@@ -10,7 +10,10 @@ class SeatPaymentChecker {
   constructor() {
     // Cache simple para evitar verificaciones duplicadas
     this.cache = new Map();
-    this.cacheTimeout = 30000; // 30 segundos
+    this.cacheTimeout = 60000; // 60 segundos (aumentado para mejor performance)
+    // Cache de asientos que NO están pagados (más común)
+    this.notPaidCache = new Map();
+    this.notPaidCacheTimeout = 30000; // 30 segundos para cache negativo
   }
 
   /**
@@ -57,105 +60,129 @@ class SeatPaymentChecker {
    * @param {string} sessionId - ID de sesión del usuario
    * @returns {Promise<{isPaid: boolean, status: string, source: string}>}
    */
-  async isSeatPaidByUser(seatId, funcionId, sessionId) {
+  async isSeatPaidByUser(seatId, funcionId, sessionId, options = {}) {
     try {
-      // Verificar cache primero
-      const cachedResult = this.getCachedResult(seatId, funcionId, sessionId);
-      if (cachedResult) {
-        return cachedResult;
-      }
-
-      // Verificando pago para asiento
+      const { timeout = 3000, useCache = true } = options;
       
-      // 1. Verificar en seat_locks si tiene status pagado/vendido/completed
-      const { data: seatLocks, error: locksError } = await supabase
-        .from('seat_locks')
-        .select('status, locator, session_id')
-        .eq('seat_id', seatId)
-        .eq('funcion_id', funcionId)
-        .eq('session_id', sessionId);
-
-      if (locksError) {
-        console.error('Error checking seat_locks:', locksError);
-      } else if (seatLocks && seatLocks.length > 0) {
-        const lock = seatLocks[0];
-        if (['pagado', 'vendido', 'completed'].includes(lock.status)) {
-          return {
-            isPaid: true,
-            status: lock.status,
-            source: 'seat_locks'
-          };
+      // Verificar cache primero (solo si useCache es true)
+      if (useCache) {
+        const cachedResult = this.getCachedResult(seatId, funcionId, sessionId);
+        if (cachedResult) {
+          return cachedResult;
+        }
+        
+        // Verificar cache negativo (asientos que NO están pagados)
+        const cacheKey = this.getCacheKey(seatId, funcionId, sessionId);
+        const notPaidCached = this.notPaidCache.get(cacheKey);
+        if (notPaidCached && Date.now() - notPaidCached.timestamp < this.notPaidCacheTimeout) {
+          return { isPaid: false, status: 'disponible', source: 'cache' };
         }
       }
 
-      // 2. Verificar en payment_transactions si el asiento fue pagado por este usuario
-      
-      const {
-        data: transactions,
-        error: transactionsError
-      } = await this.fetchCompletedTransactionsBySeat({
-        funcionId,
-        seatId,
-        userId: sessionId
-      });
+      // Verificando pago para asiento con timeout
+      const checkPromise = (async () => {
+        // 1. Verificar en seat_locks si tiene status pagado/vendido/completed (más rápido)
+        const { data: seatLocks, error: locksError } = await supabase
+          .from('seat_locks')
+          .select('status, locator, session_id')
+          .eq('seat_id', seatId)
+          .eq('funcion_id', funcionId)
+          .eq('session_id', sessionId)
+          .limit(1); // Limitar a 1 resultado para mejor performance
 
-      if (transactionsError) {
-        // Error checking payment_transactions
-      } else {
-        // Transacciones encontradas
+        if (locksError) {
+          console.error('Error checking seat_locks:', locksError);
+        } else if (seatLocks && seatLocks.length > 0) {
+          const lock = seatLocks[0];
+          if (['pagado', 'vendido', 'completed'].includes(lock.status)) {
+            const result = {
+              isPaid: true,
+              status: lock.status,
+              source: 'seat_locks'
+            };
+            this.setCachedResult(seatId, funcionId, sessionId, result);
+            return result;
+          }
+        }
 
-        if (transactions && transactions.length > 0) {
+        // 2. Solo verificar payment_transactions si no encontramos nada en seat_locks
+        // (optimización: evitar consulta costosa si no es necesario)
+        const {
+          data: transactions,
+          error: transactionsError
+        } = await this.fetchCompletedTransactionsBySeat({
+          funcionId,
+          seatId,
+          userId: sessionId
+        });
+
+        if (transactionsError) {
+          // Error checking payment_transactions
+        } else if (transactions && transactions.length > 0) {
           // Asiento pagado detectado
-          return {
+          const result = {
             isPaid: true,
             status: 'completed',
             source: 'payment_transactions'
           };
+          this.setCachedResult(seatId, funcionId, sessionId, result);
+          return result;
         }
-      }
 
-      // 3. Verificar si el asiento fue pagado por cualquier usuario
+        // Si llegamos aquí, el asiento NO está pagado
+        const result = {
+          isPaid: false,
+          status: 'disponible',
+          source: 'database'
+        };
 
-      const {
-        data: allTransactions,
-        error: allTransactionsError
-      } = await this.fetchCompletedTransactionsBySeat({ funcionId, seatId });
+        // Guardar en cache positivo y negativo
+        this.setCachedResult(seatId, funcionId, sessionId, result);
+        const cacheKey = this.getCacheKey(seatId, funcionId, sessionId);
+        this.notPaidCache.set(cacheKey, {
+          result,
+          timestamp: Date.now()
+        });
+        
+        return result;
+      })();
 
-      if (allTransactionsError) {
-        // Error checking all payment_transactions
+      // Aplicar timeout si está configurado
+      if (timeout > 0) {
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), timeout)
+        );
+        
+        try {
+          const result = await Promise.race([checkPromise, timeoutPromise]);
+          return result;
+        } catch (err) {
+          if (err.message === 'Timeout') {
+            // Si hay timeout, asumir que NO está pagado (más seguro para UX)
+            console.warn(`[SEAT_PAYMENT_CHECKER] Timeout verificando pago para asiento ${seatId}, asumiendo no pagado`);
+            const timeoutResult = {
+              isPaid: false,
+              status: 'timeout',
+              source: 'timeout'
+            };
+            // No guardar en cache negativo si fue timeout (para permitir reintento)
+            return timeoutResult;
+          }
+          throw err;
+        }
       } else {
-        // Todas las transacciones encontradas
-
-        if (allTransactions && allTransactions.length > 0) {
-          // Asiento pagado detectado por cualquier usuario
-          return {
-            isPaid: true,
-            status: 'completed',
-            source: 'payment_transactions_by_anyone'
-          };
-        }
+        return await checkPromise;
       }
-
-      const result = {
-        isPaid: false,
-        status: null,
-        source: null
-      };
-
-      // Guardar en cache
-      this.setCachedResult(seatId, funcionId, sessionId, result);
-      return result;
-
     } catch (error) {
       console.error('Error in isSeatPaidByUser:', error);
+      // En caso de error, asumir que NO está pagado (más seguro para UX)
       const errorResult = {
         isPaid: false,
-        status: null,
-        source: null
+        status: 'error',
+        source: 'error'
       };
       
-      // Guardar resultado de error en cache también
-      this.setCachedResult(seatId, funcionId, sessionId, errorResult);
+      // No guardar resultado de error en cache (para permitir reintento)
       return errorResult;
     }
   }

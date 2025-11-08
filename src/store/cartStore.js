@@ -98,25 +98,10 @@ export const useCartStore = create(
           }
 
           if (exists) {
-            // DESELECCIÓN: Verificar si ya está pagado antes de permitir deselección
+            // DESELECCIÓN: Actualización optimista (actualizar UI primero)
             console.log('🔄 [CART_TOGGLE] Deseleccionando asiento:', seatId);
             
-            // Verificar si el asiento ya fue pagado antes de permitir deselección
-            const currentSessionId = localStorage.getItem('anonSessionId');
-            
-            // Solo verificar pago si tenemos functionId válido
-            if (functionId) {
-              const seatPaymentChecker = await import('../services/seatPaymentChecker');
-              const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
-              
-              if (paymentCheck.isPaid) {
-                console.log('🚫 [CART_TOGGLE] No se puede deseleccionar asiento ya pagado:', seatId);
-                toast.error('Este asiento ya ha sido comprado y no puede ser deseleccionado');
-                return;
-              }
-            }
-            
-            // Quitar del carrito
+            // ACTUALIZACIÓN OPTIMISTA: Quitar del carrito inmediatamente
             const filtered = items.filter(
               (item) => (item.sillaId || item.id || item._id) !== seatId
             );
@@ -129,8 +114,51 @@ export const useCartStore = create(
             }
             set(newState);
             
-            // Desbloquear en BD
-            await useSeatLockStore.getState().unlockSeat(seatId, functionId);
+            // Operaciones en background (no bloquear UI)
+            Promise.all([
+              // Desbloquear en BD primero (más rápido que verificar pago)
+              (async () => {
+                try {
+                  await useSeatLockStore.getState().unlockSeat(seatId, functionId);
+                } catch (err) {
+                  console.warn('Error desbloqueando asiento (continuando):', err);
+                }
+              })(),
+              // Verificar pago solo si es necesario (con timeout corto, en background)
+              (async () => {
+                const currentSessionId = localStorage.getItem('anonSessionId');
+                if (functionId) {
+                  try {
+                    const seatPaymentChecker = await import('../services/seatPaymentChecker');
+                    // Timeout de 1.5 segundos para verificación rápida
+                    const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(
+                      seatId, 
+                      functionId, 
+                      currentSessionId,
+                      { timeout: 1500, useCache: true }
+                    );
+                    
+                    if (paymentCheck.isPaid) {
+                      // Si está pagado, volver a agregarlo al carrito
+                      const itemToRestore = items.find(item => (item.sillaId || item.id || item._id) === seatId);
+                      if (itemToRestore) {
+                        console.log('🚫 [CART_TOGGLE] Asiento pagado detectado, revirtiendo eliminación');
+                        set({ items: [...filtered, itemToRestore] });
+                        toast.error('Este asiento ya ha sido comprado y no puede ser deseleccionado');
+                      }
+                      return;
+                    }
+                  } catch (err) {
+                    // Si hay timeout o error, continuar (optimistic update)
+                    if (err.message !== 'Timeout') {
+                      console.warn('Error verificando pago (continuando):', err);
+                    }
+                  }
+                }
+              })()
+            ]).catch(err => {
+              console.warn('Error en operaciones background:', err);
+            });
             
             toast.success('Asiento eliminado del carrito');
           } else {
@@ -326,22 +354,10 @@ export const useCartStore = create(
         removeFromCart: async (seatId) => {
           const { items, functionId } = get();
           
-          // Verificar si el asiento ya fue pagado antes de permitir eliminación
-          const currentSessionId = localStorage.getItem('anonSessionId');
+          // ACTUALIZACIÓN OPTIMISTA: Quitar del carrito inmediatamente (UI primero)
+          const itemToRemove = items.find(item => (item.sillaId || item.id || item._id) === seatId);
+          const filtered = items.filter(item => (item.sillaId || item.id || item._id) !== seatId);
           
-          // Solo verificar pago si tenemos functionId válido
-          if (functionId) {
-            const seatPaymentChecker = await import('../services/seatPaymentChecker');
-            const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
-            
-            if (paymentCheck.isPaid) {
-              console.log('🚫 [CART] No se puede eliminar asiento ya pagado:', seatId);
-              toast.error('Este asiento ya ha sido comprado y no puede ser eliminado del carrito');
-              return;
-            }
-          }
-          
-          const filtered = items.filter(item => (item._id || item.id) !== seatId);
           const newState = { items: filtered };
           if (filtered.length === 0 && get().products.length === 0) {
             clearExpirationTimer();
@@ -351,34 +367,67 @@ export const useCartStore = create(
           }
           set(newState);
           
-          // Verificar que el asiento no existe en la base de datos antes de desbloquear
-          const { useSeatLockStore } = await import('../components/seatLockStore');
-          
-          // Verificar si el asiento está realmente bloqueado en la BD
-          const isLocked = await useSeatLockStore.getState().isSeatLocked(seatId, functionId);
-          
-          if (isLocked) {
-            // Solo desbloquear si está realmente bloqueado en la BD
-            await useSeatLockStore.getState().unlockSeat(seatId, functionId);
-            console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
-          } else {
-            // Si no está bloqueado en la BD, marcar como disponible en seatStates
-            // Asiento no estaba bloqueado en BD, marcando como disponible
-            
-            // Marcar explícitamente como disponible en lugar de solo eliminar
-            useSeatLockStore.getState().updateSeatState(seatId, 'disponible');
-            
-            // Asiento marcado como disponible
-          }
-          
-          // Disparar evento para notificar al mapa que debe actualizarse
-          requestAnimationFrame(() => {
+          // Disparar evento inmediatamente para actualizar UI
+          if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('seatRemovedFromCart', {
               detail: { seatId, functionId }
             }));
-          });
+          }
           
           toast.success('Asiento eliminado del carrito');
+          
+          // Operaciones en background (no bloquear UI)
+          // 1. Desbloquear en BD (sin verificar primero - más rápido)
+          Promise.all([
+            // Desbloquear directamente (más rápido que verificar primero)
+            (async () => {
+              try {
+                const { useSeatLockStore } = await import('../components/seatLockStore');
+                await useSeatLockStore.getState().unlockSeat(seatId, functionId);
+                console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
+              } catch (err) {
+                console.warn('Error desbloqueando asiento (continuando):', err);
+                // Si falla, al menos marcar como disponible localmente
+                try {
+                  const { useSeatLockStore } = await import('../components/seatLockStore');
+                  useSeatLockStore.getState().updateSeatState(seatId, 'disponible');
+                } catch (err2) {
+                  console.warn('Error marcando asiento como disponible:', err2);
+                }
+              }
+            })(),
+            // Verificar pago solo si es necesario (con timeout corto, en background)
+            (async () => {
+              const currentSessionId = localStorage.getItem('anonSessionId');
+              if (functionId && itemToRemove) {
+                try {
+                  const seatPaymentChecker = await import('../services/seatPaymentChecker');
+                  // Timeout de 1.5 segundos para verificación rápida
+                  const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(
+                    seatId, 
+                    functionId, 
+                    currentSessionId,
+                    { timeout: 1500, useCache: true }
+                  );
+                  
+                  if (paymentCheck.isPaid) {
+                    // Si está pagado, volver a agregarlo al carrito
+                    console.log('🚫 [CART] Asiento pagado detectado, revirtiendo eliminación');
+                    set({ items: [...filtered, itemToRemove] });
+                    toast.error('Este asiento ya ha sido comprado y no puede ser eliminado del carrito');
+                    return;
+                  }
+                } catch (err) {
+                  // Si hay timeout o error, continuar (optimistic update)
+                  if (err.message !== 'Timeout') {
+                    console.warn('Error verificando pago (continuando):', err);
+                  }
+                }
+              }
+            })()
+          ]).catch(err => {
+            console.warn('Error en operaciones background:', err);
+          });
         },
 
         clearCart: async (skipUnlock = false) => {

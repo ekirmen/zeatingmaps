@@ -180,12 +180,26 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         setError(null);
 
         const funcionNumeric = parseInt(funcionId, 10);
-        const { data: funcion, error: funcionError } = await supabase
-          .from('funciones')
-          .select('sala_id')
-          .eq('id', funcionNumeric)
-          .single();
+        
+        // Precargar módulos críticos en paralelo con la carga del mapa
+        const preloadModules = Promise.all([
+          import('../services/seatPaymentChecker'),
+          import('../components/seatLockStore')
+        ]).catch(err => {
+          console.warn('Error precargando módulos:', err);
+        });
 
+        // Cargar datos del mapa y función en paralelo con precarga de módulos
+        const [funcionResult] = await Promise.all([
+          supabase
+            .from('funciones')
+            .select('sala_id, plantilla_id, plantilla')
+            .eq('id', funcionNumeric)
+            .single(),
+          preloadModules // Precargar módulos en paralelo (no necesitamos el resultado)
+        ]);
+
+        const { data: funcion, error: funcionError } = funcionResult;
         if (funcionError) throw funcionError;
 
         // Obtener mapa
@@ -447,35 +461,30 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
             borderBottom: '1px solid var(--store-gray-200)',
             padding: isMobile ? '12px 16px' : '16px 24px',
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: isMobile ? 'space-between' : 'flex-end',
             alignItems: 'center',
             flexShrink: 0,
             flexWrap: isMobile ? 'wrap' : 'nowrap',
             gap: isMobile ? '8px' : '0'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto' }}>
-              <h3 className="store-card-title" style={{ margin: 0, fontSize: isMobile ? '16px' : '18px' }}>
-                Tu Carrito ({funcionCartItems.length})
-              </h3>
-              {timeLeft && timeLeft > 0 && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: isMobile ? '6px 10px' : '4px 12px',
-                  borderRadius: '20px',
-                  background: timeLeft <= 60 ? '#fff1f0' : '#f5f5f5',
-                  border: timeLeft <= 60 ? '2px solid #ff4d4f' : 'none',
-                  fontSize: isMobile ? '13px' : '14px',
-                  fontWeight: 700,
-                  color: getTimerColor(),
-                  animation: timeLeft <= 60 ? 'pulse 2s infinite' : 'none'
-                }}>
-                  <ClockCircleOutlined />
-                  <span>{formatTime(timeLeft)}</span>
-                </div>
-              )}
-            </div>
+            {timeLeft && timeLeft > 0 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: isMobile ? '6px 10px' : '4px 12px',
+                borderRadius: '20px',
+                background: timeLeft <= 60 ? '#fff1f0' : '#f5f5f5',
+                border: timeLeft <= 60 ? '2px solid #ff4d4f' : 'none',
+                fontSize: isMobile ? '13px' : '14px',
+                fontWeight: 700,
+                color: getTimerColor(),
+                animation: timeLeft <= 60 ? 'pulse 2s infinite' : 'none'
+              }}>
+                <ClockCircleOutlined />
+                <span>{formatTime(timeLeft)}</span>
+              </div>
+            )}
             {/* Botón directo a pagar en móvil */}
             {isMobile && funcionCartItems.length > 0 && (
               <button
@@ -490,7 +499,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
                   fontSize: '16px',
                   fontWeight: 600,
                   cursor: 'pointer',
-                  marginTop: '8px'
+                  marginTop: timeLeft && timeLeft > 0 ? '8px' : '0'
                 }}
               >
                 Ir a Pagar
