@@ -14,8 +14,16 @@ const getEncryptionKey = async () => {
     return encryptionKeyCache;
   }
   
-  // En producción, esta clave debería venir de variables de entorno
-  const ENCRYPTION_KEY = process.env.REACT_APP_ENCRYPTION_KEY || 'ven-eventos-encryption-key-2024';
+  // En producción, esta clave DEBE venir de variables de entorno
+  // Genera una clave segura usando: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+  // Configúrala en el archivo .env como: REACT_APP_ENCRYPTION_KEY=tu-clave-aqui
+  const ENCRYPTION_KEY = process.env.REACT_APP_ENCRYPTION_KEY || 'ven-eventos-encryption-key-2024-default-change-in-production';
+  
+  // Advertencia en desarrollo si se usa la clave por defecto
+  if (!process.env.REACT_APP_ENCRYPTION_KEY && process.env.NODE_ENV !== 'production') {
+    console.warn('[ENCRYPTION] ⚠️ ADVERTENCIA: Usando clave de encriptación por defecto. ' +
+      'Para producción, configura REACT_APP_ENCRYPTION_KEY en tu archivo .env');
+  }
   
   // Convertir la clave a formato que pueda usar Web Crypto API
   const encoder = new TextEncoder();
