@@ -177,10 +177,8 @@
    ============================================ */
 
 .store-header {
-  background: linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%);
-  box-shadow: var(--store-shadow-lg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--store-primary);
+  box-shadow: var(--store-shadow-sm);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--store-text-inverse);
   position: sticky;
@@ -1291,8 +1289,18 @@
    ============================================ */
 
 @media (max-width: 768px) {
+  /* Prevenir scroll horizontal en toda la página */
+  body {
+    overflow-x: hidden !important;
+    max-width: 100vw;
+  }
+  
   .seat-selection-page {
     padding-bottom: 0 !important;
+    overflow-x: hidden !important;
+    max-width: 100vw;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   /* Carrito flotante en móvil */
@@ -1306,6 +1314,53 @@
   
   .store-cart-floating .store-card-body {
     -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mapa de asientos - prevenir scroll horizontal */
+  .store-seating-map {
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box;
+    position: relative;
+  }
+  
+  .store-seating-map > *,
+  .store-seating-map canvas,
+  .store-seating-map > div,
+  .store-seating-map .konvajs-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box;
+  }
+  
+  /* Konva Stage - limitar tamaño en móvil */
+  .store-seating-map canvas {
+    max-width: 100vw !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  /* Contenedor del Stage de Konva */
+  .store-seating-map > div[style*="position"] {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  /* Contenedor del mapa */
+  .store-card-body {
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  
+  /* Prevenir overflow en el contenedor principal */
+  .store-container {
+    max-width: 100vw;
+    overflow-x: hidden;
   }
   
   /* Espaciado inferior cuando hay carrito flotante */

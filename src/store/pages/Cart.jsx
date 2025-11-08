@@ -6,7 +6,8 @@ import {
     DeleteOutlined,
     DownloadOutlined,
     UserOutlined,
-    ShoppingCartOutlined
+    ShoppingCartOutlined,
+    ClockCircleOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 // Nota: El carrito debe ser visible incluso en modo incógnito (sin login)
@@ -137,16 +138,27 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
 };
 
 // Main Cart Component
-const Cart = () => {
+const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selectedFunctionId }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const cartStore = useCartStore();
     const {
-        items,
+        items: storeItems,
         products,
         clearCart,
-        removeFromCart,
-        removeProduct
-    } = useCartStore();
+        removeFromCart: storeRemoveFromCart,
+        removeProduct,
+        timeLeft
+    } = cartStore;
+    
+    // Usar props si están disponibles, sino usar el store
+    const items = propsItems || storeItems;
+    const removeFromCart = propsRemoveFromCart || storeRemoveFromCart;
+    
+    // Si hay selectedFunctionId, filtrar items de esa función
+    const filteredItems = selectedFunctionId 
+      ? items.filter(item => String(item.functionId || item.funcionId) === String(selectedFunctionId))
+      : items;
     
     // State to track paid seats
     const [paidSeatsSet, setPaidSeatsSet] = useState(new Set());
@@ -156,7 +168,7 @@ const Cart = () => {
     const [locatorSeats] = useState([]);
     const [pendingCheckout, setPendingCheckout] = useState(false);
 
-    const itemCount = (items && Array.isArray(items) ? items.length : 0) + (products && Array.isArray(products) ? products.length : 0);
+    const itemCount = (filteredItems && Array.isArray(filteredItems) ? filteredItems.length : 0) + (products && Array.isArray(products) ? products.length : 0);
 
     // Format price helper
     const formatPrice = (price) => {
@@ -164,8 +176,24 @@ const Cart = () => {
     };
 
     // Calculate totals
-    const subtotal = (items && Array.isArray(items) ? items.reduce((sum, item) => sum + (item.precio || 0), 0) : 0) +
+    const subtotal = (filteredItems && Array.isArray(filteredItems) ? filteredItems.reduce((sum, item) => sum + (item.precio || 0), 0) : 0) +
                     (products && Array.isArray(products) ? products.reduce((sum, product) => sum + (product.price || 0), 0) : 0);
+    
+    // Formatear tiempo restante
+    const formatTime = (seconds) => {
+      if (!seconds || seconds <= 0) return '00:00';
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+    
+    // Obtener color del temporizador
+    const getTimerColor = () => {
+      if (!timeLeft || timeLeft <= 0) return '#999';
+      if (timeLeft <= 60) return '#ff4d4f'; // Rojo últimos 60 segundos
+      if (timeLeft <= 300) return '#faad14'; // Amarillo últimos 5 minutos
+      return '#52c41a'; // Verde por defecto
+    };
 
 
     // Get paid seats count
@@ -180,14 +208,14 @@ const Cart = () => {
         }
         
         // Validar que todos los asientos tengan IDs válidos
-        const invalidSeats = items?.filter(item => !(item.id || item._id || item.sillaId)) || [];
+        const invalidSeats = filteredItems?.filter(item => !(item.id || item._id || item.sillaId)) || [];
         if (invalidSeats.length > 0) {
             message.error('Algunos asientos no tienen IDs válidos. Por favor, recarga la página.');
             return;
         }
 
         // Validar que no haya asientos duplicados
-        const seatIds = items?.map(item => item.id || item._id || item.sillaId) || [];
+        const seatIds = filteredItems?.map(item => item.id || item._id || item.sillaId) || [];
         const uniqueSeatIds = [...new Set(seatIds)];
         if (seatIds.length !== uniqueSeatIds.length) {
             message.error('Hay asientos duplicados en el carrito. Por favor, verifica.');
@@ -220,7 +248,7 @@ const Cart = () => {
     // Check which seats are paid when items change
     useEffect(() => {
         const checkPaidSeats = async () => {
-            if (!items || items.length === 0) {
+            if (!filteredItems || filteredItems.length === 0) {
                 setPaidSeatsSet(new Set());
                 return;
             }
@@ -228,7 +256,7 @@ const Cart = () => {
             const currentSessionId = localStorage.getItem('anonSessionId');
             const paidSeatsSet = new Set();
             
-            for (const item of items) {
+            for (const item of filteredItems) {
                 const seatId = item.sillaId || item._id || item.id;
                 const functionId = item.functionId || item.funcionId;
                 
@@ -250,20 +278,20 @@ const Cart = () => {
         };
         
         checkPaidSeats();
-    }, [items]);
+    }, [filteredItems]);
 
     // Facebook Pixel tracking
     useEffect(() => {
         if (shouldTrackOnPage('cart') && itemCount > 0) {
             getFacebookPixelByEvent(FACEBOOK_EVENTS.VIEW_CART, {
-                content_ids: (items && Array.isArray(items) ? items.map(item => item.sillaId || item.id) : []),
+                content_ids: (filteredItems && Array.isArray(filteredItems) ? filteredItems.map(item => item.sillaId || item.id) : []),
                 content_type: 'product',
                 value: subtotal,
                 currency: 'USD',
                 num_items: itemCount
             });
         }
-    }, [itemCount, items, subtotal]);
+    }, [itemCount, filteredItems, subtotal]);
 
     // El carrito se muestra sin requerir sesión; el login se solicita al pagar
 
@@ -273,8 +301,24 @@ const Cart = () => {
             <FacebookPixel />
 
             <div className="store-card">
-                <div className="store-card-header">
-                    <h1 className="store-text-xl md:store-text-2xl store-font-bold store-text-center">Carrito de Compras</h1>
+                <div className="store-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h1 className="store-text-xl md:store-text-2xl store-font-bold">Carrito de Compras</h1>
+                    {timeLeft && timeLeft > 0 && itemCount > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        background: '#f5f5f5',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: getTimerColor()
+                      }}>
+                        <ClockCircleOutlined />
+                        <span>{formatTime(timeLeft)}</span>
+                      </div>
+                    )}
                 </div>
                 
                 <div className="store-card-body">
@@ -376,13 +420,13 @@ const Cart = () => {
                         )}
 
                         {/* Current Cart Seats Section */}
-                        {items && Array.isArray(items) && items.length > 0 && (
+                        {filteredItems && Array.isArray(filteredItems) && filteredItems.length > 0 && (
                             <div className="mb-6">
                                 <Title level={5} className="mb-2">
                                     <UserOutlined className="mr-2" />
-                                    Asientos Seleccionados ({(items && Array.isArray(items) ? items.length : 0)})
+                                    Asientos Seleccionados ({(filteredItems && Array.isArray(filteredItems) ? filteredItems.length : 0)})
                                 </Title>
-                                {(items && Array.isArray(items) ? items.map((item) => {
+                                {(filteredItems && Array.isArray(filteredItems) ? filteredItems.map((item) => {
                                     const seatId = item.sillaId || item._id || item.id;
                                     const isPaid = paidSeatsSet.has(seatId);
                                     

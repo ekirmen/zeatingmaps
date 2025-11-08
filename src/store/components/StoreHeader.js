@@ -685,7 +685,7 @@ const Header = ({ onLogin, onLogout }) => {
         open={isAccountModalVisible}
         zIndex={1000}
         style={{ position: 'relative' }}
-        width={420}
+        width={typeof window !== 'undefined' && window.innerWidth <= 768 ? '90%' : 420}
         centered
         maskClosable={true}
         destroyOnClose={true}
@@ -743,18 +743,18 @@ const Header = ({ onLogin, onLogout }) => {
             </div>
             <h2 className="account-modal-title">
               {accountMode === 'login'
-                ? 'Iniciar Sesión para Continuar'
+                ? 'Iniciar Sesión'
                 : accountMode === 'register'
-                ? 'Crear Cuenta Nueva'
+                ? 'Crear Cuenta'
                 : 'Recuperar Contraseña'}
             </h2>
-            <p className="account-modal-subtitle">
-              {accountMode === 'login'
-                ? 'Accede a tu cuenta para continuar con tu compra'
-                : accountMode === 'register'
-                ? 'Crea tu cuenta y disfruta de beneficios exclusivos'
-                : 'Te enviaremos un enlace para restablecer tu contraseña'}
-            </p>
+            {accountMode !== 'login' && (
+              <p className="account-modal-subtitle">
+                {accountMode === 'register'
+                  ? 'Crea tu cuenta y disfruta de beneficios exclusivos'
+                  : 'Te enviaremos un enlace para restablecer tu contraseña'}
+              </p>
+            )}
           </div>
 
           <div className="account-modal-tabs">
@@ -836,18 +836,6 @@ const Header = ({ onLogin, onLogout }) => {
                 >
                   {isSubmitting.login ? 'Procesando...' : 'Iniciar Sesión'}
                 </button>
-
-                <button
-                  type="button"
-                  className="account-link"
-                  onClick={() => handleSwitchMode('forgot')}
-                >
-                  ¿No tienes contraseña? Enviar enlace de acceso
-                </button>
-
-                <div className="account-divider">
-                  <span>o</span>
-                </div>
 
                 <a className="account-link-muted" href="/store/forgot-password">
                   ¿Olvidaste tu contraseña?

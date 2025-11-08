@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Alert, Spin } from 'antd';
-import { ShoppingCartOutlined } from '@ant-design/icons';
+import { Card, Alert, Spin, Badge } from 'antd';
+import { ShoppingCartOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import LazySeatingMap from '../../components/LazySeatingMap';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import { useCartStore } from '../../store/cartStore';
@@ -24,6 +24,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const cartItems = useCartStore((state) => state.items);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const timeLeft = useCartStore((state) => state.timeLeft);
   const { isMobile, isTablet } = useResponsive();
   
   const {
@@ -42,6 +43,22 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   const funcionCartItems = cartItems.filter(item => 
     String(item.functionId || item.funcionId) === String(funcionId)
   );
+  
+  // Formatear tiempo restante
+  const formatTime = (seconds) => {
+    if (!seconds || seconds <= 0) return '00:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+  
+  // Obtener color del temporizador
+  const getTimerColor = () => {
+    if (!timeLeft || timeLeft <= 0) return '#999';
+    if (timeLeft <= 60) return '#ff4d4f'; // Rojo últimos 60 segundos
+    if (timeLeft <= 300) return '#faad14'; // Amarillo últimos 5 minutos
+    return '#52c41a'; // Verde por defecto
+  };
 
   const ensureSessionId = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -222,13 +239,17 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           padding: isMobile ? '12px' : '24px',
           minHeight: isMobile ? '400px' : '500px',
           maxHeight: isMobile ? '60vh' : '70vh',
-          overflow: 'auto'
+          overflow: 'hidden',
+          position: 'relative'
         }}>
           {mapa ? (
             <div className="store-seating-map" style={{
               width: '100%',
               height: '100%',
-              minHeight: isMobile ? '400px' : '500px'
+              minHeight: isMobile ? '400px' : '500px',
+              overflow: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain'
             }}>
               <LazySeatingMap
                 mapa={mapa}
@@ -280,22 +301,37 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
             background: 'white',
             zIndex: 10,
             borderBottom: '1px solid var(--store-gray-200)',
-            padding: isMobile ? '12px 16px' : '16px 24px'
+            padding: isMobile ? '12px 16px' : '16px 24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}>
             <h3 className="store-card-title" style={{ margin: 0, fontSize: isMobile ? '16px' : '18px' }}>
               Tu Carrito ({funcionCartItems.length})
             </h3>
+            {timeLeft && timeLeft > 0 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '4px 12px',
+                borderRadius: '20px',
+                background: '#f5f5f5',
+                fontSize: isMobile ? '12px' : '14px',
+                fontWeight: 600,
+                color: getTimerColor()
+              }}>
+                <ClockCircleOutlined />
+                <span>{formatTime(timeLeft)}</span>
+              </div>
+            )}
           </div>
           <div className="store-card-body" style={{ 
             padding: isMobile ? '12px 16px' : '16px 24px',
             maxHeight: isMobile ? 'calc(50vh - 60px)' : 'none',
             overflow: 'auto'
           }}>
-            <Cart
-              items={funcionCartItems}
-              removeFromCart={removeFromCart}
-              selectedFunctionId={funcionId}
-            />
+            <Cart selectedFunctionId={funcionId} />
           </div>
         </div>
       )}

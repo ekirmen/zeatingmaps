@@ -847,8 +847,21 @@ const SeatingMapUnified = ({
 
   // Create a set of found seat IDs for quick lookup
 
+  // Detectar si es móvil
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  
+  // Ajustar dimensiones del Stage para móvil
+  const stageWidth = isMobile ? Math.min(maxX + 50, window.innerWidth - 40) : maxX + 50;
+  const stageHeight = isMobile ? Math.min(maxY + 50, window.innerHeight - 200) : maxY + 50;
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div style={{ 
+      position: 'relative', 
+      width: '100%', 
+      height: '100%',
+      overflow: 'hidden',
+      maxWidth: '100%'
+    }}>
       <SeatStatusLegend />
       {shouldShowSeatLockDebug && <SeatLockDebug funcionId={normalizedFuncionId} />}
       
@@ -885,18 +898,29 @@ const SeatingMapUnified = ({
         </Space>
       </div>
 
-      <Stage
-        width={maxX + 50}
-        height={maxY + 50}
-        style={{ border: '1px solid #ccc' }}
-        onWheel={handleWheel}
-        draggable
-        ref={stageRef}
-        scaleX={scale}
-        scaleY={scale}
-        x={position.x}
-        y={position.y}
-      >
+      <div style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain'
+      }}>
+        <Stage
+          width={stageWidth}
+          height={stageHeight}
+          style={{ 
+            border: '1px solid #ccc',
+            maxWidth: '100%',
+            margin: '0 auto'
+          }}
+          onWheel={handleWheel}
+          draggable
+          ref={stageRef}
+          scaleX={scale}
+          scaleY={scale}
+          x={position.x}
+          y={position.y}
+        >
         <Layer>
           {/* Background images */}
           {backgroundElements.map(bg => (
@@ -1213,7 +1237,8 @@ const SeatingMapUnified = ({
             return null;
           })}
         </Layer>
-      </Stage>
+        </Stage>
+      </div>
     </div>
   );
 };

@@ -7,7 +7,7 @@ import {
   SearchOutlined,
   EnvironmentOutlined,
   HomeOutlined,
-  BuildingOutlined
+  BankOutlined
 } from '@ant-design/icons';
 import CreateRecintoForm from '../components/CreateRecintoForm';
 import EditRecintoForm from '../components/EditRecintoForm';
@@ -395,7 +395,7 @@ const Recinto = () => {
                         color: 'white',
                         fontSize: '24px'
                       }}>
-                        <BuildingOutlined />
+                        <BankOutlined />
                       </div>
                       <div>
                         <h2 style={{

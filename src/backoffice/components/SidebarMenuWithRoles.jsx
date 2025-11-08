@@ -50,10 +50,18 @@ import { useRole } from './RoleBasedAccess';
 const { Sider } = Layout;
 const { Text } = Typography;
 
-const SidebarMenuWithRoles = ({ collapsed }) => {
+const SidebarMenuWithRoles = ({ collapsed, onMenuClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasPermission, getRole, isStoreUser } = useRole();
+  
+  // Handler para cuando se hace click en un item del menú
+  const handleMenuClick = (path) => {
+    navigate(path);
+    if (onMenuClick) {
+      onMenuClick();
+    }
+  };
   const [temporaryExpanded, setTemporaryExpanded] = useState(false);
   const [temporaryExpandedTimeout, setTemporaryExpandedTimeout] = useState(null);
 
@@ -524,7 +532,7 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
           key: subItem.path,
           icon: <FontAwesomeIcon icon={subItem.icon} />,
           label: subItem.title,
-          onClick: () => navigate(subItem.path)
+          onClick: () => handleMenuClick(subItem.path)
         }))
       };
     } else {
@@ -532,7 +540,7 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
         key: item.path,
         icon: <FontAwesomeIcon icon={item.icon} />,
         label: item.title,
-        onClick: () => navigate(item.path)
+        onClick: () => handleMenuClick(item.path)
       };
     }
   });
