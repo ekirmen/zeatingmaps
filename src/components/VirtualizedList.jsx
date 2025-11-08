@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { FixedSizeList } from 'react-window';
 import { Empty, Spin } from 'antd';
 
 /**
- * Componente de lista virtualizada para grandes cantidades de elementos
- * Usa react-window para renderizar solo los elementos visibles
+ * Componente de lista optimizada para grandes cantidades de elementos
+ * Renderiza una lista normal con scroll optimizado y lazy loading
+ * Nota: Se eliminó la dependencia de react-window para evitar problemas de build
  */
 const VirtualizedList = ({
   items = [],
@@ -18,28 +18,43 @@ const VirtualizedList = ({
   onScroll,
   overscanCount = 5
 }) => {
-  const listRef = useRef(null);
+  const containerRef = useRef(null);
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: Math.min(20, items.length) });
   const [itemSizes, setItemSizes] = useState(new Map());
 
-  // Calcular altura de items
-  // Nota: Usamos FixedSizeList siempre para evitar problemas de build con VariableSizeList
-  // Para variableHeight, usamos una altura estimada basada en el promedio de tamaños
-  const calculatedItemHeight = useMemo(() => {
-    if (!variableHeight) {
-      return itemHeight;
-    }
-    
-    // Si hay tamaños guardados, calcular el promedio
-    if (itemSizes.size > 0) {
-      const sizes = Array.from(itemSizes.values());
-      const average = sizes.reduce((sum, size) => sum + size, 0) / sizes.length;
-      return Math.max(itemHeight, average);
-    }
-    
-    return itemHeight;
-  }, [variableHeight, itemHeight, itemSizes]);
+  // Calcular rango visible basado en scroll
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-  // Actualizar tamaño de un item (solo para tracking, no afecta el render)
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const containerHeight = container.clientHeight;
+      const itemCount = items.length;
+      
+      // Calcular qué items son visibles
+      const start = Math.max(0, Math.floor(scrollTop / itemHeight) - overscanCount);
+      const end = Math.min(
+        itemCount,
+        Math.ceil((scrollTop + containerHeight) / itemHeight) + overscanCount
+      );
+      
+      setVisibleRange({ start, end });
+      
+      if (onScroll) {
+        onScroll({ target: container });
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    handleScroll(); // Inicial
+    
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [items.length, itemHeight, overscanCount, onScroll]);
+
+  // Actualizar tamaño de un item (solo para tracking)
   const updateItemSize = (index, size) => {
     if (variableHeight && itemSizes.get(index) !== size) {
       setItemSizes(prev => {
@@ -66,30 +81,82 @@ const VirtualizedList = ({
     );
   }
 
-  // Siempre usar FixedSizeList para evitar problemas de build
-  // Si variableHeight es true, usamos una altura estimada calculada
+  // Calcular altura total para scroll
+  const totalHeight = useMemo(() => {
+    if (variableHeight && itemSizes.size > 0) {
+      // Si tenemos tamaños, calcular altura total
+      let total = 0;
+      for (let i = 0; i < items.length; i++) {
+        total += itemSizes.get(i) || itemHeight;
+      }
+      return total;
+    }
+    return items.length * itemHeight;
+  }, [items.length, itemHeight, variableHeight, itemSizes]);
+
+  // Calcular offset superior para items no visibles
+  const offsetTop = useMemo(() => {
+    if (variableHeight && itemSizes.size > 0) {
+      let offset = 0;
+      for (let i = 0; i < visibleRange.start; i++) {
+        offset += itemSizes.get(i) || itemHeight;
+      }
+      return offset;
+    }
+    return visibleRange.start * itemHeight;
+  }, [visibleRange.start, itemHeight, variableHeight, itemSizes]);
+
+  // Calcular altura de items visibles
+  const visibleItemsHeight = useMemo(() => {
+    if (variableHeight && itemSizes.size > 0) {
+      let height = 0;
+      for (let i = visibleRange.start; i < visibleRange.end; i++) {
+        height += itemSizes.get(i) || itemHeight;
+      }
+      return height;
+    }
+    return (visibleRange.end - visibleRange.start) * itemHeight;
+  }, [visibleRange, itemHeight, variableHeight, itemSizes]);
+
+  // Items visibles
+  const visibleItems = useMemo(() => {
+    return items.slice(visibleRange.start, visibleRange.end);
+  }, [items, visibleRange]);
+
+  // Calcular altura del spacer inferior
+  const bottomSpacerHeight = useMemo(() => {
+    return Math.max(0, totalHeight - offsetTop - visibleItemsHeight);
+  }, [totalHeight, offsetTop, visibleItemsHeight]);
+
   return (
-    <FixedSizeList
-      ref={listRef}
-      height={height}
-      itemCount={items.length}
-      itemSize={calculatedItemHeight}
-      width="100%"
+    <div
+      ref={containerRef}
       className={className}
-      overscanCount={overscanCount}
-      onScroll={onScroll}
+      style={{
+        height,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        position: 'relative'
+      }}
     >
-      {({ index, style }) => {
-        const item = items[index];
-        const ItemComponent = (
-          <div style={style}>
-            {renderItem(item, index, updateItemSize)}
+      {/* Spacer superior para items no visibles */}
+      <div style={{ height: offsetTop, flexShrink: 0 }} />
+      
+      {/* Items visibles */}
+      {visibleItems.map((item, idx) => {
+        const actualIndex = visibleRange.start + idx;
+        // Usar id del item si está disponible, de lo contrario usar índice
+        const itemKey = item?.id || item?._id || actualIndex;
+        return (
+          <div key={itemKey}>
+            {renderItem(item, actualIndex, updateItemSize)}
           </div>
         );
-        
-        return ItemComponent;
-      }}
-    </FixedSizeList>
+      })}
+      
+      {/* Spacer inferior para items no visibles */}
+      <div style={{ height: bottomSpacerHeight, flexShrink: 0 }} />
+    </div>
   );
 };
 
