@@ -210,6 +210,10 @@ const Pay = () => {
       return;
     }
 
+    // Declarar variables fuera del try para que estén disponibles en el catch
+    let paymentData = null;
+    let resolvedTenantId = null;
+    
     try {
       setProcessingPayment(true);
       
@@ -238,7 +242,7 @@ const Pay = () => {
         cartItems?.[0]?.tenant?.id,
       ].filter(Boolean);
 
-      const resolvedTenantId = resolveTenantId(tenantCandidates[0]);
+      resolvedTenantId = resolveTenantId(tenantCandidates[0]);
 
       // Obtener evento_id desde múltiples fuentes
       let eventoId = cartItems?.[0]?.eventId || cartItems?.[0]?.eventoId || null;
@@ -312,7 +316,7 @@ const Pay = () => {
         console.log('💰 [PAY] Metadata de pagos a plazos:', metadata.pagos_plazos);
       }
 
-      const paymentData = {
+      paymentData = {
         orderId: locator,
         amount: montoAPagar,
         currency: 'USD',
@@ -434,17 +438,19 @@ const Pay = () => {
     } catch (error) {
       console.error('Error processing payment:', error);
       
-      // Registrar error de pago en auditoría
-      auditService.logPayment('error', {
-        ...paymentData,
-        error: error.message || 'Unknown error',
-        gateway: selectedGateway?.method_id || selectedGateway?.id,
-        paymentMethod: selectedGateway?.name,
-        status: 'error'
-      }, {
-        tenantId: resolvedTenantId,
-        severity: 'error'
-      }).catch(err => console.error('Error logging payment error:', err));
+      // Registrar error de pago en auditoría solo si tenemos los datos necesarios
+      if (paymentData || resolvedTenantId) {
+        auditService.logPayment('error', {
+          ...(paymentData || {}),
+          error: error.message || 'Unknown error',
+          gateway: selectedGateway?.method_id || selectedGateway?.id,
+          paymentMethod: selectedGateway?.name,
+          status: 'error'
+        }, {
+          tenantId: resolvedTenantId || null,
+          severity: 'error'
+        }).catch(err => console.error('Error logging payment error:', err));
+      }
       
       // Usar el hook de manejo de errores
       const errorResult = handleError(error, 'payment', { clearCart });

@@ -156,31 +156,43 @@ export const AuthProvider = ({ children }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted) return;
 
-      if (session?.user) {
-        try {
-          // Encriptar y almacenar token
-          await setEncryptedItem('token', session.access_token);
-          await setEncryptedItem('user_data', {
-            id: session.user.id,
-            email: session.user.email
-          });
-        } catch (storageError) {
-          console.error('Error setting token in localStorage:', storageError);
-          // Fallback
-          localStorage.setItem('token', session.access_token);
+      // Manejar operaciones asíncronas sin bloquear el callback
+      const handleSession = async () => {
+        if (session?.user) {
+          try {
+            // Encriptar y almacenar token
+            await setEncryptedItem('token', session.access_token);
+            await setEncryptedItem('user_data', {
+              id: session.user.id,
+              email: session.user.email
+            });
+          } catch (storageError) {
+            console.error('Error setting token in localStorage:', storageError);
+            // Fallback
+            try {
+              localStorage.setItem('token', session.access_token);
+            } catch (fallbackError) {
+              console.error('Error en fallback de localStorage:', fallbackError);
+            }
+          }
+          setUser(session.user);
+          fetchUserRole(session.user.id);
+        } else {
+          try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user_data');
+          } catch (storageError) {
+            console.error('Error removing token from localStorage:', storageError);
+          }
+          setUser(null);
+          setRole(null);
         }
-        setUser(session.user);
-        fetchUserRole(session.user.id);
-      } else {
-        try {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user_data');
-        } catch (storageError) {
-          console.error('Error removing token from localStorage:', storageError);
-        }
-        setUser(null);
-        setRole(null);
-      }
+      };
+      
+      // Ejecutar la función asíncrona sin esperar
+      handleSession().catch(error => {
+        console.error('Error handling auth state change:', error);
+      });
     });
 
     validateSession();

@@ -214,6 +214,9 @@ class AtomicSeatLockService {
 
       console.log('✅ [ATOMIC_UNLOCK] Asiento desbloqueado exitosamente:', unlockedRow);
       
+      // Obtener tenant_id para auditoría
+      const tenantId = this.getCurrentTenantId();
+      
       // Registrar acción de desbloqueo en auditoría
       auditService.logSeatAction('unlocked', {
         seatId: normalizedSeatId,
