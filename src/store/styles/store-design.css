@@ -1384,9 +1384,325 @@
   }
 }
 
+@keyframes bounce {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-5px);
+  }
+}
+
 /* Fallback para navegadores que no soportan :has() */
 @media (max-width: 768px) {
   .seat-selection-page-with-cart {
     padding-bottom: 120px !important;
   }
+}
+
+/* ============================================
+   ACCOUNT MODAL STYLES - MODERN DESIGN
+   ============================================ */
+
+.account-modal-wrapper .ant-modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.account-modal {
+  border-radius: 16px;
+}
+
+.account-modal-panel {
+  background: white;
+  border-radius: 16px;
+  position: relative;
+  padding: 0;
+}
+
+.account-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+  color: #666;
+}
+
+.account-modal-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: rotate(90deg);
+}
+
+.account-modal-header {
+  text-align: center;
+  padding: 32px 24px 24px;
+  background: linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%);
+  color: white;
+}
+
+.account-modal-avatar {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.account-modal-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: white;
+}
+
+.account-modal-subtitle {
+  font-size: 14px;
+  margin: 0;
+  opacity: 0.9;
+  color: white;
+}
+
+.account-modal-tabs {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  background: white;
+}
+
+.account-modal-tab {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+
+.account-modal-tab:hover {
+  color: var(--store-primary);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.account-modal-tab.is-active {
+  color: var(--store-primary);
+  border-bottom-color: var(--store-primary);
+}
+
+.account-form {
+  padding: 24px;
+  background: white;
+}
+
+.account-form-field {
+  margin-bottom: 20px;
+}
+
+.account-form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.account-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.account-input-icon {
+  position: absolute;
+  left: 12px;
+  color: #9ca3af;
+  font-size: 16px;
+  z-index: 1;
+}
+
+.account-input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: white;
+}
+
+.account-input:focus {
+  outline: none;
+  border-color: var(--store-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.account-password-toggle {
+  position: absolute;
+  right: 12px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.account-password-toggle:hover {
+  color: var(--store-primary);
+}
+
+.account-submit {
+  margin-top: 24px;
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.account-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.account-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.account-link-muted {
+  display: block;
+  text-align: center;
+  margin-top: 16px;
+  color: #6b7280;
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.account-link-muted:hover {
+  color: var(--store-primary);
+}
+
+.account-form-error {
+  padding: 12px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Header buttons improved */
+.store-header .store-button-primary {
+  background: linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.store-header .store-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+}
+
+.store-header .store-button-outline {
+  background: transparent;
+  border: 2px solid white;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.store-header .store-button-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+}
+
+.store-header .mobile-action-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: white;
+  font-size: 18px;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.store-header .mobile-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+/* Fix para el input del buscador en ModernStorePage */
+.store-card-body .ant-input-search {
+  display: flex;
+  align-items: center;
+}
+
+.store-card-body .ant-input-search .ant-input {
+  line-height: 1.5;
+  padding: 8px 11px;
+  height: auto;
+  display: flex;
+  align-items: center;
+}
+
+.store-card-body .ant-input-search .ant-input-group-wrapper {
+  display: flex;
+  align-items: stretch;
+}
+
+.store-card-body .ant-input-search-input {
+  display: flex;
+  align-items: center;
+}
+
+.store-card-body .ant-input-search .ant-input-search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
 }

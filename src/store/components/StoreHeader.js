@@ -372,22 +372,23 @@ const Header = ({ onLogin, onLogout }) => {
             )}
           </nav>
 
-          {/* Desktop Search */}
-          <div className="hidden md:flex store-header search-container">
-            <input
-              type="text"
-              placeholder={t('search.placeholder')}
-              className="store-header search-input"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-            <button onClick={handleSearch} className="store-header search-button">
-              {t('search.button')}
-            </button>
+          {/* Desktop Language Selector */}
+          <div className="hidden md:flex items-center gap-3">
             <select 
               value={i18n.language} 
               onChange={e => i18n.changeLanguage(e.target.value)} 
               className="store-header language-selector"
+              style={{
+                padding: '8px 12px',
+                border: '1px solid var(--store-border-light)',
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                color: 'var(--store-text-primary)',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
             >
               <option value="es">ES</option>
               <option value="en">EN</option>
@@ -409,14 +410,6 @@ const Header = ({ onLogin, onLogout }) => {
 
           {/* Mobile Actions */}
           <div className="mobile-actions flex lg:hidden items-center gap-2">
-            {/* Mobile Search Toggle */}
-            <button 
-              onClick={() => setIsSearchVisible(!isSearchVisible)}
-              className="store-header mobile-action-btn"
-            >
-              <SearchOutlined />
-            </button>
-            
             {/* Mobile Account */}
             {isAuthenticated ? (
               <LinkWithRef to="/store/perfil" className="store-header mobile-action-btn">
@@ -447,23 +440,6 @@ const Header = ({ onLogin, onLogout }) => {
           </div>
         </div>
 
-        {/* Mobile Search Bar */}
-        {isSearchVisible && (
-          <div className="md:hidden pb-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder={t('search.placeholder')}
-                className="store-header search-input flex-1"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-              <button onClick={handleSearch} className="store-header search-button">
-                {t('search.button')}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Mobile Menu Drawer */}

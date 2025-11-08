@@ -345,9 +345,9 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   }
 
   return (
-    <div className={`seat-selection-page store-container ${isMobile ? 'seat-selection-page-with-cart' : ''}`} style={{ 
+    <div className="seat-selection-page store-container" style={{ 
       padding: isMobile ? '12px' : '24px',
-      paddingBottom: isMobile ? '120px' : '24px',
+      paddingBottom: isMobile ? '24px' : '24px',
       display: 'flex',
       flexDirection: isMobile ? 'column' : 'row',
       gap: isMobile ? '16px' : '24px',
@@ -418,29 +418,45 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         </div>
       </div>
 
-      {/* Carrito - Siempre visible */}
+      {/* Carrito - Siempre visible, debajo del mapa en mobile */}
       <div 
-        className={`store-card ${isMobile ? 'store-cart-floating' : ''}`}
+        className="store-card"
         style={{
-          position: isMobile ? 'fixed' : 'relative',
-          bottom: isMobile ? 0 : 'auto',
-          left: isMobile ? 0 : 'auto',
-          right: isMobile ? 0 : 'auto',
+          position: 'relative',
           width: isMobile ? '100%' : 'auto',
           flex: isMobile ? '0 0 auto' : '0 0 400px',
           minWidth: isMobile ? '100%' : '350px',
           maxWidth: isMobile ? '100%' : '400px',
-          margin: isMobile ? 0 : '0',
-          borderRadius: isMobile ? '16px 16px 0 0' : 'var(--store-radius-xl)',
-          boxShadow: isMobile ? '0 -4px 20px rgba(0, 0, 0, 0.15)' : 'var(--store-shadow-lg)',
-          zIndex: isMobile ? 1000 : 'auto',
-          maxHeight: isMobile ? '50vh' : '100%',
+          marginTop: isMobile ? '16px' : '0',
+          borderRadius: 'var(--store-radius-xl)',
+          boxShadow: 'var(--store-shadow-lg)',
+          maxHeight: isMobile ? 'none' : '100%',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: 'white'
+          backgroundColor: 'white',
+          border: funcionCartItems.length > 0 && isMobile ? '2px solid var(--store-primary)' : '1px solid var(--store-border-light)'
         }}
       >
+        {funcionCartItems.length > 0 && isMobile && (
+          <div style={{
+            position: 'absolute',
+            top: '-12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'var(--store-primary)',
+            color: 'white',
+            padding: '4px 16px',
+            borderRadius: '20px',
+            fontSize: '12px',
+            fontWeight: 600,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            zIndex: 10,
+            animation: 'bounce 2s infinite'
+          }}>
+            {funcionCartItems.length} asiento{funcionCartItems.length > 1 ? 's' : ''} seleccionado{funcionCartItems.length > 1 ? 's' : ''}
+          </div>
+        )}
         <Cart selectedFunctionId={funcionId} hideCheckoutButton={!isMobile} />
       </div>
     </div>

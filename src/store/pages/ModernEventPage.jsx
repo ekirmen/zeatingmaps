@@ -879,7 +879,7 @@ const ModernEventPage = () => {
         {/* Overlay con gradiente */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
         
-        {/* Contenido del hero */}
+        {/* Contenido del hero - Solo título */}
         <div className="absolute inset-0 flex items-end">
           <div className="w-full px-4 pb-6">
             <div className="max-w-7xl mx-auto w-full">
@@ -889,42 +889,6 @@ const ModernEventPage = () => {
                     <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                       {evento.nombre}
                     </h1>
-                    {/* Información rápida */}
-                    <div className="flex flex-wrap gap-3 mt-3">
-                      <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                        <CalendarOutlined className="text-white mr-2" />
-                        <span className="font-medium text-sm">{formatDateString(evento.fecha_evento)}</span>
-      </div>
-                      {selectedFunctionId && funciones.find(f => f.id === selectedFunctionId) && (
-                        <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                          <ClockCircleOutlined className="text-white mr-2" />
-                          <span className="font-medium text-sm">{funciones.find(f => f.id === selectedFunctionId).hora}</span>
-                        </div>
-                      )}
-                      {venueInfo && (
-                        <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                          <EnvironmentOutlined className="text-white mr-2" />
-                          <span className="font-medium text-sm">{venueInfo.nombre}</span>
-                        </div>
-                      )}
-                      {venueInfo && (venueInfo.direccion || venueAddress) && (
-                        <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                          <EnvironmentOutlined className="text-white mr-2" />
-                          <span className="font-medium text-sm">{venueInfo.direccion || venueAddress}</span>
-                        </div>
-                      )}
-                      {evento.sector && (
-                        <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                          <TeamOutlined className="text-white mr-2" />
-                          <span className="font-medium text-sm">{evento.sector}</span>
-                        </div>
-                      )}
-                    </div>
-                    {evento.descripcion && (
-                      <p className="text-base md:text-lg max-w-2xl opacity-90 leading-relaxed mt-2">
-                        {evento.descripcion}
-                      </p>
-                    )}
                   </div>
                   <div className="flex flex-col items-stretch gap-3">
                     <div className="flex items-center gap-3 justify-end">
@@ -957,20 +921,65 @@ const ModernEventPage = () => {
 
       {/* Contenido principal */}
       <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8 lg:py-12">
-        {/* Estado del evento (bajado desde el hero) */}
-        <div className="flex items-center gap-4 mb-6">
-          <Badge status={eventStatus.status} text={eventStatus.text} />
-          <Tag color={modoVenta.color} className="text-sm">{modoVenta.text}</Tag>
-          {evento.estadoVenta === 'proximamente-countdown' && countdownTarget && cd.remaining > 0 && (
-            <Tag color="geekblue" className="text-sm">📅 {formatCountdown(cd)}</Tag>
-          )}
-          {evento.oculto && (
-            <Tag color="red" icon={<EyeInvisibleOutlined />}>Oculto</Tag>
-          )}
-        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contenido principal */}
           <div className="lg:col-span-2">
+            {/* Información del evento (fecha, lugar, tags) - Movido desde el hero */}
+            <Card className="mb-6 shadow-sm border border-gray-200 rounded-xl">
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center bg-blue-50 rounded-lg px-4 py-2">
+                    <CalendarOutlined className="text-blue-600 mr-2" />
+                    <span className="font-medium text-gray-800">{formatDateString(evento.fecha_evento)}</span>
+                  </div>
+                  {selectedFunctionId && funciones.find(f => f.id === selectedFunctionId) && (
+                    <div className="flex items-center bg-green-50 rounded-lg px-4 py-2">
+                      <ClockCircleOutlined className="text-green-600 mr-2" />
+                      <span className="font-medium text-gray-800">{funciones.find(f => f.id === selectedFunctionId).hora}</span>
+                    </div>
+                  )}
+                  {venueInfo && (
+                    <div className="flex items-center bg-purple-50 rounded-lg px-4 py-2">
+                      <EnvironmentOutlined className="text-purple-600 mr-2" />
+                      <span className="font-medium text-gray-800">{venueInfo.nombre}</span>
+                    </div>
+                  )}
+                  {venueInfo && (venueInfo.direccion || venueAddress) && (
+                    <div className="flex items-center bg-gray-50 rounded-lg px-4 py-2">
+                      <EnvironmentOutlined className="text-gray-600 mr-2" />
+                      <span className="font-medium text-gray-800 text-sm">{venueInfo.direccion || venueAddress}</span>
+                    </div>
+                  )}
+                  {evento.sector && (
+                    <div className="flex items-center bg-orange-50 rounded-lg px-4 py-2">
+                      <TeamOutlined className="text-orange-600 mr-2" />
+                      <span className="font-medium text-gray-800">{evento.sector}</span>
+                    </div>
+                  )}
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                    {tags.map((tag, index) => (
+                      <Tag key={index} color="blue" className="text-sm py-1">
+                        {tag}
+                      </Tag>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Descripción del evento */}
+            {evento.descripcion && (
+              <Card className="mb-6 shadow-sm border border-gray-200 rounded-xl">
+                <div className="prose max-w-none">
+                  <p className="text-base md:text-lg text-gray-700 leading-relaxed">
+                    {evento.descripcion}
+                  </p>
+                </div>
+              </Card>
+            )}
+
             {/* Información básica del evento - solo admin (estilo tickera) */}
             {isTenantAdmin && (
               <Card 
@@ -1047,26 +1056,6 @@ const ModernEventPage = () => {
               </Card>
             )}
 
-            {/* Tags */}
-            {tags.length > 0 && (
-              <Card 
-                title={
-                  <div className="flex items-center">
-                    <TagsOutlined className="text-purple-500 mr-2" />
-                    <span className="text-xl font-semibold">Etiquetas</span>
-                  </div>
-                }
-                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
-              >
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag, index) => (
-                    <Tag key={index} color="blue">
-                      {tag}
-                    </Tag>
-                  ))}
-                </div>
-              </Card>
-            )}
 
             {/* Funciones disponibles */}
             <Card 
@@ -1090,49 +1079,51 @@ const ModernEventPage = () => {
                   {funciones.map((funcion) => (
                     <div 
                       key={funcion.id || funcion._id}
-                      className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                      className={`p-4 md:p-6 border-2 rounded-xl transition-all duration-200 ${
                         selectedFunctionId === (funcion.id || funcion._id)
                           ? 'border-blue-500 bg-blue-50 shadow-md'
                           : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
                       }`}
-                      onClick={() => {
-                        handleFunctionSelect(funcion.id || funcion._id);
-                        const fid = funcion.id || funcion._id;
-                        const url = fid
-                          ? `/store/eventos/${eventSlug}/map?funcion=${fid}`
-                          : `/store/eventos/${eventSlug}/map`;
-                        navigate(url);
-                      }}
                     >
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex items-start md:items-center space-x-4 flex-1">
+                          <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-base md:text-lg flex-shrink-0">
                             {(() => { try { const d = new Date(funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha); return isNaN(d.getTime()) ? '' : d.getDate(); } catch(_) { return ''; } })()}
                           </div>
-                          <div>
-                            <h3 className="text-xl font-semibold text-gray-800">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-1">
                               {formatDateString(funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha)}
                             </h3>
-                            <p className="text-gray-600 flex items-center">
-                              <ClockCircleOutlined className="mr-1" />
-                              {(() => { if (funcion.hora) return funcion.hora; const raw = funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha; if (!raw) return '--:--'; try { const d = new Date(raw); if (isNaN(d.getTime())) return '--:--'; const hh = String(d.getHours()).padStart(2,'0'); const mm = String(d.getMinutes()).padStart(2,'0'); return `${hh}:${mm}`; } catch(_) { return '--:--'; } })()}
-                            </p>
-                            {venueInfo && (
-                              <p className="text-gray-500 text-sm flex items-center">
-                                <EnvironmentOutlined className="mr-1" />
-                                {venueInfo.nombre}
-                              </p>
-                            )}
+                            <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                              <div className="flex items-center">
+                                <ClockCircleOutlined className="mr-1 text-green-600" />
+                                <span>{(() => { if (funcion.hora) return funcion.hora; const raw = funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha; if (!raw) return '--:--'; try { const d = new Date(raw); if (isNaN(d.getTime())) return '--:--'; const hh = String(d.getHours()).padStart(2,'0'); const mm = String(d.getMinutes()).padStart(2,'0'); return `${hh}:${mm}`; } catch(_) { return '--:--'; } })()}</span>
+                              </div>
+                              {venueInfo && (
+                                <div className="flex items-center">
+                                  <EnvironmentOutlined className="mr-1 text-purple-600" />
+                                  <span className="truncate">{venueInfo.nombre}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        {/* Botón Continuar adicional */}
-                        <div className="flex-shrink-0">
+                        {/* Botón Continuar */}
+                        <div className="flex-shrink-0 w-full md:w-auto">
                           <Button
                             type="primary"
+                            size="large"
+                            block={isMobile}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleFunctionSelect(funcion.id || funcion._id);
+                              const fid = funcion.id || funcion._id;
+                              const url = fid
+                                ? `/store/eventos/${eventSlug}/map?funcion=${fid}`
+                                : `/store/eventos/${eventSlug}/map`;
+                              navigate(url);
                             }}
+                            className="md:min-w-[120px]"
                           >
                             Continuar
                           </Button>
