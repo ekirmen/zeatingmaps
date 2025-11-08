@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Alert, Spin } from 'antd';
-import { ShoppingCartOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined } from '@ant-design/icons';
 import LazySeatingMap from '../../components/LazySeatingMap';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import { useCartStore } from '../../store/cartStore';
@@ -60,21 +60,6 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     [cartItems]
   );
   
-  // Formatear tiempo restante
-  const formatTime = (seconds) => {
-    if (!seconds || seconds <= 0) return '00:00';
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-  
-  // Obtener color del temporizador
-  const getTimerColor = () => {
-    if (!timeLeft || timeLeft <= 0) return '#999';
-    if (timeLeft <= 60) return '#ff4d4f'; // Rojo últimos 60 segundos
-    if (timeLeft <= 300) return '#faad14'; // Amarillo últimos 5 minutos
-    return '#52c41a'; // Verde por defecto
-  };
 
   const ensureSessionId = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -360,25 +345,25 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   }
 
   return (
-    <div className={`seat-selection-page store-container ${funcionCartItems.length > 0 && isMobile ? 'seat-selection-page-with-cart' : ''}`} style={{ 
+    <div className={`seat-selection-page store-container ${isMobile ? 'seat-selection-page-with-cart' : ''}`} style={{ 
       padding: isMobile ? '12px' : '24px',
-      paddingBottom: funcionCartItems.length > 0 ? (isMobile ? '120px' : '24px') : (isMobile ? '24px' : '24px'),
+      paddingBottom: isMobile ? '120px' : '24px',
       display: 'flex',
-      flexDirection: isMobile ? 'column' : (funcionCartItems.length > 0 ? 'row' : 'column'),
+      flexDirection: isMobile ? 'column' : 'row',
       gap: isMobile ? '16px' : '24px',
-      height: isMobile ? 'auto' : (funcionCartItems.length > 0 ? 'calc(100vh - 100px)' : 'auto'),
+      height: isMobile ? 'auto' : 'calc(100vh - 100px)',
       overflow: isMobile ? 'visible' : 'hidden',
       maxWidth: '100vw',
       boxSizing: 'border-box'
     }}>
       {/* Mapa de asientos */}
       <div className="store-card" style={{ 
-        marginBottom: isMobile ? (funcionCartItems.length > 0 ? '24px' : '0') : '0',
-        flex: isMobile ? '0 0 auto' : (funcionCartItems.length > 0 ? '1 1 60%' : '1 1 100%'),
+        marginBottom: isMobile ? '24px' : '0',
+        flex: isMobile ? '0 0 auto' : '1 1 60%',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: isMobile ? '400px' : (funcionCartItems.length > 0 ? '100%' : '500px'),
-        maxHeight: isMobile ? '60vh' : (funcionCartItems.length > 0 ? '100%' : '70vh'),
+        minHeight: isMobile ? '400px' : '100%',
+        maxHeight: isMobile ? '60vh' : '100%',
         overflow: 'hidden',
         width: '100%',
         maxWidth: '100%'
@@ -433,93 +418,31 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         </div>
       </div>
 
-      {/* Carrito - Se muestra cuando hay items en el carrito */}
-      {funcionCartItems.length > 0 && (
-        <div 
-          className={`store-card ${isMobile ? 'store-cart-floating' : ''}`}
-          style={{
-            position: isMobile ? 'fixed' : 'relative',
-            bottom: isMobile ? 0 : 'auto',
-            left: isMobile ? 0 : 'auto',
-            right: isMobile ? 0 : 'auto',
-            width: isMobile ? '100%' : 'auto',
-            flex: isMobile ? '0 0 auto' : '0 0 400px',
-            minWidth: isMobile ? '100%' : '350px',
-            maxWidth: isMobile ? '100%' : '400px',
-            margin: isMobile ? 0 : '0',
-            borderRadius: isMobile ? '16px 16px 0 0' : 'var(--store-radius-xl)',
-            boxShadow: isMobile ? '0 -4px 20px rgba(0, 0, 0, 0.15)' : 'var(--store-shadow-lg)',
-            zIndex: isMobile ? 1000 : 'auto',
-            maxHeight: isMobile ? '50vh' : '100%',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: 'white'
-          }}
-        >
-          <div className="store-card-header" style={{ 
-            position: isMobile ? 'sticky' : 'relative',
-            top: 0,
-            background: 'white',
-            zIndex: 10,
-            borderBottom: '1px solid var(--store-gray-200)',
-            padding: isMobile ? '12px 16px' : '16px 24px',
-            display: 'flex',
-            justifyContent: isMobile ? 'space-between' : 'flex-end',
-            alignItems: 'center',
-            flexShrink: 0,
-            flexWrap: isMobile ? 'wrap' : 'nowrap',
-            gap: isMobile ? '8px' : '0'
-          }}>
-            {timeLeft && timeLeft > 0 && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: isMobile ? '6px 10px' : '4px 12px',
-                borderRadius: '20px',
-                background: timeLeft <= 60 ? '#fff1f0' : '#f5f5f5',
-                border: timeLeft <= 60 ? '2px solid #ff4d4f' : 'none',
-                fontSize: isMobile ? '13px' : '14px',
-                fontWeight: 700,
-                color: getTimerColor(),
-                animation: timeLeft <= 60 ? 'pulse 2s infinite' : 'none'
-              }}>
-                <ClockCircleOutlined />
-                <span>{formatTime(timeLeft)}</span>
-              </div>
-            )}
-            {/* Botón directo a pagar en móvil */}
-            {isMobile && funcionCartItems.length > 0 && (
-              <button
-                onClick={() => navigate('/store/payment')}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  background: 'var(--store-primary)',
-                  color: 'white',
-                  border: 'none',
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  marginTop: timeLeft && timeLeft > 0 ? '8px' : '0'
-                }}
-              >
-                Ir a Pagar
-              </button>
-            )}
-          </div>
-          <div className="store-card-body" style={{ 
-            padding: isMobile ? '12px 16px' : '16px 24px',
-            flex: '1 1 auto',
-            overflow: 'auto',
-            WebkitOverflowScrolling: 'touch'
-          }}>
-            <Cart selectedFunctionId={funcionId} />
-          </div>
-        </div>
-      )}
+      {/* Carrito - Siempre visible */}
+      <div 
+        className={`store-card ${isMobile ? 'store-cart-floating' : ''}`}
+        style={{
+          position: isMobile ? 'fixed' : 'relative',
+          bottom: isMobile ? 0 : 'auto',
+          left: isMobile ? 0 : 'auto',
+          right: isMobile ? 0 : 'auto',
+          width: isMobile ? '100%' : 'auto',
+          flex: isMobile ? '0 0 auto' : '0 0 400px',
+          minWidth: isMobile ? '100%' : '350px',
+          maxWidth: isMobile ? '100%' : '400px',
+          margin: isMobile ? 0 : '0',
+          borderRadius: isMobile ? '16px 16px 0 0' : 'var(--store-radius-xl)',
+          boxShadow: isMobile ? '0 -4px 20px rgba(0, 0, 0, 0.15)' : 'var(--store-shadow-lg)',
+          zIndex: isMobile ? 1000 : 'auto',
+          maxHeight: isMobile ? '50vh' : '100%',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: 'white'
+        }}
+      >
+        <Cart selectedFunctionId={funcionId} hideCheckoutButton={!isMobile} />
+      </div>
     </div>
   );
 };

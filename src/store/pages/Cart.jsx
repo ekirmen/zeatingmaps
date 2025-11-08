@@ -138,7 +138,7 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
 };
 
 // Main Cart Component
-const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selectedFunctionId, hideCheckoutButton = false }) => {
+const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selectedFunctionId, hideCheckoutButton = false, showTimer = true }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const cartStore = useCartStore();
@@ -324,60 +324,42 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
     // El carrito se muestra sin requerir sesión; el login se solicita al pagar
 
     return (
-        <div className="store-container store-container-sm">
+        <>
             {/* Facebook Pixel */}
             <FacebookPixel />
 
-            <div className="store-card">
-                <div className="store-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h1 className="store-text-xl md:store-text-2xl store-font-bold">Carrito de Compras</h1>
-                    {timeLeft && timeLeft > 0 && itemCount > 0 && (
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 12px',
-                        borderRadius: '20px',
-                        background: '#f5f5f5',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        color: getTimerColor()
-                      }}>
-                        <ClockCircleOutlined />
-                        <span>{formatTime(timeLeft)}</span>
-                      </div>
-                    )}
-                </div>
-                
-                <div className="store-card-body">
-                    {/* Quick Actions */}
-                    {itemCount > 0 && (
-                        <div className="store-space-y-4 mb-6">
-                            <button
-                                onClick={clearCart}
-                                className="store-button store-button-secondary store-button-sm"
-                            >
-                                <DeleteOutlined />
-                                Limpiar Carrito
-                            </button>
-                        </div>
-                    )}
+            <div className="store-card-header" style={{ 
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderBottom: '1px solid var(--store-gray-200)'
+            }}>
+              <h1 className="store-text-xl md:store-text-2xl store-font-bold">Carrito de Compras</h1>
+            </div>
+            
+            <div className="store-card-body" style={{ flex: '1 1 auto', overflow: 'auto' }}>
+                {/* Quick Actions */}
+                {itemCount > 0 && (
+                    <div className="store-space-y-4 mb-6">
+                        <button
+                            onClick={clearCart}
+                            className="store-button store-button-secondary store-button-sm"
+                        >
+                            <DeleteOutlined />
+                            Limpiar Carrito
+                        </button>
+                    </div>
+                )}
 
-                    {/* Cart Items */}
-                    <div className="max-h-[400px] overflow-y-auto store-space-y-4">
-                        {itemCount === 0 && !currentLocator ? (
-                            <div className="store-text-center store-text-gray-500 py-8">
-                                <ShoppingCartOutlined className="text-4xl mb-2" />
-                                <p className="store-text-lg store-font-medium">No hay items en el carrito</p>
-                                <p className="store-text-sm store-text-gray-400 mt-2">Añade asientos al carrito</p>
-                                <button 
-                                    onClick={() => navigate('/store')}
-                                    className="store-button store-button-primary store-button-lg mt-4"
-                                >
-                                    Explorar Eventos
-                                </button>
-                            </div>
-                ) : (
+                {/* Cart Items */}
+                <div className="max-h-[400px] overflow-y-auto store-space-y-4">
+                    {itemCount === 0 && !currentLocator ? (
+                        <div className="store-text-center store-text-gray-500 py-8">
+                            <ShoppingCartOutlined className="text-4xl mb-2" />
+                            <p className="store-text-lg store-font-medium">No hay items en el carrito</p>
+                            <p className="store-text-sm store-text-gray-400 mt-2">Añade asientos al carrito</p>
+                        </div>
+                    ) : (
                     <>
                             {/* Locator Seats Section */}
                             {currentLocator && locatorSeats.length > 0 && (
@@ -546,58 +528,73 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             </div>
                         )}
                     </>
-                )}
-            </div>
+                    )}
+                </div>
 
-                    {/* Summary and Checkout */}
-                    {(itemCount > 0 || currentLocator) && (
-                        <div className="store-cart-summary">
-                            <div className="store-space-y-3 mb-4">
-                                <div className="store-cart-summary-row">
-                                    <span className="store-text-gray-600">Subtotal:</span>
-                                    <span className="store-font-semibold">${formatPrice(subtotal)}</span>
-                                </div>
-                                {currentLocator && unpaidSeats.length > 0 && (
-                                    <div className="store-cart-summary-row store-text-warning">
-                                        <span>Pendiente de pago:</span>
-                                        <span>${formatPrice((unpaidSeats && Array.isArray(unpaidSeats) ? unpaidSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0))}</span>
-                                    </div>
-                                )}
-                                <div className="store-cart-summary-total">
-                                    <span>Total a pagar:</span>
-                                    <span>${formatPrice(subtotal)}</span>
-                                </div>
+                {/* Summary and Checkout - Siempre visible */}
+                <div className="store-cart-summary" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--store-gray-200)' }}>
+                    {itemCount > 0 && (
+                        <div className="store-space-y-3 mb-4">
+                            <div className="store-cart-summary-row">
+                                <span className="store-text-gray-600">Subtotal:</span>
+                                <span className="store-font-semibold">${formatPrice(subtotal)}</span>
                             </div>
-
-                            <div className="store-space-x-4">
-                                {itemCount > 0 && !hideCheckoutButton && (
-                                    <button 
-                                        onClick={handleCheckout}
-                                        className="store-button store-button-primary store-button-lg store-button-block"
-                                    >
-                                        Proceder al Pago
-                                    </button>
-                                )}
-                                {currentLocator && paidSeats.length > 0 && (
-                                    <button 
-                                        onClick={() => {
-                                            // Trigger bulk download
-                                            const downloadBtn = document.querySelector('[data-bulk-download]');
-                                            if (downloadBtn) downloadBtn.click();
-                                        }}
-                                        className="store-button store-button-secondary store-button-lg store-button-block"
-                                    >
-                                        <DownloadOutlined />
-                                        Descargar Tickets Pagados
-                                    </button>
-                                )}
+                            {currentLocator && unpaidSeats.length > 0 && (
+                                <div className="store-cart-summary-row store-text-warning">
+                                    <span>Pendiente de pago:</span>
+                                    <span>${formatPrice((unpaidSeats && Array.isArray(unpaidSeats) ? unpaidSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0))}</span>
+                                </div>
+                            )}
+                            <div className="store-cart-summary-total">
+                                <span>Total a pagar:</span>
+                                <span>${formatPrice(subtotal)}</span>
                             </div>
+                            {showTimer && timeLeft && timeLeft > 0 && (
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
+                                    padding: '8px 12px',
+                                    borderRadius: '20px',
+                                    background: timeLeft <= 60 ? '#fff1f0' : '#f5f5f5',
+                                    border: timeLeft <= 60 ? '2px solid #ff4d4f' : '1px solid var(--store-gray-200)',
+                                    fontSize: '14px',
+                                    fontWeight: 700,
+                                    color: getTimerColor(),
+                                    animation: timeLeft <= 60 ? 'pulse 2s infinite' : 'none',
+                                    marginTop: '12px'
+                                }}>
+                                    <ClockCircleOutlined />
+                                    <span>Tiempo restante: {formatTime(timeLeft)}</span>
+                                </div>
+                            )}
                         </div>
+                    )}
+                    {itemCount > 0 && !hideCheckoutButton && (
+                        <button 
+                            onClick={handleCheckout}
+                            className="store-button store-button-primary store-button-lg store-button-block"
+                        >
+                            Proceder al Pago
+                        </button>
+                    )}
+                    {currentLocator && paidSeats.length > 0 && (
+                        <button 
+                            onClick={() => {
+                                const downloadBtn = document.querySelector('[data-bulk-download]');
+                                if (downloadBtn) downloadBtn.click();
+                            }}
+                            className="store-button store-button-secondary store-button-lg store-button-block"
+                            style={{ marginTop: '8px' }}
+                        >
+                            <DownloadOutlined />
+                            Descargar Tickets Pagados
+                        </button>
                     )}
                 </div>
             </div>
-            {/* Widget de Validación en Tiempo Real (deshabilitado por solicitud) */}
-        </div>
+        </>
     );
 };
 
