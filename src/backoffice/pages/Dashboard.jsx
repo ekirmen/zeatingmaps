@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Typography, Space, Button, Progress, List, Avatar, Tag } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Row, Col, Card, Typography, Space, Button, Progress, List, Avatar, Tag, Pagination } from 'antd';
 import { 
   CalendarOutlined, 
   UserOutlined, 
@@ -9,13 +9,16 @@ import {
   ArrowDownOutlined,
   EyeOutlined,
   EditOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import DashboardLayout from '../components/DashboardLayout';
 import StatCard from '../components/StatCard';
 import { supabase } from '../../supabaseClient';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
 import { useResponsive } from '../../hooks/useResponsive';
+import { getDashboardStats, invalidateDashboardCache, loadDashboardData } from '../../services/dashboardService';
+import { useTenant } from '../../contexts/TenantContext';
 import '../styles/dashboard-design.css';
 
 const { Title, Text } = Typography;
@@ -29,47 +32,88 @@ const Dashboard = () => {
   });
   const [recentEvents, setRecentEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(5);
   const { addTenantFilter } = useTenantFilter();
   const { isMobile, isTablet } = useResponsive();
+  const tenantContext = useTenant();
+  const currentTenant = tenantContext?.currentTenant || null;
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  // Función optimizada para cargar datos del dashboard
+  const loadDashboardDataOptimized = useCallback(async (forceRefresh = false) => {
     try {
-      setLoading(true);
-      
-      // Cargar estadísticas con filtrado automático por tenant
-      const [eventsCount, usersCount, productsCount] = await Promise.all([
-        addTenantFilter(supabase.from('eventos').select('id', { count: 'exact' })),
-        addTenantFilter(supabase.from('profiles').select('id', { count: 'exact' })),
-        addTenantFilter(supabase.from('productos').select('id', { count: 'exact' }))
-      ]);
+      if (forceRefresh) {
+        setRefreshing(true);
+        // Invalidar caché si se fuerza refresh
+        invalidateDashboardCache(currentTenant?.id);
+      } else {
+        setLoading(true);
+      }
 
-      // Cargar eventos recientes con filtrado automático
-      const { data: recentEventsData } = await addTenantFilter(
-        supabase
-          .from('eventos')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(5)
-      );
-
-      setStats({
-        totalEvents: eventsCount.count || 0,
-        totalUsers: usersCount.count || 0,
-        totalProducts: productsCount.count || 0,
-        totalRevenue: 12500 // Mock data
+      // Usar servicio optimizado con función RPC
+      const dashboardData = await getDashboardStats(currentTenant?.id, {
+        useCache: !forceRefresh,
+        cacheTTL: 2 * 60 * 1000 // 2 minutos
       });
 
-      setRecentEvents(recentEventsData || []);
+      setStats({
+        totalEvents: dashboardData.totalEvents || 0,
+        totalUsers: dashboardData.totalUsers || 0,
+        totalProducts: dashboardData.totalProducts || 0,
+        totalRevenue: dashboardData.totalRevenue || 0
+      });
+
+      setRecentEvents(dashboardData.recentEvents || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      // Fallback a método anterior si falla la RPC
+      try {
+        const [eventsCount, usersCount, productsCount] = await Promise.all([
+          addTenantFilter(supabase.from('eventos').select('id', { count: 'exact' })),
+          addTenantFilter(supabase.from('profiles').select('id', { count: 'exact' })),
+          addTenantFilter(supabase.from('productos').select('id', { count: 'exact' }))
+        ]);
+
+        const { data: recentEventsData } = await addTenantFilter(
+          supabase
+            .from('eventos')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(5)
+        );
+
+        setStats({
+          totalEvents: eventsCount.count || 0,
+          totalUsers: usersCount.count || 0,
+          totalProducts: productsCount.count || 0,
+          totalRevenue: 0
+        });
+
+        setRecentEvents(recentEventsData || []);
+      } catch (fallbackError) {
+        console.error('Error in fallback loading:', fallbackError);
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  }, [currentTenant?.id, addTenantFilter]);
+
+  useEffect(() => {
+    loadDashboardDataOptimized();
+  }, [loadDashboardDataOptimized]);
+
+  // Función para refrescar datos manualmente
+  const handleRefresh = () => {
+    loadDashboardDataOptimized(true);
   };
+
+  // Paginación para eventos recientes
+  const paginatedEvents = recentEvents.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const getEventStatusColor = (status) => {
     switch (status) {
@@ -95,6 +139,14 @@ const Dashboard = () => {
       subtitle="Resumen general de tu ticketera"
       actions={
         <Space>
+          <Button 
+            icon={<ReloadOutlined />} 
+            onClick={handleRefresh}
+            loading={refreshing}
+            title="Refrescar datos"
+          >
+            Actualizar
+          </Button>
           <Button type="primary" icon={<CalendarOutlined />}>
             Crear Evento
           </Button>
@@ -185,9 +237,10 @@ const Dashboard = () => {
             {loading ? (
               <div className="dashboard-loading">Cargando...</div>
             ) : (
-              <List
-                dataSource={recentEvents}
-                renderItem={(event) => (
+              <>
+                <List
+                  dataSource={paginatedEvents}
+                  renderItem={(event) => (
                   <List.Item
                     style={{ padding: '16px 0', borderBottom: '1px solid var(--dashboard-gray-200)' }}
                     actions={[
@@ -214,8 +267,22 @@ const Dashboard = () => {
                       }
                     />
                   </List.Item>
+                  )}
+                />
+                {recentEvents.length > pageSize && (
+                  <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                    <Pagination
+                      current={currentPage}
+                      total={recentEvents.length}
+                      pageSize={pageSize}
+                      onChange={setCurrentPage}
+                      showSizeChanger={false}
+                      showQuickJumper={!isMobile}
+                      size={isMobile ? 'small' : 'default'}
+                    />
+                  </div>
                 )}
-              />
+              </>
             )}
           </div>
         </div>

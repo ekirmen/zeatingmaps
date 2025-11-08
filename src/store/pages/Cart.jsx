@@ -245,7 +245,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
         }
     }, [pendingCheckout, user, navigate]);
 
-    // Check which seats are paid when items change
+    // Check which seats are paid when items change (optimized with batch verification)
     useEffect(() => {
         const checkPaidSeats = async () => {
             if (!filteredItems || filteredItems.length === 0) {
@@ -254,24 +254,52 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
             }
             
             const currentSessionId = localStorage.getItem('anonSessionId');
-            const paidSeatsSet = new Set();
             
-            for (const item of filteredItems) {
+            // Agrupar asientos por función para verificación batch
+            const seatsByFunction = new Map();
+            filteredItems.forEach(item => {
                 const seatId = item.sillaId || item._id || item.id;
                 const functionId = item.functionId || item.funcionId;
                 
                 if (seatId && functionId) {
-                    try {
-                        const seatPaymentChecker = await import('../services/seatPaymentChecker');
-                        const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
-                        
-                        if (paymentCheck.isPaid) {
-                            paidSeatsSet.add(seatId);
-                        }
-                    } catch (error) {
-                        logger.error('Error checking payment status for seat:', seatId, error);
+                    if (!seatsByFunction.has(functionId)) {
+                        seatsByFunction.set(functionId, []);
                     }
+                    seatsByFunction.get(functionId).push(seatId);
                 }
+            });
+            
+            // Verificar todos los asientos en batch por función
+            const paidSeatsSet = new Set();
+            try {
+                const seatPaymentChecker = await import('../services/seatPaymentChecker');
+                
+                // Verificar todas las funciones en paralelo
+                const verificationPromises = Array.from(seatsByFunction.entries()).map(
+                    async ([functionId, seatIds]) => {
+                        try {
+                            const batchResults = await seatPaymentChecker.default.checkSeatsBatch(
+                                seatIds,
+                                functionId,
+                                currentSessionId,
+                                { useCache: true, timeout: 5000 }
+                            );
+                            
+                            // Agregar asientos pagados al Set
+                            batchResults.forEach((result, seatId) => {
+                                if (result.isPaid) {
+                                    paidSeatsSet.add(seatId);
+                                }
+                            });
+                        } catch (error) {
+                            console.error(`Error checking seats for function ${functionId}:`, error);
+                        }
+                    }
+                );
+                
+                await Promise.all(verificationPromises);
+            } catch (error) {
+                console.error('Error checking paid seats:', error);
             }
             
             setPaidSeatsSet(paidSeatsSet);

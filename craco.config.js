@@ -1,8 +1,24 @@
 const path = require('path');
 
+// Configuración para webpack-bundle-analyzer
+const BundleAnalyzerPlugin = process.env.ANALYZE 
+  ? require('webpack-bundle-analyzer').BundleAnalyzerPlugin 
+  : null;
+
 module.exports = {
   webpack: {
     configure: (webpackConfig) => {
+      // Agregar Bundle Analyzer si ANALYZE=true
+      if (process.env.ANALYZE && BundleAnalyzerPlugin) {
+        webpackConfig.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: true,
+            reportFilename: 'bundle-report.html',
+          })
+        );
+      }
+
       // Optimizar para producción
       if (process.env.NODE_ENV === 'production') {
         // Deshabilitar source maps en producción si no se especifica GENERATE_SOURCEMAP
@@ -94,6 +110,15 @@ module.exports = {
             '@': path.resolve(__dirname, 'src'),
           },
           extensions: ['.js', '.jsx', '.json'],
+          // Tree shaking: asegurar que solo se importen exports usados
+          mainFields: ['browser', 'module', 'main'],
+        };
+
+        // Optimizar tree shaking
+        webpackConfig.optimization = {
+          ...webpackConfig.optimization,
+          usedExports: true, // Habilitar tree shaking
+          sideEffects: false, // Asumir que no hay side effects (excepto en archivos específicos)
         };
         
         // Optimizar cache

@@ -193,7 +193,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         const [funcionResult] = await Promise.all([
           supabase
             .from('funciones')
-            .select('sala_id, plantilla_id, plantilla')
+            .select('sala_id, plantilla')
             .eq('id', funcionNumeric)
             .single(),
           preloadModules // Precargar módulos en paralelo (no necesitamos el resultado)
@@ -217,16 +217,20 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         // Cargar plantilla de precios
         let plantillaData = null;
         if (funcion.plantilla) {
-          plantillaData = funcion.plantilla;
-        } else if (funcion.plantilla_id) {
-          const { data: plantilla, error: plantillaError } = await supabase
-            .from('plantillas')
-            .select('*')
-            .eq('id', funcion.plantilla_id)
-            .maybeSingle();
-          
-          if (!plantillaError && plantilla) {
-            plantillaData = plantilla;
+          // Si plantilla es un número (ID), cargar la plantilla desde la tabla
+          if (typeof funcion.plantilla === 'number') {
+            const { data: plantilla, error: plantillaError } = await supabase
+              .from('plantillas')
+              .select('*')
+              .eq('id', funcion.plantilla)
+              .maybeSingle();
+            
+            if (!plantillaError && plantilla) {
+              plantillaData = plantilla;
+            }
+          } else {
+            // Si plantilla ya es un objeto, usarlo directamente
+            plantillaData = funcion.plantilla;
           }
         }
         setPlantillaPrecios(plantillaData);

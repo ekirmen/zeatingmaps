@@ -1,0 +1,380 @@
+/**
+ * Sistema de animaciones optimizado para performance
+ * Usa CSS animations con GPU acceleration y will-change
+ */
+
+/* ============================================
+   PREFERENCIAS DE MOVIMIENTO (Reducir animaciones si el usuario lo prefiere)
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+   DETECCIÓN DE DISPOSITIVOS MÓVILES/BAJOS RECURSOS
+   ============================================ */
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  /* Reducir animaciones complejas en móvil */
+  .animation-complex,
+  .animation-3d {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================
+   ANIMACIONES BASE CON GPU ACCELERATION
+   ============================================ */
+
+/* Fade In */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade Out */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Slide In Up (optimizado con transform) */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Slide In Down */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Slide In Left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translate3d(-20px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Slide In Right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translate3d(20px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Scale In */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale3d(0.9, 0.9, 1);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+/* Pulse (para elementos que necesitan atención) */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale3d(1.05, 1.05, 1);
+  }
+}
+
+/* Shake (para errores) */
+@keyframes shake {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translate3d(-5px, 0, 0);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translate3d(5px, 0, 0);
+  }
+}
+
+/* Spin (para loaders) */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Skeleton Loading Pulse */
+@keyframes skeletonPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ============================================
+   CLASES DE ANIMACIÓN OPTIMIZADAS
+   ============================================ */
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+  will-change: opacity;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.3s ease-out;
+  will-change: opacity;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+.animate-slide-in-down {
+  animation: slideInDown 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+  will-change: transform;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+  will-change: transform;
+}
+
+.animate-skeleton {
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+  will-change: opacity;
+}
+
+/* ============================================
+   TRANSICIONES OPTIMIZADAS CON GPU
+   ============================================ */
+
+/* Transiciones rápidas para hover */
+.transition-fast {
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  will-change: opacity, transform;
+}
+
+/* Transiciones base */
+.transition-base {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  will-change: opacity, transform;
+}
+
+/* Transiciones lentas */
+.transition-slow {
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+/* Transición solo para transform */
+.transition-transform {
+  transition: transform 0.2s ease-out;
+  will-change: transform;
+}
+
+/* Transición solo para opacity */
+.transition-opacity {
+  transition: opacity 0.2s ease-out;
+  will-change: opacity;
+}
+
+/* ============================================
+   UTILIDADES DE PERFORMANCE
+   ============================================ */
+
+/* GPU acceleration para elementos animados */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimizar rendering de elementos que se animarán */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-auto {
+  will-change: auto;
+}
+
+/* Remover will-change después de la animación (usar con JavaScript) */
+.will-change-none {
+  will-change: auto;
+}
+
+/* ============================================
+   ANIMACIONES PARA COMPONENTES ESPECÍFICOS
+   ============================================ */
+
+/* Card hover animation */
+.card-hover {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  will-change: transform;
+}
+
+.card-hover:hover {
+  transform: translate3d(0, -2px, 0);
+}
+
+/* Button press animation */
+.button-press {
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.button-press:active {
+  transform: scale3d(0.98, 0.98, 1);
+}
+
+/* Modal entrance */
+.modal-entrance {
+  animation: scaleIn 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+/* Toast notification */
+.toast-entrance {
+  animation: slideInRight 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+.toast-exit {
+  animation: fadeOut 0.3s ease-out;
+  will-change: opacity;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  will-change: transform;
+}
+
+/* Skeleton loader */
+.skeleton-loader {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+  will-change: background-position;
+}
+
+/* ============================================
+   OPTIMIZACIONES PARA MÓVIL
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Desactivar animaciones complejas en móvil */
+  .animation-disable-mobile {
+    animation: none !important;
+    transition: opacity 0.2s ease-out !important;
+  }
+
+  /* Reducir duración de animaciones en móvil */
+  .animate-fade-in,
+  .animate-slide-in-up,
+  .animate-scale-in {
+    animation-duration: 0.2s;
+  }
+
+  /* Desactivar hover effects en móvil (no tienen hover) */
+  .card-hover:hover {
+    transform: none;
+  }
+}
+
+/* ============================================
+   PERFORMANCE: Limpiar will-change después de animaciones
+   ============================================ */
+
+/* Nota: Estos estilos deben aplicarse con JavaScript después de que termine la animación
+   para evitar memory leaks. Ejemplo:
+   
+   element.addEventListener('animationend', () => {
+     element.classList.remove('will-change-transform');
+     element.classList.add('will-change-none');
+   });
+*/
+

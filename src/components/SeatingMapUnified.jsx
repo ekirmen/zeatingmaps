@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useMemo, useState, useEffect, memo } from 'react';
-import { Stage, Layer, Circle, Rect, Text, Line, Image } from 'react-konva';
+import { Stage, Image } from 'react-konva';
 import { Button, Space } from 'antd';
 import { ZoomInOutlined, ZoomOutOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useSeatLockStore } from './seatLockStore';
@@ -9,12 +9,15 @@ import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
 import seatPaymentChecker from '../services/seatPaymentChecker';
 import SeatStatusLegend from './SeatStatusLegend';
 import SeatLockDebug from './SeatLockDebug';
-import SeatWithTooltip from './SeatWithTooltip';
-// import VisualNotifications from '../utils/VisualNotifications'; // Removido por no usarse
+import SeatLayer from './SeatLayer';
+import TableLayer from './TableLayer';
+import BackgroundLayer from './BackgroundLayer';
+import MapElementsLayer from './MapElementsLayer';
 import resolveImageUrl from '../utils/resolveImageUrl';
 import logger from '../utils/logger';
-import { getWebPUrl, preloadOptimizedImage } from '../utils/imageOptimizer';
+import { getWebPUrl } from '../utils/imageOptimizer';
 import clickThrottle from '../utils/clickThrottle';
+import { debounce } from '../utils/debounce';
 
 // Cache global para imágenes de fondo para evitar recargas constantes
 const backgroundImageCache = new Map();
@@ -143,6 +146,9 @@ const BackgroundImage = React.memo(({ config }) => {
 // Agregar displayName para mejor debugging
 BackgroundImage.displayName = 'BackgroundImage';
 
+// Exportar BackgroundImage para uso en BackgroundLayer
+export { BackgroundImage };
+
 const SeatingMapUnified = ({
   funcionId,
   mapa,
@@ -199,23 +205,35 @@ const SeatingMapUnified = ({
     return null;
   }, [funcionId]);
 
-  // Estado para controles de zoom
-  const [scale, setScale] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  // Estado para controles de zoom (optimizado: actualizar directamente en el Stage)
+  const stageRef = useRef(null);
   const [forceRefresh, setForceRefresh] = useState(0);
   
-  // Funciones para controles de zoom
+  // Funciones para controles de zoom (actualizar directamente en el Stage para mejor performance)
   const handleZoomIn = useCallback(() => {
-    setScale(prevScale => Math.min(prevScale * 1.2, 3));
+    const stage = stageRef.current;
+    if (!stage) return;
+    const currentScale = stage.scaleX();
+    const newScale = Math.min(currentScale * 1.2, 3);
+    stage.scale({ x: newScale, y: newScale });
+    stage.batchDraw();
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setScale(prevScale => Math.max(prevScale / 1.2, 0.3));
+    const stage = stageRef.current;
+    if (!stage) return;
+    const currentScale = stage.scaleX();
+    const newScale = Math.max(currentScale / 1.2, 0.3);
+    stage.scale({ x: newScale, y: newScale });
+    stage.batchDraw();
   }, []);
 
   const handleResetZoom = useCallback(() => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
+    const stage = stageRef.current;
+    if (!stage) return;
+    stage.scale({ x: 1, y: 1 });
+    stage.position({ x: 0, y: 0 });
+    stage.batchDraw();
   }, []);
 
   // const channel = useSeatLockStore(state => state.channel); // Removido por no usarse
@@ -240,9 +258,12 @@ const SeatingMapUnified = ({
   }, [seatStatesMapRaw, seatStatesVersion]);
   
   // Usar directamente el Map del store en lugar de crear uno nuevo
-  const seatStatesMapForColor = seatStatesMapRaw instanceof Map ? seatStatesMapRaw : new Map();
-  const subscribeToFunction = useSeatLockStore(state => state.subscribeToFunction);
-  const unsubscribe = useSeatLockStore(state => state.unsubscribe);
+  const seatStatesMapForColor = useMemo(
+    () => seatStatesMapRaw instanceof Map ? seatStatesMapRaw : new Map(),
+    [seatStatesMapRaw]
+  );
+  
+  // Hook de colores (memoizado por funcionId)
   const { getSeatColor, getBorderColor } = useSeatColors(normalizedFuncionId);
 
   // Suscribirse a cambios en tiempo real cuando el componente se monta (optimizado)
@@ -308,8 +329,13 @@ const SeatingMapUnified = ({
     };
   }, []);
 
-  // Obtener items del carrito usando el hook para que se actualice automáticamente
-  const cartItems = useCartStore(state => state.items);
+  // Obtener items del carrito usando selector específico (optimizado)
+  // Memoizar para evitar re-renders cuando los items no cambian realmente
+  const cartItemsRaw = useCartStore(state => state.items);
+  const cartItems = useMemo(() => {
+    // Retornar referencia estable si no hay cambios reales
+    return cartItemsRaw;
+  }, [cartItemsRaw?.length, cartItemsRaw?.map(item => item.sillaId || item.id || item._id).join(',')]);
   
   const selectedSeatIds = useMemo(() => {
     // Obtener asientos seleccionados desde diferentes fuentes
@@ -391,9 +417,6 @@ const SeatingMapUnified = ({
   // Controlar visibilidad del panel de depuración de locks (oculto por defecto)
   const shouldShowSeatLockDebug =
     typeof window !== 'undefined' && window.__SHOW_SEAT_LOCK_DEBUG === true;
-  
-  // Referencia al stage de Konva
-  const stageRef = useRef(null);
   
   // Usar hook de sincronización para obtener asientos con estado real
   // SOLO usar el mapa original para evitar re-renders innecesarios
@@ -670,8 +693,8 @@ const SeatingMapUnified = ({
 
 
 
-  // Función para manejar el zoom del mapa
-  const handleWheel = useCallback((e) => {
+  // Función para manejar el zoom del mapa (con debounce para mejor performance)
+  const handleWheelInternal = useCallback((e) => {
     e.evt.preventDefault();
     
     const stage = stageRef.current;
@@ -680,23 +703,32 @@ const SeatingMapUnified = ({
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
     
+    if (!pointer) return; // Evitar errores si no hay posición del puntero
+    
     const mousePointTo = {
       x: (pointer.x - stage.x()) / oldScale,
       y: (pointer.y - stage.y()) / oldScale,
     };
 
     const newScale = e.evt.deltaY > 0 ? oldScale * 0.9 : oldScale * 1.1;
+    const clampedScale = Math.max(0.3, Math.min(3, newScale)); // Limitar zoom entre 0.3x y 3x
     
-    stage.scale({ x: newScale, y: newScale });
+    stage.scale({ x: clampedScale, y: clampedScale });
     
     const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
+      x: pointer.x - mousePointTo.x * clampedScale,
+      y: pointer.y - mousePointTo.y * clampedScale,
     };
     
     stage.position(newPos);
     stage.batchDraw();
   }, []);
+
+  // Debounce del zoom para evitar re-renders excesivos (16ms = ~60fps)
+  const handleWheel = useMemo(
+    () => debounce(handleWheelInternal, 16),
+    [handleWheelInternal]
+  );
 
      // Usar asientos sincronizados del hook
   const allSeats = memoizedSeats;
@@ -847,12 +879,14 @@ const SeatingMapUnified = ({
 
   // Create a set of found seat IDs for quick lookup
 
-  // Detectar si es móvil
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-  
-  // Ajustar dimensiones del Stage para móvil
-  const stageWidth = isMobile ? Math.min(maxX + 50, window.innerWidth - 40) : maxX + 50;
-  const stageHeight = isMobile ? Math.min(maxY + 50, window.innerHeight - 200) : maxY + 50;
+  // Memoizar dimensiones del Stage (solo recalcular si cambian las dimensiones máximas)
+  const stageDimensions = useMemo(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    return {
+      width: isMobile ? Math.min(maxX + 50, window.innerWidth - 40) : maxX + 50,
+      height: isMobile ? Math.min(maxY + 50, window.innerHeight - 200) : maxY + 50
+    };
+  }, [maxX, maxY]);
 
   return (
     <div style={{ 
@@ -906,8 +940,8 @@ const SeatingMapUnified = ({
         overscrollBehavior: 'contain'
       }}>
         <Stage
-          width={stageWidth}
-          height={stageHeight}
+          width={stageDimensions.width}
+          height={stageDimensions.height}
           style={{ 
             border: '1px solid #ccc',
             maxWidth: '100%',
@@ -916,327 +950,30 @@ const SeatingMapUnified = ({
           onWheel={handleWheel}
           draggable
           ref={stageRef}
-          scaleX={scale}
-          scaleY={scale}
-          x={position.x}
-          y={position.y}
         >
-        <Layer>
-          {/* Background images */}
-          {backgroundElements.map(bg => (
-            <BackgroundImage 
-              key={`bg_${bg._id || bg.id || bg.imageUrl || bg.url || bg.src}`} 
-              config={bg} 
-            />
-          ))}
+          {/* Background Layer - Separado para mejor performance */}
+          <BackgroundLayer backgroundElements={backgroundElements} />
 
-          {/* Renderizar mesas primero (para que estén detrás de las sillas) */}
-          {validatedMesas.map((mesa) => {
-            if (mesa.shape === 'circle') {
-              const centerX = mesa.x || mesa.posicion?.x || 0;
-              const centerY = mesa.y || mesa.posicion?.y || 0;
-              const radius = mesa.radius || (mesa.width || 60) / 2;
-              return (
-                <React.Fragment key={`mesa_${mesa._id}`}>
-                  <Circle
-                    x={centerX}
-                    y={centerY}
-                    radius={radius}
-                    fill="#f0f0f0"
-                    stroke="#666"
-                    strokeWidth={2}
-                    opacity={0.8}
-                  />
-                  <Text
-                    x={centerX - radius}
-                    y={centerY - 7}
-                    width={radius * 2}
-                    align="center"
-                    text={mesa.nombre || ''}
-                    fontSize={14}
-                    fill="#000"
-                  />
-                </React.Fragment>
-              );
-            } else if (mesa.shape === 'rect') {
-              const x = mesa.x || mesa.posicion?.x || 0;
-              const y = mesa.y || mesa.posicion?.y || 0;
-              const width = mesa.width || 120;
-              const height = mesa.height || 80;
-              return (
-                <React.Fragment key={`mesa_${mesa._id}`}>
-                  <Rect
-                    x={x}
-                    y={y}
-                    width={width}
-                    height={height}
-                    fill="#f0f0f0"
-                    stroke="#666"
-                    strokeWidth={2}
-                    opacity={0.8}
-                  />
-                  <Text
-                    x={x}
-                    y={y + height / 2 - 7}
-                    width={width}
-                    align="center"
-                    text={mesa.nombre || ''}
-                    fontSize={14}
-                    fill="#000"
-                  />
-                </React.Fragment>
-              );
-            }
-            return null;
-          })}
+          {/* Table Layer - Separado para mejor performance */}
+          <TableLayer mesas={validatedMesas} />
 
-          {/* Renderizar asientos */}
-          {validatedSeats.map((seat) => {
-            const isSelected = selectedSeatIds.has((seat._id || '').toString());
-            const locked = false; // Se maneja a través de seatStates
-            const lockedByMe = false; // Simplificado - se maneja a través de seatStates
+          {/* Seat Layer - Separado para mejor performance */}
+          <SeatLayer
+            seats={validatedSeats}
+            selectedSeatIds={selectedSeatIds}
+            seatStates={seatStates}
+            seatStatesMapForColor={seatStatesMapForColor}
+            validatedZonas={validatedZonas}
+            selectedSeatList={selectedSeatList}
+            onSeatClick={handleSeatClick}
+            getSeatColor={getSeatColor}
+            getBorderColor={getBorderColor}
+            allLockedSeats={allLockedSeats}
+            blockedSeats={blockedSeats}
+          />
 
-            // Determinar estado visual - priorizar seatStates del store para sincronización en tiempo real
-            let seatEstado = seat.estado;
-            
-            // Verificar si hay un estado actualizado en el store (tiempo real)
-            const storeState = seatStates?.[seat._id] || 
-              (seatStatesMapForColor instanceof Map ? seatStatesMapForColor.get(seat._id) : null);
-            if (storeState) {
-              // Usando estado del store para asiento
-              seatEstado = storeState;
-            } else {
-              // Fallback a la lógica original si no hay estado en el store
-              // Verificar si está bloqueado localmente (desde props)
-              const isLocallyBlocked = blockedSeats && blockedSeats.has && blockedSeats.has(seat._id);
-              
-              if (isLocallyBlocked) {
-                seatEstado = 'locked'; // Bloqueo local
-              } else if (locked) {
-                const lock = Array.isArray(allLockedSeats)
-                  ? allLockedSeats.find(l => l.seat_id === seat._id)
-                  : null;
-                const lockStatus = lock?.status || 'locked';
-                
-                // Usar estados estándar consistentes con boleteria
-                if (lockStatus === 'seleccionado') {
-                  seatEstado = lockedByMe ? 'seleccionado' : 'seleccionado_por_otro';
-                } else if (lockStatus === 'locked') {
-                  seatEstado = 'locked'; // Bloqueo permanente
-               } else if (lockStatus === 'vendido') {
-                 seatEstado = 'vendido';
-               } else if (lockStatus === 'reservado') {
-                 seatEstado = 'reservado';
-               } else if (lockStatus === 'anulado') {
-                 seatEstado = 'anulado';
-               } else {
-                 seatEstado = lockedByMe ? 'seleccionado' : 'seleccionado_por_otro';
-               }
-             }
-            }
-
-             // Debug logs removed for performance
-
-            const seatData = { ...seat, estado: seatEstado };
-            
-            // Buscar la zona del asiento con guardas para evitar errores cuando falten zonas/asientos
-            const seatZona = (
-              Array.isArray(validatedZonas)
-                ? validatedZonas.find(z => Array.isArray(z?.asientos) && z.asientos.some(a => a._id === seat._id))
-                : null
-            ) || (Array.isArray(validatedZonas) ? validatedZonas[0] : null);
-            
-            // Usar directamente el Map del store para getSeatColor
-            const seatStatesForColor = seatStatesMapForColor;
-            
-            const seatColor = getSeatColor(
-              seatData,
-              seatZona,
-              isSelected,
-              selectedSeatList,
-              allLockedSeats,
-              seatStatesForColor
-            );
-            
-            // Determinar si está seleccionado por mí basado en seatStates (más confiable que isSelected del carrito)
-            const isSelectedByMe = storeState === 'seleccionado';
-            const isSelectedByOther = storeState === 'seleccionado_por_otro';
-            
-            // Usar el color del store para determinar el borde también
-            const borderColor = getBorderColor({
-              isSelected: isSelectedByMe || isSelected,
-              zona: seatZona,
-              seatColor
-            });
-            const highlightStroke = (isSelectedByMe || isSelectedByOther || isSelected)
-              ? seatColor
-              : borderColor;
-            const highlightShadowColor = (isSelectedByMe || isSelectedByOther || isSelected)
-              ? seatColor
-              : 'rgba(0, 0, 0, 0.3)';
-            const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
-
-            return (
-              <SeatWithTooltip
-                key={`seat_${seat._id}`}
-                seat={seatData}
-                seatColor={seatColor}
-                highlightStroke={highlightStroke}
-                strokeWidth={(isSelectedByMe || isSelectedByOther || isSelected) ? 3 : 2}
-                shadowColor={highlightShadowColor}
-                shadowBlur={(isSelectedByMe || isSelectedByOther || isSelected) ? 12 : 5}
-                shadowOffset={{ x: 2, y: 2 }}
-                shadowOpacity={(isSelectedByMe || isSelectedByOther || isSelected) ? 0.45 : 0.3}
-                seatName={seatName}
-                onSeatClick={() => handleSeatClick(seatData)}
-                x={seat.x || seat.posicion?.x || 0}
-                y={seat.y || seat.posicion?.y || 0}
-                radius={seat.width ? seat.width / 2 : 10}
-              />
-            );
-          })}
-
-          {/* Renderizar otros elementos del mapa */}
-          {(Array.isArray(mapa?.contenido) ? mapa.contenido : mapa?.contenido?.elementos || []).map((elemento, index) => {
-            // Filtrar elementos que ya se renderizaron como mesas o asientos
-            if (elemento.type === 'mesa' || elemento.shape === 'circle' || elemento.shape === 'rect') {
-              return null;
-            }
-            
-            // Filtrar elementos de fondo que no deberían ser clickeables
-            if (elemento._id && (
-              elemento._id.startsWith('bg_') || 
-              elemento._id.startsWith('txt_') || 
-              elemento.type === 'background' ||
-              elemento.type === 'text'
-            )) {
-              return null;
-            }
-            
-            // Renderizar elementos de texto
-            if (elemento.type === 'Text' || elemento.text) {
-              return (
-                <Text
-                  key={`text_${index}`}
-                  x={elemento.x || elemento.posicion?.x || 0}
-                  y={elemento.y || elemento.posicion?.y || 0}
-                  text={elemento.text || elemento.nombre || ''}
-                  fontSize={elemento.fontSize || 14}
-                  fill={elemento.fill || '#000'}
-                  fontFamily={elemento.fontFamily || 'Arial'}
-                />
-              );
-            }
-            
-            // Renderizar líneas
-            if (elemento.type === 'Line' || elemento.points) {
-              return (
-                <Line
-                  key={`line_${index}`}
-                  points={elemento.points || [0, 0, 100, 100]}
-                  stroke={elemento.stroke || '#000'}
-                  strokeWidth={elemento.strokeWidth || 1}
-                />
-              );
-            }
-            
-            // Renderizar formas geométricas (herramientas del plano)
-            if (elemento._id && elemento._id.startsWith('shape_')) {
-              // Círculo
-              if (elemento.type === 'Circle' || elemento.shape === 'circle') {
-                return (
-                  <Circle
-                    key={`shape_circle_${index}`}
-                    x={elemento.x || elemento.posicion?.x || 0}
-                    y={elemento.y || elemento.posicion?.y || 0}
-                    radius={elemento.radius || (elemento.width ? elemento.width / 2 : 20)}
-                    fill={elemento.fill || '#e0e0e0'}
-                    stroke={elemento.stroke || '#999'}
-                    strokeWidth={elemento.strokeWidth || 2}
-                    opacity={elemento.opacity || 0.8}
-                    listening={false} // No clickeable
-                  />
-                );
-              }
-              
-              // Rectángulo/Cuadrado
-              if (elemento.type === 'Rect' || elemento.shape === 'rect' || elemento.shape === 'square') {
-                return (
-                  <Rect
-                    key={`shape_rect_${index}`}
-                    x={elemento.x || elemento.posicion?.x || 0}
-                    y={elemento.y || elemento.posicion?.y || 0}
-                    width={elemento.width || 40}
-                    height={elemento.height || 40}
-                    fill={elemento.fill || '#e0e0e0'}
-                    stroke={elemento.stroke || '#999'}
-                    strokeWidth={elemento.strokeWidth || 2}
-                    opacity={elemento.opacity || 0.8}
-                    listening={false} // No clickeable
-                  />
-                );
-              }
-              
-              // Triángulo (usando Line para simular)
-              if (elemento.shape === 'triangle') {
-                const x = elemento.x || elemento.posicion?.x || 0;
-                const y = elemento.y || elemento.posicion?.y || 0;
-                const size = elemento.width || 40;
-                const points = [
-                  x, y - size/2,           // Punto superior
-                  x - size/2, y + size/2,  // Punto inferior izquierdo
-                  x + size/2, y + size/2,  // Punto inferior derecho
-                  x, y - size/2            // Cerrar el triángulo
-                ];
-                return (
-                  <Line
-                    key={`shape_triangle_${index}`}
-                    points={points}
-                    fill={elemento.fill || '#e0e0e0'}
-                    stroke={elemento.stroke || '#999'}
-                    strokeWidth={elemento.strokeWidth || 2}
-                    closed={true}
-                    opacity={elemento.opacity || 0.8}
-                    listening={false} // No clickeable
-                  />
-                );
-              }
-            }
-            
-            // Renderizar círculos genéricos
-            if (elemento.type === 'Circle' && !elemento.shape) {
-              return (
-                <Circle
-                  key={`circle_${index}`}
-                  x={elemento.x || elemento.posicion?.x || 0}
-                  y={elemento.y || elemento.posicion?.y || 0}
-                  radius={elemento.radius || elemento.width ? elemento.width / 2 : 20}
-                  fill={elemento.fill || '#ccc'}
-                  stroke={elemento.stroke || '#666'}
-                  strokeWidth={elemento.strokeWidth || 1}
-                />
-              );
-            }
-            
-            // Renderizar rectángulos genéricos
-            if (elemento.type === 'Rect' && !elemento.shape) {
-              return (
-                <Rect
-                  key={`rect_${index}`}
-                  x={elemento.x || elemento.posicion?.x || 0}
-                  y={elemento.y || elemento.posicion?.y || 0}
-                  width={elemento.width || 100}
-                  height={elemento.height || 100}
-                  fill={elemento.fill || '#ccc'}
-                  stroke={elemento.stroke || '#666'}
-                  strokeWidth={elemento.strokeWidth || 1}
-                />
-              );
-            }
-            
-            return null;
-          })}
-        </Layer>
+          {/* Map Elements Layer - Separado para mejor performance */}
+          <MapElementsLayer mapa={mapa} />
         </Stage>
       </div>
     </div>

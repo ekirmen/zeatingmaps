@@ -175,25 +175,27 @@ const EventosPage = ({ forceShowMap = false }) => {
         let plantillaData = null;
 
         if (funcion.plantilla) {
-          // Si la función ya tiene plantilla embebida
-          plantillaData = funcion.plantilla;
-          console.log('[PRECIOS] Plantilla encontrada en función:', plantillaData);
-        } else if (funcion.plantilla_id) {
-          // Si la función tiene plantilla_id, cargarla por separado
-          try {
-            const { data: plantilla, error: plantillaError } = await supabase
-              .from('plantillas')
-              .select('*')
-              .eq('id', funcion.plantilla_id)
-              .maybeSingle();
+          // Si plantilla es un número (ID), cargar la plantilla desde la tabla
+          if (typeof funcion.plantilla === 'number') {
+            try {
+              const { data: plantilla, error: plantillaError } = await supabase
+                .from('plantillas')
+                .select('*')
+                .eq('id', funcion.plantilla)
+                .maybeSingle();
 
-            if (plantillaError) throw plantillaError;
-            if (plantilla) {
-              plantillaData = plantilla;
-              console.log('[PRECIOS] Plantilla cargada por ID:', plantillaData);
+              if (plantillaError) throw plantillaError;
+              if (plantilla) {
+                plantillaData = plantilla;
+                console.log('[PRECIOS] Plantilla cargada por ID:', plantillaData);
+              }
+            } catch (plantillaErr) {
+              console.warn('[PRECIOS] Error cargando plantilla:', plantillaErr);
             }
-          } catch (plantillaErr) {
-            console.warn('[PRECIOS] Error cargando plantilla:', plantillaErr);
+          } else {
+            // Si plantilla ya es un objeto, usarlo directamente
+            plantillaData = funcion.plantilla;
+            console.log('[PRECIOS] Plantilla encontrada en función:', plantillaData);
           }
         }
 

@@ -1364,14 +1364,8 @@
          }
          
          /* Animación de pulso para timer urgente */
-         @keyframes pulse {
-           0%, 100% {
-             opacity: 1;
-           }
-           50% {
-             opacity: 0.7;
-           }
-         }
+/* Pulse animation movida a animations.css para mejor organización */
+/* @keyframes pulse ahora está en src/styles/animations.css */
   
   /* Espaciado inferior cuando hay carrito flotante */
   .seat-selection-page:has(.store-cart-floating) {

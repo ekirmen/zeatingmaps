@@ -778,7 +778,13 @@ export const useSeatLockStore = create((set, get) => ({
 
       const pendingUpdates = new Map();
       let debounceTimer = null;
-      const DEBOUNCE_DELAY = 150; // 150ms de debounce para optimizar sin afectar UX
+      // Optimizado: 100ms para mejor balance entre performance y UX
+      // Reducido de 150ms para mejor responsividad
+      const DEBOUNCE_DELAY = 100;
+      
+      // Set para trackear asientos visibles (se actualiza desde componentes)
+      const visibleSeats = new Set();
+      const prioritySeats = new Set(); // Asientos seleccionados, en carrito, etc.
 
       const processPendingUpdates = () => {
         if (pendingUpdates.size === 0) {
@@ -789,13 +795,25 @@ export const useSeatLockStore = create((set, get) => ({
         const updatesToProcess = Array.from(pendingUpdates.values());
         console.log('🔄 [REALTIME] Procesando', updatesToProcess.length, 'updates en batch');
         pendingUpdates.clear();
+        
+        // Separar updates por prioridad (visibles/seleccionados primero)
+        const priorityUpdates = updatesToProcess.filter(update => 
+          visibleSeats.has(update.normalizedSeatId) || 
+          prioritySeats.has(update.normalizedSeatId)
+        );
+        const normalUpdates = updatesToProcess.filter(update => 
+          !visibleSeats.has(update.normalizedSeatId) && 
+          !prioritySeats.has(update.normalizedSeatId)
+        );
 
-        set((state) => {
-          let currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-          let currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
-          const newSeatStates = new Map(state.seatStates);
+        // Procesar updates prioritarios primero (sincrónicamente)
+        const processUpdates = (updates) => {
+          set((state) => {
+            let currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
+            let currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
+            const newSeatStates = new Map(state.seatStates);
 
-          updatesToProcess.forEach(({ eventType, lock, normalizedSeatId }) => {
+            updates.forEach(({ eventType, lock, normalizedSeatId }) => {
             if (eventType === 'DELETE') {
               if (lock.lock_type === 'table') {
                 currentTables = currentTables.filter(l => l.table_id !== lock.table_id);
@@ -849,13 +867,33 @@ export const useSeatLockStore = create((set, get) => ({
             version: state.seatStatesVersion + 1
           });
 
-          return {
-            lockedSeats: currentSeats,
-            lockedTables: currentTables,
-            seatStates: newSeatStates,
-            seatStatesVersion: state.seatStatesVersion + 1,
-          };
-        });
+            return {
+              lockedSeats: currentSeats,
+              lockedTables: currentTables,
+              seatStates: newSeatStates,
+              seatStatesVersion: state.seatStatesVersion + 1,
+            };
+          });
+        };
+        
+        // Procesar updates prioritarios primero (inmediatamente)
+        if (priorityUpdates.length > 0) {
+          processUpdates(priorityUpdates);
+        }
+        
+        // Procesar updates normales después (usar requestIdleCallback si está disponible)
+        if (normalUpdates.length > 0) {
+          if (typeof window !== 'undefined' && window.requestIdleCallback) {
+            window.requestIdleCallback(() => {
+              processUpdates(normalUpdates);
+            }, { timeout: 200 });
+          } else {
+            // Fallback: usar setTimeout para no bloquear UI
+            setTimeout(() => {
+              processUpdates(normalUpdates);
+            }, 0);
+          }
+        }
       };
 
       const enqueueRealtimeUpdate = (eventType, lock, normalizedSeatId, { immediate = false } = {}) => {
