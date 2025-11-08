@@ -50,7 +50,7 @@ import { useRole } from './RoleBasedAccess';
 const { Sider } = Layout;
 const { Text } = Typography;
 
-const SidebarMenuWithRoles = ({ collapsed, onMenuClick }) => {
+const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasPermission, getRole, isStoreUser } = useRole();
@@ -544,29 +544,32 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick }) => {
       };
     }
   });
+  
+  // Handler para clicks en el menú (para Drawer)
+  const handleMenuClickWrapper = ({ key }) => {
+    // Buscar el item en el menú
+    for (const item of menuItems) {
+      if (item.key === key) {
+        if (item.onClick) {
+          item.onClick();
+        }
+        return;
+      }
+      if (item.children) {
+        const subItem = item.children.find(c => c.key === key);
+        if (subItem && subItem.onClick) {
+          subItem.onClick();
+          return;
+        }
+      }
+    }
+  };
 
-  const isExpanded = !collapsed || temporaryExpanded;
+  const isExpanded = !collapsed || temporaryExpanded || asDrawer;
 
-  return (
-    <Sider
-      trigger={null}
-      collapsible
-      collapsed={!isExpanded}
-      width={250}
-      collapsedWidth={80}
-      className="bg-white shadow-lg mobile-sidebar"
-      style={{
-        overflow: 'auto',
-        height: '100vh',
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
+  // Contenido del menú (reutilizable)
+  const menuContent = (
+    <>
       {/* Header del Sidebar */}
       <div className="p-4 border-b">
         <div className="flex items-center space-x-3">
@@ -607,8 +610,9 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick }) => {
           items={menuItems}
           className="border-0"
           style={{ border: 'none' }}
-          onMouseEnter={handleTemporaryExpansion}
-          onMouseLeave={keepExpanded}
+          onMouseEnter={asDrawer ? undefined : handleTemporaryExpansion}
+          onMouseLeave={asDrawer ? undefined : keepExpanded}
+          onClick={handleMenuClickWrapper}
         />
       </div>
 
@@ -621,6 +625,40 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick }) => {
           </div>
         </div>
       )}
+    </>
+  );
+
+  // Si es para Drawer, retornar solo el contenido
+  if (asDrawer) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {menuContent}
+      </div>
+    );
+  }
+
+  // Si no, retornar el Sider completo
+  return (
+    <Sider
+      trigger={null}
+      collapsible
+      collapsed={!isExpanded}
+      width={250}
+      collapsedWidth={80}
+      className="bg-white shadow-lg mobile-sidebar"
+      style={{
+        overflow: 'auto',
+        height: '100vh',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
+      {menuContent}
     </Sider>
   );
 };

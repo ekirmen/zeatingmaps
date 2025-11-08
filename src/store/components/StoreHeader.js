@@ -42,9 +42,7 @@ const Header = ({ onLogin, onLogout }) => {
   const [forgotEmail, setForgotEmail] = useState('');
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
-  const [searchTerm, setSearchTerm] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('token');
@@ -255,15 +253,6 @@ const Header = ({ onLogin, onLogout }) => {
     } catch (error) {
       message.error(error.message || 'Error al guardar contraseña');
     }
-  };
-
-  const handleSearch = () => {
-    const base = '/store';
-    const q = encodeURIComponent(searchTerm.trim());
-    const url = refParam
-      ? `${base}?ref=${refParam}&q=${q}`
-      : `${base}?q=${q}`;
-    navigate(url);
   };
 
   const openAccountModal = () => {

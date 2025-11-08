@@ -200,15 +200,18 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                 {/* Mobile Menu Drawer */}
                 {isMobile && !isBoleteriaRoute && (
                   <Drawer
-                    title="Menú"
+                    title={null}
                     placement="left"
                     onClose={() => setMobileMenuOpen(false)}
                     open={mobileMenuOpen}
                     width={280}
-                    bodyStyle={{ padding: 0 }}
+                    bodyStyle={{ padding: 0, height: '100%' }}
+                    headerStyle={{ display: 'none' }}
+                    closable={true}
                   >
                     <SidebarMenuWithRoles 
                       collapsed={false} 
+                      asDrawer={true}
                       onMenuClick={() => setMobileMenuOpen(false)}
                     />
                   </Drawer>

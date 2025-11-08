@@ -228,7 +228,7 @@ const ModernStorePage = () => {
               display: 'grid',
               gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '2fr 1fr 1fr auto',
               gap: 'var(--store-space-4)',
-              alignItems: 'center'
+              alignItems: 'stretch'
             }}>
               <Search
                 placeholder="Buscar eventos..."
@@ -237,7 +237,12 @@ const ModernStorePage = () => {
                 prefix={<SearchOutlined />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: '100%' }}
+                style={{ 
+                  width: '100%'
+                }}
+                onPressEnter={() => {
+                  // Search is handled by the filter effect
+                }}
               />
               
               <Select
