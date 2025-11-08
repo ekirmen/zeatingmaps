@@ -7,11 +7,6 @@ import { EventListSkeleton } from '../../components/SkeletonLoaders';
 
 function EventListWidget({ events, loading = false }) {
   const navigate = useNavigate();
-  
-  // Usar lista virtualizada si hay muchos eventos (más de 20)
-  const shouldUseVirtualized = useMemo(() => {
-    return events && events.length > 20;
-  }, [events?.length]);
 
   const handleViewDetails = (eventSlug) => {
     if (eventSlug) {
@@ -67,6 +62,33 @@ function EventListWidget({ events, loading = false }) {
     }
   };
 
+  // Usar lista virtualizada si hay muchos eventos (más de 20) - mover antes de early returns
+  const shouldUseVirtualized = useMemo(() => {
+    return events && events.length > 20;
+  }, [events?.length]);
+
+  // Preparar eventos para la lista virtualizada (mover antes de early returns)
+  const formattedEvents = useMemo(() => {
+    if (!events || events.length === 0) return [];
+    return events.map(event => {
+      const images = getEventImages(event);
+      const rawImage = images.obraImagen || images.portada || images.banner;
+      const eventName = event.name || event.nombre || 'E';
+      const displayImageUrl = rawImage ? getImageUrl(rawImage) : null;
+      
+      return {
+        id: event.id || event._id,
+        nombre: event.name || event.nombre || 'Evento sin nombre',
+        descripcion: event.descripcion || event.description || '',
+        fecha_inicio: event.fechaInicio || event.fecha_inicio || event.startDate,
+        hora_inicio: event.horaInicio || event.hora_inicio || event.startTime,
+        precio_minimo: event.precioMinimo || event.precio_minimo || event.minPrice,
+        imagen: displayImageUrl,
+        slug: event.slug
+      };
+    });
+  }, [events]);
+
   if (loading) {
     return <EventListSkeleton />;
   }
@@ -78,25 +100,6 @@ function EventListWidget({ events, loading = false }) {
       </div>
     );
   }
-
-  // Preparar eventos para la lista virtualizada (usar funciones auxiliares existentes)
-  const formattedEvents = useMemo(() => events.map(event => {
-    const images = getEventImages(event);
-    const rawImage = images.obraImagen || images.portada || images.banner;
-    const eventName = event.name || event.nombre || 'E';
-    const displayImageUrl = rawImage ? getImageUrl(rawImage) : null;
-    
-    return {
-      id: event.id || event._id,
-      nombre: event.name || event.nombre || 'Evento sin nombre',
-      descripcion: event.descripcion || event.description || '',
-      fecha_inicio: event.fechaInicio || event.fecha_inicio || event.startDate,
-      hora_inicio: event.horaInicio || event.hora_inicio || event.startTime,
-      precio_minimo: event.precioMinimo || event.precio_minimo || event.minPrice,
-      imagen: displayImageUrl,
-      slug: event.slug
-    };
-  }), [events]);
 
   // Usar lista virtualizada para muchos eventos
   if (shouldUseVirtualized) {

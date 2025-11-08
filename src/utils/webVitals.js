@@ -1,8 +1,8 @@
 /**
  * Utilidad para medir y reportar Core Web Vitals
- * LCP, FID, CLS, FCP, TTFB
+ * LCP, INP, CLS, FCP, TTFB
  */
-import { onCLS, onFID, onLCP, onFCP, onTTFB, onINP } from 'web-vitals';
+import { onCLS, onLCP, onFCP, onTTFB, onINP } from 'web-vitals';
 
 /**
  * Reporta métricas de Core Web Vitals
@@ -13,9 +13,6 @@ const reportWebVitals = (onPerfEntry) => {
     // Largest Contentful Paint (LCP)
     onLCP(onPerfEntry);
     
-    // First Input Delay (FID) - deprecated, usar INP
-    onFID(onPerfEntry);
-    
     // Cumulative Layout Shift (CLS)
     onCLS(onPerfEntry);
     
@@ -25,10 +22,8 @@ const reportWebVitals = (onPerfEntry) => {
     // Time to First Byte (TTFB)
     onTTFB(onPerfEntry);
     
-    // Interaction to Next Paint (INP) - nueva métrica
-    if (onINP) {
-      onINP(onPerfEntry);
-    }
+    // Interaction to Next Paint (INP) - reemplaza a FID (First Input Delay)
+    onINP(onPerfEntry);
   }
 };
 

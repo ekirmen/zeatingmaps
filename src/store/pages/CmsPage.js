@@ -31,14 +31,7 @@ const CmsPage = ({ slug }) => {
     fetchPage();
   }, [pageSlug]);
 
-  if (loading) {
-    return <div className="p-6">Cargando...</div>;
-  }
-
-  if (!pageData || !pageData.original_data) {
-    return <NotFoundPage />;
-  }
-
+  // Memoizar renderWidget antes de early returns
   const renderWidget = useCallback((widget, index) => {
     const config = widget.config || {};
 
@@ -74,11 +67,19 @@ const CmsPage = ({ slug }) => {
     }
   }, [events]); // Memoizar renderWidget para evitar recreación
 
-  // Memoizar widgets renderizados
+  // Memoizar widgets renderizados antes de early returns
   const renderedWidgets = useMemo(() => {
     if (!pageData?.widgets?.content) return null;
     return pageData.widgets.content.map((widget, idx) => renderWidget(widget, idx));
   }, [pageData?.widgets?.content, renderWidget]);
+
+  if (loading) {
+    return <div className="p-6">Cargando...</div>;
+  }
+
+  if (!pageData || !pageData.original_data) {
+    return <NotFoundPage />;
+  }
 
   return (
     <div className="p-6">

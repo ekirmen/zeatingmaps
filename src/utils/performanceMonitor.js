@@ -2,7 +2,7 @@
  * Monitor de performance para Core Web Vitals
  * Mide y reporta métricas de rendimiento
  */
-import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
+import { onCLS, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
 
 /**
  * Clase para monitorear performance
@@ -23,12 +23,6 @@ class PerformanceMonitor {
       this.reportMetric('LCP', metric, onMetric);
     });
 
-    // First Input Delay (FID) - deprecated, usar INP
-    onFID((metric) => {
-      this.metrics.fid = metric;
-      this.reportMetric('FID', metric, onMetric);
-    });
-
     // Cumulative Layout Shift (CLS)
     onCLS((metric) => {
       this.metrics.cls = metric;
@@ -47,13 +41,11 @@ class PerformanceMonitor {
       this.reportMetric('TTFB', metric, onMetric);
     });
 
-    // Interaction to Next Paint (INP) - nueva métrica
-    if (onINP) {
-      onINP((metric) => {
-        this.metrics.inp = metric;
-        this.reportMetric('INP', metric, onMetric);
-      });
-    }
+    // Interaction to Next Paint (INP) - reemplaza a FID (First Input Delay)
+    onINP((metric) => {
+      this.metrics.inp = metric;
+      this.reportMetric('INP', metric, onMetric);
+    });
   }
 
   /**
