@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { FixedSizeList, VariableSizeList } from 'react-window';
+import { FixedSizeList } from 'react-window';
 import { Empty, Spin } from 'antd';
 
 /**
@@ -21,30 +21,32 @@ const VirtualizedList = ({
   const listRef = useRef(null);
   const [itemSizes, setItemSizes] = useState(new Map());
 
-  // Calcular altura de items si es variable
-  const getItemSize = useMemo(() => {
+  // Calcular altura de items
+  // Nota: Usamos FixedSizeList siempre para evitar problemas de build con VariableSizeList
+  // Para variableHeight, usamos una altura estimada basada en el promedio de tamaños
+  const calculatedItemHeight = useMemo(() => {
     if (!variableHeight) {
-      return () => itemHeight;
+      return itemHeight;
     }
     
-    return (index) => {
-      return itemSizes.get(index) || itemHeight;
-    };
+    // Si hay tamaños guardados, calcular el promedio
+    if (itemSizes.size > 0) {
+      const sizes = Array.from(itemSizes.values());
+      const average = sizes.reduce((sum, size) => sum + size, 0) / sizes.length;
+      return Math.max(itemHeight, average);
+    }
+    
+    return itemHeight;
   }, [variableHeight, itemHeight, itemSizes]);
 
-  // Actualizar tamaño de un item
+  // Actualizar tamaño de un item (solo para tracking, no afecta el render)
   const updateItemSize = (index, size) => {
-    if (itemSizes.get(index) !== size) {
+    if (variableHeight && itemSizes.get(index) !== size) {
       setItemSizes(prev => {
         const newMap = new Map(prev);
         newMap.set(index, size);
         return newMap;
       });
-      
-      // Recalcular cache de react-window
-      if (listRef.current && variableHeight) {
-        listRef.current.resetAfterIndex(index);
-      }
     }
   };
 
@@ -64,14 +66,14 @@ const VirtualizedList = ({
     );
   }
 
-  const ListComponent = variableHeight ? VariableSizeList : FixedSizeList;
-
+  // Siempre usar FixedSizeList para evitar problemas de build
+  // Si variableHeight es true, usamos una altura estimada calculada
   return (
-    <ListComponent
+    <FixedSizeList
       ref={listRef}
       height={height}
       itemCount={items.length}
-      itemSize={getItemSize}
+      itemSize={calculatedItemHeight}
       width="100%"
       className={className}
       overscanCount={overscanCount}
@@ -87,7 +89,7 @@ const VirtualizedList = ({
         
         return ItemComponent;
       }}
-    </ListComponent>
+    </FixedSizeList>
   );
 };
 
@@ -115,9 +117,9 @@ export const useVirtualizedList = (items, options = {}) => {
       const newMap = new Map(prev);
       if (newMap.get(index) !== clampedHeight) {
         newMap.set(index, clampedHeight);
-        if (listRef.current) {
-          listRef.current.resetAfterIndex(index);
-        }
+        // Nota: resetAfterIndex solo está disponible en VariableSizeList
+        // Con FixedSizeList, no podemos resetear dinámicamente
+        // El componente recalcula la altura promedio automáticamente
         return newMap;
       }
       return prev;
