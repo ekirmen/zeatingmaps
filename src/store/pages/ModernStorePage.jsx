@@ -131,8 +131,25 @@ const ModernStorePage = () => {
     }
   };
 
-  const handleEventClick = (event) => {
-    navigate(`/store/eventos/${event.slug}`);
+  const handleEventClick = (event, e) => {
+    // Prevenir propagación si viene de un evento
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    // Verificar que el evento tenga slug, si no, usar ID como fallback
+    if (!event || (!event.slug && !event.id)) {
+      console.warn('[ModernStorePage] Evento sin slug ni ID:', event);
+      return;
+    }
+    
+    const eventPath = event.slug 
+      ? `/store/eventos/${event.slug}`
+      : `/store/event/${event.id}`;
+    
+    console.log('[ModernStorePage] Navegando a:', eventPath);
+    navigate(eventPath);
   };
 
   if (loading) {
@@ -250,12 +267,12 @@ const ModernStorePage = () => {
                   <Card
                     hoverable
                     className="h-full shadow-lg border-0 overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer"
-                    onClick={() => handleEventClick(event)}
+                    onClick={(e) => handleEventClick(event, e)}
                     cover={
-                      <div className="relative h-48 overflow-hidden">
+                      <div className="relative h-48 overflow-hidden bg-gray-100">
                         <EventImage
                           event={event}
-                          imageType="logoHorizontal"
+                          imageType="banner"
                           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                           showDebug={false}
                         />
@@ -280,11 +297,13 @@ const ModernStorePage = () => {
                     }
                     actions={[
                       <Button 
+                        key="view-details"
                         type="primary" 
                         icon={<EyeOutlined />}
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
-                          handleEventClick(event);
+                          handleEventClick(event, e);
                         }}
                         block
                       >

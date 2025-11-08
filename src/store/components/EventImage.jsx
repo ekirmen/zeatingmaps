@@ -110,25 +110,47 @@ const EventImage = ({
 
   // Usar OptimizedImage para mejor performance
   const finalImageUrl = imageError ? fallbackUrl : (imageUrl || fallbackUrl);
-  const isPriority = imageType === 'banner' || imageType === 'portada'; // Priorizar imágenes principales
+  // Priorizar imágenes principales - siempre priorizar para tarjetas de eventos
+  const isPriority = imageType === 'banner' || imageType === 'portada' || imageType === 'logoHorizontal' || true; // Siempre priorizar en lista de eventos
 
+  // Si no hay URL de imagen válida, mostrar fallback inmediatamente
+  const hasValidImageUrl = imageUrl && imageUrl !== fallbackUrl && !imageUrl.includes('placehold.co');
+  
   return (
-    <div className={`relative overflow-hidden ${className}`}>
-      <OptimizedImage
-        src={finalImageUrl}
-        alt={event?.nombre || event?.name || 'Evento'}
-        className="w-full h-full"
-        priority={isPriority}
-        objectFit="cover"
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-        placeholder={fallbackUrl}
-      />
-      
-      {/* Indicador de carga */}
-      {!imageLoaded && !imageError && (
-        <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
-          <div className="text-gray-400 text-sm">Cargando...</div>
+    <div className={`relative overflow-hidden w-full h-full ${className}`} style={{ minHeight: '192px' }}>
+      {hasValidImageUrl ? (
+        <>
+          <OptimizedImage
+            src={imageUrl}
+            alt={event?.nombre || event?.name || 'Evento'}
+            className="w-full h-full"
+            priority={isPriority}
+            objectFit="cover"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+            placeholder={fallbackUrl}
+          />
+          {/* Indicador de carga */}
+          {!imageLoaded && !imageError && (
+            <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center z-10">
+              <div className="text-gray-400 text-sm">Cargando...</div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div 
+          className="w-full h-full bg-gray-200 flex items-center justify-center"
+          style={{ 
+            backgroundColor: '#f0f2f5',
+            minHeight: '192px'
+          }}
+        >
+          <div 
+            className="text-gray-400 text-4xl font-bold"
+            style={{ color: '#bfbfbf' }}
+          >
+            {fallbackChar}
+          </div>
         </div>
       )}
       

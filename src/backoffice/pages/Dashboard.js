@@ -419,111 +419,137 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="dashboard-container" style={{ 
+      padding: '16px', 
+      backgroundColor: '#f9fafb', 
+      minHeight: '100vh' 
+    }}>
       {/* Header */}
-      <div className="mb-8">
-        <Title level={2}>Dashboard</Title>
-        <Text type="secondary">Resumen general del sistema de boletería</Text>
+      <div style={{ marginBottom: '16px' }}>
+        <Title level={2} style={{ 
+          fontSize: '24px', 
+          marginBottom: '4px',
+          color: '#1f2937'
+        }}>
+          Dashboard
+        </Title>
+        <Text type="secondary" style={{ fontSize: '14px' }}>
+          Resumen general del sistema de boletería
+        </Text>
       </div>
 
       {/* Métricas Principales */}
-      <Row gutter={[16, 16]} className="mb-8">
+      <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card style={{ borderRadius: '8px' }}>
             <Statistic
               title="Ingresos Totales"
               value={stats.totalRevenue}
               precision={2}
-              valueStyle={{ color: '#3f8600' }}
+              valueStyle={{ color: '#3f8600', fontSize: '20px' }}
               prefix={<DollarOutlined />}
             />
             <Progress 
-              percent={Math.min(100, (stats.todaySales / stats.totalRevenue) * 100)} 
+              percent={Math.min(100, stats.totalRevenue > 0 ? (stats.todaySales / stats.totalRevenue) * 100 : 0)} 
               size="small" 
               showInfo={false}
+              style={{ marginTop: '8px' }}
             />
-            <Text type="secondary">Hoy: ${stats.todaySales.toFixed(2)}</Text>
+            <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
+              Hoy: ${stats.todaySales.toFixed(2)}
+            </Text>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card style={{ borderRadius: '8px' }}>
             <Statistic
               title="Tickets Vendidos"
               value={stats.soldTickets}
-              valueStyle={{ color: '#1890ff' }}
+              valueStyle={{ color: '#1890ff', fontSize: '20px' }}
               prefix={<FileTextOutlined />}
             />
             <Progress 
-              percent={Math.min(100, (stats.soldTickets / stats.totalTickets) * 100)} 
+              percent={Math.min(100, stats.totalTickets > 0 ? (stats.soldTickets / stats.totalTickets) * 100 : 0)} 
               size="small" 
               showInfo={false}
+              style={{ marginTop: '8px' }}
             />
-            <Text type="secondary">Total: {stats.totalTickets}</Text>
+            <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
+              Total: {stats.totalTickets}
+            </Text>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card style={{ borderRadius: '8px' }}>
             <Statistic
               title="Usuarios Activos (24h)"
               value={stats.activeUsers}
-              valueStyle={{ color: '#722ed1' }}
+              valueStyle={{ color: '#722ed1', fontSize: '20px' }}
               prefix={<UserOutlined />}
             />
-            <Text type="secondary">
+            <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
               {stats.totalUsers} total • +{stats.newUsersThisWeek} esta semana
             </Text>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card style={{ borderRadius: '8px' }}>
             <Statistic
               title="Pagos Pendientes"
               value={stats.pendingPayments}
-              valueStyle={{ color: '#faad14' }}
+              valueStyle={{ color: '#faad14', fontSize: '20px' }}
               prefix={<ShoppingCartOutlined />}
             />
-            <Text type="secondary">Requieren atención</Text>
+            <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
+              Requieren atención
+            </Text>
           </Card>
         </Col>
       </Row>
 
       {/* Acciones Rápidas */}
-      <Row gutter={[16, 16]} className="mb-8">
+      <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24}>
-          <Card title="Acciones Rápidas">
+          <Card 
+            title="Acciones Rápidas"
+            style={{ borderRadius: '8px' }}
+          >
             <Row gutter={[16, 16]}>
-              <Col xs={24} sm={12} md={6}>
+              <Col xs={24} sm={12} md={8} lg={6}>
                 <Button 
                   type="primary" 
                   size="large" 
                   block
                   icon={<ShoppingCartOutlined />}
                   onClick={() => navigate('/backoffice/boleteria')}
+                  style={{ height: '48px', fontSize: '14px' }}
                 >
                   Boletería
                 </Button>
               </Col>
-              <Col xs={24} sm={12} md={6}>
+              <Col xs={24} sm={12} md={8} lg={6}>
                 <Button
                   type="default"
                   size="large"
                   block
                   icon={<CalendarOutlined />}
                   onClick={() => navigate('/backoffice/eventos')}
+                  style={{ height: '48px', fontSize: '14px' }}
                 >
                   Eventos
                 </Button>
               </Col>
-              <Col xs={24} sm={12} md={6}>
+              <Col xs={24} sm={12} md={8} lg={6}>
                 <Button 
                   type="default" 
                   size="large" 
                   block
                   icon={<FileTextOutlined />}
                   onClick={() => navigate('/backoffice/reportes')}
+                  style={{ height: '48px', fontSize: '14px' }}
                 >
                   Reportes
                 </Button>
@@ -534,35 +560,39 @@ const Dashboard = () => {
       </Row>
 
       {/* Gráficos y Análisis */}
-      <Row gutter={[16, 16]} className="mb-8">
+      <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} lg={16}>
-          <Card title="Ventas por Período" extra={<Button type="link">Ver Detalles</Button>}>
+          <Card 
+            title="Ventas por Período" 
+            extra={<Button type="link" size="small">Ver Detalles</Button>}
+            style={{ borderRadius: '8px' }}
+          >
             <Row gutter={[16, 16]}>
-              <Col span={8}>
+              <Col xs={24} sm={8}>
                 <Statistic
                   title="Esta Semana"
                   value={stats.thisWeekSales}
                   precision={2}
                   prefix="$"
-                  valueStyle={{ color: '#3f8600' }}
+                  valueStyle={{ color: '#3f8600', fontSize: '18px' }}
                 />
               </Col>
-              <Col span={8}>
+              <Col xs={24} sm={8}>
                 <Statistic
                   title="Este Mes"
                   value={stats.thisMonthSales}
                   precision={2}
                   prefix="$"
-                  valueStyle={{ color: '#1890ff' }}
+                  valueStyle={{ color: '#1890ff', fontSize: '18px' }}
                 />
               </Col>
-              <Col span={8}>
+              <Col xs={24} sm={8}>
                 <Statistic
                   title="Hoy"
                   value={stats.todaySales}
                   precision={2}
                   prefix="$"
-                  valueStyle={{ color: '#faad14' }}
+                  valueStyle={{ color: '#faad14', fontSize: '18px' }}
                 />
               </Col>
             </Row>
@@ -570,19 +600,22 @@ const Dashboard = () => {
         </Col>
 
         <Col xs={24} lg={8}>
-          <Card title="Alertas del Sistema">
+          <Card 
+            title="Alertas del Sistema"
+            style={{ borderRadius: '8px' }}
+          >
             <List
               size="small"
               dataSource={systemAlerts}
               renderItem={(alert) => (
-                <List.Item>
+                <List.Item style={{ padding: '8px 0' }}>
                   <List.Item.Meta
                     avatar={getAlertIcon(alert.type)}
-                    title={alert.title}
+                    title={<span style={{ fontSize: '14px' }}>{alert.title}</span>}
                     description={
                       <div>
-                        <Text type="secondary">{alert.message}</Text>
-                        <div className="text-xs text-gray-400 mt-1">
+                        <Text type="secondary" style={{ fontSize: '12px' }}>{alert.message}</Text>
+                        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
                           {alert.time}
                         </div>
                       </div>

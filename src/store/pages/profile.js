@@ -21,6 +21,7 @@ import {
   updateUserProfile,
   getUserStats
 } from '../services/userProfileService';
+import '../styles/profile-mobile.css';
 
 const { TabPane } = Tabs;
 
@@ -169,64 +170,92 @@ const Profile = () => {
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Header del Perfil */}
-      <Card style={{ marginBottom: '24px' }}>
-        <Row gutter={24} align="middle">
-          <Col>
+    <div className="profile-container" style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Header del Perfil - Responsive */}
+      <Card style={{ marginBottom: '16px' }} className="profile-header-card">
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} sm={8} md={6} style={{ textAlign: 'center' }}>
             <Avatar 
-              size={80} 
+              size={{ xs: 64, sm: 80, md: 100 }}
               src={profile?.avatar} 
               icon={<UserOutlined />}
               style={{ border: '3px solid #1890ff' }}
             />
           </Col>
-          <Col flex="1">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h1 style={{ margin: '0 0 8px 0' }}>{profile?.name}</h1>
-                <p style={{ margin: '0 0 4px 0', color: '#666' }}>
-                  <UserOutlined /> {profile?.email}
-                </p>
-                <p style={{ margin: '0 0 4px 0', color: '#666' }}>
-                  <CalendarOutlined /> Miembro desde {profile?.joinDate}
-                </p>
-                <p style={{ margin: '0 0 4px 0', color: '#666' }}>
-                  <SettingOutlined /> {profile?.company}
-                </p>
-                <p style={{ margin: '0 0 4px 0', color: '#666' }}>
-                  <Tag color="blue">{profile?.role}</Tag>
-                </p>
+          <Col xs={24} sm={16} md={18}>
+            <div className="profile-header-info">
+              <div className="profile-header-main">
+                <h1 className="profile-name">{profile?.name}</h1>
+                <div className="profile-details">
+                  <div className="profile-detail-item">
+                    <UserOutlined className="profile-icon" />
+                    <span>{profile?.email}</span>
+                  </div>
+                  <div className="profile-detail-item">
+                    <CalendarOutlined className="profile-icon" />
+                    <span>Miembro desde {profile?.joinDate}</span>
+                  </div>
+                  <div className="profile-detail-item">
+                    <SettingOutlined className="profile-icon" />
+                    <span>{profile?.company}</span>
+                  </div>
+                  <div className="profile-detail-item">
+                    <Tag color="blue">{profile?.role}</Tag>
+                  </div>
+                </div>
               </div>
-              <Space>
-                {editing ? (
-                  <>
-                    <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
-                      Guardar
-                    </Button>
-                    <Button icon={<CloseOutlined />} onClick={() => setEditing(false)}>
-                      Cancelar
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button icon={<EditOutlined />} onClick={() => setEditing(true)}>
-                      Editar
-                    </Button>
-                    <Button danger onClick={handleLogout}>
-                      Cerrar Sesión
-                    </Button>
-                  </>
-                )}
-              </Space>
+              <div className="profile-actions">
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  {editing ? (
+                    <>
+                      <Button 
+                        type="primary" 
+                        icon={<SaveOutlined />} 
+                        onClick={handleSave}
+                        block
+                        size="large"
+                      >
+                        Guardar
+                      </Button>
+                      <Button 
+                        icon={<CloseOutlined />} 
+                        onClick={() => setEditing(false)}
+                        block
+                        size="large"
+                      >
+                        Cancelar
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        icon={<EditOutlined />} 
+                        onClick={() => setEditing(true)}
+                        block
+                        size="large"
+                      >
+                        Editar Perfil
+                      </Button>
+                      <Button 
+                        danger 
+                        onClick={handleLogout}
+                        block
+                        size="large"
+                      >
+                        Cerrar Sesión
+                      </Button>
+                    </>
+                  )}
+                </Space>
+              </div>
             </div>
           </Col>
         </Row>
       </Card>
 
-      {/* Estadísticas Reales */}
-      <Row gutter={16} style={{ marginBottom: '24px' }}>
-        <Col span={6}>
+      {/* Estadísticas Reales - Responsive */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
+        <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
               title="Compras Totales"
@@ -239,7 +268,7 @@ const Profile = () => {
             </div>
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
               title="Reservas Activas"
@@ -249,7 +278,7 @@ const Profile = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
               title="Favoritos"
@@ -259,7 +288,7 @@ const Profile = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
               title="Total Gastado"
@@ -285,7 +314,11 @@ const Profile = () => {
             } 
             key="profile"
           >
-            <Descriptions bordered column={2} size="large">
+            <Descriptions 
+              bordered 
+              column={{ xs: 1, sm: 1, md: 2 }} 
+              size="large"
+            >
               <Descriptions.Item label="Nombre" span={2}>
                 {editing ? (
                   <Input 
@@ -340,16 +373,23 @@ const Profile = () => {
                 renderItem={purchase => (
                   <List.Item
                     actions={[
-                      <Button size="small" href={`/store/payment-success/${purchase.locator}`}>
-                        Ver Detalles
-                      </Button>,
-                      <Button 
-                        size="small" 
-                        disabled={purchase.status !== 'completed'}
-                        title={purchase.status !== 'completed' ? 'Solo disponible para pagos completados' : 'Descargar ticket'}
-                      >
-                        Descargar Ticket
-                      </Button>
+                      <Space key="actions" direction="vertical" size="small" style={{ width: '100%' }}>
+                        <Button 
+                          size="small" 
+                          href={`/store/payment-success/${purchase.locator}`}
+                          block
+                        >
+                          Ver Detalles
+                        </Button>
+                        <Button 
+                          size="small" 
+                          disabled={purchase.status !== 'completed'}
+                          title={purchase.status !== 'completed' ? 'Solo disponible para pagos completados' : 'Descargar ticket'}
+                          block
+                        >
+                          Descargar Ticket
+                        </Button>
+                      </Space>
                     ]}
                   >
                     <List.Item.Meta

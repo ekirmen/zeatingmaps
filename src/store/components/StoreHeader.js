@@ -469,11 +469,17 @@ const Header = ({ onLogin, onLogout }) => {
       {/* Mobile Menu Drawer */}
       <Drawer
         title={
-          <div className="flex items-center gap-2">
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            color: '#1f2937',
+            fontWeight: '600'
+          }}>
             {header.logoUrl && (
-              <img src={header.logoUrl} alt="Logo" className="h-6 w-auto" />
+              <img src={header.logoUrl} alt="Logo" style={{ height: '24px', width: 'auto' }} />
             )}
-            {header.companyName}
+            <span>{header.companyName}</span>
           </div>
         }
         placement="right"
@@ -481,47 +487,128 @@ const Header = ({ onLogin, onLogout }) => {
         open={isMobileMenuOpen}
         width={280}
         className="mobile-menu-drawer"
+        styles={{
+          body: {
+            padding: '16px',
+            backgroundColor: '#ffffff'
+          },
+          header: {
+            backgroundColor: '#ffffff',
+            borderBottom: '1px solid #e5e7eb',
+            padding: '16px'
+          },
+          content: {
+            backgroundColor: '#ffffff'
+          }
+        }}
       >
-        <div className="flex flex-col space-y-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Navigation Links */}
-          <div className="space-y-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <LinkWithRef 
               to="/store" 
-              className="mobile-menu-link"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '12px',
+                color: '#1f2937',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                transition: 'all 0.2s',
+                backgroundColor: 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                e.currentTarget.style.color = '#1890ff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#1f2937';
+              }}
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <HomeOutlined className="mr-2" />
+              <HomeOutlined style={{ marginRight: '8px', fontSize: '16px' }} />
               {t('header.home')}
             </LinkWithRef>
             
             <LinkWithRef 
               to="/store/cart" 
-              className="mobile-menu-link"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '12px',
+                color: '#1f2937',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                transition: 'all 0.2s',
+                backgroundColor: 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                e.currentTarget.style.color = '#1890ff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#1f2937';
+              }}
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <ShoppingCartOutlined className="mr-2" />
+              <ShoppingCartOutlined style={{ marginRight: '8px', fontSize: '16px' }} />
               {t('header.cart')}
             </LinkWithRef>
             
             {isAuthenticated && (
               <LinkWithRef
                 to="/store/perfil"
-                className="mobile-menu-link"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '12px',
+                  color: '#1f2937',
+                  textDecoration: 'none',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s',
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f3f4f6';
+                  e.currentTarget.style.color = '#1890ff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#1f2937';
+                }}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <UserOutlined className="mr-2" />
+                <UserOutlined style={{ marginRight: '8px', fontSize: '16px' }} />
                 {t('header.profile')}
               </LinkWithRef>
             )}
           </div>
 
           {/* Language Selector */}
-          <div className="pt-4 border-t">
-            <label className="block text-sm font-medium mb-2">Idioma</label>
+          <div style={{ paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+            <label style={{ 
+              display: 'block', 
+              fontSize: '14px', 
+              fontWeight: '500',
+              marginBottom: '8px',
+              color: '#374151'
+            }}>
+              Idioma
+            </label>
             <select 
               value={i18n.language} 
               onChange={e => i18n.changeLanguage(e.target.value)} 
-              className="w-full p-2 border rounded"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '14px',
+                backgroundColor: '#ffffff',
+                color: '#1f2937'
+              }}
             >
               <option value="es">Español</option>
               <option value="en">English</option>
@@ -529,14 +616,33 @@ const Header = ({ onLogin, onLogout }) => {
           </div>
 
           {/* Auth Section */}
-          <div className="pt-4 border-t">
+          <div style={{ paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
             {isAuthenticated ? (
               <button
                 onClick={() => {
                   handleLogout();
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full store-button store-button-outline"
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  backgroundColor: 'transparent',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  color: '#1f2937',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f3f4f6';
+                  e.currentTarget.style.borderColor = '#9ca3af';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                }}
               >
                 {t('header.logout')}
               </button>
@@ -546,7 +652,24 @@ const Header = ({ onLogin, onLogout }) => {
                   openAccountModal();
                   setIsMobileMenuOpen(false);
                 }} 
-                className="w-full store-button store-button-primary"
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  backgroundColor: '#2563eb',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: '#ffffff',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#1d4ed8';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#2563eb';
+                }}
               >
                 {t('header.account')}
               </button>

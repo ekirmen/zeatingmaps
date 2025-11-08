@@ -144,6 +144,7 @@ const OptimizedImage = ({
   }, [width, height, objectFit, props.style]);
 
   // No renderizar hasta que esté en view (excepto si es priority)
+  // Para imágenes en tarjetas de eventos, siempre renderizar (priority=true)
   if (!isInView && !priority) {
     return (
       <div
@@ -151,7 +152,7 @@ const OptimizedImage = ({
         className={className}
         style={{
           width: width || '100%',
-          height: height || 'auto',
+          height: height || '100%',
           backgroundColor: '#f0f2f5',
           ...imageStyle,
         }}
