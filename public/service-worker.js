@@ -67,6 +67,13 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Ignorar métodos que no se pueden cachear (POST, PUT, DELETE, etc.)
+  // La Cache API solo soporta GET y HEAD
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    // Dejar pasar requests POST/PUT/DELETE sin cachear
+    return;
+  }
+
   // Ignorar requests a APIs externas y Supabase
   if (url.origin.includes('supabase.co') || 
       url.origin.includes('googleapis.com') ||
@@ -96,6 +103,11 @@ self.addEventListener('fetch', (event) => {
 
 // Estrategia Cache First (para assets estáticos)
 async function cacheFirst(request) {
+  // Solo cachear GET y HEAD requests
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return fetch(request);
+  }
+
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
   
@@ -105,8 +117,14 @@ async function cacheFirst(request) {
   
   try {
     const response = await fetch(request);
-    if (response.ok) {
-      cache.put(request, response.clone());
+    // Solo cachear respuestas exitosas y que sean cacheables
+    if (response.ok && response.status === 200) {
+      // Clonar la respuesta antes de cachear
+      const responseClone = response.clone();
+      // Verificar que la respuesta sea cacheable
+      if (responseClone.type === 'basic' || responseClone.type === 'cors') {
+        cache.put(request, responseClone);
+      }
     }
     return response;
   } catch (error) {
@@ -121,24 +139,41 @@ async function cacheFirst(request) {
 
 // Estrategia Network First (para contenido dinámico)
 async function networkFirst(request) {
+  // Solo cachear GET y HEAD requests
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return fetch(request);
+  }
+
   const cache = await caches.open(RUNTIME_CACHE);
   
   try {
     const response = await fetch(request);
     
-    // Cachear respuestas exitosas
-    if (response.ok) {
-      cache.put(request, response.clone());
+    // Solo cachear respuestas exitosas y que sean cacheables
+    if (response.ok && response.status === 200) {
+      // Clonar la respuesta antes de cachear
+      const responseClone = response.clone();
+      // Verificar que la respuesta sea cacheable (básica o CORS)
+      if (responseClone.type === 'basic' || responseClone.type === 'cors') {
+        try {
+          cache.put(request, responseClone);
+        } catch (cacheError) {
+          // Si falla el cacheo, continuar sin cachear
+          console.warn('[ServiceWorker] No se pudo cachear la respuesta:', cacheError);
+        }
+      }
     }
     
     return response;
   } catch (error) {
     console.log('[ServiceWorker] Red no disponible, usando cache:', error);
     
-    // Intentar obtener del cache
-    const cached = await cache.match(request);
-    if (cached) {
-      return cached;
+    // Intentar obtener del cache solo para GET/HEAD
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const cached = await cache.match(request);
+      if (cached) {
+        return cached;
+      }
     }
     
     // Si es navegación y no hay cache, mostrar página offline

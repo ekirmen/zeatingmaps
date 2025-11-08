@@ -72,12 +72,15 @@ const StoreApp = () => {
                   {/* Render modern store page by default */}
                   <Route index element={<ModernStorePage />} />
                 <Route path="tag/:tagSlug?" element={<EventsVenue groupByTags />} />
-                {/* Ruta especial para /eventos/r/map - redirige a seat-selection (más específica primero) */}
-                <Route path="eventos/r/map" element={<MapShortRoute />} />
-                {/* Ruta especial para /eventos/r - redirige a seat-selection */}
-                <Route path="eventos/r" element={<MapShortRoute />} />
-                <Route path="eventos/:eventSlug" element={<ModernEventPage />} />
+                {/* Rutas amigables para mapas de eventos */}
+                {/* Ruta especial para /eventos/{eventSlug}/map - URL amigable con slug */}
                 <Route path="eventos/:eventSlug/map" element={<EventMapPage />} />
+                {/* Ruta especial para /eventos/r/map - URL corta con función ID */}
+                <Route path="eventos/r/map" element={<MapShortRoute />} />
+                {/* Ruta especial para /eventos/r - URL corta sin /map */}
+                <Route path="eventos/r" element={<MapShortRoute />} />
+                {/* Ruta principal para eventos - muestra evento o redirige a mapa si hay ?funcion= */}
+                <Route path="eventos/:eventSlug" element={<ModernEventPage />} />
                 <Route path="event/:eventId" element={<EventInfo />} />
 
                 <Route path="event/:eventId/full" element={<Event />} />

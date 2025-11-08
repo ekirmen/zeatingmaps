@@ -340,8 +340,16 @@ const ModernEventPage = () => {
     fetchMapa();
   }, [isMapView, selectedFunctionId, funciones]);
 
+  // Función para manejar la selección de función
+  // Si estamos en la vista del evento (no mapa), navegar al mapa
+  // Si ya estamos en el mapa, solo actualizar la función seleccionada
   const handleFunctionSelect = (functionId) => {
     setSelectedFunctionId(functionId);
+    
+    // Si NO estamos en la vista del mapa, navegar al mapa con la función seleccionada
+    if (!isMapView) {
+      navigate(`/store/eventos/${eventSlug}/map?funcion=${functionId}`, { replace: false });
+    }
   };
 
   // Cache para restricciones de múltiplos por función
@@ -1063,11 +1071,7 @@ const ModernEventPage = () => {
                             type="primary"
                             onClick={(e) => {
                               e.stopPropagation();
-                              const fid = funcion.id || funcion._id;
-                              const url = fid
-                                ? `/store/eventos/${eventSlug}/map?funcion=${fid}`
-                                : `/store/eventos/${eventSlug}/map`;
-                              navigate(url);
+                              handleFunctionSelect(funcion.id || funcion._id);
                             }}
                           >
                             Continuar
