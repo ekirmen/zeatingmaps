@@ -16,7 +16,8 @@ import {
   Row,
   Col,
   Divider,
-  Statistic
+  Statistic,
+  Alert
 } from 'antd';
 import { 
   EyeOutlined,
@@ -25,8 +26,10 @@ import {
   ClockCircleOutlined,
   UserOutlined,
   CloudOutlined,
-  SafetyOutlined
+  SafetyOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
+import auditService from '../../services/auditService';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -38,12 +41,20 @@ const AuditLogs = () => {
   const [logs, setLogs] = useState([]);
   const [filters, setFilters] = useState({
     dateRange: null,
-    action: 'all',
-    user: '',
-    level: 'all'
+    action: null,
+    user: null,
+    severity: null,
+    resourceType: null
   });
   const [selectedLog, setSelectedLog] = useState(null);
   const [showLogModal, setShowLogModal] = useState(false);
+  const [stats, setStats] = useState({
+    total: 0,
+    errors: 0,
+    warnings: 0,
+    info: 0,
+    critical: 0
+  });
 
   useEffect(() => {
     loadAuditLogs();
@@ -53,119 +64,116 @@ const AuditLogs = () => {
     try {
       setLoading(true);
       
-      // Simular logs de auditoría
-      const mockLogs = [
-        {
-          id: 1,
-          timestamp: new Date(Date.now() - 1000 * 60 * 5),
-          user: 'admin@example.com',
-          action: 'login',
-          level: 'info',
-          description: 'Usuario inició sesión exitosamente',
-          ip: '192.168.1.100',
-          userAgent: 'Chrome/91.0.4472.124',
-          details: {
-            sessionId: 'sess_123456',
-            location: 'Madrid, España',
-            device: 'Desktop'
-          }
-        },
-        {
-          id: 2,
-          timestamp: new Date(Date.now() - 1000 * 60 * 15),
-          user: 'admin@example.com',
-          action: 'payment_update',
-          level: 'warning',
-          description: 'Actualización de configuración de pago',
-          ip: '192.168.1.100',
-          userAgent: 'Chrome/91.0.4472.124',
-          details: {
-            gateway: 'Stripe',
-            changes: ['API Key actualizada', 'Webhook URL modificada'],
-            oldValues: { apiKey: 'sk_test_old' },
-            newValues: { apiKey: 'sk_test_new' }
-          }
-        },
-        {
-          id: 3,
-          timestamp: new Date(Date.now() - 1000 * 60 * 30),
-          user: 'user@example.com',
-          action: 'ticket_purchase',
-          level: 'info',
-          description: 'Compra de ticket realizada',
-          ip: '192.168.1.101',
-          userAgent: 'Firefox/89.0',
-          details: {
-            eventId: 'evt_123',
-            ticketCount: 2,
-            amount: 50.00,
-            paymentMethod: 'Stripe'
-          }
-        },
-        {
-          id: 4,
-          timestamp: new Date(Date.now() - 1000 * 60 * 60),
-          user: 'admin@example.com',
-          action: 'user_delete',
-          level: 'error',
-          description: 'Intento de eliminación de usuario fallido',
-          ip: '192.168.1.100',
-          userAgent: 'Chrome/91.0.4472.124',
-          details: {
-            targetUser: 'user@example.com',
-            reason: 'Permisos insuficientes',
-            error: 'Access denied'
-          }
-        },
-        {
-          id: 5,
-          timestamp: new Date(Date.now() - 1000 * 60 * 120),
-          user: 'system',
-          action: 'backup_created',
-          level: 'info',
-          description: 'Backup automático creado exitosamente',
-          ip: '127.0.0.1',
-          userAgent: 'System/1.0',
-          details: {
-            backupId: 'backup_20231201_120000',
-            size: '2.5 MB',
-            duration: '45s',
-            type: 'automated'
-          }
-        }
-      ];
-
-      // Aplicar filtros
-      let filteredLogs = mockLogs;
-
-      if (filters.dateRange) {
-        filteredLogs = filteredLogs.filter(log => {
-          const logDate = new Date(log.timestamp);
-          return logDate >= filters.dateRange[0] && logDate <= filters.dateRange[1];
-        });
+      // Construir filtros para el servicio de auditoría
+      const auditFilters = {};
+      
+      if (filters.dateRange && filters.dateRange.length === 2) {
+        auditFilters.startDate = filters.dateRange[0].toISOString();
+        auditFilters.endDate = filters.dateRange[1].toISOString();
       }
-
-      if (filters.action !== 'all') {
-        filteredLogs = filteredLogs.filter(log => log.action === filters.action);
+      
+      if (filters.action && filters.action !== 'all') {
+        auditFilters.action = filters.action;
       }
-
+      
       if (filters.user) {
-        filteredLogs = filteredLogs.filter(log => 
-          log.user.toLowerCase().includes(filters.user.toLowerCase())
-        );
+        // Buscar por usuario (necesitaríamos obtener el ID del usuario)
+        // Por ahora, buscar por acción que contenga el término
+        auditFilters.action = filters.user;
       }
-
-      if (filters.level !== 'all') {
-        filteredLogs = filteredLogs.filter(log => log.level === filters.level);
+      
+      if (filters.severity && filters.severity !== 'all') {
+        auditFilters.severity = filters.severity;
       }
-
-      setLogs(filteredLogs);
+      
+      if (filters.resourceType && filters.resourceType !== 'all') {
+        auditFilters.resourceType = filters.resourceType;
+      }
+      
+      // Cargar logs desde el servicio de auditoría
+      const auditLogs = await auditService.getLogs(auditFilters, 100);
+      
+      // Formatear logs para la tabla
+      const formattedLogs = auditLogs.map(log => {
+        const details = log.details ? (typeof log.details === 'string' ? JSON.parse(log.details) : log.details) : {};
+        return {
+          id: log.id,
+          timestamp: new Date(log.created_at),
+          user: log.user_id || 'Sistema',
+          action: log.action,
+          severity: log.severity || 'info',
+          description: getActionDescription(log),
+          ip: log.ip_address || 'N/A',
+          userAgent: log.user_agent || 'N/A',
+          details: details,
+          metadata: log.metadata ? (typeof log.metadata === 'string' ? JSON.parse(log.metadata) : log.metadata) : {},
+          resourceId: log.resource_id,
+          resourceType: log.resource_type,
+          sessionId: log.session_id,
+          url: log.url,
+          referrer: log.referrer
+        };
+      });
+      
+      setLogs(formattedLogs);
+      
+      // Calcular estadísticas
+      setStats({
+        total: formattedLogs.length,
+        errors: formattedLogs.filter(log => log.severity === 'error').length,
+        warnings: formattedLogs.filter(log => log.severity === 'warning').length,
+        info: formattedLogs.filter(log => log.severity === 'info').length,
+        critical: formattedLogs.filter(log => log.severity === 'critical').length
+      });
+      
     } catch (error) {
       console.error('Error loading audit logs:', error);
       message.error('Error al cargar los logs de auditoría');
+      
+      // Cargar logs locales como fallback
+      try {
+        const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
+        if (localLogs.length > 0) {
+          message.warning('Usando logs locales como fallback');
+          setLogs(localLogs.map(log => ({
+            ...log,
+            timestamp: new Date(log.created_at || log.timestamp)
+          })));
+        }
+      } catch (localError) {
+        console.error('Error loading local logs:', localError);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Función helper para obtener descripción de acción
+  const getActionDescription = (log) => {
+    const action = log.action || '';
+    const details = log.details ? (typeof log.details === 'string' ? JSON.parse(log.details) : log.details) : {};
+    
+    if (action.startsWith('payment_')) {
+      const status = action.replace('payment_', '');
+      return `Pago ${status}: $${details.amount || 'N/A'} - ${details.paymentMethod || 'N/A'}`;
+    }
+    
+    if (action.startsWith('seat_')) {
+      const seatAction = action.replace('seat_', '');
+      return `Asiento ${seatAction}: ${details.seatId || 'N/A'} - Función ${details.functionId || 'N/A'}`;
+    }
+    
+    if (action.startsWith('user_')) {
+      const userAction = action.replace('user_', '');
+      return `Usuario ${userAction}: ${details.email || details.userId || 'N/A'}`;
+    }
+    
+    if (action.startsWith('security_')) {
+      const securityEvent = action.replace('security_', '');
+      return `Evento de seguridad: ${securityEvent}`;
+    }
+    
+    return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const viewLogDetails = (log) => {
@@ -176,18 +184,20 @@ const AuditLogs = () => {
   const exportLogs = () => {
     try {
       const csvContent = [
-        'Timestamp,User,Action,Level,Description,IP',
+        'Timestamp,User,Action,Severity,Description,IP,Resource Type,Resource ID',
         ...logs.map(log => 
-          `${log.timestamp.toISOString()},"${log.user}","${log.action}","${log.level}","${log.description}","${log.ip}"`
+          `${log.timestamp.toISOString()},"${log.user}","${log.action}","${log.severity || 'info'}","${log.description}","${log.ip}","${log.resourceType || ''}","${log.resourceId || ''}"`
         )
       ].join('\n');
 
-      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
       message.success('Logs exportados correctamente');
@@ -210,15 +220,17 @@ const AuditLogs = () => {
     return colors[action] || 'default';
   };
 
-  const getLevelColor = (level) => {
+  const getSeverityColor = (severity) => {
     const colors = {
       info: 'blue',
       warning: 'orange',
       error: 'red',
       critical: 'red'
     };
-    return colors[level] || 'default';
+    return colors[severity] || 'default';
   };
+  
+  const getLevelColor = getSeverityColor; // Alias para compatibilidad
 
   const getActionIcon = (action) => {
     const icons = {
@@ -266,12 +278,12 @@ const AuditLogs = () => {
       )
     },
     {
-      title: 'Nivel',
-      dataIndex: 'level',
-      key: 'level',
-      render: (level) => (
-        <Tag color={getLevelColor(level)}>
-          {level.toUpperCase()}
+      title: 'Severidad',
+      dataIndex: 'severity',
+      key: 'severity',
+      render: (severity) => (
+        <Tag color={getSeverityColor(severity)}>
+          {severity?.toUpperCase() || 'INFO'}
         </Tag>
       )
     },
@@ -328,19 +340,21 @@ const AuditLogs = () => {
               style={{ width: '100%', marginTop: 8 }}
             >
               <Option value="all">Todas las Acciones</Option>
-              <Option value="login">Login</Option>
-              <Option value="logout">Logout</Option>
-              <Option value="payment_update">Actualización de Pago</Option>
-              <Option value="ticket_purchase">Compra de Ticket</Option>
-              <Option value="user_delete">Eliminación de Usuario</Option>
-              <Option value="backup_created">Backup Creado</Option>
+              <Option value="payment_initiated">Pago Iniciado</Option>
+              <Option value="payment_completed">Pago Completado</Option>
+              <Option value="payment_failed">Pago Fallido</Option>
+              <Option value="seat_locked">Asiento Bloqueado</Option>
+              <Option value="seat_unlocked">Asiento Desbloqueado</Option>
+              <Option value="user_login">Usuario Login</Option>
+              <Option value="user_logout">Usuario Logout</Option>
+              <Option value="security_login_failed">Intento de Login Fallido</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Text strong>Nivel:</Text>
             <Select
-              value={filters.level}
-              onChange={(value) => setFilters(prev => ({ ...prev, level: value }))}
+              value={filters.severity || 'all'}
+              onChange={(value) => setFilters(prev => ({ ...prev, severity: value === 'all' ? null : value }))}
               style={{ width: '100%', marginTop: 8 }}
             >
               <Option value="all">Todos los Niveles</Option>
@@ -372,6 +386,13 @@ const AuditLogs = () => {
             Aplicar Filtros
           </Button>
           <Button 
+            icon={<ReloadOutlined />}
+            onClick={loadAuditLogs}
+            loading={loading}
+          >
+            Actualizar
+          </Button>
+          <Button 
             icon={<DownloadOutlined />}
             onClick={exportLogs}
           >
@@ -382,38 +403,47 @@ const AuditLogs = () => {
 
       {/* Estadísticas */}
       <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={6}>
+        <Col xs={24} sm={8} md={6}>
           <Card>
             <Statistic
               title="Total de Logs"
-              value={logs.length}
+              value={stats.total}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={6}>
+        <Col xs={24} sm={8} md={6}>
           <Card>
             <Statistic
               title="Errores"
-              value={logs.filter(log => log.level === 'error').length}
+              value={stats.errors}
               valueStyle={{ color: '#ff4d4f' }}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={6}>
+        <Col xs={24} sm={8} md={6}>
           <Card>
             <Statistic
               title="Advertencias"
-              value={logs.filter(log => log.level === 'warning').length}
+              value={stats.warnings}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={6}>
+        <Col xs={24} sm={8} md={6}>
+          <Card>
+            <Statistic
+              title="Críticos"
+              value={stats.critical}
+              valueStyle={{ color: '#cf1322' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={8} md={6}>
           <Card>
             <Statistic
               title="Información"
-              value={logs.filter(log => log.level === 'info').length}
+              value={stats.info}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -466,11 +496,36 @@ const AuditLogs = () => {
                   {selectedLog.action.replace('_', ' ').toUpperCase()}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Nivel" span={3}>
-                <Tag color={getLevelColor(selectedLog.level)}>
-                  {selectedLog.level.toUpperCase()}
+              <Descriptions.Item label="Severidad" span={3}>
+                <Tag color={getSeverityColor(selectedLog.severity || selectedLog.level)}>
+                  {(selectedLog.severity || selectedLog.level || 'info').toUpperCase()}
                 </Tag>
               </Descriptions.Item>
+              {selectedLog.resourceType && (
+                <Descriptions.Item label="Tipo de Recurso" span={3}>
+                  {selectedLog.resourceType}
+                </Descriptions.Item>
+              )}
+              {selectedLog.resourceId && (
+                <Descriptions.Item label="ID de Recurso" span={3}>
+                  <Text code>{selectedLog.resourceId}</Text>
+                </Descriptions.Item>
+              )}
+              {selectedLog.sessionId && (
+                <Descriptions.Item label="Session ID" span={3}>
+                  <Text code>{selectedLog.sessionId}</Text>
+                </Descriptions.Item>
+              )}
+              {selectedLog.url && (
+                <Descriptions.Item label="URL" span={3}>
+                  <Text ellipsis style={{ maxWidth: 400 }}>{selectedLog.url}</Text>
+                </Descriptions.Item>
+              )}
+              {selectedLog.referrer && (
+                <Descriptions.Item label="Referrer" span={3}>
+                  <Text ellipsis style={{ maxWidth: 400 }}>{selectedLog.referrer}</Text>
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="Descripción" span={3}>
                 {selectedLog.description}
               </Descriptions.Item>

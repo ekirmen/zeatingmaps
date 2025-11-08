@@ -6,6 +6,7 @@ import { SeatMapSkeleton, PageSkeleton } from '../../components/SkeletonLoaders'
 import SeatListView from '../../components/SeatListView';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useMapaSeatsSync } from '../../hooks/useMapaSeatsSync';
+import { useSeatWorker, useZonesWorker } from '../../hooks/useSeatWorker';
 import { 
   CalendarOutlined, 
   EnvironmentOutlined, 
@@ -77,11 +78,32 @@ const ModernEventPage = () => {
   // Extraer asientos del mapa usando el hook de sincronización
   const { seatsData: syncedSeats } = useMapaSeatsSync(mapa, selectedFunctionId);
   
+  // Procesar asientos usando Web Worker si hay muchos (50+)
+  // Para listas pequeñas, el overhead del worker no vale la pena
+  const { processedSeats: workerProcessedSeats } = useSeatWorker(
+    syncedSeats && syncedSeats.length >= 50 ? syncedSeats : [],
+    {
+      normalizePositions: true,
+      calculateBounds: false,
+      groupByZone: false
+    }
+  );
+  
+  // Calcular zonas usando Web Worker si hay muchos asientos
+  const { zones: calculatedZones } = useZonesWorker(
+    syncedSeats && syncedSeats.length >= 50 ? syncedSeats : []
+  );
+  
   // Preparar asientos para la vista de lista
   const seatsForList = useMemo(() => {
     if (!syncedSeats || syncedSeats.length === 0) return [];
     
-    return syncedSeats.map(seat => ({
+    // Si usamos el worker, usar los asientos procesados
+    const seatsToProcess = (syncedSeats.length >= 50 && workerProcessedSeats && workerProcessedSeats.length > 0)
+      ? workerProcessedSeats
+      : syncedSeats;
+    
+    return seatsToProcess.map(seat => ({
       ...seat,
       _id: seat._id || seat.id || seat.sillaId,
       nombre: seat.nombre || seat.numero || `Asiento ${seat._id || seat.id}`,
@@ -89,7 +111,7 @@ const ModernEventPage = () => {
       zonaId: seat.zonaId || seat.zona?.id,
       nombreZona: seat.nombreZona || seat.zona?.nombre || 'General'
     }));
-  }, [syncedSeats]);
+  }, [syncedSeats, workerProcessedSeats]);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
@@ -243,13 +265,24 @@ const ModernEventPage = () => {
       } catch (err) {
         logger.error('Error cargando evento:', err);
         setError(err);
-        message.error('Error al cargar el evento');
+        // Mejorar el mensaje de error
+        const errorMessage = err?.message || 'Error desconocido';
+        if (errorMessage.includes('Evento no encontrado') || errorMessage.includes('not found')) {
+          message.error('El evento no existe o no está disponible');
+        } else {
+          message.error(`Error al cargar el evento: ${errorMessage}`);
+        }
       } finally {
         setLoading(false);
       }
     };
     
-    if (eventSlug) fetchData();
+    if (eventSlug && eventSlug.trim() !== '') {
+      fetchData();
+    } else {
+      setError(new Error('Slug de evento inválido'));
+      setLoading(false);
+    }
   }, [eventSlug, searchParams]);
 
   // Cargar perfil para conocer permisos (tenant_admin)
@@ -559,15 +592,35 @@ const ModernEventPage = () => {
     return <PageSkeleton rows={6} />;
   }
 
-  if (error || !evento) {
+  if (error || (!evento && !loading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Alert
-          message="Error"
-          description="No se pudo cargar el evento"
-          type="error"
-          showIcon
-        />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full px-4">
+          <Alert
+            message="Error al cargar el evento"
+            description={
+              <div>
+                <p className="mb-2">
+                  {error?.message?.includes('Evento no encontrado') || error?.message?.includes('not found')
+                    ? 'El evento solicitado no existe o no está disponible.'
+                    : error?.message || 'No se pudo cargar el evento. Por favor, verifica que la URL sea correcta.'}
+                </p>
+                {eventSlug && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Slug buscado: <code className="bg-gray-100 px-2 py-1 rounded">{eventSlug}</code>
+                  </p>
+                )}
+                <div className="mt-4">
+                  <Button type="primary" onClick={() => navigate('/store')}>
+                    Volver al inicio
+                  </Button>
+                </div>
+              </div>
+            }
+            type="error"
+            showIcon
+          />
+        </div>
       </div>
     );
   }

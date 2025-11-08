@@ -17,6 +17,8 @@ import { resolveTenantId } from '../../utils/tenantUtils';
 import { verificarPagosPlazosActivos, calcularCuotas } from '../../services/cuotasPagosService';
 import InstallmentPaymentSelector from '../../components/InstallmentPaymentSelector';
 import logger from '../../utils/logger';
+import auditService from '../../services/auditService';
+import { encryptPaymentData } from '../../utils/encryption';
 
 
 const Pay = () => {
@@ -335,7 +337,23 @@ const Pay = () => {
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined
       };
 
-      const result = await processPaymentMethod(selectedGateway, paymentData);
+      // Encriptar datos sensibles de pago antes de enviarlos
+      const encryptedPaymentData = await encryptPaymentData(paymentData).catch(err => {
+        console.warn('[PAY] Error encriptando datos de pago, continuando sin encriptar:', err);
+        return paymentData; // Continuar sin encriptar si falla
+      });
+
+      // Registrar inicio de transacción en auditoría
+      auditService.logPayment('initiated', {
+        ...paymentData,
+        gateway: selectedGateway?.method_id || selectedGateway?.id,
+        paymentMethod: selectedGateway?.name
+      }, {
+        tenantId: resolvedTenantId,
+        severity: 'info'
+      }).catch(err => console.error('Error logging payment initiation:', err));
+
+      const result = await processPaymentMethod(selectedGateway, encryptedPaymentData);
       console.log('🔍 Payment result:', result);
       console.log('🔍 Result success:', result.success);
       console.log('🔍 Result requiresRedirect:', result.requiresRedirect);
@@ -344,6 +362,20 @@ const Pay = () => {
 
       if (result.success) {
         console.log('✅ Payment successful, redirecting...');
+        
+        // Registrar pago exitoso en auditoría
+        auditService.logPayment('completed', {
+          ...paymentData,
+          transactionId: result.transactionId,
+          gateway: selectedGateway?.method_id || selectedGateway?.id,
+          paymentMethod: selectedGateway?.name,
+          status: 'completed'
+        }, {
+          tenantId: resolvedTenantId,
+          resourceId: result.transactionId,
+          severity: 'info'
+        }).catch(err => console.error('Error logging payment success:', err));
+        
         // Enviar notificación de éxito
         await createPaymentSuccessNotification({
           id: result.transactionId,
@@ -384,10 +416,35 @@ const Pay = () => {
         }
       } else {
         console.log('❌ Payment failed or success is false:', result);
+        
+        // Registrar pago fallido en auditoría
+        auditService.logPayment('failed', {
+          ...paymentData,
+          error: result.error || 'Payment failed',
+          gateway: selectedGateway?.method_id || selectedGateway?.id,
+          paymentMethod: selectedGateway?.name,
+          status: 'failed'
+        }, {
+          tenantId: resolvedTenantId,
+          severity: 'error'
+        }).catch(err => console.error('Error logging payment failure:', err));
+        
         message.error(result.error || 'Error al procesar el pago. Por favor, inténtalo de nuevo.');
       }
     } catch (error) {
       console.error('Error processing payment:', error);
+      
+      // Registrar error de pago en auditoría
+      auditService.logPayment('error', {
+        ...paymentData,
+        error: error.message || 'Unknown error',
+        gateway: selectedGateway?.method_id || selectedGateway?.id,
+        paymentMethod: selectedGateway?.name,
+        status: 'error'
+      }, {
+        tenantId: resolvedTenantId,
+        severity: 'error'
+      }).catch(err => console.error('Error logging payment error:', err));
       
       // Usar el hook de manejo de errores
       const errorResult = handleError(error, 'payment', { clearCart });

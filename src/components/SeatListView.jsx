@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { Card, Badge, Button, Input, Select, Space, Empty } from 'antd';
+import { Card, Badge, Button, Input, Select, Space, Empty, Spin } from 'antd';
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import { useFilteredSeatsWorker } from '../hooks/useSeatWorker';
 
 const { Search } = Input;
 const { Option } = Select;
 
 /**
  * Vista de lista de asientos como alternativa al mapa para móviles
+ * Usa Web Workers para filtrar y ordenar cuando hay muchos asientos
  */
 const SeatListView = ({
   seats = [],
@@ -19,49 +21,108 @@ const SeatListView = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedZona, setSelectedZona] = useState(null);
-  const [sortBy, setSortBy] = useState('nombre'); // nombre, precio, zona
+  const [sortBy, setSortBy] = useState('nombre'); // nombre, precio-asc, precio-desc, zona
 
-  // Filtrar y ordenar asientos
+  // Convertir sortBy a formato del worker
+  const workerSortBy = useMemo(() => {
+    switch (sortBy) {
+      case 'precio':
+        return 'precio-asc';
+      case 'precio-desc':
+        return 'precio-desc';
+      case 'zona':
+        return 'zona-asc';
+      case 'nombre':
+      default:
+        return 'nombre-asc';
+    }
+  }, [sortBy]);
+
+  // Preparar filtros para el worker
+  const filters = useMemo(() => ({
+    disponible: true, // Solo mostrar disponibles
+    zonaId: selectedZona || undefined,
+    search: searchTerm || undefined
+  }), [selectedZona, searchTerm]);
+
+  // Usar Web Worker para filtrar y ordenar (solo si hay 50+ asientos)
+  const { filteredSeats: workerFilteredSeats, loading: workerLoading } = useFilteredSeatsWorker(
+    seats.length >= 50 ? seats : [],
+    filters,
+    workerSortBy
+  );
+
+  // Filtrar y ordenar asientos (usar worker si hay muchos, sino hacerlo localmente)
   const filteredAndSortedSeats = useMemo(() => {
-    let filtered = [...seats];
+    // Si hay menos de 50 asientos, procesar localmente (más rápido)
+    if (seats.length < 50) {
+      let filtered = [...seats];
 
-    // Filtrar por búsqueda
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(seat => {
-        const nombre = (seat.nombre || seat.numero || '').toLowerCase();
-        const zona = (seat.nombreZona || seat.zona?.nombre || '').toLowerCase();
-        return nombre.includes(term) || zona.includes(term);
-      });
-    }
-
-    // Filtrar por zona
-    if (selectedZona) {
-      filtered = filtered.filter(seat => {
-        const zonaId = seat.zonaId || seat.zona?.id;
-        return zonaId === selectedZona;
-      });
-    }
-
-    // Ordenar
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'precio':
-          return (b.precio || 0) - (a.precio || 0);
-        case 'zona':
-          const zonaA = (a.nombreZona || a.zona?.nombre || '').toLowerCase();
-          const zonaB = (b.nombreZona || b.zona?.nombre || '').toLowerCase();
-          return zonaA.localeCompare(zonaB);
-        case 'nombre':
-        default:
-          const nombreA = (a.nombre || a.numero || '').toLowerCase();
-          const nombreB = (b.nombre || b.numero || '').toLowerCase();
-          return nombreA.localeCompare(nombreB);
+      // Filtrar por búsqueda
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        filtered = filtered.filter(seat => {
+          const nombre = (seat.nombre || seat.numero || '').toLowerCase();
+          const zona = (seat.nombreZona || seat.zona?.nombre || '').toLowerCase();
+          return nombre.includes(term) || zona.includes(term);
+        });
       }
-    });
 
-    return filtered;
-  }, [seats, searchTerm, selectedZona, sortBy]);
+      // Filtrar por zona
+      if (selectedZona) {
+        filtered = filtered.filter(seat => {
+          const zonaId = seat.zonaId || seat.zona?.id;
+          return zonaId === selectedZona;
+        });
+      }
+
+      // Filtrar disponibles
+      filtered = filtered.filter(seat => {
+        const seatId = seat._id || seat.id || seat.sillaId;
+        const locked = isSeatLocked ? isSeatLocked(seatId, funcionId) : false;
+        const isSelected = selectedSeats.includes(seatId);
+        return !seat.vendido && !seat.reservado && (seat.disponible !== false) && (!locked || isSelected);
+      });
+
+      // Ordenar
+      filtered.sort((a, b) => {
+        switch (sortBy) {
+          case 'precio':
+            return (a.precio || 0) - (b.precio || 0);
+          case 'precio-desc':
+            return (b.precio || 0) - (a.precio || 0);
+          case 'zona':
+            const zonaA = (a.nombreZona || a.zona?.nombre || '').toLowerCase();
+            const zonaB = (b.nombreZona || b.zona?.nombre || '').toLowerCase();
+            return zonaA.localeCompare(zonaB);
+          case 'nombre':
+          default:
+            const nombreA = (a.nombre || a.numero || '').toLowerCase();
+            const nombreB = (b.nombre || b.numero || '').toLowerCase();
+            return nombreA.localeCompare(nombreB);
+        }
+      });
+
+      return filtered;
+    }
+
+    // Si hay 50+ asientos, usar resultado del worker
+    // Aplicar filtros adicionales que el worker no puede hacer (estado de locks)
+    if (workerFilteredSeats && workerFilteredSeats.length > 0) {
+      return workerFilteredSeats.filter(seat => {
+        const seatId = seat._id || seat.id || seat.sillaId;
+        const locked = isSeatLocked ? isSeatLocked(seatId, funcionId) : false;
+        const isSelected = selectedSeats.includes(seatId);
+        // Si está bloqueado pero no por mí y no está seleccionado, no mostrarlo
+        if (locked && !isSelected) {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    return [];
+  }, [seats, searchTerm, selectedZona, sortBy, workerFilteredSeats, workerLoading, isSeatLocked, funcionId, selectedSeats]);
 
   const handleSeatClick = async (seat) => {
     if (onSeatToggle) {
@@ -91,6 +152,11 @@ const SeatListView = ({
     <div className="seat-list-view h-full flex flex-col">
       {/* Filtros y búsqueda */}
       <div className="p-4 bg-white border-b space-y-3">
+        {workerLoading && seats.length >= 50 && (
+          <div className="flex items-center justify-center py-2">
+            <Spin size="small" /> <span className="ml-2 text-sm text-gray-500">Procesando asientos...</span>
+          </div>
+        )}
         <Search
           placeholder="Buscar asiento por nombre o zona..."
           value={searchTerm}

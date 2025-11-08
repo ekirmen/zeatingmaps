@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import apiRateLimiter from '../utils/apiRateLimiter';
+import auditService from './auditService';
 
 /**
  * Servicio para bloqueo atómico de asientos que previene condiciones de carrera
@@ -52,6 +53,19 @@ class AtomicSeatLockService {
       // Usar función RPC para bloqueo atómico
       console.log('🔒 [ATOMIC_LOCK] Llamando a lock_seat_atomically con:', lockData);
       const { data, error } = await supabase.rpc('lock_seat_atomically', lockData);
+      
+      // Registrar acción de bloqueo en auditoría
+      auditService.logSeatAction('locked', {
+        seatId: normalizedSeatId,
+        functionId: normalizedFuncionId,
+        sessionId: normalizedSessionId,
+        status: status,
+        previousStatus: null,
+        newStatus: status
+      }, {
+        tenantId: tenantId || null,
+        severity: 'info'
+      }).catch(err => console.error('Error logging seat lock:', err));
       
       if (error) {
         console.error('❌ [ATOMIC_LOCK] Error en bloqueo atómico:', error);
@@ -199,6 +213,19 @@ class AtomicSeatLockService {
       const unlockedRow = Array.isArray(data) ? data[0] : data;
 
       console.log('✅ [ATOMIC_UNLOCK] Asiento desbloqueado exitosamente:', unlockedRow);
+      
+      // Registrar acción de desbloqueo en auditoría
+      auditService.logSeatAction('unlocked', {
+        seatId: normalizedSeatId,
+        functionId: normalizedFuncionId,
+        sessionId: normalizedSessionId,
+        previousStatus: 'locked',
+        newStatus: 'available'
+      }, {
+        tenantId: tenantId || null,
+        severity: 'info'
+      }).catch(err => console.error('Error logging seat unlock:', err));
+      
       return {
         success: true,
         data: unlockedRow

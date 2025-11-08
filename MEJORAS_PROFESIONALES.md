@@ -123,7 +123,13 @@
 
 ### Prioridad Media
 - [ ] **Compresión de Respuestas**: Gzip/Brotli en servidor
+  - **Estado actual**: Vercel comprime automáticamente las respuestas (Gzip/Brotli)
+  - **Verificación**: Comprobar headers `Content-Encoding` en respuesta del servidor
+  - **Nota**: Vercel aplica compresión automática, no requiere configuración adicional
 - [ ] **CDN para Assets**: Servir imágenes y assets desde CDN
+  - **Estado actual**: Vercel ya usa su CDN global para todos los assets
+  - **Optimización**: Considerar usar Vercel Image Optimization para imágenes
+  - **Nota**: Vercel Edge Network actúa como CDN, no requiere configuración adicional
 - [ ] **Bundle Analysis**: 
   - Analizar tamaño de bundles
   - Identificar dependencias pesadas
@@ -141,12 +147,34 @@
   - Install prompt ✅
 
 ### Prioridad Baja
-- [ ] **Web Workers**: Mover cálculos pesados a workers
-- [ ] **Streaming SSR**: Para mejor First Contentful Paint
+- [x] **Web Workers**: Mover cálculos pesados a workers ✅
+  - **Implementado**: Worker para cálculos de asientos (`seatCalculations.worker.js`)
+  - **Funcionalidades**: 
+    - Cálculo de distancias entre asientos ✅
+    - Procesamiento de datos de asientos (normalización, bounds) ✅
+    - Cálculo de zonas y precios ✅
+    - Filtrado y ordenamiento de grandes listas ✅
+    - Cálculo de grupos de asientos (sugerencias) ✅
+  - **Hooks disponibles**: `useSeatWorker`, `useZonesWorker`, `useFilteredSeatsWorker`
+  - **Nota**: Se usa automáticamente para listas de 50+ asientos (overhead mínimo para listas pequeñas)
+- [x] **Mejoras de FCP (First Contentful Paint)**: Pre-rendering crítico y optimizaciones ✅
+  - **Implementado**: 
+    - Critical CSS inline en `index.html` ✅
+    - Preload de recursos críticos (CSS, fuentes) ✅
+    - Prefetch de Web Workers ✅
+    - Resource hints (preconnect, dns-prefetch) ✅
+  - **Beneficios**: Reducción de FCP, mejor percepción de velocidad
+- [ ] **Streaming SSR**: Para mejor First Contentful Paint (requiere Next.js o framework SSR)
 - [ ] **HTTP/3**: Migrar a HTTP/3 cuando esté disponible (requiere configuración del servidor/hosting)
-  - Nota: HTTP/3 requiere soporte del servidor (Supabase ya soporta HTTP/2)
-  - Para habilitar HTTP/3, configurar en el servidor web (nginx, Cloudflare, etc.)
-  - No requiere cambios en el código frontend
+  - **Estado actual**: Vercel NO soporta HTTP/3 actualmente (solo HTTP/1 y HTTP/2)
+  - **Alternativas**: 
+    - Cloudflare Pages/Workers (soporta HTTP/3)
+    - Netlify (soporte limitado)
+    - Servidor propio con nginx (requiere configuración manual)
+  - **Nota**: HTTP/3 requiere soporte del servidor (Supabase ya soporta HTTP/2)
+  - **Beneficios**: Mejor rendimiento en conexiones lentas, menor latencia, mejor multiplexado
+  - **No requiere cambios en el código frontend** (una vez habilitado en el servidor)
+  - **Monitoreo**: Verificar actualizaciones de Vercel sobre soporte futuro de HTTP/3
 
 ---
 
@@ -174,12 +202,38 @@
   - Alertas para patrones anómalos ✅
 
 ### Prioridad Media
-- [ ] **Encriptación de Datos Sensibles**: 
-  - Encriptar datos de pago en tránsito
-  - Encriptar datos sensibles en localStorage
-- [ ] **Auditoría Completa**: 
-  - Log de todas las acciones críticas
-  - Trazabilidad completa de transacciones
+- [x] **Encriptación de Datos Sensibles**: ✅
+  - **Implementado**: Servicio de encriptación usando Web Crypto API (`src/utils/encryption.js`)
+  - **Funcionalidades**:
+    - Encriptación AES-GCM para datos sensibles ✅
+    - Encriptación de tokens en localStorage ✅
+    - Encriptación de datos de pago antes de enviarlos ✅
+    - Hash seguro para verificación de integridad ✅
+    - Funciones helper: `setEncryptedItem`, `getEncryptedItem` ✅
+  - **Integrado en**:
+    - `AuthContext`: Tokens y datos de usuario encriptados ✅
+    - `Pay.js`: Datos de pago encriptados antes de enviar ✅
+    - `paymentMethodsProcessor.js`: Campos sensibles encriptados ✅
+  - **Nota**: HTTPS ya proporciona encriptación en tránsito; esto añade una capa extra para campos específicos
+- [x] **Auditoría Completa**: ✅
+  - **Implementado**: Sistema completo de auditoría (`src/services/auditService.js`)
+  - **Funcionalidades**:
+    - Log de todas las acciones críticas ✅
+    - Trazabilidad completa de transacciones ✅
+    - Registro de acciones de usuarios (login, logout) ✅
+    - Registro de acciones de asientos (lock, unlock) ✅
+    - Registro de pagos (initiated, completed, failed, error) ✅
+    - Registro de eventos de seguridad ✅
+    - Hasheo de campos sensibles en logs ✅
+    - Almacenamiento local como fallback ✅
+  - **Tabla de base de datos**: `audit_logs` con índices optimizados ✅
+  - **Integrado en**:
+    - `AuthContext`: Login/logout, intentos fallidos ✅
+    - `Pay.js`: Transacciones de pago ✅
+    - `atomicSeatLock.js`: Bloqueo/desbloqueo de asientos ✅
+  - **Funciones de consulta**:
+    - `getLogs()`: Obtener logs con filtros ✅
+    - `getTransactionTrace()`: Trazabilidad completa de transacciones ✅
 - [ ] **Backup Automático**: 
   - Backup de carritos en proceso
   - Backup de selecciones

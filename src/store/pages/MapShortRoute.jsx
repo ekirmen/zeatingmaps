@@ -4,7 +4,7 @@ import { Spin } from 'antd';
 import { supabase } from '../../supabaseClient';
 
 const MapShortRoute = () => {
-  const { eventSlug } = useParams(); // Permitir slug opcional en la ruta
+  const { eventSlug } = useParams(); // Permitir slug opcional en la ruta (puede ser "r" para ruta corta)
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -13,11 +13,9 @@ const MapShortRoute = () => {
     const funcion = searchParams.get('funcion');
     
     // Asegurar que el session_id se inicialice antes de redirigir
-    // Esto previene problemas con session_id no inicializado
     if (typeof window !== 'undefined' && window.crypto) {
       const storedSessionId = localStorage.getItem('anonSessionId');
       if (!storedSessionId) {
-        // Generar session_id si no existe
         const newSessionId = crypto.randomUUID();
         localStorage.setItem('anonSessionId', newSessionId);
         console.log('[MapShortRoute] Session ID inicializado:', newSessionId);
@@ -25,22 +23,21 @@ const MapShortRoute = () => {
     }
     
     const loadEventAndRedirect = async () => {
-      // Si ya tenemos el slug del evento en la URL, usar directamente
-      if (eventSlug && funcion) {
+      // Si tenemos un slug válido (no "r") y una función, 
+      // y estamos en la ruta /eventos/:eventSlug/map, dejar que EventMapPage maneje
+      if (eventSlug && eventSlug !== 'r' && funcion) {
         const funcionId = parseInt(funcion, 10);
         if (Number.isFinite(funcionId) && funcionId > 0) {
-          console.log(`[MapShortRoute] URL amigable detectada: /store/eventos/${eventSlug}/map?funcion=${funcionId}`);
-          // No necesitamos redirigir, solo asegurarnos de que la ruta sea correcta
-          // La ruta /eventos/:eventSlug/map ya maneja esto correctamente
+          console.log(`[MapShortRoute] URL amigable válida detectada: /store/eventos/${eventSlug}/map?funcion=${funcionId}`);
+          // No hacer nada, la ruta /eventos/:eventSlug/map ya maneja esto
           setLoading(false);
           return;
         }
       }
-
-      // Si no hay función, redirigir al store
+      
+      // Si no hay función, redirigir
       if (!funcion) {
-        if (eventSlug) {
-          // Si tenemos slug pero no función, redirigir a la página del evento
+        if (eventSlug && eventSlug !== 'r') {
           navigate(`/store/eventos/${eventSlug}`, { replace: true });
         } else {
           navigate('/store', { replace: true });
@@ -51,21 +48,19 @@ const MapShortRoute = () => {
       const funcionId = parseInt(funcion, 10);
       if (!Number.isFinite(funcionId) || funcionId <= 0) {
         console.warn('[MapShortRoute] funcion inválido:', funcion);
-        if (eventSlug) {
-          navigate(`/store/eventos/${eventSlug}`, { replace: true });
-        } else {
-          navigate('/store', { replace: true });
-        }
+        navigate('/store', { replace: true });
         return;
       }
 
       try {
         setLoading(true);
         
-        // Si ya tenemos el eventSlug, no necesitamos buscar el evento
-        if (eventSlug) {
-          console.log(`[MapShortRoute] Usando slug del evento: ${eventSlug}`);
-          // Verificar que el evento existe y tiene el slug correcto
+        // Si tenemos un slug válido (no "r"), verificar que el evento existe
+        // Si el slug es "r" o no existe, buscar el evento desde la función
+        if (eventSlug && eventSlug !== 'r') {
+          console.log(`[MapShortRoute] Verificando slug del evento: ${eventSlug}`);
+          
+          // Verificar que el evento existe
           const { data: eventoData, error: eventoError } = await supabase
             .from('eventos')
             .select('id, slug')
@@ -91,35 +86,39 @@ const MapShortRoute = () => {
             throw new Error('La función no pertenece a este evento');
           }
 
-          // Todo está correcto, no necesitamos redirigir
+          // Todo está correcto, EventMapPage manejará el resto
+          console.log(`[MapShortRoute] Validación exitosa para slug: ${eventSlug}`);
           setLoading(false);
           return;
         }
+        
+        // Ruta corta: buscar el evento desde la función (slug es "r" o no existe)
+        console.log(`[MapShortRoute] Ruta corta: buscando evento desde función ${funcionId}`);
 
-        // Si no tenemos slug, buscar el evento desde la función
         // Obtener la función y el evento asociado
-        // Intentar primero con el esquema nuevo (evento_id)
         let { data: funcionData, error: funcionError } = await supabase
           .from('funciones')
-          .select('id, evento_id')
+          .select('id, evento_id, evento')
           .eq('id', funcionId)
           .single();
 
-        // Si falla, intentar con el esquema antiguo (evento)
-        if (funcionError || !funcionData) {
-          ({ data: funcionData, error: funcionError } = await supabase
+        if (funcionError) {
+          // Si falla con evento_id, intentar solo con evento (esquema antiguo)
+          const { data: altFuncionData, error: altError } = await supabase
             .from('funciones')
             .select('id, evento')
             .eq('id', funcionId)
-            .single());
+            .single();
+          
+          if (altError) throw altError;
+          funcionData = altFuncionData;
         }
 
-        if (funcionError) throw funcionError;
         if (!funcionData) {
           throw new Error('Función no encontrada');
         }
 
-        // Obtener el ID del evento (puede ser evento_id o evento dependiendo del esquema)
+        // Obtener el ID del evento
         const eventoId = funcionData.evento_id || funcionData.evento;
         if (!eventoId) {
           throw new Error('La función no tiene un evento asociado');
@@ -128,44 +127,50 @@ const MapShortRoute = () => {
         // Obtener el slug del evento
         const { data: eventoData, error: eventoError } = await supabase
           .from('eventos')
-          .select('id, slug')
+          .select('id, slug, nombre')
           .eq('id', eventoId)
           .single();
 
         if (eventoError) throw eventoError;
-        if (!eventoData || !eventoData.slug) {
-          throw new Error('Evento no encontrado o sin slug');
+        if (!eventoData) {
+          throw new Error('Evento no encontrado');
+        }
+
+        // Si el evento no tiene slug, usar seat-selection como fallback
+        if (!eventoData.slug) {
+          console.warn(`[MapShortRoute] Evento ${eventoData.id} no tiene slug, usando seat-selection`);
+          navigate(`/store/seat-selection/${funcionId}`, { replace: true });
+          return;
         }
 
         const finalEventSlug = eventoData.slug;
         
-        // Redirigir a la vista del mapa dentro del contexto del evento
-        // Esto mostrará el mapa sincronizado con el evento (más cool)
+        // Redirigir a la vista del mapa con el slug correcto
         console.log(`[MapShortRoute] Redirigiendo a: /store/eventos/${finalEventSlug}/map?funcion=${funcionId}`);
         navigate(`/store/eventos/${finalEventSlug}/map?funcion=${funcionId}`, { replace: true });
       } catch (error) {
         console.error('[MapShortRoute] Error cargando evento:', error);
-        console.error('[MapShortRoute] Detalles del error:', {
+        console.error('[MapShortRoute] Detalles:', {
           message: error.message,
           funcionId,
-          funcionError: error.code || error.message
+          eventSlug
         });
         
-        // Si falla, intentar redirigir directamente a seat-selection como fallback
-        try {
+        // Si es ruta corta (slug es "r" o no existe), usar seat-selection como fallback
+        if ((!eventSlug || eventSlug === 'r') && funcionId) {
+          console.log(`[MapShortRoute] Usando fallback: /store/seat-selection/${funcionId}`);
           navigate(`/store/seat-selection/${funcionId}`, { replace: true });
-        } catch (navError) {
-          console.error('[MapShortRoute] Error en redirección de fallback:', navError);
-          // Último recurso: redirigir a la página principal del store
+        } else if (eventSlug && eventSlug !== 'r') {
+          // Si tenemos slug válido pero falló, mostrar error
+          setLoading(false);
+        } else {
           navigate('/store', { replace: true });
         }
-      } finally {
-        setLoading(false);
       }
     };
 
     loadEventAndRedirect();
-  }, [navigate, searchParams, eventSlug]);
+  }, [navigate, searchParams, eventSlug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mostrar un spinner mientras se carga
   if (loading) {

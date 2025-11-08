@@ -1,6 +1,8 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { createAuthError } from '../utils/authErrorMessages';
+import { setEncryptedItem, getEncryptedItem } from '../utils/encryption';
+import auditService from '../services/auditService';
 
 const AuthContext = createContext();
 
@@ -30,15 +32,31 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
       if (session) {
         try {
-          localStorage.setItem('token', session.access_token);
+          // Encriptar y almacenar token de forma segura
+          await setEncryptedItem('token', session.access_token);
+          // También almacenar información del usuario de forma segura
+          await setEncryptedItem('user_data', {
+            id: session.user.id,
+            email: session.user.email
+          });
         } catch (storageError) {
           console.error('Error setting token in localStorage:', storageError);
+          // Fallback: almacenar sin encriptar si falla
+          localStorage.setItem('token', session.access_token);
         }
         setUser(session.user);
         fetchUserRole(session.user.id);
+        
+        // Registrar login en auditoría
+        auditService.logUserAction('login', {
+          userId: session.user.id,
+          email: session.user.email
+        }).catch(err => console.error('Error logging login:', err));
       } else {
         try {
+          // Limpiar datos encriptados
           localStorage.removeItem('token');
+          localStorage.removeItem('user_data');
         } catch (storageError) {
           console.error('Error removing token from localStorage:', storageError);
         }
@@ -62,6 +80,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error || !data.session) {
+        // Registrar intento de login fallido en auditoría
+        auditService.logSecurityEvent('login_failed', {
+          email,
+          reason: error?.message || 'Invalid session'
+        }).catch(err => console.error('Error logging failed login:', err));
+        
         const authError = await createAuthError({
           error: error || new Error('Respuesta de inicio de sesión inválida'),
           email,
@@ -70,9 +94,29 @@ export const AuthProvider = ({ children }) => {
         throw authError;
       }
       const token = data.session.access_token;
-      localStorage.setItem('token', token);
+      
+      // Encriptar y almacenar token de forma segura
+      try {
+        await setEncryptedItem('token', token);
+        await setEncryptedItem('user_data', {
+          id: data.user.id,
+          email: data.user.email
+        });
+      } catch (storageError) {
+        console.error('Error encrypting token:', storageError);
+        // Fallback: almacenar sin encriptar
+        localStorage.setItem('token', token);
+      }
+      
       setUser(data.user);
       fetchUserRole(data.user.id);
+      
+      // Registrar login exitoso en auditoría
+      auditService.logUserAction('login', {
+        userId: data.user.id,
+        email: data.user.email
+      }).catch(err => console.error('Error logging login:', err));
+      
       return data;
     } catch (error) {
       if (error?.code && error?.i18nKey) {
@@ -84,8 +128,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    // Registrar logout en auditoría antes de cerrar sesión
+    if (user) {
+      auditService.logUserAction('logout', {
+        userId: user.id,
+        email: user.email
+      }).catch(err => console.error('Error logging logout:', err));
+    }
+    
     await supabase.auth.signOut();
-    localStorage.removeItem('token');
+    
+    // Limpiar datos encriptados
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user_data');
+    } catch (storageError) {
+      console.error('Error removing encrypted data:', storageError);
+    }
+    
     setUser(null);
     setRole(null);
   };
@@ -98,15 +158,23 @@ export const AuthProvider = ({ children }) => {
 
       if (session?.user) {
         try {
-          localStorage.setItem('token', session.access_token);
+          // Encriptar y almacenar token
+          await setEncryptedItem('token', session.access_token);
+          await setEncryptedItem('user_data', {
+            id: session.user.id,
+            email: session.user.email
+          });
         } catch (storageError) {
           console.error('Error setting token in localStorage:', storageError);
+          // Fallback
+          localStorage.setItem('token', session.access_token);
         }
         setUser(session.user);
         fetchUserRole(session.user.id);
       } else {
         try {
           localStorage.removeItem('token');
+          localStorage.removeItem('user_data');
         } catch (storageError) {
           console.error('Error removing token from localStorage:', storageError);
         }
