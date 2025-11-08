@@ -243,6 +243,9 @@ const SeatingMapUnified = ({
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const seatStatesMapRaw = useSeatLockStore(state => state.seatStates);
   const seatStatesVersion = useSeatLockStore(state => state.seatStatesVersion);
+  // Obtener funciones de suscripción del store
+  const subscribeToFunction = useSeatLockStore(state => state.subscribeToFunction);
+  const unsubscribe = useSeatLockStore(state => state.unsubscribe);
   
   // Convertir Map a objeto para que React detecte cambios
   // seatStatesVersion cambia cada vez que se actualiza seatStates, forzando re-render
@@ -839,18 +842,31 @@ const SeatingMapUnified = ({
   // Los asientos ya vienen validados del hook de sincronización
   const validatedSeats = allSeats;
 
-  // Calcular dimensiones máximas de manera segura
-  let maxX = 800;
-  let maxY = 600;
-  
-  if (validatedSeats.length > 0) {
-    maxX = Math.max(...validatedSeats.map((s) => (s.x || 0) + (s.ancho || 30)), 800);
-    maxY = Math.max(...validatedSeats.map((s) => (s.y || 0) + (s.alto || 30)), 600);
-  } else if (validatedMesas.length > 0) {
-    // Si no hay asientos, usar las mesas para calcular dimensiones
-    maxX = Math.max(...validatedMesas.map((m) => (m.posicion?.x || 0) + (m.width || 100)), 800);
-    maxY = Math.max(...validatedMesas.map((m) => (m.posicion?.y || 0) + (m.height || 80)), 600);
-  }
+  // Calcular dimensiones máximas de manera segura (antes de cualquier return)
+  const maxDimensions = useMemo(() => {
+    let maxX = 800;
+    let maxY = 600;
+    
+    if (validatedSeats.length > 0) {
+      maxX = Math.max(...validatedSeats.map((s) => (s.x || 0) + (s.ancho || 30)), 800);
+      maxY = Math.max(...validatedSeats.map((s) => (s.y || 0) + (s.alto || 30)), 600);
+    } else if (validatedMesas.length > 0) {
+      // Si no hay asientos, usar las mesas para calcular dimensiones
+      maxX = Math.max(...validatedMesas.map((m) => (m.posicion?.x || 0) + (m.width || 100)), 800);
+      maxY = Math.max(...validatedMesas.map((m) => (m.posicion?.y || 0) + (m.height || 80)), 600);
+    }
+    
+    return { maxX, maxY };
+  }, [validatedSeats, validatedMesas]);
+
+  // Memoizar dimensiones del Stage (solo recalcular si cambian las dimensiones máximas)
+  const stageDimensions = useMemo(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    return {
+      width: isMobile ? Math.min(maxDimensions.maxX + 50, window.innerWidth - 40) : maxDimensions.maxX + 50,
+      height: isMobile ? Math.min(maxDimensions.maxY + 50, window.innerHeight - 200) : maxDimensions.maxY + 50
+    };
+  }, [maxDimensions]);
 
   if (!mapa) {
     return <div>No map data available</div>;
@@ -876,17 +892,6 @@ const SeatingMapUnified = ({
   if (validatedMesas.length === 0) {
     logger.warn('No valid tables found in the map');
   }
-
-  // Create a set of found seat IDs for quick lookup
-
-  // Memoizar dimensiones del Stage (solo recalcular si cambian las dimensiones máximas)
-  const stageDimensions = useMemo(() => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-    return {
-      width: isMobile ? Math.min(maxX + 50, window.innerWidth - 40) : maxX + 50,
-      height: isMobile ? Math.min(maxY + 50, window.innerHeight - 200) : maxY + 50
-    };
-  }, [maxX, maxY]);
 
   return (
     <div style={{ 
