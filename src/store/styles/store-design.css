@@ -1678,3 +1678,25 @@
     line-height: 32px;
   }
 }
+
+/* ============================================
+   CARRITO FLOTANTE GLOBAL
+   ============================================ */
+
+.store-cart-floating-card {
+  animation: slideUpCart 0.3s ease-out;
+}
+
+.store-cart-floating-card .ant-card-body {
+  padding: 16px !important;
+}
+
+@media (max-width: 768px) {
+  .store-cart-floating-card {
+    max-width: calc(100vw - 24px) !important;
+    width: 100% !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    left: 12px !important;
+  }
+}

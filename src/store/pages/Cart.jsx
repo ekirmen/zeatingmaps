@@ -330,11 +330,39 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
 
             <div className="store-card-header" style={{ 
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid var(--store-gray-200)'
+              flexDirection: 'column',
+              gap: '12px',
+              borderBottom: '1px solid var(--store-gray-200)',
+              paddingBottom: '16px'
             }}>
-              <h1 className="store-text-xl md:store-text-2xl store-font-bold">Carrito de Compras</h1>
+              <div style={{ 
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <h1 className="store-text-xl md:store-text-2xl store-font-bold">Carrito de Compras</h1>
+              </div>
+              {/* Timer arriba */}
+              {showTimer && timeLeft && timeLeft > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  gap: '6px',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  background: timeLeft <= 60 ? '#fff1f0' : '#f0f7ff',
+                  border: timeLeft <= 60 ? '2px solid #ff4d4f' : '1px solid #1890ff',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: getTimerColor(),
+                  width: 'fit-content',
+                  animation: timeLeft <= 60 ? 'pulse 2s infinite' : 'none'
+                }}>
+                  <ClockCircleOutlined />
+                  <span>Tiempo restante: {formatTime(timeLeft)}</span>
+                </div>
+              )}
             </div>
             
             <div className="store-card-body" style={{ flex: '1 1 auto', overflow: 'auto' }}>
@@ -549,26 +577,6 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                 <span>Total a pagar:</span>
                                 <span>${formatPrice(subtotal)}</span>
                             </div>
-                            {showTimer && timeLeft && timeLeft > 0 && (
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '6px',
-                                    padding: '8px 12px',
-                                    borderRadius: '20px',
-                                    background: timeLeft <= 60 ? '#fff1f0' : '#f5f5f5',
-                                    border: timeLeft <= 60 ? '2px solid #ff4d4f' : '1px solid var(--store-gray-200)',
-                                    fontSize: '14px',
-                                    fontWeight: 700,
-                                    color: getTimerColor(),
-                                    animation: timeLeft <= 60 ? 'pulse 2s infinite' : 'none',
-                                    marginTop: '12px'
-                                }}>
-                                    <ClockCircleOutlined />
-                                    <span>Tiempo restante: {formatTime(timeLeft)}</span>
-                                </div>
-                            )}
                         </div>
                     )}
                     {itemCount > 0 && !hideCheckoutButton && (

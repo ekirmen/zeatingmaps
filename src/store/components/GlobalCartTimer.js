@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Badge, Button, Tooltip, Modal } from 'antd';
-import { ClockCircleOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { Badge, Button, Tooltip, Modal, Card } from 'antd';
+import { ClockCircleOutlined, ShoppingCartOutlined, RightOutlined, CreditCardOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { notification } from 'antd';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { notification, message } from 'antd';
 import { useSeatLockStore } from '../../components/seatLockStore';
 
 const GlobalCartTimer = () => {
   const [showTimer, setShowTimer] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const location = useLocation();
   const { timeLeft, getItemCount, calculateTotal, items, products, clearCart, cartExpiration } = useCartStore();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -18,10 +19,15 @@ const GlobalCartTimer = () => {
   const itemCount = getItemCount();
   const total = calculateTotal();
 
-  // Mostrar el temporizador si hay items en el carrito
+  // Páginas donde NO mostrar el carrito flotante (ya tienen su propio carrito)
+  const isSeatSelectionPage = location.pathname.includes('/map') || 
+                               location.pathname.includes('/seat-selection') || 
+                               location.pathname === '/store/cart';
+
+  // Mostrar el carrito flotante si hay items y no estamos en página de selección
   useEffect(() => {
-    setShowTimer(itemCount > 0);
-  }, [itemCount]);
+    setShowTimer(itemCount > 0 && !isSeatSelectionPage);
+  }, [itemCount, isSeatSelectionPage]);
 
   // Verificar expiración del carrito
   useEffect(() => {
@@ -86,61 +92,136 @@ const GlobalCartTimer = () => {
 
   // Determinar el color del temporizador basado en el tiempo restante
   const getTimerColor = () => {
-    if (timeLeft <= 300) return '#ff4d4f'; // Rojo para últimos 5 minutos
-    if (timeLeft <= 600) return '#faad14'; // Amarillo para últimos 10 minutos
+    if (timeLeft <= 60) return '#ff4d4f'; // Rojo para últimos 60 segundos
+    if (timeLeft <= 300) return '#faad14'; // Amarillo para últimos 5 minutos
     return '#52c41a'; // Verde para el resto
+  };
+
+  // Manejar checkout desde el carrito flotante
+  const handleCheckout = () => {
+    if (itemCount === 0) {
+      message.warning('El carrito está vacío');
+      return;
+    }
+    
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    
+    navigate('/store/payment');
   };
 
   return (
     <>
-      {/* Temporizador flotante */}
-      <div className="fixed top-6 right-6 z-50">
-        <Tooltip 
-          title={
-            <div className="text-center">
-              <div className="font-bold mb-2">Tu carrito expira en {formatTime(timeLeft)}</div>
-              <div className="text-sm">
-                {items.length > 0 && <div>Asientos: {items.length}</div>}
-                {products.length > 0 && <div>Productos: {products.length}</div>}
-                <div className="font-bold mt-1">Total: ${total.toFixed(2)}</div>
+      {/* Carrito flotante - Solo mostrar si hay items y no estamos en página de selección */}
+      {showTimer && (
+        <div 
+          className="fixed bottom-6 right-6 z-50"
+          style={{
+            maxWidth: '320px',
+            width: '100%'
+          }}
+        >
+          <Card
+            className="store-cart-floating-card"
+            style={{
+              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+              borderRadius: '12px',
+              border: `2px solid ${getTimerColor()}`,
+              background: 'white'
+            }}
+            bodyStyle={{ padding: '16px' }}
+          >
+            {/* Header con timer */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '12px',
+              paddingBottom: '12px',
+              borderBottom: '1px solid #f0f0f0'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShoppingCartOutlined style={{ fontSize: '20px', color: getTimerColor() }} />
+                <span style={{ fontWeight: 600, fontSize: '16px' }}>
+                  Carrito ({itemCount})
+                </span>
               </div>
-              <div className="text-xs mt-2">
-                {user ? 'Haz clic para ver el carrito' : 'Inicia sesión para continuar'}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                background: timeLeft <= 60 ? '#fff1f0' : '#f0f7ff',
+                border: `1px solid ${getTimerColor()}`,
+                fontSize: '12px',
+                fontWeight: 600,
+                color: getTimerColor()
+              }}>
+                <ClockCircleOutlined />
+                <span>{formatTime(timeLeft)}</span>
               </div>
             </div>
-          }
-          placement="left"
-        >
-          <Button
-            type="primary"
-            shape="circle"
-            size="large"
-            icon={<ClockCircleOutlined />}
-            onClick={handleTimerClick}
-            style={{
-              backgroundColor: getTimerColor(),
-              borderColor: getTimerColor(),
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              width: '60px',
-              height: '60px',
-              fontSize: '20px'
-            }}
-            className="flex items-center justify-center"
-          >
-            <Badge count={itemCount} size="small" offset={[-5, 5]}>
-              <div></div>
-            </Badge>
-          </Button>
-        </Tooltip>
 
-        {/* Texto del tiempo restante */}
-        <div 
-          className="absolute -top-8 right-0 bg-white px-2 py-1 rounded shadow-md text-sm font-bold whitespace-nowrap"
-          style={{ color: getTimerColor() }}
-        >
-          {formatTime(timeLeft)}
+            {/* Resumen */}
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: '4px',
+                fontSize: '14px'
+              }}>
+                <span style={{ color: '#666' }}>Total:</span>
+                <span style={{ fontWeight: 700, fontSize: '18px', color: '#1890ff' }}>
+                  ${total.toFixed(2)}
+                </span>
+              </div>
+              {items.length > 0 && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                  {items.length} asiento{items.length > 1 ? 's' : ''} seleccionado{items.length > 1 ? 's' : ''}
+                </div>
+              )}
+            </div>
+
+            {/* Botón de comprar */}
+            <Button
+              type="primary"
+              block
+              size="large"
+              icon={<CreditCardOutlined />}
+              onClick={handleCheckout}
+              style={{
+                background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+                border: 'none',
+                height: '40px',
+                fontWeight: 600,
+                fontSize: '14px',
+                boxShadow: '0 2px 8px rgba(24,144,255,0.3)'
+              }}
+            >
+              Proceder al Pago
+            </Button>
+
+            {/* Link para ver carrito completo */}
+            <Button
+              type="link"
+              block
+              size="small"
+              onClick={() => navigate('/store/cart')}
+              style={{
+                marginTop: '8px',
+                padding: '4px 0',
+                fontSize: '12px',
+                height: 'auto'
+              }}
+            >
+              Ver carrito completo <RightOutlined />
+            </Button>
+          </Card>
         </div>
-      </div>
+      )}
 
       {/* Modal de login/registro */}
       <Modal
