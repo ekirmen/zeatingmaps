@@ -678,98 +678,99 @@ const ModernEventPage = () => {
                 bodyStyle={{ padding: '12px', height: 'calc(100% - 57px)', overflow: 'auto' }}
               >
                 <div className="w-full h-full min-h-[400px] md:min-h-[500px]">
-                {!canStoreAccess ? (
-                  <NotFound title="404" message={`Este evento no está disponible (${eventStatus.text}).`} homePath="/store" />
-                ) : evento?.modoVenta === 'grid' ? (
-                  // Modo Grid - Venta sin mapa
-                  <GridSaleMode
-                    evento={evento}
-                    funcion={funciones.find(f => f.id === selectedFunctionId)}
-                    onAddToCart={(item) => {
-                      // Convertir item del modo grid al formato del carrito
-                      const cartItem = {
-                        sillaId: item.id,
-                        nombre: item.descripcion,
-                        precio: item.precio,
-                        nombreZona: item.zona_nombre,
-                        functionId: item.funcion_id,
-                        cantidad: item.cantidad,
-                        tipo: 'grid'
-                      };
-                      toggleSeat(cartItem);
-                    }}
-                    onRemoveFromCart={(itemId) => {
-                      removeFromCart(itemId);
-                    }}
-                    cartItems={cartItems}
-                    loading={mapLoading}
-                  />
-                ) : mapLoading ? (
-                  <div className="flex items-center justify-center h-full min-h-[400px]">
-                    <SeatMapSkeleton />
-                  </div>
-                ) : mapa ? (
-                  <div className="w-full h-full overflow-auto store-seating-map">
-                    {/* Toggle entre mapa y lista en móvil */}
-                    {isMobile && (
-                      <div className="flex gap-2 p-2 bg-white border-b">
-                        <Button
-                          type={viewMode === 'map' ? 'primary' : 'default'}
-                          onClick={() => setViewMode('map')}
-                          size="small"
-                        >
-                          Mapa
-                        </Button>
-                        <Button
-                          type={viewMode === 'list' ? 'primary' : 'default'}
-                          onClick={() => setViewMode('list')}
-                          size="small"
-                        >
-                          Lista
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {viewMode === 'list' && isMobile ? (
-                      seatsForList.length === 0 ? (
-                        <SeatMapSkeleton />
+                  {!canStoreAccess ? (
+                    <NotFound title="404" message={`Este evento no está disponible (${eventStatus.text}).`} homePath="/store" />
+                  ) : evento?.modoVenta === 'grid' ? (
+                    // Modo Grid - Venta sin mapa
+                    <GridSaleMode
+                      evento={evento}
+                      funcion={funciones.find(f => f.id === selectedFunctionId)}
+                      onAddToCart={(item) => {
+                        // Convertir item del modo grid al formato del carrito
+                        const cartItem = {
+                          sillaId: item.id,
+                          nombre: item.descripcion,
+                          precio: item.precio,
+                          nombreZona: item.zona_nombre,
+                          functionId: item.funcion_id,
+                          cantidad: item.cantidad,
+                          tipo: 'grid'
+                        };
+                        toggleSeat(cartItem);
+                      }}
+                      onRemoveFromCart={(itemId) => {
+                        removeFromCart(itemId);
+                      }}
+                      cartItems={cartItems}
+                      loading={mapLoading}
+                    />
+                  ) : mapLoading ? (
+                    <div className="flex items-center justify-center h-full min-h-[400px]">
+                      <SeatMapSkeleton />
+                    </div>
+                  ) : mapa ? (
+                    <div className="w-full h-full overflow-auto store-seating-map">
+                      {/* Toggle entre mapa y lista en móvil */}
+                      {isMobile && (
+                        <div className="flex gap-2 p-2 bg-white border-b">
+                          <Button
+                            type={viewMode === 'map' ? 'primary' : 'default'}
+                            onClick={() => setViewMode('map')}
+                            size="small"
+                          >
+                            Mapa
+                          </Button>
+                          <Button
+                            type={viewMode === 'list' ? 'primary' : 'default'}
+                            onClick={() => setViewMode('list')}
+                            size="small"
+                          >
+                            Lista
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {viewMode === 'list' && isMobile ? (
+                        seatsForList.length === 0 ? (
+                          <SeatMapSkeleton />
+                        ) : (
+                          <SeatListView
+                            seats={seatsForList}
+                            funcionId={selectedFunctionId}
+                            selectedSeats={selectedSeats.map(seat => seat._id || seat.id)}
+                            onSeatToggle={handleSeatToggle}
+                            isSeatLocked={isSeatLocked}
+                            isSeatLockedByMe={isSeatLockedByMe}
+                            zonas={mapa?.zonas || []}
+                          />
+                        )
                       ) : (
-                        <SeatListView
-                          seats={seatsForList}
+                        <LazySeatingMap
+                          mapa={mapa}
                           funcionId={selectedFunctionId}
                           selectedSeats={selectedSeats.map(seat => seat._id || seat.id)}
                           onSeatToggle={handleSeatToggle}
                           isSeatLocked={isSeatLocked}
                           isSeatLockedByMe={isSeatLockedByMe}
-                          zonas={mapa?.zonas || []}
+                          isTableLocked={isTableLocked}
+                          isTableLockedByMe={isTableLockedByMe}
+                          isAnySeatInTableLocked={isAnySeatInTableLocked}
+                          areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
+                          onTableToggle={handleTableToggle}
+                          // lockedSeats se obtiene automáticamente del useSeatLockStore
                         />
-                      )
-                    ) : (
-                      <LazySeatingMap
-                      mapa={mapa}
-                      funcionId={selectedFunctionId}
-                      selectedSeats={selectedSeats.map(seat => seat._id || seat.id)}
-                      onSeatToggle={handleSeatToggle}
-                      isSeatLocked={isSeatLocked}
-                      isSeatLockedByMe={isSeatLockedByMe}
-                      isTableLocked={isTableLocked}
-                      isTableLockedByMe={isTableLockedByMe}
-                      isAnySeatInTableLocked={isAnySeatInTableLocked}
-                      areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
-                      onTableToggle={handleTableToggle}
-                      // lockedSeats se obtiene automáticamente del useSeatLockStore
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full min-h-[400px]">
-                    <Alert
-                      message="No hay mapa disponible"
-                      description="Este evento no tiene un mapa de asientos configurado."
-                      type="warning"
-                      showIcon
-                    />
-                  </div>
-                )}
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full min-h-[400px]">
+                      <Alert
+                        message="No hay mapa disponible"
+                        description="Este evento no tiene un mapa de asientos configurado."
+                        type="warning"
+                        showIcon
+                      />
+                    </div>
+                  )}
                 </div>
               </Card>
             </div>
