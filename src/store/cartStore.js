@@ -4,6 +4,15 @@ import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 
 const getLockExpirationMs = () => {
+  // Detectar si es móvil
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  
+  // En móvil: 1 minuto (60 segundos) para compra rápida
+  // En desktop: 15 minutos por defecto, o el valor guardado
+  if (isMobile) {
+    return 60 * 1000; // 1 minuto
+  }
+  
   const saved = parseInt(localStorage.getItem('cart_lock_minutes') || '15', 10);
   const minutes = Number.isFinite(saved) ? Math.max(1, Math.min(120, saved)) : 15;
   return minutes * 60 * 1000;
@@ -77,7 +86,6 @@ export const useCartStore = create(
           // ¿Asiento ya existe en carrito?
 
           const { useSeatLockStore } = await import('../components/seatLockStore');
-          const seatStore = useSeatLockStore.getState();
           const functionId = seat.functionId || seat.funcionId || get().functionId;
           
           // functionId extraído
@@ -194,7 +202,9 @@ export const useCartStore = create(
               nombre: seat.nombre || seat.numero || seatId,
               precio: seat.precio || 0,
               zonaId: seat.zonaId || null,
-              nombreZona: seat.nombreZona || 'Zona',
+              nombreZona: seat.nombreZona || seat.zona?.nombre || 'Zona',
+              mesaId: seat.mesaId || seat.mesa || seat.tableId || null,
+              nombreMesa: seat.nombreMesa || seat.mesa?.nombre || (seat.mesaId ? `Mesa ${seat.mesaId}` : null),
               functionId: functionId,
               funcionId: functionId,
               ...seat // Incluir cualquier otra propiedad del asiento
@@ -343,7 +353,6 @@ export const useCartStore = create(
           
           // Verificar que el asiento no existe en la base de datos antes de desbloquear
           const { useSeatLockStore } = await import('../components/seatLockStore');
-          const seatStore = useSeatLockStore.getState();
           
           // Verificar si el asiento está realmente bloqueado en la BD
           const isLocked = await useSeatLockStore.getState().isSeatLocked(seatId, functionId);

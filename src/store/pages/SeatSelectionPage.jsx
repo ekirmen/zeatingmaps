@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Alert, Spin, Badge } from 'antd';
+import { Alert, Spin } from 'antd';
 import { ShoppingCartOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import LazySeatingMap from '../../components/LazySeatingMap';
 import { useSeatLockStore } from '../../components/seatLockStore';
@@ -16,16 +16,19 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   const funcionId = initialFuncionId ?? funcionIdFromParams;
   const navigate = useNavigate();
   const [mapa, setMapa] = useState(null);
+  const [plantillaPrecios, setPlantillaPrecios] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isRedirecting, setIsRedirecting] = useState(autoRedirectToEventMap);
   const [redirectFailed, setRedirectFailed] = useState(!autoRedirectToEventMap);
+  
+  // Cache para zona/mesa/precio por asiento (evitar recalcular en cada click)
+  const seatDataCache = React.useRef(new Map());
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const cartItems = useCartStore((state) => state.items);
-  const removeFromCart = useCartStore((state) => state.removeFromCart);
   const timeLeft = useCartStore((state) => state.timeLeft);
-  const { isMobile, isTablet } = useResponsive();
+  const { isMobile } = useResponsive();
   
   const {
     subscribeToFunction,
@@ -39,9 +42,22 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   } = useSeatLockStore();
   const lockedSeats = useSeatLockStore((state) => state.lockedSeats);
   
-  // Filtrar items del carrito que pertenecen a esta función
-  const funcionCartItems = cartItems.filter(item => 
-    String(item.functionId || item.funcionId) === String(funcionId)
+  // Filtrar items del carrito que pertenecen a esta función (memoizado)
+  const funcionCartItems = useMemo(() => 
+    cartItems.filter(item => 
+      String(item.functionId || item.funcionId) === String(funcionId)
+    ), [cartItems, funcionId]
+  );
+  
+  // Limpiar cache cuando cambia el mapa o plantilla
+  useEffect(() => {
+    seatDataCache.current.clear();
+  }, [mapa, plantillaPrecios]);
+  
+  // Memoizar selectedSeats para evitar re-renders innecesarios
+  const selectedSeats = useMemo(() => 
+    cartItems.map(item => item.sillaId || item.id || item._id),
+    [cartItems]
   );
   
   // Formatear tiempo restante
@@ -183,6 +199,23 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         if (mapaError) throw mapaError;
 
         setMapa(mapaData);
+
+        // Cargar plantilla de precios
+        let plantillaData = null;
+        if (funcion.plantilla) {
+          plantillaData = funcion.plantilla;
+        } else if (funcion.plantilla_id) {
+          const { data: plantilla, error: plantillaError } = await supabase
+            .from('plantillas')
+            .select('*')
+            .eq('id', funcion.plantilla_id)
+            .maybeSingle();
+          
+          if (!plantillaError && plantilla) {
+            plantillaData = plantilla;
+          }
+        }
+        setPlantillaPrecios(plantillaData);
       } catch (err) {
         console.error('Error cargando mapa:', err);
         setError(err.message);
@@ -194,10 +227,98 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     loadMapa();
   }, [funcionId, redirectFailed, isRedirecting]);
 
-  const handleSeatToggle = async (seat) => {
-    // Asegurarnos de que toggleSeat reciba la función asociada
-    await toggleSeat({ ...seat, funcionId });
-  };
+  // Función optimizada para obtener datos del asiento (con cache)
+  const getSeatData = useCallback((seat) => {
+    const seatId = seat._id || seat.id || seat.sillaId;
+    if (!seatId) return null;
+    
+    // Verificar cache primero
+    if (seatDataCache.current.has(seatId)) {
+      return seatDataCache.current.get(seatId);
+    }
+    
+    // Obtener zona del asiento (simplificado para móvil)
+    const zona = mapa?.zonas?.find(z => z.asientos?.some(a => a._id === seatId)) ||
+                 mapa?.contenido?.find(el => el.sillas?.some(a => a._id === seatId) && (el.zona || el.zonaId)) ||
+                 seat.zona || {};
+    
+    const zonaId = zona?.id || zona?.zonaId || seat.zonaId;
+    const nombreZona = zona?.nombre || seat.nombreZona || seat.zona?.nombre || 'Zona';
+    
+    // Obtener mesa del asiento
+    const mesa = seat.mesa || seat.mesaId || seat.tableId || null;
+    const nombreMesa = seat.nombreMesa || seat.mesa?.nombre || (mesa ? `Mesa ${mesa}` : null);
+    
+    // Obtener precio de la plantilla (cachear resultado)
+    let precio = seat.precio || 0;
+    if (plantillaPrecios && plantillaPrecios.detalles) {
+      try {
+        const detalles = typeof plantillaPrecios.detalles === 'string'
+          ? JSON.parse(plantillaPrecios.detalles)
+          : plantillaPrecios.detalles;
+        
+        const precioZona = detalles.find(d =>
+          d.zona_id === zonaId ||
+          d.zonaId === zonaId ||
+          d.zona_nombre === nombreZona ||
+          d.zonaNombre === nombreZona
+        );
+        
+        if (precioZona) {
+          precio = precioZona.precio || precio;
+        }
+      } catch (e) {
+        // Silenciar error en móvil para mejor performance
+        if (!isMobile) {
+          console.warn('[SeatSelectionPage] Error parsing detalles:', e);
+        }
+      }
+    }
+    
+    const seatData = {
+      zonaId,
+      nombreZona,
+      mesaId: mesa,
+      nombreMesa,
+      precio
+    };
+    
+    // Guardar en cache
+    seatDataCache.current.set(seatId, seatData);
+    
+    return seatData;
+  }, [mapa, plantillaPrecios, isMobile]);
+
+  const handleSeatToggle = useCallback(async (seat) => {
+    // Obtener datos del asiento (usar cache si está disponible)
+    const seatData = getSeatData(seat);
+    if (!seatData) {
+      // Si no se pueden obtener datos, usar valores por defecto
+      await toggleSeat({
+        ...seat,
+        funcionId,
+        precio: seat.precio || 0,
+        nombreZona: seat.nombreZona || 'Zona'
+      });
+      return;
+    }
+    
+    // Preparar asiento con todos los datos
+    const seatWithData = {
+      ...seat,
+      funcionId,
+      ...seatData
+    };
+    
+    // En móvil, no esperar respuesta completa (optimistic update)
+    if (isMobile) {
+      toggleSeat(seatWithData).catch(err => {
+        console.error('Error toggling seat:', err);
+      });
+    } else {
+      await toggleSeat(seatWithData);
+    }
+  }, [getSeatData, toggleSeat, funcionId, isMobile]);
 
   if (isRedirecting || loading) {
     return (
@@ -223,10 +344,27 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   return (
     <div className={`seat-selection-page store-container ${funcionCartItems.length > 0 && isMobile ? 'seat-selection-page-with-cart' : ''}`} style={{ 
       padding: isMobile ? '12px' : '24px',
-      paddingBottom: funcionCartItems.length > 0 ? (isMobile ? '120px' : '24px') : (isMobile ? '24px' : '24px')
+      paddingBottom: funcionCartItems.length > 0 ? (isMobile ? '120px' : '24px') : (isMobile ? '24px' : '24px'),
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : (funcionCartItems.length > 0 ? 'row' : 'column'),
+      gap: isMobile ? '16px' : '24px',
+      height: isMobile ? 'auto' : (funcionCartItems.length > 0 ? 'calc(100vh - 100px)' : 'auto'),
+      overflow: isMobile ? 'visible' : 'hidden',
+      maxWidth: '100vw',
+      boxSizing: 'border-box'
     }}>
       {/* Mapa de asientos */}
-      <div className="store-card" style={{ marginBottom: funcionCartItems.length > 0 ? '24px' : '0' }}>
+      <div className="store-card" style={{ 
+        marginBottom: isMobile ? (funcionCartItems.length > 0 ? '24px' : '0') : '0',
+        flex: isMobile ? '0 0 auto' : (funcionCartItems.length > 0 ? '1 1 60%' : '1 1 100%'),
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: isMobile ? '400px' : (funcionCartItems.length > 0 ? '100%' : '500px'),
+        maxHeight: isMobile ? '60vh' : (funcionCartItems.length > 0 ? '100%' : '70vh'),
+        overflow: 'hidden',
+        width: '100%',
+        maxWidth: '100%'
+      }}>
         <div className="store-card-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <ShoppingCartOutlined style={{ fontSize: '20px', color: 'var(--store-primary)' }} />
@@ -237,16 +375,17 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         </div>
         <div className="store-card-body" style={{ 
           padding: isMobile ? '12px' : '24px',
-          minHeight: isMobile ? '400px' : '500px',
-          maxHeight: isMobile ? '60vh' : '70vh',
+          flex: '1 1 auto',
           overflow: 'hidden',
-          position: 'relative'
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column'
         }}>
           {mapa ? (
             <div className="store-seating-map" style={{
               width: '100%',
               height: '100%',
-              minHeight: isMobile ? '400px' : '500px',
+              flex: '1 1 auto',
               overflow: 'auto',
               WebkitOverflowScrolling: 'touch',
               overscrollBehavior: 'contain'
@@ -254,7 +393,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
               <LazySeatingMap
                 mapa={mapa}
                 funcionId={funcionId}
-                selectedSeats={cartItems.map(item => item.sillaId || item.id || item._id)}
+                selectedSeats={selectedSeats}
                 onSeatToggle={handleSeatToggle}
                 isSeatLocked={isSeatLocked}
                 isSeatLockedByMe={isSeatLockedByMe}
@@ -286,13 +425,18 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
             left: isMobile ? 0 : 'auto',
             right: isMobile ? 0 : 'auto',
             width: isMobile ? '100%' : 'auto',
-            maxWidth: isMobile ? '100%' : '600px',
-            margin: isMobile ? 0 : '0 auto',
+            flex: isMobile ? '0 0 auto' : '0 0 400px',
+            minWidth: isMobile ? '100%' : '350px',
+            maxWidth: isMobile ? '100%' : '400px',
+            margin: isMobile ? 0 : '0',
             borderRadius: isMobile ? '16px 16px 0 0' : 'var(--store-radius-xl)',
             boxShadow: isMobile ? '0 -4px 20px rgba(0, 0, 0, 0.15)' : 'var(--store-shadow-lg)',
             zIndex: isMobile ? 1000 : 'auto',
-            maxHeight: isMobile ? '50vh' : 'auto',
-            overflow: isMobile ? 'auto' : 'visible'
+            maxHeight: isMobile ? '50vh' : '100%',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: 'white'
           }}
         >
           <div className="store-card-header" style={{ 
@@ -304,32 +448,60 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
             padding: isMobile ? '12px 16px' : '16px 24px',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            flexShrink: 0,
+            flexWrap: isMobile ? 'wrap' : 'nowrap',
+            gap: isMobile ? '8px' : '0'
           }}>
-            <h3 className="store-card-title" style={{ margin: 0, fontSize: isMobile ? '16px' : '18px' }}>
-              Tu Carrito ({funcionCartItems.length})
-            </h3>
-            {timeLeft && timeLeft > 0 && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '4px 12px',
-                borderRadius: '20px',
-                background: '#f5f5f5',
-                fontSize: isMobile ? '12px' : '14px',
-                fontWeight: 600,
-                color: getTimerColor()
-              }}>
-                <ClockCircleOutlined />
-                <span>{formatTime(timeLeft)}</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto' }}>
+              <h3 className="store-card-title" style={{ margin: 0, fontSize: isMobile ? '16px' : '18px' }}>
+                Tu Carrito ({funcionCartItems.length})
+              </h3>
+              {timeLeft && timeLeft > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: isMobile ? '6px 10px' : '4px 12px',
+                  borderRadius: '20px',
+                  background: timeLeft <= 60 ? '#fff1f0' : '#f5f5f5',
+                  border: timeLeft <= 60 ? '2px solid #ff4d4f' : 'none',
+                  fontSize: isMobile ? '13px' : '14px',
+                  fontWeight: 700,
+                  color: getTimerColor(),
+                  animation: timeLeft <= 60 ? 'pulse 2s infinite' : 'none'
+                }}>
+                  <ClockCircleOutlined />
+                  <span>{formatTime(timeLeft)}</span>
+                </div>
+              )}
+            </div>
+            {/* Botón directo a pagar en móvil */}
+            {isMobile && funcionCartItems.length > 0 && (
+              <button
+                onClick={() => navigate('/store/payment')}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: 'var(--store-primary)',
+                  color: 'white',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginTop: '8px'
+                }}
+              >
+                Ir a Pagar
+              </button>
             )}
           </div>
           <div className="store-card-body" style={{ 
             padding: isMobile ? '12px 16px' : '16px 24px',
-            maxHeight: isMobile ? 'calc(50vh - 60px)' : 'none',
-            overflow: 'auto'
+            flex: '1 1 auto',
+            overflow: 'auto',
+            WebkitOverflowScrolling: 'touch'
           }}>
             <Cart selectedFunctionId={funcionId} />
           </div>

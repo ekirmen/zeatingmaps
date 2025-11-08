@@ -177,10 +177,10 @@
    ============================================ */
 
 .store-header {
-  background: var(--store-primary);
+  background: var(--store-header-bg, var(--store-primary));
   box-shadow: var(--store-shadow-sm);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--store-text-inverse);
+  color: var(--store-header-text, var(--store-text-inverse));
   position: sticky;
   top: 0;
   z-index: var(--store-z-sticky);
@@ -1357,11 +1357,21 @@
     box-sizing: border-box;
   }
   
-  /* Prevenir overflow en el contenedor principal */
-  .store-container {
-    max-width: 100vw;
-    overflow-x: hidden;
-  }
+/* Prevenir overflow en el contenedor principal */
+         .store-container {
+           max-width: 100vw;
+           overflow-x: hidden;
+         }
+         
+         /* Animación de pulso para timer urgente */
+         @keyframes pulse {
+           0%, 100% {
+             opacity: 1;
+           }
+           50% {
+             opacity: 0.7;
+           }
+         }
   
   /* Espaciado inferior cuando hay carrito flotante */
   .seat-selection-page:has(.store-cart-floating) {

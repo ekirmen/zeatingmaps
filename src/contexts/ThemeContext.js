@@ -33,7 +33,34 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     Object.entries(theme).forEach(([key, value]) => {
+      // Aplicar variables CSS del tema
       document.documentElement.style.setProperty(`--${key}`, value);
+      
+      // Mapear colores del webstudio a variables del store
+      if (key === 'primary' || key === 'btnPrimary') {
+        document.documentElement.style.setProperty('--store-primary', value);
+        // Calcular variaciones del color primario
+        const hoverColor = value; // Usar el mismo color o calcular uno más oscuro
+        const activeColor = value; // Usar el mismo color o calcular uno más oscuro
+        document.documentElement.style.setProperty('--store-primary-hover', hoverColor);
+        document.documentElement.style.setProperty('--store-primary-active', activeColor);
+      }
+      if (key === 'headerBg') {
+        document.documentElement.style.setProperty('--store-header-bg', value);
+      }
+      if (key === 'headerText' || key === 'headerTextColor') {
+        document.documentElement.style.setProperty('--store-header-text', value);
+        document.documentElement.style.setProperty('--store-text-inverse', value);
+      }
+      if (key === 'bodyBg') {
+        document.documentElement.style.setProperty('--store-bg-secondary', value);
+      }
+      if (key === 'contBody') {
+        document.documentElement.style.setProperty('--store-bg-primary', value);
+      }
+      if (key === 'bodyFont' || key === 'textoTitulo') {
+        document.documentElement.style.setProperty('--store-text-primary', value);
+      }
     });
     localStorage.setItem('themeColors', JSON.stringify(theme));
   }, [theme]);

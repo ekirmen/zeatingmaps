@@ -138,7 +138,7 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
 };
 
 // Main Cart Component
-const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selectedFunctionId }) => {
+const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selectedFunctionId, hideCheckoutButton = false }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const cartStore = useCartStore();
@@ -451,15 +451,23 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                         <div className="flex justify-between items-center">
                                             <div className="flex-1">
                                                 <div className="font-medium text-sm">
-                                                    {item.nombre || `Asiento ${item.sillaId}`}
+                                                    {item.nombre || `Asiento ${item.sillaId || item.id || item._id}`}
                                                 </div>
-                                                <div className="text-xs text-gray-600">
-                                                    {item.nombreZona || 'General'}{item.nombreMesa ? ` - Mesa ${item.nombreMesa}` : ''}
+                                                <div className="text-xs text-gray-600" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    {item.nombreZona && (
+                                                      <div>Zona: {item.nombreZona}</div>
+                                                    )}
+                                                    {item.nombreMesa && (
+                                                      <div>Mesa: {item.nombreMesa}</div>
+                                                    )}
+                                                    {!item.nombreZona && !item.nombreMesa && (
+                                                      <div>General</div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <div className="font-bold text-sm">
-                                                    ${formatPrice(item.precio)}
+                                                    ${formatPrice(item.precio || 0)}
                                                 </div>
                                             </div>
                                         </div>
@@ -534,7 +542,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             </div>
 
                             <div className="store-space-x-4">
-                                {itemCount > 0 && (
+                                {itemCount > 0 && !hideCheckoutButton && (
                                     <button 
                                         onClick={handleCheckout}
                                         className="store-button store-button-primary store-button-lg store-button-block"
