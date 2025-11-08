@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Spin, Alert, Button, Input, Select, Tag, Badge, Statistic } from 'antd';
+import { Card, Spin, Alert, Button, Input, Select, Tag, Badge, Statistic, Empty } from 'antd';
 import { 
   CalendarOutlined, 
   EnvironmentOutlined, 
@@ -18,6 +18,9 @@ import formatDateString from '../../utils/formatDateString';
 import EventImage from '../components/EventImage';
 import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../hooks/useAuth';
+import { useResponsive } from '../../hooks/useResponsive';
+import { PageSkeleton } from '../../components/SkeletonLoaders';
+import '../styles/store-design.css';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -26,6 +29,7 @@ const ModernStorePage = () => {
   const navigate = useNavigate();
   const { currentTenant } = useTenant();
   const { isTenantAdmin } = useAuth();
+  const { isMobile, isTablet } = useResponsive();
   
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,7 +119,8 @@ const ModernStorePage = () => {
       'normal': { text: 'Normal', color: 'blue' },
       'preventa': { text: 'Preventa', color: 'orange' },
       'especial': { text: 'Especial', color: 'purple' },
-      'gratis': { text: 'Gratuito', color: 'green' }
+      'gratis': { text: 'Gratuito', color: 'green' },
+      'mapa': { text: 'Mapa', color: 'cyan' }
     };
     return modos[event.modoVenta] || { text: 'Normal', color: 'default' };
   };
@@ -132,13 +137,11 @@ const ModernStorePage = () => {
   };
 
   const handleEventClick = (event, e) => {
-    // Prevenir propagación si viene de un evento
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
     
-    // Verificar que el evento tenga slug, si no, usar ID como fallback
     if (!event || (!event.slug && !event.id)) {
       console.warn('[ModernStorePage] Evento sin slug ni ID:', event);
       return;
@@ -148,82 +151,111 @@ const ModernStorePage = () => {
       ? `/store/eventos/${event.slug}`
       : `/store/event/${event.id}`;
     
-    console.log('[ModernStorePage] Navegando a:', eventPath);
     navigate(eventPath);
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spin size="large" />
-      </div>
-    );
+    return <PageSkeleton rows={6} />;
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Alert
-          message="Error"
-          description="No se pudieron cargar los eventos"
-          type="error"
-          showIcon
-        />
+      <div className="store-page">
+        <div className="store-container-wrapper">
+          <div className="store-card" style={{ marginTop: 'var(--store-space-8)' }}>
+            <div className="store-card-body">
+              <Alert
+                message="Error"
+                description="No se pudieron cargar los eventos. Por favor, intenta de nuevo."
+                type="error"
+                showIcon
+                action={
+                  <Button size="small" onClick={() => window.location.reload()}>
+                    Recargar
+                  </Button>
+                }
+              />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="store-page">
       {/* Hero Section */}
-      <div className="relative h-64 md:h-80 bg-gradient-to-r from-blue-600 to-purple-600 overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative h-full flex items-center justify-center">
-          <div className="text-center text-white px-4">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              Eventos Disponibles
-            </h1>
-            <p className="text-xl md:text-2xl opacity-90 max-w-2xl mx-auto">
-              Descubre los mejores eventos y experiencias únicas
-            </p>
-          </div>
+      <div className="store-hero-section" style={{
+        background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)',
+        padding: isMobile ? 'var(--store-space-8) var(--store-space-4)' : 'var(--store-space-20) var(--store-space-6)',
+        color: 'var(--store-text-inverse)',
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 70%)',
+          pointerEvents: 'none'
+        }}></div>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h1 className="store-page-title" style={{
+            color: 'var(--store-text-inverse)',
+            fontSize: isMobile ? 'var(--store-font-size-2xl)' : 'var(--store-font-size-5xl)',
+            marginBottom: 'var(--store-space-4)',
+            textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          }}>
+            Eventos Disponibles
+          </h1>
+          <p className="store-page-subtitle" style={{
+            color: 'rgba(255, 255, 255, 0.9)',
+            fontSize: isMobile ? 'var(--store-font-size-base)' : 'var(--store-font-size-xl)',
+            maxWidth: '600px',
+            margin: '0 auto'
+          }}>
+            Descubre los mejores eventos y experiencias únicas
+          </p>
         </div>
       </div>
 
       {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="store-container-wrapper" style={{ paddingTop: 'var(--store-space-8)', paddingBottom: 'var(--store-space-8)' }}>
         {/* Filtros y búsqueda */}
-        <Card className="mb-8 shadow-lg border-0">
-          <Row gutter={[16, 16]} align="middle">
-            <Col xs={24} sm={12} md={8}>
+        <div className="store-card" style={{ marginBottom: 'var(--store-space-8)' }}>
+          <div className="store-card-body">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '2fr 1fr 1fr auto',
+              gap: 'var(--store-space-4)',
+              alignItems: 'center'
+            }}>
               <Search
                 placeholder="Buscar eventos..."
                 allowClear
-                size="large"
+                size={isMobile ? 'middle' : 'large'}
                 prefix={<SearchOutlined />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ width: '100%' }}
               />
-            </Col>
-            <Col xs={12} sm={6} md={4}>
+              
               <Select
                 placeholder="Estado"
-                size="large"
+                size={isMobile ? 'middle' : 'large'}
                 style={{ width: '100%' }}
                 value={statusFilter}
                 onChange={setStatusFilter}
-                prefix={<FilterOutlined />}
               >
                 <Option value="all">Todos</Option>
                 <Option value="a-la-venta">A la Venta</Option>
                 <Option value="pronto">Pronto</Option>
                 <Option value="agotado">Agotado</Option>
               </Select>
-            </Col>
-            <Col xs={12} sm={6} md={4}>
+              
               <Select
-                placeholder="Ordenar por"
-                size="large"
+                placeholder="Ordenar"
+                size={isMobile ? 'middle' : 'large'}
                 style={{ width: '100%' }}
                 value={sortBy}
                 onChange={setSortBy}
@@ -232,73 +264,199 @@ const ModernStorePage = () => {
                 <Option value="nombre">Nombre</Option>
                 <Option value="creado">Recientes</Option>
               </Select>
-            </Col>
-            <Col xs={24} md={8}>
-              <div className="text-right">
+              
+              {!isMobile && (
+                <div style={{ textAlign: 'right' }}>
+                  <Statistic
+                    title="Eventos"
+                    value={filteredEvents.length}
+                    prefix={<TrophyOutlined />}
+                    valueStyle={{ fontSize: 'var(--store-font-size-lg)', fontWeight: 700 }}
+                  />
+                </div>
+              )}
+            </div>
+            
+            {isMobile && (
+              <div style={{ marginTop: 'var(--store-space-4)', textAlign: 'center' }}>
                 <Statistic
                   title="Eventos encontrados"
                   value={filteredEvents.length}
                   prefix={<TrophyOutlined />}
                 />
               </div>
-            </Col>
-          </Row>
-        </Card>
+            )}
+          </div>
+        </div>
 
         {/* Grid de eventos */}
         {filteredEvents.length === 0 ? (
-          <Card className="text-center py-12">
-            <Alert
-              message="No se encontraron eventos"
-              description="No hay eventos que coincidan con los criterios de búsqueda."
-              type="info"
-              showIcon
-            />
-          </Card>
+          <div className="store-card">
+            <div className="store-card-body" style={{ textAlign: 'center', padding: 'var(--store-space-12)' }}>
+              <Empty
+                description="No se encontraron eventos"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              >
+                {searchTerm && (
+                  <Button type="primary" onClick={() => setSearchTerm('')}>
+                    Limpiar búsqueda
+                  </Button>
+                )}
+              </Empty>
+            </div>
+          </div>
         ) : (
-          <Row gutter={[24, 24]}>
+          <div className="store-grid store-grid-auto" style={{ marginBottom: 'var(--store-space-8)' }}>
             {filteredEvents.map((event) => {
               const eventStatus = getEventStatus(event);
               const modoVenta = getModoVenta(event);
               const tags = getEventTags(event);
               
               return (
-                <Col key={event.id} xs={24} sm={12} lg={8} xl={6}>
-                  <Card
-                    hoverable
-                    className="h-full shadow-lg border-0 overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer"
-                    onClick={(e) => handleEventClick(event, e)}
-                    cover={
-                      <div className="relative h-48 overflow-hidden bg-gray-100">
-                        <EventImage
-                          event={event}
-                          imageType="banner"
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                          showDebug={false}
-                        />
-                        <div className="absolute top-3 right-3 flex flex-col gap-2">
-                          <Badge 
-                            status={eventStatus.status} 
-                            text={eventStatus.text}
-                            className="bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 text-xs font-medium"
-                          />
-                          <Tag color={modoVenta.color} className="text-xs">
-                            {modoVenta.text}
-                          </Tag>
+                <div
+                  key={event.id}
+                  className="store-event-card"
+                  onClick={(e) => handleEventClick(event, e)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleEventClick(event, e);
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Imagen del evento */}
+                  <div style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: isMobile ? '200px' : '240px',
+                    overflow: 'hidden',
+                    background: 'linear-gradient(135deg, var(--store-gray-100) 0%, var(--store-gray-200) 100%)'
+                  }}>
+                    <EventImage
+                      event={event}
+                      imageType="banner"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'transform 0.3s ease'
+                      }}
+                      showDebug={false}
+                    />
+                    
+                    {/* Badges overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 'var(--store-space-3)',
+                      right: 'var(--store-space-3)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 'var(--store-space-2)',
+                      zIndex: 10
+                    }}>
+                      <Badge 
+                        status={eventStatus.status} 
+                        text={eventStatus.text}
+                        style={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          backdropFilter: 'blur(10px)',
+                          borderRadius: 'var(--store-radius-full)',
+                          padding: 'var(--store-space-1) var(--store-space-2)',
+                          fontSize: 'var(--store-font-size-xs)',
+                          fontWeight: 600,
+                          boxShadow: 'var(--store-shadow-sm)'
+                        }}
+                      />
+                      <Tag 
+                        color={modoVenta.color}
+                        style={{
+                          fontSize: 'var(--store-font-size-xs)',
+                          margin: 0,
+                          boxShadow: 'var(--store-shadow-sm)'
+                        }}
+                      >
+                        {modoVenta.text}
+                      </Tag>
+                    </div>
+                    
+                    {event.oculto && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 'var(--store-space-3)',
+                        left: 'var(--store-space-3)'
+                      }}>
+                        <Tag color="red" icon={<EyeOutlined />} style={{ fontSize: 'var(--store-font-size-xs)' }}>
+                          Oculto
+                        </Tag>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Contenido de la tarjeta */}
+                  <div className="store-event-card-content">
+                    {/* Título */}
+                    <h3 className="store-event-card-title">
+                      {event.nombre}
+                    </h3>
+                    
+                    {/* Descripción */}
+                    {event.descripcion && (
+                      <p className="store-event-card-description">
+                        {event.descripcion}
+                      </p>
+                    )}
+
+                    {/* Información del evento */}
+                    <div className="store-event-card-meta">
+                      {event.created_at && (
+                        <div className="store-event-card-meta-item">
+                          <CalendarOutlined style={{ color: 'var(--store-primary)' }} />
+                          <span>{formatDateString(event.created_at)}</span>
                         </div>
-                        {event.oculto && (
-                          <div className="absolute top-3 left-3">
-                            <Tag color="red" icon={<EyeOutlined />} className="text-xs">
-                              Oculto
-                            </Tag>
-                          </div>
+                      )}
+                      
+                      {event.recintos?.nombre && (
+                        <div className="store-event-card-meta-item">
+                          <EnvironmentOutlined style={{ color: 'var(--store-success)' }} />
+                          <span>{event.recintos.nombre}</span>
+                        </div>
+                      )}
+                      
+                      {event.sector && (
+                        <div className="store-event-card-meta-item">
+                          <TeamOutlined style={{ color: 'var(--store-secondary)' }} />
+                          <span>{event.sector}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tags */}
+                    {tags.length > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 'var(--store-space-1)',
+                        marginBottom: 'var(--store-space-4)'
+                      }}>
+                        {tags.slice(0, 3).map((tag, index) => (
+                          <Tag key={index} size="small" color="blue">
+                            {tag}
+                          </Tag>
+                        ))}
+                        {tags.length > 3 && (
+                          <Tag size="small" color="default">
+                            +{tags.length - 3}
+                          </Tag>
                         )}
                       </div>
-                    }
-                    actions={[
-                      <Button 
-                        key="view-details"
-                        type="primary" 
+                    )}
+
+                    {/* Footer con botón */}
+                    <div className="store-event-card-footer">
+                      <Button
+                        type="primary"
                         icon={<EyeOutlined />}
                         onClick={(e) => {
                           e.preventDefault();
@@ -306,115 +464,55 @@ const ModernStorePage = () => {
                           handleEventClick(event, e);
                         }}
                         block
+                        className="store-button store-button-primary"
+                        style={{ marginTop: 'auto' }}
                       >
                         Ver Detalles
                       </Button>
-                    ]}
-                  >
-                    <div className="space-y-3">
-                      {/* Título del evento */}
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2">
-                          {event.nombre}
-                        </h3>
-                        {event.descripcion && (
-                          <p className="text-gray-600 text-sm line-clamp-2">
-                            {event.descripcion}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Información del evento */}
-                      <div className="space-y-2">
-                        {event.created_at && (
-                          <div className="flex items-center text-gray-600 text-sm">
-                            <CalendarOutlined className="mr-2 text-blue-500" />
-                            <span>{formatDateString(event.created_at)}</span>
-                          </div>
-                        )}
-                        
-                        {event.recintos && (
-                          <div className="flex items-center text-gray-600 text-sm">
-                            <EnvironmentOutlined className="mr-2 text-green-500" />
-                            <span>{event.recintos.nombre}</span>
-                          </div>
-                        )}
-                        
-                        {event.sector && (
-                          <div className="flex items-center text-gray-600 text-sm">
-                            <TeamOutlined className="mr-2 text-purple-500" />
-                            <span>{event.sector}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Tags */}
-                      {tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {tags.slice(0, 3).map((tag, index) => (
-                            <Tag key={index} size="small" color="blue">
-                              {tag}
-                            </Tag>
-                          ))}
-                          {tags.length > 3 && (
-                            <Tag size="small" color="default">
-                              +{tags.length - 3}
-                            </Tag>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Información adicional */}
-                      <div className="flex justify-between items-center text-xs text-gray-500 pt-2 border-t">
-                        <span>Fecha de celebración: {formatDateString(event.fechaCelebracion || event.fecha || event.created_at)}</span>
-                        {isTenantAdmin() && (
-                          <span>ID: {String(event.id).slice(0, 8)}...</span>
-                        )}
-                      </div>
                     </div>
-                  </Card>
-                </Col>
+                  </div>
+                </div>
               );
             })}
-          </Row>
+          </div>
         )}
 
         {/* Estadísticas generales */}
-        <Card className="mt-8 shadow-lg border-0">
-          <Row gutter={[16, 16]}>
-            <Col xs={12} sm={6}>
+        <div className="store-card">
+          <div className="store-card-body">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+              gap: 'var(--store-space-4)',
+              textAlign: 'center'
+            }}>
               <Statistic
-                title="Total de Eventos"
+                title="Total"
                 value={events.length}
                 prefix={<TrophyOutlined />}
+                valueStyle={{ color: 'var(--store-primary)' }}
               />
-            </Col>
-            <Col xs={12} sm={6}>
               <Statistic
                 title="A la Venta"
                 value={events.filter(e => e.estadoVenta === 'a-la-venta').length}
                 prefix={<FireOutlined />}
-                valueStyle={{ color: '#52c41a' }}
+                valueStyle={{ color: 'var(--store-success)' }}
               />
-            </Col>
-            <Col xs={12} sm={6}>
               <Statistic
                 title="Próximamente"
                 value={events.filter(e => e.estadoVenta === 'pronto').length}
                 prefix={<ClockCircleOutlined />}
-                valueStyle={{ color: '#1890ff' }}
+                valueStyle={{ color: 'var(--store-primary)' }}
               />
-            </Col>
-            <Col xs={12} sm={6}>
               <Statistic
                 title="Agotados"
                 value={events.filter(e => e.estadoVenta === 'agotado').length}
                 prefix={<StarOutlined />}
-                valueStyle={{ color: '#f5222d' }}
+                valueStyle={{ color: 'var(--store-error)' }}
               />
-            </Col>
-          </Row>
-        </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

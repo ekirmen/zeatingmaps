@@ -139,7 +139,15 @@ const MapShortRoute = () => {
 
         const finalEventSlug = eventoData.slug;
         
-        // Redirigir a la vista del mapa con el slug correcto
+        // Si el slug final es el mismo que el slug actual y estamos en /map, 
+        // no redirigir (evitar bucle infinito) - dejar que EventMapPage lo maneje
+        if (finalEventSlug === eventSlug && window.location.pathname.includes('/map')) {
+          console.log(`[MapShortRoute] Slug coincide con la ruta actual, dejando que EventMapPage maneje la ruta`);
+          setLoading(false);
+          return;
+        }
+        
+        // Redirigir a la vista del mapa con el slug correcto solo si es diferente
         console.log(`[MapShortRoute] Redirigiendo a: /store/eventos/${finalEventSlug}/map?funcion=${funcionId}`);
         navigate(`/store/eventos/${finalEventSlug}/map?funcion=${funcionId}`, { replace: true });
       } catch (error) {

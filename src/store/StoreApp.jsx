@@ -32,7 +32,6 @@ import CookiesPolicy from './pages/CookiesPolicy';
 import LegalTerms from './pages/LegalTerms';
 import CmsPage from './pages/CmsPage';
 import EventsVenue from './pages/EventsVenue';
-import MapShortRoute from './pages/MapShortRoute';
 import { useAuth } from '../contexts/AuthContext'; // para perfil
 import { useCartStore } from './cartStore';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -73,12 +72,10 @@ const StoreApp = () => {
                   <Route index element={<ModernStorePage />} />
                 <Route path="tag/:tagSlug?" element={<EventsVenue groupByTags />} />
                 {/* Rutas amigables para mapas de eventos */}
-                {/* Ruta especial para /eventos/{eventSlug}/map - URL amigable con slug */}
+                {/* IMPORTANTE: /eventos/:eventSlug/map debe estar ANTES de /eventos/r/map */}
+                {/* para que EventMapPage maneje /eventos/r/map cuando "r" es un slug válido */}
                 <Route path="eventos/:eventSlug/map" element={<EventMapPage />} />
-                {/* Ruta especial para /eventos/r/map?funcion=X - URL corta con función ID (solo si tiene ?funcion=) */}
-                <Route path="eventos/r/map" element={<MapShortRoute />} />
                 {/* Ruta principal para eventos - muestra evento o redirige a mapa si hay ?funcion= */}
-                {/* Esta ruta debe estar ANTES de las rutas específicas de MapShortRoute para que maneje /eventos/r como slug válido */}
                 <Route path="eventos/:eventSlug" element={<ModernEventPage />} />
                 <Route path="event/:eventId" element={<EventInfo />} />
 
