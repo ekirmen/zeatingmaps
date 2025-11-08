@@ -118,7 +118,7 @@ module.exports = {
         webpackConfig.optimization = {
           ...webpackConfig.optimization,
           usedExports: true, // Habilitar tree shaking
-          sideEffects: false, // Asumir que no hay side effects (excepto en archivos específicos)
+          // sideEffects se lee desde package.json
         };
         
         // Optimizar cache

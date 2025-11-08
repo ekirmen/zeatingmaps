@@ -108,5 +108,14 @@
       "last 1 safari version"
     ]
   },
+  "sideEffects": [
+    "*.css",
+    "*.scss",
+    "*.sass",
+    "*.less",
+    "./src/index.js",
+    "./src/index.css",
+    "./src/styles/**/*.css"
+  ],
   "license": "MIT"
 }

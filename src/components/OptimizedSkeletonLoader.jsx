@@ -4,22 +4,22 @@
  */
 
 import React from 'react';
-import { SkeletonLoader, EventCardSkeleton, SeatListSkeleton } from './loadingStates';
+import { Skeleton, Card } from 'antd';
 import '../styles/animations.css';
 
 /**
  * Skeleton loader para tarjetas de evento
  */
 export const EventCardSkeletonOptimized = () => (
-  <div className="store-event-card animate-skeleton">
-    <EventCardSkeleton />
-  </div>
+  <Card className="store-event-card" style={{ marginBottom: '16px' }}>
+    <Skeleton active avatar paragraph={{ rows: 3 }} />
+  </Card>
 );
 
 /**
- * Skeleton loader para lista de eventos
+ * Skeleton loader para lista de eventos (usando EventCardSkeletonOptimized)
  */
-export const EventListSkeleton = ({ count = 6 }) => (
+export const EventListSkeletonOptimized = ({ count = 6 }) => (
   <div className="store-grid store-grid-3">
     {Array.from({ length: count }).map((_, index) => (
       <EventCardSkeletonOptimized key={index} />
@@ -27,19 +27,13 @@ export const EventListSkeleton = ({ count = 6 }) => (
   </div>
 );
 
+
 /**
  * Skeleton loader para mapa de asientos
  */
 export const SeatMapSkeleton = () => (
   <div className="store-card" style={{ minHeight: '500px', position: 'relative' }}>
-    <div className="skeleton-loader" style={{ 
-      position: 'absolute', 
-      top: 0, 
-      left: 0, 
-      right: 0, 
-      bottom: 0,
-      borderRadius: '8px'
-    }} />
+    <Skeleton active paragraph={{ rows: 8 }} />
   </div>
 );
 
@@ -49,12 +43,12 @@ export const SeatMapSkeleton = () => (
 export const CartSkeleton = () => (
   <div className="store-card">
     <div className="store-card-header">
-      <SkeletonLoader width="40%" height="24px" />
+      <Skeleton.Input active size="large" style={{ width: '40%' }} />
     </div>
     <div className="store-card-body">
-      <SeatListSkeleton count={3} />
+      <Skeleton active paragraph={{ rows: 3 }} />
       <div style={{ marginTop: '24px' }}>
-        <SkeletonLoader width="100%" height="48px" />
+        <Skeleton.Button active size="large" block />
       </div>
     </div>
   </div>
@@ -62,7 +56,7 @@ export const CartSkeleton = () => (
 
 export default {
   EventCardSkeletonOptimized,
-  EventListSkeleton,
+  EventListSkeletonOptimized,
   SeatMapSkeleton,
   CartSkeleton,
 };

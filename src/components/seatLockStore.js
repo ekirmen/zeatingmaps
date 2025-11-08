@@ -254,12 +254,23 @@ export const useSeatLockStore = create((set, get) => ({
   },
 
   // Actualizar estado de un asiento individual sin tocar el mapa completo
+  // Optimizado: usa requestAnimationFrame para mejor performance
   updateSeatState: (seatId, newState) => {
-    set((state) => {
-      const newSeatStates = new Map(state.seatStates);
-      newSeatStates.set(seatId, newState);
-      return { seatStates: newSeatStates, seatStatesVersion: state.seatStatesVersion + 1 };
-    });
+    if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+      window.requestAnimationFrame(() => {
+        set((state) => {
+          const newSeatStates = new Map(state.seatStates);
+          newSeatStates.set(seatId, newState);
+          return { seatStates: newSeatStates, seatStatesVersion: state.seatStatesVersion + 1 };
+        });
+      });
+    } else {
+      set((state) => {
+        const newSeatStates = new Map(state.seatStates);
+        newSeatStates.set(seatId, newState);
+        return { seatStates: newSeatStates, seatStatesVersion: state.seatStatesVersion + 1 };
+      });
+    }
   },
 
   // Función específica para actualizar seatStates desde el exterior
@@ -292,6 +303,28 @@ export const useSeatLockStore = create((set, get) => ({
       console.log('🧹 [SEAT_LOCK_STORE] Limpiando todos los estados de asientos');
       return { seatStates: new Map() };
     });
+  },
+  
+  // Marcar asientos como visibles para priorizar updates
+  setVisibleSeats: (seatIds) => {
+    if (typeof window !== 'undefined') {
+      if (!window.__VISIBLE_SEATS__) {
+        window.__VISIBLE_SEATS__ = new Set();
+      }
+      window.__VISIBLE_SEATS__.clear();
+      seatIds.forEach(id => window.__VISIBLE_SEATS__.add(String(id)));
+    }
+  },
+  
+  // Marcar asientos como de alta prioridad (seleccionados, en carrito)
+  setPrioritySeats: (seatIds) => {
+    if (typeof window !== 'undefined') {
+      if (!window.__PRIORITY_SEATS__) {
+        window.__PRIORITY_SEATS__ = new Set();
+      }
+      window.__PRIORITY_SEATS__.clear();
+      seatIds.forEach(id => window.__PRIORITY_SEATS__.add(String(id)));
+    }
   },
 
   ensureConnectivityListeners: (funcionId = null) => {
@@ -783,8 +816,19 @@ export const useSeatLockStore = create((set, get) => ({
       const DEBOUNCE_DELAY = 100;
       
       // Set para trackear asientos visibles (se actualiza desde componentes)
-      const visibleSeats = new Set();
-      const prioritySeats = new Set(); // Asientos seleccionados, en carrito, etc.
+      const getVisibleSeats = () => {
+        if (typeof window !== 'undefined' && window.__VISIBLE_SEATS__) {
+          return window.__VISIBLE_SEATS__;
+        }
+        return new Set();
+      };
+      
+      const getPrioritySeats = () => {
+        if (typeof window !== 'undefined' && window.__PRIORITY_SEATS__) {
+          return window.__PRIORITY_SEATS__;
+        }
+        return new Set();
+      };
 
       const processPendingUpdates = () => {
         if (pendingUpdates.size === 0) {
@@ -797,6 +841,9 @@ export const useSeatLockStore = create((set, get) => ({
         pendingUpdates.clear();
         
         // Separar updates por prioridad (visibles/seleccionados primero)
+        const visibleSeats = getVisibleSeats();
+        const prioritySeats = getPrioritySeats();
+        
         const priorityUpdates = updatesToProcess.filter(update => 
           visibleSeats.has(update.normalizedSeatId) || 
           prioritySeats.has(update.normalizedSeatId)
