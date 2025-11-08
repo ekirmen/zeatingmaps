@@ -2,7 +2,7 @@
  * Monitor de performance para Core Web Vitals
  * Mide y reporta métricas de rendimiento
  */
-import { getCLS, getFID, getFCP, getLCP, getTTFB, getINP } from 'web-vitals';
+import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
 
 /**
  * Clase para monitorear performance
@@ -18,38 +18,38 @@ class PerformanceMonitor {
    */
   startMonitoring(onMetric) {
     // Largest Contentful Paint (LCP)
-    getLCP((metric) => {
+    onLCP((metric) => {
       this.metrics.lcp = metric;
       this.reportMetric('LCP', metric, onMetric);
     });
 
     // First Input Delay (FID) - deprecated, usar INP
-    getFID((metric) => {
+    onFID((metric) => {
       this.metrics.fid = metric;
       this.reportMetric('FID', metric, onMetric);
     });
 
     // Cumulative Layout Shift (CLS)
-    getCLS((metric) => {
+    onCLS((metric) => {
       this.metrics.cls = metric;
       this.reportMetric('CLS', metric, onMetric);
     });
 
     // First Contentful Paint (FCP)
-    getFCP((metric) => {
+    onFCP((metric) => {
       this.metrics.fcp = metric;
       this.reportMetric('FCP', metric, onMetric);
     });
 
     // Time to First Byte (TTFB)
-    getTTFB((metric) => {
+    onTTFB((metric) => {
       this.metrics.ttfb = metric;
       this.reportMetric('TTFB', metric, onMetric);
     });
 
     // Interaction to Next Paint (INP) - nueva métrica
-    if (getINP) {
-      getINP((metric) => {
+    if (onINP) {
+      onINP((metric) => {
         this.metrics.inp = metric;
         this.reportMetric('INP', metric, onMetric);
       });
