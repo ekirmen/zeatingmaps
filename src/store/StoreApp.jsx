@@ -75,11 +75,10 @@ const StoreApp = () => {
                 {/* Rutas amigables para mapas de eventos */}
                 {/* Ruta especial para /eventos/{eventSlug}/map - URL amigable con slug */}
                 <Route path="eventos/:eventSlug/map" element={<EventMapPage />} />
-                {/* Ruta especial para /eventos/r/map - URL corta con función ID */}
+                {/* Ruta especial para /eventos/r/map?funcion=X - URL corta con función ID (solo si tiene ?funcion=) */}
                 <Route path="eventos/r/map" element={<MapShortRoute />} />
-                {/* Ruta especial para /eventos/r - URL corta sin /map */}
-                <Route path="eventos/r" element={<MapShortRoute />} />
                 {/* Ruta principal para eventos - muestra evento o redirige a mapa si hay ?funcion= */}
+                {/* Esta ruta debe estar ANTES de las rutas específicas de MapShortRoute para que maneje /eventos/r como slug válido */}
                 <Route path="eventos/:eventSlug" element={<ModernEventPage />} />
                 <Route path="event/:eventId" element={<EventInfo />} />
 

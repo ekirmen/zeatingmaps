@@ -206,14 +206,21 @@ const ModernEventPage = () => {
         
         if (!eventData) {
           // Si no está en caché, cargar desde la API
+          // Usar .eq() para búsqueda exacta (case-sensitive) ya que los slugs deben ser únicos
           const { data, error: eventError } = await supabase
             .from('eventos')
             .select('*')
-            .ilike('slug', eventSlug)
+            .eq('slug', eventSlug)
             .maybeSingle();
 
-          if (eventError) throw eventError;
-          if (!data) throw new Error('Evento no encontrado');
+          if (eventError) {
+            console.error('[ModernEventPage] Error consultando evento:', eventError);
+            throw eventError;
+          }
+          if (!data) {
+            console.warn('[ModernEventPage] Evento no encontrado con slug:', eventSlug);
+            throw new Error('Evento no encontrado');
+          }
           
           eventData = data;
           // Guardar en caché

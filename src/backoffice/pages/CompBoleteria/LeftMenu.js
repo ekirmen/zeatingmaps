@@ -162,12 +162,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       // Si falta información de evento, intentar completarla a partir de la función
       for (const payment of payments) {
-        if (!payment.event && payment.funcion?.evento) {
+        if (!payment.event && payment.funcion?.evento_id) {
           await supabase
             .from('payment_transactions')
-            .update({ evento_id: payment.funcion.evento })
+            .update({ evento_id: payment.funcion.evento_id })
             .eq('id', payment.id);
-          payment.event = payment.funcion.evento;
+          payment.event = payment.funcion.evento_id;
         }
       }
 

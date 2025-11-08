@@ -22,10 +22,27 @@ class SeatWorkerService {
     try {
       // Crear worker - Compatible con Create React App
       // El worker debe estar en public/ para que funcione correctamente
-      const workerUrl = process.env.PUBLIC_URL 
-        ? `${process.env.PUBLIC_URL}/seatCalculations.worker.js`
-        : '/seatCalculations.worker.js';
+      // En producción, usar ruta absoluta desde la raíz del dominio
+      // Vercel rewrite maneja /store/seatCalculations.worker.js -> /seatCalculations.worker.js
+      let workerUrl;
+      if (process.env.NODE_ENV === 'production') {
+        // En producción, detectar si estamos en un subdirectorio (store, backoffice, etc.)
+        const pathname = window.location.pathname;
+        const basePath = pathname.match(/^\/(store|backoffice|dashboard|saas)/)?.[0] || '';
+        
+        // Construir URL: basePath puede ser "/store" o ""
+        // Si hay basePath, Vercel lo reescribe automáticamente a la raíz
+        workerUrl = basePath 
+          ? `${window.location.origin}${basePath}/seatCalculations.worker.js`
+          : `${window.location.origin}/seatCalculations.worker.js`;
+      } else {
+        // En desarrollo, usar ruta relativa
+        workerUrl = process.env.PUBLIC_URL 
+          ? `${process.env.PUBLIC_URL}/seatCalculations.worker.js`
+          : '/seatCalculations.worker.js';
+      }
       
+      console.log('[SeatWorkerService] Inicializando worker desde:', workerUrl);
       this.worker = new Worker(workerUrl);
 
       this.worker.onmessage = (e) => {

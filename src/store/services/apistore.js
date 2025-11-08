@@ -167,7 +167,7 @@ export const getFunciones = async (eventId) => {
       return {
         id: funcion.id,
         fecha_celebracion: funcion.fecha_celebracion,
-        evento: funcion.evento_id ?? funcion.evento,
+        evento: funcion.evento_id,
         sala: salaId,
         sala_nombre: salasData[salaId]?.nombre || 'Sala sin nombre',
         // Crear un objeto plantilla básico si no existe

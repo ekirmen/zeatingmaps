@@ -21,6 +21,10 @@
       "destination": "/static/:path*"
     },
     {
+      "source": "/store/seatCalculations.worker.js",
+      "destination": "/seatCalculations.worker.js"
+    },
+    {
       "source": "/store/manifest.json",
       "destination": "/manifest.json"
     },
@@ -43,6 +47,10 @@
     {
       "source": "/backoffice/static/:path*",
       "destination": "/static/:path*"
+    },
+    {
+      "source": "/backoffice/seatCalculations.worker.js",
+      "destination": "/seatCalculations.worker.js"
     },
     {
       "source": "/backoffice/manifest.json",
@@ -93,6 +101,58 @@
     }
   ],
   "headers": [
+    {
+      "source": "/static/css/(.*\\.css)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/css; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/static/js/(.*\\.js)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.worker\\.js)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/seatCalculations.worker.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
     {
       "source": "/static/(.*)",
       "headers": [

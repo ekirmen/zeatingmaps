@@ -58,17 +58,18 @@
     
     <!-- Preload de recursos críticos para mejor FCP -->
     <!-- Preload de CSS crítico -->
-    <link rel="preload" href="%PUBLIC_URL%/static/css/main.css" as="style" />
+    <link rel="preload" href="%PUBLIC_URL%/static/css/main.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="%PUBLIC_URL%/static/css/main.css" /></noscript>
     
     <!-- Preload de fuentes críticas -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
     
     <!-- Font Awesome con preload -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" /></noscript>
     
-    <!-- Prefetch de recursos no críticos -->
-    <link rel="prefetch" href="%PUBLIC_URL%/seatCalculations.worker.js" as="script" />
+    <!-- Worker se carga dinámicamente cuando se necesita, no es necesario prefetch -->
     
     <!-- Critical CSS inline para FCP rápido -->
     <style>

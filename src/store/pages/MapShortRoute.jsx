@@ -12,7 +12,7 @@ const MapShortRoute = () => {
   useEffect(() => {
     const funcion = searchParams.get('funcion');
     
-    // Asegurar que el session_id se inicialice antes de redirigir
+    // Asegurar que el session_id se inicialize antes de redirigir
     if (typeof window !== 'undefined' && window.crypto) {
       const storedSessionId = localStorage.getItem('anonSessionId');
       if (!storedSessionId) {
@@ -35,11 +35,16 @@ const MapShortRoute = () => {
         }
       }
       
-      // Si no hay función, redirigir
+      // Si no hay función, redirigir a la página del evento (será manejado por ModernEventPage)
+      // MapShortRoute solo debe manejar rutas con ?funcion= para rutas cortas
       if (!funcion) {
-        if (eventSlug && eventSlug !== 'r') {
+        if (eventSlug) {
+          // Redirigir a la página del evento (ModernEventPage lo manejará)
+          console.log(`[MapShortRoute] No hay función, redirigiendo a página del evento: /store/eventos/${eventSlug}`);
           navigate(`/store/eventos/${eventSlug}`, { replace: true });
         } else {
+          // Si no hay slug ni función, redirigir a la página principal
+          console.log('[MapShortRoute] No hay función ni slug, redirigiendo a /store');
           navigate('/store', { replace: true });
         }
         return;
@@ -72,15 +77,15 @@ const MapShortRoute = () => {
             throw new Error('Evento no encontrado');
           }
 
-          // Verificar que la función pertenece a este evento
-          const { data: funcionData, error: funcionError } = await supabase
-            .from('funciones')
-            .select('id, evento_id, evento')
-            .eq('id', funcionId)
-            .single();
+               // Verificar que la función pertenece a este evento
+               const { data: funcionData, error: funcionError } = await supabase
+                 .from('funciones')
+                 .select('id, evento_id')
+                 .eq('id', funcionId)
+                 .single();
 
-          if (funcionError) throw funcionError;
-          const eventoId = funcionData.evento_id || funcionData.evento;
+               if (funcionError) throw funcionError;
+               const eventoId = funcionData.evento_id;
           
           if (eventoId !== eventoData.id) {
             throw new Error('La función no pertenece a este evento');
@@ -96,30 +101,19 @@ const MapShortRoute = () => {
         console.log(`[MapShortRoute] Ruta corta: buscando evento desde función ${funcionId}`);
 
         // Obtener la función y el evento asociado
-        let { data: funcionData, error: funcionError } = await supabase
+        const { data: funcionData, error: funcionError } = await supabase
           .from('funciones')
-          .select('id, evento_id, evento')
+          .select('id, evento_id')
           .eq('id', funcionId)
           .single();
 
-        if (funcionError) {
-          // Si falla con evento_id, intentar solo con evento (esquema antiguo)
-          const { data: altFuncionData, error: altError } = await supabase
-            .from('funciones')
-            .select('id, evento')
-            .eq('id', funcionId)
-            .single();
-          
-          if (altError) throw altError;
-          funcionData = altFuncionData;
-        }
-
+        if (funcionError) throw funcionError;
         if (!funcionData) {
           throw new Error('Función no encontrada');
         }
 
-        // Obtener el ID del evento
-        const eventoId = funcionData.evento_id || funcionData.evento;
+        // Obtener el ID del evento (solo usar evento_id)
+        const eventoId = funcionData.evento_id;
         if (!eventoId) {
           throw new Error('La función no tiene un evento asociado');
         }

@@ -112,7 +112,7 @@ export const sendFunctionCreatedNotification = async (funcion) => {
     // Obtener el evento asociado a la función
     let evento = null;
     try {
-      const eventoId = funcion.evento_id || funcion.evento;
+      const eventoId = funcion.evento_id;
       if (eventoId) {
         const { data: eventoData, error: eventoError } = await supabase
           .from('eventos')

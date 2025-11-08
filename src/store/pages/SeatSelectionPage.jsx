@@ -76,13 +76,13 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         const { data: funcionData, error: funcionError } = await supabase
           .from('funciones')
-          .select('evento_id, evento')
+          .select('evento_id')
           .eq('id', funcionNumeric)
           .maybeSingle();
 
         if (funcionError) throw funcionError;
 
-        const eventoId = funcionData?.evento_id || funcionData?.evento;
+        const eventoId = funcionData?.evento_id;
         if (!eventoId) {
           throw new Error('La función no tiene un evento asociado');
         }

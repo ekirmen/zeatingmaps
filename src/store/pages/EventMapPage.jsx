@@ -49,15 +49,15 @@ const EventMapPage = () => {
           throw new Error('Evento no encontrado');
         }
 
-        // Verificar que la función pertenece a este evento
-        const { data: funcionData, error: funcionError } = await supabase
-          .from('funciones')
-          .select('id, evento_id, evento')
-          .eq('id', funcionId)
-          .single();
+               // Verificar que la función pertenece a este evento
+               const { data: funcionData, error: funcionError } = await supabase
+                 .from('funciones')
+                 .select('id, evento_id')
+                 .eq('id', funcionId)
+                 .single();
 
-        if (funcionError) throw funcionError;
-        const eventoId = funcionData.evento_id || funcionData.evento;
+               if (funcionError) throw funcionError;
+               const eventoId = funcionData.evento_id;
         
         if (eventoId !== eventoData.id) {
           throw new Error('La función no pertenece a este evento');
