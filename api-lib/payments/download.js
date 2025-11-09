@@ -10,14 +10,27 @@ export async function handleDownload(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     res.setHeader('Content-Type', 'application/json');
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ 
+      error: {
+        code: '405',
+        message: 'Method not allowed'
+      }
+    });
   }
 
   const { locator, mode = 'full' } = req.query;
   if (!locator) {
     console.error('❌ [DOWNLOAD] Missing locator in query params');
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(400).json({ error: 'Missing locator' });
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ 
+        error: {
+          code: '400',
+          message: 'Missing locator'
+        }
+      });
+    }
+    return;
   }
 
   // Si es modo simple, generar PDF básico sin autenticación
@@ -33,17 +46,29 @@ export async function handleDownload(req, res) {
 
   if (!isValidConfig || !supabaseAdmin) {
     console.error('❌ [DOWNLOAD] Configuración inválida, redirigiendo a error 500');
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({
-      error: 'Server configuration error',
-      details: 'Missing Supabase environment variables',
-      config: {
-        supabaseUrl: !!supabaseUrl,
-        supabaseServiceKey: !!supabaseServiceKey,
-        nodeEnv: config.nodeEnv,
-        vercelEnv: config.vercelEnv
-      }
+    console.error('❌ [DOWNLOAD] Config details:', {
+      supabaseUrl: !!supabaseUrl,
+      supabaseServiceKey: !!supabaseServiceKey,
+      nodeEnv: config.nodeEnv,
+      vercelEnv: config.vercelEnv
     });
+    
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({
+        error: {
+          code: '500',
+          message: 'Server configuration error - Missing Supabase environment variables'
+        },
+        details: process.env.NODE_ENV === 'development' ? {
+          supabaseUrl: !!supabaseUrl,
+          supabaseServiceKey: !!supabaseServiceKey,
+          nodeEnv: config.nodeEnv,
+          vercelEnv: config.vercelEnv
+        } : undefined
+      });
+    }
+    return;
   }
   
   console.log('✅ [DOWNLOAD] Configuración validada correctamente');
@@ -52,8 +77,16 @@ export async function handleDownload(req, res) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
   if (!token) {
     console.error('❌ [DOWNLOAD] Missing auth token in headers');
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(401).json({ error: 'Missing auth token' });
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(401).json({ 
+        error: {
+          code: '401',
+          message: 'Missing auth token'
+        }
+      });
+    }
+    return;
   }
 
   try {
@@ -71,8 +104,16 @@ export async function handleDownload(req, res) {
     
     if (userError || !user) {
       console.error('❌ [DOWNLOAD] Auth error:', userError);
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(403).json({ error: 'Unauthorized' });
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(403).json({ 
+          error: {
+            code: '403',
+            message: 'Unauthorized'
+          }
+        });
+      }
+      return;
     }
 
     console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
@@ -125,12 +166,17 @@ export async function handleDownload(req, res) {
 
     if (!payment) {
       console.error('❌ [DOWNLOAD] No se encontró el pago con el locator u order_id proporcionado:', locator);
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(404).json({ 
-        error: 'Payment not found',
-        locator: locator,
-        message: 'No se encontró un pago con el localizador proporcionado'
-      });
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(404).json({ 
+          error: {
+            code: '404',
+            message: 'Payment not found - No se encontró un pago con el localizador proporcionado'
+          },
+          locator: locator
+        });
+      }
+      return;
     }
 
     console.log('✅ [DOWNLOAD] Pago encontrado:', payment.id);
@@ -215,14 +261,29 @@ export async function handleDownload(req, res) {
   } catch (err) {
     console.error('❌ [DOWNLOAD] Error generando ticket:', err);
     console.error('❌ [DOWNLOAD] Stack trace:', err.stack);
+    console.error('❌ [DOWNLOAD] Error name:', err?.name);
+    console.error('❌ [DOWNLOAD] Error message:', err?.message);
     
     // Asegurar que se envíe JSON y no HTML
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ 
-      error: 'Internal server error', 
-      details: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
+    // Asegurar que la respuesta no se haya enviado ya
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+      const responsePayload = {
+        error: {
+          code: '500',
+          message: err?.message || 'A server error has occurred'
+        }
+      };
+
+      // Agregar detalles en desarrollo
+      if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
+        responsePayload.details = err?.stack;
+      }
+
+      return res.status(500).json(responsePayload);
+    } else {
+      console.error('❌ [DOWNLOAD] Response already sent, cannot send error response');
+    }
   }
 }
 

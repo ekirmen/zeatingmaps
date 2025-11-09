@@ -1,3 +1,4 @@
+// Importar handlers usando ES modules estáticos
 import { handleDebug } from '../../../api-lib/payments/debug.js';
 import { handleDiagnostic } from '../../../api-lib/payments/diagnostic.js';
 import { handleDownload } from '../../../api-lib/payments/download.js';
@@ -11,44 +12,102 @@ const ACTION_HANDLERS = {
 };
 
 export default async function handler(req, res) {
-  const { action: actionParam } = req.query;
-  const actionSegment = Array.isArray(actionParam) ? actionParam[0] : actionParam;
-  const fallbackAction = req.method === 'GET' ? 'download' : req.method === 'POST' ? 'email' : undefined;
-  const action =
-    typeof actionSegment === 'string' && ACTION_HANDLERS[actionSegment]
-      ? actionSegment
-      : actionSegment === undefined
-        ? fallbackAction
-        : undefined;
+  // Manejar errores de CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return res.status(200).end();
+  }
 
-  const handlerFn = action ? ACTION_HANDLERS[action] : null;
-
-  if (!handlerFn) {
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(404).json({ error: 'Not found' });
+  // Validar que los handlers estén disponibles
+  if (!handleDownload || typeof handleDownload !== 'function') {
+    console.error('[PAYMENTS] handleDownload no está disponible');
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({
+        error: {
+          code: '500',
+          message: 'Server configuration error - Download handler not available'
+        }
+      });
+    }
+    return;
   }
 
   try {
-    return await handlerFn(req, res);
-  } catch (err) {
-    console.error('[PAYMENTS] Unhandled action error:', {
-      locator: req?.query?.locator,
-      action,
-      method: req.method,
-      message: err?.message,
-    });
-
-    const status = Number(err?.statusCode || err?.status) || 500;
-    const responsePayload = {
-      error: 'Internal server error',
-      details: err?.message || 'Unexpected error executing action',
-    };
-
-    if (process.env.NODE_ENV === 'development' && err?.stack) {
-      responsePayload.stack = err.stack;
+    const { action: actionParam, locator } = req.query;
+    
+    // Si no hay locator en query, intentar extraerlo de la URL
+    if (!locator && req.url) {
+      const urlParts = req.url.split('/').filter(Boolean);
+      const paymentsIndex = urlParts.indexOf('payments');
+      if (paymentsIndex >= 0 && urlParts[paymentsIndex + 1]) {
+        req.query.locator = urlParts[paymentsIndex + 1];
+      }
     }
 
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(status).json(responsePayload);
+    // Determinar la acción a ejecutar
+    const actionSegment = Array.isArray(actionParam) ? actionParam[0] : actionParam;
+    const fallbackAction = req.method === 'GET' ? 'download' : req.method === 'POST' ? 'email' : undefined;
+    const action =
+      typeof actionSegment === 'string' && ACTION_HANDLERS[actionSegment]
+        ? actionSegment
+        : actionSegment === undefined
+          ? fallbackAction
+          : undefined;
+
+    const handlerFn = action ? ACTION_HANDLERS[action] : null;
+
+    if (!handlerFn) {
+      console.error('[PAYMENTS] Handler not found for action:', action, 'method:', req.method);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(404).json({ 
+        error: {
+          code: '404',
+          message: `No handler found for action: ${action || 'undefined'}`
+        }
+      });
+    }
+
+    console.log('[PAYMENTS] Executing handler:', {
+      action,
+      locator: req.query.locator,
+      method: req.method,
+      url: req.url
+    });
+
+    // Ejecutar handler
+    return await handlerFn(req, res);
+  } catch (err) {
+    console.error('[PAYMENTS] Unhandled error:', {
+      locator: req?.query?.locator,
+      action: req?.query?.action,
+      method: req.method,
+      message: err?.message,
+      stack: err?.stack,
+      name: err?.name
+    });
+
+    // Asegurar que la respuesta no se haya enviado ya
+    if (!res.headersSent) {
+      const status = Number(err?.statusCode || err?.status) || 500;
+      const responsePayload = {
+        error: {
+          code: String(status),
+          message: err?.message || 'A server error has occurred'
+        }
+      };
+
+      // Agregar detalles en desarrollo
+      if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
+        responsePayload.details = err?.stack;
+      }
+
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(status).json(responsePayload);
+    } else {
+      console.error('[PAYMENTS] Response already sent, cannot send error response');
+    }
   }
 }
