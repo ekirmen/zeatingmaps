@@ -14,8 +14,10 @@ import {
   Tag,
   Spin,
   Calendar,
-  Badge
+  Badge,
+  ConfigProvider
 } from 'antd';
+import locale from 'antd/locale/es_ES';
 import { 
   DollarOutlined, 
   UserOutlined, 
@@ -719,45 +721,66 @@ const Dashboard = () => {
       <Row gutter={[16, 16]} className="mt-8">
         <Col xs={24}>
           <Card title="Calendario de Eventos">
-            <Calendar
-              fullscreen={false}
-              headerRender={({ value, onChange }) => (
-                <div className="flex justify-between items-center mb-4">
-                  <Button 
-                    size="small" 
-                    onClick={() => onChange(value.clone().subtract(1, 'month'))}
-                  >
-                    Anterior
-                  </Button>
-                  <Text strong>{value.format('MMMM YYYY')}</Text>
-                  <Button 
-                    size="small" 
-                    onClick={() => onChange(value.clone().add(1, 'month'))}
-                  >
-                    Siguiente
-                  </Button>
-                </div>
-              )}
-              dateCellRender={(date) => {
-                const eventsOnDate = upcomingEvents.filter(event => {
-                  const eventDate = new Date(event.fecha_evento);
-                  return eventDate.toDateString() === date.toDate().toDateString();
-                });
+            <ConfigProvider locale={locale}>
+              <Calendar
+                fullscreen={false}
+                headerRender={({ value, type, onChange, onTypeChange }) => {
+                  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                  // Ant Design v5 usa dayjs
+                  const currentMonth = monthNames[value.month()];
+                  const currentYear = value.year();
+                  
+                  return (
+                    <div className="flex justify-between items-center mb-4 flex-wrap gap-2 px-2">
+                      <Button 
+                        size="small" 
+                        onClick={() => {
+                          onChange(value.subtract(1, 'month'));
+                        }}
+                      >
+                        Anterior
+                      </Button>
+                      <Text strong style={{ fontSize: '14px', fontWeight: 600 }}>
+                        {currentMonth} {currentYear}
+                      </Text>
+                      <Button 
+                        size="small" 
+                        onClick={() => {
+                          onChange(value.add(1, 'month'));
+                        }}
+                      >
+                        Siguiente
+                      </Button>
+                    </div>
+                  );
+                }}
+                dateCellRender={(date) => {
+                  const eventsOnDate = upcomingEvents.filter(event => {
+                    if (!event.fecha_evento) return false;
+                    const eventDate = new Date(event.fecha_evento);
+                    const cellDate = date.toDate();
+                    return eventDate.toDateString() === cellDate.toDateString();
+                  });
 
-                return (
-                  <div className="h-full">
-                    {eventsOnDate.map((event, index) => (
-                      <Badge 
-                        key={index}
-                        color="blue" 
-                        text={event.nombre}
-                        className="text-xs"
-                      />
-                    ))}
-                  </div>
-                );
-              }}
-            />
+                  if (eventsOnDate.length === 0) return null;
+
+                  return (
+                    <div className="h-full py-1">
+                      {eventsOnDate.map((event, index) => (
+                        <div key={index} className="text-xs mb-1">
+                          <Badge 
+                            color="blue" 
+                            text={event.nombre}
+                            className="text-xs"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }}
+              />
+            </ConfigProvider>
           </Card>
         </Col>
       </Row>

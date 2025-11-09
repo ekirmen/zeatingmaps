@@ -891,58 +891,67 @@ const PaymentMethodsConfig = () => {
         </Space>
       }
       extra={
-        <Space>
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={exportConfig}
-            size="small"
-          >
-            Exportar
-          </Button>
-          <Button
-            icon={<UploadOutlined />}
-            onClick={() => setImportExportModalVisible(true)}
-            size="small"
-          >
-            Importar
-          </Button>
-          <Button
-            icon={<HistoryOutlined />}
-            onClick={() => setHistoryModalVisible(true)}
-            size="small"
-          >
-            Historial
-          </Button>
-          <Popconfirm
-            title="¿Activar todos los métodos?"
-            onConfirm={() => handleBulkAction('enable')}
-            okText="Sí"
-            cancelText="No"
-          >
+        <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+          <Space size="small" wrap>
             <Button
-              icon={<CheckOutlined />}
-              loading={bulkActionLoading}
+              icon={<DownloadOutlined />}
+              onClick={exportConfig}
               size="small"
             >
-              Activar Todos
+              <span className="hidden sm:inline">Exportar</span>
+              <span className="sm:hidden">Exp</span>
             </Button>
-          </Popconfirm>
-          <Popconfirm
-            title="¿Desactivar todos los métodos?"
-            onConfirm={() => handleBulkAction('disable')}
-            okText="Sí"
-            cancelText="No"
-          >
             <Button
-              icon={<ExclamationCircleOutlined />}
-              loading={bulkActionLoading}
+              icon={<UploadOutlined />}
+              onClick={() => setImportExportModalVisible(true)}
               size="small"
-              danger
             >
-              Desactivar Todos
+              <span className="hidden sm:inline">Importar</span>
+              <span className="sm:hidden">Imp</span>
             </Button>
-          </Popconfirm>
-        </Space>
+            <Button
+              icon={<HistoryOutlined />}
+              onClick={() => setHistoryModalVisible(true)}
+              size="small"
+            >
+              <span className="hidden sm:inline">Historial</span>
+              <span className="sm:hidden">Hist</span>
+            </Button>
+          </Space>
+          <Space size="small" wrap>
+            <Popconfirm
+              title="¿Activar todos los métodos?"
+              onConfirm={() => handleBulkAction('enable')}
+              okText="Sí"
+              cancelText="No"
+            >
+              <Button
+                icon={<CheckOutlined />}
+                loading={bulkActionLoading}
+                size="small"
+              >
+                <span className="hidden sm:inline">Activar Todos</span>
+                <span className="sm:hidden">Activar</span>
+              </Button>
+            </Popconfirm>
+            <Popconfirm
+              title="¿Desactivar todos los métodos?"
+              onConfirm={() => handleBulkAction('disable')}
+              okText="Sí"
+              cancelText="No"
+            >
+              <Button
+                icon={<ExclamationCircleOutlined />}
+                loading={bulkActionLoading}
+                size="small"
+                danger
+              >
+                <span className="hidden sm:inline">Desactivar Todos</span>
+                <span className="sm:hidden">Desactivar</span>
+              </Button>
+            </Popconfirm>
+          </Space>
+        </div>
       }
     >
       <Row gutter={[16, 16]}>
@@ -969,6 +978,7 @@ const PaymentMethodsConfig = () => {
                   icon={favoriteMethods.includes(method.id) ? <StarFilled /> : <StarOutlined />}
                   onClick={() => toggleFavorite(method.id)}
                   style={{ color: favoriteMethods.includes(method.id) ? '#faad14' : '#d9d9d9' }}
+                  title="Favorito"
                 />,
                 <Button
                   key="test"
@@ -977,6 +987,7 @@ const PaymentMethodsConfig = () => {
                   onClick={() => validateApiKey(method.id, method.config)}
                   loading={testingConnection[method.id]}
                   disabled={!method.enabled || !method.config}
+                  title="Probar conexión"
                 />,
                 <Button
                   key="config"
@@ -984,8 +995,10 @@ const PaymentMethodsConfig = () => {
                   icon={<SettingOutlined />}
                   onClick={() => openConfigModal(method)}
                   disabled={!method.enabled}
+                  className="!text-xs sm:!text-sm"
                 >
-                  Configurar
+                  <span className="hidden sm:inline">Configurar</span>
+                  <span className="sm:hidden">Config</span>
                 </Button>
               ]}
             >

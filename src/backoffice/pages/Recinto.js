@@ -44,7 +44,7 @@ const Recinto = () => {
       const { data, error } = await supabase
         .from('recintos')
         .select('*, salas(*)')
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: false });
 
       if (error) {
         console.error('Error al obtener recintos:', error.message);

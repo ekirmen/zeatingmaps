@@ -365,36 +365,36 @@ const Plano = () => {
                   .filter(z => !zonaSearch || String(z.nombre || '').toLowerCase().includes(zonaSearch.toLowerCase()))
                   .map((zona, index) => (
                   <div key={zona.id || index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         <div 
-                          className="w-4 h-4 rounded-full" 
+                          className="w-4 h-4 rounded-full flex-shrink-0" 
                           style={{ backgroundColor: zona.color }}
                         ></div>
-                        <span className="font-medium">{zona.nombre}</span>
-                        <span className="text-sm text-gray-500">
+                        <span className="font-medium text-sm sm:text-base">{zona.nombre}</span>
+                        <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
                           Aforo: {zona.aforo || 'No definido'}
                         </span>
                         {zona.numerada && (
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded whitespace-nowrap">
                             Numerada
                           </span>
                         )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-row gap-2 sm:gap-2">
                         <button
                           onClick={() => {
                             setEditingZona(zona);
                             setNuevaZona({ ...zona });
                             setModalIsOpen(true);
                           }}
-                          className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                          className="flex-1 sm:flex-none px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm whitespace-nowrap font-medium"
                         >
                           ✏️ Editar
                         </button>
                         <button
                           onClick={() => handleDeleteZona(zona.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          className="flex-1 sm:flex-none px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm whitespace-nowrap font-medium"
                         >
                           🗑️ Eliminar
                         </button>

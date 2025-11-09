@@ -25,6 +25,14 @@
       "destination": "/seatCalculations.worker.js"
     },
     {
+      "source": "/dashboard/seatCalculations.worker.js",
+      "destination": "/seatCalculations.worker.js"
+    },
+    {
+      "source": "/backoffice/seatCalculations.worker.js",
+      "destination": "/seatCalculations.worker.js"
+    },
+    {
       "source": "/store/manifest.json",
       "destination": "/manifest.json"
     },
