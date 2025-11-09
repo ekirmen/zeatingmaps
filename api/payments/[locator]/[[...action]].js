@@ -1,4 +1,5 @@
 // Importar handlers usando ES modules estáticos
+// Las importaciones deben ser estáticas para Vercel serverless functions
 import { handleDebug } from '../../../api-lib/payments/debug.js';
 import { handleDiagnostic } from '../../../api-lib/payments/diagnostic.js';
 import { handleDownload } from '../../../api-lib/payments/download.js';
@@ -23,12 +24,15 @@ export default async function handler(req, res) {
   // Validar que los handlers estén disponibles
   if (!handleDownload || typeof handleDownload !== 'function') {
     console.error('[PAYMENTS] handleDownload no está disponible');
+    console.error('[PAYMENTS] handleDownload type:', typeof handleDownload);
+    console.error('[PAYMENTS] Available handlers:', Object.keys(ACTION_HANDLERS).filter(key => ACTION_HANDLERS[key]));
     if (!res.headersSent) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(500).json({
         error: {
           code: '500',
-          message: 'Server configuration error - Download handler not available'
+          message: 'Server configuration error - Download handler not available',
+          details: 'Handler not loaded correctly'
         }
       });
     }
