@@ -14,15 +14,22 @@ export const trackEvent = (name, properties = {}) => {
   }
 
   try {
-    // Usar la API de Vercel Analytics si está disponible
-    if (window.va) {
+    // Verificar que window.va existe y tiene el método track
+    if (window.va && typeof window.va.track === 'function') {
       window.va.track(name, properties);
       console.log('📊 [ANALYTICS] Evento trackeado:', { name, properties });
     } else {
-      console.warn('⚠️ [ANALYTICS] Vercel Analytics no disponible');
+      // Silenciosamente ignorar si Vercel Analytics no está disponible
+      // No mostrar warning en producción para evitar ruido en la consola
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ [ANALYTICS] Vercel Analytics no disponible o método track no existe');
+      }
     }
   } catch (error) {
-    console.error('❌ [ANALYTICS] Error trackeando evento:', error);
+    // Solo mostrar errores en desarrollo, silenciosamente ignorar en producción
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ [ANALYTICS] Error trackeando evento:', error);
+    }
   }
 };
 

@@ -19,12 +19,13 @@ const GlobalCartTimer = () => {
   const itemCount = getItemCount();
   const total = calculateTotal();
 
-  // Páginas donde NO mostrar el carrito flotante (ya tienen su propio carrito)
+  // Páginas donde NO mostrar el carrito flotante (ya tienen su propio carrito o están en proceso de pago)
   const isSeatSelectionPage = location.pathname.includes('/map') || 
                                location.pathname.includes('/seat-selection') || 
-                               location.pathname === '/store/cart';
+                               location.pathname === '/store/cart' ||
+                               location.pathname === '/store/payment';
 
-  // Mostrar el carrito flotante si hay items y no estamos en página de selección
+  // Mostrar el carrito flotante si hay items y no estamos en página de selección o pago
   useEffect(() => {
     setShowTimer(itemCount > 0 && !isSeatSelectionPage);
   }, [itemCount, isSeatSelectionPage]);

@@ -165,16 +165,27 @@ export default async function downloadTicket(locator, ticketId) {
     toast.success('Ticket descargado exitosamente');
     
   } catch (error) {
+    // Manejar errores correctamente, asegurándose de que el mensaje sea un string
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : typeof error === 'string' 
+        ? error 
+        : error?.message || JSON.stringify(error) || 'Error desconocido al descargar el ticket';
+    
     console.error('❌ [DOWNLOAD] Error descargando ticket:', error);
-    console.error('❌ [DOWNLOAD] Error name:', error.name);
-    console.error('❌ [DOWNLOAD] Error message:', error.message);
-    console.error('❌ [DOWNLOAD] Error stack:', error.stack);
+    console.error('❌ [DOWNLOAD] Error name:', error?.name || 'Unknown');
+    console.error('❌ [DOWNLOAD] Error message:', errorMessage);
+    console.error('❌ [DOWNLOAD] Error stack:', error?.stack || 'No stack available');
+    
+    // Trackear error de descarga
+    trackTicketDownload(locator || 'unknown', 'download', false, errorMessage);
     
     // Mostrar toast de error si no se mostró antes
-    if (!error.message.includes('Server returned') && !error.message.includes('Invalid content type')) {
-      toast.error('Error al descargar el ticket: ' + error.message);
+    if (!errorMessage.includes('Server returned') && !errorMessage.includes('Invalid content type')) {
+      toast.error(`Error al descargar el ticket: ${errorMessage}`);
     }
     
-    throw error;
+    // Lanzar un nuevo error con el mensaje correcto
+    throw new Error(errorMessage);
   }
 }

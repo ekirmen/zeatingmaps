@@ -53,11 +53,21 @@ const TicketDownloadButton = ({ seat, locator, isPaid }) => {
                 document.body.removeChild(a);
                 message.success('Ticket descargado correctamente');
             } else {
-                message.error('Error al descargar ticket');
+                const errorText = await response.text().catch(() => 'Error desconocido');
+                console.error('❌ [DOWNLOAD] Error en respuesta:', response.status, errorText);
+                message.error(`Error al descargar ticket: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
+            // Manejar errores correctamente, asegurándose de que el mensaje sea un string
+            const errorMessage = error instanceof Error 
+                ? error.message 
+                : typeof error === 'string' 
+                    ? error 
+                    : error?.message || 'Error desconocido al descargar el ticket';
             
-            message.error('Error al descargar ticket');
+            console.error('❌ [DOWNLOAD] Error descargando ticket:', error);
+            console.error('❌ [DOWNLOAD] Error message:', errorMessage);
+            message.error(`Error al descargar ticket: ${errorMessage}`);
         } finally {
             setDownloading(false);
         }
@@ -108,13 +118,25 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
                 message.success(`${paidSeats.length} tickets descargados correctamente`);
                 VisualNotifications.show('purchaseComplete', `${paidSeats.length} tickets descargados correctamente`);
             } else {
-                message.error('Error al descargar tickets');
-                VisualNotifications.show('error', 'Error al descargar tickets');
+                const errorText = await response.text().catch(() => 'Error desconocido');
+                console.error('❌ [DOWNLOAD] Error en respuesta bulk:', response.status, errorText);
+                const errorMsg = `Error al descargar tickets: ${response.status} ${response.statusText}`;
+                message.error(errorMsg);
+                VisualNotifications.show('error', errorMsg);
             }
         } catch (error) {
+            // Manejar errores correctamente, asegurándose de que el mensaje sea un string
+            const errorMessage = error instanceof Error 
+                ? error.message 
+                : typeof error === 'string' 
+                    ? error 
+                    : error?.message || 'Error desconocido al descargar los tickets';
             
-            message.error('Error al descargar tickets');
-            VisualNotifications.show('error', 'Error al descargar tickets');
+            console.error('❌ [DOWNLOAD] Error descargando tickets (bulk):', error);
+            console.error('❌ [DOWNLOAD] Error message:', errorMessage);
+            const errorMsg = `Error al descargar tickets: ${errorMessage}`;
+            message.error(errorMsg);
+            VisualNotifications.show('error', errorMsg);
         } finally {
             setDownloading(false);
         }
