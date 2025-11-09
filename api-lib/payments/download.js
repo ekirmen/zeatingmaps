@@ -91,25 +91,53 @@ export async function handleDownload(req, res) {
 
   try {
     console.log('🔐 [DOWNLOAD] Verificando token de autenticación...');
+    console.log('🔐 [DOWNLOAD] Token length:', token ? token.length : 0);
+    console.log('🔐 [DOWNLOAD] Token preview (first 20 chars):', token ? token.substring(0, 20) + '...' : 'none');
+    console.log('🔐 [DOWNLOAD] supabaseAdmin disponible:', supabaseAdmin ? '✅ sí' : '❌ no');
+    console.log('🔐 [DOWNLOAD] supabaseAdmin.auth disponible:', supabaseAdmin?.auth ? '✅ sí' : '❌ no');
+    console.log('🔐 [DOWNLOAD] supabaseAdmin.auth.getUser disponible:', supabaseAdmin?.auth?.getUser ? '✅ sí' : '❌ no');
 
     // Verify the user token using the access token (tolerante a mocks)
-    const userResp = await supabaseAdmin?.auth?.getUser?.(token);
+    let userResp;
+    try {
+      userResp = await supabaseAdmin?.auth?.getUser?.(token);
+    } catch (authError) {
+      console.error('❌ [DOWNLOAD] Error llamando getUser:', authError);
+      console.error('❌ [DOWNLOAD] Auth error message:', authError?.message);
+      console.error('❌ [DOWNLOAD] Auth error stack:', authError?.stack);
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(500).json({ 
+          error: {
+            code: '500',
+            message: 'Error verificando autenticación: ' + (authError?.message || 'Error desconocido')
+          }
+        });
+      }
+      return;
+    }
+    
     const user = userResp?.data?.user || null;
     const userError = userResp?.error || null;
     
-    console.log('🔐 [DOWNLOAD] Resultado de autenticación:', {
-      user: user ? 'presente' : 'ausente',
-      error: userError ? userError.message : 'ninguno'
-    });
+    console.log('🔐 [DOWNLOAD] Resultado de autenticación:');
+    console.log('- User presente:', user ? '✅ sí' : '❌ no');
+    console.log('- User ID:', user?.id || 'N/A');
+    console.log('- Error presente:', userError ? '❌ sí' : '✅ no');
+    if (userError) {
+      console.log('- Error message:', userError.message);
+      console.log('- Error code:', userError.code);
+      console.log('- Error status:', userError.status);
+    }
     
     if (userError || !user) {
-      console.error('❌ [DOWNLOAD] Auth error:', userError);
+      console.error('❌ [DOWNLOAD] Auth error o usuario no encontrado:', userError);
       if (!res.headersSent) {
         res.setHeader('Content-Type', 'application/json');
         return res.status(403).json({ 
           error: {
             code: '403',
-            message: 'Unauthorized'
+            message: userError?.message || 'Unauthorized - Token inválido o expirado'
           }
         });
       }
@@ -120,15 +148,34 @@ export async function handleDownload(req, res) {
 
     // Get payment data - tolerante a duplicados en payment_transactions
     console.log('🔍 [DOWNLOAD] Buscando pago con localizador:', locator);
-    const { data: locatorMatches, error: locatorError } = await supabaseAdmin
-      .from('payment_transactions')
-      .select('*')
-      .eq('locator', locator)
-      .order('created_at', { ascending: false })
-      .limit(5);
+    console.log('🔍 [DOWNLOAD] supabaseAdmin disponible para consulta:', supabaseAdmin ? '✅ sí' : '❌ no');
+    
+    let locatorMatches, locatorError;
+    try {
+      const result = await supabaseAdmin
+        .from('payment_transactions')
+        .select('*')
+        .eq('locator', locator)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      locatorMatches = result.data;
+      locatorError = result.error;
+    } catch (queryError) {
+      console.error('❌ [DOWNLOAD] Excepción al buscar por locator:', queryError);
+      console.error('❌ [DOWNLOAD] Query error message:', queryError?.message);
+      console.error('❌ [DOWNLOAD] Query error stack:', queryError?.stack);
+      locatorError = queryError;
+      locatorMatches = null;
+    }
 
     if (locatorError) {
       console.error('❌ [DOWNLOAD] Error buscando por locator:', locatorError);
+      console.error('❌ [DOWNLOAD] Error message:', locatorError.message);
+      console.error('❌ [DOWNLOAD] Error code:', locatorError.code);
+      console.error('❌ [DOWNLOAD] Error details:', locatorError.details);
+      console.error('❌ [DOWNLOAD] Error hint:', locatorError.hint);
+    } else {
+      console.log('✅ [DOWNLOAD] Consulta exitosa, resultados encontrados:', locatorMatches ? locatorMatches.length : 0);
     }
 
     let payment = Array.isArray(locatorMatches) ? locatorMatches[0] : null;
@@ -256,13 +303,45 @@ export async function handleDownload(req, res) {
     }
 
     // Generate full PDF with payment data
-    return await generateFullPDF(req, res, payment, locator, { funcionData, eventData, venueData, supabaseAdmin });
+    try {
+      return await generateFullPDF(req, res, payment, locator, { funcionData, eventData, venueData, supabaseAdmin });
+    } catch (pdfError) {
+      console.error('❌ [DOWNLOAD] Error en generateFullPDF:', pdfError);
+      console.error('❌ [DOWNLOAD] PDF Error name:', pdfError?.name);
+      console.error('❌ [DOWNLOAD] PDF Error message:', pdfError?.message);
+      console.error('❌ [DOWNLOAD] PDF Error stack:', pdfError?.stack);
+      
+      // Si la respuesta ya se envió, no podemos hacer nada
+      if (res.headersSent) {
+        console.error('❌ [DOWNLOAD] Response already sent, cannot send error response');
+        return;
+      }
+      
+      // Enviar respuesta de error en formato JSON
+      res.setHeader('Content-Type', 'application/json');
+      const responsePayload = {
+        error: {
+          code: '500',
+          message: pdfError?.message || 'Error generando PDF'
+        }
+      };
+
+      // Agregar detalles en desarrollo
+      if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
+        responsePayload.details = pdfError?.stack;
+        responsePayload.errorName = pdfError?.name;
+      }
+
+      return res.status(500).json(responsePayload);
+    }
 
   } catch (err) {
-    console.error('❌ [DOWNLOAD] Error generando ticket:', err);
-    console.error('❌ [DOWNLOAD] Stack trace:', err.stack);
+    console.error('❌ [DOWNLOAD] Error inesperado en handleDownload:', err);
+    console.error('❌ [DOWNLOAD] Stack trace:', err?.stack);
     console.error('❌ [DOWNLOAD] Error name:', err?.name);
     console.error('❌ [DOWNLOAD] Error message:', err?.message);
+    console.error('❌ [DOWNLOAD] Error type:', typeof err);
+    console.error('❌ [DOWNLOAD] Error constructor:', err?.constructor?.name);
     
     // Asegurar que se envíe JSON y no HTML
     // Asegurar que la respuesta no se haya enviado ya
@@ -278,6 +357,8 @@ export async function handleDownload(req, res) {
       // Agregar detalles en desarrollo
       if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
         responsePayload.details = err?.stack;
+        responsePayload.errorName = err?.name;
+        responsePayload.errorType = typeof err;
       }
 
       return res.status(500).json(responsePayload);
@@ -839,12 +920,39 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
       seats_count: Array.isArray(payment.seats) ? payment.seats.length : 0
     });
     
-    const { buffer, filename } = await createTicketPdfBuffer(payment, locator, extra);
+    // Verificar que payment tiene los datos necesarios
+    if (!payment || !payment.id) {
+      throw new Error('Payment data is invalid or missing');
+    }
+    
+    if (!payment.locator && !locator) {
+      throw new Error('Locator is required but not provided');
+    }
+    
+    const finalLocator = locator || payment.locator;
+    if (!finalLocator) {
+      throw new Error('Locator is required but not found in payment or request');
+    }
+    
+    console.log('📄 [DOWNLOAD-FULL] Calling createTicketPdfBuffer...');
+    const pdfResult = await createTicketPdfBuffer(payment, finalLocator, extra);
+    
+    if (!pdfResult || !pdfResult.buffer) {
+      throw new Error('PDF generation returned invalid result');
+    }
+    
+    const { buffer, filename } = pdfResult;
 
     console.log('✅ [DOWNLOAD-FULL] PDF generado exitosamente, tamaño:', buffer.length, 'bytes');
 
+    // Verificar que los headers no se hayan enviado ya
+    if (res.headersSent) {
+      console.error('❌ [DOWNLOAD-FULL] Headers already sent, cannot send PDF');
+      throw new Error('Response headers already sent');
+    }
+
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename || `ticket-${finalLocator}.pdf`}"`);
     res.setHeader('Content-Length', buffer.length.toString());
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -854,21 +962,38 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
     return res.status(200).send(buffer);
   } catch (err) {
     console.error('❌ [DOWNLOAD-FULL] Error generando PDF completo:', err);
-    console.error('❌ [DOWNLOAD-FULL] Stack trace:', err.stack);
+    console.error('❌ [DOWNLOAD-FULL] Stack trace:', err?.stack);
     console.error('❌ [DOWNLOAD-FULL] Error details:', {
-      name: err.name,
-      message: err.message,
-      code: err.code,
-      cause: err.cause
+      name: err?.name,
+      message: err?.message,
+      code: err?.code,
+      cause: err?.cause,
+      type: typeof err
     });
 
+    // Si los headers ya se enviaron, no podemos enviar una respuesta de error
+    if (res.headersSent) {
+      console.error('❌ [DOWNLOAD-FULL] Response headers already sent, cannot send error response');
+      return;
+    }
+
+    // Enviar respuesta de error en formato JSON
     res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({
-      error: 'Error generando PDF completo',
-      details: err.message || 'Error desconocido al generar el PDF',
-      message: err.message,
-      stack: process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development' ? err.stack : undefined
-    });
+    const responsePayload = {
+      error: {
+        code: '500',
+        message: err?.message || 'Error generando PDF completo'
+      }
+    };
+
+    // Agregar detalles en desarrollo
+    if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
+      responsePayload.details = err?.stack;
+      responsePayload.errorName = err?.name;
+      responsePayload.errorType = typeof err;
+    }
+
+    return res.status(500).json(responsePayload);
   }
 }
 // Función para generar PDF con todos los tickets (modo bulk)
