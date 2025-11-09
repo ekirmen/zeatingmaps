@@ -157,7 +157,19 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
     
     // Si hay selectedFunctionId, filtrar items de esa función
     const filteredItems = selectedFunctionId 
-      ? items.filter(item => String(item.functionId || item.funcionId) === String(selectedFunctionId))
+      ? items.filter(item => {
+          const itemFunctionId = item.functionId || item.funcionId;
+          const matches = String(itemFunctionId) === String(selectedFunctionId);
+          // Debug: log si hay items que no coinciden
+          if (!matches && itemFunctionId) {
+            console.log('🔍 [CART] Item no coincide con función:', {
+              itemFunctionId,
+              selectedFunctionId,
+              item: item.sillaId || item.id || item._id
+            });
+          }
+          return matches;
+        })
       : items;
     
     // State to track paid seats
@@ -169,6 +181,13 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
     const [pendingCheckout, setPendingCheckout] = useState(false);
 
     const itemCount = (filteredItems && Array.isArray(filteredItems) ? filteredItems.length : 0) + (products && Array.isArray(products) ? products.length : 0);
+    
+    // Debug: verificar itemCount y hideCheckoutButton
+    useEffect(() => {
+      if (itemCount > 0) {
+        console.log('🛒 [CART] Item count:', itemCount, 'hideCheckoutButton:', hideCheckoutButton, 'filteredItems:', filteredItems.length, 'total items:', items.length);
+      }
+    }, [itemCount, hideCheckoutButton, filteredItems.length, items.length]);
 
     // Format price helper
     const formatPrice = (price) => {
@@ -579,14 +598,23 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             </div>
                         </div>
                     )}
-                    {itemCount > 0 && !hideCheckoutButton && (
+                    
+                    {/* Botón de pago - Siempre visible si hay items */}
+                    {itemCount > 0 && (
                         <button 
                             onClick={handleCheckout}
                             className="store-button store-button-primary store-button-lg store-button-block"
+                            style={{
+                                marginTop: '0',
+                                width: '100%',
+                                display: 'block'
+                            }}
                         >
                             Proceder al Pago
                         </button>
                     )}
+                    
+                    {/* Botón de descarga de tickets pagados */}
                     {currentLocator && paidSeats.length > 0 && (
                         <button 
                             onClick={() => {

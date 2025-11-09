@@ -457,7 +457,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
             {funcionCartItems.length} asiento{funcionCartItems.length > 1 ? 's' : ''} seleccionado{funcionCartItems.length > 1 ? 's' : ''}
           </div>
         )}
-        <Cart selectedFunctionId={funcionId} hideCheckoutButton={!isMobile} />
+        <Cart selectedFunctionId={funcionId} hideCheckoutButton={false} />
       </div>
     </div>
   );
