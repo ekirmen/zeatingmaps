@@ -60,21 +60,60 @@ export default async function downloadTicket(locator, ticketId) {
       let errorMessage = 'Failed to download ticket';
       console.error('❌ [DOWNLOAD] Response not OK:', response.status, response.statusText);
       
+      // Clonar la respuesta para poder leerla múltiples veces si es necesario
+      let responseClone = null;
+      try {
+        responseClone = response.clone();
+      } catch (e) {
+        // Si no se puede clonar, continuar con la respuesta original
+      }
+      
       // Manejar diferentes tipos de respuesta de error
       if (contentType?.includes('application/json')) {
         try {
-          const data = await response.json();
-          errorMessage = data?.error || data?.details || errorMessage;
-          console.error('❌ [DOWNLOAD] API Error Details:', data);
+          // Intentar leer el cuerpo de la respuesta como JSON
+          const responseToRead = responseClone || response;
+          const text = await responseToRead.text();
+          let data;
+          
+          try {
+            data = JSON.parse(text);
+          } catch (parseError) {
+            // Si no se puede parsear como JSON, usar el texto como mensaje
+            errorMessage = text || `Error del servidor: ${response.status} ${response.statusText}`;
+            console.error('❌ [DOWNLOAD] Error parseando JSON:', parseError, 'Texto recibido:', text);
+          }
+          
+          if (data) {
+            // Extraer mensaje de error de diferentes formatos posibles
+            if (typeof data === 'string') {
+              errorMessage = data;
+            } else if (data.error) {
+              errorMessage = typeof data.error === 'string' 
+                ? data.error 
+                : data.error.message || JSON.stringify(data.error);
+            } else if (data.message) {
+              errorMessage = data.message;
+            } else if (data.details) {
+              errorMessage = typeof data.details === 'string' 
+                ? data.details 
+                : JSON.stringify(data.details);
+            } else {
+              errorMessage = `Error del servidor: ${response.status} ${response.statusText}`;
+            }
+            console.error('❌ [DOWNLOAD] API Error Details:', data);
+          }
         } catch (e) {
-          console.error('❌ [DOWNLOAD] Error parsing JSON response:', e);
+          console.error('❌ [DOWNLOAD] Error leyendo respuesta JSON:', e);
+          errorMessage = `Error del servidor: ${response.status} ${response.statusText}`;
         }
       } else if (contentType?.includes('text/html')) {
         console.error('❌ [DOWNLOAD] API devolvió HTML en lugar de JSON/PDF');
         
         // Intentar leer el contenido HTML para debug
         try {
-          const htmlContent = await response.text();
+          const responseToRead = responseClone || response;
+          const htmlContent = await responseToRead.text();
           console.error('❌ [DOWNLOAD] Contenido HTML recibido (primeros 500 chars):', htmlContent.substring(0, 500));
           
           if (htmlContent.includes('Error') || htmlContent.includes('error')) {
@@ -91,12 +130,20 @@ export default async function downloadTicket(locator, ticketId) {
       } else if (response.status === 404) {
         errorMessage = 'Endpoint no encontrado (404) - Verificar configuración de API';
         console.error('❌ [DOWNLOAD] Endpoint 404 - URL:', url);
+      } else if (response.status === 500) {
+        errorMessage = `Error interno del servidor (500) - Por favor, intente más tarde o contacte al soporte`;
+        console.error('❌ [DOWNLOAD] Error 500 - URL:', url);
       } else {
-        errorMessage = `Error del servidor: ${response.status} ${response.statusText}`;
+        errorMessage = `Error del servidor: ${response.status} ${response.statusText || 'Error desconocido'}`;
+      }
+      
+      // Asegurarse de que errorMessage sea un string
+      if (typeof errorMessage !== 'string') {
+        errorMessage = JSON.stringify(errorMessage) || 'Error desconocido al descargar el ticket';
       }
       
       // Trackear error de descarga
-      trackTicketDownload(locator, 'download', false, errorMessage);
+      trackTicketDownload(locator || 'unknown', 'download', false, errorMessage);
       trackApiError(url, response.status, errorMessage);
       
       toast.error(errorMessage);
@@ -166,16 +213,41 @@ export default async function downloadTicket(locator, ticketId) {
     
   } catch (error) {
     // Manejar errores correctamente, asegurándose de que el mensaje sea un string
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : typeof error === 'string' 
-        ? error 
-        : error?.message || JSON.stringify(error) || 'Error desconocido al descargar el ticket';
+    let errorMessage = 'Error desconocido al descargar el ticket';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message || errorMessage;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error && typeof error === 'object') {
+      // Intentar extraer mensaje de diferentes propiedades
+      if (error.message) {
+        errorMessage = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+      } else if (error.error) {
+        errorMessage = typeof error.error === 'string' ? error.error : JSON.stringify(error.error);
+      } else if (error.details) {
+        errorMessage = typeof error.details === 'string' ? error.details : JSON.stringify(error.details);
+      } else {
+        // Como último recurso, stringificar el objeto completo
+        try {
+          errorMessage = JSON.stringify(error);
+        } catch (e) {
+          errorMessage = 'Error desconocido al descargar el ticket';
+        }
+      }
+    }
+    
+    // Asegurarse de que errorMessage sea un string válido
+    if (typeof errorMessage !== 'string' || errorMessage === '[object Object]') {
+      errorMessage = 'Error desconocido al descargar el ticket';
+    }
     
     console.error('❌ [DOWNLOAD] Error descargando ticket:', error);
     console.error('❌ [DOWNLOAD] Error name:', error?.name || 'Unknown');
     console.error('❌ [DOWNLOAD] Error message:', errorMessage);
     console.error('❌ [DOWNLOAD] Error stack:', error?.stack || 'No stack available');
+    console.error('❌ [DOWNLOAD] Error type:', typeof error);
+    console.error('❌ [DOWNLOAD] Error object:', error);
     
     // Trackear error de descarga
     trackTicketDownload(locator || 'unknown', 'download', false, errorMessage);

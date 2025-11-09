@@ -105,21 +105,41 @@ class AuditService {
       };
 
       // Insertar en la base de datos
-      const { data, error } = await supabase
-        .from('audit_logs')
-        .insert([auditData])
-        .select()
-        .single();
+      // Usar try-catch para manejar errores de permisos silenciosamente
+      try {
+        const { data, error } = await supabase
+          .from('audit_logs')
+          .insert([auditData])
+          .select()
+          .single();
 
-      if (error) {
-        console.error('[AUDIT] Error registrando acción:', error);
-        // Fallback: almacenar localmente si falla la inserción
+        if (error) {
+          // Si es un error de permisos (403, 42501), solo loggear en desarrollo
+          if (error.code === '42501' || error.code === 'PGRST301' || error.message?.includes('permission denied')) {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('[AUDIT] Permisos insuficientes para registrar acción:', action, error.message);
+            }
+            // Fallback: almacenar localmente si falla la inserción por permisos
+            await this.storeLocally(auditData);
+            return null;
+          }
+          
+          // Para otros errores, loggear y usar fallback
+          console.error('[AUDIT] Error registrando acción:', error);
+          await this.storeLocally(auditData);
+          return null;
+        }
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AUDIT] Acción registrada:', action, data?.id);
+        }
+        return data;
+      } catch (dbError) {
+        // Manejar errores inesperados (como problemas de conexión)
+        console.error('[AUDIT] Error inesperado en logAction:', dbError);
         await this.storeLocally(auditData);
         return null;
       }
-
-      console.log('[AUDIT] Acción registrada:', action, data.id);
-      return data;
     } catch (error) {
       console.error('[AUDIT] Error en logAction:', error);
       // Fallback: almacenar localmente
