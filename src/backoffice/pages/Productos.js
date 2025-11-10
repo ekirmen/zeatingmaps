@@ -126,11 +126,12 @@ const Productos = () => {
       productosQuery = addTenantFilter(productosQuery);
       
       // Productos específicos del evento (si la tabla existe, con manejo de errores)
+      // Nota: La tabla productos_eventos puede no existir, por eso usamos manejo de errores
       let productosEventosQuery = supabase
         .from('productos_eventos')
         .select(`
           *,
-          productos:producto_id(nombre, descripcion, precio_base, categoria)
+          productos:producto_id(nombre, descripcion, precio, categoria)
         `)
         .eq('evento_id', eventoSeleccionado)
         .eq('activo', true)
@@ -138,11 +139,22 @@ const Productos = () => {
       
       productosEventosQuery = addTenantFilter(productosEventosQuery);
       
+      // También consultar productos directamente que tengan evento_id
+      let productosConEventoQuery = supabase
+        .from('productos')
+        .select('*')
+        .eq('evento_id', eventoSeleccionado)
+        .eq('activo', true)
+        .order('created_at', { ascending: false });
+      
+      productosConEventoQuery = addTenantFilter(productosConEventoQuery);
+      
       // Ejecutar consultas con manejo de errores individual
-      const [plantillasResult, productosResult, productosEventosResult] = await Promise.allSettled([
+      const [plantillasResult, productosResult, productosEventosResult, productosConEventoResult] = await Promise.allSettled([
         plantillasQuery,
         productosQuery,
-        productosEventosQuery
+        productosEventosQuery,
+        productosConEventoQuery
       ]);
 
       // Procesar resultados
@@ -179,6 +191,12 @@ const Productos = () => {
         : shouldIgnoreError(productosEventosResult.reason)
           ? { data: [], error: null } // Ignorar errores de autenticación o tabla no existente
           : { data: null, error: productosEventosResult.reason };
+      
+      const productosConEventoData = productosConEventoResult.status === 'fulfilled'
+        ? productosConEventoResult.value
+        : shouldIgnoreError(productosConEventoResult.reason)
+          ? { data: [], error: null } // Ignorar errores de autenticación o tabla no existente
+          : { data: null, error: productosConEventoResult.reason };
 
       // ✅ COMBINAR PRODUCTOS DE TODAS LAS FUENTES
       let allProductos = [];
@@ -197,11 +215,15 @@ const Productos = () => {
       }
 
       // Agregar productos generales (si la tabla existe y no hay error)
+      // Nota: Solo productos que NO tengan evento_id (productos generales)
       if (productosData.data && !productosData.error) {
-        const productosWithSource = productosData.data.map(p => ({
+        // Filtrar productos que no tengan evento_id o que tengan evento_id null
+        const productosGenerales = productosData.data.filter(p => !p.evento_id || p.evento_id !== eventoSeleccionado);
+        const productosWithSource = productosGenerales.map(p => ({
           ...p,
           source: 'productos',
-          tipo: 'producto_general'
+          tipo: 'producto_general',
+          precio: p.precio || 0 // La tabla productos tiene 'precio', no 'precio_base'
         }));
         allProductos = [...allProductos, ...productosWithSource];
         console.log('✅ Productos generales cargados:', productosWithSource.length);
@@ -227,7 +249,7 @@ const Productos = () => {
         // Ignorar silenciosamente errores de autenticación o tabla no existente
       }
 
-      // Agregar productos específicos del evento (si la tabla existe y no hay error)
+      // Agregar productos específicos del evento desde productos_eventos (si la tabla existe)
       if (productosEventosData.data && !productosEventosData.error) {
         const productosEventosWithSource = productosEventosData.data.map(p => ({
           ...p,
@@ -236,11 +258,11 @@ const Productos = () => {
           // Usar datos del producto relacionado si está disponible
           nombre: p.productos?.nombre || p.nombre,
           descripcion: p.productos?.descripcion || p.descripcion,
-          precio_base: p.productos?.precio_base || p.precio_base,
+          precio: p.productos?.precio || p.precio || p.precio_base || 0, // productos tiene 'precio', no 'precio_base'
           categoria: p.productos?.categoria || p.categoria
         }));
         allProductos = [...allProductos, ...productosEventosWithSource];
-        console.log('✅ Productos del evento cargados:', productosEventosWithSource.length);
+        console.log('✅ Productos del evento (productos_eventos) cargados:', productosEventosWithSource.length);
       } else if (productosEventosData.error) {
         // Detectar errores de autenticación o tabla no existente
         const error = productosEventosData.error;
@@ -261,6 +283,36 @@ const Productos = () => {
           console.warn('⚠️ Error cargando productos_eventos:', error);
         }
         // Ignorar silenciosamente errores de autenticación o tabla no existente
+      }
+      
+      // Agregar productos que tengan evento_id directamente (desde tabla productos)
+      if (productosConEventoData.data && !productosConEventoData.error) {
+        const productosConEventoWithSource = productosConEventoData.data.map(p => ({
+          ...p,
+          source: 'productos',
+          tipo: 'producto_evento_directo',
+          precio: p.precio || 0 // La tabla productos tiene 'precio', no 'precio_base'
+        }));
+        allProductos = [...allProductos, ...productosConEventoWithSource];
+        console.log('✅ Productos con evento_id cargados:', productosConEventoWithSource.length);
+      } else if (productosConEventoData.error) {
+        // Detectar errores de autenticación
+        const error = productosConEventoData.error;
+        const errorMessage = error.message?.toLowerCase() || '';
+        const errorHint = error.hint?.toLowerCase() || '';
+        const isAuthError = 
+          error.status === 401 ||
+          error.status === 403 ||
+          errorMessage.includes('no api key found') ||
+          errorMessage.includes('apikey') ||
+          errorMessage.includes('permission denied') ||
+          errorHint.includes('no `apikey`') ||
+          errorHint.includes('api key');
+        
+        // Solo mostrar advertencia si no es un error de autenticación
+        if (!isAuthError) {
+          console.warn('⚠️ Error cargando productos con evento_id:', error);
+        }
       }
 
       setProductos(allProductos);
@@ -389,6 +441,15 @@ const Productos = () => {
           <span>{text}</span>
         </Tooltip>
       ),
+    },
+    {
+      title: 'Precio',
+      key: 'precio',
+      render: (_, record) => {
+        // plantillas_productos usa precio_base, productos usa precio
+        const precioValue = record.precio ?? record.precio_base ?? 0;
+        return `$${typeof precioValue === 'number' ? precioValue.toFixed(2) : '0.00'}`;
+      },
     },
     {
       title: 'Categoría',
