@@ -163,6 +163,8 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       try {
         setLoading(true);
         setError(null);
+        setMapLoadStage('cargandoDatos');
+        setMapLoadProgress(10);
 
         const funcionNumeric = parseInt(funcionId, 10);
         
@@ -174,6 +176,8 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           console.warn('Error precargando módulos:', err);
         });
 
+        setMapLoadProgress(20);
+
         // Cargar datos del mapa y función en paralelo con precarga de módulos
         const [funcionResult] = await Promise.all([
           supabase
@@ -184,10 +188,15 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           preloadModules // Precargar módulos en paralelo (no necesitamos el resultado)
         ]);
 
+        setMapLoadProgress(40);
+
         const { data: funcion, error: funcionError } = funcionResult;
         if (funcionError) throw funcionError;
 
         // Obtener mapa
+        setMapLoadStage('cargandoMapa');
+        setMapLoadProgress(50);
+        
         const { data: mapaData, error: mapaError } = await supabase
           .from('mapas')
           .select('*')
@@ -197,9 +206,13 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         if (mapaError) throw mapaError;
 
+        setMapLoadProgress(70);
         setMapa(mapaData);
 
         // Cargar plantilla de precios
+        setMapLoadStage('cargandoPrecios');
+        setMapLoadProgress(80);
+        
         let plantillaData = null;
         if (funcion.plantilla) {
           // Si plantilla es un número (ID), cargar la plantilla desde la tabla
@@ -219,11 +232,22 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           }
         }
         setPlantillaPrecios(plantillaData);
+        setMapLoadProgress(90);
+        setMapLoadStage('finalizando');
+        
+        // Pequeño delay para mostrar el 100%
+        setTimeout(() => {
+          setMapLoadProgress(100);
+        }, 200);
       } catch (err) {
         console.error('Error cargando mapa:', err);
         setError(err.message);
+        setMapLoadProgress(0);
       } finally {
-        setLoading(false);
+        // Esperar un poco antes de ocultar el loading para que se vea el progreso completo
+        setTimeout(() => {
+          setLoading(false);
+        }, 300);
       }
     };
 
@@ -323,10 +347,30 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     }
   }, [getSeatData, toggleSeat, funcionId, isMobile]);
 
+  // Estado para rastrear el progreso de carga del mapa
+  const [mapLoadProgress, setMapLoadProgress] = useState(0);
+  const [mapLoadStage, setMapLoadStage] = useState('cargandoDatos');
+
   if (isRedirecting || loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <Spin size="large" />
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Spin size="large" className="mb-4" />
+          <p className="text-gray-600">
+            {isRedirecting ? 'Redirigiendo...' : 'Cargando mapa...'}
+          </p>
+          {loading && mapLoadProgress > 0 && (
+            <div className="mt-4 w-64">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${mapLoadProgress}%` }}
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-2">{mapLoadProgress}%</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

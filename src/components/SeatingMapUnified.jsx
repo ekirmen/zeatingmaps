@@ -13,6 +13,7 @@ import SeatLayer from './SeatLayer';
 import TableLayer from './TableLayer';
 import BackgroundLayer from './BackgroundLayer';
 import MapElementsLayer from './MapElementsLayer';
+import MapLoadingProgress from './MapLoadingProgress';
 import resolveImageUrl from '../utils/resolveImageUrl';
 import logger from '../utils/logger';
 import { getWebPUrl } from '../utils/imageOptimizer';
@@ -22,28 +23,138 @@ import { debounce } from '../utils/debounce';
 // Cache global para imágenes de fondo para evitar recargas constantes
 const backgroundImageCache = new Map();
 
-// Función para precargar imágenes de fondo
-const preloadBackgroundImage = (url) => {
-  if (!url || backgroundImageCache.has(url)) return Promise.resolve();
+// Callbacks para reportar progreso de carga
+let progressCallbacks = new Set();
+
+// Registrar callback de progreso
+export const registerProgressCallback = (callback) => {
+  progressCallbacks.add(callback);
+  return () => progressCallbacks.delete(callback);
+};
+
+// Reportar progreso
+const reportProgress = (stage, progress) => {
+  progressCallbacks.forEach(callback => {
+    try {
+      callback(stage, progress);
+    } catch (err) {
+      console.error('Error en callback de progreso:', err);
+    }
+  });
+};
+
+// Función para precargar imágenes de fondo con progreso
+const preloadBackgroundImage = (url, onProgress) => {
+  if (!url || backgroundImageCache.has(url)) {
+    if (onProgress) onProgress(100);
+    return Promise.resolve(backgroundImageCache.get(url));
+  }
   
   return new Promise((resolve, reject) => {
-    const image = new window.Image();
-    image.crossOrigin = url.startsWith('data:') ? undefined : 'anonymous';
-    image.loading = 'eager';
-    image.decoding = 'sync';
-    
-    image.onload = () => {
-      backgroundImageCache.set(url, image);
-      resolve(image);
-    };
-    
-    image.onerror = reject;
-    image.src = url;
+    // Si es una data URL, cargar directamente
+    if (url.startsWith('data:')) {
+      const image = new window.Image();
+      image.crossOrigin = undefined;
+      image.loading = 'eager';
+      image.decoding = 'sync';
+      
+      image.onload = () => {
+        backgroundImageCache.set(url, image);
+        if (onProgress) onProgress(100);
+        resolve(image);
+      };
+      
+      image.onerror = reject;
+      image.src = url;
+      return;
+    }
+
+    // Para URLs HTTP, usar fetch para rastrear progreso
+    fetch(url)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const contentLength = response.headers.get('content-length');
+        const total = contentLength ? parseInt(contentLength, 10) : 0;
+        
+        if (!response.body) {
+          throw new Error('ReadableStream not supported');
+        }
+
+        const reader = response.body.getReader();
+        const chunks = [];
+        let receivedLength = 0;
+
+        const readChunk = () => {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              // Crear blob y cargar imagen
+              const blob = new Blob(chunks);
+              const blobUrl = URL.createObjectURL(blob);
+              
+              const image = new window.Image();
+              image.crossOrigin = 'anonymous';
+              image.loading = 'eager';
+              image.decoding = 'sync';
+              
+              image.onload = () => {
+                backgroundImageCache.set(url, image);
+                URL.revokeObjectURL(blobUrl);
+                if (onProgress) onProgress(100);
+                resolve(image);
+              };
+              
+              image.onerror = (err) => {
+                URL.revokeObjectURL(blobUrl);
+                reject(err);
+              };
+              
+              image.src = blobUrl;
+              return;
+            }
+
+            chunks.push(value);
+            receivedLength += value.length;
+            
+            // Reportar progreso
+            if (total > 0 && onProgress) {
+              const progress = Math.round((receivedLength / total) * 100);
+              onProgress(progress);
+            } else if (onProgress && receivedLength > 0) {
+              // Si no conocemos el tamaño total, estimar progreso
+              onProgress(Math.min(50, (receivedLength / 100000) * 50));
+            }
+            
+            readChunk();
+          }).catch(reject);
+        };
+
+        readChunk();
+      })
+      .catch(error => {
+        // Fallback a método tradicional si fetch falla
+        console.warn('Fetch falló, usando método tradicional:', error);
+        const image = new window.Image();
+        image.crossOrigin = url.startsWith('data:') ? undefined : 'anonymous';
+        image.loading = 'eager';
+        image.decoding = 'sync';
+        
+        if (onProgress) onProgress(50); // Progreso estimado
+        
+        image.onload = () => {
+          backgroundImageCache.set(url, image);
+          if (onProgress) onProgress(100);
+          resolve(image);
+        };
+        
+        image.onerror = reject;
+        image.src = url;
+      });
   });
 };
 
 // Componente BackgroundImage memoizado para evitar re-renders innecesarios
-const BackgroundImage = React.memo(({ config }) => {
+const BackgroundImage = React.memo(({ config, onLoadProgress }) => {
   // Resolver la URL desde múltiples posibles campos
   const rawUrl = useMemo(() => {
     let url = config.imageUrl
@@ -67,7 +178,11 @@ const BackgroundImage = React.memo(({ config }) => {
   const [bgImg, setBgImg] = React.useState(() => {
     // Intentar obtener la imagen del cache primero
     if (rawUrl && backgroundImageCache.has(rawUrl)) {
-      return backgroundImageCache.get(rawUrl);
+      const cached = backgroundImageCache.get(rawUrl);
+      if (cached.complete && cached.naturalWidth > 0) {
+        if (onLoadProgress) onLoadProgress(100);
+        return cached;
+      }
     }
     return null;
   });
@@ -78,54 +193,40 @@ const BackgroundImage = React.memo(({ config }) => {
       return;
     }
     
-    // Si ya está en cache, usar la imagen cacheada inmediatamente
+    // Si ya está en cache y completamente cargada, usar inmediatamente
     if (backgroundImageCache.has(rawUrl)) {
       const cachedImage = backgroundImageCache.get(rawUrl);
-      // Verificar que la imagen cacheada esté completamente cargada
       if (cachedImage.complete && cachedImage.naturalWidth > 0) {
         setBgImg(cachedImage);
+        if (onLoadProgress) onLoadProgress(100);
         return;
       }
     }
     
-    const image = new window.Image();
+    // Usar la función de precarga con progreso
+    let cancelled = false;
     
-    // Configurar la imagen para evitar problemas de cache
-    image.crossOrigin = rawUrl.startsWith('data:') ? undefined : 'anonymous';
-    image.loading = 'eager'; // Cargar inmediatamente, no lazy
-    image.decoding = 'sync'; // Decodificar sincrónicamente para evitar parpadeos
-    
-    const onLoad = () => {
-      // Verificar que la imagen se cargó correctamente
-      if (image.complete && image.naturalWidth > 0) {
-        // Guardar en cache
-        backgroundImageCache.set(rawUrl, image);
+    preloadBackgroundImage(rawUrl, (progress) => {
+      if (!cancelled && onLoadProgress) {
+        onLoadProgress(progress);
+      }
+    })
+    .then((image) => {
+      if (!cancelled && image) {
         setBgImg(image);
       }
-    };
-    
-    const onError = (error) => {
-      logger.error('Error cargando imagen de fondo:', error);
-      setBgImg(null);
-    };
-    
-    // Agregar listeners antes de establecer src
-    image.addEventListener('load', onLoad, { once: true });
-    image.addEventListener('error', onError, { once: true });
-    
-    // Establecer src después de los listeners
-    image.src = rawUrl;
-    
-    // Si la imagen ya está en cache del navegador, puede disparar load inmediatamente
-    if (image.complete) {
-      onLoad();
-    }
+    })
+    .catch((error) => {
+      if (!cancelled) {
+        logger.error('Error cargando imagen de fondo:', error);
+        setBgImg(null);
+      }
+    });
     
     return () => {
-      image.removeEventListener('load', onLoad);
-      image.removeEventListener('error', onError);
+      cancelled = true;
     };
-  }, [rawUrl]);
+  }, [rawUrl, onLoadProgress]);
   
   const imageProps = useMemo(() => ({
     x: config.position?.x || config.posicion?.x || 0,
@@ -461,22 +562,77 @@ const SeatingMapUnified = ({
       : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
   }, [mapa]); // Mantener dependencia completa para evitar warnings
 
-  // Precargar imágenes de fondo para evitar parpadeos
-  useEffect(() => {
-    if (backgroundElements.length > 0) {
-      backgroundElements.forEach(bg => {
-        const url = bg.imageUrl || bg.url || bg.src || bg.image?.url || bg.image?.publicUrl || bg.imageData || bg.image?.data;
-        if (url) {
-          let resolvedUrl = url;
-          if (!/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
-            resolvedUrl = resolveImageUrl(url, 'productos') || url;
-          }
-          preloadBackgroundImage(resolvedUrl).catch(err => {
-            logger.warn('Error precargando imagen de fondo:', err);
-          });
-        }
-      });
+  // Estado para rastrear el progreso de carga de imágenes
+  const [imageLoadProgress, setImageLoadProgress] = React.useState(0);
+  const [imageLoadStage, setImageLoadStage] = React.useState('inicializando');
+  const [imagesLoading, setImagesLoading] = React.useState(false);
+  const imageProgressMap = React.useRef(new Map());
+
+  // Callback para recibir progreso de carga de imágenes individuales
+  const handleImageLoadProgress = useCallback((imageIndex, progress, totalImages) => {
+    imageProgressMap.current.set(imageIndex, progress);
+    
+    // Calcular progreso total inmediatamente
+    let totalProgress = 0;
+    let loadedCount = 0;
+    imageProgressMap.current.forEach((imgProgress) => {
+      totalProgress += imgProgress;
+      if (imgProgress >= 100) {
+        loadedCount++;
+      }
+    });
+    
+    const averageProgress = totalImages > 0 ? totalProgress / totalImages : 0;
+    const finalProgress = Math.min(Math.max(averageProgress, 0), 100);
+    setImageLoadProgress(finalProgress);
+    
+    // Actualizar etapa basada en el progreso
+    if (finalProgress < 30) {
+      setImageLoadStage('cargandoImagen');
+    } else if (finalProgress < 70) {
+      setImageLoadStage('cargandoImagen');
+    } else if (finalProgress < 95) {
+      setImageLoadStage('cargandoAsientos');
+    } else if (loadedCount >= totalImages) {
+      setImageLoadStage('finalizando');
+      setImageLoadProgress(100);
+      // Marcar como completado después de un pequeño delay
+      setTimeout(() => {
+        setImagesLoading(false);
+      }, 300);
+    } else {
+      setImageLoadStage('cargandoAsientos');
     }
+  }, []);
+
+  // Inicializar estado de carga cuando cambian los elementos de fondo
+  useEffect(() => {
+    if (backgroundElements.length === 0) {
+      setImageLoadProgress(100);
+      setImageLoadStage('finalizando');
+      setImagesLoading(false);
+      imageProgressMap.current.clear();
+      return;
+    }
+
+    // Inicializar estado de carga
+    setImagesLoading(true);
+    setImageLoadStage('cargandoImagen');
+    setImageLoadProgress(0);
+    imageProgressMap.current.clear();
+
+    // Inicializar progreso para elementos sin URL (considerarlos como cargados)
+    backgroundElements.forEach((bg, index) => {
+      const url = bg.imageUrl || bg.url || bg.src || bg.image?.url || bg.image?.publicUrl || bg.imageData || bg.image?.data;
+      if (!url) {
+        imageProgressMap.current.set(index, 100);
+      } else {
+        imageProgressMap.current.set(index, 0);
+      }
+    });
+
+    // Las imágenes se cargarán individualmente a través de BackgroundImage
+    // El callback handleImageLoadProgress se encargará de actualizar el progreso
   }, [backgroundElements]);
 
   // const [mapImage, setMapImage] = React.useState(null); // Removido por no usarse
@@ -901,6 +1057,16 @@ const SeatingMapUnified = ({
       overflow: 'hidden',
       maxWidth: '100%'
     }}>
+      {/* Barra de progreso de carga de imágenes */}
+      {imagesLoading && (
+        <MapLoadingProgress
+          loading={imagesLoading}
+          progress={imageLoadProgress}
+          stage={imageLoadStage}
+          showDetails={true}
+        />
+      )}
+      
       <SeatStatusLegend />
       {shouldShowSeatLockDebug && <SeatLockDebug funcionId={normalizedFuncionId} />}
       
@@ -957,7 +1123,10 @@ const SeatingMapUnified = ({
           ref={stageRef}
         >
           {/* Background Layer - Separado para mejor performance */}
-          <BackgroundLayer backgroundElements={backgroundElements} />
+          <BackgroundLayer 
+            backgroundElements={backgroundElements}
+            onImageLoadProgress={handleImageLoadProgress}
+          />
 
           {/* Table Layer - Separado para mejor performance */}
           <TableLayer mesas={validatedMesas} />
