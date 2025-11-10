@@ -238,7 +238,6 @@ const Productos = () => {
       nombre: producto.nombre,
       descripcion: producto.descripcion,
       imagen_url: producto.imagen_url,
-      precio_base: producto.precio_base,
       categoria: producto.categoria,
       activo: producto.activo
     });
@@ -266,8 +265,10 @@ const Productos = () => {
 
   const handleSubmit = async (values) => {
     try {
+      // Excluir precio_base ya que se asigna desde la plantilla de precios
+      const { precio_base, ...valuesWithoutPrice } = values;
       const productoData = {
-        ...values,
+        ...valuesWithoutPrice,
         evento_id: eventoSeleccionado,
         activo: values.activo !== false // Asegurar que activo sea boolean
       };
@@ -336,12 +337,6 @@ const Productos = () => {
           <span>{text}</span>
         </Tooltip>
       ),
-    },
-    {
-      title: 'Precio Base',
-      dataIndex: 'precio_base',
-      key: 'precio_base',
-      render: (precio) => `$${precio?.toFixed(2) || '0.00'}`,
     },
     {
       title: 'Categoría',
@@ -494,7 +489,6 @@ const Productos = () => {
             onFinish={handleSubmit}
             initialValues={{
               activo: true,
-              precio_base: 0,
             }}
           >
             <Form.Item
@@ -562,21 +556,6 @@ const Productos = () => {
                   />
                 </div>
               )}
-            </Form.Item>
-
-            <Form.Item
-              name="precio_base"
-              label="Precio Base"
-              rules={[{ required: true, message: 'Por favor ingresa el precio' }]}
-            >
-              <InputNumber
-                min={0}
-                step={0.01}
-                style={{ width: '100%' }}
-                formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-                placeholder="0.00"
-              />
             </Form.Item>
 
             <Form.Item
