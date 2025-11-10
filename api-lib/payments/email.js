@@ -362,17 +362,34 @@ export async function handleEmail(req, res) {
     
     if (!isReservation) {
       // Generar PDF solo para pagos completos
-      const pdfResult = await createTicketPdfBuffer(payment, locator, {
-        funcionData,
-        eventData,
-        venueData,
-        supabaseAdmin,
-        downloadSource: 'email', // Indicar que el PDF se genera para correo
-      });
-      
-      buffer = pdfResult.buffer;
-      filename = pdfResult.filename;
-      eventTitle = pdfResult.eventTitle;
+      try {
+        console.log('📄 [EMAIL] Generando PDF para correo...');
+        const pdfResult = await createTicketPdfBuffer(payment, locator, {
+          funcionData,
+          eventData,
+          venueData,
+          supabaseAdmin,
+          downloadSource: 'email', // Indicar que el PDF se genera para correo
+        });
+        
+        if (!pdfResult || !pdfResult.buffer) {
+          throw new Error('PDF generation returned invalid result - no buffer');
+        }
+        
+        buffer = pdfResult.buffer;
+        filename = pdfResult.filename;
+        eventTitle = pdfResult.eventTitle;
+        console.log('✅ [EMAIL] PDF generado exitosamente para correo');
+      } catch (pdfError) {
+        console.error('❌ [EMAIL] Error generando PDF para correo:', pdfError);
+        console.error('❌ [EMAIL] PDF Error name:', pdfError?.name);
+        console.error('❌ [EMAIL] PDF Error message:', pdfError?.message);
+        console.error('❌ [EMAIL] PDF Error stack:', pdfError?.stack);
+        // Continuar sin PDF - el correo se enviará sin adjunto
+        buffer = null;
+        filename = null;
+        console.warn('⚠️ [EMAIL] Continuando sin PDF adjunto debido a error');
+      }
 
       // Generar token de descarga para el enlace en el correo
       if (payment.user_id && payment.id) {
@@ -445,7 +462,29 @@ export async function handleEmail(req, res) {
     return res.status(200).json({ success: true, message: 'Email sent', id: result.messageId });
   } catch (err) {
     console.error('[EMAIL] Error sending ticket email:', err);
+    console.error('[EMAIL] Error name:', err?.name);
+    console.error('[EMAIL] Error message:', err?.message);
+    console.error('[EMAIL] Error stack:', err?.stack);
+    console.error('[EMAIL] Error code:', err?.code);
+    console.error('[EMAIL] Error details:', err?.details);
+    
     res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ error: 'Failed to send email', details: err.message });
+    const errorMessage = err?.message || 'Failed to send email';
+    const responsePayload = {
+      error: {
+        code: '500',
+        message: typeof errorMessage === 'string' ? errorMessage : 'Failed to send email'
+      }
+    };
+
+    // Agregar detalles en desarrollo
+    if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
+      responsePayload.details = err?.stack;
+      responsePayload.errorName = err?.name;
+      responsePayload.errorCode = err?.code;
+      responsePayload.errorDetails = err?.details;
+    }
+
+    return res.status(500).json(responsePayload);
   }
 }

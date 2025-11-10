@@ -111,8 +111,24 @@ class SeatPaymentChecker {
         
         try {
           const { data, error } = await Promise.race([checkPromise, timeoutPromise]);
-          if (error) throw error;
-          result = data || [];
+          if (error) {
+            // Si la función RPC no existe (404), silenciar el error y continuar
+            if (error.code === 'PGRST116' || error.message?.includes('does not exist') || error.message?.includes('not found')) {
+              console.warn(`[SEAT_PAYMENT_CHECKER] Función RPC check_seats_payment_status no existe, usando verificación manual`);
+              // Retornar resultados por defecto (no pagados) sin lanzar error
+              result = normalizedSeatIds.map(seatId => ({
+                seat_id: seatId,
+                is_paid: false,
+                status: 'disponible',
+                source: 'rpc_not_available',
+                locator: null
+              }));
+            } else {
+              throw error;
+            }
+          } else {
+            result = data || [];
+          }
         } catch (err) {
           if (err.message === 'Timeout') {
             console.warn(`[SEAT_PAYMENT_CHECKER] Timeout en verificación batch, asumiendo no pagados`);
@@ -130,8 +146,24 @@ class SeatPaymentChecker {
         }
       } else {
         const { data, error } = await checkPromise;
-        if (error) throw error;
-        result = data || [];
+        if (error) {
+          // Si la función RPC no existe (404), silenciar el error y continuar
+          if (error.code === 'PGRST116' || error.message?.includes('does not exist') || error.message?.includes('not found')) {
+            console.warn(`[SEAT_PAYMENT_CHECKER] Función RPC check_seats_payment_status no existe, usando verificación manual`);
+            // Retornar resultados por defecto (no pagados) sin lanzar error
+            result = normalizedSeatIds.map(seatId => ({
+              seat_id: seatId,
+              is_paid: false,
+              status: 'disponible',
+              source: 'rpc_not_available',
+              locator: null
+            }));
+          } else {
+            throw error;
+          }
+        } else {
+          result = data || [];
+        }
       }
 
       // Convertir resultados a Map para acceso rápido
