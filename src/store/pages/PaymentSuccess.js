@@ -67,7 +67,7 @@ const PaymentSuccess = () => {
 
   const handleDownloadAllTickets = async () => {
     try {
-      await downloadTicket(locator);
+      await downloadTicket(locator, null, 'web');
     } catch {
       toast.error('No se pudo descargar el ticket');
     }

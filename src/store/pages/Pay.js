@@ -19,6 +19,7 @@ import InstallmentPaymentSelector from '../../components/InstallmentPaymentSelec
 import logger from '../../utils/logger';
 import auditService from '../../services/auditService';
 import { encryptPaymentData } from '../../utils/encryption';
+import { sendPaymentEmailByStatus } from '../services/paymentEmailService';
 
 
 const Pay = () => {
@@ -367,13 +368,17 @@ const Pay = () => {
       if (result.success) {
         console.log('✅ Payment successful, redirecting...');
         
+        // Determinar el status real de la transacción
+        const transactionStatus = result.status || 'completed';
+        const isReservation = transactionStatus === 'reservado' || transactionStatus === 'reserved' || transactionStatus === 'pending';
+        
         // Registrar pago exitoso en auditoría
         auditService.logPayment('completed', {
           ...paymentData,
           transactionId: result.transactionId,
           gateway: selectedGateway?.method_id || selectedGateway?.id,
           paymentMethod: selectedGateway?.name,
-          status: 'completed'
+          status: transactionStatus
         }, {
           tenantId: resolvedTenantId,
           resourceId: result.transactionId,
@@ -401,6 +406,28 @@ const Pay = () => {
             ? { ...(currentTenant || {}), id: resolvedTenantId }
             : currentTenant
         });
+
+        // Enviar correo automáticamente según el status
+        if (result.locator && user?.id) {
+          try {
+            const emailResult = await sendPaymentEmailByStatus({
+              locator: result.locator,
+              user_id: user.id,
+              status: transactionStatus,
+              transactionId: result.transactionId,
+              amount: montoAPagar,
+            });
+            
+            if (emailResult.success) {
+              console.log('✅ [PAY] Correo enviado exitosamente');
+            } else {
+              console.warn('⚠️ [PAY] Error enviando correo:', emailResult.error);
+            }
+          } catch (emailError) {
+            console.error('❌ [PAY] Error enviando correo:', emailError);
+            // No bloquear el flujo si falla el envío de correo
+          }
+        }
 
         // Limpiar carrito (sin intentar desbloquear asientos ya vendidos)
         clearCart(true);

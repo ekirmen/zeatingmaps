@@ -468,13 +468,16 @@ const TenantEmailConfigPanel = () => {
 
           {/* Botones de acción */}
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <Space>
+            {/* Botones principales - Responsive */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 flex-wrap w-full sm:w-auto">
                 <Button
                   type="primary"
                   icon={<SaveOutlined />}
                   htmlType="submit"
                   loading={loading}
+                  size="large"
+                  className="w-full sm:w-auto"
                 >
                   Guardar Configuración
                 </Button>
@@ -483,12 +486,14 @@ const TenantEmailConfigPanel = () => {
                   icon={<ExperimentOutlined />}
                   onClick={handleTest}
                   loading={testing}
+                  size="large"
+                  className="w-full sm:w-auto"
                 >
                   Probar Configuración
                 </Button>
-              </Space>
+              </div>
 
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <Text type="secondary" style={{ fontSize: '12px' }}>
                   {activeTab === 'tenant' ? 'Configuración específica del tenant' : 'Configuración global del sistema'}
                 </Text>
@@ -511,27 +516,34 @@ const TenantEmailConfigPanel = () => {
                   icon={<InboxOutlined />}
                   onClick={handleInboundTest}
                   loading={sendingInbound}
+                  block
+                  size="large"
                 >
                   Enviar prueba a email@omegaboletos.com
                 </Button>
 
-                <Space.Compact style={{ width: '100%' }}>
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Form.Item
                     name="welcome_target_email"
                     style={{ flex: 1, marginBottom: 0 }}
                     rules={[{ type: 'email', message: 'Ingresa un email válido' }]}
                   >
-                    <Input placeholder="correo@ejemplo.com" />
+                    <Input 
+                      placeholder="correo@ejemplo.com" 
+                      size="large"
+                    />
                   </Form.Item>
                   <Button
                     type="primary"
                     icon={<SendOutlined />}
                     onClick={handleSendWelcome}
                     loading={sendingWelcome}
+                    size="large"
+                    className="sm:flex-shrink-0"
                   >
                     Enviar correo de bienvenida
                   </Button>
-                </Space.Compact>
+                </div>
               </Space>
             </div>
           </div>

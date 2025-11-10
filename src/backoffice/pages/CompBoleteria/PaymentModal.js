@@ -888,6 +888,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         }
         if (results && results.length > 0 && results[0]) {
           setLocator(results[0].locator);
+          const locator = results[0].locator;
+          const userId = selectedClient?.id || selectedClient?._id;
 
           // Crear payment_transaction para cada método de pago usado
           try {
@@ -895,16 +897,16 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               const entryIsCashea = entry.metadata?.gateway === 'cashea' || entry.formaPago === 'Cashea';
               const entryStatus = entry.metadata?.status || (entryIsCashea ? 'pending' : 'completed');
               const transactionData = {
-                orderId: results[0].locator,
+                orderId: locator,
                 gatewayId: null, // Para pagos manuales no hay gateway
                 amount: Number(entry.importe) || 0,
                 currency: entry.metadata?.currency || selectedFuncion?.moneda || selectedFuncion?.currency || 'USD',
                 status: entryStatus,
                 gatewayTransactionId: entry.metadata?.orderId || entry.metadata?.transactionId || null,
                 gatewayResponse: entry.metadata?.raw || entry.metadata || null,
-                locator: results[0].locator,
+                locator: locator,
                 tenantId: tenantIdForTransactions || null,
-                userId: selectedClient?.id || selectedClient?._id,
+                userId: userId,
                 eventoId: selectedEvent?.id,
                 funcionId: selectedFuncion?.id || selectedFuncion?._id,
                 paymentMethod: entry.formaPago,
@@ -924,8 +926,38 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               return await createPaymentTransaction(transactionData);
             });
             
-            await Promise.all(paymentTransactionPromises);
+            const transactions = await Promise.all(paymentTransactionPromises);
             console.log('✅ Payment transactions created successfully');
+            
+            // Determinar el status final del pago (completed si todos están completados, sino reservado/pending)
+            const finalStatus = hasCasheaPaymentOverall || diferencia > 0 || paymentStatus === 'reserved'
+              ? 'reservado'
+              : 'completed';
+            
+            // Enviar correo automáticamente según el status
+            if (locator && userId) {
+              try {
+                // Importar dinámicamente para evitar problemas de ciclo
+                const { sendPaymentEmailByStatus } = await import('../../../store/services/paymentEmailService');
+                
+                const emailResult = await sendPaymentEmailByStatus({
+                  locator,
+                  user_id: userId,
+                  status: finalStatus,
+                  transactionId: transactions[0]?.id,
+                  amount: total,
+                });
+                
+                if (emailResult.success) {
+                  console.log('✅ [PAYMENT_MODAL] Correo enviado exitosamente');
+                } else {
+                  console.warn('⚠️ [PAYMENT_MODAL] Error enviando correo:', emailResult.error);
+                }
+              } catch (emailError) {
+                console.error('❌ [PAYMENT_MODAL] Error enviando correo:', emailError);
+                // No bloquear el flujo si falla el envío de correo
+              }
+            }
           } catch (transactionError) {
             console.error('❌ Error creating payment transactions:', transactionError);
             // No fallar el pago por esto, solo loggear el error

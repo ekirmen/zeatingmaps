@@ -103,21 +103,22 @@ const handlePaymentSuccess = async (paymentData) => {
     if (transactions && transactions.length > 0) {
       const transaction = transactions[0];
       
-      // Actualizar estado de la transacción
-      await updatePaymentTransactionStatus(
+      // Obtener la transacción actualizada después de cambiar el status
+      // updatePaymentTransactionStatus ahora maneja el envío de correos automáticamente
+      const updatedTransaction = await updatePaymentTransactionStatus(
         transaction.id,
         'completed',
         paymentData
       );
 
       // Actualizar estado de los asientos
-      await updateSeatsStatus(transaction.order_id, 'pagado');
+      await updateSeatsStatus(transaction.order_id || transaction.locator, 'pagado');
 
       // Enviar notificación al usuario
-      await sendPaymentSuccessNotification(transaction);
+      await sendPaymentSuccessNotification(updatedTransaction || transaction);
 
       // Actualizar inventario si es necesario
-      await updateInventory(transaction.order_id);
+      await updateInventory(transaction.order_id || transaction.locator);
     }
   } catch (error) {
     console.error('Error handling payment success:', error);

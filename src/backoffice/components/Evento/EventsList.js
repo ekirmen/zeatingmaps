@@ -133,52 +133,58 @@ const EventsList = ({
               )
             }
             actions={
-              viewMode === 'grid' ? [
-                <Button 
-                  key="toggle-status"
-                  type={(() => {
-                    const isActive = evento.activo === true || evento.activo === 'true';
-                    const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
-                    return (isActive && !isDisabled) ? 'default' : 'primary';
-                  })()}
-                  size="small"
-                  onClick={() => onToggleEventStatus && onToggleEventStatus(evento.id, evento)}
-                  className="w-full"
-                >
-                  {(() => {
-                    const isActive = evento.activo === true || evento.activo === 'true';
-                    const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
-                    return (isActive && !isDisabled) ? 'Desactivar' : 'Activar';
-                  })()}
-                </Button>,
-                <Button 
-                  type="primary" 
-                  icon={<EditOutlined />} 
-                  size="small"
-                  onClick={() => handleEdit(evento.id)}
-                  className="w-full"
-                >
-                  Editar
-                </Button>,
-                <Button 
-                  type="default" 
-                  icon={<CopyOutlined />} 
-                  size="small"
-                  onClick={() => handleDuplicate(evento.id)}
-                  className="w-full"
-                >
-                  Duplicar
-                </Button>,
-                <Button 
-                  danger 
-                  icon={<DeleteOutlined />} 
-                  size="small"
-                  onClick={() => handleDelete(evento.id)}
-                  className="w-full"
-                >
-                  Eliminar
-                </Button>
-              ] : [
+              viewMode === 'grid' ? (
+                <div className="grid grid-cols-2 gap-2 p-2">
+                  <Button 
+                    key="toggle-status"
+                    type={(() => {
+                      const isActive = evento.activo === true || evento.activo === 'true';
+                      const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
+                      return (isActive && !isDisabled) ? 'default' : 'primary';
+                    })()}
+                    size="small"
+                    onClick={() => onToggleEventStatus && onToggleEventStatus(evento.id, evento)}
+                    className="w-full"
+                    block
+                  >
+                    {(() => {
+                      const isActive = evento.activo === true || evento.activo === 'true';
+                      const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
+                      return (isActive && !isDisabled) ? 'Desactivar' : 'Activar';
+                    })()}
+                  </Button>
+                  <Button 
+                    type="primary" 
+                    icon={<EditOutlined />} 
+                    size="small"
+                    onClick={() => handleEdit(evento.id)}
+                    className="w-full"
+                    block
+                  >
+                    Editar
+                  </Button>
+                  <Button 
+                    type="default" 
+                    icon={<CopyOutlined />} 
+                    size="small"
+                    onClick={() => handleDuplicate(evento.id)}
+                    className="w-full"
+                    block
+                  >
+                    Duplicar
+                  </Button>
+                  <Button 
+                    danger 
+                    icon={<DeleteOutlined />} 
+                    size="small"
+                    onClick={() => handleDelete(evento.id)}
+                    className="w-full"
+                    block
+                  >
+                    Eliminar
+                  </Button>
+                </div>
+              ) : [
                 <Button 
                   key="toggle-status"
                   type={(() => {

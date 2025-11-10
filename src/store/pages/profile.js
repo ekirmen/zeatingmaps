@@ -21,6 +21,7 @@ import {
   updateUserProfile,
   getUserStats
 } from '../services/userProfileService';
+import downloadTicket from '../../utils/downloadTicket';
 import '../styles/profile-mobile.css';
 
 const { TabPane } = Tabs;
@@ -385,6 +386,15 @@ const Profile = () => {
                           size="small" 
                           disabled={purchase.status !== 'completed'}
                           title={purchase.status !== 'completed' ? 'Solo disponible para pagos completados' : 'Descargar ticket'}
+                          onClick={async () => {
+                            if (purchase.status === 'completed' && purchase.locator) {
+                              try {
+                                await downloadTicket(purchase.locator, null, 'web');
+                              } catch (error) {
+                                message.error('Error al descargar el ticket');
+                              }
+                            }
+                          }}
                           block
                         >
                           Descargar Ticket

@@ -117,22 +117,15 @@ export const sendPushNotification = async (userId, notification) => {
 
 /**
  * Enviar email de confirmación de pago
+ * Esta función ahora usa el servicio de correos automático
  */
 export const sendPaymentConfirmationEmail = async (transaction) => {
   try {
-    // Aquí implementarías el envío de email
-    console.log('Payment confirmation email sent:', transaction.id);
-    
-    // Ejemplo con un servicio de email
-    // await emailService.send({
-    //   to: user.email,
-    //   template: 'payment-confirmation',
-    //   data: {
-    //     transaction,
-    //     user,
-    //     event: transaction.event
-    //   }
-    // });
+    // El envío de correos ahora se maneja automáticamente en:
+    // - Pay.js: cuando se procesa un pago
+    // - updatePaymentTransactionStatus: cuando el status cambia a 'completed'
+    // - PaymentModal: cuando se crea un pago desde el backoffice
+    console.log('📧 [NOTIFICATIONS] Email de confirmación será enviado automáticamente para transaction:', transaction.id);
   } catch (error) {
     console.error('Error sending payment confirmation email:', error);
   }

@@ -57,24 +57,30 @@ const RegistroObligatorio = ({ eventoData, setEventoData }) => {
       <div>
         <h4 className="text-lg font-semibold text-gray-800 mb-4">Opciones</h4>
         <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700 min-w-[180px]">Max tickets compra</label>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <label className="text-sm font-medium text-gray-700 sm:min-w-[200px] block sm:block">
+              Max tickets compra
+            </label>
             <input
               type="number"
               name="maxTicketsCompra"
               value={form.maxTicketsCompra}
               onChange={handleChange}
-              className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 max-w-xs px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+              min="1"
             />
           </div>
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700 min-w-[180px]">Max entradas / email</label>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <label className="text-sm font-medium text-gray-700 sm:min-w-[200px] block sm:block">
+              Max entradas / email
+            </label>
             <input
               type="number"
               name="maxEntradasEmail"
               value={form.maxEntradasEmail}
               onChange={handleChange}
-              className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 max-w-xs px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+              min="0"
             />
           </div>
           

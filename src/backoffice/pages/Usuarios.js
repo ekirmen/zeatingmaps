@@ -24,51 +24,43 @@ const Usuarios = () => {
   const fetchProfiles = async () => {
     setLoading(true);
     try {
-      // 👥 CARGAR USUARIOS CON INFORMACIÓN DE TENANTS
+      // 👥 CARGAR USUARIOS DESDE PROFILES
+      // Primero intentamos cargar solo los perfiles básicos
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_tenants:user_tenants(
-            id,
-            tenant_id,
-            role,
-            status,
-            tenants:tenant_id(
-              id,
-              nombre,
-              dominio
-            )
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error al cargar perfiles:', error.message);
         toast.error('Error al cargar usuarios');
-      } else {
-        // Procesar datos para incluir información de tenants
-        const processedProfiles = (data || []).map(profile => ({
-          ...profile,
-          // Información de tenants
-          tenants_info: profile.user_tenants?.map(ut => ({
-            tenant_id: ut.tenant_id,
-            role: ut.role,
-            status: ut.status,
-            tenant_name: ut.tenants?.nombre,
-            tenant_domain: ut.tenants?.dominio
-          })) || [],
-          // Estadísticas
-          total_tenants: profile.user_tenants?.length || 0,
-          active_tenants: profile.user_tenants?.filter(ut => ut.status === 'active').length || 0
-        }));
-
-        setProfiles(processedProfiles);
-        console.log('👥 Usuarios cargados con información de tenants:', processedProfiles.length);
+        setProfiles([]);
+        return;
       }
+
+      // Procesar datos básicos
+      const processedProfiles = (data || []).map(profile => ({
+        ...profile,
+        // Información de tenants (si existe tenant_id en el perfil)
+        tenants_info: profile.tenant_id ? [{
+          tenant_id: profile.tenant_id,
+          role: profile.role || 'usuario',
+          status: profile.activo ? 'active' : 'inactive'
+        }] : [],
+        // Estadísticas básicas
+        total_tenants: profile.tenant_id ? 1 : 0,
+        active_tenants: profile.activo && profile.tenant_id ? 1 : 0,
+        // Campos de compatibilidad
+        email: profile.login || profile.email || '',
+        empresa: profile.tenant_id ? 'N/A' : '-'
+      }));
+
+      setProfiles(processedProfiles);
+      console.log('👥 Usuarios cargados:', processedProfiles.length);
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error al cargar usuarios');
+      setProfiles([]);
     } finally {
       setLoading(false);
     }

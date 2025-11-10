@@ -7,6 +7,7 @@ import { getSupabaseAdmin } from './config.js';
  */
 async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData, pdfExtras, helveticaFont, helveticaBold, locator, currentPage = 1, totalPages = 1) {
   const { width, height } = page.getSize();
+  const downloadSource = pdfExtras.downloadSource || 'web'; // 'email' or 'web'
   
   // Obtener información del asiento
   const seatId = seat.id || seat._id || seat.seatId || seat.seat_id || 'unknown';
@@ -539,7 +540,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     }
   }
 
-  // 9. CONDICIONES
+  // 9. CONDICIONES - Mensaje personalizado según el origen
   page.drawText('Condiciones:', { 
     x: 50, 
     y: 100, 
@@ -561,13 +562,32 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     color: rgb(0.2,0.2,0.2), 
     font: helveticaFont 
   });
-  page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { 
-    x: 60, 
-    y: 61, 
-    size: 9, 
-    color: rgb(0.2,0.2,0.2), 
-    font: helveticaFont 
-  });
+  
+  // Mensaje adicional si viene de correo
+  if (downloadSource === 'email') {
+    page.drawText('• Este enlace fue enviado directamente a tu correo personal.', { 
+      x: 60, 
+      y: 61, 
+      size: 9, 
+      color: rgb(0.7,0.1,0.1), // Rojo para destacar
+      font: helveticaBold 
+    });
+    page.drawText('• No compartas este enlace. Solo el primer escaneo será válido.', { 
+      x: 60, 
+      y: 49, 
+      size: 9, 
+      color: rgb(0.2,0.2,0.2), 
+      font: helveticaFont 
+    });
+  } else {
+    page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { 
+      x: 60, 
+      y: 61, 
+      size: 9, 
+      color: rgb(0.2,0.2,0.2), 
+      font: helveticaFont 
+    });
+  }
 }
 
 /**

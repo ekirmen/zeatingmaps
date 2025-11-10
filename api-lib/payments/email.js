@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
 import { createTicketPdfBuffer } from './download.js';
+import { generateDownloadToken } from './tokenUtils.js';
 
 const TABLE_MISSING_CODES = new Set(['42P01', 'PGRST116', 'PGRST301']);
 
@@ -116,28 +117,70 @@ function createTransporter(config) {
   });
 }
 
-function buildEmailContent({ locator, eventTitle, recipient }) {
-  const subject = eventTitle
-    ? `Tus tickets para ${eventTitle}`
-    : 'Tus tickets están listos';
+function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailType = 'payment_complete' }) {
+  // Determinar el tipo de correo (reserva o pago completo)
+  const isReservation = emailType === 'reservation';
+  
+  const subject = isReservation
+    ? (eventTitle ? `Reserva confirmada para ${eventTitle}` : 'Reserva confirmada')
+    : (eventTitle ? `Tus tickets para ${eventTitle}` : 'Tus tickets están listos');
 
   const bodyEvent = eventTitle ? `<p><strong>Evento:</strong> ${eventTitle}</p>` : '';
 
-  const html = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #1a73e8;">¡Gracias por tu compra!</h2>
-      ${bodyEvent}
-      <p>Adjuntamos tus tickets en formato PDF.</p>
+  // Contenido diferente según el tipo de correo
+  let mainContent = '';
+  if (isReservation) {
+    mainContent = `
+      <p>Tu reserva ha sido confirmada exitosamente.</p>
       <p><strong>Localizador:</strong> ${locator}</p>
-      <p>Si tienes alguna pregunta, responde a este correo.</p>
+      <p style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+        <strong>⚠️ Importante:</strong> Esta es una reserva temporal. Completa el pago para confirmar tus asientos.
+        Te notificaremos cuando tu pago sea procesado y recibirás tus tickets.
+      </p>
+    `;
+  } else {
+    mainContent = `
+      <p>¡Gracias por tu compra! Tu pago ha sido procesado exitosamente.</p>
+      <p><strong>Localizador:</strong> ${locator}</p>
+      <p>Adjuntamos tus tickets en formato PDF.</p>
+    `;
+  }
+
+  // Botón de descarga solo para pagos completos
+  const downloadButton = (!isReservation && downloadUrl) ? `
+    <div style="margin: 30px 0; text-align: center;">
+      <a href="${downloadUrl}" style="display: inline-block; padding: 12px 30px; background-color: #1a73e8; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+        Descargar Tickets
+      </a>
+    </div>
+    <div style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+      <p style="margin: 0; color: #856404; font-weight: bold;">⚠️ Importante:</p>
+      <p style="margin: 5px 0 0 0; color: #856404;">
+        Este enlace es personal e intransferible. Fue enviado directamente a tu correo electrónico.
+        <strong>No compartas este enlace</strong> con otras personas.
+      </p>
+    </div>
+  ` : '';
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #1a73e8;">${isReservation ? '¡Reserva Confirmada!' : '¡Gracias por tu compra!'}</h2>
+      ${bodyEvent}
+      ${mainContent}
+      ${downloadButton}
+      <p style="margin-top: 30px;">Si tienes alguna pregunta, responde a este correo.</p>
     </div>
   `;
 
   const textLines = [
-    '¡Gracias por tu compra!',
+    isReservation ? '¡Reserva Confirmada!' : '¡Gracias por tu compra!',
     eventTitle ? `Evento: ${eventTitle}` : null,
     `Localizador: ${locator}`,
-    'Adjuntamos tus tickets en formato PDF.',
+    isReservation 
+      ? 'Tu reserva ha sido confirmada. Completa el pago para recibir tus tickets.'
+      : 'Adjuntamos tus tickets en formato PDF.',
+    (!isReservation && downloadUrl) ? `Descargar tickets: ${downloadUrl}` : null,
+    (!isReservation && downloadUrl) ? '⚠️ IMPORTANTE: Este enlace es personal e intransferible. No compartas este enlace con otras personas.' : null,
     'Si tienes alguna pregunta, responde a este correo.'
   ].filter(Boolean);
 
@@ -154,17 +197,15 @@ export async function handleEmail(req, res) {
   }
 
   const { locator } = req.query;
-  const { email } = req.body || {};
+  const { email: providedEmail, type } = req.body || {};
 
   if (!locator) {
     res.setHeader('Content-Type', 'application/json');
     return res.status(400).json({ error: 'Missing locator' });
   }
 
-  if (!email) {
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(400).json({ error: 'Missing email' });
-  }
+  // Si no se proporciona email, intentar obtenerlo del pago
+  let email = providedEmail;
 
   const config = getConfig();
   const isValidConfig = validateConfig(config);
@@ -230,6 +271,38 @@ export async function handleEmail(req, res) {
       return res.status(404).json({ error: 'Payment not found' });
     }
 
+    // Si no se proporcionó email, obtenerlo del usuario del pago
+    if (!email && payment.user_id) {
+      try {
+        // Intentar obtener desde auth.users usando admin
+        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(payment.user_id);
+        if (!userError && userData?.user?.email) {
+          email = userData.user.email;
+          console.log('📧 [EMAIL] Email obtenido desde auth.users:', email);
+        } else {
+          // Fallback: obtener desde profiles
+          const { data: profile, error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .select('email, login')
+            .eq('id', payment.user_id)
+            .maybeSingle();
+          
+          if (!profileError && profile) {
+            email = profile.email || profile.login;
+            console.log('📧 [EMAIL] Email obtenido desde profiles:', email);
+          }
+        }
+      } catch (emailError) {
+        console.warn('⚠️ [EMAIL] Error obteniendo email del usuario:', emailError);
+      }
+    }
+
+    // Si aún no hay email, retornar error
+    if (!email) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: 'Missing email - No se pudo obtener el email del usuario' });
+    }
+
     let seats = [];
     try {
       if (Array.isArray(payment.seats)) seats = payment.seats;
@@ -276,12 +349,58 @@ export async function handleEmail(req, res) {
       console.warn('[EMAIL] Error enriching payment data:', extraErr);
     }
 
-    const { buffer, filename, eventTitle } = await createTicketPdfBuffer(payment, locator, {
-      funcionData,
-      eventData,
-      venueData,
-      supabaseAdmin,
-    });
+    // Determinar el tipo de correo desde el body o desde el status del pago
+    const paymentStatus = payment.status || 'completed';
+    const emailType = type || (paymentStatus === 'completed' || paymentStatus === 'pagado' ? 'payment_complete' : 'reservation');
+    const isReservation = emailType === 'reservation' || paymentStatus === 'reservado' || paymentStatus === 'reserved' || paymentStatus === 'pending';
+    
+    // Solo generar PDF y token si es pago completo (no para reservas)
+    let buffer = null;
+    let filename = null;
+    let eventTitle = null;
+    let downloadUrl = null;
+    
+    if (!isReservation) {
+      // Generar PDF solo para pagos completos
+      const pdfResult = await createTicketPdfBuffer(payment, locator, {
+        funcionData,
+        eventData,
+        venueData,
+        supabaseAdmin,
+        downloadSource: 'email', // Indicar que el PDF se genera para correo
+      });
+      
+      buffer = pdfResult.buffer;
+      filename = pdfResult.filename;
+      eventTitle = pdfResult.eventTitle;
+
+      // Generar token de descarga para el enlace en el correo
+      if (payment.user_id && payment.id) {
+        try {
+          const downloadToken = generateDownloadToken(locator, payment.user_id, payment.id);
+          
+          // Obtener base URL desde variables de entorno o desde req
+          const baseUrl = process.env.BASE_URL || 
+                         process.env.REACT_APP_BASE_URL || 
+                         process.env.API_URL ||
+                         (req.headers.origin || req.headers.host ? `https://${req.headers.host}` : 'https://sistema.veneventos.com');
+          
+          // Construir URL de descarga con token
+          downloadUrl = `${baseUrl}/api/payments/${locator}/download?token=${encodeURIComponent(downloadToken)}&source=email`;
+          
+          console.log('🔑 [EMAIL] Token de descarga generado para locator:', locator);
+          console.log('🔗 [EMAIL] URL de descarga:', downloadUrl);
+        } catch (tokenError) {
+          console.warn('⚠️ [EMAIL] Error generando token de descarga:', tokenError.message);
+          // Continuar sin token, el usuario aún puede descargar desde el PDF adjunto
+        }
+      }
+    } else {
+      // Para reservas, obtener solo el título del evento
+      if (eventData) {
+        eventTitle = eventData.nombre;
+      }
+    }
 
     const emailConfig = await resolveEmailConfig(supabaseAdmin, payment.tenant_id);
     if (!emailConfig || !emailConfig.host || !emailConfig.fromEmail) {
@@ -298,6 +417,8 @@ export async function handleEmail(req, res) {
       locator,
       eventTitle,
       recipient: email,
+      downloadUrl,
+      emailType,
     });
 
     const mailOptions = {
@@ -309,13 +430,13 @@ export async function handleEmail(req, res) {
       html,
       text,
       replyTo: emailConfig.replyTo,
-      attachments: [
+      attachments: buffer && filename ? [
         {
           filename,
           content: buffer,
           contentType: 'application/pdf',
         },
-      ],
+      ] : [], // Solo adjuntar PDF si es pago completo
     };
 
     const result = await transporter.sendMail(mailOptions);

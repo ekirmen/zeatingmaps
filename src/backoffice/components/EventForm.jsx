@@ -331,22 +331,40 @@ const EventForm = ({
         </Row>
 
         <Row gutter={16}>
-          <Col span={12}>
+          <Col xs={24} sm={12}>
             <Form.Item
               name="recinto_id"
-              label="Recinto"
+              label={<span style={{ fontSize: '14px', fontWeight: 600 }}>Recinto *</span>}
+              rules={[{ required: true, message: 'Por favor selecciona un recinto' }]}
             >
-              <Select placeholder="Selecciona un recinto">
+              <Select 
+                placeholder="Selecciona un recinto" 
+                size="large"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                style={{ width: '100%' }}
+              >
                 {/* Aquí se cargarían los recintos disponibles */}
               </Select>
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col xs={24} sm={12}>
             <Form.Item
               name="sala_id"
-              label="Sala"
+              label={<span style={{ fontSize: '14px', fontWeight: 600 }}>Sala *</span>}
+              rules={[{ required: true, message: 'Por favor selecciona una sala' }]}
             >
-              <Select placeholder="Selecciona una sala">
+              <Select 
+                placeholder="Selecciona una sala" 
+                size="large"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                style={{ width: '100%' }}
+              >
                 {/* Aquí se cargarían las salas disponibles */}
               </Select>
             </Form.Item>

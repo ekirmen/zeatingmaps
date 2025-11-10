@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import { trackTicketDownload, trackApiError } from './analytics';
 
-export default async function downloadTicket(locator, ticketId) {
+export default async function downloadTicket(locator, ticketId, source = 'web') {
   if (!locator && !ticketId) throw new Error('Invalid locator');
   
   // Construir URL usando la configuración que detecta el entorno
@@ -12,6 +12,12 @@ export default async function downloadTicket(locator, ticketId) {
     url = buildRelativeApiUrl(`tickets/${ticketId}/download`);
   } else {
     url = buildRelativeApiUrl(`payments/${locator}/download`);
+  }
+  
+  // Agregar parámetro source si se proporciona
+  if (source) {
+    const separator = url.includes('?') ? '&' : '?';
+    url = `${url}${separator}source=${encodeURIComponent(source)}`;
   }
     
   try {

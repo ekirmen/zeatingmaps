@@ -393,16 +393,16 @@ const Evento = () => {
           </div>
         </div>
 
-        {/* Selectores de Recinto y Sala + Acciones (una sola línea) */}
+        {/* Selectores de Recinto y Sala + Acciones */}
         <VenueSelectors
           recintos={recintos}
           recintoSeleccionado={recintoSeleccionado}
           handleRecintoChange={handleRecintoChange}
           salaSeleccionada={salaSeleccionada}
           setSalaSeleccionada={setSalaSeleccionada}
-          rightContent={recintoSeleccionado && (
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="hidden lg:block min-w-[320px]">
+          rightContent={recintoSeleccionado && salaSeleccionada && (
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              <div className="hidden lg:block min-w-[320px] flex-1 sm:flex-initial">
                 <SearchBar
                   searchTerm={searchTerm}
                   handleSearch={handleSearch}
@@ -410,7 +410,7 @@ const Evento = () => {
                   handleEdit={handleEdit}
                 />
               </div>
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1 flex-shrink-0">
                 <button 
                   onClick={() => toggleView('grid')} 
                   className={`p-2 rounded-md transition-colors ${
@@ -436,7 +436,7 @@ const Evento = () => {
               </div>
               <button
                 onClick={handleCreateEventClick}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-sm transition-all duration-200 font-semibold flex items-center gap-2"
+                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-sm transition-all duration-200 font-semibold flex items-center justify-center gap-2 whitespace-nowrap flex-shrink-0 w-full sm:w-auto"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -521,21 +521,43 @@ const Evento = () => {
                 </div>
               </div>
 
-              {/* Tabs de Navegación - Diseño Minimalista Mejorado */}
+              {/* Tabs de Navegación - Diseño Vertical Desplegable */}
               <div className="bg-white/80 backdrop-blur-sm px-8 py-4 border-b border-gray-200/60">
-                <div className="flex gap-2">
+                <div className="space-y-2">
                   {tabs.map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-3.5 text-sm font-semibold rounded-xl transition-all duration-300 ${
-                        activeTab === tab.id
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
-                          : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80 hover:shadow-sm'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
+                    <div key={tab.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => setActiveTab(activeTab === tab.id ? null : tab.id)}
+                        className={`w-full px-6 py-4 text-left text-sm font-semibold rounded-lg transition-all duration-300 flex items-center justify-between ${
+                          activeTab === tab.id
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80 hover:shadow-sm bg-white'
+                        }`}
+                      >
+                        <span>{tab.label}</span>
+                        <svg
+                          className={`w-5 h-5 transition-transform duration-300 ${
+                            activeTab === tab.id ? 'rotate-180' : ''
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {activeTab === tab.id && (
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                          <div className="text-sm text-gray-600">
+                            {tab.id === 'datosBasicos' && 'Configura los datos básicos del evento (nombre, descripción, fechas, etc.)'}
+                            {tab.id === 'disenoEspectaculo' && 'Personaliza el diseño visual del evento y las imágenes'}
+                            {tab.id === 'configuracionVenta' && 'Configura las opciones de venta, registro y límites de compra'}
+                            {tab.id === 'configuracionBoletas' && 'Configura los datos de las boletas y tickets'}
+                            {tab.id === 'opcionesAvanzadas' && 'Opciones avanzadas y configuraciones adicionales'}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>

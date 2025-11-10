@@ -85,7 +85,7 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
 
           {/* Nombre de la Entrada */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-base sm:text-sm font-semibold text-gray-700">
               Nombre de la Entrada *
             </label>
             <input
@@ -94,14 +94,14 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
               placeholder="Ej: Entrada General, VIP, Reducida..."
               value={formData.nombreEntrada}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-500"
+              className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-500 min-h-[48px]"
             />
           </div>
 
           {/* Cantidad Mín / Máx */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">
+              <label className="block text-base sm:text-sm font-semibold text-gray-700">
                 Cantidad Mínima *
               </label>
               <input
@@ -111,11 +111,11 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
                 min="1"
                 value={formData.min}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-h-[48px]"
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">
+              <label className="block text-base sm:text-sm font-semibold text-gray-700">
                 Cantidad Máxima *
               </label>
               <input
@@ -125,14 +125,14 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
                 min="1"
                 value={formData.max}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-h-[48px]"
               />
             </div>
           </div>
 
           {/* Comprar en múltiplos de */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-base sm:text-sm font-semibold text-gray-700">
               Comprar en múltiplos de:
               <span className="ml-1 text-gray-500 text-xs" title="Permite comprar 2, 4, 6... entradas. Seleccione 'Sin restricción' para desactivar la limitación.">
                 <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,13 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
               name="quantityStep"
               value={formData.quantityStep}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white appearance-none cursor-pointer min-h-[48px]"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 1rem center',
+                paddingRight: '2.5rem'
+              }}
             >
               <option value="">Sin restricción</option>
               <option value="2">2 en 2</option>
@@ -153,7 +159,7 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
             </select>
             {formData.quantityStep === 'custom' && (
               <div className="mt-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-base sm:text-sm font-medium text-gray-700 mb-2">
                   Introducir múltiplo
                 </label>
                 <input
@@ -168,7 +174,7 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
                     const value = e.target.value.replace(/[^0-9]/g, '').replace(/^0+/, '');
                     setFormData(prev => ({ ...prev, customQuantityStep: value }));
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-h-[48px]"
                 />
               </div>
             )}
@@ -200,14 +206,20 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
 
           {/* Selección de IVA */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-base sm:text-sm font-semibold text-gray-700">
               IVA *
             </label>
             <select
               name="ivaSeleccionado"
               value={formData.ivaSeleccionado}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3.5 sm:py-3 text-base sm:text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white appearance-none cursor-pointer min-h-[48px]"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 1rem center',
+                paddingRight: '2.5rem'
+              }}
             >
               <option value="">Seleccionar IVA</option>
               {ivas && ivas.length > 0 ? (
@@ -229,14 +241,14 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
 
           {/* Tipo de Producto */}
           <div className="space-y-3">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-base sm:text-sm font-semibold text-gray-700">
               Tipo de Producto *
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
               {tiposDeProducto.map(tipo => (
                 <label 
                   key={tipo.value} 
-                  className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all hover:bg-white hover:border-blue-300 ${
+                  className={`flex items-start gap-3 p-3 sm:p-2.5 rounded-lg border-2 cursor-pointer transition-all hover:bg-white hover:border-blue-300 ${
                     formData.tipoProducto === tipo.value 
                       ? 'bg-blue-50 border-blue-500' 
                       : 'bg-white border-gray-200'
@@ -248,13 +260,13 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
                     value={tipo.value}
                     checked={formData.tipoProducto === tipo.value}
                     onChange={() => handleTipoProductoChange(tipo.value)}
-                    className="mt-1 accent-blue-600"
+                    className="mt-1 accent-blue-600 w-5 h-5 sm:w-4 sm:h-4"
                   />
                   <div className="flex-1">
-                    <span className="block text-sm font-medium text-gray-900">
+                    <span className="block text-base sm:text-sm font-medium text-gray-900">
                       {tipo.label}
                     </span>
-                    <span className="block text-xs text-gray-600 mt-1">
+                    <span className="block text-sm sm:text-xs text-gray-600 mt-1">
                       {tipo.description}
                     </span>
                   </div>
@@ -281,17 +293,17 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
         </div>
 
         {/* Botones */}
-        <div className="bg-gray-50 px-6 py-4 rounded-b-xl border-t border-gray-200">
+        <div className="bg-gray-50 px-4 sm:px-6 py-4 rounded-b-xl border-t border-gray-200">
           <div className="flex flex-col sm:flex-row justify-end gap-3">
             <button 
               onClick={onClose} 
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              className="px-6 py-3.5 sm:py-3 text-base sm:text-sm border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium min-h-[48px]"
             >
               Cancelar
             </button>
             <button 
               onClick={handleSubmit} 
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+              className="px-6 py-3.5 sm:py-3 text-base sm:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm min-h-[48px]"
             >
               Crear Entrada
             </button>

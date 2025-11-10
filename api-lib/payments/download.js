@@ -2,6 +2,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import QRCode from 'qrcode';
 import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
 import { drawSeatPage, loadEventImages } from './download-seat-pages.js';
+import { validateDownloadToken } from './tokenUtils.js';
 
 export async function handleDownload(req, res) {
   console.log('🚀 [DOWNLOAD] Endpoint llamado con método:', req.method);
@@ -19,7 +20,7 @@ export async function handleDownload(req, res) {
     });
   }
 
-  const { locator, mode = 'full' } = req.query;
+  const { locator, mode = 'full', token: downloadToken, source } = req.query;
   if (!locator) {
     console.error('❌ [DOWNLOAD] Missing locator in query params');
     if (!res.headersSent) {
@@ -39,7 +40,7 @@ export async function handleDownload(req, res) {
     return await generateSimplePDF(req, res, locator);
   }
 
-  // Para modo completo, validar configuración y autenticación
+  // Para modo completo, validar configuración
   const config = getConfig();
   const { supabaseUrl, supabaseServiceKey } = config;
   const isValidConfig = validateConfig(config);
@@ -74,38 +75,90 @@ export async function handleDownload(req, res) {
   
   console.log('✅ [DOWNLOAD] Configuración validada correctamente');
   
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-  if (!token) {
-    console.error('❌ [DOWNLOAD] Missing auth token in headers');
-    if (!res.headersSent) {
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(401).json({ 
-        error: {
-          code: '401',
-          message: 'Missing auth token'
-        }
-      });
+  // Validar token de descarga si viene en query params (para enlaces de correo)
+  let tokenPayload = null;
+  if (downloadToken) {
+    console.log('🔑 [DOWNLOAD] Token de descarga detectado en query params');
+    tokenPayload = validateDownloadToken(downloadToken);
+    if (!tokenPayload) {
+      console.error('❌ [DOWNLOAD] Token de descarga inválido o expirado');
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(403).json({ 
+          error: {
+            code: '403',
+            message: 'Token inválido o expirado'
+          }
+        });
+      }
+      return;
     }
-    return;
+    
+    // Verificar que el token corresponde al locator
+    if (tokenPayload.locator !== locator) {
+      console.error('❌ [DOWNLOAD] Token no corresponde al localizador');
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(403).json({ 
+          error: {
+            code: '403',
+            message: 'Token no corresponde al localizador'
+          }
+        });
+      }
+      return;
+    }
+    
+    console.log('✅ [DOWNLOAD] Token de descarga válido para locator:', locator);
   }
-
-  try {
-    console.log('🔐 [DOWNLOAD] Verificando token de autenticación...');
-    console.log('🔐 [DOWNLOAD] Token length:', token ? token.length : 0);
-    console.log('🔐 [DOWNLOAD] Token preview (first 20 chars):', token ? token.substring(0, 20) + '...' : 'none');
-    console.log('🔐 [DOWNLOAD] supabaseAdmin disponible:', supabaseAdmin ? '✅ sí' : '❌ no');
-    console.log('🔐 [DOWNLOAD] supabaseAdmin.auth disponible:', supabaseAdmin?.auth ? '✅ sí' : '❌ no');
-    console.log('🔐 [DOWNLOAD] supabaseAdmin.auth.getUser disponible:', supabaseAdmin?.auth?.getUser ? '✅ sí' : '❌ no');
-
-    // Verify the user token using the access token (tolerante a mocks)
-    let userResp;
+  
+  // Determinar el origen de la descarga
+  const downloadSource = source || (tokenPayload ? 'email' : 'web');
+  console.log('📥 [DOWNLOAD] Origen de descarga:', downloadSource);
+  
+  // Si viene de web, requiere autenticación
+  let user = null;
+  if (downloadSource === 'web' && !tokenPayload) {
+    const authHeader = req.headers.authorization || '';
+    const authToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    if (!authToken) {
+      console.error('❌ [DOWNLOAD] Missing auth token in headers (descarga desde web)');
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(401).json({ 
+          error: {
+            code: '401',
+            message: 'Missing auth token'
+          }
+        });
+      }
+      return;
+    }
+    
+    // Verificar token de autenticación
     try {
-      userResp = await supabaseAdmin?.auth?.getUser?.(token);
+      console.log('🔐 [DOWNLOAD] Verificando token de autenticación...');
+      const userResp = await supabaseAdmin?.auth?.getUser?.(authToken);
+      user = userResp?.data?.user || null;
+      const userError = userResp?.error || null;
+      
+      if (userError || !user) {
+        console.error('❌ [DOWNLOAD] Auth error o usuario no encontrado:', userError);
+        if (!res.headersSent) {
+          res.setHeader('Content-Type', 'application/json');
+          return res.status(403).json({ 
+            error: {
+              code: '403',
+              message: userError?.message || 'Unauthorized - Token inválido o expirado'
+            }
+          });
+        }
+        return;
+      }
+      
+      console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
     } catch (authError) {
       console.error('❌ [DOWNLOAD] Error llamando getUser:', authError);
-      console.error('❌ [DOWNLOAD] Auth error message:', authError?.message);
-      console.error('❌ [DOWNLOAD] Auth error stack:', authError?.stack);
       if (!res.headersSent) {
         res.setHeader('Content-Type', 'application/json');
         return res.status(500).json({ 
@@ -117,36 +170,14 @@ export async function handleDownload(req, res) {
       }
       return;
     }
-    
-    const user = userResp?.data?.user || null;
-    const userError = userResp?.error || null;
-    
-    console.log('🔐 [DOWNLOAD] Resultado de autenticación:');
-    console.log('- User presente:', user ? '✅ sí' : '❌ no');
-    console.log('- User ID:', user?.id || 'N/A');
-    console.log('- Error presente:', userError ? '❌ sí' : '✅ no');
-    if (userError) {
-      console.log('- Error message:', userError.message);
-      console.log('- Error code:', userError.code);
-      console.log('- Error status:', userError.status);
-    }
-    
-    if (userError || !user) {
-      console.error('❌ [DOWNLOAD] Auth error o usuario no encontrado:', userError);
-      if (!res.headersSent) {
-        res.setHeader('Content-Type', 'application/json');
-        return res.status(403).json({ 
-          error: {
-            code: '403',
-            message: userError?.message || 'Unauthorized - Token inválido o expirado'
-          }
-        });
-      }
-      return;
-    }
+  } else if (tokenPayload) {
+    // Si viene con token, usar el userId del token
+    console.log('🔑 [DOWNLOAD] Usando userId del token:', tokenPayload.userId);
+    // Crear objeto usuario mínimo para logging y registro
+    user = { id: tokenPayload.userId };
+  }
 
-    console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
-
+  try {
     // Get payment data - tolerante a duplicados en payment_transactions
     console.log('🔍 [DOWNLOAD] Buscando pago con localizador:', locator);
     console.log('🔍 [DOWNLOAD] supabaseAdmin disponible para consulta:', supabaseAdmin ? '✅ sí' : '❌ no');
@@ -229,6 +260,121 @@ export async function handleDownload(req, res) {
 
     console.log('✅ [DOWNLOAD] Pago encontrado:', payment.id);
 
+    // Verificar permisos SOLO para descargas desde web
+    if (downloadSource === 'web' && !tokenPayload && user) {
+      // Verificar que el usuario es el dueño o es admin
+      const isOwner = payment.user_id === user.id || payment.usuario_id === user.id;
+      let isAdmin = false;
+      
+      try {
+        const userRole = user.app_metadata?.role || user.user_metadata?.role;
+        isAdmin = userRole === 'admin' || userRole === 'gerente' || userRole === 'super_admin';
+        
+        if (!isAdmin) {
+          const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+          isAdmin = profile?.role === 'admin' || profile?.role === 'gerente' || profile?.role === 'super_admin';
+        }
+      } catch (roleError) {
+        console.warn('⚠️ [DOWNLOAD] Error verificando rol:', roleError.message);
+      }
+      
+      if (!isOwner && !isAdmin) {
+        // Log intento no autorizado
+        await supabaseAdmin.from('audit_logs').insert({
+          action: 'ticket_download_denied',
+          details: JSON.stringify({
+            attempted_user_id: user.id,
+            payment_id: payment.id,
+            locator: locator,
+            reason: 'User is not owner and not admin'
+          }),
+          severity: 'warning',
+          user_id: user.id
+        }).catch(() => {}); // Ignorar errores de audit
+        
+        console.error('❌ [DOWNLOAD] Usuario no autorizado para descargar este ticket');
+        if (!res.headersSent) {
+          res.setHeader('Content-Type', 'application/json');
+          return res.status(403).json({ 
+            error: {
+              code: '403',
+              message: 'Access denied - No tienes permiso para descargar este ticket'
+            }
+          });
+        }
+        return;
+      }
+      
+      // 🔒 RATE LIMITING solo para descargas desde web
+      try {
+        // Verificar descargas recientes del usuario (últimos 5 minutos)
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        const { data: recentDownloads, error: rateLimitError } = await supabaseAdmin
+          .from('ticket_downloads')
+          .select('id, downloaded_at')
+          .eq('user_id', user.id)
+          .gte('downloaded_at', fiveMinutesAgo)
+          .order('downloaded_at', { ascending: false });
+        
+        if (!rateLimitError && recentDownloads && recentDownloads.length >= 10) {
+          console.warn('⚠️ [DOWNLOAD] Rate limit excedido para usuario:', user.id);
+          
+          // Log intento bloqueado
+          await supabaseAdmin
+            .from('audit_logs')
+            .insert({
+              action: 'ticket_download_rate_limited',
+              details: JSON.stringify({
+                user_id: user.id,
+                locator: locator,
+                recent_downloads_count: recentDownloads.length,
+                ip_address: req.headers['x-forwarded-for'] || req.headers['x-real-ip'],
+              }),
+              severity: 'warning',
+              user_id: user.id,
+              url: req.url
+            })
+            .catch(() => {}); // Ignorar errores de audit
+          
+          if (!res.headersSent) {
+            res.setHeader('Content-Type', 'application/json');
+            return res.status(429).json({ 
+              error: {
+                code: '429',
+                message: 'Too many requests - Por favor espera unos minutos antes de intentar nuevamente'
+              }
+            });
+          }
+          return;
+        }
+      } catch (rateLimitErr) {
+        console.warn('⚠️ [DOWNLOAD] Error verificando rate limit:', rateLimitErr.message);
+        // Continuar si hay error en rate limiting (no bloquear descarga)
+      }
+    } else if (tokenPayload) {
+      // Si viene con token, verificar que el userId del token coincida con payment.user_id
+      if (tokenPayload.userId !== payment.user_id && tokenPayload.userId !== payment.usuario_id) {
+        console.error('❌ [DOWNLOAD] Token no válido para este pago');
+        if (!res.headersSent) {
+          res.setHeader('Content-Type', 'application/json');
+          return res.status(403).json({ 
+            error: {
+              code: '403',
+              message: 'Token no válido para este pago'
+            }
+          });
+        }
+        return;
+      }
+      
+      // Usar userId del token para el registro
+      user = user || { id: tokenPayload.userId };
+    }
+
     // Parse seats from payment.seats JSON (preferir asientos comprados)
     let parsedSeats = [];
     try {
@@ -241,38 +387,41 @@ export async function handleDownload(req, res) {
 
     // Registrar la descarga del ticket (asíncrono, no bloquea la descarga)
     // Esto se hace después de parsear los asientos para obtener el conteo correcto
-    try {
-      const downloadData = {
-        payment_id: payment.id,
-        locator: locator || payment.locator,
-        user_id: user.id,
-        tenant_id: payment.tenant_id || null,
-        downloaded_at: new Date().toISOString(),
-        download_method: 'pdf_download',
-        user_agent: req.headers['user-agent'] || null,
-        ip_address: req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection?.remoteAddress || null,
-        metadata: {
-          payment_status: payment.status,
-          seats_count: parsedSeats.length
-        }
-      };
-
-      // Insertar de forma asíncrona (no esperamos el resultado para no bloquear la descarga)
-      supabaseAdmin
-        .from('ticket_downloads')
-        .insert([downloadData])
-        .then(({ error: downloadError }) => {
-          if (downloadError) {
-            console.warn('⚠️ [DOWNLOAD] Error registrando descarga:', downloadError.message);
-          } else {
-            console.log('✅ [DOWNLOAD] Descarga registrada para payment:', payment.id, 'con', parsedSeats.length, 'asiento(s)');
+    if (user && user.id) {
+      try {
+        const downloadData = {
+          payment_id: payment.id,
+          locator: locator || payment.locator,
+          user_id: user.id,
+          tenant_id: payment.tenant_id || null,
+          downloaded_at: new Date().toISOString(),
+          download_method: downloadSource === 'email' ? 'email_link' : 'pdf_download',
+          user_agent: req.headers['user-agent'] || null,
+          ip_address: req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection?.remoteAddress || null,
+          metadata: {
+            payment_status: payment.status,
+            seats_count: parsedSeats.length,
+            download_source: downloadSource
           }
-        })
-        .catch((err) => {
-          console.warn('⚠️ [DOWNLOAD] Error inesperado registrando descarga:', err.message);
-        });
-    } catch (downloadLogError) {
-      console.warn('⚠️ [DOWNLOAD] Error preparando registro de descarga:', downloadLogError.message);
+        };
+
+        // Insertar de forma asíncrona (no esperamos el resultado para no bloquear la descarga)
+        supabaseAdmin
+          .from('ticket_downloads')
+          .insert([downloadData])
+          .then(({ error: downloadError }) => {
+            if (downloadError) {
+              console.warn('⚠️ [DOWNLOAD] Error registrando descarga:', downloadError.message);
+            } else {
+              console.log('✅ [DOWNLOAD] Descarga registrada para payment:', payment.id, 'con', parsedSeats.length, 'asiento(s), source:', downloadSource);
+            }
+          })
+          .catch((err) => {
+            console.warn('⚠️ [DOWNLOAD] Error inesperado registrando descarga:', err.message);
+          });
+      } catch (downloadLogError) {
+        console.warn('⚠️ [DOWNLOAD] Error preparando registro de descarga:', downloadLogError.message);
+      }
     }
 
     // Enriquecer con datos de función y evento/recinto para el PDF
@@ -341,7 +490,13 @@ export async function handleDownload(req, res) {
 
     // Generate full PDF with payment data
     try {
-      return await generateFullPDF(req, res, payment, locator, { funcionData, eventData, venueData, supabaseAdmin });
+      return await generateFullPDF(req, res, payment, locator, { 
+        funcionData, 
+        eventData, 
+        venueData, 
+        supabaseAdmin,
+        downloadSource // Pasar el origen de la descarga
+      });
     } catch (pdfError) {
       console.error('❌ [DOWNLOAD] Error en generateFullPDF:', pdfError);
       console.error('❌ [DOWNLOAD] PDF Error name:', pdfError?.name);
@@ -620,7 +775,8 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
       locator: payment.locator,
       funcion_id: payment.funcion_id,
       evento_id: payment.evento_id,
-      seats_count: Array.isArray(payment.seats) ? payment.seats.length : 0
+      seats_count: Array.isArray(payment.seats) ? payment.seats.length : 0,
+      downloadSource: extra.downloadSource || 'web'
     });
     
     // Verificar que payment tiene los datos necesarios
@@ -638,6 +794,7 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
     }
     
     console.log('📄 [DOWNLOAD-FULL] Calling createTicketPdfBuffer...');
+    // Pasar downloadSource a createTicketPdfBuffer para que se incluya en pdfExtras
     const pdfResult = await createTicketPdfBuffer(payment, finalLocator, extra);
     
     if (!pdfResult || !pdfResult.buffer) {
