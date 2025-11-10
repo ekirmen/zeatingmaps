@@ -204,7 +204,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         color: rgb(0.3, 0.3, 0.3),
       });
       
-      page.drawText('📍 Ubicación', { 
+      page.drawText('Ubicacion', { 
         x: 50, 
         y: y - 20, 
         size: 14, 
@@ -333,7 +333,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       color: rgb(0.2, 0.2, 0.2),
     });
     
-    page.drawText('🎫 Información de la Entrada', { 
+    page.drawText('Informacion de la Entrada', { 
       x: 50, 
       y: y - 20, 
       size: 14, 
@@ -455,7 +455,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
             color: rgb(0.25, 0.25, 0.25),
           });
           
-          page.drawText('📅 Información del Evento', { 
+          page.drawText('Informacion del Evento', { 
             x: 50, 
             y: y - 20, 
             size: 14, 
@@ -691,7 +691,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       color: rgb(0.98, 0.98, 0.98),
     });
     
-    page.drawText('📋 Condiciones:', { 
+    page.drawText('Condiciones:', { 
       x: 50, 
       y: conditionsY + 35, 
       size: 10, 
