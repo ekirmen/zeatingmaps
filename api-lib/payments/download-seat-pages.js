@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from './config.js';
 /**
  * Función auxiliar para dibujar una página de ticket para un asiento específico
  */
-async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData, pdfExtras, helveticaFont, helveticaBold, locator) {
+async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData, pdfExtras, helveticaFont, helveticaBold, locator, currentPage = 1, totalPages = 1) {
   const { width, height } = page.getSize();
   
   // Obtener información del asiento
@@ -90,7 +90,10 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     const title = pdfExtras.eventData?.nombre || payment.event?.nombre || payment.evento?.nombre || null;
     if (title) {
       eventTitle = title;
-      page.drawText(title, {
+      // Truncar título si es muy largo
+      const maxTitleLength = 50;
+      const displayTitle = title.length > maxTitleLength ? title.substring(0, maxTitleLength) + '...' : title;
+      page.drawText(displayTitle, {
         x: 200,
         y: height - 100,
         size: 12,
@@ -102,74 +105,134 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     console.warn('⚠️ [PDF] Error dibujando título del evento:', titleError.message);
   }
 
-  // 3. DATOS PRINCIPALES (lado izquierdo)
-  let y = height - 140;
+  // 2.2 Numeración de páginas (esquina superior derecha) - Formato: "1-3", "2-3", "3-3"
+  const pageNumberText = `${currentPage}-${totalPages}`;
+  const pageNumberWidth = helveticaFont.widthOfTextAtSize(pageNumberText, 11);
+  page.drawText(pageNumberText, {
+    x: width - pageNumberWidth - 50,
+    y: height - 50,
+    size: 11,
+    color: rgb(0.4, 0.4, 0.4),
+    font: helveticaBold,
+  });
+
+  // 3. DATOS PRINCIPALES (lado izquierdo) - Ajustado para no solapar con QR
+  let y = height - 160;
+  
+  // Localizador
   page.drawText(`Localizador: ${payment.locator || locator}`, { 
     x: 50, 
     y, 
-    size: 13, 
+    size: 12, 
     color: rgb(0,0,0), 
-    font: helveticaFont 
+    font: helveticaBold 
   });
-  y -= 25;
+  y -= 20;
 
+  // Estado del pago
   page.drawText(`Estado: ${payment.status}`, { 
     x: 50, 
     y, 
-    size: 13, 
-    color: rgb(0,0,0), 
+    size: 11, 
+    color: rgb(0.2,0.2,0.2), 
     font: helveticaFont 
   });
-  y -= 25;
+  y -= 18;
 
+  // Monto
   const montoNum = Number(payment.monto || payment.amount || 0);
   if (montoNum > 0) {
-    page.drawText(`Monto: $${montoNum.toFixed(2)}`, { 
+    page.drawText(`Monto Total: $${montoNum.toFixed(2)}`, { 
       x: 50, 
       y, 
-      size: 13, 
-      color: rgb(0,0,0), 
+      size: 11, 
+      color: rgb(0.2,0.2,0.2), 
       font: helveticaFont 
     });
-    y -= 25;
+    y -= 18;
   }
 
   // Método de pago
   try {
     const pm = payment.payment_method || (Array.isArray(payment.payments) && payment.payments[0]?.method) || null;
     if (pm) {
-      page.drawText(`Método de pago: ${pm}`, { 
+      page.drawText(`Método: ${pm}`, { 
         x: 50, 
         y, 
-        size: 12, 
-        color: rgb(0.1,0.1,0.1), 
+        size: 10, 
+        color: rgb(0.3,0.3,0.3), 
         font: helveticaFont 
       });
-      y -= 20;
+      y -= 16;
     }
   } catch {}
+  
+  y -= 10; // Espacio antes de la ubicación
 
-  // RECINTO
+  // RECINTO - Información completa
   if (venueData?.nombre) {
-    page.drawText(`Recinto: ${venueData.nombre}`, { 
+    page.drawText('Ubicación:', { 
       x: 50, 
+      y, 
+      size: 14, 
+      color: rgb(0,0,0), 
+      font: helveticaBold 
+    });
+    y -= 20;
+    
+    page.drawText(`Recinto: ${venueData.nombre}`, { 
+      x: 60, 
       y, 
       size: 12, 
       color: rgb(0.1,0.1,0.1), 
       font: helveticaBold 
     });
     y -= 18;
-    const direccion = [venueData.direccion, venueData.ciudad, venueData.pais].filter(Boolean).join(', ');
-    if (direccion) {
-      page.drawText(direccion, { 
-        x: 50, 
+    
+    // Dirección completa
+    const direccionParts = [];
+    if (venueData.direccion) direccionParts.push(venueData.direccion);
+    if (venueData.ciudad) direccionParts.push(venueData.ciudad);
+    if (venueData.estado) direccionParts.push(venueData.estado);
+    if (venueData.codigo_postal) direccionParts.push(venueData.codigo_postal);
+    if (venueData.pais) direccionParts.push(venueData.pais);
+    
+    if (direccionParts.length > 0) {
+      page.drawText(direccionParts.join(', '), { 
+        x: 60, 
         y, 
         size: 11, 
         color: rgb(0.3,0.3,0.3), 
         font: helveticaFont 
       });
-      y -= 20;
+      y -= 18;
     }
+    
+    // Teléfono si está disponible
+    if (venueData.telefono) {
+      page.drawText(`Teléfono: ${venueData.telefono}`, { 
+        x: 60, 
+        y, 
+        size: 10, 
+        color: rgb(0.4,0.4,0.4), 
+        font: helveticaFont 
+      });
+      y -= 16;
+    }
+    
+    // Capacidad si está disponible
+    if (venueData.capacidad) {
+      page.drawText(`Capacidad: ${venueData.capacidad} personas`, { 
+        x: 60, 
+        y, 
+        size: 10, 
+        color: rgb(0.4,0.4,0.4), 
+        font: helveticaFont 
+      });
+      y -= 16;
+    }
+    
+    y -= 5; // Espacio adicional
   }
 
   // 4. QR CODE DEL ASIENTO (centro-derecho)
@@ -223,39 +286,71 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     }
   }
 
-  // 5. INFORMACIÓN DEL ASIENTO (lado izquierdo)
-  page.drawText('Asiento:', { 
+  // 5. INFORMACIÓN DEL ASIENTO (lado izquierdo) - Mejorada
+  page.drawText('Información de la Entrada:', { 
     x: 50, 
     y, 
     size: 14, 
     color: rgb(0,0,0), 
     font: helveticaBold 
   });
-  y -= 25;
+  y -= 20;
 
   let seatInfo = [];
-  if (zonaTxt) seatInfo.push(`Zona: ${zonaTxt}`);
-  if (mesaTxt) seatInfo.push(`Mesa: ${mesaTxt}`);
-  if (filaTxt) seatInfo.push(`Fila: ${filaTxt}`);
-  if (asientoTxt) seatInfo.push(`Asiento: ${asientoTxt}`);
-  if (precioTxt) seatInfo.push(`Precio: $${Number(precioTxt).toFixed(2)}`);
+  if (zonaTxt) seatInfo.push({ label: 'Zona', value: zonaTxt });
+  if (mesaTxt) seatInfo.push({ label: 'Mesa', value: mesaTxt });
+  if (filaTxt) seatInfo.push({ label: 'Fila', value: filaTxt });
+  if (asientoTxt) seatInfo.push({ label: 'Asiento', value: asientoTxt });
+  if (precioTxt) seatInfo.push({ label: 'Precio', value: `$${Number(precioTxt).toFixed(2)}` });
 
   if (seatInfo.length === 0) {
-    seatInfo.push(`ID: ${seatId}`);
+    seatInfo.push({ label: 'ID', value: seatId });
   }
 
   seatInfo.forEach((info) => {
-    page.drawText(info, { 
+    page.drawText(`${info.label}: ${info.value}`, { 
       x: 60, 
       y, 
       size: 12, 
       color: rgb(0.2,0.2,0.2), 
       font: helveticaFont 
     });
-    y -= 20;
+    y -= 18;
   });
+  
+  // Información adicional del evento si está disponible
+  try {
+    const eventData = pdfExtras.eventData || payment.event || null;
+    if (eventData) {
+      // Categoría del evento
+      if (eventData.categoria) {
+        page.drawText(`Categoría: ${eventData.categoria}`, { 
+          x: 60, 
+          y, 
+          size: 10, 
+          color: rgb(0.4,0.4,0.4), 
+          font: helveticaFont 
+        });
+        y -= 16;
+      }
+      
+      // Tipo de evento
+      if (eventData.tipo) {
+        page.drawText(`Tipo: ${eventData.tipo}`, { 
+          x: 60, 
+          y, 
+          size: 10, 
+          color: rgb(0.4,0.4,0.4), 
+          font: helveticaFont 
+        });
+        y -= 16;
+      }
+    }
+  } catch {}
+  
+  y -= 5; // Espacio adicional
 
-  // 6. DETALLES DE LA FUNCIÓN
+  // 6. DETALLES DE LA FUNCIÓN - Información completa
   try {
     const funcion = pdfExtras.funcionData || payment.funcion || null;
     if (funcion?.fecha_celebracion) {
@@ -269,10 +364,11 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       });
       const hora = fechaCelebracion.toLocaleTimeString('es-ES', { 
         hour: '2-digit', 
-        minute: '2-digit' 
+        minute: '2-digit',
+        timeZoneName: 'short'
       });
 
-      page.drawText('Detalles del evento:', { 
+      page.drawText('Información del Evento:', { 
         x: 50, 
         y, 
         size: 14, 
@@ -280,6 +376,8 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         font: helveticaBold 
       });
       y -= 20;
+      
+      // Fecha
       page.drawText(`Fecha: ${fecha}`, { 
         x: 60, 
         y, 
@@ -288,6 +386,8 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         font: helveticaFont 
       });
       y -= 18;
+      
+      // Hora de inicio (extraída de fecha_celebracion)
       page.drawText(`Hora: ${hora}`, { 
         x: 60, 
         y, 
@@ -296,6 +396,76 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         font: helveticaFont 
       });
       y -= 18;
+      
+      // Hora de apertura si está disponible (puede ser un campo separado o parte de fecha_celebracion)
+      if (funcion.hora_apertura) {
+        try {
+          // Si hora_apertura es un string de hora (HH:MM) o una fecha completa
+          let horaApertura = funcion.hora_apertura;
+          if (typeof horaApertura === 'string' && horaApertura.includes('T')) {
+            // Es una fecha completa
+            horaApertura = new Date(horaApertura).toLocaleTimeString('es-ES', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+          }
+          page.drawText(`Apertura de puertas: ${horaApertura}`, { 
+            x: 60, 
+            y, 
+            size: 10, 
+            color: rgb(0.3,0.3,0.3), 
+            font: helveticaFont 
+          });
+          y -= 16;
+        } catch (err) {
+          // Si falla, intentar mostrar como string directo
+          try {
+            page.drawText(`Apertura: ${funcion.hora_apertura}`, { 
+              x: 60, 
+              y, 
+              size: 10, 
+              color: rgb(0.3,0.3,0.3), 
+              font: helveticaFont 
+            });
+            y -= 16;
+          } catch {}
+        }
+      }
+      
+      // Hora de inicio adicional si está disponible y es diferente de fecha_celebracion
+      if (funcion.hora_inicio && funcion.hora_inicio !== funcion.fecha_celebracion) {
+        try {
+          let horaInicio = funcion.hora_inicio;
+          if (typeof horaInicio === 'string' && horaInicio.includes('T')) {
+            horaInicio = new Date(horaInicio).toLocaleTimeString('es-ES', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+          }
+          page.drawText(`Inicio: ${horaInicio}`, { 
+            x: 60, 
+            y, 
+            size: 10, 
+            color: rgb(0.3,0.3,0.3), 
+            font: helveticaFont 
+          });
+          y -= 16;
+        } catch {}
+      }
+      
+      // Estado de la función si está disponible
+      if (funcion.estado) {
+        page.drawText(`Estado: ${funcion.estado}`, { 
+          x: 60, 
+          y, 
+          size: 10, 
+          color: rgb(0.3,0.3,0.3), 
+          font: helveticaFont 
+        });
+        y -= 16;
+      }
+      
+      y -= 5; // Espacio adicional
     }
   } catch {}
 
@@ -443,11 +613,11 @@ async function loadEventImages(pdfDoc, eventData, supabaseAdmin) {
       }
     }
 
-    // Cargar información del recinto
+    // Cargar información del recinto con más datos
     if (eventData?.recinto_id && supabaseAdmin) {
       const { data: rec, error: recErr } = await supabaseAdmin
         .from('recintos')
-        .select('id, nombre, direccion, ciudad, pais')
+        .select('id, nombre, direccion, ciudad, estado, pais, codigo_postal, telefono, capacidad')
         .eq('id', eventData.recinto_id)
         .maybeSingle();
       if (!recErr && rec) {

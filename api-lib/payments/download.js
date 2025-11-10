@@ -281,20 +281,20 @@ export async function handleDownload(req, res) {
     let venueData = null;
     try {
       if (payment.funcion_id) {
-        // Primero obtener evento_id desde la función
+        // Primero obtener evento_id desde la función con más datos
         const { data: func, error: fErr } = await supabaseAdmin
           .from('funciones')
-          .select('id, fecha_celebracion, evento_id')
+          .select('id, fecha_celebracion, evento_id, estado, hora_apertura, hora_inicio')
           .eq('id', payment.funcion_id)
           .maybeSingle();
         
         if (!fErr && func && func.evento_id) {
-          funcionData = { id: func.id, fecha_celebracion: func.fecha_celebracion };
+          funcionData = func;
           
-          // Luego obtener el evento usando evento_id
+          // Luego obtener el evento usando evento_id con más datos
           const { data: evt, error: eErr } = await supabaseAdmin
             .from('eventos')
-            .select('id, nombre, imagenes, recinto_id')
+            .select('id, nombre, imagenes, recinto_id, descripcion, categoria, tipo')
             .eq('id', func.evento_id)
             .maybeSingle();
           
@@ -304,7 +304,7 @@ export async function handleDownload(req, res) {
             if (eventData?.recinto_id) {
               const { data: rec, error: rErr } = await supabaseAdmin
                 .from('recintos')
-                .select('id, nombre, direccion, ciudad, pais')
+                .select('id, nombre, direccion, ciudad, estado, pais, codigo_postal, telefono, capacidad')
                 .eq('id', eventData.recinto_id)
                 .maybeSingle();
               if (!rErr) venueData = rec;
@@ -317,7 +317,7 @@ export async function handleDownload(req, res) {
       if (!eventData && payment.evento_id) {
         const { data: evt, error: eErr } = await supabaseAdmin
           .from('eventos')
-          .select('id, nombre, imagenes, recinto_id')
+          .select('id, nombre, imagenes, recinto_id, descripcion, categoria, tipo')
           .eq('id', payment.evento_id)
           .maybeSingle();
         
@@ -327,7 +327,7 @@ export async function handleDownload(req, res) {
           if (eventData?.recinto_id) {
             const { data: rec, error: rErr } = await supabaseAdmin
               .from('recintos')
-              .select('id, nombre, direccion, ciudad, pais')
+              .select('id, nombre, direccion, ciudad, estado, pais, codigo_postal, telefono, capacidad')
               .eq('id', eventData.recinto_id)
               .maybeSingle();
             if (!rErr) venueData = rec;
@@ -518,13 +518,13 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // Obtener datos del evento
+    // Obtener datos del evento con más información
     let eventData = pdfExtras.eventData || payment.event || null;
     if (!eventData && payment.evento_id && supabaseAdmin) {
       console.log('📄 [PDF] Obteniendo datos del evento desde evento_id:', payment.evento_id);
       const { data: evt, error: evtErr } = await supabaseAdmin
         .from('eventos')
-        .select('id, nombre, imagenes, recinto_id')
+        .select('id, nombre, imagenes, recinto_id, descripcion, categoria, tipo')
         .eq('id', payment.evento_id)
         .maybeSingle();
       
@@ -548,11 +548,13 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
     }
 
     // Generar una página por asiento
+    const totalPages = seats.length;
     for (let i = 0; i < seats.length; i++) {
       const seat = seats[i];
       const seatId = seat.id || seat._id || seat.seatId || seat.seat_id || `seat-${i + 1}`;
+      const currentPage = i + 1;
       
-      console.log(`📄 [PDF] Generando página ${i + 1}/${seats.length} para asiento: ${seatId}`);
+      console.log(`📄 [PDF] Generando página ${currentPage}/${totalPages} para asiento: ${seatId}`);
       
       // Crear nueva página para este asiento
       const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
@@ -568,7 +570,9 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
         pdfExtras, 
         helveticaFont, 
         helveticaBold,
-        locator
+        locator,
+        currentPage,
+        totalPages
       );
     }
 
