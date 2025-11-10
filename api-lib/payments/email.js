@@ -1,8 +1,47 @@
 import nodemailer from 'nodemailer';
 import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
 import { createTicketPdfBuffer } from './download.js';
-// tokenUtils solo usa módulos nativos de Node.js (crypto), así que puede importarse estáticamente
-import { generateDownloadToken } from './tokenUtils.js';
+import crypto from 'crypto';
+
+// Funciones de tokenUtils inlined para evitar problemas de empaquetado en Vercel
+// Usar la misma clave secreta que Supabase Service Role Key para mayor seguridad
+const TOKEN_SECRET_KEY = process.env.TICKET_DOWNLOAD_SECRET || 
+                         process.env.SUPABASE_SERVICE_ROLE_KEY || 
+                         'default-secret-key-change-in-production';
+
+/**
+ * Genera un token permanente para descarga de tickets desde correo
+ * El token NO expira, pero está firmado y vinculado al usuario y pago
+ * Inlined desde tokenUtils.js para evitar problemas de empaquetado en Vercel
+ * 
+ * @param {string} locator - Localizador del pago
+ * @param {string} userId - ID del usuario
+ * @param {string} paymentId - ID del pago
+ * @returns {string} Token firmado
+ */
+function generateDownloadToken(locator, userId, paymentId) {
+  const payload = {
+    locator,
+    userId,
+    paymentId,
+    source: 'email',
+    createdAt: Date.now() // Para tracking, no para expiración
+  };
+  
+  const payloadString = JSON.stringify(payload);
+  const signature = crypto
+    .createHmac('sha256', TOKEN_SECRET_KEY)
+    .update(payloadString)
+    .digest('hex');
+  
+  // Codificar el payload en base64url (seguro para URLs)
+  const token = Buffer.from(payloadString).toString('base64url') + '.' + signature;
+  
+  console.log('🔑 [TOKEN] Token generado para locator:', locator);
+  console.log('🔑 [TOKEN] Token length:', token.length);
+  
+  return token;
+}
 
 const TABLE_MISSING_CODES = new Set(['42P01', 'PGRST116', 'PGRST301']);
 

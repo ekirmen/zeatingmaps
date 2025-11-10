@@ -1,7 +1,74 @@
 // Importaciones estáticas - solo las que no dependen de librerías externas
 import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
-// tokenUtils solo usa módulos nativos de Node.js (crypto), así que puede importarse estáticamente
-import { validateDownloadToken } from './tokenUtils.js';
+import crypto from 'crypto';
+
+// Funciones de tokenUtils inlined para evitar problemas de empaquetado en Vercel
+// Usar la misma clave secreta que Supabase Service Role Key para mayor seguridad
+const TOKEN_SECRET_KEY = process.env.TICKET_DOWNLOAD_SECRET || 
+                         process.env.SUPABASE_SERVICE_ROLE_KEY || 
+                         'default-secret-key-change-in-production';
+
+/**
+ * Valida un token de descarga (sin verificar expiración, ya que son permanentes)
+ * Inlined desde tokenUtils.js para evitar problemas de empaquetado en Vercel
+ * 
+ * @param {string} token - Token a validar
+ * @returns {Object|null} Payload del token si es válido, null si es inválido
+ */
+function validateDownloadToken(token) {
+  try {
+    if (!token || typeof token !== 'string') {
+      console.warn('⚠️ [TOKEN] Token no proporcionado o inválido');
+      return null;
+    }
+    
+    const parts = token.split('.');
+    if (parts.length !== 2) {
+      console.warn('⚠️ [TOKEN] Formato de token inválido (debe tener 2 partes separadas por punto)');
+      return null;
+    }
+    
+    const [payloadBase64, signature] = parts;
+    if (!payloadBase64 || !signature) {
+      console.warn('⚠️ [TOKEN] Token incompleto');
+      return null;
+    }
+    
+    // Decodificar el payload
+    const payloadString = Buffer.from(payloadBase64, 'base64url').toString('utf-8');
+    const payload = JSON.parse(payloadString);
+    
+    // Verificar firma
+    const expectedSignature = crypto
+      .createHmac('sha256', TOKEN_SECRET_KEY)
+      .update(payloadString)
+      .digest('hex');
+    
+    if (signature !== expectedSignature) {
+      console.warn('⚠️ [TOKEN] Firma inválida - token posiblemente modificado');
+      return null;
+    }
+    
+    // Validar que el payload tenga los campos requeridos
+    if (!payload.locator || !payload.userId || !payload.paymentId) {
+      console.warn('⚠️ [TOKEN] Payload incompleto - faltan campos requeridos');
+      return null;
+    }
+    
+    // Validar que el source sea 'email'
+    if (payload.source !== 'email') {
+      console.warn('⚠️ [TOKEN] Source inválido:', payload.source);
+      return null;
+    }
+    
+    console.log('✅ [TOKEN] Token válido para locator:', payload.locator);
+    return payload;
+  } catch (error) {
+    console.error('❌ [TOKEN] Error validando token:', error.message);
+    console.error('❌ [TOKEN] Error stack:', error.stack);
+    return null;
+  }
+}
 
 // Las importaciones de pdf-lib, qrcode y download-seat-pages se harán dinámicamente
 // para evitar que el módulo falle al inicializarse si estas dependencias no están disponibles
