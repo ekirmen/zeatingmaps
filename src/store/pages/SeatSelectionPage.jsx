@@ -170,8 +170,8 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         
         // Precargar módulos críticos en paralelo con la carga del mapa
         const preloadModules = Promise.all([
-          import('../services/seatPaymentChecker'),
-          import('../components/seatLockStore')
+          import('../../services/seatPaymentChecker'),
+          import('../../components/seatLockStore')
         ]).catch(err => {
           console.warn('Error precargando módulos:', err);
         });

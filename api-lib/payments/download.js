@@ -5,190 +5,205 @@ import { drawSeatPage, loadEventImages } from './download-seat-pages.js';
 import { validateDownloadToken } from './tokenUtils.js';
 
 export async function handleDownload(req, res) {
-  // Validar que las funciones importadas estén disponibles
-  if (!drawSeatPage || typeof drawSeatPage !== 'function') {
-    console.error('❌ [DOWNLOAD] drawSeatPage no está disponible o no es una función');
-    console.error('❌ [DOWNLOAD] drawSeatPage type:', typeof drawSeatPage);
-    if (!res.headersSent) {
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(500).json({
-        error: {
-          code: '500',
-          message: 'Server configuration error - drawSeatPage function not available'
-        }
-      });
-    }
-    return;
-  }
-
-  if (!loadEventImages || typeof loadEventImages !== 'function') {
-    console.error('❌ [DOWNLOAD] loadEventImages no está disponible o no es una función');
-    console.error('❌ [DOWNLOAD] loadEventImages type:', typeof loadEventImages);
-    if (!res.headersSent) {
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(500).json({
-        error: {
-          code: '500',
-          message: 'Server configuration error - loadEventImages function not available'
-        }
-      });
-    }
-    return;
-  }
-
-  console.log('🚀 [DOWNLOAD] Endpoint llamado con método:', req.method);
-  console.log('🔍 [DOWNLOAD] Query params:', req.query);
-  console.log('🔍 [DOWNLOAD] Headers:', req.headers);
-  console.log('✅ [DOWNLOAD] Funciones importadas correctamente');
-  
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET');
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(405).json({ 
-      error: {
-        code: '405',
-        message: 'Method not allowed'
-      }
-    });
-  }
-
-  const { locator, mode = 'full', token: downloadToken, source } = req.query;
-  if (!locator) {
-    console.error('❌ [DOWNLOAD] Missing locator in query params');
-    if (!res.headersSent) {
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(400).json({ 
-        error: {
-          code: '400',
-          message: 'Missing locator'
-        }
-      });
-    }
-    return;
-  }
-
-  // Si es modo simple, generar PDF básico sin autenticación
-  if (mode === 'simple') {
-    return await generateSimplePDF(req, res, locator);
-  }
-
-  // Para modo completo, validar configuración
-  const config = getConfig();
-  const { supabaseUrl, supabaseServiceKey } = config;
-  const isValidConfig = validateConfig(config);
-  const supabaseAdmin = getSupabaseAdmin(config);
-
-  if (!isValidConfig || !supabaseAdmin) {
-    console.error('❌ [DOWNLOAD] Configuración inválida, redirigiendo a error 500');
-    console.error('❌ [DOWNLOAD] Config details:', {
-      supabaseUrl: !!supabaseUrl,
-      supabaseServiceKey: !!supabaseServiceKey,
-      nodeEnv: config.nodeEnv,
-      vercelEnv: config.vercelEnv
-    });
+  try {
+    console.log('🚀 [DOWNLOAD] Endpoint llamado con método:', req.method);
+    console.log('🔍 [DOWNLOAD] Query params:', req.query);
+    console.log('🔍 [DOWNLOAD] Headers:', Object.keys(req.headers || {}));
     
-    if (!res.headersSent) {
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(500).json({
-        error: {
-          code: '500',
-          message: 'Server configuration error - Missing Supabase environment variables'
-        },
-        details: process.env.NODE_ENV === 'development' ? {
-          supabaseUrl: !!supabaseUrl,
-          supabaseServiceKey: !!supabaseServiceKey,
-          nodeEnv: config.nodeEnv,
-          vercelEnv: config.vercelEnv
-        } : undefined
-      });
+    // Validar req y res
+    if (!req || !res) {
+      console.error('❌ [DOWNLOAD] req o res no están disponibles');
+      throw new Error('Request or response object is missing');
     }
-    return;
-  }
-  
-  console.log('✅ [DOWNLOAD] Configuración validada correctamente');
-  
-  // Validar token de descarga si viene en query params (para enlaces de correo)
-  let tokenPayload = null;
-  if (downloadToken) {
-    console.log('🔑 [DOWNLOAD] Token de descarga detectado en query params');
-    tokenPayload = validateDownloadToken(downloadToken);
-    if (!tokenPayload) {
-      console.error('❌ [DOWNLOAD] Token de descarga inválido o expirado');
+
+    if (req.method !== 'GET') {
       if (!res.headersSent) {
+        res.setHeader('Allow', 'GET');
         res.setHeader('Content-Type', 'application/json');
-        return res.status(403).json({ 
+        return res.status(405).json({ 
           error: {
-            code: '403',
-            message: 'Token inválido o expirado'
+            code: '405',
+            message: 'Method not allowed'
           }
         });
       }
       return;
     }
+
+    const { locator, mode = 'full', token: downloadToken, source } = req.query || {};
     
-    // Verificar que el token corresponde al locator
-    if (tokenPayload.locator !== locator) {
-      console.error('❌ [DOWNLOAD] Token no corresponde al localizador');
+    if (!locator) {
+      console.error('❌ [DOWNLOAD] Missing locator in query params');
       if (!res.headersSent) {
         res.setHeader('Content-Type', 'application/json');
-        return res.status(403).json({ 
+        return res.status(400).json({ 
           error: {
-            code: '403',
-            message: 'Token no corresponde al localizador'
+            code: '400',
+            message: 'Missing locator'
           }
         });
       }
       return;
     }
+
+    console.log('📋 [DOWNLOAD] Locator:', locator);
+    console.log('📋 [DOWNLOAD] Mode:', mode);
+
+    // Si es modo simple, generar PDF básico sin autenticación ni dependencias externas
+    if (mode === 'simple') {
+      console.log('📄 [DOWNLOAD] Modo simple detectado, generando PDF de prueba...');
+      return await generateSimplePDF(req, res, locator);
+    }
+
+    // Para modo completo, validar funciones importadas
+    if (!drawSeatPage || typeof drawSeatPage !== 'function') {
+      console.error('❌ [DOWNLOAD] drawSeatPage no está disponible o no es una función');
+      console.error('❌ [DOWNLOAD] drawSeatPage type:', typeof drawSeatPage);
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(500).json({
+          error: {
+            code: '500',
+            message: 'Server configuration error - drawSeatPage function not available'
+          }
+        });
+      }
+      return;
+    }
+
+    if (!loadEventImages || typeof loadEventImages !== 'function') {
+      console.error('❌ [DOWNLOAD] loadEventImages no está disponible o no es una función');
+      console.error('❌ [DOWNLOAD] loadEventImages type:', typeof loadEventImages);
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(500).json({
+          error: {
+            code: '500',
+            message: 'Server configuration error - loadEventImages function not available'
+          }
+        });
+      }
+      return;
+    }
+
+    console.log('✅ [DOWNLOAD] Funciones importadas correctamente');
+
+    // Para modo completo, validar configuración
+    const config = getConfig();
+    const { supabaseUrl, supabaseServiceKey } = config;
+    const isValidConfig = validateConfig(config);
+    const supabaseAdmin = getSupabaseAdmin(config);
+
+    if (!isValidConfig || !supabaseAdmin) {
+      console.error('❌ [DOWNLOAD] Configuración inválida, redirigiendo a error 500');
+      console.error('❌ [DOWNLOAD] Config details:', {
+        supabaseUrl: !!supabaseUrl,
+        supabaseServiceKey: !!supabaseServiceKey,
+        nodeEnv: config.nodeEnv,
+        vercelEnv: config.vercelEnv
+      });
+      
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(500).json({
+          error: {
+            code: '500',
+            message: 'Server configuration error - Missing Supabase environment variables'
+          },
+          details: process.env.NODE_ENV === 'development' ? {
+            supabaseUrl: !!supabaseUrl,
+            supabaseServiceKey: !!supabaseServiceKey,
+            nodeEnv: config.nodeEnv,
+            vercelEnv: config.vercelEnv
+          } : undefined
+        });
+      }
+      return;
+    }
     
-    console.log('✅ [DOWNLOAD] Token de descarga válido para locator:', locator);
-  }
-  
-  // Determinar el origen de la descarga
-  const downloadSource = source || (tokenPayload ? 'email' : 'web');
-  console.log('📥 [DOWNLOAD] Origen de descarga:', downloadSource);
-  
-  // Si viene de web, requiere autenticación (pero puede continuar sin token para permitir descargas desde perfil)
-  let user = null;
-  if (downloadSource === 'web' && !tokenPayload) {
-    const authHeader = req.headers.authorization || '';
-    const authToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    console.log('✅ [DOWNLOAD] Configuración validada correctamente');
     
-    if (authToken) {
-      // Verificar token de autenticación solo si está presente
-      try {
-        console.log('🔐 [DOWNLOAD] Verificando token de autenticación...');
-        const userResp = await supabaseAdmin?.auth?.getUser?.(authToken);
-        user = userResp?.data?.user || null;
-        const userError = userResp?.error || null;
-        
-        if (userError || !user) {
-          console.error('❌ [DOWNLOAD] Auth error o usuario no encontrado:', userError);
-          // No bloquear la descarga si hay error de autenticación, pero continuar sin user
-          console.warn('⚠️ [DOWNLOAD] Continuando sin autenticación debido a error de token');
+    // Validar token de descarga si viene en query params (para enlaces de correo)
+    let tokenPayload = null;
+    if (downloadToken) {
+      console.log('🔑 [DOWNLOAD] Token de descarga detectado en query params');
+      tokenPayload = validateDownloadToken(downloadToken);
+      if (!tokenPayload) {
+        console.error('❌ [DOWNLOAD] Token de descarga inválido o expirado');
+        if (!res.headersSent) {
+          res.setHeader('Content-Type', 'application/json');
+          return res.status(403).json({ 
+            error: {
+              code: '403',
+              message: 'Token inválido o expirado'
+            }
+          });
+        }
+        return;
+      }
+      
+      // Verificar que el token corresponde al locator
+      if (tokenPayload.locator !== locator) {
+        console.error('❌ [DOWNLOAD] Token no corresponde al localizador');
+        if (!res.headersSent) {
+          res.setHeader('Content-Type', 'application/json');
+          return res.status(403).json({ 
+            error: {
+              code: '403',
+              message: 'Token no corresponde al localizador'
+            }
+          });
+        }
+        return;
+      }
+      
+      console.log('✅ [DOWNLOAD] Token de descarga válido para locator:', locator);
+    }
+    
+    // Determinar el origen de la descarga
+    const downloadSource = source || (tokenPayload ? 'email' : 'web');
+    console.log('📥 [DOWNLOAD] Origen de descarga:', downloadSource);
+    
+    // Si viene de web, requiere autenticación (pero puede continuar sin token para permitir descargas desde perfil)
+    let user = null;
+    if (downloadSource === 'web' && !tokenPayload) {
+      const authHeader = req.headers.authorization || '';
+      const authToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+      
+      if (authToken) {
+        // Verificar token de autenticación solo si está presente
+        try {
+          console.log('🔐 [DOWNLOAD] Verificando token de autenticación...');
+          const userResp = await supabaseAdmin?.auth?.getUser?.(authToken);
+          user = userResp?.data?.user || null;
+          const userError = userResp?.error || null;
+          
+          if (userError || !user) {
+            console.error('❌ [DOWNLOAD] Auth error o usuario no encontrado:', userError);
+            // No bloquear la descarga si hay error de autenticación, pero continuar sin user
+            console.warn('⚠️ [DOWNLOAD] Continuando sin autenticación debido a error de token');
+            user = null;
+          } else {
+            console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
+          }
+        } catch (authError) {
+          console.error('❌ [DOWNLOAD] Error llamando getUser:', authError);
+          console.warn('⚠️ [DOWNLOAD] Continuando sin autenticación debido a error');
+          // No bloquear la descarga, continuar sin user
           user = null;
-        } else {
-          console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
         }
-      } catch (authError) {
-        console.error('❌ [DOWNLOAD] Error llamando getUser:', authError);
-        console.warn('⚠️ [DOWNLOAD] Continuando sin autenticación debido a error');
-        // No bloquear la descarga, continuar sin user
+      } else {
+        console.warn('⚠️ [DOWNLOAD] No hay token de autenticación en headers (descarga desde web sin autenticación)');
+        // Continuar sin autenticación - permitir descargas públicas si el locator es válido
         user = null;
       }
-    } else {
-      console.warn('⚠️ [DOWNLOAD] No hay token de autenticación en headers (descarga desde web sin autenticación)');
-      // Continuar sin autenticación - permitir descargas públicas si el locator es válido
-      user = null;
+    } else if (tokenPayload) {
+      // Si viene con token, usar el userId del token
+      console.log('🔑 [DOWNLOAD] Usando userId del token:', tokenPayload.userId);
+      // Crear objeto usuario mínimo para logging y registro
+      user = { id: tokenPayload.userId };
     }
-  } else if (tokenPayload) {
-    // Si viene con token, usar el userId del token
-    console.log('🔑 [DOWNLOAD] Usando userId del token:', tokenPayload.userId);
-    // Crear objeto usuario mínimo para logging y registro
-    user = { id: tokenPayload.userId };
-  }
 
-  try {
     // Get payment data - tolerante a duplicados en payment_transactions
     console.log('🔍 [DOWNLOAD] Buscando pago con localizador:', locator);
     console.log('🔍 [DOWNLOAD] supabaseAdmin disponible para consulta:', supabaseAdmin ? '✅ sí' : '❌ no');
@@ -573,17 +588,64 @@ export async function handleDownload(req, res) {
 
 // Función para generar PDF simple (sin autenticación)
 async function generateSimplePDF(req, res, locator) {
+  // Validar que los headers no se hayan enviado ya
+  if (res.headersSent) {
+    console.error('❌ [DOWNLOAD-SIMPLE] Headers already sent, cannot send PDF');
+    return;
+  }
+
   try {
-    console.log('📄 [DOWNLOAD-SIMPLE] Creando documento PDF simple...');
+    console.log('📄 [DOWNLOAD-SIMPLE] Iniciando generación de PDF simple...');
+    console.log('📄 [DOWNLOAD-SIMPLE] Locator:', locator);
+    console.log('📄 [DOWNLOAD-SIMPLE] PDFDocument disponible:', typeof PDFDocument);
+    console.log('📄 [DOWNLOAD-SIMPLE] StandardFonts disponible:', typeof StandardFonts);
+    console.log('📄 [DOWNLOAD-SIMPLE] rgb disponible:', typeof rgb);
     
+    // Validar que las importaciones estén disponibles
+    if (!PDFDocument || typeof PDFDocument.create !== 'function') {
+      throw new Error('PDFDocument is not available or PDFDocument.create is not a function');
+    }
+    
+    if (!StandardFonts || !StandardFonts.Helvetica) {
+      throw new Error('StandardFonts is not available');
+    }
+    
+    if (!rgb || typeof rgb !== 'function') {
+      throw new Error('rgb function is not available');
+    }
+    
+    // Validar locator
+    if (!locator || typeof locator !== 'string') {
+      throw new Error('Locator is required and must be a string');
+    }
+
     // Crear PDF simple sin dependencias externas
-    const pdfDoc = await PDFDocument.create();
-    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    console.log('📄 [DOWNLOAD-SIMPLE] Creando documento PDF...');
+    let pdfDoc;
+    try {
+      pdfDoc = await PDFDocument.create();
+      console.log('✅ [DOWNLOAD-SIMPLE] Documento PDF creado exitosamente');
+    } catch (createError) {
+      console.error('❌ [DOWNLOAD-SIMPLE] Error creando PDFDocument:', createError);
+      throw new Error(`Error creando documento PDF: ${createError.message}`);
+    }
     
+    console.log('📄 [DOWNLOAD-SIMPLE] Embedding fonts...');
+    let helveticaFont, helveticaBold;
+    try {
+      helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      console.log('✅ [DOWNLOAD-SIMPLE] Fuentes embedidas exitosamente');
+    } catch (fontError) {
+      console.error('❌ [DOWNLOAD-SIMPLE] Error embediendo fuentes:', fontError);
+      throw new Error(`Error embediendo fuentes: ${fontError.message}`);
+    }
+    
+    console.log('📄 [DOWNLOAD-SIMPLE] Adding page...');
     const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
     const { width, height } = page.getSize();
 
+    console.log('📄 [DOWNLOAD-SIMPLE] Drawing content...');
     // Título
     page.drawText('TICKET DE PRUEBA', {
       x: 50,
@@ -606,10 +668,24 @@ async function generateSimplePDF(req, res, locator) {
     page.drawText('Generado para verificar la funcionalidad', { x: 50, y, size: 12, color: rgb(0.2,0.2,0.2), font: helveticaFont });
     y -= 20;
     page.drawText('de descarga de PDFs', { x: 50, y, size: 12, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+    y -= 20;
 
     // Fecha
-    const fechaCreacion = new Date().toLocaleString('es-ES');
-    page.drawText(`Fecha de generación: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
+    try {
+      const fechaCreacion = new Date().toLocaleString('es-ES', { 
+        timeZone: 'UTC',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      page.drawText(`Fecha de generación: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
+    } catch (dateError) {
+      console.warn('⚠️ [DOWNLOAD-SIMPLE] Error formateando fecha:', dateError);
+      page.drawText(`Fecha de generación: ${new Date().toISOString()}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
+    }
 
     // Mensaje de prueba
     page.drawText('Si puedes ver este PDF, la generación está funcionando correctamente', { 
@@ -622,29 +698,74 @@ async function generateSimplePDF(req, res, locator) {
 
     console.log('💾 [DOWNLOAD-SIMPLE] Guardando PDF...');
     const pdfBytes = await pdfDoc.save();
+    
+    if (!pdfBytes || !(pdfBytes instanceof Uint8Array)) {
+      throw new Error('PDF generation returned invalid data');
+    }
+    
     console.log('✅ [DOWNLOAD-SIMPLE] PDF generado exitosamente, tamaño:', pdfBytes.length, 'bytes');
+    console.log('✅ [DOWNLOAD-SIMPLE] pdfBytes type:', typeof pdfBytes, 'is Uint8Array:', pdfBytes instanceof Uint8Array);
+
+    // Verificar que los headers no se hayan enviado
+    if (res.headersSent) {
+      console.error('❌ [DOWNLOAD-SIMPLE] Headers already sent before sending PDF');
+      throw new Error('Response headers already sent');
+    }
+
+    // Convertir Uint8Array a Buffer de manera segura
+    let buffer;
+    if (typeof Buffer !== 'undefined' && Buffer.from) {
+      // Node.js environment
+      buffer = Buffer.from(pdfBytes);
+    } else if (pdfBytes instanceof Uint8Array) {
+      // Browser environment or Node.js without Buffer
+      buffer = pdfBytes;
+    } else {
+      throw new Error('Cannot convert PDF bytes to buffer');
+    }
 
     // Headers para PDF
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="ticket-prueba-${locator}.pdf"`);
-    res.setHeader('Content-Length', pdfBytes.length);
+    res.setHeader('Content-Length', buffer.length.toString());
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     
-    console.log('📤 [DOWNLOAD-SIMPLE] Enviando PDF al cliente...');
-    return res.status(200).send(Buffer.from(pdfBytes));
+    console.log('📤 [DOWNLOAD-SIMPLE] Enviando PDF al cliente, tamaño:', buffer.length, 'bytes');
+    return res.status(200).send(buffer);
     
   } catch (err) {
     console.error('❌ [DOWNLOAD-SIMPLE] Error generando PDF de prueba:', err);
-    console.error('❌ [DOWNLOAD-SIMPLE] Stack trace:', err.stack);
-    
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ 
-      error: 'Error generando PDF de prueba', 
-      details: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    console.error('❌ [DOWNLOAD-SIMPLE] Error name:', err?.name);
+    console.error('❌ [DOWNLOAD-SIMPLE] Error message:', err?.message);
+    console.error('❌ [DOWNLOAD-SIMPLE] Stack trace:', err?.stack);
+    console.error('❌ [DOWNLOAD-SIMPLE] Error details:', {
+      code: err?.code,
+      cause: err?.cause,
+      type: typeof err
     });
+    
+    // Verificar que los headers no se hayan enviado antes de enviar error
+    if (!res.headersSent) {
+      const errorResponse = {
+        error: {
+          code: '500',
+          message: 'Error generando PDF de prueba',
+          details: err?.message || 'Unknown error'
+        }
+      };
+
+      // Agregar stack trace solo en desarrollo
+      if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
+        errorResponse.stack = err?.stack;
+      }
+
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json(errorResponse);
+    } else {
+      console.error('❌ [DOWNLOAD-SIMPLE] Cannot send error response - headers already sent');
+    }
   }
 }
 
