@@ -79,10 +79,28 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     // Obtener información del asiento
     const seatId = seat?.id || seat?._id || seat?.seatId || seat?.seat_id || 'unknown';
     const zonaTxt = seat?.zonaNombre || seat?.nombreZona || (seat?.zona?.nombre) || (typeof seat?.zona === 'string' ? seat.zona : null) || seat?.zonaId || null;
-    const mesaTxt = seat?.mesa || seat?.table || seat?.mesaNombre || (seat?.mesa?.nombre) || (typeof seat?.mesa === 'string' ? seat.mesa : null) || null;
-    const filaTxt = seat?.fila || seat?.row || seat?.filaNombre || (seat?.fila?.nombre) || (typeof seat?.fila === 'string' ? seat.fila : null) || null;
+    const mesaTxt = seat?.mesa || seat?.table || seat?.mesaNombre || seat?.mesaId || (seat?.mesa?.nombre) || (seat?.mesa?.id) || (typeof seat?.mesa === 'string' ? seat.mesa : null) || (typeof seat?.mesa === 'number' ? seat.mesa.toString() : null) || null;
+    const filaTxt = seat?.fila || seat?.row || seat?.filaNombre || seat?.filaId || (seat?.fila?.nombre) || (seat?.fila?.id) || (typeof seat?.fila === 'string' ? seat.fila : null) || (typeof seat?.fila === 'number' ? seat.fila.toString() : null) || null;
     const asientoTxt = seat?.asiento || seat?.seat || seat?.asientoNombre || seat?.nombre || seat?.name || null;
     const precioTxt = seat?.price || seat?.precio || null;
+    
+    // Log para debugging: verificar qué datos de mesa/fila se detectaron
+    console.log(`📋 [PDF-PAGE] Datos del asiento ${seatId}:`, {
+      zona: zonaTxt,
+      mesa: mesaTxt,
+      fila: filaTxt,
+      asiento: asientoTxt,
+      hasMesa: !!mesaTxt,
+      hasFila: !!filaTxt,
+      seatData: {
+        mesa: seat?.mesa,
+        table: seat?.table,
+        mesaId: seat?.mesaId,
+        fila: seat?.fila,
+        row: seat?.row,
+        filaId: seat?.filaId
+      }
+    });
     
     // Obtener datos del tenant y comprador
     const tenantData = pdfExtras?.tenantData || null;
@@ -300,8 +318,8 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
             height: locationQrSize,
           });
           
-          // Texto "Escanea para llegar!"
-          page.drawText('Escanea para llegar!', {
+          // Texto "¡Escanea para llegar al Evento!"
+          page.drawText('¡Escanea para llegar al Evento!', {
             x: locationQrX,
             y: locationQrY - 15,
             size: 9,
@@ -318,30 +336,15 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     
     leftY -= 20;
     
-    // Imagen del medio (25% de la altura de la página, ancho hasta la mitad de la hoja)
-    const middleImageHeight = height * 0.25; // 25% de la altura
-    const middleImageY = leftY - middleImageHeight - 15;
-    if (eventImages.portada || eventImages.logoVertical || eventImages.banner) {
-      const middleImage = eventImages.portada || eventImages.logoVertical || eventImages.banner;
-      // Ancho hasta el divisor (mitad de la hoja) menos un pequeño margen
-      const middleImageWidth = dividerX - leftX - 5; // Hasta la línea divisoria
-      try {
-        page.drawImage(middleImage, {
-          x: leftX,
-          y: middleImageY,
-          width: middleImageWidth,
-          height: middleImageHeight,
-        });
-      } catch (imgError) {
-        console.warn('⚠️ [PDF] Error dibujando imagen del medio:', imgError);
-      }
-    }
+    // Términos y Condiciones (desde el 5% hasta el 45% del ancho de la página)
+    // Calcular posición para términos (subidos, después de la información del recinto)
+    const termsStartX = width * 0.05; // 5% desde la izquierda
+    const termsEndX = width * 0.45; // 45% del ancho (hasta la mitad)
+    const termsMaxWidth = termsEndX - termsStartX; // Ancho disponible para términos
+    const termsStartY = leftY; // Continuar desde donde quedó la información del recinto
     
-    // Términos y Condiciones (alargados hasta casi la mitad de la hoja)
-    // Calcular posición para términos (debajo de la imagen del medio)
-    const termsStartY = middleImageY - 20;
     page.drawText('TERMINOS Y CONDICIONES', {
-      x: leftX,
+      x: termsStartX,
       y: termsStartY,
       size: 11,
       color: rgb(0, 0, 0),
@@ -357,18 +360,16 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       '6.- Al adquirir este tickets el cliente acepta nuestros terminos y condiciones.'
     ];
     
-    // Calcular el ancho máximo de texto para que llegue hasta casi la mitad (hasta dividerX - 10)
-    const termsMaxWidth = dividerX - leftX - 10; // Casi hasta la mitad
-    // Aproximadamente 5.5 puntos por carácter para tamaño 8
+    // Calcular el ancho máximo de texto (aproximadamente 5.5 puntos por carácter para tamaño 8)
     const maxCharsPerLine = Math.floor(termsMaxWidth / 5.5);
     
     let termsYPos = termsStartY - 15;
     terms.forEach(term => {
-      // Dividir el término en líneas para que quepa hasta casi la mitad
+      // Dividir el término en líneas para que quepa dentro del ancho especificado
       const termLines = wrapText(cleanTextForPDF(term), maxCharsPerLine);
       termLines.forEach((line, lineIndex) => {
         page.drawText(line, {
-          x: leftX,
+          x: termsStartX,
           y: termsYPos,
           size: 8,
           color: rgb(0.2, 0.2, 0.2),
@@ -378,6 +379,9 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       });
       termsYPos -= 2; // Espaciado adicional entre términos
     });
+    
+    // Actualizar leftY para continuar con el layout
+    leftY = termsYPos - 10;
     
     // Información de la empresa (lo más abajo posible)
     const companyInfoY = bottomMargin + 30;
@@ -428,9 +432,9 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       color: rgb(0, 0, 0),
       font: helveticaBold,
     });
-    rightY -= 30;
+    rightY -= 25; // Reducido de 30 a 25
     
-    // COMPRADOR (nombre y apellido unidos)
+    // COMPRADOR (nombre y apellido unidos) - Subido
     if (buyerProfile && (buyerProfile.nombre || buyerProfile.apellido)) {
       const buyerFullName = `${cleanTextForPDF(buyerProfile.nombre || '')} ${cleanTextForPDF(buyerProfile.apellido || '')}`.trim();
       if (buyerFullName) {
@@ -441,12 +445,12 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
           color: rgb(0, 0, 0),
           font: helveticaBold,
         });
-        rightY -= 20;
+        rightY -= 18; // Reducido de 20 a 18
       }
     }
-    rightY -= 5;
+    rightY -= 3; // Reducido de 5 a 3
     
-    // Localizador (a la derecha)
+    // Localizador (a la derecha) - Subido
     const locatorText = `Localizador: ${cleanTextForPDF(payment.locator || locator || '')}`;
     page.drawText(locatorText, {
       x: rightX,
@@ -455,9 +459,9 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       color: rgb(0, 0, 0),
       font: helveticaBold,
     });
-    rightY -= 25;
+    rightY -= 20; // Reducido de 25 a 20
     
-    // TIPO: ENTRADA (en la columna derecha)
+    // TIPO: ENTRADA (en la columna derecha) - Subido
     const tipoTicket = precioTxt && Number(precioTxt) === 0 ? 'CORTESIA' : 'ENTRADA';
     page.drawText(`TIPO: ${tipoTicket}`, {
       x: rightX,
@@ -466,10 +470,103 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       color: rgb(0, 0, 0),
       font: helveticaFont,
     });
-    rightY -= 25;
+    rightY -= 20; // Reducido de 25 a 20
     
-    // QR Code de validación (más arriba de la mitad de la hoja para evitar daños al doblar)
-    // Posicionar el QR justo después de TIPO, en la parte superior de la columna derecha
+    // Tabla de información del asiento (con borde, menos alta, subida)
+    // Detectar si el asiento tiene mesa o fila para determinar qué columnas mostrar
+    const hasMesa = mesaTxt && mesaTxt !== '-' && mesaTxt.trim() !== '';
+    const hasFila = filaTxt && filaTxt !== '-' && filaTxt.trim() !== '';
+    
+    // Determinar las columnas de la tabla según los datos disponibles
+    let tableHeaders = ['Zona', 'Asiento'];
+    let tableValues = [
+      cleanTextForPDF(zonaTxt || '-'),
+      cleanTextForPDF(asientoTxt || '-')
+    ];
+    
+    if (hasMesa) {
+      // Si tiene mesa, mostrar: Zona, Mesa, Asiento
+      tableHeaders = ['Zona', 'Mesa', 'Asiento'];
+      tableValues = [
+        cleanTextForPDF(zonaTxt || '-'),
+        cleanTextForPDF(mesaTxt || '-'),
+        cleanTextForPDF(asientoTxt || '-')
+      ];
+    } else if (hasFila) {
+      // Si tiene fila, mostrar: Zona, Fila, Asiento
+      tableHeaders = ['Zona', 'Fila', 'Asiento'];
+      tableValues = [
+        cleanTextForPDF(zonaTxt || '-'),
+        cleanTextForPDF(filaTxt || '-'),
+        cleanTextForPDF(asientoTxt || '-')
+      ];
+    }
+    // Si no tiene ni mesa ni fila, solo mostrar Zona y Asiento (ya definido arriba)
+    
+    const numColumns = tableHeaders.length;
+    
+    // Dibujar tabla con borde (menos alta)
+    const tableStartX = rightX;
+    const tableWidth = rightColumnWidth - 10;
+    const tableRowHeight = 18; // Reducido de 25 a 18 (menos alta)
+    const tableY = rightY + 3; // Subida, reducido de 5 a 3
+    
+    // Dibujar borde de la tabla (menos alto)
+    page.drawRectangle({
+      x: tableStartX,
+      y: tableY - tableRowHeight - 3, // Reducido de 5 a 3
+      width: tableWidth,
+      height: tableRowHeight + 12, // Reducido de 20 a 12 (menos alta)
+      borderColor: rgb(0.5, 0.5, 0.5),
+      borderWidth: 1.5,
+    });
+    
+    // Dibujar línea horizontal entre encabezados y valores
+    page.drawLine({
+      start: { x: tableStartX, y: tableY - tableRowHeight },
+      end: { x: tableStartX + tableWidth, y: tableY - tableRowHeight },
+      thickness: 1,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+    
+    // Dibujar líneas verticales entre columnas (solo si hay más de una columna)
+    const colWidth = tableWidth / numColumns;
+    for (let i = 1; i < numColumns; i++) {
+      page.drawLine({
+        start: { x: tableStartX + (colWidth * i), y: tableY - tableRowHeight - 3 }, // Reducido de 5 a 3
+        end: { x: tableStartX + (colWidth * i), y: tableY + 10 }, // Reducido de 15 a 10
+        thickness: 1,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+    }
+    
+    // Dibujar encabezados de tabla
+    tableHeaders.forEach((header, index) => {
+      const headerX = tableStartX + (index * colWidth) + 5;
+      page.drawText(header, {
+        x: headerX,
+        y: tableY - 2, // Ajustado para centrar mejor
+        size: 10,
+        color: rgb(0, 0, 0),
+        font: helveticaBold,
+      });
+    });
+    
+    // Dibujar valores de tabla
+    tableValues.forEach((value, index) => {
+      const valueX = tableStartX + (index * colWidth) + 5;
+      page.drawText(value, {
+        x: valueX,
+        y: tableY - tableRowHeight - 2, // Ajustado para centrar mejor
+        size: 10, // Reducido de 11 a 10
+        color: rgb(0, 0, 0),
+        font: helveticaFont,
+      });
+    });
+    rightY = tableY - tableRowHeight - 20; // Reducido de 30 a 20
+    
+    // QR Code de validación (más arriba, subido para que no llegue a la mitad de la hoja)
+    // Posicionar el QR después de la tabla, pero más arriba
     if (qrImageBytes) {
       try {
         const qrImage = await pdfDoc.embedPng(qrImageBytes);
@@ -478,9 +575,8 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         const qrTextPadding = qrSize * 0.05; // 5% para el texto
         const qrTotalSize = qrSize + (qrPadding * 2);
         const qrX = rightX + (rightColumnWidth / 2) - (qrTotalSize / 2);
-        // Posicionar el QR arriba, cerca de la mitad de la hoja pero en la parte superior de la columna derecha
-        // Colocarlo después de TIPO, pero lo más arriba posible para evitar dobleces
-        const qrY = rightY - qrTotalSize - 10;
+        // Posicionar el QR más arriba, después de la tabla
+        const qrY = rightY - qrTotalSize - 8; // Reducido de 10 a 8, más compacto
         
         // Dibujar borde gris
         page.drawRectangle({
@@ -513,80 +609,12 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
           font: helveticaFont,
         });
         
-        // Actualizar rightY para continuar con la tabla debajo del QR
-        rightY = qrY - 30;
+        // Actualizar rightY para el poster (ya no necesitamos más espacio)
+        rightY = qrY - 20; // Reducido de 30 a 20
       } catch (qrError) {
         console.error('❌ [PDF] Error embediendo QR:', qrError);
       }
     }
-    
-    // Tabla de información del asiento (con borde y alargado, debajo del QR)
-    const tableHeaders = ['Zona', 'Fila', 'Asiento'];
-    const tableValues = [
-      cleanTextForPDF(zonaTxt || '-'),
-      cleanTextForPDF(filaTxt || '-'),
-      cleanTextForPDF(asientoTxt || '-')
-    ];
-    
-    // Dibujar tabla con borde
-    const tableStartX = rightX;
-    const tableWidth = rightColumnWidth - 10;
-    const tableRowHeight = 25;
-    const tableY = rightY + 5;
-    
-    // Dibujar borde de la tabla
-    page.drawRectangle({
-      x: tableStartX,
-      y: tableY - tableRowHeight - 5,
-      width: tableWidth,
-      height: tableRowHeight + 20,
-      borderColor: rgb(0.5, 0.5, 0.5),
-      borderWidth: 1.5,
-    });
-    
-    // Dibujar línea horizontal entre encabezados y valores
-    page.drawLine({
-      start: { x: tableStartX, y: tableY - tableRowHeight },
-      end: { x: tableStartX + tableWidth, y: tableY - tableRowHeight },
-      thickness: 1,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
-    // Dibujar líneas verticales entre columnas
-    const colWidth = tableWidth / 3;
-    for (let i = 1; i < 3; i++) {
-      page.drawLine({
-        start: { x: tableStartX + (colWidth * i), y: tableY - tableRowHeight - 5 },
-        end: { x: tableStartX + (colWidth * i), y: tableY + 15 },
-        thickness: 1,
-        color: rgb(0.5, 0.5, 0.5),
-      });
-    }
-    
-    // Dibujar encabezados de tabla
-    tableHeaders.forEach((header, index) => {
-      const headerX = tableStartX + (index * colWidth) + 5;
-      page.drawText(header, {
-        x: headerX,
-        y: tableY,
-        size: 10,
-        color: rgb(0, 0, 0),
-        font: helveticaBold,
-      });
-    });
-    
-    // Dibujar valores de tabla
-    tableValues.forEach((value, index) => {
-      const valueX = tableStartX + (index * colWidth) + 5;
-      page.drawText(value, {
-        x: valueX,
-        y: tableY - tableRowHeight,
-        size: 11,
-        color: rgb(0, 0, 0),
-        font: helveticaFont,
-      });
-    });
-    rightY = tableY - tableRowHeight - 30;
     
     // Poster del evento en la parte inferior de la columna derecha (estirado hasta el final)
     if (eventImages.portada || eventImages.banner) {
