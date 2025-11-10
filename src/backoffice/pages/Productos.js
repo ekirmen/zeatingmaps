@@ -264,25 +264,34 @@ const Productos = () => {
         allProductos = [...allProductos, ...productosEventosWithSource];
         console.log('✅ Productos del evento (productos_eventos) cargados:', productosEventosWithSource.length);
       } else if (productosEventosData.error) {
-        // Detectar errores de autenticación o tabla no existente
+        // Detectar errores de autenticación, tabla no existente, o relación no encontrada
         const error = productosEventosData.error;
         const errorMessage = error.message?.toLowerCase() || '';
         const errorHint = error.hint?.toLowerCase() || '';
-        const isAuthError = 
+        const isIgnorableError = 
           error.code === 'PGRST116' || // Tabla no existe
+          error.code === 'PGRST200' || // Relación no encontrada (tabla productos_eventos no existe o no tiene relación)
           error.status === 401 ||
           error.status === 403 ||
           errorMessage.includes('no api key found') ||
           errorMessage.includes('apikey') ||
           errorMessage.includes('permission denied') ||
+          errorMessage.includes('could not find a relationship') ||
+          errorMessage.includes('foreign key relationship') ||
           errorHint.includes('no `apikey`') ||
-          errorHint.includes('api key');
+          errorHint.includes('api key') ||
+          errorHint.includes('perhaps you meant');
         
-        // Solo mostrar advertencia si no es un error de autenticación o tabla no existente
-        if (!isAuthError) {
+        // Solo mostrar advertencia si no es un error que debemos ignorar
+        if (!isIgnorableError) {
           console.warn('⚠️ Error cargando productos_eventos:', error);
+        } else {
+          // Log silencioso para debugging (solo en desarrollo)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('ℹ️ productos_eventos no disponible (tabla o relación no existe), usando productos directos');
+          }
         }
-        // Ignorar silenciosamente errores de autenticación o tabla no existente
+        // Ignorar silenciosamente errores esperados
       }
       
       // Agregar productos que tengan evento_id directamente (desde tabla productos)
@@ -338,10 +347,29 @@ const Productos = () => {
 
   const handleEditProduct = (producto) => {
     setEditingProducto(producto);
+    
+    // Limpiar imagen_url si es un objeto JSON string
+    let imagenUrl = producto.imagen_url;
+    if (imagenUrl && typeof imagenUrl === 'string' && imagenUrl.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(imagenUrl);
+        // Intentar extraer la URL del objeto
+        if (parsed.fileList && parsed.fileList.length > 0) {
+          imagenUrl = parsed.fileList[0].response?.url || parsed.fileList[0].url || imagenUrl;
+        } else if (parsed.url) {
+          imagenUrl = parsed.url;
+        }
+        // Si no se puede extraer, mantener el valor original (puede ser una URL válida)
+      } catch (e) {
+        // Si no se puede parsear, asumir que es una URL válida o null
+        console.warn('No se pudo parsear imagen_url al editar:', e);
+      }
+    }
+    
     form.setFieldsValue({
       nombre: producto.nombre,
       descripcion: producto.descripcion,
-      imagen_url: producto.imagen_url,
+      imagen_url: imagenUrl, // Usar la URL limpia
       categoria: producto.categoria,
       activo: producto.activo
     });
@@ -371,8 +399,76 @@ const Productos = () => {
     try {
       // Excluir precio_base ya que se asigna desde la plantilla de precios
       const { precio_base, ...valuesWithoutPrice } = values;
+      
+      // Limpiar imagen_url: asegurar que siempre sea una URL string, no un objeto JSON
+      let imagenUrl = valuesWithoutPrice.imagen_url;
+      
+      // Si imagenUrl existe, procesarlo para extraer solo la URL
+      if (imagenUrl) {
+        // Caso 1: Es un string que parece JSON (empieza con '{')
+        if (typeof imagenUrl === 'string' && imagenUrl.trim().startsWith('{')) {
+          try {
+            const parsed = JSON.parse(imagenUrl);
+            // Buscar la URL en diferentes estructuras posibles
+            if (parsed.fileList && Array.isArray(parsed.fileList) && parsed.fileList.length > 0) {
+              const firstFile = parsed.fileList[0];
+              imagenUrl = firstFile.response?.url || firstFile.url || firstFile.thumbUrl || null;
+            } else if (parsed.url) {
+              imagenUrl = parsed.url;
+            } else if (parsed.file?.response?.url) {
+              imagenUrl = parsed.file.response.url;
+            } else {
+              // Si no se encuentra URL en el JSON, establecer como null
+              imagenUrl = null;
+            }
+          } catch (e) {
+            // Si no se puede parsear, asumir que puede ser una URL válida que empieza con '{'
+            // Pero es más seguro establecerlo como null si no parece una URL
+            if (imagenUrl.startsWith('http://') || imagenUrl.startsWith('https://')) {
+              // Es una URL válida que casualmente empieza con '{'
+              // Mantener el valor
+            } else {
+              imagenUrl = null;
+            }
+          }
+        }
+        // Caso 2: Es un objeto (no string)
+        else if (typeof imagenUrl === 'object' && imagenUrl !== null) {
+          if (imagenUrl.response?.url) {
+            imagenUrl = imagenUrl.response.url;
+          } else if (imagenUrl.url) {
+            imagenUrl = imagenUrl.url;
+          } else if (imagenUrl.thumbUrl) {
+            imagenUrl = imagenUrl.thumbUrl;
+          } else if (Array.isArray(imagenUrl.fileList) && imagenUrl.fileList.length > 0) {
+            const firstFile = imagenUrl.fileList[0];
+            imagenUrl = firstFile.response?.url || firstFile.url || firstFile.thumbUrl || null;
+          } else {
+            imagenUrl = null;
+          }
+        }
+        // Caso 3: Es una URL string válida (no JSON)
+        // Verificar que sea una URL válida
+        else if (typeof imagenUrl === 'string') {
+          // Si no empieza con http:// o https://, podría no ser una URL válida
+          if (!imagenUrl.startsWith('http://') && !imagenUrl.startsWith('https://') && !imagenUrl.startsWith('/')) {
+            // Si no parece una URL, establecer como null
+            imagenUrl = null;
+          }
+          // Si es una URL válida, mantenerla
+        }
+        // Caso 4: Cualquier otro tipo (number, boolean, etc.) -> null
+        else {
+          imagenUrl = null;
+        }
+      } else {
+        // Si imagenUrl es null, undefined, o vacío, establecer como null
+        imagenUrl = null;
+      }
+      
       const productoData = {
         ...valuesWithoutPrice,
+        imagen_url: imagenUrl, // Usar la URL limpia
         evento_id: eventoSeleccionado,
         activo: values.activo !== false // Asegurar que activo sea boolean
       };
