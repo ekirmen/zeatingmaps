@@ -131,20 +131,66 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     
     // ==========================================
     // BANNER SUPERIOR (cruza ambas columnas)
+    // Usar logoHorizontal (640x200) escalado manteniendo aspect ratio
     // ==========================================
-    const bannerHeight = 80;
-    const bannerY = height - topMargin - bannerHeight;
-    if (eventImages.banner || eventImages.portada) {
+    const bannerY = height - topMargin;
+    if (eventImages.logoHorizontal) {
+      try {
+        const logoHorizontalImage = eventImages.logoHorizontal;
+        const logoAspectRatio = 640 / 200; // 3.2:1 (ancho:alto)
+        const availableWidth = width - leftMargin - rightMargin;
+        const calculatedHeight = availableWidth / logoAspectRatio;
+        const bannerHeight = Math.min(calculatedHeight, 80); // Máximo 80 puntos
+        const bannerWidth = bannerHeight * logoAspectRatio;
+        
+        // Centrar el logo horizontalmente
+        const bannerX = (width - bannerWidth) / 2;
+        
+        page.drawImage(logoHorizontalImage, {
+          x: bannerX,
+          y: bannerY - bannerHeight,
+          width: bannerWidth,
+          height: bannerHeight,
+        });
+      } catch (logoError) {
+        console.warn('⚠️ [PDF] Error dibujando logo horizontal, usando banner/portada:', logoError);
+        // Fallback a banner/portada si logoHorizontal falla
+        if (eventImages.banner || eventImages.portada) {
+          const bannerImage = eventImages.banner || eventImages.portada;
+          const bannerHeight = 80;
+          page.drawImage(bannerImage, {
+            x: leftMargin,
+            y: bannerY - bannerHeight,
+            width: width - leftMargin - rightMargin,
+            height: bannerHeight,
+          });
+        }
+      }
+    } else if (eventImages.banner || eventImages.portada) {
+      // Fallback si no hay logoHorizontal
       const bannerImage = eventImages.banner || eventImages.portada;
+      const bannerHeight = 80;
       page.drawImage(bannerImage, {
         x: leftMargin,
-        y: bannerY,
+        y: bannerY - bannerHeight,
         width: width - leftMargin - rightMargin,
         height: bannerHeight,
       });
     }
     
-    let contentStartY = bannerY - 20;
+    // Calcular contentStartY basado en si se dibujó el banner
+    let contentStartY = height - topMargin;
+    if (eventImages.logoHorizontal) {
+      const logoAspectRatio = 640 / 200;
+      const availableWidth = width - leftMargin - rightMargin;
+      const calculatedHeight = availableWidth / logoAspectRatio;
+      const bannerHeight = Math.min(calculatedHeight, 80);
+      contentStartY = bannerY - bannerHeight - 20;
+    } else if (eventImages.banner || eventImages.portada) {
+      contentStartY = bannerY - 80 - 20;
+    } else {
+      contentStartY = bannerY - 20;
+    }
     
     // ==========================================
     // LÍNEA PUNTEADA VERTICAL DIVISORIA
@@ -334,14 +380,14 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       }
     }
     
-    leftY -= 20;
+    leftY -= 40; // Aumentado de 30 a 40 para bajar más los términos
     
     // Términos y Condiciones (desde el 5% hasta el 45% del ancho de la página)
-    // Calcular posición para términos (subidos, después de la información del recinto)
+    // Bajar más los términos y condiciones
     const termsStartX = width * 0.05; // 5% desde la izquierda
     const termsEndX = width * 0.45; // 45% del ancho (hasta la mitad)
     const termsMaxWidth = termsEndX - termsStartX; // Ancho disponible para términos
-    const termsStartY = leftY; // Continuar desde donde quedó la información del recinto
+    const termsStartY = leftY - 15; // Bajado más (reducido de leftY - 10 a leftY - 15)
     
     page.drawText('TERMINOS Y CONDICIONES', {
       x: termsStartX,
@@ -363,7 +409,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     // Calcular el ancho máximo de texto (aproximadamente 5.5 puntos por carácter para tamaño 8)
     const maxCharsPerLine = Math.floor(termsMaxWidth / 5.5);
     
-    let termsYPos = termsStartY - 15;
+    let termsYPos = termsStartY - 20; // Aumentado de 15 a 20 para bajar más los términos
     terms.forEach(term => {
       // Dividir el término en líneas para que quepa dentro del ancho especificado
       const termLines = wrapText(cleanTextForPDF(term), maxCharsPerLine);
@@ -450,8 +496,8 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     }
     rightY -= 3; // Reducido de 5 a 3
     
-    // Localizador (a la derecha) - Subido
-    const locatorText = `Localizador: ${cleanTextForPDF(payment.locator || locator || '')}`;
+    // Localizador (a la derecha) - Subido, en mayúsculas
+    const locatorText = `LOCALIZADOR: ${cleanTextForPDF(payment.locator || locator || '')}`;
     page.drawText(locatorText, {
       x: rightX,
       y: rightY,
@@ -461,14 +507,14 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     });
     rightY -= 20; // Reducido de 25 a 20
     
-    // TIPO: ENTRADA (en la columna derecha) - Subido
+    // TIPO: ENTRADA (en la columna derecha) - Subido, en negrita
     const tipoTicket = precioTxt && Number(precioTxt) === 0 ? 'CORTESIA' : 'ENTRADA';
     page.drawText(`TIPO: ${tipoTicket}`, {
       x: rightX,
       y: rightY,
       size: 11,
       color: rgb(0, 0, 0),
-      font: helveticaFont,
+      font: helveticaBold, // Cambiado de helveticaFont a helveticaBold
     });
     rightY -= 20; // Reducido de 25 a 20
     
@@ -511,36 +557,11 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     const tableRowHeight = 18; // Reducido de 25 a 18 (menos alta)
     const tableY = rightY + 3; // Subida, reducido de 5 a 3
     
-    // Dibujar borde de la tabla (menos alto)
-    page.drawRectangle({
-      x: tableStartX,
-      y: tableY - tableRowHeight - 3, // Reducido de 5 a 3
-      width: tableWidth,
-      height: tableRowHeight + 12, // Reducido de 20 a 12 (menos alta)
-      borderColor: rgb(0.5, 0.5, 0.5),
-      borderWidth: 1.5,
-    });
+    // NO dibujar borde de la tabla - eliminado según solicitud del usuario
+    // Solo dibujar los textos sin bordes ni líneas
     
-    // Dibujar línea horizontal entre encabezados y valores
-    page.drawLine({
-      start: { x: tableStartX, y: tableY - tableRowHeight },
-      end: { x: tableStartX + tableWidth, y: tableY - tableRowHeight },
-      thickness: 1,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
-    // Dibujar líneas verticales entre columnas (solo si hay más de una columna)
+    // Dibujar encabezados de tabla (sin bordes)
     const colWidth = tableWidth / numColumns;
-    for (let i = 1; i < numColumns; i++) {
-      page.drawLine({
-        start: { x: tableStartX + (colWidth * i), y: tableY - tableRowHeight - 3 }, // Reducido de 5 a 3
-        end: { x: tableStartX + (colWidth * i), y: tableY + 10 }, // Reducido de 15 a 10
-        thickness: 1,
-        color: rgb(0.5, 0.5, 0.5),
-      });
-    }
-    
-    // Dibujar encabezados de tabla
     tableHeaders.forEach((header, index) => {
       const headerX = tableStartX + (index * colWidth) + 5;
       page.drawText(header, {
@@ -552,7 +573,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       });
     });
     
-    // Dibujar valores de tabla
+    // Dibujar valores de tabla (sin bordes)
     tableValues.forEach((value, index) => {
       const valueX = tableStartX + (index * colWidth) + 5;
       page.drawText(value, {
@@ -575,8 +596,8 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         const qrTextPadding = qrSize * 0.05; // 5% para el texto
         const qrTotalSize = qrSize + (qrPadding * 2);
         const qrX = rightX + (rightColumnWidth / 2) - (qrTotalSize / 2);
-        // Posicionar el QR más arriba, después de la tabla
-        const qrY = rightY - qrTotalSize - 8; // Reducido de 10 a 8, más compacto
+        // Posicionar el QR más arriba, después de la tabla (subido más)
+        const qrY = rightY - qrTotalSize - 5; // Reducido de 8 a 5 para subirlo más
         
         // Dibujar borde gris
         page.drawRectangle({
