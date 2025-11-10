@@ -24,7 +24,6 @@ import {
   EyeOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
-import { supabase } from '../../supabaseClient';
 
 const { Option } = Select;
 const { TextArea } = Input;
