@@ -374,18 +374,22 @@ const Profile = () => {
                 dataSource={purchases}
                 renderItem={(purchase) => {
                   // Verificar si el wallet está habilitado para esta compra
-                  let walletEnabled = false;
-                  if (purchase?.event?.datosBoleto) {
+                  const getWalletEnabled = () => {
+                    if (!purchase?.event?.datosBoleto) {
+                      return false;
+                    }
                     try {
                       const datosBoleto = typeof purchase.event.datosBoleto === 'string'
                         ? JSON.parse(purchase.event.datosBoleto)
                         : purchase.event.datosBoleto;
-                      walletEnabled = datosBoleto?.habilitarWallet || false;
+                      return datosBoleto?.habilitarWallet || false;
                     } catch (e) {
                       console.warn('Error parsing datosBoleto:', e);
-                      walletEnabled = false;
+                      return false;
                     }
-                  }
+                  };
+                  
+                  const walletEnabled = getWalletEnabled();
 
                   return (
                     <List.Item
