@@ -3,6 +3,31 @@ import QRCode from 'qrcode';
 import { getSupabaseAdmin } from './config.js';
 
 /**
+ * Función auxiliar para limpiar texto de emojis y caracteres no compatibles con WinAnsi
+ * WinAnsi solo soporta caracteres en el rango 0x00-0xFF (ASCII extendido)
+ */
+function cleanTextForPDF(text) {
+  if (!text || typeof text !== 'string') {
+    return text || '';
+  }
+  
+  // Eliminar emojis y caracteres Unicode fuera del rango WinAnsi
+  // WinAnsi soporta caracteres 0x00-0xFF, pero algunos caracteres especiales pueden causar problemas
+  // Eliminar todos los caracteres que no estén en el rango ASCII extendido (0x00-0xFF)
+  return text
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Emojis (rango general)
+    .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emoticons
+    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transport and map symbols (incluye 📍)
+    .replace(/[\u{2600}-\u{26FF}]/gu, '') // Miscellaneous symbols
+    .replace(/[\u{2700}-\u{27BF}]/gu, '') // Dingbats
+    .replace(/[\u{FE00}-\u{FE0F}]/gu, '') // Variation selectors
+    .replace(/[\u{200D}]/gu, '') // Zero-width joiner
+    .replace(/[\u{200B}]/gu, '') // Zero-width space
+    .replace(/[\u{FEFF}]/gu, '') // Zero-width no-break space
+    .trim();
+}
+
+/**
  * Función auxiliar para dibujar una página de ticket para un asiento específico
  */
 async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData, pdfExtras, helveticaFont, helveticaBold, locator, currentPage = 1, totalPages = 1) {
@@ -115,7 +140,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         // Truncar título si es muy largo
         const maxTitleLength = 50;
         const displayTitle = title.length > maxTitleLength ? title.substring(0, maxTitleLength) + '...' : title;
-        page.drawText(displayTitle, {
+        page.drawText(cleanTextForPDF(displayTitle), {
           x: 200,
           y: height - 100,
           size: 12,
@@ -157,7 +182,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     });
     
     // Localizador (dentro de la caja)
-    page.drawText(`Localizador: ${payment.locator || locator}`, { 
+    page.drawText(`Localizador: ${cleanTextForPDF(payment.locator || locator || '')}`, { 
       x: 50, 
       y: infoBoxY - 25, 
       size: 12, 
@@ -213,7 +238,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       });
       y -= 35;
       
-      page.drawText(`${venueData.nombre}`, { 
+      page.drawText(cleanTextForPDF(venueData.nombre || ''), { 
         x: 60, 
         y, 
         size: 12, 
@@ -232,7 +257,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       if (venueData.pais) direccionParts.push(venueData.pais);
       
       if (direccionParts.length > 0) {
-        page.drawText(direccionParts.join(', '), { 
+        page.drawText(cleanTextForPDF(direccionParts.join(', ')), { 
           x: 60, 
           y, 
           size: 11, 
@@ -350,7 +375,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         color: rgb(0.3,0.3,0.3), 
         font: helveticaBold 
       });
-      page.drawText(info.value, { 
+      page.drawText(cleanTextForPDF(info.value || ''), { 
         x: 130, 
         y, 
         size: 11, 
@@ -371,7 +396,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
             try {
               const tags = typeof eventData.tags === 'string' ? JSON.parse(eventData.tags) : eventData.tags;
               if (Array.isArray(tags) && tags.length > 0) {
-                page.drawText(`Tags: ${tags.join(', ')}`, { 
+                page.drawText(`Tags: ${cleanTextForPDF(tags.join(', '))}`, { 
                   x: 60, 
                   y, 
                   size: 10, 
@@ -383,7 +408,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
             } catch (tagsError) {
               // Si tags es un string simple, mostrarlo directamente
               if (typeof eventData.tags === 'string') {
-                page.drawText(`Tags: ${eventData.tags}`, { 
+                page.drawText(`Tags: ${cleanTextForPDF(eventData.tags)}`, { 
                   x: 60, 
                   y, 
                   size: 10, 
@@ -472,7 +497,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
             color: rgb(0.3,0.3,0.3), 
             font: helveticaBold 
           });
-          page.drawText(fecha, { 
+          page.drawText(cleanTextForPDF(fecha), { 
             x: 120, 
             y, 
             size: 11, 
@@ -482,14 +507,14 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
           y -= 20;
           
           // Hora de inicio (extraída de fecha_celebracion)
-          page.drawText(`Hora de la función:`, { 
+          page.drawText(`Hora de la funcion:`, { 
             x: 60, 
             y, 
             size: 11, 
             color: rgb(0.3,0.3,0.3), 
             font: helveticaBold 
           });
-          page.drawText(hora, { 
+          page.drawText(cleanTextForPDF(hora), { 
             x: 180, 
             y, 
             size: 11, 
@@ -500,7 +525,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         } catch (dateError) {
           console.error('❌ [PDF-PAGE] Error procesando fecha de celebración:', dateError.message);
           // Mostrar fecha sin formatear si falla el formateo
-          page.drawText(`Fecha: ${funcion.fecha_celebracion}`, { 
+          page.drawText(`Fecha: ${cleanTextForPDF(String(funcion.fecha_celebracion || ''))}`, { 
             x: 60, 
             y, 
             size: 11, 
@@ -527,7 +552,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
               color: rgb(0.3,0.3,0.3), 
               font: helveticaBold 
             });
-            page.drawText(horaApertura, { 
+            page.drawText(cleanTextForPDF(horaApertura), { 
               x: 180, 
               y, 
               size: 11, 
@@ -565,7 +590,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         });
         y -= 20;
         if (customerName) {
-          page.drawText(`Nombre: ${customerName}`, { 
+          page.drawText(`Nombre: ${cleanTextForPDF(customerName)}`, { 
             x: 60, 
             y, 
             size: 11, 
@@ -575,7 +600,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
           y -= 18;
         }
         if (customerEmail) {
-          page.drawText(`Email: ${customerEmail}`, { 
+          page.drawText(`Email: ${cleanTextForPDF(customerEmail)}`, { 
             x: 60, 
             y, 
             size: 11, 
@@ -643,7 +668,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
             height: locationQrSize,
           });
           
-          page.drawText('Ubicación', {
+          page.drawText('Ubicacion', {
             x: locationQrX + 10,
             y: locationQrY - 15,
             size: 9,
