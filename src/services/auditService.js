@@ -120,14 +120,22 @@ class AuditService {
       try {
         const sessionResult = await supabase.auth.getSession();
         session = sessionResult?.data?.session;
+        
+        // Verificar que el cliente de Supabase tenga las credenciales configuradas
+        // Si no hay acceso token, no intentar insertar
+        if (session && !session.access_token) {
+          session = null;
+        }
       } catch (sessionError) {
         // Si hay error obteniendo la sesión, continuar sin sesión
         if (process.env.NODE_ENV === 'development') {
           console.warn('[AUDIT] Error obteniendo sesión:', sessionError);
         }
+        session = null;
       }
 
-      if (!session) {
+      // Si no hay sesión o acceso token, almacenar localmente
+      if (!session || !session.access_token) {
         // No hay sesión activa, almacenar localmente sin hacer ruido
         await this.storeLocally(auditData);
         return null;
@@ -144,21 +152,25 @@ class AuditService {
 
         if (error) {
           // Detectar errores relacionados con API key, autenticación o permisos
+          const errorMessage = error.message?.toLowerCase() || '';
+          const errorHint = error.hint?.toLowerCase() || '';
           const isAuthError = 
             error.code === '42501' || 
             error.code === 'PGRST301' ||
             error.status === 401 ||
             error.status === 403 ||
-            error.message?.toLowerCase().includes('permission denied') ||
-            error.message?.toLowerCase().includes('no api key found') ||
-            error.message?.toLowerCase().includes('apikey') ||
-            error.message?.toLowerCase().includes('unauthorized') ||
-            error.message?.toLowerCase().includes('forbidden');
+            errorMessage.includes('permission denied') ||
+            errorMessage.includes('no api key found') ||
+            errorMessage.includes('apikey') ||
+            errorMessage.includes('unauthorized') ||
+            errorMessage.includes('forbidden') ||
+            errorHint.includes('no `apikey`') ||
+            errorHint.includes('api key');
 
           if (isAuthError) {
             // Solo loggear en desarrollo para errores de permisos/autenticación
             if (process.env.NODE_ENV === 'development') {
-              console.warn('[AUDIT] No se pudo registrar acción (permisos/autenticación):', action, error.message);
+              console.warn('[AUDIT] No se pudo registrar acción (permisos/autenticación):', action, error.message || error.hint);
             }
             // Fallback: almacenar localmente si falla la inserción por permisos
             await this.storeLocally(auditData);
@@ -426,19 +438,23 @@ class AuditService {
 
       if (error) {
         // Detectar errores relacionados con API key, autenticación o permisos
+        const errorMessage = error.message?.toLowerCase() || '';
+        const errorHint = error.hint?.toLowerCase() || '';
         const isAuthError = 
           error.code === '42501' || 
           error.code === 'PGRST301' ||
           error.status === 401 ||
           error.status === 403 ||
-          error.message?.toLowerCase().includes('permission denied') ||
-          error.message?.toLowerCase().includes('no api key found') ||
-          error.message?.toLowerCase().includes('apikey') ||
-          error.message?.toLowerCase().includes('unauthorized') ||
-          error.message?.toLowerCase().includes('forbidden');
+          errorMessage.includes('permission denied') ||
+          errorMessage.includes('no api key found') ||
+          errorMessage.includes('apikey') ||
+          errorMessage.includes('unauthorized') ||
+          errorMessage.includes('forbidden') ||
+          errorHint.includes('no `apikey`') ||
+          errorHint.includes('api key');
 
         if (isAuthError) {
-          // Si es un error de API key o permisos, retornar logs locales
+          // Si es un error de API key o permisos, retornar logs locales silenciosamente
           try {
             const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
             return localLogs.slice(-limit);

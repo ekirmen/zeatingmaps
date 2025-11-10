@@ -150,16 +150,34 @@ const Productos = () => {
         ? plantillasResult.value 
         : { data: null, error: plantillasResult.reason };
       
+      // Helper para detectar si un error debe ser ignorado silenciosamente
+      const shouldIgnoreError = (error) => {
+        if (!error) return false;
+        const errorMessage = error.message?.toLowerCase() || '';
+        const errorHint = error.hint?.toLowerCase() || '';
+        return (
+          error.code === 'PGRST116' || // Tabla no existe
+          error.status === 401 || // No autorizado
+          error.status === 403 || // Prohibido
+          errorMessage.includes('does not exist') ||
+          errorMessage.includes('no api key found') ||
+          errorMessage.includes('apikey') ||
+          errorMessage.includes('permission denied') ||
+          errorHint.includes('no `apikey`') ||
+          errorHint.includes('api key')
+        );
+      };
+      
       const productosData = productosResult.status === 'fulfilled'
         ? productosResult.value
-        : productosResult.reason?.code === 'PGRST116' || productosResult.reason?.message?.includes('does not exist')
-          ? { data: [], error: null }
+        : shouldIgnoreError(productosResult.reason)
+          ? { data: [], error: null } // Ignorar errores de autenticación o tabla no existente
           : { data: null, error: productosResult.reason };
       
       const productosEventosData = productosEventosResult.status === 'fulfilled'
         ? productosEventosResult.value
-        : productosEventosResult.reason?.code === 'PGRST116' || productosEventosResult.reason?.message?.includes('does not exist')
-          ? { data: [], error: null }
+        : shouldIgnoreError(productosEventosResult.reason)
+          ? { data: [], error: null } // Ignorar errores de autenticación o tabla no existente
           : { data: null, error: productosEventosResult.reason };
 
       // ✅ COMBINAR PRODUCTOS DE TODAS LAS FUENTES
@@ -187,9 +205,26 @@ const Productos = () => {
         }));
         allProductos = [...allProductos, ...productosWithSource];
         console.log('✅ Productos generales cargados:', productosWithSource.length);
-      } else if (productosData.error && productosData.error.code !== 'PGRST116') {
-        // PGRST116 = tabla no existe, ignorar silenciosamente
-        console.warn('⚠️ Error cargando productos:', productosData.error);
+      } else if (productosData.error) {
+        // Detectar errores de autenticación o tabla no existente
+        const error = productosData.error;
+        const errorMessage = error.message?.toLowerCase() || '';
+        const errorHint = error.hint?.toLowerCase() || '';
+        const isAuthError = 
+          error.code === 'PGRST116' || // Tabla no existe
+          error.status === 401 ||
+          error.status === 403 ||
+          errorMessage.includes('no api key found') ||
+          errorMessage.includes('apikey') ||
+          errorMessage.includes('permission denied') ||
+          errorHint.includes('no `apikey`') ||
+          errorHint.includes('api key');
+        
+        // Solo mostrar advertencia si no es un error de autenticación o tabla no existente
+        if (!isAuthError) {
+          console.warn('⚠️ Error cargando productos:', error);
+        }
+        // Ignorar silenciosamente errores de autenticación o tabla no existente
       }
 
       // Agregar productos específicos del evento (si la tabla existe y no hay error)
@@ -206,9 +241,26 @@ const Productos = () => {
         }));
         allProductos = [...allProductos, ...productosEventosWithSource];
         console.log('✅ Productos del evento cargados:', productosEventosWithSource.length);
-      } else if (productosEventosData.error && productosEventosData.error.code !== 'PGRST116') {
-        // PGRST116 = tabla no existe, ignorar silenciosamente
-        console.warn('⚠️ Error cargando productos_eventos:', productosEventosData.error);
+      } else if (productosEventosData.error) {
+        // Detectar errores de autenticación o tabla no existente
+        const error = productosEventosData.error;
+        const errorMessage = error.message?.toLowerCase() || '';
+        const errorHint = error.hint?.toLowerCase() || '';
+        const isAuthError = 
+          error.code === 'PGRST116' || // Tabla no existe
+          error.status === 401 ||
+          error.status === 403 ||
+          errorMessage.includes('no api key found') ||
+          errorMessage.includes('apikey') ||
+          errorMessage.includes('permission denied') ||
+          errorHint.includes('no `apikey`') ||
+          errorHint.includes('api key');
+        
+        // Solo mostrar advertencia si no es un error de autenticación o tabla no existente
+        if (!isAuthError) {
+          console.warn('⚠️ Error cargando productos_eventos:', error);
+        }
+        // Ignorar silenciosamente errores de autenticación o tabla no existente
       }
 
       setProductos(allProductos);
