@@ -522,14 +522,15 @@ const Evento = () => {
                 </div>
               </div>
 
-              {/* Tabs de Navegación - Diseño Vertical Desplegable */}
-              <div className="bg-white/80 backdrop-blur-sm px-8 py-4 border-b border-gray-200/60">
-                <div className="space-y-2">
+              {/* Tabs de Navegación - Horizontal en Desktop, Vertical en Mobile */}
+              <div className="bg-white/80 backdrop-blur-sm px-4 md:px-8 py-4 border-b border-gray-200/60">
+                {/* Mobile: Diseño Vertical Desplegable */}
+                <div className="md:hidden space-y-2">
                   {tabs.map(tab => (
                     <div key={tab.id} className="border border-gray-200 rounded-lg overflow-hidden">
                       <button
                         onClick={() => setActiveTab(activeTab === tab.id ? null : tab.id)}
-                        className={`w-full px-6 py-4 text-left text-sm font-semibold rounded-lg transition-all duration-300 flex items-center justify-between ${
+                        className={`w-full px-4 py-3 text-left text-sm font-semibold rounded-lg transition-all duration-300 flex items-center justify-between ${
                           activeTab === tab.id
                             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
                             : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80 hover:shadow-sm bg-white'
@@ -548,8 +549,8 @@ const Evento = () => {
                         </svg>
                       </button>
                       {activeTab === tab.id && (
-                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                          <div className="text-sm text-gray-600">
+                        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                          <div className="text-xs text-gray-600">
                             {tab.id === 'datosBasicos' && 'Configura los datos básicos del evento (nombre, descripción, fechas, etc.)'}
                             {tab.id === 'disenoEspectaculo' && 'Personaliza el diseño visual del evento y las imágenes'}
                             {tab.id === 'configuracionVenta' && 'Configura las opciones de venta, registro y límites de compra'}
@@ -559,6 +560,23 @@ const Evento = () => {
                         </div>
                       )}
                     </div>
+                  ))}
+                </div>
+                
+                {/* Desktop: Diseño Horizontal (como estaba antes) */}
+                <div className="hidden md:flex md:flex-wrap md:gap-2 md:items-center md:justify-start">
+                  {tabs.map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
+                        activeTab === tab.id
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30'
+                          : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 bg-white border border-gray-200'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
                   ))}
                 </div>
               </div>

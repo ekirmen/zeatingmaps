@@ -725,12 +725,58 @@ export async function handleDownload(req, res) {
       console.error('❌ [DOWNLOAD] Error stack:', enrichErr.stack);
     }
 
+    // Obtener información del tenant
+    let tenantData = null;
+    try {
+      if (payment.tenant_id && supabaseAdmin) {
+        console.log('🔍 [DOWNLOAD] Obteniendo datos del tenant:', payment.tenant_id);
+        const { data: tenant, error: tenantErr } = await supabaseAdmin
+          .from('tenants')
+          .select('id, company_name, contact_email, contact_phone')
+          .eq('id', payment.tenant_id)
+          .maybeSingle();
+        
+        if (!tenantErr && tenant) {
+          tenantData = tenant;
+          console.log('✅ [DOWNLOAD] Tenant obtenido:', tenant.company_name);
+        } else if (tenantErr) {
+          console.warn('⚠️ [DOWNLOAD] Error obteniendo tenant:', tenantErr.message);
+        }
+      }
+    } catch (tenantError) {
+      console.warn('⚠️ [DOWNLOAD] Error obteniendo tenant:', tenantError.message);
+    }
+
+    // Obtener nombre y apellido del comprador desde profiles
+    let buyerProfile = null;
+    try {
+      if (payment.user_id && supabaseAdmin) {
+        console.log('🔍 [DOWNLOAD] Obteniendo perfil del comprador:', payment.user_id);
+        const { data: profile, error: profileErr } = await supabaseAdmin
+          .from('profiles')
+          .select('id, nombre, apellido')
+          .eq('id', payment.user_id)
+          .maybeSingle();
+        
+        if (!profileErr && profile) {
+          buyerProfile = profile;
+          console.log('✅ [DOWNLOAD] Perfil del comprador obtenido:', profile.nombre, profile.apellido);
+        } else if (profileErr) {
+          console.warn('⚠️ [DOWNLOAD] Error obteniendo perfil:', profileErr.message);
+        }
+      }
+    } catch (profileError) {
+      console.warn('⚠️ [DOWNLOAD] Error obteniendo perfil del comprador:', profileError.message);
+    }
+
     // Generate full PDF with payment data
     try {
       return await generateFullPDF(req, res, payment, locator, { 
         funcionData, 
         eventData, 
         venueData, 
+        tenantData,
+        buyerProfile,
         supabaseAdmin,
         downloadSource // Pasar el origen de la descarga
       });
@@ -1251,6 +1297,8 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
           eventData: eventData || pdfExtras.eventData,
           funcionData: funcionData || pdfExtras.funcionData,
           venueData: finalVenueData || pdfExtras.venueData,
+          tenantData: pdfExtras.tenantData || null,
+          buyerProfile: pdfExtras.buyerProfile || null,
           downloadSource: pdfExtras.downloadSource || 'web'
         };
         
@@ -1258,6 +1306,8 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
           hasEventData: !!seatPageExtras.eventData,
           hasFuncionData: !!seatPageExtras.funcionData,
           hasVenueData: !!seatPageExtras.venueData,
+          hasTenantData: !!seatPageExtras.tenantData,
+          hasBuyerProfile: !!seatPageExtras.buyerProfile,
           eventImagesCount: Object.keys(eventImages).length,
           seatId: seatId
         });
