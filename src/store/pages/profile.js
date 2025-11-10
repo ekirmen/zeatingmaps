@@ -459,8 +459,41 @@ const Profile = () => {
                             <CreditCardOutlined /> {purchase.payment_method || 'Método de pago'}
                           </div>
                           {purchase.seats && purchase.seats.length > 0 && (
-                            <div>
-                              <strong>Asientos:</strong> {purchase.seats.map(seat => seat.seat_id).join(', ')}
+                            <div style={{ marginTop: '8px' }}>
+                              <strong>Asientos:</strong>
+                              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {purchase.seats.map((seat, seatIndex) => (
+                                  <div key={seat.seat_id || seat.id || seatIndex} style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center',
+                                    padding: '4px 8px',
+                                    backgroundColor: '#f5f5f5',
+                                    borderRadius: '4px'
+                                  }}>
+                                    <span style={{ fontSize: '12px' }}>
+                                      Asiento {seatIndex + 1}: {seat.seat_id || seat.id || `Asiento ${seatIndex + 1}`}
+                                      {seat.zona && ` - Zona: ${seat.zona}`}
+                                    </span>
+                                    {(purchase.status === 'completed' || purchase.status === 'pagado') && (
+                                      <Button
+                                        size="small"
+                                        type="link"
+                                        style={{ padding: '0 4px', fontSize: '11px', height: 'auto' }}
+                                        onClick={async () => {
+                                          try {
+                                            await downloadTicket(purchase.locator, null, 'web', seatIndex);
+                                          } catch (error) {
+                                            message.error('Error al descargar el asiento');
+                                          }
+                                        }}
+                                      >
+                                        Descargar
+                                      </Button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </Space>

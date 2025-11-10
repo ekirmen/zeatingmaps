@@ -158,7 +158,7 @@ function createTransporter(config) {
   });
 }
 
-function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailType = 'payment_complete' }) {
+function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailType = 'payment_complete', seats = [], downloadToken = null, baseUrl = '' }) {
   // Determinar el tipo de correo (reserva o pago completo)
   const isReservation = emailType === 'reservation';
   
@@ -187,28 +187,58 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
     `;
   }
 
-  // Botón de descarga solo para pagos completos
-  const downloadButton = (!isReservation && downloadUrl) ? `
-    <div style="margin: 30px 0; text-align: center;">
-      <a href="${downloadUrl}" style="display: inline-block; padding: 12px 30px; background-color: #1a73e8; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
-        Descargar Tickets
-      </a>
-    </div>
-    <div style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
-      <p style="margin: 0; color: #856404; font-weight: bold;">⚠️ Importante:</p>
-      <p style="margin: 5px 0 0 0; color: #856404;">
-        Este enlace es personal e intransferible. Fue enviado directamente a tu correo electrónico.
-        <strong>No compartas este enlace</strong> con otras personas.
-      </p>
-    </div>
-  ` : '';
+  // Botones de descarga individual por asiento (solo para pagos completos)
+  let downloadButtons = '';
+  if (!isReservation && seats && seats.length > 0 && downloadToken && baseUrl) {
+    const seatButtons = seats.map((seat, index) => {
+      const seatId = seat.seat_id || seat.id || seat._id || `Asiento ${index + 1}`;
+      const seatDownloadUrl = `${baseUrl}/api/payments/${locator}/download?token=${encodeURIComponent(downloadToken)}&source=email&seatIndex=${index}`;
+      return `
+        <div style="margin: 10px 0;">
+          <a href="${seatDownloadUrl}" style="display: inline-block; padding: 10px 20px; background-color: #1a73e8; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px;">
+            Descargar Asiento ${index + 1}${seatId !== `Asiento ${index + 1}` ? ` (${seatId})` : ''}
+          </a>
+        </div>
+      `;
+    }).join('');
+    
+    downloadButtons = `
+      <div style="margin: 30px 0;">
+        <h3 style="color: #333; font-size: 18px; margin-bottom: 15px;">Descargar Tickets Individuales:</h3>
+        ${seatButtons}
+      </div>
+      <div style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+        <p style="margin: 0; color: #856404; font-weight: bold;">⚠️ Importante:</p>
+        <p style="margin: 5px 0 0 0; color: #856404;">
+          Estos enlaces son personales e intransferibles. Fueron enviados directamente a tu correo electrónico.
+          <strong>No compartas estos enlaces</strong> con otras personas.
+        </p>
+      </div>
+    `;
+  } else if (!isReservation && downloadUrl) {
+    // Fallback: botón de descarga general si no hay asientos o token
+    downloadButtons = `
+      <div style="margin: 30px 0; text-align: center;">
+        <a href="${downloadUrl}" style="display: inline-block; padding: 12px 30px; background-color: #1a73e8; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+          Descargar Tickets
+        </a>
+      </div>
+      <div style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+        <p style="margin: 0; color: #856404; font-weight: bold;">⚠️ Importante:</p>
+        <p style="margin: 5px 0 0 0; color: #856404;">
+          Este enlace es personal e intransferible. Fue enviado directamente a tu correo electrónico.
+          <strong>No compartas este enlace</strong> con otras personas.
+        </p>
+      </div>
+    `;
+  }
 
   const html = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #1a73e8;">${isReservation ? '¡Reserva Confirmada!' : '¡Gracias por tu compra!'}</h2>
       ${bodyEvent}
       ${mainContent}
-      ${downloadButton}
+      ${downloadButtons}
       <p style="margin-top: 30px;">Si tienes alguna pregunta, responde a este correo.</p>
     </div>
   `;
@@ -553,12 +583,14 @@ export async function handleEmail(req, res) {
       }
 
       // Generar token de descarga para el enlace en el correo
+      let downloadToken = null;
+      let baseUrl = '';
       if (payment.user_id && payment.id) {
         try {
-          const downloadToken = generateDownloadToken(locator, payment.user_id, payment.id);
+          downloadToken = generateDownloadToken(locator, payment.user_id, payment.id);
           
           // Obtener base URL desde variables de entorno o desde req
-          const baseUrl = process.env.BASE_URL || 
+          baseUrl = process.env.BASE_URL || 
                          process.env.REACT_APP_BASE_URL || 
                          process.env.API_URL ||
                          (req.headers.origin || req.headers.host ? `https://${req.headers.host}` : 'https://sistema.veneventos.com');
@@ -592,12 +624,29 @@ export async function handleEmail(req, res) {
 
     const transporter = createTransporter(emailConfig);
 
+    // Parsear asientos para incluir en el correo
+    let parsedSeats = [];
+    if (payment.seats) {
+      try {
+        if (Array.isArray(payment.seats)) {
+          parsedSeats = payment.seats;
+        } else if (typeof payment.seats === 'string') {
+          parsedSeats = JSON.parse(payment.seats);
+        }
+      } catch (e) {
+        console.warn('⚠️ [EMAIL] Error parseando asientos para correo:', e);
+      }
+    }
+    
     const { subject, html, text } = buildEmailContent({
       locator,
       eventTitle,
       recipient: email,
       downloadUrl,
       emailType,
+      seats: parsedSeats,
+      downloadToken: downloadToken || null,
+      baseUrl: baseUrl || ''
     });
 
     // Preparar adjuntos (PDF y .pkpass si están disponibles)

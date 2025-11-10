@@ -238,30 +238,48 @@ const PaymentSuccess = () => {
           </div>
         )}
         
-        {!isReservation && paymentDetails?.seats?.length > 0 && (
+        {!isReservation && paymentDetails?.seats && paymentDetails.seats.length > 0 && (
           <div className="my-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Asientos Seleccionados</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {paymentDetails.seats.map((seat, index) => (
-                <div key={seat.seat_id || index} className="bg-gray-50 p-4 rounded-lg border">
-                  <div className="flex justify-between items-start">
+                <div key={seat.seat_id || seat.id || index} className="bg-gray-50 p-4 rounded-lg border">
+                  <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="font-medium text-gray-900">
-                        Asiento: {seat.seat_id || `Asiento ${index + 1}`}
+                        Asiento {index + 1}: {seat.seat_id || seat.id || `Asiento ${index + 1}`}
                       </p>
                       {seat.table_id && (
                         <p className="text-sm text-gray-600">
                           Mesa: {seat.table_id}
                         </p>
                       )}
+                      {seat.zona && (
+                        <p className="text-sm text-gray-600">
+                          Zona: {seat.zona}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-500">
-                        Estado: {seat.status}
+                        Estado: {seat.status || 'Confirmado'}
                       </p>
                     </div>
                     <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
                       Confirmado
                     </span>
                   </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await downloadTicket(locator, null, 'web', index);
+                      } catch (error) {
+                        console.error('Error descargando asiento individual:', error);
+                      }
+                    }}
+                    className="w-full mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
+                    Descargar Asiento {index + 1}
+                  </button>
                 </div>
               ))}
             </div>

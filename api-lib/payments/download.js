@@ -130,7 +130,7 @@ export async function handleDownload(req, res) {
       return;
     }
 
-    const { locator, mode = 'full', token: downloadToken, source } = req.query || {};
+    const { locator, mode = 'full', token: downloadToken, source, seatIndex } = req.query || {};
     
     if (!locator) {
       console.error('❌ [DOWNLOAD] Missing locator in query params');
@@ -146,8 +146,19 @@ export async function handleDownload(req, res) {
       return;
     }
 
+    // Parsear seatIndex si se proporciona
+    let parsedSeatIndex = null;
+    if (seatIndex !== undefined && seatIndex !== null && seatIndex !== '') {
+      parsedSeatIndex = parseInt(seatIndex, 10);
+      if (isNaN(parsedSeatIndex) || parsedSeatIndex < 0) {
+        console.warn('⚠️ [DOWNLOAD] Invalid seatIndex, ignoring:', seatIndex);
+        parsedSeatIndex = null;
+      }
+    }
+
     console.log('📋 [DOWNLOAD] Locator:', locator);
     console.log('📋 [DOWNLOAD] Mode:', mode);
+    console.log('📋 [DOWNLOAD] SeatIndex:', parsedSeatIndex !== null ? parsedSeatIndex : 'all seats');
 
     // Si es modo simple, generar PDF básico sin autenticación ni dependencias externas
     if (mode === 'simple') {
@@ -778,7 +789,8 @@ export async function handleDownload(req, res) {
         tenantData,
         buyerProfile,
         supabaseAdmin,
-        downloadSource // Pasar el origen de la descarga
+        downloadSource, // Pasar el origen de la descarga
+        seatIndex: parsedSeatIndex // Pasar el índice del asiento si se proporciona
       });
     } catch (pdfError) {
       console.error('❌ [DOWNLOAD] Error en generateFullPDF:', pdfError);
@@ -1088,6 +1100,15 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
       }
     }
 
+    // Si se proporciona seatIndex, filtrar para generar solo ese asiento
+    const seatIndex = extra?.seatIndex !== null && extra?.seatIndex !== undefined ? parseInt(extra.seatIndex, 10) : null;
+    if (seatIndex !== null && !isNaN(seatIndex) && seatIndex >= 0 && seatIndex < seats.length) {
+      console.log(`📄 [PDF] Generando PDF solo para el asiento en el índice ${seatIndex} (0-based)`);
+      seats = [seats[seatIndex]]; // Solo el asiento seleccionado
+    } else if (seatIndex !== null) {
+      console.warn(`⚠️ [PDF] seatIndex ${seatIndex} inválido (rango: 0-${seats.length - 1}), generando todos los asientos`);
+    }
+
     if (seats.length === 0) {
       console.warn('⚠️ [PDF] No hay asientos en el pago, generando PDF sin asientos');
       seats = [{}]; // Página vacía con solo el localizador
@@ -1277,14 +1298,50 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
       eventTitle = eventData.nombre;
     }
 
-    // Generar una página por asiento
+    // Generar una página por asiento (o solo el asiento seleccionado si seatIndex está definido)
     const totalPages = seats.length;
+    // Obtener el total original de asientos para mostrar en "ENTRADA X DE Y"
+    let originalSeatsArray = [];
+    if (Array.isArray(payment.seats)) {
+      originalSeatsArray = payment.seats;
+    } else if (typeof payment.seats === 'string') {
+      try {
+        originalSeatsArray = JSON.parse(payment.seats);
+      } catch {
+        try {
+          originalSeatsArray = JSON.parse(JSON.parse(payment.seats));
+        } catch {
+          originalSeatsArray = [];
+        }
+      }
+    }
+    const originalSeatsCount = originalSeatsArray.length;
+    
     for (let i = 0; i < seats.length; i++) {
       const seat = seats[i];
       const seatId = seat.id || seat._id || seat.seatId || seat.seat_id || `seat-${i + 1}`;
-      const currentPage = i + 1;
       
-      console.log(`📄 [PDF] Generando página ${currentPage}/${totalPages} para asiento: ${seatId}`);
+      // Si se está generando un solo asiento, currentPage será el índice real + 1, totalPages será el total original
+      // Si se están generando todos, currentPage será el índice real (1-based)
+      let currentPage, displayTotalPages;
+      if (seatIndex !== null && !isNaN(seatIndex)) {
+        // Generando solo un asiento: mostrar "ENTRADA X DE Y" donde X es el índice real + 1, Y es el total original
+        currentPage = seatIndex + 1; // seatIndex es 0-based, currentPage es 1-based
+        displayTotalPages = originalSeatsCount || totalPages;
+      } else {
+        // Generando todos los asientos: usar índice real
+        // Necesitamos encontrar el índice real del asiento en la lista original
+        const realIndex = originalSeatsArray.length > 0
+          ? originalSeatsArray.findIndex(s => {
+              const sId = s.id || s._id || s.seatId || s.seat_id;
+              return sId === seatId;
+            })
+          : i;
+        currentPage = realIndex >= 0 ? realIndex + 1 : i + 1;
+        displayTotalPages = originalSeatsCount || totalPages;
+      }
+      
+      console.log(`📄 [PDF] Generando página ${currentPage}/${displayTotalPages} para asiento: ${seatId}`);
       
       // Crear nueva página para este asiento
       const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
@@ -1302,7 +1359,7 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
           downloadSource: pdfExtras.downloadSource || 'web'
         };
         
-        console.log(`📄 [PDF] Dibujando página ${currentPage}/${totalPages} con datos:`, {
+        console.log(`📄 [PDF] Dibujando página ${currentPage}/${displayTotalPages} con datos:`, {
           hasEventData: !!seatPageExtras.eventData,
           hasFuncionData: !!seatPageExtras.funcionData,
           hasVenueData: !!seatPageExtras.venueData,
@@ -1324,11 +1381,11 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
           helveticaBold,
           locator,
           currentPage,
-          totalPages
+          displayTotalPages
         );
-        console.log(`✅ [PDF] Página ${currentPage}/${totalPages} generada exitosamente`);
+        console.log(`✅ [PDF] Página ${currentPage}/${displayTotalPages} generada exitosamente`);
       } catch (pageError) {
-        console.error(`❌ [PDF] Error generando página ${currentPage}/${totalPages}:`, pageError);
+        console.error(`❌ [PDF] Error generando página ${currentPage}/${displayTotalPages}:`, pageError);
         console.error(`❌ [PDF] Error message:`, pageError.message);
         console.error(`❌ [PDF] Error stack:`, pageError.stack);
         // Continuar con la siguiente página en lugar de fallar completamente
@@ -1342,7 +1399,11 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
     console.log('✅ [PDF] PDF generado exitosamente, tamaño:', pdfBytes.length, 'bytes');
 
     const buffer = Buffer.from(pdfBytes);
-    const filename = `tickets-${locator}.pdf`;
+    // Si se generó un solo asiento, incluir el número en el nombre del archivo
+    const seatIndex = extra?.seatIndex !== null && extra?.seatIndex !== undefined ? parseInt(extra.seatIndex, 10) : null;
+    const filename = seatIndex !== null && !isNaN(seatIndex) 
+      ? `ticket-${locator}-asiento-${seatIndex + 1}.pdf`
+      : `tickets-${locator}.pdf`;
 
     return {
       buffer,

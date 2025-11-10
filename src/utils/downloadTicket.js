@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import { trackTicketDownload, trackApiError } from './analytics';
 
-export default async function downloadTicket(locator, ticketId, source = 'web') {
+export default async function downloadTicket(locator, ticketId, source = 'web', seatIndex = null) {
   if (!locator && !ticketId) throw new Error('Invalid locator');
   
   // Construir URL usando la configuración que detecta el entorno
@@ -14,10 +14,18 @@ export default async function downloadTicket(locator, ticketId, source = 'web') 
     url = buildRelativeApiUrl(`payments/${locator}/download`);
   }
   
-  // Agregar parámetro source si se proporciona
+  // Agregar parámetros de consulta
+  const params = new URLSearchParams();
   if (source) {
+    params.append('source', source);
+  }
+  if (seatIndex !== null && seatIndex !== undefined) {
+    params.append('seatIndex', seatIndex.toString());
+  }
+  
+  if (params.toString()) {
     const separator = url.includes('?') ? '&' : '?';
-    url = `${url}${separator}source=${encodeURIComponent(source)}`;
+    url = `${url}${separator}${params.toString()}`;
   }
     
   try {
@@ -203,7 +211,11 @@ export default async function downloadTicket(locator, ticketId, source = 'web') 
     const blobUrl = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = blobUrl;
-    a.download = `ticket-${locator}.pdf`;
+    // Si se está descargando un asiento específico, incluir el número en el nombre del archivo
+    const filename = seatIndex !== null && seatIndex !== undefined 
+      ? `ticket-${locator}-asiento-${seatIndex + 1}.pdf`
+      : `ticket-${locator}.pdf`;
+    a.download = filename;
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
