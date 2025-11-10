@@ -2,6 +2,11 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "build",
   "framework": "create-react-app",
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "build": {
     "env": {
       "CI": "false",
@@ -15,10 +20,6 @@
     {
       "source": "/api/:path*",
       "destination": "/api/:path*"
-    },
-    {
-      "source": "/store/static/:path*",
-      "destination": "/static/:path*"
     },
     {
       "source": "/store/seatCalculations.worker.js",
@@ -43,6 +44,10 @@
     {
       "source": "/store/logo512.png",
       "destination": "/logo512.png"
+    },
+    {
+      "source": "/store/static/:path*",
+      "destination": "/static/:path*"
     },
     {
       "source": "/store/:path*",
@@ -110,46 +115,7 @@
   ],
   "headers": [
     {
-      "source": "/static/css/(.*\\.css)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/css; charset=utf-8"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/store/static/css/(.*\\.css)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/css; charset=utf-8"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/backoffice/static/css/(.*\\.css)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/css; charset=utf-8"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/dashboard/static/css/(.*\\.css)",
+      "source": "/static/css/:path*",
       "headers": [
         {
           "key": "Content-Type",

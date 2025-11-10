@@ -1,8 +1,39 @@
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import QRCode from 'qrcode';
+// Importaciones estáticas - solo las que no dependen de librerías externas
 import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
-import { drawSeatPage, loadEventImages } from './download-seat-pages.js';
 import { validateDownloadToken } from './tokenUtils.js';
+
+// Las importaciones de pdf-lib, qrcode y download-seat-pages se harán dinámicamente
+// para evitar que el módulo falle al inicializarse si estas dependencias no están disponibles
+let PDFDocument, rgb, StandardFonts, QRCode, drawSeatPage, loadEventImages;
+
+// Función helper para cargar las dependencias de PDF dinámicamente
+async function loadPdfDependencies() {
+  if (PDFDocument && rgb && StandardFonts && QRCode && drawSeatPage && loadEventImages) {
+    return { PDFDocument, rgb, StandardFonts, QRCode, drawSeatPage, loadEventImages };
+  }
+
+  try {
+    // Cargar pdf-lib
+    const pdfLib = await import('pdf-lib');
+    PDFDocument = pdfLib.PDFDocument;
+    rgb = pdfLib.rgb;
+    StandardFonts = pdfLib.StandardFonts;
+
+    // Cargar qrcode
+    const qrcodeModule = await import('qrcode');
+    QRCode = qrcodeModule.default || qrcodeModule;
+
+    // Cargar download-seat-pages
+    const seatPagesModule = await import('./download-seat-pages.js');
+    drawSeatPage = seatPagesModule.drawSeatPage;
+    loadEventImages = seatPagesModule.loadEventImages;
+
+    return { PDFDocument, rgb, StandardFonts, QRCode, drawSeatPage, loadEventImages };
+  } catch (error) {
+    console.error('❌ [DOWNLOAD] Error cargando dependencias de PDF:', error);
+    throw new Error(`Failed to load PDF dependencies: ${error.message}`);
+  }
+}
 
 export async function handleDownload(req, res) {
   try {
@@ -55,38 +86,25 @@ export async function handleDownload(req, res) {
       return await generateSimplePDF(req, res, locator);
     }
 
-    // Para modo completo, validar funciones importadas
-    if (!drawSeatPage || typeof drawSeatPage !== 'function') {
-      console.error('❌ [DOWNLOAD] drawSeatPage no está disponible o no es una función');
-      console.error('❌ [DOWNLOAD] drawSeatPage type:', typeof drawSeatPage);
+    // Para modo completo, cargar dependencias de PDF dinámicamente
+    try {
+      console.log('📦 [DOWNLOAD] Cargando dependencias de PDF...');
+      await loadPdfDependencies();
+      console.log('✅ [DOWNLOAD] Dependencias de PDF cargadas correctamente');
+    } catch (depError) {
+      console.error('❌ [DOWNLOAD] Error cargando dependencias de PDF:', depError);
       if (!res.headersSent) {
         res.setHeader('Content-Type', 'application/json');
         return res.status(500).json({
           error: {
             code: '500',
-            message: 'Server configuration error - drawSeatPage function not available'
+            message: 'Server configuration error - Failed to load PDF dependencies',
+            details: depError.message
           }
         });
       }
       return;
     }
-
-    if (!loadEventImages || typeof loadEventImages !== 'function') {
-      console.error('❌ [DOWNLOAD] loadEventImages no está disponible o no es una función');
-      console.error('❌ [DOWNLOAD] loadEventImages type:', typeof loadEventImages);
-      if (!res.headersSent) {
-        res.setHeader('Content-Type', 'application/json');
-        return res.status(500).json({
-          error: {
-            code: '500',
-            message: 'Server configuration error - loadEventImages function not available'
-          }
-        });
-      }
-      return;
-    }
-
-    console.log('✅ [DOWNLOAD] Funciones importadas correctamente');
 
     // Para modo completo, validar configuración
     const config = getConfig();
@@ -597,6 +615,14 @@ async function generateSimplePDF(req, res, locator) {
   try {
     console.log('📄 [DOWNLOAD-SIMPLE] Iniciando generación de PDF simple...');
     console.log('📄 [DOWNLOAD-SIMPLE] Locator:', locator);
+    
+    // Cargar dependencias de PDF dinámicamente
+    const { PDFDocument: PDFDoc, rgb: rgbFunc, StandardFonts: Fonts } = await loadPdfDependencies();
+    const PDFDocument = PDFDoc;
+    const rgb = rgbFunc;
+    const StandardFonts = Fonts;
+    console.log('✅ [DOWNLOAD-SIMPLE] Dependencias de PDF cargadas correctamente');
+    
     console.log('📄 [DOWNLOAD-SIMPLE] PDFDocument disponible:', typeof PDFDocument);
     console.log('📄 [DOWNLOAD-SIMPLE] StandardFonts disponible:', typeof StandardFonts);
     console.log('📄 [DOWNLOAD-SIMPLE] rgb disponible:', typeof rgb);
@@ -773,6 +799,15 @@ async function generateSimplePDF(req, res, locator) {
 export async function createTicketPdfBuffer(payment, locator, extra = {}) {
   try {
     console.log('📄 [PDF] Generando PDF en memoria para el pago:', payment.id);
+
+    // Cargar dependencias de PDF dinámicamente
+    const deps = await loadPdfDependencies();
+    const { PDFDocument: PDFDoc, rgb: rgbFunc, StandardFonts: Fonts, drawSeatPage: drawPage, loadEventImages: loadImages } = deps;
+    const PDFDocument = PDFDoc;
+    const rgb = rgbFunc;
+    const StandardFonts = Fonts;
+    const drawSeatPage = drawPage;
+    const loadEventImages = loadImages;
 
     const { supabaseAdmin: providedSupabaseAdmin, ...pdfExtras } = extra || {};
     const supabaseAdmin = providedSupabaseAdmin || getSupabaseAdmin();
