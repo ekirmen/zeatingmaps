@@ -205,20 +205,58 @@ class SeatLocatorService {
       const transaction = await this.fetchTransactionRecord(locator);
       if (!transaction) return null;
 
-      const { data: seats, error: seatsError } = await supabase
+      // Intentar obtener asientos desde seat_locks primero
+      let seats = [];
+      const { data: seatsFromLocks, error: seatsError } = await supabase
         .from('seat_locks')
         .select(
           'id, seat_id, table_id, funcion_id, locked_at, expires_at, status, lock_type, created_at, tenant_id, locator, user_id, updated_at, zona_id, zona_nombre, session_id, precio, metadata'
         )
         .eq('locator', locator);
 
-      if (seatsError) {
-        console.warn('Error fetching seats by locator during fallback:', seatsError);
+      if (!seatsError && Array.isArray(seatsFromLocks) && seatsFromLocks.length > 0) {
+        seats = seatsFromLocks;
+      } else if (seatsError) {
+        console.warn('Error fetching seats from seat_locks by locator:', seatsError);
+      }
+
+      // Si no hay asientos en seat_locks, intentar parsear desde transaction.seats
+      if (seats.length === 0 && transaction.seats) {
+        try {
+          let parsedSeats = [];
+          if (Array.isArray(transaction.seats)) {
+            parsedSeats = transaction.seats;
+          } else if (typeof transaction.seats === 'string') {
+            parsedSeats = JSON.parse(transaction.seats);
+          }
+          
+          // Normalizar los asientos para que tengan la misma estructura que seat_locks
+          if (Array.isArray(parsedSeats) && parsedSeats.length > 0) {
+            seats = parsedSeats.map((seat, index) => ({
+              id: seat.id || seat._id || `seat-${index}`,
+              seat_id: seat.seat_id || seat.id || seat._id || seat.sillaId || `seat-${index}`,
+              table_id: seat.table_id || seat.mesa_id || seat.mesaId || seat.mesa?.id || seat.mesa || null,
+              zona_id: seat.zona_id || seat.zonaId || seat.zona?.id || null,
+              zona_nombre: seat.zona_nombre || seat.zonaNombre || seat.zona?.nombre || seat.zona || null,
+              precio: seat.precio || seat.price || null,
+              status: seat.status || 'vendido',
+              funcion_id: transaction.funcion_id || null,
+              locator: transaction.locator || locator,
+              user_id: transaction.user_id || null,
+              tenant_id: transaction.tenant_id || null,
+              metadata: seat.metadata || {}
+            }));
+            console.log(`✅ [seatLocatorService] Obtenidos ${seats.length} asientos desde transaction.seats`);
+          }
+        } catch (parseError) {
+          console.warn('Error parseando asientos desde transaction.seats:', parseError);
+        }
       }
 
       return {
         transaction,
         seats: Array.isArray(seats) ? seats : [],
+        event: null // Se puede agregar más adelante si es necesario
       };
     } catch (fallbackError) {
       console.error('Error getting transaction with seats using fallback logic:', fallbackError);

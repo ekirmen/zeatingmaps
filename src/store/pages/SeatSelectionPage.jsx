@@ -176,78 +176,77 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           console.warn('Error precargando módulos:', err);
         });
 
-        setMapLoadProgress(20);
+        setMapLoadProgress(15);
 
-        // Cargar datos del mapa y función en paralelo con precarga de módulos
-        const [funcionResult] = await Promise.all([
-          supabase
-            .from('funciones')
-            .select('sala_id, plantilla')
-            .eq('id', funcionNumeric)
-            .single(),
-          preloadModules // Precargar módulos en paralelo (no necesitamos el resultado)
-        ]);
+        // Cargar función y precargar módulos en paralelo
+        const funcionQuery = supabase
+          .from('funciones')
+          .select('sala_id, plantilla')
+          .eq('id', funcionNumeric)
+          .single();
 
-        setMapLoadProgress(40);
+        // Iniciar ambas operaciones en paralelo (no esperamos preloadModules)
+        const funcionResult = await funcionQuery;
+        preloadModules.catch(() => {}); // Precargar en segundo plano
+
+        setMapLoadProgress(30);
 
         const { data: funcion, error: funcionError } = funcionResult;
         if (funcionError) throw funcionError;
 
-        // Obtener mapa
+        // Cargar mapa y plantilla en paralelo
         setMapLoadStage('cargandoMapa');
-        setMapLoadProgress(50);
+        setMapLoadProgress(40);
         
-        const { data: mapaData, error: mapaError } = await supabase
+        const mapaQuery = supabase
           .from('mapas')
           .select('*')
           .eq('sala_id', funcion.sala_id)
           .eq('estado', 'active')
           .single();
 
-        if (mapaError) throw mapaError;
-
-        setMapLoadProgress(70);
-        setMapa(mapaData);
-
-        // Cargar plantilla de precios
-        setMapLoadStage('cargandoPrecios');
-        setMapLoadProgress(80);
-        
-        let plantillaData = null;
-        if (funcion.plantilla) {
-          // Si plantilla es un número (ID), cargar la plantilla desde la tabla
-          if (typeof funcion.plantilla === 'number') {
-            const { data: plantilla, error: plantillaError } = await supabase
+        const plantillaQuery = funcion.plantilla && typeof funcion.plantilla === 'number'
+          ? supabase
               .from('plantillas')
               .select('*')
               .eq('id', funcion.plantilla)
-              .maybeSingle();
-            
-            if (!plantillaError && plantilla) {
-              plantillaData = plantilla;
-            }
-          } else {
-            // Si plantilla ya es un objeto, usarlo directamente
-            plantillaData = funcion.plantilla;
-          }
-        }
-        setPlantillaPrecios(plantillaData);
-        setMapLoadProgress(90);
+              .maybeSingle()
+          : Promise.resolve({ data: funcion.plantilla || null, error: null });
+
+        // Cargar mapa y plantilla en paralelo para reducir tiempo total
+        const [mapaResult, plantillaResult] = await Promise.all([
+          mapaQuery,
+          plantillaQuery
+        ]);
+
+        setMapLoadProgress(75);
+
+        const { data: mapaData, error: mapaError } = mapaResult;
+        if (mapaError) throw mapaError;
+
+        setMapa(mapaData);
+        setMapLoadProgress(85);
+
+        // Procesar plantilla
+        setMapLoadStage('cargandoPrecios');
+        const { data: plantillaData } = plantillaResult;
+        setPlantillaPrecios(plantillaData || null);
+        
+        setMapLoadProgress(95);
         setMapLoadStage('finalizando');
         
-        // Pequeño delay para mostrar el 100%
+        // Mostrar 100% inmediatamente
+        setMapLoadProgress(100);
+        
+        // Ocultar loading rápidamente después de mostrar 100%
         setTimeout(() => {
-          setMapLoadProgress(100);
-        }, 200);
+          setLoading(false);
+        }, 100);
       } catch (err) {
         console.error('Error cargando mapa:', err);
         setError(err.message);
         setMapLoadProgress(0);
-      } finally {
-        // Esperar un poco antes de ocultar el loading para que se vea el progreso completo
-        setTimeout(() => {
-          setLoading(false);
-        }, 300);
+        setLoading(false);
       }
     };
 

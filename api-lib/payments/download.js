@@ -1099,14 +1099,44 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
         }
       }
     }
+    
+    // Asegurarse de que seats es un array
+    if (!Array.isArray(seats)) {
+      console.warn('⚠️ [PDF] seats no es un array, inicializando como array vacío');
+      seats = [];
+    }
+    
+    console.log(`📄 [PDF] Asientos parseados: ${seats.length} asiento(s)`);
 
     // Si se proporciona seatIndex, filtrar para generar solo ese asiento
-    const seatIndex = extra?.seatIndex !== null && extra?.seatIndex !== undefined ? parseInt(extra.seatIndex, 10) : null;
-    if (seatIndex !== null && !isNaN(seatIndex) && seatIndex >= 0 && seatIndex < seats.length) {
-      console.log(`📄 [PDF] Generando PDF solo para el asiento en el índice ${seatIndex} (0-based)`);
-      seats = [seats[seatIndex]]; // Solo el asiento seleccionado
-    } else if (seatIndex !== null) {
-      console.warn(`⚠️ [PDF] seatIndex ${seatIndex} inválido (rango: 0-${seats.length - 1}), generando todos los asientos`);
+    let requestedSeatIndex = null;
+    if (extra?.seatIndex !== null && extra?.seatIndex !== undefined && extra?.seatIndex !== '') {
+      const seatIndexStr = String(extra.seatIndex).trim();
+      if (seatIndexStr !== '') {
+        requestedSeatIndex = parseInt(seatIndexStr, 10);
+        if (isNaN(requestedSeatIndex)) {
+          console.warn(`⚠️ [PDF] seatIndex no es un número: ${extra.seatIndex}, generando todos los asientos`);
+          requestedSeatIndex = null;
+        } else if (requestedSeatIndex < 0) {
+          console.warn(`⚠️ [PDF] seatIndex negativo: ${requestedSeatIndex}, generando todos los asientos`);
+          requestedSeatIndex = null;
+        } else if (seats.length === 0) {
+          console.warn(`⚠️ [PDF] No hay asientos disponibles, no se puede generar PDF para seatIndex ${requestedSeatIndex}`);
+          requestedSeatIndex = null;
+        } else if (requestedSeatIndex >= seats.length) {
+          console.warn(`⚠️ [PDF] seatIndex ${requestedSeatIndex} fuera de rango (rango: 0-${seats.length - 1}), generando todos los asientos`);
+          requestedSeatIndex = null;
+        } else {
+          console.log(`📄 [PDF] Generando PDF solo para el asiento en el índice ${requestedSeatIndex} (0-based) de ${seats.length} asientos`);
+          const selectedSeat = seats[requestedSeatIndex];
+          if (selectedSeat) {
+            seats = [selectedSeat]; // Solo el asiento seleccionado
+          } else {
+            console.warn(`⚠️ [PDF] No se encontró asiento en el índice ${requestedSeatIndex}, generando todos los asientos`);
+            requestedSeatIndex = null;
+          }
+        }
+      }
     }
 
     if (seats.length === 0) {
@@ -1324,9 +1354,9 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
       // Si se está generando un solo asiento, currentPage será el índice real + 1, totalPages será el total original
       // Si se están generando todos, currentPage será el índice real (1-based)
       let currentPage, displayTotalPages;
-      if (seatIndex !== null && !isNaN(seatIndex)) {
+      if (requestedSeatIndex !== null && !isNaN(requestedSeatIndex)) {
         // Generando solo un asiento: mostrar "ENTRADA X DE Y" donde X es el índice real + 1, Y es el total original
-        currentPage = seatIndex + 1; // seatIndex es 0-based, currentPage es 1-based
+        currentPage = requestedSeatIndex + 1; // requestedSeatIndex es 0-based, currentPage es 1-based
         displayTotalPages = originalSeatsCount || totalPages;
       } else {
         // Generando todos los asientos: usar índice real
@@ -1400,9 +1430,9 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
 
     const buffer = Buffer.from(pdfBytes);
     // Si se generó un solo asiento, incluir el número en el nombre del archivo
-    const seatIndex = extra?.seatIndex !== null && extra?.seatIndex !== undefined ? parseInt(extra.seatIndex, 10) : null;
-    const filename = seatIndex !== null && !isNaN(seatIndex) 
-      ? `ticket-${locator}-asiento-${seatIndex + 1}.pdf`
+    // Usar requestedSeatIndex que ya está definido arriba
+    const filename = requestedSeatIndex !== null && !isNaN(requestedSeatIndex) 
+      ? `ticket-${locator}-asiento-${requestedSeatIndex + 1}.pdf`
       : `tickets-${locator}.pdf`;
 
     return {

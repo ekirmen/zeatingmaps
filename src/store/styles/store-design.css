@@ -177,14 +177,15 @@
    ============================================ */
 
 .store-header {
-  background: var(--store-header-bg, var(--store-primary));
-  box-shadow: var(--store-shadow-sm);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--store-header-text, var(--store-text-inverse));
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: var(--store-shadow-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   position: sticky;
   top: 0;
   z-index: var(--store-z-sticky);
   transition: var(--store-transition-all);
+  backdrop-filter: blur(10px);
 }
 
 .store-header.scrolled {
@@ -206,7 +207,7 @@
 .store-header .logo {
   font-size: var(--store-font-size-xl);
   font-weight: 700;
-  color: var(--store-text-inverse) !important;
+  color: #ffffff !important;
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -215,7 +216,7 @@
 }
 
 .store-header .logo:hover {
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
   transform: translateY(-1px);
 }
 
@@ -251,14 +252,22 @@
 }
 
 .store-header .nav a {
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: #ffffff !important;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   font-size: var(--store-font-size-sm);
   padding: var(--store-space-2) var(--store-space-4);
   border-radius: var(--store-radius-lg);
   transition: var(--store-transition-all);
   position: relative;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.store-header .nav a:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff !important;
+  transform: translateY(-1px);
 }
 
 .store-header .nav a::after {
@@ -1572,35 +1581,40 @@
 
 /* Header buttons improved */
 .store-header .store-button-primary {
-  background: linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%);
-  border: none;
-  color: white;
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
   font-weight: 600;
   padding: 10px 20px;
   border-radius: 8px;
   transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .store-header .store-button-primary:hover {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.6);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .store-header .store-button-outline {
-  background: transparent;
-  border: 2px solid white;
-  color: white;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
   font-weight: 600;
   padding: 10px 20px;
   border-radius: 8px;
   transition: all 0.3s;
+  backdrop-filter: blur(5px);
 }
 
 .store-header .store-button-outline:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.25);
   border-color: rgba(255, 255, 255, 0.8);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .store-header .mobile-action-btn {

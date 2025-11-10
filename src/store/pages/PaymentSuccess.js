@@ -51,9 +51,28 @@ const PaymentSuccess = () => {
         const transactionWithSeats = await seatLocatorService.getTransactionWithSeats(locator);
 
         if (transactionWithSeats?.transaction) {
+          // Parsear asientos si vienen como string
+          let seats = transactionWithSeats.seats || [];
+          if (transactionWithSeats.transaction.seats) {
+            try {
+              if (typeof transactionWithSeats.transaction.seats === 'string') {
+                seats = JSON.parse(transactionWithSeats.transaction.seats);
+              } else if (Array.isArray(transactionWithSeats.transaction.seats)) {
+                seats = transactionWithSeats.transaction.seats;
+              }
+            } catch (e) {
+              console.warn('Error parseando asientos desde transaction:', e);
+              // Usar seats de transactionWithSeats si hay error
+              seats = transactionWithSeats.seats || [];
+            }
+          }
+          
+          console.log('📋 [PaymentSuccess] Asientos obtenidos:', seats);
+          console.log('📋 [PaymentSuccess] Número de asientos:', seats.length);
+          
           setPaymentDetails({
             ...transactionWithSeats.transaction,
-            seats: transactionWithSeats.seats || []
+            seats: seats
           });
           
           // Verificar si el evento tiene wallet habilitado
@@ -238,51 +257,84 @@ const PaymentSuccess = () => {
           </div>
         )}
         
-        {!isReservation && paymentDetails?.seats && paymentDetails.seats.length > 0 && (
+        {!isReservation && paymentDetails && (
           <div className="my-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Asientos Seleccionados</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              {paymentDetails.seats.map((seat, index) => (
-                <div key={seat.seat_id || seat.id || index} className="bg-gray-50 p-4 rounded-lg border">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        Asiento {index + 1}: {seat.seat_id || seat.id || `Asiento ${index + 1}`}
-                      </p>
-                      {seat.table_id && (
-                        <p className="text-sm text-gray-600">
-                          Mesa: {seat.table_id}
-                        </p>
-                      )}
-                      {seat.zona && (
-                        <p className="text-sm text-gray-600">
-                          Zona: {seat.zona}
-                        </p>
-                      )}
-                      <p className="text-sm text-gray-500">
-                        Estado: {seat.status || 'Confirmado'}
-                      </p>
-                    </div>
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                      Confirmado
-                    </span>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        await downloadTicket(locator, null, 'web', index);
-                      } catch (error) {
-                        console.error('Error descargando asiento individual:', error);
-                      }
-                    }}
-                    className="w-full mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-                  >
-                    <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
-                    Descargar Asiento {index + 1}
-                  </button>
+            {paymentDetails.seats && Array.isArray(paymentDetails.seats) && paymentDetails.seats.length > 0 ? (
+              <>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Asientos Seleccionados ({paymentDetails.seats.length})</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {paymentDetails.seats.map((seat, index) => {
+                    const seatId = seat.seat_id || seat.id || seat._id || `seat-${index}`;
+                    const zonaNombre = seat.zona_nombre || seat.zonaNombre || seat.zona?.nombre || seat.zona || null;
+                    const mesaId = seat.table_id || seat.mesa_id || seat.mesaId || seat.mesa?.id || seat.mesa || null;
+                    const filaNombre = seat.fila_nombre || seat.filaNombre || seat.fila?.nombre || seat.fila || seat.row || null;
+                    
+                    return (
+                      <div key={seatId || index} className="bg-gray-50 p-4 rounded-lg border">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900 mb-1">
+                              Asiento {index + 1}
+                            </p>
+                            <p className="text-sm text-gray-700 font-mono">
+                              ID: {seatId}
+                            </p>
+                            {zonaNombre && (
+                              <p className="text-sm text-gray-600 mt-1">
+                                Zona: {zonaNombre}
+                              </p>
+                            )}
+                            {mesaId && (
+                              <p className="text-sm text-gray-600">
+                                Mesa: {mesaId}
+                              </p>
+                            )}
+                            {filaNombre && (
+                              <p className="text-sm text-gray-600">
+                                Fila: {filaNombre}
+                              </p>
+                            )}
+                            {seat.precio && (
+                              <p className="text-sm text-gray-600 font-semibold mt-1">
+                                Precio: ${seat.precio}
+                              </p>
+                            )}
+                          </div>
+                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded ml-2">
+                            Confirmado
+                          </span>
+                        </div>
+                        <button
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            try {
+                              console.log(`📥 [PaymentSuccess] Descargando asiento ${index + 1} (índice ${index})`);
+                              await downloadTicket(locator, null, 'web', index);
+                            } catch (error) {
+                              console.error('Error descargando asiento individual:', error);
+                              toast.error('Error al descargar el asiento');
+                            }
+                          }}
+                          className="w-full mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                        >
+                          <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
+                          Descargar Asiento {index + 1}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <p className="text-sm text-yellow-700">
+                  <strong>Nota:</strong> No se encontraron asientos para esta transacción. 
+                  {paymentDetails.status === 'completed' || paymentDetails.status === 'pagado' 
+                    ? ' Contacta con soporte si necesitas ayuda.' 
+                    : ' Los asientos aparecerán cuando el pago esté completo.'}
+                </p>
+              </div>
+            )}
           </div>
         )}
 

@@ -852,6 +852,119 @@ const SeatingMapUnified = ({
 
 
 
+  // Estado para gestos táctiles (zoom con pellizco)
+  const touchStateRef = useRef({
+    lastDistance: 0,
+    lastCenter: null,
+    isPinching: false
+  });
+
+  // Función para calcular distancia entre dos puntos táctiles
+  const getDistance = useCallback((touch1, touch2) => {
+    const dx = touch2.clientX - touch1.clientX;
+    const dy = touch2.clientY - touch1.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }, []);
+
+  // Función para calcular el centro entre dos puntos táctiles
+  const getCenter = useCallback((touch1, touch2) => {
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2
+    };
+  }, []);
+
+  // Función para manejar gestos táctiles (zoom con pellizco)
+  const handleTouchStart = useCallback((e) => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const touches = e.evt.touches;
+    if (touches && touches.length === 2) {
+      e.evt.preventDefault();
+      const touch1 = touches[0];
+      const touch2 = touches[1];
+      const distance = getDistance(touch1, touch2);
+      const center = getCenter(touch1, touch2);
+      
+      // Convertir coordenadas de pantalla a coordenadas del stage
+      const stageBox = stage.container().getBoundingClientRect();
+      const centerPoint = {
+        x: center.x - stageBox.left,
+        y: center.y - stageBox.top
+      };
+      
+      touchStateRef.current = {
+        lastDistance: distance,
+        lastCenter: centerPoint,
+        isPinching: true
+      };
+    }
+  }, [getDistance, getCenter]);
+
+  // Función para manejar el movimiento de gestos táctiles
+  const handleTouchMove = useCallback((e) => {
+    const stage = stageRef.current;
+    if (!stage || !touchStateRef.current.isPinching) return;
+
+    const touches = e.evt.touches;
+    if (touches && touches.length === 2) {
+      e.evt.preventDefault();
+      const touch1 = touches[0];
+      const touch2 = touches[1];
+      const distance = getDistance(touch1, touch2);
+      const center = getCenter(touch1, touch2);
+      
+      // Convertir coordenadas de pantalla a coordenadas del stage
+      const stageBox = stage.container().getBoundingClientRect();
+      const centerPoint = {
+        x: center.x - stageBox.left,
+        y: center.y - stageBox.top
+      };
+      
+      const { lastDistance, lastCenter } = touchStateRef.current;
+      
+      if (lastDistance > 0 && lastCenter) {
+        const scaleChange = distance / lastDistance;
+        const oldScale = stage.scaleX();
+        const newScale = Math.max(0.3, Math.min(3, oldScale * scaleChange));
+        
+        // Calcular el punto en el stage antes del zoom
+        const pointer = {
+          x: (centerPoint.x - stage.x()) / oldScale,
+          y: (centerPoint.y - stage.y()) / oldScale
+        };
+        
+        // Aplicar el zoom
+        stage.scale({ x: newScale, y: newScale });
+        
+        // Ajustar la posición para mantener el punto centrado
+        const newPos = {
+          x: centerPoint.x - pointer.x * newScale,
+          y: centerPoint.y - pointer.y * newScale
+        };
+        
+        stage.position(newPos);
+        stage.batchDraw();
+      }
+      
+      touchStateRef.current.lastDistance = distance;
+      touchStateRef.current.lastCenter = centerPoint;
+    }
+  }, [getDistance, getCenter]);
+
+  // Función para manejar el fin de gestos táctiles
+  const handleTouchEnd = useCallback((e) => {
+    const touches = e.evt.touches;
+    if (!touches || touches.length < 2) {
+      touchStateRef.current = {
+        lastDistance: 0,
+        lastCenter: null,
+        isPinching: false
+      };
+    }
+  }, []);
+
   // Función para manejar el zoom del mapa (con debounce para mejor performance)
   const handleWheelInternal = useCallback((e) => {
     e.evt.preventDefault();
@@ -1119,6 +1232,9 @@ const SeatingMapUnified = ({
             margin: '0 auto'
           }}
           onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           draggable
           ref={stageRef}
         >
