@@ -88,7 +88,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     const tenantData = pdfExtras?.tenantData || null;
     const buyerProfile = pdfExtras?.buyerProfile || null;
     
-    // Generar QR code único para este asiento
+    // Generar QR code único para este asiento (usando errorCorrectionLevel: 'L' para modelo más simple)
     let qrImageBytes = null;
     try {
       const qrData = JSON.stringify({
@@ -101,7 +101,8 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         type: 'image/png',
         width: 200,
         margin: 1,
-        color: { dark: '#000000', light: '#FFFFFF' }
+        color: { dark: '#000000', light: '#FFFFFF' },
+        errorCorrectionLevel: 'L' // Nivel de corrección bajo (modelo más simple, más fácil de escanear)
       });
     } catch (qrError) {
       console.error(`❌ [PDF] Error generando código QR:`, qrError);
@@ -154,7 +155,61 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     leftY -= (titleLines.length > 4 ? 4 * 18 : titleLines.length * 18);
     leftY -= 20;
     
-    // Información del recinto en texto
+    // FECHA, HORA, IMPORTE del lado izquierdo (debajo del título del evento)
+    const funcion = pdfExtras?.funcionData || payment?.funcion || null;
+    
+    if (funcion?.fecha_celebracion) {
+      try {
+        const fechaCelebracion = new Date(funcion.fecha_celebracion);
+        const fecha = fechaCelebracion.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit',
+          timeZone: 'UTC'
+        });
+        const hora = fechaCelebracion.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'UTC',
+          hour12: false
+        });
+        
+        // FECHA: 04/11/25 (lado izquierdo)
+        page.drawText(`FECHA: ${fecha}`, {
+          x: leftX,
+          y: leftY,
+          size: 11,
+          color: rgb(0, 0, 0),
+          font: helveticaFont,
+        });
+        leftY -= 18;
+        
+        // HORA: 16:00 (lado izquierdo)
+        page.drawText(`HORA: ${hora}`, {
+          x: leftX,
+          y: leftY,
+          size: 11,
+          color: rgb(0, 0, 0),
+          font: helveticaFont,
+        });
+        leftY -= 18;
+      } catch (dateError) {
+        console.warn('⚠️ [PDF-PAGE] Error procesando fecha:', dateError);
+      }
+    }
+    
+    // IMPORTE: $5.00 (lado izquierdo)
+    const montoNum = Number(payment.monto || payment.amount || 0);
+    page.drawText(`IMPORTE: $${montoNum.toFixed(2)}`, {
+      x: leftX,
+      y: leftY,
+      size: 11,
+      color: rgb(0, 0, 0),
+      font: helveticaFont,
+    });
+    leftY -= 25;
+    
+    // Información del recinto en texto (después de FECHA, HORA, IMPORTE)
     if (venueData?.nombre) {
       page.drawText(cleanTextForPDF(venueData.nombre), {
         x: leftX,
@@ -193,7 +248,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     
     leftY -= 10;
     
-    // Código QR para ubicación del recinto (debajo de la información del recinto)
+    // Código QR para ubicación del recinto (con borde)
     if (venueData && (venueData.latitud && venueData.longitud || venueData.direccion)) {
       try {
         // Generar URL de Google Maps (direcciones)
@@ -215,18 +270,32 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
             type: 'image/png',
             width: 120,
             margin: 1,
-            color: { dark: '#000000', light: '#FFFFFF' }
+            color: { dark: '#000000', light: '#FFFFFF' },
+            errorCorrectionLevel: 'L' // Modelo más simple
           });
           
           const locationQrImage = await pdfDoc.embedPng(locationQrBytes);
           const locationQrSize = 100;
+          const locationQrPadding = 5; // Padding para el borde
+          const locationQrTotalSize = locationQrSize + (locationQrPadding * 2);
           const locationQrX = leftX;
-          const locationQrY = leftY - locationQrSize - 10;
+          const locationQrY = leftY - locationQrTotalSize - 10;
           
-          // Dibujar QR de ubicación
-          page.drawImage(locationQrImage, {
+          // Dibujar borde gris alrededor del QR de ubicación
+          page.drawRectangle({
             x: locationQrX,
             y: locationQrY,
+            width: locationQrTotalSize,
+            height: locationQrTotalSize,
+            borderColor: rgb(0.6, 0.6, 0.6),
+            borderWidth: 1.5,
+            color: rgb(1, 1, 1), // Fondo blanco
+          });
+          
+          // Dibujar QR de ubicación dentro del borde
+          page.drawImage(locationQrImage, {
+            x: locationQrX + locationQrPadding,
+            y: locationQrY + locationQrPadding,
             width: locationQrSize,
             height: locationQrSize,
           });
@@ -268,44 +337,9 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       }
     }
     
-    // Información de la empresa (en lugar de KREATICKETS, arriba de términos)
-    let companyInfoY = middleImageY - 20;
-    if (tenantData) {
-      if (tenantData.company_name) {
-        page.drawText(cleanTextForPDF(tenantData.company_name), {
-          x: leftX,
-          y: companyInfoY,
-          size: 10,
-          color: rgb(0, 0, 0),
-          font: helveticaBold,
-        });
-        companyInfoY -= 14;
-      }
-      // Eliminar correo - solo teléfono
-      if (tenantData.contact_phone) {
-        page.drawText(cleanTextForPDF(tenantData.contact_phone), {
-          x: leftX,
-          y: companyInfoY,
-          size: 9,
-          color: rgb(0.3, 0.3, 0.3),
-          font: helveticaFont,
-        });
-        companyInfoY -= 12;
-      }
-    } else {
-      // Fallback a KREATICKETS si no hay información del tenant
-      page.drawText('KREATICKETS', {
-        x: leftX,
-        y: companyInfoY,
-        size: 10,
-        color: rgb(0, 0, 0),
-        font: helveticaBold,
-      });
-      companyInfoY -= 14;
-    }
-    
-    // Términos y Condiciones (abajo, ajustados para no pasar de la mitad de la hoja)
-    const termsStartY = bottomMargin + 180;
+    // Términos y Condiciones (alargados hasta casi la mitad de la hoja)
+    // Calcular posición para términos (debajo de la imagen del medio)
+    const termsStartY = middleImageY - 20;
     page.drawText('TERMINOS Y CONDICIONES', {
       x: leftX,
       y: termsStartY,
@@ -323,13 +357,14 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       '6.- Al adquirir este tickets el cliente acepta nuestros terminos y condiciones.'
     ];
     
-    // Calcular el ancho máximo de texto para que no se pase de la mitad (leftColumnWidth)
-    // Aproximadamente 6 puntos por carácter para tamaño 8
-    const maxCharsPerLine = Math.floor(leftColumnWidth / 6);
+    // Calcular el ancho máximo de texto para que llegue hasta casi la mitad (hasta dividerX - 10)
+    const termsMaxWidth = dividerX - leftX - 10; // Casi hasta la mitad
+    // Aproximadamente 5.5 puntos por carácter para tamaño 8
+    const maxCharsPerLine = Math.floor(termsMaxWidth / 5.5);
     
     let termsYPos = termsStartY - 15;
     terms.forEach(term => {
-      // Dividir el término en líneas si es muy largo para que quepa en la columna izquierda
+      // Dividir el término en líneas para que quepa hasta casi la mitad
       const termLines = wrapText(cleanTextForPDF(term), maxCharsPerLine);
       termLines.forEach((line, lineIndex) => {
         page.drawText(line, {
@@ -343,6 +378,39 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       });
       termsYPos -= 2; // Espaciado adicional entre términos
     });
+    
+    // Información de la empresa (lo más abajo posible)
+    const companyInfoY = bottomMargin + 30;
+    if (tenantData) {
+      if (tenantData.company_name) {
+        page.drawText(cleanTextForPDF(tenantData.company_name), {
+          x: leftX,
+          y: companyInfoY,
+          size: 10,
+          color: rgb(0, 0, 0),
+          font: helveticaBold,
+        });
+      }
+      // Eliminar correo - solo teléfono
+      if (tenantData.contact_phone) {
+        page.drawText(cleanTextForPDF(tenantData.contact_phone), {
+          x: leftX,
+          y: companyInfoY - 14,
+          size: 9,
+          color: rgb(0.3, 0.3, 0.3),
+          font: helveticaFont,
+        });
+      }
+    } else {
+      // Fallback a KREATICKETS si no hay información del tenant
+      page.drawText('KREATICKETS', {
+        x: leftX,
+        y: companyInfoY,
+        size: 10,
+        color: rgb(0, 0, 0),
+        font: helveticaBold,
+      });
+    }
     
     // ==========================================
     // COLUMNA DERECHA - STUB/ENTRADA
@@ -362,32 +430,23 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     });
     rightY -= 30;
     
-    // Nombre y apellido del comprador (formato: NOMBRE: y APELLIDO:)
-    if (buyerProfile) {
-      if (buyerProfile.nombre) {
-        page.drawText(`NOMBRE: ${cleanTextForPDF(buyerProfile.nombre)}`, {
+    // COMPRADOR (nombre y apellido unidos)
+    if (buyerProfile && (buyerProfile.nombre || buyerProfile.apellido)) {
+      const buyerFullName = `${cleanTextForPDF(buyerProfile.nombre || '')} ${cleanTextForPDF(buyerProfile.apellido || '')}`.trim();
+      if (buyerFullName) {
+        page.drawText(`COMPRADOR: ${buyerFullName}`, {
           x: rightX,
           y: rightY,
           size: 11,
           color: rgb(0, 0, 0),
           font: helveticaBold,
         });
-        rightY -= 18;
-      }
-      if (buyerProfile.apellido) {
-        page.drawText(`APELLIDO: ${cleanTextForPDF(buyerProfile.apellido)}`, {
-          x: rightX,
-          y: rightY,
-          size: 11,
-          color: rgb(0, 0, 0),
-          font: helveticaBold,
-        });
-        rightY -= 18;
+        rightY -= 20;
       }
     }
     rightY -= 5;
     
-    // Localizador (a la derecha, arriba de fecha/hora/tipo)
+    // Localizador (a la derecha)
     const locatorText = `Localizador: ${cleanTextForPDF(payment.locator || locator || '')}`;
     page.drawText(locatorText, {
       x: rightX,
@@ -398,62 +457,9 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     });
     rightY -= 25;
     
-    // FECHA, HORA, TIPO (formato específico: FECHA: 04/11/25, HORA: 16:00, TIPO: ENTRADA)
-    const funcion = pdfExtras?.funcionData || payment?.funcion || null;
-    if (funcion?.fecha_celebracion) {
-      try {
-        const fechaCelebracion = new Date(funcion.fecha_celebracion);
-        const fecha = fechaCelebracion.toLocaleDateString('es-ES', {
-          day: '2-digit',
-          month: '2-digit',
-          year: '2-digit',
-          timeZone: 'UTC'
-        });
-        const hora = fechaCelebracion.toLocaleTimeString('es-ES', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'UTC',
-          hour12: false
-        });
-        
-        // FECHA: 04/11/25
-        page.drawText(`FECHA: ${fecha}`, {
-          x: rightX,
-          y: rightY,
-          size: 11,
-          color: rgb(0, 0, 0),
-          font: helveticaFont,
-        });
-        rightY -= 18;
-        
-        // HORA: 16:00
-        page.drawText(`HORA: ${hora}`, {
-          x: rightX,
-          y: rightY,
-          size: 11,
-          color: rgb(0, 0, 0),
-          font: helveticaFont,
-        });
-        rightY -= 18;
-        
-        // TIPO: ENTRADA
-        const tipoTicket = precioTxt && Number(precioTxt) === 0 ? 'CORTESIA' : 'ENTRADA';
-        page.drawText(`TIPO: ${tipoTicket}`, {
-          x: rightX,
-          y: rightY,
-          size: 11,
-          color: rgb(0, 0, 0),
-          font: helveticaFont,
-        });
-        rightY -= 18;
-      } catch (dateError) {
-        console.warn('⚠️ [PDF-PAGE] Error procesando fecha:', dateError);
-      }
-    }
-    
-    // IMPORTE: (abajo de TIPO:)
-    const montoNum = Number(payment.monto || payment.amount || 0);
-    page.drawText(`IMPORTE: $${montoNum.toFixed(2)}`, {
+    // TIPO: ENTRADA (en la columna derecha)
+    const tipoTicket = precioTxt && Number(precioTxt) === 0 ? 'CORTESIA' : 'ENTRADA';
+    page.drawText(`TIPO: ${tipoTicket}`, {
       x: rightX,
       y: rightY,
       size: 11,
@@ -462,7 +468,59 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     });
     rightY -= 25;
     
-    // Tabla de información del asiento (con borde y alargado)
+    // QR Code de validación (más arriba de la mitad de la hoja para evitar daños al doblar)
+    // Posicionar el QR justo después de TIPO, en la parte superior de la columna derecha
+    if (qrImageBytes) {
+      try {
+        const qrImage = await pdfDoc.embedPng(qrImageBytes);
+        const qrSize = 140;
+        const qrPadding = qrSize * 0.15; // 15% de separación
+        const qrTextPadding = qrSize * 0.05; // 5% para el texto
+        const qrTotalSize = qrSize + (qrPadding * 2);
+        const qrX = rightX + (rightColumnWidth / 2) - (qrTotalSize / 2);
+        // Posicionar el QR arriba, cerca de la mitad de la hoja pero en la parte superior de la columna derecha
+        // Colocarlo después de TIPO, pero lo más arriba posible para evitar dobleces
+        const qrY = rightY - qrTotalSize - 10;
+        
+        // Dibujar borde gris
+        page.drawRectangle({
+          x: qrX,
+          y: qrY,
+          width: qrTotalSize,
+          height: qrTotalSize,
+          borderColor: rgb(0.6, 0.6, 0.6),
+          borderWidth: 2,
+          color: rgb(1, 1, 1), // Fondo blanco
+        });
+        
+        // Dibujar QR code dentro del borde
+        page.drawImage(qrImage, {
+          x: qrX + qrPadding,
+          y: qrY + qrPadding,
+          width: qrSize,
+          height: qrSize,
+        });
+        
+        // Código alfanumérico debajo del QR (dentro del borde, al 5% desde abajo)
+        const codeText = cleanTextForPDF(alphanumericCode);
+        const codeWidth = helveticaFont.widthOfTextAtSize(codeText, 9);
+        const codeY = qrY + qrTextPadding;
+        page.drawText(codeText, {
+          x: qrX + (qrTotalSize / 2) - (codeWidth / 2),
+          y: codeY,
+          size: 9,
+          color: rgb(0.2, 0.2, 0.2),
+          font: helveticaFont,
+        });
+        
+        // Actualizar rightY para continuar con la tabla debajo del QR
+        rightY = qrY - 30;
+      } catch (qrError) {
+        console.error('❌ [PDF] Error embediendo QR:', qrError);
+      }
+    }
+    
+    // Tabla de información del asiento (con borde y alargado, debajo del QR)
     const tableHeaders = ['Zona', 'Fila', 'Asiento'];
     const tableValues = [
       cleanTextForPDF(zonaTxt || '-'),
@@ -529,52 +587,6 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       });
     });
     rightY = tableY - tableRowHeight - 30;
-    
-    // QR Code con borde gris (15% de separación, texto al 5%)
-    if (qrImageBytes) {
-      try {
-        const qrImage = await pdfDoc.embedPng(qrImageBytes);
-        const qrSize = 140;
-        const qrPadding = qrSize * 0.15; // 15% de separación
-        const qrTextPadding = qrSize * 0.05; // 5% para el texto
-        const qrTotalSize = qrSize + (qrPadding * 2);
-        const qrX = rightX + (rightColumnWidth / 2) - (qrTotalSize / 2);
-        const qrY = rightY - qrTotalSize - 10;
-        
-        // Dibujar borde gris
-        page.drawRectangle({
-          x: qrX,
-          y: qrY,
-          width: qrTotalSize,
-          height: qrTotalSize,
-          borderColor: rgb(0.6, 0.6, 0.6),
-          borderWidth: 2,
-          color: rgb(1, 1, 1), // Fondo blanco
-        });
-        
-        // Dibujar QR code dentro del borde
-        page.drawImage(qrImage, {
-          x: qrX + qrPadding,
-          y: qrY + qrPadding,
-          width: qrSize,
-          height: qrSize,
-        });
-        
-        // Código alfanumérico debajo del QR (dentro del borde, al 5% desde abajo)
-        const codeText = cleanTextForPDF(alphanumericCode);
-        const codeWidth = helveticaFont.widthOfTextAtSize(codeText, 9);
-        const codeY = qrY + qrTextPadding;
-        page.drawText(codeText, {
-          x: qrX + (qrTotalSize / 2) - (codeWidth / 2),
-          y: codeY,
-          size: 9,
-          color: rgb(0.2, 0.2, 0.2),
-          font: helveticaFont,
-        });
-      } catch (qrError) {
-        console.error('❌ [PDF] Error embediendo QR:', qrError);
-      }
-    }
     
     // Poster del evento en la parte inferior de la columna derecha (estirado hasta el final)
     if (eventImages.portada || eventImages.banner) {
