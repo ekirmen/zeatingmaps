@@ -7,15 +7,20 @@ import { getSupabaseAdmin } from './config.js';
  */
 async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData, pdfExtras, helveticaFont, helveticaBold, locator, currentPage = 1, totalPages = 1) {
   const { width, height } = page.getSize();
-  const downloadSource = pdfExtras.downloadSource || 'web'; // 'email' or 'web'
+  const downloadSource = pdfExtras?.downloadSource || 'web'; // 'email' or 'web'
   
-  // Obtener información del asiento
-  const seatId = seat.id || seat._id || seat.seatId || seat.seat_id || 'unknown';
-  const zonaTxt = seat.zonaNombre || seat.nombreZona || (seat.zona?.nombre) || (typeof seat.zona === 'string' ? seat.zona : null) || seat.zonaId || null;
-  const mesaTxt = seat.mesa || seat.table || seat.mesaNombre || (seat.mesa?.nombre) || (typeof seat.mesa === 'string' ? seat.mesa : null) || null;
-  const filaTxt = seat.fila || seat.row || seat.filaNombre || (seat.fila?.nombre) || (typeof seat.fila === 'string' ? seat.fila : null) || null;
-  const asientoTxt = seat.asiento || seat.seat || seat.asientoNombre || seat.nombre || seat.name || null;
-  const precioTxt = seat.price || seat.precio || null;
+  // Asegurar que eventImages es un objeto
+  if (!eventImages || typeof eventImages !== 'object') {
+    eventImages = {};
+  }
+  
+  // Obtener información del asiento con validaciones
+  const seatId = seat?.id || seat?._id || seat?.seatId || seat?.seat_id || 'unknown';
+  const zonaTxt = seat?.zonaNombre || seat?.nombreZona || (seat?.zona?.nombre) || (typeof seat?.zona === 'string' ? seat.zona : null) || seat?.zonaId || null;
+  const mesaTxt = seat?.mesa || seat?.table || seat?.mesaNombre || (seat?.mesa?.nombre) || (typeof seat?.mesa === 'string' ? seat.mesa : null) || null;
+  const filaTxt = seat?.fila || seat?.row || seat?.filaNombre || (seat?.fila?.nombre) || (typeof seat?.fila === 'string' ? seat.fila : null) || null;
+  const asientoTxt = seat?.asiento || seat?.seat || seat?.asientoNombre || seat?.nombre || seat?.name || null;
+  const precioTxt = seat?.price || seat?.precio || null;
 
   // Generar QR code único para este asiento
   console.log(`🖼️ [PDF] Generando código QR para asiento: ${seatId}`);

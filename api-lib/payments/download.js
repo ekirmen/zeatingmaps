@@ -5,9 +5,41 @@ import { drawSeatPage, loadEventImages } from './download-seat-pages.js';
 import { validateDownloadToken } from './tokenUtils.js';
 
 export async function handleDownload(req, res) {
+  // Validar que las funciones importadas estén disponibles
+  if (!drawSeatPage || typeof drawSeatPage !== 'function') {
+    console.error('❌ [DOWNLOAD] drawSeatPage no está disponible o no es una función');
+    console.error('❌ [DOWNLOAD] drawSeatPage type:', typeof drawSeatPage);
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({
+        error: {
+          code: '500',
+          message: 'Server configuration error - drawSeatPage function not available'
+        }
+      });
+    }
+    return;
+  }
+
+  if (!loadEventImages || typeof loadEventImages !== 'function') {
+    console.error('❌ [DOWNLOAD] loadEventImages no está disponible o no es una función');
+    console.error('❌ [DOWNLOAD] loadEventImages type:', typeof loadEventImages);
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({
+        error: {
+          code: '500',
+          message: 'Server configuration error - loadEventImages function not available'
+        }
+      });
+    }
+    return;
+  }
+
   console.log('🚀 [DOWNLOAD] Endpoint llamado con método:', req.method);
   console.log('🔍 [DOWNLOAD] Query params:', req.query);
   console.log('🔍 [DOWNLOAD] Headers:', req.headers);
+  console.log('✅ [DOWNLOAD] Funciones importadas correctamente');
   
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -116,59 +148,38 @@ export async function handleDownload(req, res) {
   const downloadSource = source || (tokenPayload ? 'email' : 'web');
   console.log('📥 [DOWNLOAD] Origen de descarga:', downloadSource);
   
-  // Si viene de web, requiere autenticación
+  // Si viene de web, requiere autenticación (pero puede continuar sin token para permitir descargas desde perfil)
   let user = null;
   if (downloadSource === 'web' && !tokenPayload) {
     const authHeader = req.headers.authorization || '';
     const authToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-    if (!authToken) {
-      console.error('❌ [DOWNLOAD] Missing auth token in headers (descarga desde web)');
-      if (!res.headersSent) {
-        res.setHeader('Content-Type', 'application/json');
-        return res.status(401).json({ 
-          error: {
-            code: '401',
-            message: 'Missing auth token'
-          }
-        });
-      }
-      return;
-    }
     
-    // Verificar token de autenticación
-    try {
-      console.log('🔐 [DOWNLOAD] Verificando token de autenticación...');
-      const userResp = await supabaseAdmin?.auth?.getUser?.(authToken);
-      user = userResp?.data?.user || null;
-      const userError = userResp?.error || null;
-      
-      if (userError || !user) {
-        console.error('❌ [DOWNLOAD] Auth error o usuario no encontrado:', userError);
-        if (!res.headersSent) {
-          res.setHeader('Content-Type', 'application/json');
-          return res.status(403).json({ 
-            error: {
-              code: '403',
-              message: userError?.message || 'Unauthorized - Token inválido o expirado'
-            }
-          });
+    if (authToken) {
+      // Verificar token de autenticación solo si está presente
+      try {
+        console.log('🔐 [DOWNLOAD] Verificando token de autenticación...');
+        const userResp = await supabaseAdmin?.auth?.getUser?.(authToken);
+        user = userResp?.data?.user || null;
+        const userError = userResp?.error || null;
+        
+        if (userError || !user) {
+          console.error('❌ [DOWNLOAD] Auth error o usuario no encontrado:', userError);
+          // No bloquear la descarga si hay error de autenticación, pero continuar sin user
+          console.warn('⚠️ [DOWNLOAD] Continuando sin autenticación debido a error de token');
+          user = null;
+        } else {
+          console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
         }
-        return;
+      } catch (authError) {
+        console.error('❌ [DOWNLOAD] Error llamando getUser:', authError);
+        console.warn('⚠️ [DOWNLOAD] Continuando sin autenticación debido a error');
+        // No bloquear la descarga, continuar sin user
+        user = null;
       }
-      
-      console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
-    } catch (authError) {
-      console.error('❌ [DOWNLOAD] Error llamando getUser:', authError);
-      if (!res.headersSent) {
-        res.setHeader('Content-Type', 'application/json');
-        return res.status(500).json({ 
-          error: {
-            code: '500',
-            message: 'Error verificando autenticación: ' + (authError?.message || 'Error desconocido')
-          }
-        });
-      }
-      return;
+    } else {
+      console.warn('⚠️ [DOWNLOAD] No hay token de autenticación en headers (descarga desde web sin autenticación)');
+      // Continuar sin autenticación - permitir descargas públicas si el locator es válido
+      user = null;
     }
   } else if (tokenPayload) {
     // Si viene con token, usar el userId del token
@@ -260,8 +271,8 @@ export async function handleDownload(req, res) {
 
     console.log('✅ [DOWNLOAD] Pago encontrado:', payment.id);
 
-    // Verificar permisos SOLO para descargas desde web
-    if (downloadSource === 'web' && !tokenPayload && user) {
+    // Verificar permisos SOLO para descargas desde web CON usuario autenticado
+    if (downloadSource === 'web' && !tokenPayload && user && user.id) {
       // Verificar que el usuario es el dueño o es admin
       const isOwner = payment.user_id === user.id || payment.usuario_id === user.id;
       let isAdmin = false;
@@ -309,7 +320,7 @@ export async function handleDownload(req, res) {
         return;
       }
       
-      // 🔒 RATE LIMITING solo para descargas desde web
+      // 🔒 RATE LIMITING solo para descargas desde web con usuario autenticado
       try {
         // Verificar descargas recientes del usuario (últimos 5 minutos)
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -691,11 +702,24 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
     }
 
     // Cargar imágenes del evento (una sola vez, se reutilizan en todas las páginas)
-    const { eventImages, venueData } = await loadEventImages(
-      pdfDoc, 
-      eventData || pdfExtras.eventData, 
-      supabaseAdmin
-    );
+    let eventImages = {};
+    let finalVenueData = null;
+    try {
+      const loadedData = await loadEventImages(
+        pdfDoc, 
+        eventData || pdfExtras.eventData, 
+        supabaseAdmin
+      );
+      eventImages = loadedData.eventImages || {};
+      finalVenueData = loadedData.venueData || pdfExtras.venueData || null;
+      console.log('✅ [PDF] Imágenes del evento cargadas:', Object.keys(eventImages).length, 'imágenes');
+    } catch (imagesError) {
+      console.error('❌ [PDF] Error cargando imágenes del evento:', imagesError);
+      console.error('❌ [PDF] Stack:', imagesError.stack);
+      // Continuar con imágenes vacías
+      eventImages = {};
+      finalVenueData = pdfExtras.venueData || null;
+    }
 
     let eventTitle = null;
     if (eventData) {
@@ -715,20 +739,29 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
       const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
       
       // Dibujar la página del asiento
-      await drawSeatPage(
-        pdfDoc, 
-        page, 
-        payment, 
-        seat, 
-        eventImages, 
-        venueData || pdfExtras.venueData, 
-        pdfExtras, 
-        helveticaFont, 
-        helveticaBold,
-        locator,
-        currentPage,
-        totalPages
-      );
+      try {
+        await drawSeatPage(
+          pdfDoc, 
+          page, 
+          payment, 
+          seat, 
+          eventImages, 
+          finalVenueData, 
+          pdfExtras, 
+          helveticaFont, 
+          helveticaBold,
+          locator,
+          currentPage,
+          totalPages
+        );
+        console.log(`✅ [PDF] Página ${currentPage}/${totalPages} generada exitosamente`);
+      } catch (pageError) {
+        console.error(`❌ [PDF] Error generando página ${currentPage}/${totalPages}:`, pageError);
+        console.error(`❌ [PDF] Error message:`, pageError.message);
+        console.error(`❌ [PDF] Error stack:`, pageError.stack);
+        // Continuar con la siguiente página en lugar de fallar completamente
+        throw pageError; // Propagar el error para que se maneje en el nivel superior
+      }
     }
 
     // Guardar PDF después de generar todas las páginas
