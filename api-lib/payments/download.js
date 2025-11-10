@@ -1,5 +1,6 @@
 // Importaciones estáticas - solo las que no dependen de librerías externas
 import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
+// tokenUtils solo usa módulos nativos de Node.js (crypto), así que puede importarse estáticamente
 import { validateDownloadToken } from './tokenUtils.js';
 
 // Las importaciones de pdf-lib, qrcode y download-seat-pages se harán dinámicamente
@@ -34,6 +35,7 @@ async function loadPdfDependencies() {
     throw new Error(`Failed to load PDF dependencies: ${error.message}`);
   }
 }
+
 
 export async function handleDownload(req, res) {
   try {
@@ -146,6 +148,7 @@ export async function handleDownload(req, res) {
     if (downloadToken) {
       console.log('🔑 [DOWNLOAD] Token de descarga detectado en query params');
       tokenPayload = validateDownloadToken(downloadToken);
+      
       if (!tokenPayload) {
         console.error('❌ [DOWNLOAD] Token de descarga inválido o expirado');
         if (!res.headersSent) {

@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
 import { createTicketPdfBuffer } from './download.js';
+// tokenUtils solo usa módulos nativos de Node.js (crypto), así que puede importarse estáticamente
 import { generateDownloadToken } from './tokenUtils.js';
 
 const TABLE_MISSING_CODES = new Set(['42P01', 'PGRST116', 'PGRST301']);
@@ -409,6 +410,7 @@ export async function handleEmail(req, res) {
           console.log('🔗 [EMAIL] URL de descarga:', downloadUrl);
         } catch (tokenError) {
           console.warn('⚠️ [EMAIL] Error generando token de descarga:', tokenError.message);
+          console.warn('⚠️ [EMAIL] Token error stack:', tokenError.stack);
           // Continuar sin token, el usuario aún puede descargar desde el PDF adjunto
         }
       }
