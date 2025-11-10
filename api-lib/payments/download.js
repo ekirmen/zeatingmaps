@@ -1050,6 +1050,14 @@ async function generateBulkPDF(req, res, locator, supabaseAdminParam) {
   try {
     console.log('📄 [DOWNLOAD-BULK] Generando PDF con todos los tickets para localizador:', locator);
 
+    // Cargar dependencias de PDF dinámicamente
+    const deps = await loadPdfDependencies();
+    const { PDFDocument: PDFDoc, rgb: rgbFunc, StandardFonts: Fonts, QRCode: QR } = deps;
+    const PDFDocument = PDFDoc;
+    const rgb = rgbFunc;
+    const StandardFonts = Fonts;
+    const QRCode = QR;
+
     const supabaseAdmin = supabaseAdminParam || getSupabaseAdmin();
 
     if (!supabaseAdmin) {
