@@ -154,7 +154,46 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     leftY -= (titleLines.length > 4 ? 4 * 18 : titleLines.length * 18);
     leftY -= 20;
     
-    // Código QR para ubicación del recinto (donde estaba la información del lugar)
+    // Información del recinto en texto
+    if (venueData?.nombre) {
+      page.drawText(cleanTextForPDF(venueData.nombre), {
+        x: leftX,
+        y: leftY,
+        size: 12,
+        color: rgb(0.1, 0.1, 0.1),
+        font: helveticaFont,
+      });
+      leftY -= 18;
+      
+      if (venueData.direccion) {
+        page.drawText(cleanTextForPDF(venueData.direccion), {
+          x: leftX,
+          y: leftY,
+          size: 10,
+          color: rgb(0.3, 0.3, 0.3),
+          font: helveticaFont,
+        });
+        leftY -= 16;
+      }
+      
+      if (venueData.ciudad || venueData.estado) {
+        const locationParts = [];
+        if (venueData.ciudad) locationParts.push(venueData.ciudad);
+        if (venueData.estado) locationParts.push(venueData.estado);
+        page.drawText(cleanTextForPDF(locationParts.join(', ')), {
+          x: leftX,
+          y: leftY,
+          size: 10,
+          color: rgb(0.3, 0.3, 0.3),
+          font: helveticaFont,
+        });
+        leftY -= 16;
+      }
+    }
+    
+    leftY -= 10;
+    
+    // Código QR para ubicación del recinto (debajo de la información del recinto)
     if (venueData && (venueData.latitud && venueData.longitud || venueData.direccion)) {
       try {
         // Generar URL de Google Maps (direcciones)
@@ -210,12 +249,13 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     
     leftY -= 20;
     
-    // Imagen del medio (25% de la altura de la página)
+    // Imagen del medio (25% de la altura de la página, ancho hasta la mitad de la hoja)
     const middleImageHeight = height * 0.25; // 25% de la altura
     const middleImageY = leftY - middleImageHeight - 15;
     if (eventImages.portada || eventImages.logoVertical || eventImages.banner) {
       const middleImage = eventImages.portada || eventImages.logoVertical || eventImages.banner;
-      const middleImageWidth = Math.min(leftColumnWidth - 10, middleImageHeight * 0.7); // Mantener proporción
+      // Ancho hasta el divisor (mitad de la hoja) menos un pequeño margen
+      const middleImageWidth = dividerX - leftX - 5; // Hasta la línea divisoria
       try {
         page.drawImage(middleImage, {
           x: leftX,
@@ -264,7 +304,7 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       companyInfoY -= 14;
     }
     
-    // Términos y Condiciones (abajo, todos los puntos en una misma línea)
+    // Términos y Condiciones (abajo, ajustados para no pasar de la mitad de la hoja)
     const termsStartY = bottomMargin + 180;
     page.drawText('TERMINOS Y CONDICIONES', {
       x: leftX,
@@ -283,17 +323,25 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       '6.- Al adquirir este tickets el cliente acepta nuestros terminos y condiciones.'
     ];
     
+    // Calcular el ancho máximo de texto para que no se pase de la mitad (leftColumnWidth)
+    // Aproximadamente 6 puntos por carácter para tamaño 8
+    const maxCharsPerLine = Math.floor(leftColumnWidth / 6);
+    
     let termsYPos = termsStartY - 15;
     terms.forEach(term => {
-      // Cada término en una sola línea (sin wrap, el texto se dibuja completo)
-      page.drawText(cleanTextForPDF(term), {
-        x: leftX,
-        y: termsYPos,
-        size: 8,
-        color: rgb(0.2, 0.2, 0.2),
-        font: helveticaFont,
+      // Dividir el término en líneas si es muy largo para que quepa en la columna izquierda
+      const termLines = wrapText(cleanTextForPDF(term), maxCharsPerLine);
+      termLines.forEach((line, lineIndex) => {
+        page.drawText(line, {
+          x: leftX,
+          y: termsYPos,
+          size: 8,
+          color: rgb(0.2, 0.2, 0.2),
+          font: helveticaFont,
+        });
+        termsYPos -= 11;
       });
-      termsYPos -= 12;
+      termsYPos -= 2; // Espaciado adicional entre términos
     });
     
     // ==========================================
