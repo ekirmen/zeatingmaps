@@ -24,6 +24,7 @@ import {
   EyeOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -181,6 +182,7 @@ const Productos = () => {
     form.setFieldsValue({
       nombre: producto.nombre,
       descripcion: producto.descripcion,
+      imagen_url: producto.imagen_url,
       precio_base: producto.precio_base,
       categoria: producto.categoria,
       activo: producto.activo
@@ -436,9 +438,57 @@ const Productos = () => {
               rules={[{ required: true, message: 'Por favor ingresa la descripción' }]}
             >
               <TextArea
-                rows={3}
-                placeholder="Describe el producto..."
+                rows={4}
+                placeholder="Describe el producto detalladamente..."
               />
+            </Form.Item>
+
+            <Form.Item
+              name="imagen_url"
+              label="Imagen del Producto"
+            >
+              <Upload
+                beforeUpload={async (file) => {
+                  try {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}.${fileExt}`;
+                    const filePath = `productos/${fileName}`;
+
+                    const { error: uploadError } = await supabase.storage
+                      .from('productos')
+                      .upload(filePath, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: { publicUrl } } = supabase.storage
+                      .from('productos')
+                      .getPublicUrl(filePath);
+
+                    form.setFieldsValue({ imagen_url: publicUrl });
+                    message.success('Imagen subida correctamente');
+                  } catch (error) {
+                    console.error('Error uploading image:', error);
+                    message.error('Error al subir imagen');
+                  }
+                  return false;
+                }}
+                showUploadList={false}
+                accept="image/*"
+              >
+                <Button icon={<UploadOutlined />}>
+                  Subir Imagen
+                </Button>
+              </Upload>
+              {form.getFieldValue('imagen_url') && (
+                <div className="mt-2">
+                  <Image
+                    width={100}
+                    height={100}
+                    src={form.getFieldValue('imagen_url')}
+                    style={{ objectFit: 'cover', borderRadius: '4px' }}
+                  />
+                </div>
+              )}
             </Form.Item>
 
             <Form.Item

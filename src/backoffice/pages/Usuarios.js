@@ -4,6 +4,7 @@ import CreateUserForm from '../components/CreateUserForm';
 import EnhancedEditUserForm from '../components/EnhancedEditUserForm';
 import { toast } from 'react-hot-toast';
 import { AiOutlineEdit, AiOutlineDelete, AiOutlineKey, AiOutlineMail, AiOutlinePhone, AiOutlineUser } from 'react-icons/ai';
+import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const Usuarios = () => {
   const [profiles, setProfiles] = useState([]);
@@ -16,6 +17,7 @@ const Usuarios = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const recordsPerPage = 10;
+  const { addTenantFilter } = useTenantFilter();
 
   useEffect(() => {
     fetchProfiles();
@@ -24,12 +26,16 @@ const Usuarios = () => {
   const fetchProfiles = async () => {
     setLoading(true);
     try {
-      // 👥 CARGAR USUARIOS DESDE PROFILES
-      // Primero intentamos cargar solo los perfiles básicos
-      const { data, error } = await supabase
+      // 👥 CARGAR USUARIOS DESDE PROFILES CON FILTRO DE TENANT
+      let query = supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      // Aplicar filtro de tenant para multiempresas
+      query = addTenantFilter(query);
+      
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error al cargar perfiles:', error.message);
@@ -51,8 +57,7 @@ const Usuarios = () => {
         total_tenants: profile.tenant_id ? 1 : 0,
         active_tenants: profile.activo && profile.tenant_id ? 1 : 0,
         // Campos de compatibilidad
-        email: profile.login || profile.email || '',
-        empresa: profile.tenant_id ? 'N/A' : '-'
+        email: profile.login || profile.email || ''
       }));
 
       setProfiles(processedProfiles);
@@ -139,13 +144,22 @@ const Usuarios = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
-          <p className="text-gray-600">Administra los usuarios registrados en el sistema</p>
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold">Gestión de Usuarios</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Administra los usuarios registrados en el sistema</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex sm:hidden flex-col gap-2">
+          <button
+            onClick={() => setIsCreating(true)}
+            className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2"
+          >
+            <AiOutlineUser />
+            Crear Usuario
+          </button>
+        </div>
+        <div className="hidden sm:flex gap-2">
           <input
             type="text"
             placeholder="Buscar usuarios..."
@@ -172,10 +186,21 @@ const Usuarios = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
-              <p className="text-2xl font-bold text-gray-900">{profiles.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{filtered.length}</p>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Búsqueda en móvil - debajo de stats */}
+      <div className="flex sm:hidden flex-col gap-2 mb-6">
+        <input
+          type="text"
+          placeholder="Buscar usuarios..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+        />
       </div>
 
       {/* Users Table */}
@@ -188,13 +213,10 @@ const Usuarios = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Usuario
+                  Nombre y Apellido
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Contacto
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Empresa
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Fecha Registro
@@ -216,10 +238,7 @@ const Usuarios = () => {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {user.nombre} {user.apellido}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          ID: {user.id}
+                          {user.nombre || 'Sin nombre'} {user.apellido || ''}
                         </div>
                       </div>
                     </div>
@@ -237,9 +256,6 @@ const Usuarios = () => {
                         </div>
                       )}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{user.empresa || '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(user.created_at).toLocaleDateString('es-ES')}
@@ -280,11 +296,8 @@ const Usuarios = () => {
       </div>
 
       {/* Pagination */}
-      <div className="mt-6 flex justify-between items-center">
-        <div className="text-sm text-gray-700">
-          Mostrando {indexOfFirst + 1} a {Math.min(indexOfLast, filtered.length)} de {filtered.length} usuarios
-        </div>
-        <div className="flex gap-2">
+      <div className="mt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="flex gap-2 justify-center sm:justify-start">
           <button
             onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
             disabled={currentPage === 1}
@@ -292,7 +305,7 @@ const Usuarios = () => {
           >
             Anterior
           </button>
-          <span className="px-4 py-2">Página {currentPage}</span>
+          <span className="px-4 py-2 flex items-center">Página {currentPage}</span>
           <button
             onClick={() => setCurrentPage(p => p + 1)}
             disabled={currentPage >= Math.ceil(filtered.length / recordsPerPage)}
@@ -301,11 +314,14 @@ const Usuarios = () => {
             Siguiente
           </button>
         </div>
+        <div className="text-sm text-gray-700 text-center sm:text-left">
+          Mostrando {indexOfFirst + 1} a {Math.min(indexOfLast, filtered.length)} de {filtered.length} usuarios
+        </div>
       </div>
 
       {/* Create User Modal */}
       {isCreating && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white p-6 rounded-lg w-full max-w-xl relative">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Crear Nuevo Usuario</h2>
@@ -326,7 +342,7 @@ const Usuarios = () => {
 
       {/* Edit User Modal */}
       {editingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white p-6 rounded-lg w-full max-w-6xl max-h-screen overflow-y-auto relative">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Editar Usuario</h2>
@@ -348,7 +364,7 @@ const Usuarios = () => {
 
       {/* Change Password Modal */}
       {showPasswordModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white p-6 rounded-lg w-full max-w-md relative">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Cambiar Contraseña</h2>
