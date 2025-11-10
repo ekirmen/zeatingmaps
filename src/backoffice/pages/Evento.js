@@ -144,7 +144,8 @@ const Evento = () => {
           verificarEmail: false,
           verificacionEmail: false,
           pregunta1: false,
-          pregunta2: false
+          pregunta2: false,
+          habilitarWallet: false
         },
         otrasOpciones: {
           observacionesEmail: { mostrar: false, texto: '' },

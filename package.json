@@ -54,6 +54,7 @@
     "fabric": "^6.5.3",
     "framer-motion": "^11.0.0",
     "i18next": "^23.8.1",
+    "jszip": "^3.10.1",
     "konva": "^9.3.16",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.513.0",

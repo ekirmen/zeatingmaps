@@ -87,10 +87,11 @@ export const getUserPurchasesWithSeats = async (userId) => {
 
     if (error) throw error;
 
-    // Para cada transacción, obtener sus asientos
+    // Para cada transacción, obtener sus asientos y datos del evento
     const transactionsWithSeats = await Promise.all(
       (transactions || []).map(async (transaction) => {
         try {
+          // Obtener asientos
           const { data: seats, error: seatsError } = await supabase
             .from('seat_locks')
             .select('seat_id, table_id, status, locked_at, expires_at')
@@ -98,13 +99,34 @@ export const getUserPurchasesWithSeats = async (userId) => {
 
           if (seatsError) {
             console.warn('Error getting seats for transaction:', seatsError);
-            return { ...transaction, seats: [] };
           }
 
-          return { ...transaction, seats: seats || [] };
+          // Obtener datos del evento para verificar si wallet está habilitado
+          let eventData = null;
+          if (transaction.evento_id) {
+            try {
+              const { data: event, error: eventError } = await supabase
+                .from('eventos')
+                .select('id, datosBoleto, nombre')
+                .eq('id', transaction.evento_id)
+                .maybeSingle();
+
+              if (!eventError && event) {
+                eventData = event;
+              }
+            } catch (eventErr) {
+              console.warn('Error getting event data for transaction:', eventErr);
+            }
+          }
+
+          return { 
+            ...transaction, 
+            seats: seats || [],
+            event: eventData
+          };
         } catch (error) {
           console.warn('Error processing seats for transaction:', error);
-          return { ...transaction, seats: [] };
+          return { ...transaction, seats: [], event: null };
         }
       })
     );

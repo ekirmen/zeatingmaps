@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
 import { createTicketPdfBuffer } from './download.js';
+import { generatePkpass, getEventDataForPkpass } from './pkpass-generator.js';
 import crypto from 'crypto';
 
 // Funciones de tokenUtils inlined para evitar problemas de empaquetado en Vercel
@@ -399,6 +400,23 @@ export async function handleEmail(req, res) {
     let filename = null;
     let eventTitle = null;
     let downloadUrl = null;
+    let pkpassBuffer = null;
+    let pkpassFilename = null;
+    
+    // Verificar si el evento tiene habilitado el wallet
+    let datosBoleto = null;
+    if (eventData?.datosBoleto) {
+      try {
+        datosBoleto = typeof eventData.datosBoleto === 'string' 
+          ? JSON.parse(eventData.datosBoleto) 
+          : eventData.datosBoleto;
+      } catch (e) {
+        console.warn('⚠️ [EMAIL] Error parseando datosBoleto:', e);
+        datosBoleto = {};
+      }
+    }
+    
+    const walletEnabled = datosBoleto?.habilitarWallet || false;
     
     if (!isReservation) {
       // Generar PDF solo para pagos completos
@@ -429,6 +447,109 @@ export async function handleEmail(req, res) {
         buffer = null;
         filename = null;
         console.warn('⚠️ [EMAIL] Continuando sin PDF adjunto debido a error');
+      }
+      
+      // Generar .pkpass si el wallet está habilitado
+      if (walletEnabled) {
+        try {
+          console.log('🎫 [EMAIL] Wallet habilitado, generando .pkpass para correo...');
+          
+          // Obtener datos completos del evento si no los tenemos
+          if (!eventData || !funcionData || !venueData) {
+            const eventDataResult = await getEventDataForPkpass(
+              supabaseAdmin,
+              payment.evento_id,
+              payment.funcion_id
+            );
+            
+            if (eventDataResult) {
+              if (!eventData) eventData = eventDataResult.evento;
+              if (!funcionData) funcionData = eventDataResult.funcion;
+              if (!venueData) venueData = eventDataResult.recinto;
+            }
+          }
+          
+          // Parsear asientos
+          let seats = [];
+          try {
+            if (typeof payment.seats === 'string') {
+              seats = JSON.parse(payment.seats);
+            } else if (Array.isArray(payment.seats)) {
+              seats = payment.seats;
+            }
+          } catch (e) {
+            console.warn('⚠️ [EMAIL] Error parseando asientos para pkpass:', e);
+          }
+          
+          if (seats.length > 0) {
+            // Generar .pkpass para el primer asiento
+            const seat = seats[0];
+            const ticketData = {
+              locator: payment.locator,
+              orderId: payment.order_id,
+              seatId: seat.id || seat._id || seat.seatId || seat.seat_id,
+              zonaNombre: seat.zonaNombre || seat.nombreZona || seat.zona?.nombre || seat.zona,
+              mesa: seat.mesa || seat.table || seat.mesaNombre || seat.mesa?.nombre,
+              fila: seat.fila || seat.row || seat.filaNombre || seat.fila?.nombre,
+              asiento: seat.asiento || seat.seat || seat.asientoNombre || seat.nombre || seat.name,
+              price: seat.price || seat.precio
+            };
+            
+            // Obtener imágenes del evento si están disponibles
+            let images = null;
+            if (eventData?.imagenes) {
+              try {
+                const imagenesData = typeof eventData.imagenes === 'string' 
+                  ? JSON.parse(eventData.imagenes) 
+                  : eventData.imagenes;
+                
+                images = {};
+                if (imagenesData.logoHorizontal) {
+                  images.logo = imagenesData.logoHorizontal;
+                }
+                if (imagenesData.logoCuadrado) {
+                  images.icon = imagenesData.logoCuadrado;
+                }
+              } catch (e) {
+                console.warn('⚠️ [EMAIL] Error parseando imágenes para pkpass:', e);
+              }
+            }
+            
+            // Opciones para generar el pkpass
+            const pkpassOptions = {
+              organizationName: 'Veneventos',
+              passTypeIdentifier: process.env.PASS_TYPE_IDENTIFIER || 'pass.com.veneventos.ticket',
+              teamIdentifier: process.env.TEAM_IDENTIFIER || 'TEAM123456',
+              images: images,
+              // Certificados (si están disponibles)
+              certificate: process.env.APPLE_CERTIFICATE ? Buffer.from(process.env.APPLE_CERTIFICATE, 'base64') : null,
+              privateKey: process.env.APPLE_PRIVATE_KEY ? Buffer.from(process.env.APPLE_PRIVATE_KEY, 'base64') : null,
+              wwdrCertificate: process.env.APPLE_WWDR_CERTIFICATE ? Buffer.from(process.env.APPLE_WWDR_CERTIFICATE, 'base64') : null
+            };
+            
+            // Generar el archivo .pkpass
+            pkpassBuffer = await generatePkpass(
+              ticketData,
+              eventData,
+              funcionData,
+              venueData,
+              pkpassOptions
+            );
+            
+            pkpassFilename = `ticket-${payment.locator}-${ticketData.seatId || 'ticket'}.pkpass`;
+            console.log('✅ [EMAIL] Archivo .pkpass generado exitosamente para correo');
+          } else {
+            console.warn('⚠️ [EMAIL] No se encontraron asientos para generar .pkpass');
+          }
+        } catch (pkpassError) {
+          console.error('❌ [EMAIL] Error generando .pkpass para correo:', pkpassError);
+          console.error('❌ [EMAIL] PKPASS Error message:', pkpassError?.message);
+          console.error('❌ [EMAIL] PKPASS Error stack:', pkpassError?.stack);
+          // Continuar sin .pkpass - el correo se enviará sin este adjunto
+          pkpassBuffer = null;
+          pkpassFilename = null;
+          console.warn('⚠️ [EMAIL] Continuando sin .pkpass adjunto debido a error');
+        }
       }
 
       // Generar token de descarga para el enlace en el correo
@@ -479,6 +600,26 @@ export async function handleEmail(req, res) {
       emailType,
     });
 
+    // Preparar adjuntos (PDF y .pkpass si están disponibles)
+    const attachments = [];
+    
+    if (buffer && filename) {
+      attachments.push({
+        filename,
+        content: buffer,
+        contentType: 'application/pdf',
+      });
+    }
+    
+    if (pkpassBuffer && pkpassFilename) {
+      attachments.push({
+        filename: pkpassFilename,
+        content: pkpassBuffer,
+        contentType: 'application/vnd.apple.pkpass',
+      });
+      console.log('📎 [EMAIL] Archivo .pkpass agregado como adjunto:', pkpassFilename);
+    }
+    
     const mailOptions = {
       from: emailConfig.fromName
         ? `"${emailConfig.fromName}" <${emailConfig.fromEmail}>`
@@ -488,13 +629,7 @@ export async function handleEmail(req, res) {
       html,
       text,
       replyTo: emailConfig.replyTo,
-      attachments: buffer && filename ? [
-        {
-          filename,
-          content: buffer,
-          contentType: 'application/pdf',
-        },
-      ] : [], // Solo adjuntar PDF si es pago completo
+      attachments, // Adjuntar PDF y .pkpass si están disponibles
     };
 
     const result = await transporter.sendMail(mailOptions);

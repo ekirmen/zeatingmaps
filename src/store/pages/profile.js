@@ -22,6 +22,7 @@ import {
   getUserStats
 } from '../services/userProfileService';
 import downloadTicket from '../../utils/downloadTicket';
+import downloadPkpass from '../../utils/downloadPkpass';
 import '../styles/profile-mobile.css';
 
 const { TabPane } = Tabs;
@@ -385,7 +386,7 @@ const Profile = () => {
                         <Button 
                           size="small" 
                           disabled={purchase.status !== 'completed'}
-                          title={purchase.status !== 'completed' ? 'Solo disponible para pagos completados' : 'Descargar ticket'}
+                          title={purchase.status !== 'completed' ? 'Solo disponible para pagos completados' : 'Descargar ticket PDF'}
                           onClick={async () => {
                             if (purchase.status === 'completed' && purchase.locator) {
                               try {
@@ -397,8 +398,24 @@ const Profile = () => {
                           }}
                           block
                         >
-                          Descargar Ticket
+                          Descargar PDF
                         </Button>
+                        {(purchase.status === 'completed' || purchase.status === 'pagado') && walletEnabledMap[purchase.locator] && (
+                          <Button 
+                            size="small" 
+                            type="default"
+                            onClick={async () => {
+                              try {
+                                await downloadPkpass(purchase.locator, null, 'web');
+                              } catch (error) {
+                                console.error('Error descargando .pkpass:', error);
+                              }
+                            }}
+                            block
+                          >
+                            Descargar Wallet
+                          </Button>
+                        )}
                       </Space>
                     ]}
                   >

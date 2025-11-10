@@ -5,13 +5,15 @@ import { handleDiagnostic } from '../../../api-lib/payments/diagnostic.js';
 import { handleDownload } from '../../../api-lib/payments/download.js';
 import { handleEmail } from '../../../api-lib/payments/email.js';
 import { handleValidate } from '../../../api-lib/payments/validate.js';
+import { handlePkpass } from '../../../api-lib/payments/pkpass.js';
 
 const ACTION_HANDLERS = {
   debug: handleDebug,
   diagnostic: handleDiagnostic,
   download: handleDownload,
   email: handleEmail,
-  validate: handleValidate
+  validate: handleValidate,
+  pkpass: handlePkpass
 };
 
 export default async function handler(req, res) {

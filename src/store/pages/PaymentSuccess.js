@@ -7,6 +7,7 @@ import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
 import { loadMetaPixel } from '../utils/analytics';
 import { useCartStore } from '../../store/cartStore';
 import downloadTicket from '../../utils/downloadTicket';
+import downloadPkpass from '../../utils/downloadPkpass';
 import { useAuth } from '../../contexts/AuthContext';
 import seatLocatorService from '../services/seatLocatorService';
 
@@ -53,6 +54,20 @@ const PaymentSuccess = () => {
             ...transactionWithSeats.transaction,
             seats: transactionWithSeats.seats || []
           });
+          
+          // Verificar si el evento tiene wallet habilitado
+          if (transactionWithSeats.event?.datosBoleto) {
+            try {
+              const datosBoleto = typeof transactionWithSeats.event.datosBoleto === 'string'
+                ? JSON.parse(transactionWithSeats.event.datosBoleto)
+                : transactionWithSeats.event.datosBoleto;
+              
+              setWalletEnabled(datosBoleto?.habilitarWallet || false);
+            } catch (e) {
+              console.warn('Error parseando datosBoleto:', e);
+              setWalletEnabled(false);
+            }
+          }
         } else {
           console.error('No transaction found for locator:', locator);
         }
@@ -70,6 +85,15 @@ const PaymentSuccess = () => {
       await downloadTicket(locator, null, 'web');
     } catch {
       toast.error('No se pudo descargar el ticket');
+    }
+  };
+  
+  const handleDownloadPkpass = async () => {
+    try {
+      await downloadPkpass(locator, null, 'web');
+    } catch (error) {
+      console.error('Error descargando .pkpass:', error);
+      // El error ya se muestra en downloadPkpass
     }
   };
 
@@ -242,14 +266,28 @@ const PaymentSuccess = () => {
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
           {!isReservation && (
-            <button
-              onClick={handleDownloadAllTickets}
-              className="flex items-center justify-center px-6 py-3 store-button store-button-primary"
-              style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)' }}
-            >
-              <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
-              Descargar Todos
-            </button>
+            <>
+              <button
+                onClick={handleDownloadAllTickets}
+                className="flex items-center justify-center px-6 py-3 store-button store-button-primary"
+                style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)' }}
+              >
+                <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
+                Descargar PDF
+              </button>
+              {walletEnabled && (
+                <button
+                  onClick={handleDownloadPkpass}
+                  className="flex items-center justify-center px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                  </svg>
+                  Descargar Wallet
+                </button>
+              )}
+            </>
           )}
           {isReservation && (
             <button

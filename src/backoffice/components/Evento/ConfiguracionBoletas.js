@@ -236,54 +236,159 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
 
   // Add save button at the end of the images-upload section
   return (
-    <div className="tab-codntent space-y-6">
+    <div className="tab-content space-y-6">
       
       <section className="ticket-formats space-y-4">
-        <h4 className="font-semibold">Formatos de boleta</h4>
-        <div className="space-y-2">
-          <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-            <input
-              type="checkbox"
-              checked={selectedFormat === 'pdf'}
-              onChange={() => setSelectedFormat('pdf')}
-              className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
-            />
-            <span className="text-sm text-gray-700">Permitir boletas en formato PDF</span>
-          </label>
-          {selectedFormat === 'pdf' && (
-            <div className="pl-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="pdfOption"
-                  value="all"
-                  checked={pdfOption === 'all'}
-                  onChange={(e) => setPdfOption(e.target.value)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">Todas las entradas en el mismo PDF</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="pdfOption"
-                  value="single"
-                  checked={pdfOption === 'single'}
-                  onChange={(e) => setPdfOption(e.target.value)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">Un PDF por entrada</span>
+        <h4 className="font-semibold text-lg mb-4">Formatos de boleta</h4>
+        
+        {/* Diseño responsive: vertical en mobile, horizontal en desktop */}
+        <div className="space-y-4">
+          {/* Mobile: Vertical Stack */}
+          <div className="flex flex-col md:hidden space-y-3">
+            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-200">
+              <input
+                type="checkbox"
+                checked={selectedFormat === 'pdf'}
+                onChange={() => setSelectedFormat('pdf')}
+                className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
+              />
+              <span className="text-sm font-medium text-gray-700">Permitir boletas en formato PDF</span>
+            </label>
+            {selectedFormat === 'pdf' && (
+              <div className="pl-8 space-y-3">
+                <label className="flex items-center gap-3 p-3 bg-white rounded border border-gray-200 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="pdfOption"
+                    value="all"
+                    checked={pdfOption === 'all'}
+                    onChange={(e) => setPdfOption(e.target.value)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Todas las entradas en el mismo PDF</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 bg-white rounded border border-gray-200 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="pdfOption"
+                    value="single"
+                    checked={pdfOption === 'single'}
+                    onChange={(e) => setPdfOption(e.target.value)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Un PDF por entrada</span>
+                </label>
+              </div>
+            )}
+            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-200">
+              <input
+                type="checkbox"
+                checked={eventoData?.datosBoleto?.habilitarWallet || false}
+                onChange={(e) => {
+                  setEventoData(prev => ({
+                    ...prev,
+                    datosBoleto: {
+                      ...prev.datosBoleto,
+                      habilitarWallet: e.target.checked
+                    }
+                  }));
+                }}
+                className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
+              />
+              <span className="text-sm font-medium text-gray-700">Habilitar Wallet (pkpass)</span>
+            </label>
+            {eventoData?.datosBoleto?.habilitarWallet && (
+              <div className="pl-8 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-800">
+                  <strong>ℹ️ Información:</strong> Los tickets se enviarán automáticamente en formato .pkpass (Apple Wallet/Google Wallet) en los correos de confirmación de compra.
+                </p>
+              </div>
+            )}
+            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-gray-200">
+              <input type="checkbox" className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2" />
+              <span className="text-sm font-medium text-gray-700">Permitir impresión en taquilla</span>
+            </label>
+          </div>
+          
+          {/* Desktop: Horizontal Layout */}
+          <div className="hidden md:grid md:grid-cols-3 gap-4">
+            <div className="col-span-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <label className="flex flex-col gap-2 cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedFormat === 'pdf'}
+                    onChange={() => setSelectedFormat('pdf')}
+                    className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
+                  />
+                  <span className="text-sm font-medium text-gray-700">PDF</span>
+                </div>
+                {selectedFormat === 'pdf' && (
+                  <div className="pl-7 space-y-2 mt-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="pdfOption"
+                        value="all"
+                        checked={pdfOption === 'all'}
+                        onChange={(e) => setPdfOption(e.target.value)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />
+                      <span className="text-xs text-gray-600">Mismo PDF</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="pdfOption"
+                        value="single"
+                        checked={pdfOption === 'single'}
+                        onChange={(e) => setPdfOption(e.target.value)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />
+                      <span className="text-xs text-gray-600">PDF por entrada</span>
+                    </label>
+                  </div>
+                )}
               </label>
             </div>
-          )}
-          <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-            <input type="checkbox" className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2" />
-            <span className="text-sm text-gray-700">Permitir boletas en Passbook o Wallet (e-tickets)</span>
-          </label>
-          <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-            <input type="checkbox" className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2" />
-            <span className="text-sm text-gray-700">Permitir impresión en taquilla</span>
-          </label>
+            
+            <div className="col-span-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <label className="flex flex-col gap-2 cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={eventoData?.datosBoleto?.habilitarWallet || false}
+                    onChange={(e) => {
+                      setEventoData(prev => ({
+                        ...prev,
+                        datosBoleto: {
+                          ...prev.datosBoleto,
+                          habilitarWallet: e.target.checked
+                        }
+                      }));
+                    }}
+                    className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Wallet (pkpass)</span>
+                </div>
+                <span className="text-xs text-gray-500 pl-7">Apple/Google Wallet</span>
+                {eventoData?.datosBoleto?.habilitarWallet && (
+                  <div className="pl-7 mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                    <p className="text-xs text-blue-800">
+                      Se enviará por correo electrónico en formato .pkpass
+                    </p>
+                  </div>
+                )}
+              </label>
+            </div>
+            
+            <div className="col-span-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2" />
+                <span className="text-sm font-medium text-gray-700">Impresión en taquilla</span>
+              </label>
+            </div>
+          </div>
         </div>
       </section>
 
