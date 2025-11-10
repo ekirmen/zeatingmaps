@@ -364,7 +364,7 @@ const Profile = () => {
             tab={
               <span>
                 <ShoppingOutlined />
-                Mis Compras ({purchases.length})
+                Mis Entradas ({purchases.length})
               </span>
             } 
             key="purchases"
@@ -372,61 +372,76 @@ const Profile = () => {
             {purchases.length > 0 ? (
               <List
                 dataSource={purchases}
-                renderItem={purchase => (
-                  <List.Item
-                    actions={[
-                      <Space key="actions" direction="vertical" size="small" style={{ width: '100%' }}>
-                        <Button 
-                          size="small" 
-                          href={`/store/payment-success/${purchase.locator}`}
-                          block
-                        >
-                          Ver Detalles
-                        </Button>
-                        <Button 
-                          size="small" 
-                          disabled={purchase.status !== 'completed'}
-                          title={purchase.status !== 'completed' ? 'Solo disponible para pagos completados' : 'Descargar ticket PDF'}
-                          onClick={async () => {
-                            if (purchase.status === 'completed' && purchase.locator) {
-                              try {
-                                await downloadTicket(purchase.locator, null, 'web');
-                              } catch (error) {
-                                message.error('Error al descargar el ticket');
-                              }
-                            }
-                          }}
-                          block
-                        >
-                          Descargar PDF
-                        </Button>
-                        {(purchase.status === 'completed' || purchase.status === 'pagado') && walletEnabledMap[purchase.locator] && (
+                renderItem={purchase => {
+                  // Verificar si el wallet está habilitado para esta compra
+                  let walletEnabled = false;
+                  if (purchase.event?.datosBoleto) {
+                    try {
+                      const datosBoleto = typeof purchase.event.datosBoleto === 'string'
+                        ? JSON.parse(purchase.event.datosBoleto)
+                        : purchase.event.datosBoleto;
+                      walletEnabled = datosBoleto?.habilitarWallet || false;
+                    } catch (e) {
+                      console.warn('Error parsing datosBoleto:', e);
+                    }
+                  }
+
+                  return (
+                    <List.Item
+                      actions={[
+                        <Space key="actions" direction="vertical" size="small" style={{ width: '100%' }}>
                           <Button 
                             size="small" 
-                            type="default"
+                            href={`/store/payment-success/${purchase.locator}`}
+                            block
+                          >
+                            Ver Detalles
+                          </Button>
+                          <Button 
+                            size="small" 
+                            disabled={purchase.status !== 'completed' && purchase.status !== 'pagado'}
+                            title={purchase.status !== 'completed' && purchase.status !== 'pagado' ? 'Solo disponible para pagos completados' : 'Descargar ticket PDF'}
                             onClick={async () => {
-                              try {
-                                await downloadPkpass(purchase.locator, null, 'web');
-                              } catch (error) {
-                                console.error('Error descargando .pkpass:', error);
+                              if ((purchase.status === 'completed' || purchase.status === 'pagado') && purchase.locator) {
+                                try {
+                                  await downloadTicket(purchase.locator, null, 'web');
+                                } catch (error) {
+                                  message.error('Error al descargar el ticket');
+                                }
                               }
                             }}
                             block
                           >
-                            Descargar Wallet
+                            Descargar PDF
                           </Button>
-                        )}
-                      </Space>
-                    ]}
-                  >
-                    <List.Item.Meta
-                      avatar={
-                        <Avatar 
-                          size={64}
-                          icon={<ShoppingOutlined />}
-                        />
-                      }
-                      title={`Localizador ${purchase.locator}`}
+                          {(purchase.status === 'completed' || purchase.status === 'pagado') && walletEnabled && (
+                            <Button 
+                              size="small" 
+                              type="default"
+                              onClick={async () => {
+                                try {
+                                  await downloadPkpass(purchase.locator, null, 'web');
+                                } catch (error) {
+                                  console.error('Error descargando .pkpass:', error);
+                                  message.error('Error al descargar el archivo .pkpass');
+                                }
+                              }}
+                              block
+                            >
+                              📱 Descargar Wallet (.pkpass)
+                            </Button>
+                          )}
+                        </Space>
+                      ]}
+                    >
+                      <List.Item.Meta
+                        avatar={
+                          <Avatar 
+                            size={64}
+                            icon={<ShoppingOutlined />}
+                          />
+                        }
+                        title={`Localizador ${purchase.locator}`}
                       description={
                         <Space direction="vertical" size="small">
                           <div>
@@ -455,7 +470,8 @@ const Profile = () => {
                       </Tag>
                     </div>
                   </List.Item>
-                )}
+                  );
+                }}
               />
             ) : (
               <Empty
