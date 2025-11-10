@@ -138,23 +138,29 @@ const Productos = () => {
       
       productosEventosQuery = addTenantFilter(productosEventosQuery);
       
-      const [plantillasData, productosData, productosEventosData] = await Promise.all([
+      // Ejecutar consultas con manejo de errores individual
+      const [plantillasResult, productosResult, productosEventosResult] = await Promise.allSettled([
         plantillasQuery,
-        productosQuery.catch(err => {
-          // Si la tabla no existe o hay error, retornar estructura vacía
-          if (err.code === 'PGRST116' || err.message?.includes('does not exist')) {
-            return { data: [], error: null };
-          }
-          return { data: null, error: err };
-        }),
-        productosEventosQuery.catch(err => {
-          // Si la tabla no existe o hay error, retornar estructura vacía
-          if (err.code === 'PGRST116' || err.message?.includes('does not exist')) {
-            return { data: [], error: null };
-          }
-          return { data: null, error: err };
-        })
+        productosQuery,
+        productosEventosQuery
       ]);
+
+      // Procesar resultados
+      const plantillasData = plantillasResult.status === 'fulfilled' 
+        ? plantillasResult.value 
+        : { data: null, error: plantillasResult.reason };
+      
+      const productosData = productosResult.status === 'fulfilled'
+        ? productosResult.value
+        : productosResult.reason?.code === 'PGRST116' || productosResult.reason?.message?.includes('does not exist')
+          ? { data: [], error: null }
+          : { data: null, error: productosResult.reason };
+      
+      const productosEventosData = productosEventosResult.status === 'fulfilled'
+        ? productosEventosResult.value
+        : productosEventosResult.reason?.code === 'PGRST116' || productosEventosResult.reason?.message?.includes('does not exist')
+          ? { data: [], error: null }
+          : { data: null, error: productosEventosResult.reason };
 
       // ✅ COMBINAR PRODUCTOS DE TODAS LAS FUENTES
       let allProductos = [];
@@ -412,21 +418,20 @@ const Productos = () => {
               >
                 {eventos.map((evento) => (
                   <Option key={evento.id} value={evento.id}>
-                    <div>
-                      <div className="font-medium">{evento.nombre}</div>
-                      {evento.fecha_celebracion && (
-                        <div className="text-sm text-gray-500">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium flex-1 truncate">{evento.nombre}</span>
+                      {evento.fecha_celebracion ? (
+                        <span className="text-sm text-gray-500 whitespace-nowrap">
                           {new Date(evento.fecha_celebracion).toLocaleDateString('es-ES', {
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric'
                           })}
-                        </div>
-                      )}
-                      {!evento.fecha_celebracion && (
-                        <div className="text-sm text-gray-400">
-                          Sin fecha programada
-                        </div>
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400 whitespace-nowrap">
+                          Sin fecha
+                        </span>
                       )}
                     </div>
                   </Option>
