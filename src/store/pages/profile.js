@@ -372,10 +372,10 @@ const Profile = () => {
             {purchases.length > 0 ? (
               <List
                 dataSource={purchases}
-                renderItem={purchase => {
+                renderItem={(purchase) => {
                   // Verificar si el wallet está habilitado para esta compra
                   let walletEnabled = false;
-                  if (purchase.event?.datosBoleto) {
+                  if (purchase?.event?.datosBoleto) {
                     try {
                       const datosBoleto = typeof purchase.event.datosBoleto === 'string'
                         ? JSON.parse(purchase.event.datosBoleto)
@@ -383,6 +383,7 @@ const Profile = () => {
                       walletEnabled = datosBoleto?.habilitarWallet || false;
                     } catch (e) {
                       console.warn('Error parsing datosBoleto:', e);
+                      walletEnabled = false;
                     }
                   }
 
@@ -461,15 +462,15 @@ const Profile = () => {
                         </Space>
                       }
                     />
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#52c41a' }}>
-                        ${purchase.amount}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#52c41a' }}>
+                          ${purchase.amount}
+                        </div>
+                        <Tag color={getStatusColor(purchase.status)}>
+                          {purchase.status}
+                        </Tag>
                       </div>
-                      <Tag color={getStatusColor(purchase.status)}>
-                        {purchase.status}
-                      </Tag>
-                    </div>
-                  </List.Item>
+                    </List.Item>
                   );
                 }}
               />
