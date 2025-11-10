@@ -634,11 +634,11 @@ export async function handleDownload(req, res) {
               
               if (!venueData && recintoId) {
                 console.log('🔍 [DOWNLOAD] Buscando recinto con ID (desde evento):', recintoId);
-                const { data: rec, error: rErr } = await supabaseAdmin
-                  .from('recintos')
-                  .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
-                  .eq('id', recintoId)
-                  .maybeSingle();
+      const { data: rec, error: rErr } = await supabaseAdmin
+        .from('recintos')
+        .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad, latitud, longitud')
+        .eq('id', recintoId)
+        .maybeSingle();
                 
                 if (rErr) {
                   console.error('❌ [DOWNLOAD] Error obteniendo recinto:', rErr);
@@ -684,11 +684,11 @@ export async function handleDownload(req, res) {
           // Preferir recinto_id si existe, si no usar recinto
           const recintoId = eventData?.recinto_id || eventData?.recinto;
           if (!venueData && recintoId) {
-            const { data: rec, error: rErr } = await supabaseAdmin
-              .from('recintos')
-              .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
-              .eq('id', recintoId)
-              .maybeSingle();
+      const { data: rec, error: rErr } = await supabaseAdmin
+        .from('recintos')
+        .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad, latitud, longitud')
+        .eq('id', recintoId)
+        .maybeSingle();
             if (!rErr && rec) {
               console.log('✅ [DOWNLOAD] Recinto obtenido por evento_id:', rec.nombre);
               venueData = rec;
