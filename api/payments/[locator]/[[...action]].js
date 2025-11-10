@@ -4,12 +4,14 @@ import { handleDebug } from '../../../api-lib/payments/debug.js';
 import { handleDiagnostic } from '../../../api-lib/payments/diagnostic.js';
 import { handleDownload } from '../../../api-lib/payments/download.js';
 import { handleEmail } from '../../../api-lib/payments/email.js';
+import { handleValidate } from '../../../api-lib/payments/validate.js';
 
 const ACTION_HANDLERS = {
   debug: handleDebug,
   diagnostic: handleDiagnostic,
   download: handleDownload,
-  email: handleEmail
+  email: handleEmail,
+  validate: handleValidate
 };
 
 export default async function handler(req, res) {
