@@ -172,6 +172,12 @@
   box-sizing: border-box;
 }
 
+/* Asegurar que el container dentro del header sea transparente para mostrar el gradiente */
+.store-header .store-container {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
 /* ============================================
    HEADER STYLES - PROFESSIONAL GRADIENT
    ============================================ */
@@ -196,12 +202,32 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: var(--store-space-4) var(--store-space-4);
+  background: transparent !important;
 }
 
 @media (min-width: 768px) {
   .store-header .container {
     padding: var(--store-space-4) var(--store-space-6);
   }
+}
+
+/* Asegurar que los elementos dentro del header no tengan fondo que tape el gradiente */
+.store-header .store-container > div {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.store-header .store-container .flex {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Específicamente para las clases de Tailwind que puedan tener fondo */
+.store-header .flex.justify-between.items-center,
+.store-header div.flex.justify-between.items-center,
+.store-header .store-container div.flex.justify-between.items-center {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 .store-header .logo {

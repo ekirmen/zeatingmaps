@@ -369,18 +369,19 @@ const Header = ({ onLogin, onLogout }) => {
               className="store-header language-selector"
               style={{
                 padding: '8px 12px',
-                border: '1px solid var(--store-border-light)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
                 borderRadius: '8px',
-                backgroundColor: 'white',
-                color: 'var(--store-text-primary)',
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                color: '#ffffff',
                 fontSize: '14px',
                 fontWeight: 500,
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                backdropFilter: 'blur(5px)'
               }}
             >
-              <option value="es">ES</option>
-              <option value="en">EN</option>
+              <option value="es" style={{ color: '#1f2937', backgroundColor: '#ffffff' }}>ES</option>
+              <option value="en" style={{ color: '#1f2937', backgroundColor: '#ffffff' }}>EN</option>
             </select>
           </div>
 
