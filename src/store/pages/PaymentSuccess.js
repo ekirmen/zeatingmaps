@@ -20,6 +20,7 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
   const { refParam } = useRefParam();
   const [paymentDetails, setPaymentDetails] = useState(null);
+  const [walletEnabled, setWalletEnabled] = useState(false);
   const { user, loading: authLoading } = useAuth();
 
   const isReservation = paymentDetails?.status === 'reservado' || paymentDetails?.status === 'pending';
@@ -62,11 +63,14 @@ const PaymentSuccess = () => {
                 ? JSON.parse(transactionWithSeats.event.datosBoleto)
                 : transactionWithSeats.event.datosBoleto;
               
-              setWalletEnabled(datosBoleto?.habilitarWallet || false);
+              setWalletEnabled(datosBoleto?.habilitarWallet === true);
             } catch (e) {
               console.warn('Error parseando datosBoleto:', e);
               setWalletEnabled(false);
             }
+          } else {
+            // Si no hay datosBoleto, el wallet no está habilitado
+            setWalletEnabled(false);
           }
         } else {
           console.error('No transaction found for locator:', locator);
