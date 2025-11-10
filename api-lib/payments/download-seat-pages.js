@@ -6,149 +6,150 @@ import { getSupabaseAdmin } from './config.js';
  * Función auxiliar para dibujar una página de ticket para un asiento específico
  */
 async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData, pdfExtras, helveticaFont, helveticaBold, locator, currentPage = 1, totalPages = 1) {
-  const { width, height } = page.getSize();
-  const downloadSource = pdfExtras?.downloadSource || 'web'; // 'email' or 'web'
-  
-  // Asegurar que eventImages es un objeto
-  if (!eventImages || typeof eventImages !== 'object') {
-    eventImages = {};
-  }
-  
-  // Obtener información del asiento con validaciones
-  const seatId = seat?.id || seat?._id || seat?.seatId || seat?.seat_id || 'unknown';
-  const zonaTxt = seat?.zonaNombre || seat?.nombreZona || (seat?.zona?.nombre) || (typeof seat?.zona === 'string' ? seat.zona : null) || seat?.zonaId || null;
-  const mesaTxt = seat?.mesa || seat?.table || seat?.mesaNombre || (seat?.mesa?.nombre) || (typeof seat?.mesa === 'string' ? seat.mesa : null) || null;
-  const filaTxt = seat?.fila || seat?.row || seat?.filaNombre || (seat?.fila?.nombre) || (typeof seat?.fila === 'string' ? seat.fila : null) || null;
-  const asientoTxt = seat?.asiento || seat?.seat || seat?.asientoNombre || seat?.nombre || seat?.name || null;
-  const precioTxt = seat?.price || seat?.precio || null;
-
-  // Generar QR code único para este asiento
-  console.log(`🖼️ [PDF] Generando código QR para asiento: ${seatId}`);
-  let qrImageBytes = null;
   try {
-    const qrData = JSON.stringify({
-      seatId: seatId,
-      paymentId: payment.id,
-      locator: payment.locator || locator,
-      timestamp: new Date().toISOString()
+    const { width, height } = page.getSize();
+    const downloadSource = pdfExtras?.downloadSource || 'web'; // 'email' or 'web'
+    
+    // Log de datos recibidos para debugging
+    console.log(`📄 [PDF-PAGE] Dibujando página ${currentPage}/${totalPages} con datos:`, {
+      hasEventData: !!pdfExtras?.eventData,
+      hasFuncionData: !!pdfExtras?.funcionData,
+      hasVenueData: !!venueData,
+      eventImagesCount: eventImages ? Object.keys(eventImages).length : 0,
+      paymentId: payment?.id,
+      locator: locator
     });
+    
+    // Asegurar que eventImages es un objeto
+    if (!eventImages || typeof eventImages !== 'object') {
+      eventImages = {};
+    }
+    
+    // Obtener información del asiento con validaciones
+    const seatId = seat?.id || seat?._id || seat?.seatId || seat?.seat_id || 'unknown';
+    const zonaTxt = seat?.zonaNombre || seat?.nombreZona || (seat?.zona?.nombre) || (typeof seat?.zona === 'string' ? seat.zona : null) || seat?.zonaId || null;
+    const mesaTxt = seat?.mesa || seat?.table || seat?.mesaNombre || (seat?.mesa?.nombre) || (typeof seat?.mesa === 'string' ? seat.mesa : null) || null;
+    const filaTxt = seat?.fila || seat?.row || seat?.filaNombre || (seat?.fila?.nombre) || (typeof seat?.fila === 'string' ? seat.fila : null) || null;
+    const asientoTxt = seat?.asiento || seat?.seat || seat?.asientoNombre || seat?.nombre || seat?.name || null;
+    const precioTxt = seat?.price || seat?.precio || null;
 
-    qrImageBytes = await QRCode.toBuffer(qrData, {
-      type: 'image/png',
-      width: 200,
-      margin: 1,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
+    // Generar QR code único para este asiento
+    console.log(`🖼️ [PDF] Generando código QR para asiento: ${seatId}`);
+    let qrImageBytes = null;
+    try {
+      const qrData = JSON.stringify({
+        seatId: seatId,
+        paymentId: payment.id,
+        locator: payment.locator || locator,
+        timestamp: new Date().toISOString()
+      });
+
+      qrImageBytes = await QRCode.toBuffer(qrData, {
+        type: 'image/png',
+        width: 200,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      console.log(`✅ [PDF] Código QR generado para asiento: ${seatId}`);
+    } catch (qrError) {
+      console.error(`❌ [PDF] Error generando código QR para asiento ${seatId}:`, qrError);
+      qrImageBytes = null;
+    }
+
+    // 1. IMAGEN SUPERIOR (logoHorizontal) o placeholder
+    {
+      const topImageWidth = 140;
+      const topImageHeight = 42;
+      const topX = 50;
+      const topY = height - 120;
+      if (eventImages.logoHorizontal) {
+        page.drawImage(eventImages.logoHorizontal, {
+          x: topX,
+          y: topY,
+          width: topImageWidth,
+          height: topImageHeight,
+        });
+      } else {
+        page.drawRectangle({ 
+          x: topX, 
+          y: topY, 
+          width: topImageWidth, 
+          height: topImageHeight, 
+          color: rgb(0.95,0.95,0.95), 
+          borderColor: rgb(0.8,0.8,0.8), 
+          borderWidth: 1 
+        });
+        page.drawText('1', { 
+          x: topX + topImageWidth/2 - 6, 
+          y: topY + topImageHeight/2 - 8, 
+          size: 16, 
+          color: rgb(0.6,0.6,0.6), 
+          font: helveticaBold 
+        });
       }
+    }
+
+    // 2. TÍTULO DEL TICKET
+    page.drawText('TICKET DE ENTRADA', {
+      x: 200,
+      y: height - 80,
+      size: 22,
+      color: rgb(0.1, 0.1, 0.1),
+      font: helveticaBold,
     });
-    console.log(`✅ [PDF] Código QR generado para asiento: ${seatId}`);
-  } catch (qrError) {
-    console.error(`❌ [PDF] Error generando código QR para asiento ${seatId}:`, qrError);
-    qrImageBytes = null;
-  }
 
-  // 1. IMAGEN SUPERIOR (logoHorizontal) o placeholder
-  {
-    const topImageWidth = 140;
-    const topImageHeight = 42;
-    const topX = 50;
-    const topY = height - 120;
-    if (eventImages.logoHorizontal) {
-      page.drawImage(eventImages.logoHorizontal, {
-        x: topX,
-        y: topY,
-        width: topImageWidth,
-        height: topImageHeight,
-      });
-    } else {
-      page.drawRectangle({ 
-        x: topX, 
-        y: topY, 
-        width: topImageWidth, 
-        height: topImageHeight, 
-        color: rgb(0.95,0.95,0.95), 
-        borderColor: rgb(0.8,0.8,0.8), 
-        borderWidth: 1 
-      });
-      page.drawText('1', { 
-        x: topX + topImageWidth/2 - 6, 
-        y: topY + topImageHeight/2 - 8, 
-        size: 16, 
-        color: rgb(0.6,0.6,0.6), 
-        font: helveticaBold 
-      });
+    // 2.1 Nombre del evento
+    let eventTitle = null;
+    try {
+      const title = pdfExtras?.eventData?.nombre || payment?.event?.nombre || payment?.evento?.nombre || null;
+      if (title) {
+        eventTitle = title;
+        // Truncar título si es muy largo
+        const maxTitleLength = 50;
+        const displayTitle = title.length > maxTitleLength ? title.substring(0, maxTitleLength) + '...' : title;
+        page.drawText(displayTitle, {
+          x: 200,
+          y: height - 100,
+          size: 12,
+          color: rgb(0.15, 0.15, 0.15),
+          font: helveticaFont,
+        });
+      } else {
+        console.warn('⚠️ [PDF-PAGE] No hay título de evento disponible');
+      }
+    } catch (titleError) {
+      console.warn('⚠️ [PDF] Error dibujando título del evento:', titleError.message);
     }
-  }
 
-  // 2. TÍTULO DEL TICKET
-  page.drawText('TICKET DE ENTRADA', {
-    x: 200,
-    y: height - 80,
-    size: 22,
-    color: rgb(0.1, 0.1, 0.1),
-    font: helveticaBold,
-  });
+    // 2.2 Numeración de páginas (esquina superior derecha) - Formato: "1-3", "2-3", "3-3"
+    const pageNumberText = `${currentPage}-${totalPages}`;
+    const pageNumberWidth = helveticaFont.widthOfTextAtSize(pageNumberText, 11);
+    page.drawText(pageNumberText, {
+      x: width - pageNumberWidth - 50,
+      y: height - 50,
+      size: 11,
+      color: rgb(0.4, 0.4, 0.4),
+      font: helveticaBold,
+    });
 
-  // 2.1 Nombre del evento
-  let eventTitle = null;
-  try {
-    const title = pdfExtras.eventData?.nombre || payment.event?.nombre || payment.evento?.nombre || null;
-    if (title) {
-      eventTitle = title;
-      // Truncar título si es muy largo
-      const maxTitleLength = 50;
-      const displayTitle = title.length > maxTitleLength ? title.substring(0, maxTitleLength) + '...' : title;
-      page.drawText(displayTitle, {
-        x: 200,
-        y: height - 100,
-        size: 12,
-        color: rgb(0.15, 0.15, 0.15),
-        font: helveticaFont,
-      });
-    }
-  } catch (titleError) {
-    console.warn('⚠️ [PDF] Error dibujando título del evento:', titleError.message);
-  }
+    // 3. DATOS PRINCIPALES (lado izquierdo) - Ajustado para no solapar con QR
+    let y = height - 160;
+    
+    // Localizador
+    page.drawText(`Localizador: ${payment.locator || locator}`, { 
+      x: 50, 
+      y, 
+      size: 12, 
+      color: rgb(0,0,0), 
+      font: helveticaBold 
+    });
+    y -= 20;
 
-  // 2.2 Numeración de páginas (esquina superior derecha) - Formato: "1-3", "2-3", "3-3"
-  const pageNumberText = `${currentPage}-${totalPages}`;
-  const pageNumberWidth = helveticaFont.widthOfTextAtSize(pageNumberText, 11);
-  page.drawText(pageNumberText, {
-    x: width - pageNumberWidth - 50,
-    y: height - 50,
-    size: 11,
-    color: rgb(0.4, 0.4, 0.4),
-    font: helveticaBold,
-  });
-
-  // 3. DATOS PRINCIPALES (lado izquierdo) - Ajustado para no solapar con QR
-  let y = height - 160;
-  
-  // Localizador
-  page.drawText(`Localizador: ${payment.locator || locator}`, { 
-    x: 50, 
-    y, 
-    size: 12, 
-    color: rgb(0,0,0), 
-    font: helveticaBold 
-  });
-  y -= 20;
-
-  // Estado del pago
-  page.drawText(`Estado: ${payment.status}`, { 
-    x: 50, 
-    y, 
-    size: 11, 
-    color: rgb(0.2,0.2,0.2), 
-    font: helveticaFont 
-  });
-  y -= 18;
-
-  // Monto
-  const montoNum = Number(payment.monto || payment.amount || 0);
-  if (montoNum > 0) {
-    page.drawText(`Monto Total: $${montoNum.toFixed(2)}`, { 
+    // Estado del pago
+    page.drawText(`Estado: ${payment.status}`, { 
       x: 50, 
       y, 
       size: 11, 
@@ -156,225 +157,41 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       font: helveticaFont 
     });
     y -= 18;
-  }
 
-  // Método de pago
-  try {
-    const pm = payment.payment_method || (Array.isArray(payment.payments) && payment.payments[0]?.method) || null;
-    if (pm) {
-      page.drawText(`Método: ${pm}`, { 
+    // Monto
+    const montoNum = Number(payment.monto || payment.amount || 0);
+    if (montoNum > 0) {
+      page.drawText(`Monto Total: $${montoNum.toFixed(2)}`, { 
         x: 50, 
         y, 
-        size: 10, 
-        color: rgb(0.3,0.3,0.3), 
-        font: helveticaFont 
-      });
-      y -= 16;
-    }
-  } catch {}
-  
-  y -= 10; // Espacio antes de la ubicación
-
-  // RECINTO - Información completa
-  if (venueData?.nombre) {
-    page.drawText('Ubicación:', { 
-      x: 50, 
-      y, 
-      size: 14, 
-      color: rgb(0,0,0), 
-      font: helveticaBold 
-    });
-    y -= 20;
-    
-    page.drawText(`Recinto: ${venueData.nombre}`, { 
-      x: 60, 
-      y, 
-      size: 12, 
-      color: rgb(0.1,0.1,0.1), 
-      font: helveticaBold 
-    });
-    y -= 18;
-    
-    // Dirección completa
-    const direccionParts = [];
-    if (venueData.direccion) direccionParts.push(venueData.direccion);
-    if (venueData.ciudad) direccionParts.push(venueData.ciudad);
-    if (venueData.estado) direccionParts.push(venueData.estado);
-    if (venueData.codigo_postal) direccionParts.push(venueData.codigo_postal);
-    if (venueData.pais) direccionParts.push(venueData.pais);
-    
-    if (direccionParts.length > 0) {
-      page.drawText(direccionParts.join(', '), { 
-        x: 60, 
-        y, 
         size: 11, 
-        color: rgb(0.3,0.3,0.3), 
+        color: rgb(0.2,0.2,0.2), 
         font: helveticaFont 
       });
       y -= 18;
     }
-    
-    // Teléfono si está disponible
-    if (venueData.telefono) {
-      page.drawText(`Teléfono: ${venueData.telefono}`, { 
-        x: 60, 
-        y, 
-        size: 10, 
-        color: rgb(0.4,0.4,0.4), 
-        font: helveticaFont 
-      });
-      y -= 16;
-    }
-    
-    // Capacidad si está disponible
-    if (venueData.capacidad) {
-      page.drawText(`Capacidad: ${venueData.capacidad} personas`, { 
-        x: 60, 
-        y, 
-        size: 10, 
-        color: rgb(0.4,0.4,0.4), 
-        font: helveticaFont 
-      });
-      y -= 16;
-    }
-    
-    y -= 5; // Espacio adicional
-  }
 
-  // 4. QR CODE DEL ASIENTO (centro-derecho)
-  const qrSize = 120;
-  const qrX = width - qrSize - 50;
-  const qrY = height - 220;
-  
-  if (qrImageBytes) {
+    // Método de pago
     try {
-      const qrImage = await pdfDoc.embedPng(qrImageBytes);
-      page.drawImage(qrImage, {
-        x: qrX,
-        y: qrY,
-        width: qrSize,
-        height: qrSize,
-      });
-
-      page.drawText('CÓDIGO DE VALIDACIÓN', {
-        x: qrX,
-        y: qrY - 20,
-        size: 12,
-        color: rgb(0.1, 0.1, 0.1),
-        font: helveticaBold
-      });
-
-      page.drawText('Escanea para validar entrada', {
-        x: qrX,
-        y: qrY - 35,
-        size: 10,
-        color: rgb(0.3,0.3,0.3),
-        font: helveticaFont
-      });
-    } catch (qrEmbedError) {
-      console.error('❌ [PDF] Error embediendo QR en PDF:', qrEmbedError);
-      page.drawRectangle({ 
-        x: qrX, 
-        y: qrY, 
-        width: qrSize, 
-        height: qrSize, 
-        color: rgb(0.95,0.95,0.95), 
-        borderColor: rgb(0.8,0.8,0.8), 
-        borderWidth: 1 
-      });
-      page.drawText('QR', { 
-        x: qrX + qrSize/2 - 10, 
-        y: qrY + qrSize/2 - 8, 
-        size: 16, 
-        color: rgb(0.6,0.6,0.6), 
-        font: helveticaBold 
-      });
-    }
-  }
-
-  // 5. INFORMACIÓN DEL ASIENTO (lado izquierdo) - Mejorada
-  page.drawText('Información de la Entrada:', { 
-    x: 50, 
-    y, 
-    size: 14, 
-    color: rgb(0,0,0), 
-    font: helveticaBold 
-  });
-  y -= 20;
-
-  let seatInfo = [];
-  if (zonaTxt) seatInfo.push({ label: 'Zona', value: zonaTxt });
-  if (mesaTxt) seatInfo.push({ label: 'Mesa', value: mesaTxt });
-  if (filaTxt) seatInfo.push({ label: 'Fila', value: filaTxt });
-  if (asientoTxt) seatInfo.push({ label: 'Asiento', value: asientoTxt });
-  if (precioTxt) seatInfo.push({ label: 'Precio', value: `$${Number(precioTxt).toFixed(2)}` });
-
-  if (seatInfo.length === 0) {
-    seatInfo.push({ label: 'ID', value: seatId });
-  }
-
-  seatInfo.forEach((info) => {
-    page.drawText(`${info.label}: ${info.value}`, { 
-      x: 60, 
-      y, 
-      size: 12, 
-      color: rgb(0.2,0.2,0.2), 
-      font: helveticaFont 
-    });
-    y -= 18;
-  });
-  
-  // Información adicional del evento si está disponible
-  try {
-    const eventData = pdfExtras.eventData || payment.event || null;
-    if (eventData) {
-      // Categoría del evento
-      if (eventData.categoria) {
-        page.drawText(`Categoría: ${eventData.categoria}`, { 
-          x: 60, 
+      const pm = payment.payment_method || (Array.isArray(payment.payments) && payment.payments[0]?.method) || null;
+      if (pm) {
+        page.drawText(`Método: ${pm}`, { 
+          x: 50, 
           y, 
           size: 10, 
-          color: rgb(0.4,0.4,0.4), 
+          color: rgb(0.3,0.3,0.3), 
           font: helveticaFont 
         });
         y -= 16;
       }
-      
-      // Tipo de evento
-      if (eventData.tipo) {
-        page.drawText(`Tipo: ${eventData.tipo}`, { 
-          x: 60, 
-          y, 
-          size: 10, 
-          color: rgb(0.4,0.4,0.4), 
-          font: helveticaFont 
-        });
-        y -= 16;
-      }
-    }
-  } catch {}
-  
-  y -= 5; // Espacio adicional
+    } catch {}
+    
+    y -= 10; // Espacio antes de la ubicación
 
-  // 6. DETALLES DE LA FUNCIÓN - Información completa
-  try {
-    const funcion = pdfExtras.funcionData || payment.funcion || null;
-    if (funcion?.fecha_celebracion) {
-      y -= 10;
-      const fechaCelebracion = new Date(funcion.fecha_celebracion);
-      const fecha = fechaCelebracion.toLocaleDateString('es-ES', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      const hora = fechaCelebracion.toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        timeZoneName: 'short'
-      });
-
-      page.drawText('Información del Evento:', { 
+    // RECINTO - Información completa
+    if (venueData?.nombre) {
+      console.log('📍 [PDF-PAGE] Mostrando información del recinto:', venueData.nombre);
+      page.drawText('Ubicación:', { 
         x: 50, 
         y, 
         size: 14, 
@@ -383,50 +200,298 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       });
       y -= 20;
       
-      // Fecha
-      page.drawText(`Fecha: ${fecha}`, { 
+      page.drawText(`Recinto: ${venueData.nombre}`, { 
         x: 60, 
         y, 
-        size: 11, 
+        size: 12, 
+        color: rgb(0.1,0.1,0.1), 
+        font: helveticaBold 
+      });
+      y -= 18;
+      
+      // Dirección completa
+      const direccionParts = [];
+      if (venueData.direccion) direccionParts.push(venueData.direccion);
+      if (venueData.ciudad) direccionParts.push(venueData.ciudad);
+      if (venueData.estado) direccionParts.push(venueData.estado);
+      if (venueData.codigo_postal) direccionParts.push(venueData.codigo_postal);
+      if (venueData.pais) direccionParts.push(venueData.pais);
+      
+      if (direccionParts.length > 0) {
+        page.drawText(direccionParts.join(', '), { 
+          x: 60, 
+          y, 
+          size: 11, 
+          color: rgb(0.3,0.3,0.3), 
+          font: helveticaFont 
+        });
+        y -= 18;
+      }
+      
+      // Teléfono si está disponible
+      if (venueData.telefono) {
+        page.drawText(`Teléfono: ${venueData.telefono}`, { 
+          x: 60, 
+          y, 
+          size: 10, 
+          color: rgb(0.4,0.4,0.4), 
+          font: helveticaFont 
+        });
+        y -= 16;
+      }
+      
+      // Capacidad si está disponible
+      if (venueData.capacidad) {
+        page.drawText(`Capacidad: ${venueData.capacidad} personas`, { 
+          x: 60, 
+          y, 
+          size: 10, 
+          color: rgb(0.4,0.4,0.4), 
+          font: helveticaFont 
+        });
+        y -= 16;
+      }
+      
+      y -= 5; // Espacio adicional
+    } else {
+      console.warn('⚠️ [PDF-PAGE] No hay datos de recinto disponibles');
+    }
+
+    // 4. QR CODE DEL ASIENTO (centro-derecho)
+    const qrSize = 120;
+    const qrX = width - qrSize - 50;
+    const qrY = height - 220;
+    
+    if (qrImageBytes) {
+      try {
+        const qrImage = await pdfDoc.embedPng(qrImageBytes);
+        page.drawImage(qrImage, {
+          x: qrX,
+          y: qrY,
+          width: qrSize,
+          height: qrSize,
+        });
+
+        page.drawText('CÓDIGO DE VALIDACIÓN', {
+          x: qrX,
+          y: qrY - 20,
+          size: 12,
+          color: rgb(0.1, 0.1, 0.1),
+          font: helveticaBold
+        });
+
+        page.drawText('Escanea para validar entrada', {
+          x: qrX,
+          y: qrY - 35,
+          size: 10,
+          color: rgb(0.3,0.3,0.3),
+          font: helveticaFont
+        });
+      } catch (qrEmbedError) {
+        console.error('❌ [PDF] Error embediendo QR en PDF:', qrEmbedError);
+        page.drawRectangle({ 
+          x: qrX, 
+          y: qrY, 
+          width: qrSize, 
+          height: qrSize, 
+          color: rgb(0.95,0.95,0.95), 
+          borderColor: rgb(0.8,0.8,0.8), 
+          borderWidth: 1 
+        });
+        page.drawText('QR', { 
+          x: qrX + qrSize/2 - 10, 
+          y: qrY + qrSize/2 - 8, 
+          size: 16, 
+          color: rgb(0.6,0.6,0.6), 
+          font: helveticaBold 
+        });
+      }
+    }
+
+    // 5. INFORMACIÓN DEL ASIENTO (lado izquierdo) - Mejorada
+    page.drawText('Información de la Entrada:', { 
+      x: 50, 
+      y, 
+      size: 14, 
+      color: rgb(0,0,0), 
+      font: helveticaBold 
+    });
+    y -= 20;
+
+    let seatInfo = [];
+    if (zonaTxt) seatInfo.push({ label: 'Zona', value: zonaTxt });
+    if (mesaTxt) seatInfo.push({ label: 'Mesa', value: mesaTxt });
+    if (filaTxt) seatInfo.push({ label: 'Fila', value: filaTxt });
+    if (asientoTxt) seatInfo.push({ label: 'Asiento', value: asientoTxt });
+    if (precioTxt) seatInfo.push({ label: 'Precio', value: `$${Number(precioTxt).toFixed(2)}` });
+
+    if (seatInfo.length === 0) {
+      seatInfo.push({ label: 'ID', value: seatId });
+    }
+
+    seatInfo.forEach((info) => {
+      page.drawText(`${info.label}: ${info.value}`, { 
+        x: 60, 
+        y, 
+        size: 12, 
         color: rgb(0.2,0.2,0.2), 
         font: helveticaFont 
       });
       y -= 18;
-      
-      // Hora de inicio (extraída de fecha_celebracion)
-      page.drawText(`Hora: ${hora}`, { 
-        x: 60, 
-        y, 
-        size: 11, 
-        color: rgb(0.2,0.2,0.2), 
-        font: helveticaFont 
-      });
-      y -= 18;
-      
-      // Hora de apertura si está disponible (puede ser un campo separado o parte de fecha_celebracion)
-      if (funcion.hora_apertura) {
-        try {
-          // Si hora_apertura es un string de hora (HH:MM) o una fecha completa
-          let horaApertura = funcion.hora_apertura;
-          if (typeof horaApertura === 'string' && horaApertura.includes('T')) {
-            // Es una fecha completa
-            horaApertura = new Date(horaApertura).toLocaleTimeString('es-ES', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            });
-          }
-          page.drawText(`Apertura de puertas: ${horaApertura}`, { 
+    });
+    
+    // Información adicional del evento si está disponible
+    try {
+      const eventData = pdfExtras?.eventData || payment?.event || null;
+      if (eventData) {
+        // Categoría del evento
+        if (eventData.categoria) {
+          page.drawText(`Categoría: ${eventData.categoria}`, { 
             x: 60, 
             y, 
             size: 10, 
-            color: rgb(0.3,0.3,0.3), 
+            color: rgb(0.4,0.4,0.4), 
             font: helveticaFont 
           });
           y -= 16;
-        } catch (err) {
-          // Si falla, intentar mostrar como string directo
+        }
+        
+        // Tipo de evento
+        if (eventData.tipo) {
+          page.drawText(`Tipo: ${eventData.tipo}`, { 
+            x: 60, 
+            y, 
+            size: 10, 
+            color: rgb(0.4,0.4,0.4), 
+            font: helveticaFont 
+          });
+          y -= 16;
+        }
+      }
+    } catch {}
+    
+    y -= 5; // Espacio adicional
+
+    // 6. DETALLES DE LA FUNCIÓN - Información completa
+    try {
+      const funcion = pdfExtras?.funcionData || payment?.funcion || null;
+      console.log(`📅 [PDF-PAGE] Datos de función:`, {
+        hasFuncion: !!funcion,
+        fecha_celebracion: funcion?.fecha_celebracion,
+        hora_apertura: funcion?.hora_apertura,
+        hora_inicio: funcion?.hora_inicio,
+        estado: funcion?.estado
+      });
+      
+      if (funcion?.fecha_celebracion) {
+        y -= 10;
+        try {
+          const fechaCelebracion = new Date(funcion.fecha_celebracion);
+          if (isNaN(fechaCelebracion.getTime())) {
+            console.warn('⚠️ [PDF-PAGE] Fecha de celebración inválida:', funcion.fecha_celebracion);
+            throw new Error('Fecha inválida');
+          }
+          
+          const fecha = fechaCelebracion.toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            timeZone: 'UTC'
+          });
+          const hora = fechaCelebracion.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'UTC'
+          });
+
+          page.drawText('Información del Evento:', { 
+            x: 50, 
+            y, 
+            size: 14, 
+            color: rgb(0,0,0), 
+            font: helveticaBold 
+          });
+          y -= 20;
+          
+          // Fecha
+          page.drawText(`Fecha: ${fecha}`, { 
+            x: 60, 
+            y, 
+            size: 11, 
+            color: rgb(0.2,0.2,0.2), 
+            font: helveticaFont 
+          });
+          y -= 18;
+          
+          // Hora de inicio (extraída de fecha_celebracion)
+          page.drawText(`Hora: ${hora}`, { 
+            x: 60, 
+            y, 
+            size: 11, 
+            color: rgb(0.2,0.2,0.2), 
+            font: helveticaFont 
+          });
+          y -= 18;
+        } catch (dateError) {
+          console.error('❌ [PDF-PAGE] Error procesando fecha de celebración:', dateError.message);
+          // Mostrar fecha sin formatear si falla el formateo
+          page.drawText(`Fecha: ${funcion.fecha_celebracion}`, { 
+            x: 60, 
+            y, 
+            size: 11, 
+            color: rgb(0.2,0.2,0.2), 
+            font: helveticaFont 
+          });
+          y -= 18;
+        }
+        
+        // Hora de apertura si está disponible (puede ser un campo separado o parte de fecha_celebracion)
+        if (funcion.hora_apertura) {
           try {
-            page.drawText(`Apertura: ${funcion.hora_apertura}`, { 
+            // Si hora_apertura es un string de hora (HH:MM) o una fecha completa
+            let horaApertura = funcion.hora_apertura;
+            if (typeof horaApertura === 'string' && horaApertura.includes('T')) {
+              // Es una fecha completa
+              horaApertura = new Date(horaApertura).toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              });
+            }
+            page.drawText(`Apertura de puertas: ${horaApertura}`, { 
+              x: 60, 
+              y, 
+              size: 10, 
+              color: rgb(0.3,0.3,0.3), 
+              font: helveticaFont 
+            });
+            y -= 16;
+          } catch (err) {
+            // Si falla, intentar mostrar como string directo
+            try {
+              page.drawText(`Apertura: ${funcion.hora_apertura}`, { 
+                x: 60, 
+                y, 
+                size: 10, 
+                color: rgb(0.3,0.3,0.3), 
+                font: helveticaFont 
+              });
+              y -= 16;
+            } catch {}
+          }
+        }
+        
+        // Hora de inicio adicional si está disponible y es diferente de fecha_celebracion
+        if (funcion.hora_inicio && funcion.hora_inicio !== funcion.fecha_celebracion) {
+          try {
+            let horaInicio = funcion.hora_inicio;
+            if (typeof horaInicio === 'string' && horaInicio.includes('T')) {
+              horaInicio = new Date(horaInicio).toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              });
+            }
+            page.drawText(`Inicio: ${horaInicio}`, { 
               x: 60, 
               y, 
               size: 10, 
@@ -436,19 +501,10 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
             y -= 16;
           } catch {}
         }
-      }
-      
-      // Hora de inicio adicional si está disponible y es diferente de fecha_celebracion
-      if (funcion.hora_inicio && funcion.hora_inicio !== funcion.fecha_celebracion) {
-        try {
-          let horaInicio = funcion.hora_inicio;
-          if (typeof horaInicio === 'string' && horaInicio.includes('T')) {
-            horaInicio = new Date(horaInicio).toLocaleTimeString('es-ES', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            });
-          }
-          page.drawText(`Inicio: ${horaInicio}`, { 
+        
+        // Estado de la función si está disponible
+        if (funcion.estado) {
+          page.drawText(`Estado: ${funcion.estado}`, { 
             x: 60, 
             y, 
             size: 10, 
@@ -456,142 +512,139 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
             font: helveticaFont 
           });
           y -= 16;
-        } catch {}
+        }
+        
+        y -= 5; // Espacio adicional
+      } else {
+        console.warn('⚠️ [PDF-PAGE] No hay datos de función disponibles para mostrar fecha/hora');
       }
-      
-      // Estado de la función si está disponible
-      if (funcion.estado) {
-        page.drawText(`Estado: ${funcion.estado}`, { 
-          x: 60, 
-          y, 
-          size: 10, 
-          color: rgb(0.3,0.3,0.3), 
-          font: helveticaFont 
-        });
-        y -= 16;
-      }
-      
-      y -= 5; // Espacio adicional
+    } catch (funcionError) {
+      console.error('❌ [PDF-PAGE] Error procesando datos de función:', funcionError.message);
+      console.error('❌ [PDF-PAGE] Stack:', funcionError.stack);
     }
-  } catch {}
 
-  // 7. INFORMACIÓN DEL CLIENTE
-  try {
-    const customerName = payment.customer_name || payment.nombre_cliente || payment.user_name || null;
-    const customerEmail = payment.customer_email || payment.email_cliente || payment.user_email || null;
-    if (customerName || customerEmail) {
-      y -= 10;
-      page.drawText('Información del comprador:', { 
-        x: 50, 
-        y, 
-        size: 14, 
-        color: rgb(0,0,0), 
-        font: helveticaBold 
-      });
-      y -= 20;
-      if (customerName) {
-        page.drawText(`Nombre: ${customerName}`, { 
-          x: 60, 
+    // 7. INFORMACIÓN DEL CLIENTE
+    try {
+      const customerName = payment.customer_name || payment.nombre_cliente || payment.user_name || null;
+      const customerEmail = payment.customer_email || payment.email_cliente || payment.user_email || null;
+      if (customerName || customerEmail) {
+        y -= 10;
+        page.drawText('Información del comprador:', { 
+          x: 50, 
           y, 
-          size: 11, 
-          color: rgb(0.2,0.2,0.2), 
-          font: helveticaFont 
+          size: 14, 
+          color: rgb(0,0,0), 
+          font: helveticaBold 
         });
-        y -= 18;
+        y -= 20;
+        if (customerName) {
+          page.drawText(`Nombre: ${customerName}`, { 
+            x: 60, 
+            y, 
+            size: 11, 
+            color: rgb(0.2,0.2,0.2), 
+            font: helveticaFont 
+          });
+          y -= 18;
+        }
+        if (customerEmail) {
+          page.drawText(`Email: ${customerEmail}`, { 
+            x: 60, 
+            y, 
+            size: 11, 
+            color: rgb(0.2,0.2,0.2), 
+            font: helveticaFont 
+          });
+          y -= 18;
+        }
       }
-      if (customerEmail) {
-        page.drawText(`Email: ${customerEmail}`, { 
-          x: 60, 
-          y, 
-          size: 11, 
-          color: rgb(0.2,0.2,0.2), 
-          font: helveticaFont 
+    } catch {}
+
+    // 8. IMAGEN INFERIOR (banner)
+    {
+      const bottomImageWidth = width - 100;
+      const bottomImageHeight = 100;
+      const bx = 50;
+      const by = 150;
+      if (eventImages.banner) {
+        page.drawImage(eventImages.banner, { 
+          x: bx, 
+          y: by, 
+          width: bottomImageWidth, 
+          height: bottomImageHeight 
         });
-        y -= 18;
+      } else {
+        page.drawRectangle({ 
+          x: bx, 
+          y: by, 
+          width: bottomImageWidth, 
+          height: bottomImageHeight, 
+          color: rgb(0.95,0.95,0.95), 
+          borderColor: rgb(0.8,0.8,0.8), 
+          borderWidth: 1 
+        });
+        page.drawText('3', { 
+          x: bx + bottomImageWidth/2 - 8, 
+          y: by + bottomImageHeight/2 - 10, 
+          size: 20, 
+          color: rgb(0.6,0.6,0.6), 
+          font: helveticaBold 
+        });
       }
     }
-  } catch {}
 
-  // 8. IMAGEN INFERIOR (banner)
-  {
-    const bottomImageWidth = width - 100;
-    const bottomImageHeight = 100;
-    const bx = 50;
-    const by = 150;
-    if (eventImages.banner) {
-      page.drawImage(eventImages.banner, { 
-        x: bx, 
-        y: by, 
-        width: bottomImageWidth, 
-        height: bottomImageHeight 
-      });
-    } else {
-      page.drawRectangle({ 
-        x: bx, 
-        y: by, 
-        width: bottomImageWidth, 
-        height: bottomImageHeight, 
-        color: rgb(0.95,0.95,0.95), 
-        borderColor: rgb(0.8,0.8,0.8), 
-        borderWidth: 1 
-      });
-      page.drawText('3', { 
-        x: bx + bottomImageWidth/2 - 8, 
-        y: by + bottomImageHeight/2 - 10, 
-        size: 20, 
-        color: rgb(0.6,0.6,0.6), 
-        font: helveticaBold 
-      });
-    }
-  }
-
-  // 9. CONDICIONES - Mensaje personalizado según el origen
-  page.drawText('Condiciones:', { 
-    x: 50, 
-    y: 100, 
-    size: 10, 
-    color: rgb(0.2,0.2,0.2), 
-    font: helveticaBold 
-  });
-  page.drawText('• Presenta este ticket en la entrada del evento.', { 
-    x: 60, 
-    y: 85, 
-    size: 9, 
-    color: rgb(0.2,0.2,0.2), 
-    font: helveticaFont 
-  });
-  page.drawText('• El QR es único y será validado electrónicamente.', { 
-    x: 60, 
-    y: 73, 
-    size: 9, 
-    color: rgb(0.2,0.2,0.2), 
-    font: helveticaFont 
-  });
-  
-  // Mensaje adicional si viene de correo
-  if (downloadSource === 'email') {
-    page.drawText('• Este enlace fue enviado directamente a tu correo personal.', { 
-      x: 60, 
-      y: 61, 
-      size: 9, 
-      color: rgb(0.7,0.1,0.1), // Rojo para destacar
+    // 9. CONDICIONES - Mensaje personalizado según el origen
+    page.drawText('Condiciones:', { 
+      x: 50, 
+      y: 100, 
+      size: 10, 
+      color: rgb(0.2,0.2,0.2), 
       font: helveticaBold 
     });
-    page.drawText('• No compartas este enlace. Solo el primer escaneo será válido.', { 
+    page.drawText('• Presenta este ticket en la entrada del evento.', { 
       x: 60, 
-      y: 49, 
+      y: 85, 
       size: 9, 
       color: rgb(0.2,0.2,0.2), 
       font: helveticaFont 
     });
-  } else {
-    page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { 
+    page.drawText('• El QR es único y será validado electrónicamente.', { 
       x: 60, 
-      y: 61, 
+      y: 73, 
       size: 9, 
       color: rgb(0.2,0.2,0.2), 
       font: helveticaFont 
     });
+    
+    // Mensaje adicional si viene de correo
+    if (downloadSource === 'email') {
+      page.drawText('• Este enlace fue enviado directamente a tu correo personal.', { 
+        x: 60, 
+        y: 61, 
+        size: 9, 
+        color: rgb(0.7,0.1,0.1), // Rojo para destacar
+        font: helveticaBold 
+      });
+      page.drawText('• No compartas este enlace. Solo el primer escaneo será válido.', { 
+        x: 60, 
+        y: 49, 
+        size: 9, 
+        color: rgb(0.2,0.2,0.2), 
+        font: helveticaFont 
+      });
+    } else {
+      page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { 
+        x: 60, 
+        y: 61, 
+        size: 9, 
+        color: rgb(0.2,0.2,0.2), 
+        font: helveticaFont 
+      });
+    }
+  } catch (error) {
+    console.error(`❌ [PDF-PAGE] Error en drawSeatPage para asiento ${seat?._id || 'unknown'}:`, error);
+    console.error(`❌ [PDF-PAGE] Stack:`, error.stack);
+    throw error; // Re-lanzar el error para que sea capturado por el manejador superior
   }
 }
 
@@ -603,39 +656,110 @@ async function loadEventImages(pdfDoc, eventData, supabaseAdmin) {
   let venueData = null;
 
   try {
+    console.log('🖼️ [PDF] loadEventImages llamado con eventData:', {
+      hasEventData: !!eventData,
+      hasImagenes: !!eventData?.imagenes,
+      imagenesType: typeof eventData?.imagenes
+    });
+    
     if (eventData && eventData.imagenes) {
-      const images = typeof eventData.imagenes === 'string'
-        ? JSON.parse(eventData.imagenes)
-        : eventData.imagenes;
+      let images;
+      try {
+        images = typeof eventData.imagenes === 'string'
+          ? JSON.parse(eventData.imagenes)
+          : eventData.imagenes;
+        console.log('🖼️ [PDF] Imágenes parseadas:', Object.keys(images || {}));
+      } catch (parseError) {
+        console.error('❌ [PDF] Error parseando imágenes:', parseError.message);
+        images = {};
+      }
 
       const imageTypes = ['logoHorizontal', 'portada', 'banner'];
       for (const imageType of imageTypes) {
-        if (images[imageType]) {
+        if (images && images[imageType]) {
           try {
-            const imageUrl = images[imageType].publicUrl || images[imageType].url;
-            if (imageUrl) {
-              console.log(`🖼️ [PDF] Cargando ${imageType}:`, imageUrl);
-              const response = await fetch(imageUrl);
-              if (response.ok) {
-                const imageBuffer = await response.arrayBuffer();
+            // Intentar múltiples formas de obtener la URL
+            const imageObj = images[imageType];
+            let imageUrl = null;
+            
+            if (typeof imageObj === 'string') {
+              // Si es una cadena, usar directamente
+              imageUrl = imageObj;
+            } else if (imageObj?.publicUrl) {
+              imageUrl = imageObj.publicUrl;
+            } else if (imageObj?.url) {
+              imageUrl = imageObj.url;
+            } else if (imageObj?.path) {
+              // Si es un path de Supabase Storage, construir la URL pública
+              // Esto asume que las imágenes están en un bucket público
+              const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
+              if (supabaseUrl && supabaseAdmin) {
+                // Intentar obtener la URL pública desde Supabase Storage
                 try {
-                  eventImages[imageType] = await pdfDoc.embedPng(imageBuffer);
-                  console.log(`✅ [PDF] ${imageType} cargado como PNG`);
-                } catch (pngError) {
-                  try {
-                    eventImages[imageType] = await pdfDoc.embedJpg(imageBuffer);
-                    console.log(`✅ [PDF] ${imageType} cargado como JPEG`);
-                  } catch (jpgError) {
-                    console.warn(`⚠️ [PDF] ${imageType} no es PNG ni JPEG`);
-                  }
+                  const { data } = await supabaseAdmin.storage.from('eventos').getPublicUrl(imageObj.path);
+                  imageUrl = data?.publicUrl || null;
+                } catch (storageError) {
+                  console.warn(`⚠️ [PDF] Error obteniendo URL pública de Storage para ${imageType}:`, storageError.message);
                 }
               }
             }
+            
+            if (imageUrl) {
+              console.log(`🖼️ [PDF] Cargando ${imageType} desde:`, imageUrl);
+              
+              // Hacer la petición con timeout
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+              
+              try {
+                const response = await fetch(imageUrl, {
+                  signal: controller.signal,
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0'
+                  }
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                  const imageBuffer = await response.arrayBuffer();
+                  console.log(`✅ [PDF] ${imageType} descargado, tamaño:`, imageBuffer.byteLength, 'bytes');
+                  
+                  try {
+                    eventImages[imageType] = await pdfDoc.embedPng(imageBuffer);
+                    console.log(`✅ [PDF] ${imageType} embedido como PNG`);
+                  } catch (pngError) {
+                    try {
+                      eventImages[imageType] = await pdfDoc.embedJpg(imageBuffer);
+                      console.log(`✅ [PDF] ${imageType} embedido como JPEG`);
+                    } catch (jpgError) {
+                      console.warn(`⚠️ [PDF] ${imageType} no es PNG ni JPEG:`, jpgError.message);
+                    }
+                  }
+                } else {
+                  console.warn(`⚠️ [PDF] Error HTTP al cargar ${imageType}:`, response.status, response.statusText);
+                }
+              } catch (fetchError) {
+                clearTimeout(timeoutId);
+                if (fetchError.name === 'AbortError') {
+                  console.warn(`⚠️ [PDF] Timeout al cargar ${imageType}`);
+                } else {
+                  console.warn(`⚠️ [PDF] Error fetch al cargar ${imageType}:`, fetchError.message);
+                }
+              }
+            } else {
+              console.warn(`⚠️ [PDF] No se pudo obtener URL para ${imageType}`);
+            }
           } catch (imgError) {
-            console.warn(`⚠️ [PDF] Error cargando ${imageType}:`, imgError.message);
+            console.warn(`⚠️ [PDF] Error procesando ${imageType}:`, imgError.message);
+            console.warn(`⚠️ [PDF] Stack:`, imgError.stack);
           }
+        } else {
+          console.log(`ℹ️ [PDF] No hay imagen ${imageType} disponible`);
         }
       }
+    } else {
+      console.warn('⚠️ [PDF] No hay imágenes en eventData');
     }
 
     // Cargar información del recinto con más datos

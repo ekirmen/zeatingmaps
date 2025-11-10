@@ -910,8 +910,21 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // Obtener datos del evento con más información
+    // Obtener datos del evento, función y recinto
+    // Preferir los datos que vienen en pdfExtras (ya obtenidos en handleDownload)
     let eventData = pdfExtras.eventData || payment.event || null;
+    let funcionData = pdfExtras.funcionData || payment.funcion || null;
+    let venueData = pdfExtras.venueData || null;
+    
+    console.log('📄 [PDF] Datos recibidos:', {
+      hasEventData: !!eventData,
+      hasFuncionData: !!funcionData,
+      hasVenueData: !!venueData,
+      evento_id: payment.evento_id,
+      funcion_id: payment.funcion_id
+    });
+    
+    // Si no hay eventData pero hay evento_id, intentar obtenerlo
     if (!eventData && payment.evento_id && supabaseAdmin) {
       console.log('📄 [PDF] Obteniendo datos del evento desde evento_id:', payment.evento_id);
       const { data: evt, error: evtErr } = await supabaseAdmin
@@ -921,30 +934,94 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
         .maybeSingle();
       
       if (!evtErr && evt) {
-        console.log('✅ [PDF] Evento obtenido:', evt.id);
+        console.log('✅ [PDF] Evento obtenido:', evt.id, evt.nombre);
         eventData = evt;
         pdfExtras.eventData = evt;
+      } else {
+        console.error('❌ [PDF] Error obteniendo evento:', evtErr);
+      }
+    }
+    
+    // Si no hay funcionData pero hay funcion_id, intentar obtenerlo
+    if (!funcionData && payment.funcion_id && supabaseAdmin) {
+      console.log('📄 [PDF] Obteniendo datos de la función desde funcion_id:', payment.funcion_id);
+      const { data: func, error: fErr } = await supabaseAdmin
+        .from('funciones')
+        .select('id, fecha_celebracion, evento_id, estado, hora_apertura, hora_inicio')
+        .eq('id', payment.funcion_id)
+        .maybeSingle();
+      
+      if (!fErr && func) {
+        console.log('✅ [PDF] Función obtenida:', func.id, func.fecha_celebracion);
+        funcionData = func;
+        pdfExtras.funcionData = func;
+        
+        // Si no hay eventData pero la función tiene evento_id, obtenerlo
+        if (!eventData && func.evento_id) {
+          const { data: evt, error: eErr } = await supabaseAdmin
+            .from('eventos')
+            .select('id, nombre, imagenes, recinto_id, descripcion, categoria, tipo')
+            .eq('id', func.evento_id)
+            .maybeSingle();
+          
+          if (!eErr && evt) {
+            console.log('✅ [PDF] Evento obtenido desde función:', evt.id, evt.nombre);
+            eventData = evt;
+            pdfExtras.eventData = evt;
+          }
+        }
+      } else {
+        console.error('❌ [PDF] Error obteniendo función:', fErr);
+      }
+    }
+    
+    // Si no hay venueData pero el evento tiene recinto_id, obtenerlo
+    if (!venueData && eventData?.recinto_id && supabaseAdmin) {
+      console.log('📄 [PDF] Obteniendo datos del recinto desde recinto_id:', eventData.recinto_id);
+      const { data: rec, error: rErr } = await supabaseAdmin
+        .from('recintos')
+        .select('id, nombre, direccion, ciudad, estado, pais, codigo_postal, telefono, capacidad')
+        .eq('id', eventData.recinto_id)
+        .maybeSingle();
+      
+      if (!rErr && rec) {
+        console.log('✅ [PDF] Recinto obtenido:', rec.nombre);
+        venueData = rec;
+        pdfExtras.venueData = rec;
+      } else {
+        console.error('❌ [PDF] Error obteniendo recinto:', rErr);
       }
     }
 
     // Cargar imágenes del evento (una sola vez, se reutilizan en todas las páginas)
     let eventImages = {};
-    let finalVenueData = null;
+    let finalVenueData = venueData;
     try {
+      console.log('🖼️ [PDF] Cargando imágenes del evento...');
+      console.log('🖼️ [PDF] EventData para imágenes:', {
+        hasEventData: !!eventData,
+        hasImagenes: !!eventData?.imagenes,
+        imagenesType: typeof eventData?.imagenes
+      });
+      
       const loadedData = await loadEventImages(
         pdfDoc, 
-        eventData || pdfExtras.eventData, 
+        eventData, 
         supabaseAdmin
       );
       eventImages = loadedData.eventImages || {};
-      finalVenueData = loadedData.venueData || pdfExtras.venueData || null;
+      // Si loadEventImages devolvió venueData y no teníamos uno, usarlo
+      if (loadedData.venueData && !finalVenueData) {
+        finalVenueData = loadedData.venueData;
+        pdfExtras.venueData = finalVenueData;
+      }
       console.log('✅ [PDF] Imágenes del evento cargadas:', Object.keys(eventImages).length, 'imágenes');
+      console.log('✅ [PDF] Tipos de imágenes cargadas:', Object.keys(eventImages));
     } catch (imagesError) {
       console.error('❌ [PDF] Error cargando imágenes del evento:', imagesError);
       console.error('❌ [PDF] Stack:', imagesError.stack);
       // Continuar con imágenes vacías
       eventImages = {};
-      finalVenueData = pdfExtras.venueData || null;
     }
 
     let eventTitle = null;
@@ -966,6 +1043,23 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
       
       // Dibujar la página del asiento
       try {
+        // Asegurarse de que pdfExtras tenga todos los datos necesarios
+        const seatPageExtras = {
+          ...pdfExtras,
+          eventData: eventData || pdfExtras.eventData,
+          funcionData: funcionData || pdfExtras.funcionData,
+          venueData: finalVenueData || pdfExtras.venueData,
+          downloadSource: pdfExtras.downloadSource || 'web'
+        };
+        
+        console.log(`📄 [PDF] Dibujando página ${currentPage}/${totalPages} con datos:`, {
+          hasEventData: !!seatPageExtras.eventData,
+          hasFuncionData: !!seatPageExtras.funcionData,
+          hasVenueData: !!seatPageExtras.venueData,
+          eventImagesCount: Object.keys(eventImages).length,
+          seatId: seatId
+        });
+        
         await drawSeatPage(
           pdfDoc, 
           page, 
@@ -973,7 +1067,7 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
           seat, 
           eventImages, 
           finalVenueData, 
-          pdfExtras, 
+          seatPageExtras, 
           helveticaFont, 
           helveticaBold,
           locator,
