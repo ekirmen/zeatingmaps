@@ -4,10 +4,17 @@
 
 // Registrar Service Worker
 export const registerServiceWorker = async () => {
+  // Verificar si el service worker está deshabilitado
+  if (typeof window !== 'undefined' && localStorage.getItem('sw-disabled') === 'true') {
+    console.log('[PWA] Service Worker deshabilitado por usuario');
+    return null;
+  }
+
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.register('/service-worker.js', {
-        scope: '/'
+        scope: '/',
+        updateViaCache: 'none' // Siempre verificar actualizaciones del service worker
       });
       
       console.log('[PWA] Service Worker registrado:', registration.scope);

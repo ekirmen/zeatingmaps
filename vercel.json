@@ -45,6 +45,14 @@
       "destination": "/static/:path*"
     },
     {
+      "source": "/store/static/css/:path*",
+      "destination": "/static/css/:path*"
+    },
+    {
+      "source": "/store/static/js/:path*",
+      "destination": "/static/js/:path*"
+    },
+    {
       "source": "/store/:path*",
       "destination": "/index.html"
     },

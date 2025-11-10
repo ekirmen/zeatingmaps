@@ -65,75 +65,218 @@ self.addEventListener('activate', (event) => {
 // Estrategia: Network First, luego Cache
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
-
-  // Ignorar métodos que no se pueden cachear (POST, PUT, DELETE, etc.)
-  // La Cache API solo soporta GET y HEAD
+  
+  // No interceptar si no es una request GET/HEAD
   if (request.method !== 'GET' && request.method !== 'HEAD') {
-    // Dejar pasar requests POST/PUT/DELETE sin cachear
     return;
   }
 
-  // Ignorar requests a APIs externas y Supabase
-  if (url.origin.includes('supabase.co') || 
-      url.origin.includes('googleapis.com') ||
-      url.origin.includes('gstatic.com')) {
-    // Network only para APIs
+  try {
+    const url = new URL(request.url);
+
+    // Ignorar requests a APIs externas y Supabase (dejar que pasen directamente)
+    if (url.origin.includes('supabase.co') || 
+        url.origin.includes('googleapis.com') ||
+        url.origin.includes('gstatic.com') ||
+        url.origin.includes('vercel.app') ||
+        url.pathname.startsWith('/api/') ||
+        url.pathname.includes('service-worker.js')) {
+      // No interceptar - dejar que pasen directamente
+      return;
+    }
+
+    // Para recursos estáticos CSS/JS, NO interceptar por defecto
+    // Esto previene problemas de MIME types y permite que Vercel aplique headers correctos
+    // El service worker NO interceptará estos requests para evitar el error "Refused to apply style"
+    if (request.destination === 'style' || request.destination === 'script') {
+      // Limpiar cache de versiones con MIME types incorrectos en background (no bloqueante)
+      event.waitUntil(
+        (async () => {
+          try {
+            const cache = await caches.open(CACHE_NAME);
+            const cached = await cache.match(request);
+            if (cached) {
+              const contentType = cached.headers.get('content-type');
+              // Si el MIME type es incorrecto, eliminar del cache
+              if (request.destination === 'style' && contentType && !contentType.includes('text/css')) {
+                console.warn('[ServiceWorker] Limpiando CSS cacheado con MIME type incorrecto:', contentType);
+                await cache.delete(request).catch(() => {});
+              } else if (request.destination === 'script' && contentType && !contentType.includes('javascript')) {
+                console.warn('[ServiceWorker] Limpiando JS cacheado con MIME type incorrecto:', contentType);
+                await cache.delete(request).catch(() => {});
+              }
+            }
+          } catch (error) {
+            // Ignorar errores de cache - no crítico
+          }
+        })()
+      );
+      
+      // NO interceptar - dejar que el request pase directamente
+      // Esto permite que Vercel aplique los headers correctos (Content-Type: text/css)
+      // y previene el error "Refused to apply style from ... because its MIME type ('text/plain') is not a supported stylesheet MIME type"
+      return;
+    }
+
+    // Para imágenes y fuentes, usar cache first pero con manejo de errores robusto
+    if (request.destination === 'image' || request.destination === 'font') {
+      event.respondWith(
+        cacheFirst(request).catch(error => {
+          console.warn('[ServiceWorker] Error en cacheFirst para imagen/fuente:', error);
+          return fetch(request);
+        })
+      );
+      return;
+    }
+
+    // Para HTML y navegación, usar Network First
+    if (request.mode === 'navigate') {
+      event.respondWith(
+        networkFirst(request).catch(error => {
+          console.warn('[ServiceWorker] Error en networkFirst para navegación:', error);
+          return fetch(request).catch(() => {
+            return caches.match(OFFLINE_URL) || new Response('Offline', { status: 503 });
+          });
+        })
+      );
+      return;
+    }
+
+    // Para otros recursos, no interceptar si hay dudas
+    // Solo interceptar si podemos manejar el error de forma segura
+    return;
+  } catch (error) {
+    // Si hay cualquier error, NO interceptar el request
+    console.error('[ServiceWorker] Error en fetch event listener, no interceptando:', error);
     return;
   }
-
-  // Para assets estáticos, usar Cache First
-  if (request.destination === 'image' || 
-      request.destination === 'font' ||
-      request.destination === 'style' ||
-      request.destination === 'script') {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  // Para HTML y navegación, usar Network First
-  if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-
-  // Para otros recursos, usar Network First
-  event.respondWith(networkFirst(request));
 });
+
+// Función especializada para manejar assets estáticos (CSS/JS) de forma segura
+// Solo intercepta si hay una versión cacheada válida, de lo contrario deja que pase directamente
+async function handleStaticAssetSafe(request) {
+  try {
+    // Solo intentar usar cache si existe una versión cacheada válida
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(request);
+    
+    if (cached) {
+      // Verificar que la respuesta cacheada sea válida
+      try {
+        // Verificar headers de la respuesta cacheada
+        const contentType = cached.headers.get('content-type');
+        if (contentType && (
+          contentType.includes('text/css') || 
+          contentType.includes('application/javascript') ||
+          contentType.includes('text/javascript')
+        )) {
+          // La respuesta cacheada tiene el MIME type correcto, usarla
+          return cached;
+        } else {
+          // La respuesta cacheada tiene un MIME type incorrecto, no usarla
+          console.warn('[ServiceWorker] Respuesta cacheada con MIME type incorrecto, no usando cache:', contentType);
+          // Eliminar del cache para forzar una nueva descarga
+          cache.delete(request).catch(() => {});
+          // Dejar que pase directamente para que Vercel aplique headers correctos
+          throw new Error('Invalid cached MIME type');
+        }
+      } catch (validationError) {
+        // Si hay error validando, no usar cache
+        throw validationError;
+      }
+    }
+  } catch (cacheError) {
+    // Si el cache falla o no hay versión cacheada, no interceptar
+    // Esto permite que Vercel aplique los headers correctos
+    throw cacheError;
+  }
+
+  // Si no hay versión cacheada válida, no interceptar
+  // Esto permite que el request pase directamente y Vercel aplique headers
+  throw new Error('No valid cached version');
+}
 
 // Estrategia Cache First (para assets estáticos)
 async function cacheFirst(request) {
   // Solo cachear GET y HEAD requests
   if (request.method !== 'GET' && request.method !== 'HEAD') {
-    return fetch(request);
+    try {
+      return await fetch(request);
+    } catch (error) {
+      console.warn('[ServiceWorker] Error en fetch (no cacheable):', error);
+      // Dejar que el navegador maneje el error normalmente
+      return new Response('Network error', { status: 408, statusText: 'Request Timeout' });
+    }
   }
 
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-  
-  if (cached) {
-    return cached;
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(request);
+    
+    if (cached) {
+      return cached;
+    }
+  } catch (cacheError) {
+    console.warn('[ServiceWorker] Error accediendo al cache:', cacheError);
+    // Continuar con fetch si el cache falla
   }
   
   try {
     const response = await fetch(request);
+    
     // Solo cachear respuestas exitosas y que sean cacheables
-    if (response.ok && response.status === 200) {
-      // Clonar la respuesta antes de cachear
-      const responseClone = response.clone();
-      // Verificar que la respuesta sea cacheable
-      if (responseClone.type === 'basic' || responseClone.type === 'cors') {
-        cache.put(request, responseClone);
+    if (response && response.ok && response.status === 200) {
+      try {
+        // Clonar la respuesta antes de cachear
+        const responseClone = response.clone();
+        // Verificar que la respuesta sea cacheable
+        if (responseClone.type === 'basic' || responseClone.type === 'cors') {
+          const cache = await caches.open(CACHE_NAME);
+          // Intentar cachear, pero no fallar si no se puede
+          cache.put(request, responseClone).catch(cacheError => {
+            console.warn('[ServiceWorker] No se pudo cachear:', request.url, cacheError);
+          });
+        }
+      } catch (cacheError) {
+        // Si falla el cacheo, no es crítico, continuar
+        console.warn('[ServiceWorker] Error cacheando respuesta:', cacheError);
       }
     }
     return response;
   } catch (error) {
-    console.error('[ServiceWorker] Error en cacheFirst:', error);
+    console.warn('[ServiceWorker] Error en cacheFirst (fetch falló):', error);
+    
+    // Si hay un error de red, intentar devolver del cache como último recurso
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(request);
+      if (cached) {
+        return cached;
+      }
+    } catch (cacheError) {
+      // Ignorar errores de cache
+    }
+    
     // Retornar offline page si es navegación
     if (request.mode === 'navigate') {
-      return caches.match(OFFLINE_URL);
+      try {
+        const offlinePage = await caches.match(OFFLINE_URL);
+        if (offlinePage) {
+          return offlinePage;
+        }
+      } catch (offlineError) {
+        // Ignorar error de offline page
+      }
     }
-    throw error;
+    
+    // Devolver una respuesta de error en lugar de lanzar excepción
+    return new Response('Network error', { 
+      status: 408, 
+      statusText: 'Request Timeout',
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    });
   }
 }
 
@@ -141,47 +284,95 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
   // Solo cachear GET y HEAD requests
   if (request.method !== 'GET' && request.method !== 'HEAD') {
-    return fetch(request);
+    try {
+      return await fetch(request);
+    } catch (error) {
+      console.warn('[ServiceWorker] Error en fetch (no cacheable):', error);
+      // Dejar que el navegador maneje el error normalmente
+      return new Response('Network error', { status: 408, statusText: 'Request Timeout' });
+    }
   }
 
-  const cache = await caches.open(RUNTIME_CACHE);
+  let cache;
+  try {
+    cache = await caches.open(RUNTIME_CACHE);
+  } catch (cacheError) {
+    console.warn('[ServiceWorker] Error abriendo cache:', cacheError);
+    // Continuar sin cache si no se puede abrir
+    cache = null;
+  }
   
   try {
     const response = await fetch(request);
     
     // Solo cachear respuestas exitosas y que sean cacheables
-    if (response.ok && response.status === 200) {
-      // Clonar la respuesta antes de cachear
-      const responseClone = response.clone();
-      // Verificar que la respuesta sea cacheable (básica o CORS)
-      if (responseClone.type === 'basic' || responseClone.type === 'cors') {
-        try {
-          cache.put(request, responseClone);
-        } catch (cacheError) {
-          // Si falla el cacheo, continuar sin cachear
-          console.warn('[ServiceWorker] No se pudo cachear la respuesta:', cacheError);
+    if (response && response.ok && response.status === 200 && cache) {
+      try {
+        // Clonar la respuesta antes de cachear
+        const responseClone = response.clone();
+        // Verificar que la respuesta sea cacheable (básica o CORS)
+        if (responseClone.type === 'basic' || responseClone.type === 'cors') {
+          // Intentar cachear, pero no fallar si no se puede
+          cache.put(request, responseClone).catch(cacheError => {
+            console.warn('[ServiceWorker] No se pudo cachear la respuesta:', cacheError);
+          });
         }
+      } catch (cacheError) {
+        // Si falla el cacheo, no es crítico, continuar
+        console.warn('[ServiceWorker] Error cacheando respuesta:', cacheError);
       }
     }
     
     return response;
   } catch (error) {
-    console.log('[ServiceWorker] Red no disponible, usando cache:', error);
+    console.warn('[ServiceWorker] Red no disponible, intentando usar cache:', error.message);
     
     // Intentar obtener del cache solo para GET/HEAD
-    if (request.method === 'GET' || request.method === 'HEAD') {
-      const cached = await cache.match(request);
-      if (cached) {
-        return cached;
+    if (cache && (request.method === 'GET' || request.method === 'HEAD')) {
+      try {
+        const cached = await cache.match(request);
+        if (cached) {
+          console.log('[ServiceWorker] Devolviendo desde cache:', request.url);
+          return cached;
+        }
+      } catch (cacheError) {
+        console.warn('[ServiceWorker] Error leyendo del cache:', cacheError);
       }
     }
     
     // Si es navegación y no hay cache, mostrar página offline
     if (request.mode === 'navigate') {
-      return caches.match(OFFLINE_URL);
+      try {
+        const offlinePage = await caches.match(OFFLINE_URL);
+        if (offlinePage) {
+          return offlinePage;
+        }
+      } catch (offlineError) {
+        // Ignorar error de offline page
+      }
     }
     
-    throw error;
+    // Para assets estáticos (CSS, JS), no fallar completamente
+    // Dejar que el navegador maneje el error normalmente
+    if (request.destination === 'style' || request.destination === 'script') {
+      // Devolver respuesta vacía para que el navegador maneje el error
+      return new Response('', { 
+        status: 408, 
+        statusText: 'Request Timeout',
+        headers: {
+          'Content-Type': request.destination === 'style' ? 'text/css' : 'application/javascript'
+        }
+      });
+    }
+    
+    // Para otros recursos, devolver error controlado
+    return new Response('Network error', { 
+      status: 408, 
+      statusText: 'Request Timeout',
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    });
   }
 }
 
