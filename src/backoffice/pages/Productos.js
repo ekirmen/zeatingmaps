@@ -24,6 +24,7 @@ import {
   EyeOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
+import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -36,32 +37,51 @@ const Productos = () => {
   const [editingProducto, setEditingProducto] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const { addTenantFilter, addTenantToInsert } = useTenantFilter();
 
   // Cargar eventos
   useEffect(() => {
     const fetchEventos = async () => {
       try {
-        // Intentar cargar desde eventos_con_funciones_activas
-        let { data, error } = await supabase
-          .from('eventos_con_funciones_activas')
-          .select('id, nombre, fecha_evento, recinto')
-          .order('fecha_evento', { ascending: false });
+        // Consultar eventos directamente (sin JOIN inicial para evitar errores de sintaxis)
+        let query = supabase
+          .from('eventos')
+          .select('id, nombre, recinto_id, created_at')
+          .eq('activo', true);
+        
+        // Aplicar filtro de tenant
+        query = addTenantFilter(query);
+        
+        const { data, error } = await query.order('created_at', { ascending: false });
 
-        // Si falla, usar eventos directamente
         if (error) {
-          console.warn('Error con eventos_con_funciones_activas, usando eventos directamente:', error);
-          const result = await supabase
-            .from('eventos')
-            .select('id, nombre, fecha_evento, recinto_id')
-            .eq('activo', true)
-            .order('created_at', { ascending: false });
-          
-          data = result.data;
-          error = result.error;
+          console.error('Error cargando eventos:', error);
+          message.error('Error al cargar eventos');
+          setEventos([]);
+          return;
         }
 
-        if (error) throw error;
-        setEventos(data || []);
+        // Procesar datos: obtener la fecha más próxima de las funciones activas para cada evento
+        const eventosWithFecha = await Promise.all(
+          (data || []).map(async (evento) => {
+            // Obtener la primera función activa para este evento
+            const { data: funcionData } = await supabase
+              .from('funciones')
+              .select('fecha_celebracion')
+              .eq('evento_id', evento.id)
+              .eq('activo', true)
+              .order('fecha_celebracion', { ascending: true })
+              .limit(1)
+              .maybeSingle();
+            
+            return {
+              ...evento,
+              fecha_celebracion: funcionData?.fecha_celebracion || null
+            };
+          })
+        );
+        
+        setEventos(eventosWithFecha);
       } catch (error) {
         console.error('Error cargando eventos:', error);
         message.error('Error al cargar eventos');
@@ -69,7 +89,7 @@ const Productos = () => {
     };
 
     fetchEventos();
-  }, []);
+  }, [addTenantFilter]);
 
   // Cargar productos cuando se selecciona un evento
   useEffect(() => {
@@ -86,39 +106,61 @@ const Productos = () => {
     setLoading(true);
     try {
       // 🛍️ CARGAR PRODUCTOS DESDE MÚLTIPLES TABLAS
+      // Plantillas de productos (tabla principal)
+      let plantillasQuery = supabase
+        .from('plantillas_productos')
+        .select('*')
+        .eq('evento_id', eventoSeleccionado)
+        .eq('activo', true)
+        .order('nombre', { ascending: true });
+      
+      plantillasQuery = addTenantFilter(plantillasQuery);
+      
+      // Productos generales (si la tabla existe, con manejo de errores)
+      let productosQuery = supabase
+        .from('productos')
+        .select('*')
+        .eq('activo', true)
+        .order('nombre', { ascending: true });
+      
+      productosQuery = addTenantFilter(productosQuery);
+      
+      // Productos específicos del evento (si la tabla existe, con manejo de errores)
+      let productosEventosQuery = supabase
+        .from('productos_eventos')
+        .select(`
+          *,
+          productos:producto_id(nombre, descripcion, precio_base, categoria)
+        `)
+        .eq('evento_id', eventoSeleccionado)
+        .eq('activo', true)
+        .order('created_at', { ascending: false });
+      
+      productosEventosQuery = addTenantFilter(productosEventosQuery);
+      
       const [plantillasData, productosData, productosEventosData] = await Promise.all([
-        // Plantillas de productos (tabla actual)
-        supabase
-          .from('plantillas_productos')
-          .select('*')
-          .eq('evento_id', eventoSeleccionado)
-          .eq('activo', true)
-          .order('nombre', { ascending: true }),
-        
-        // Productos generales
-        supabase
-          .from('productos')
-          .select('*')
-          .eq('activo', true)
-          .order('nombre', { ascending: true }),
-        
-        // Productos específicos del evento
-        supabase
-          .from('productos_eventos')
-          .select(`
-            *,
-            productos:producto_id(nombre, descripcion, precio_base, categoria)
-          `)
-          .eq('evento_id', eventoSeleccionado)
-          .eq('activo', true)
-          .order('created_at', { ascending: false })
+        plantillasQuery,
+        productosQuery.catch(err => {
+          // Si la tabla no existe o hay error, retornar estructura vacía
+          if (err.code === 'PGRST116' || err.message?.includes('does not exist')) {
+            return { data: [], error: null };
+          }
+          return { data: null, error: err };
+        }),
+        productosEventosQuery.catch(err => {
+          // Si la tabla no existe o hay error, retornar estructura vacía
+          if (err.code === 'PGRST116' || err.message?.includes('does not exist')) {
+            return { data: [], error: null };
+          }
+          return { data: null, error: err };
+        })
       ]);
 
       // ✅ COMBINAR PRODUCTOS DE TODAS LAS FUENTES
       let allProductos = [];
 
-      // Agregar plantillas de productos
-      if (plantillasData.data) {
+      // Agregar plantillas de productos (tabla principal)
+      if (plantillasData.data && !plantillasData.error) {
         const plantillasWithSource = plantillasData.data.map(p => ({
           ...p,
           source: 'plantillas_productos',
@@ -126,10 +168,12 @@ const Productos = () => {
         }));
         allProductos = [...allProductos, ...plantillasWithSource];
         console.log('✅ Plantillas de productos cargadas:', plantillasWithSource.length);
+      } else if (plantillasData.error) {
+        console.error('❌ Error cargando plantillas_productos:', plantillasData.error);
       }
 
-      // Agregar productos generales
-      if (productosData.data) {
+      // Agregar productos generales (si la tabla existe y no hay error)
+      if (productosData.data && !productosData.error) {
         const productosWithSource = productosData.data.map(p => ({
           ...p,
           source: 'productos',
@@ -137,10 +181,13 @@ const Productos = () => {
         }));
         allProductos = [...allProductos, ...productosWithSource];
         console.log('✅ Productos generales cargados:', productosWithSource.length);
+      } else if (productosData.error && productosData.error.code !== 'PGRST116') {
+        // PGRST116 = tabla no existe, ignorar silenciosamente
+        console.warn('⚠️ Error cargando productos:', productosData.error);
       }
 
-      // Agregar productos específicos del evento
-      if (productosEventosData.data) {
+      // Agregar productos específicos del evento (si la tabla existe y no hay error)
+      if (productosEventosData.data && !productosEventosData.error) {
         const productosEventosWithSource = productosEventosData.data.map(p => ({
           ...p,
           source: 'productos_eventos',
@@ -153,6 +200,9 @@ const Productos = () => {
         }));
         allProductos = [...allProductos, ...productosEventosWithSource];
         console.log('✅ Productos del evento cargados:', productosEventosWithSource.length);
+      } else if (productosEventosData.error && productosEventosData.error.code !== 'PGRST116') {
+        // PGRST116 = tabla no existe, ignorar silenciosamente
+        console.warn('⚠️ Error cargando productos_eventos:', productosEventosData.error);
       }
 
       setProductos(allProductos);
@@ -191,17 +241,20 @@ const Productos = () => {
 
   const handleDeleteProduct = async (producto) => {
     try {
-      const { error } = await supabase
+      let deleteQuery = supabase
         .from('plantillas_productos')
         .update({ activo: false })
         .eq('id', producto.id);
+      
+      deleteQuery = addTenantFilter(deleteQuery);
+      const { error } = await deleteQuery;
 
       if (error) throw error;
       message.success('Producto eliminado correctamente');
       loadProductos();
     } catch (error) {
       console.error('Error eliminando producto:', error);
-      message.error('Error al eliminar producto');
+      message.error('Error al eliminar producto: ' + (error.message || 'Error desconocido'));
     }
   };
 
@@ -210,23 +263,28 @@ const Productos = () => {
       const productoData = {
         ...values,
         evento_id: eventoSeleccionado,
-        activo: true
+        activo: values.activo !== false // Asegurar que activo sea boolean
       };
 
       if (editingProducto) {
         // Actualizar producto existente
-        const { error } = await supabase
+        let updateQuery = supabase
           .from('plantillas_productos')
           .update(productoData)
           .eq('id', editingProducto.id);
+        
+        updateQuery = addTenantFilter(updateQuery);
+        const { error } = await updateQuery;
 
         if (error) throw error;
         message.success('Producto actualizado correctamente');
       } else {
-        // Crear nuevo producto
+        // Crear nuevo producto - agregar tenant_id
+        const productoDataWithTenant = addTenantToInsert(productoData);
+        
         const { error } = await supabase
           .from('plantillas_productos')
-          .insert([productoData]);
+          .insert([productoDataWithTenant]);
 
         if (error) throw error;
         message.success('Producto creado correctamente');
@@ -236,7 +294,7 @@ const Productos = () => {
       loadProductos();
     } catch (error) {
       console.error('Error guardando producto:', error);
-      message.error('Error al guardar producto');
+      message.error('Error al guardar producto: ' + (error.message || 'Error desconocido'));
     }
   };
 
@@ -356,9 +414,20 @@ const Productos = () => {
                   <Option key={evento.id} value={evento.id}>
                     <div>
                       <div className="font-medium">{evento.nombre}</div>
-                      <div className="text-sm text-gray-500">
-                        {new Date(evento.fecha_evento).toLocaleDateString()}
-                      </div>
+                      {evento.fecha_celebracion && (
+                        <div className="text-sm text-gray-500">
+                          {new Date(evento.fecha_celebracion).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      )}
+                      {!evento.fecha_celebracion && (
+                        <div className="text-sm text-gray-400">
+                          Sin fecha programada
+                        </div>
+                      )}
                     </div>
                   </Option>
                 ))}

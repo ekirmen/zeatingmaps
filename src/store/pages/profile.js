@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Card, Avatar, Descriptions, Button, message, Tabs, 
   List, Tag, Space, Row, Col, Statistic,
-  Timeline, Empty, Spin, Alert, Input
+  Timeline, Empty, Spin, Alert, Input, Modal
 } from 'antd';
 import { 
   UserOutlined, ShoppingOutlined, CalendarOutlined, 
@@ -38,6 +38,8 @@ const Profile = () => {
   const [activityHistory, setActivityHistory] = useState([]);
   const [stats, setStats] = useState({});
   const [editForm, setEditForm] = useState({});
+  const [ticketModalVisible, setTicketModalVisible] = useState(false);
+  const [selectedPurchase, setSelectedPurchase] = useState(null);
 
   const loadUserData = useCallback(async () => {
     setLoading(true);
@@ -139,9 +141,30 @@ const Profile = () => {
       'pending': 'orange',
       'cancelled': 'red',
       'active': 'blue',
-      'expired': 'gray'
+      'expired': 'gray',
+      'pagado': 'green',
+      'reservado': 'orange',
+      'cancelado': 'red',
+      'activo': 'blue',
+      'expirado': 'gray'
     };
     return colors[status] || 'default';
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      'completed': 'Completado',
+      'pending': 'Pendiente',
+      'cancelled': 'Cancelado',
+      'active': 'Activo',
+      'expired': 'Expirado',
+      'pagado': 'Pagado',
+      'reservado': 'Reservado',
+      'cancelado': 'Cancelado',
+      'activo': 'Activo',
+      'expirado': 'Expirado'
+    };
+    return labels[status] || status;
   };
 
   if (!user) {
@@ -405,19 +428,16 @@ const Profile = () => {
                           <Button 
                             size="small" 
                             disabled={purchase.status !== 'completed' && purchase.status !== 'pagado'}
-                            title={purchase.status !== 'completed' && purchase.status !== 'pagado' ? 'Solo disponible para pagos completados' : 'Descargar ticket PDF'}
-                            onClick={async () => {
+                            title={purchase.status !== 'completed' && purchase.status !== 'pagado' ? 'Solo disponible para pagos completados' : 'Descargar tickets individuales'}
+                            onClick={() => {
                               if ((purchase.status === 'completed' || purchase.status === 'pagado') && purchase.locator) {
-                                try {
-                                  await downloadTicket(purchase.locator, null, 'web');
-                                } catch (error) {
-                                  message.error('Error al descargar el ticket');
-                                }
+                                setSelectedPurchase(purchase);
+                                setTicketModalVisible(true);
                               }
                             }}
                             block
                           >
-                            Descargar PDF
+                            Descargar Tickets
                           </Button>
                           {(purchase.status === 'completed' || purchase.status === 'pagado') && walletEnabled && (
                             <Button 
@@ -458,44 +478,6 @@ const Profile = () => {
                           <div>
                             <CreditCardOutlined /> {purchase.payment_method || 'Método de pago'}
                           </div>
-                          {purchase.seats && purchase.seats.length > 0 && (
-                            <div style={{ marginTop: '8px' }}>
-                              <strong>Asientos:</strong>
-                              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                {purchase.seats.map((seat, seatIndex) => (
-                                  <div key={seat.seat_id || seat.id || seatIndex} style={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
-                                    alignItems: 'center',
-                                    padding: '4px 8px',
-                                    backgroundColor: '#f5f5f5',
-                                    borderRadius: '4px'
-                                  }}>
-                                    <span style={{ fontSize: '12px' }}>
-                                      Asiento {seatIndex + 1}: {seat.seat_id || seat.id || `Asiento ${seatIndex + 1}`}
-                                      {seat.zona && ` - Zona: ${seat.zona}`}
-                                    </span>
-                                    {(purchase.status === 'completed' || purchase.status === 'pagado') && (
-                                      <Button
-                                        size="small"
-                                        type="link"
-                                        style={{ padding: '0 4px', fontSize: '11px', height: 'auto' }}
-                                        onClick={async () => {
-                                          try {
-                                            await downloadTicket(purchase.locator, null, 'web', seatIndex);
-                                          } catch (error) {
-                                            message.error('Error al descargar el asiento');
-                                          }
-                                        }}
-                                      >
-                                        Descargar
-                                      </Button>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </Space>
                       }
                     />
@@ -504,7 +486,7 @@ const Profile = () => {
                           ${purchase.amount}
                         </div>
                         <Tag color={getStatusColor(purchase.status)}>
-                          {purchase.status}
+                          {getStatusLabel(purchase.status)}
                         </Tag>
                       </div>
                     </List.Item>
@@ -568,7 +550,7 @@ const Profile = () => {
                     />
                     <div style={{ textAlign: 'right' }}>
                       <Tag color={getStatusColor(reservation.status)}>
-                        {reservation.status}
+                        {getStatusLabel(reservation.status)}
                       </Tag>
                     </div>
                   </List.Item>
@@ -675,6 +657,134 @@ const Profile = () => {
           </TabPane>
         </Tabs>
       </Card>
+
+      {/* Modal para descargar tickets individuales */}
+      <Modal
+        title={
+          <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
+            <FileTextOutlined style={{ marginRight: '8px' }} />
+            Descargar Tickets - {selectedPurchase?.locator}
+          </div>
+        }
+        open={ticketModalVisible}
+        onCancel={() => {
+          setTicketModalVisible(false);
+          setSelectedPurchase(null);
+        }}
+        footer={[
+          <Button key="all" type="primary" onClick={async () => {
+            if (selectedPurchase?.locator) {
+              try {
+                await downloadTicket(selectedPurchase.locator, null, 'web');
+                message.success('Descargando todos los tickets...');
+              } catch (error) {
+                message.error('Error al descargar los tickets');
+              }
+            }
+          }}>
+            Descargar todos los PDF
+          </Button>,
+          <Button key="close" onClick={() => {
+            setTicketModalVisible(false);
+            setSelectedPurchase(null);
+          }}>
+            Cerrar
+          </Button>
+        ]}
+        width="90%"
+        style={{ maxWidth: '600px' }}
+        className="ticket-download-modal"
+      >
+        {selectedPurchase && selectedPurchase.seats && selectedPurchase.seats.length > 0 ? (
+          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+              <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
+                <CalendarOutlined style={{ marginRight: '8px' }} />
+                {formatDate(selectedPurchase.created_at)}
+              </div>
+              <div style={{ fontSize: '14px', color: '#666' }}>
+                <FileTextOutlined style={{ marginRight: '8px' }} />
+                {selectedPurchase.seats.length} {selectedPurchase.seats.length === 1 ? 'asiento' : 'asientos'}
+              </div>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px' }}>
+              {selectedPurchase.seats.map((seat, seatIndex) => {
+                const seatId = seat.seat_id || seat.id || seat._id || `seat-${seatIndex}`;
+                const zonaNombre = seat.zona_nombre || seat.zonaNombre || seat.zona?.nombre || seat.zona || null;
+                const mesaId = seat.table_id || seat.mesa_id || seat.mesaId || seat.mesa?.id || seat.mesa || null;
+                const filaNombre = seat.fila_nombre || seat.filaNombre || seat.fila?.nombre || seat.fila || seat.row || null;
+                
+                return (
+                  <Card
+                    key={seatId || seatIndex}
+                    size="small"
+                    style={{
+                      border: '1px solid #d9d9d9',
+                      borderRadius: '8px',
+                      transition: 'all 0.3s',
+                    }}
+                    bodyStyle={{ padding: '12px' }}
+                    hoverable
+                  >
+                    <div style={{ marginBottom: '8px' }}>
+                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1890ff', marginBottom: '4px' }}>
+                        Asiento {seatIndex + 1}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666', fontFamily: 'monospace', marginBottom: '4px' }}>
+                        ID: {seatId}
+                      </div>
+                      {zonaNombre && (
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>
+                          Zona: {zonaNombre}
+                        </div>
+                      )}
+                      {mesaId && (
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>
+                          Mesa: {mesaId}
+                        </div>
+                      )}
+                      {filaNombre && (
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>
+                          Fila: {filaNombre}
+                        </div>
+                      )}
+                      {seat.precio && (
+                        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#52c41a', marginTop: '4px' }}>
+                          ${seat.precio}
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      type="primary"
+                      size="small"
+                      block
+                      icon={<FileTextOutlined />}
+                      onClick={async () => {
+                        try {
+                          await downloadTicket(selectedPurchase.locator, null, 'web', seatIndex);
+                          message.success(`Descargando ticket del asiento ${seatIndex + 1}...`);
+                        } catch (error) {
+                          console.error('Error descargando asiento:', error);
+                          message.error('Error al descargar el ticket');
+                        }
+                      }}
+                      style={{ marginTop: '8px' }}
+                    >
+                      Descargar PDF
+                    </Button>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <Empty
+            description="No hay asientos disponibles para esta compra"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

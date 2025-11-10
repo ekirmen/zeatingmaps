@@ -261,37 +261,35 @@ const PaymentSuccess = () => {
           <div className="my-6">
             {paymentDetails.seats && Array.isArray(paymentDetails.seats) && paymentDetails.seats.length > 0 ? (
               <>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Asientos Seleccionados ({paymentDetails.seats.length})</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Tickets ({paymentDetails.seats.length})</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   {paymentDetails.seats.map((seat, index) => {
+                    const ticketNumber = index + 1; // Número del ticket (1, 2, 3...)
                     const seatId = seat.seat_id || seat.id || seat._id || `seat-${index}`;
                     const zonaNombre = seat.zona_nombre || seat.zonaNombre || seat.zona?.nombre || seat.zona || null;
                     const mesaId = seat.table_id || seat.mesa_id || seat.mesaId || seat.mesa?.id || seat.mesa || null;
                     const filaNombre = seat.fila_nombre || seat.filaNombre || seat.fila?.nombre || seat.fila || seat.row || null;
+                    // Obtener el número real del asiento (puede estar en diferentes campos)
+                    const asientoNumero = seat.asiento || seat.numero || seat.seat || seat.name || seat.asientoNombre || null;
+                    
+                    // Construir la línea de información (Zona, Mesa/Fila, Asiento)
+                    const infoParts = [];
+                    if (zonaNombre) infoParts.push(`Zona: ${zonaNombre}`);
+                    if (mesaId) infoParts.push(`Mesa: ${mesaId}`);
+                    if (filaNombre && !mesaId) infoParts.push(`Fila: ${filaNombre}`);
+                    if (asientoNumero) infoParts.push(`Asiento: ${asientoNumero}`);
+                    const infoLine = infoParts.join(' | ');
                     
                     return (
                       <div key={seatId || index} className="bg-gray-50 p-4 rounded-lg border">
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900 mb-1">
-                              Asiento {index + 1}
+                            <p className="font-medium text-gray-900 mb-2">
+                              Ticket N{ticketNumber}
                             </p>
-                            <p className="text-sm text-gray-700 font-mono">
-                              ID: {seatId}
-                            </p>
-                            {zonaNombre && (
-                              <p className="text-sm text-gray-600 mt-1">
-                                Zona: {zonaNombre}
-                              </p>
-                            )}
-                            {mesaId && (
-                              <p className="text-sm text-gray-600">
-                                Mesa: {mesaId}
-                              </p>
-                            )}
-                            {filaNombre && (
-                              <p className="text-sm text-gray-600">
-                                Fila: {filaNombre}
+                            {infoLine && (
+                              <p className="text-sm text-gray-700 mb-2">
+                                {infoLine}
                               </p>
                             )}
                             {seat.precio && (
@@ -300,7 +298,7 @@ const PaymentSuccess = () => {
                               </p>
                             )}
                           </div>
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded ml-2">
+                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded ml-2 whitespace-nowrap">
                             Confirmado
                           </span>
                         </div>
@@ -308,17 +306,17 @@ const PaymentSuccess = () => {
                           onClick={async (e) => {
                             e.preventDefault();
                             try {
-                              console.log(`📥 [PaymentSuccess] Descargando asiento ${index + 1} (índice ${index})`);
+                              console.log(`📥 [PaymentSuccess] Descargando ticket ${ticketNumber} (índice ${index})`);
                               await downloadTicket(locator, null, 'web', index);
                             } catch (error) {
-                              console.error('Error descargando asiento individual:', error);
-                              toast.error('Error al descargar el asiento');
+                              console.error('Error descargando ticket individual:', error);
+                              toast.error('Error al descargar el ticket');
                             }
                           }}
                           className="w-full mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
                         >
                           <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
-                          Descargar Asiento {index + 1}
+                          Descargar Ticket N{ticketNumber}
                         </button>
                       </div>
                     );
@@ -347,7 +345,7 @@ const PaymentSuccess = () => {
                 style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)' }}
               >
                 <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
-                Descargar PDF
+                Descargar todos los PDF
               </button>
               {walletEnabled && (
                 <button
