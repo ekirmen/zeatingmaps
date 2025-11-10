@@ -298,6 +298,9 @@ export async function handleDownload(req, res) {
     
     let locatorMatches, locatorError;
     try {
+      // Obtener TODOS los campos del pago, incluyendo evento_id y funcion_id
+      // Nota: Los joins pueden fallar si las foreign keys no están configuradas en Supabase
+      // Por eso haremos consultas separadas como fallback
       const result = await supabaseAdmin
         .from('payment_transactions')
         .select('*')
@@ -306,6 +309,24 @@ export async function handleDownload(req, res) {
         .limit(5);
       locatorMatches = result.data;
       locatorError = result.error;
+      
+      console.log('🔍 [DOWNLOAD] Resultado de la consulta:', {
+        hasData: !!locatorMatches,
+        dataLength: locatorMatches?.length || 0,
+        hasError: !!locatorError,
+        errorMessage: locatorError?.message || 'N/A'
+      });
+      
+      if (locatorMatches && locatorMatches.length > 0) {
+        const firstMatch = locatorMatches[0];
+        console.log('🔍 [DOWNLOAD] Primer resultado tiene:', {
+          id: firstMatch.id,
+          funcion_id: firstMatch.funcion_id,
+          evento_id: firstMatch.evento_id,
+          funcion_id_type: typeof firstMatch.funcion_id,
+          evento_id_type: typeof firstMatch.evento_id
+        });
+      }
     } catch (queryError) {
       console.error('❌ [DOWNLOAD] Excepción al buscar por locator:', queryError);
       console.error('❌ [DOWNLOAD] Query error message:', queryError?.message);
@@ -373,6 +394,18 @@ export async function handleDownload(req, res) {
     }
 
     console.log('✅ [DOWNLOAD] Pago encontrado:', payment.id);
+    console.log('✅ [DOWNLOAD] Payment data completo:', {
+      id: payment.id,
+      locator: payment.locator,
+      funcion_id: payment.funcion_id,
+      evento_id: payment.evento_id,
+      user_id: payment.user_id,
+      status: payment.status,
+      amount: payment.amount,
+      seats_count: Array.isArray(payment.seats) ? payment.seats.length : 0,
+      hasEvent: !!payment.event,
+      hasFuncion: !!payment.funcion
+    });
 
     // Verificar permisos SOLO para descargas desde web CON usuario autenticado
     if (downloadSource === 'web' && !tokenPayload && user && user.id) {
@@ -553,10 +586,14 @@ export async function handleDownload(req, res) {
       if (payment.funcion_id) {
         console.log('🔍 [DOWNLOAD] Buscando función con ID:', payment.funcion_id);
         // Primero obtener evento_id desde la función con más datos
+        // funciones.id es serial (integer), pero payment.funcion_id puede ser string o number
+        const funcionId = typeof payment.funcion_id === 'string' ? parseInt(payment.funcion_id, 10) : payment.funcion_id;
+        console.log('🔍 [DOWNLOAD] Buscando función con ID (convertido):', funcionId, 'tipo:', typeof funcionId);
+        
         const { data: func, error: fErr } = await supabaseAdmin
           .from('funciones')
-          .select('id, fecha_celebracion, evento_id, estado, hora_apertura, hora_inicio')
-          .eq('id', payment.funcion_id)
+          .select('id, fecha_celebracion, evento_id, apertura_puertas, activo, recinto_id')
+          .eq('id', funcionId)
           .maybeSingle();
         
         if (fErr) {
@@ -570,38 +607,43 @@ export async function handleDownload(req, res) {
           funcionData = func;
           
           // Luego obtener el evento usando evento_id con más datos
-          if (func.evento_id) {
-            console.log('🔍 [DOWNLOAD] Buscando evento con ID:', func.evento_id);
+          if (!eventData && func.evento_id) {
+            console.log('🔍 [DOWNLOAD] Buscando evento con ID (desde función):', func.evento_id);
             const { data: evt, error: eErr } = await supabaseAdmin
               .from('eventos')
-              .select('id, nombre, imagenes, recinto_id, descripcion, categoria, tipo')
+              .select('id, nombre, imagenes, recinto, recinto_id, descripcion, tags')
               .eq('id', func.evento_id)
               .maybeSingle();
             
             if (eErr) {
               console.error('❌ [DOWNLOAD] Error obteniendo evento:', eErr);
             } else if (evt) {
-              console.log('✅ [DOWNLOAD] Evento obtenido:', {
+              console.log('✅ [DOWNLOAD] Evento obtenido desde consulta directa:', {
                 id: evt.id,
                 nombre: evt.nombre,
-                recinto_id: evt.recinto_id,
+                recinto: evt.recinto, // Campo recinto (integer)
+                recinto_id: evt.recinto_id, // Campo recinto_id (integer, puede ser null)
                 hasImagenes: !!evt.imagenes
               });
               eventData = evt;
               if (!payment.event) payment.event = eventData;
               
-              if (eventData?.recinto_id) {
-                console.log('🔍 [DOWNLOAD] Buscando recinto con ID:', eventData.recinto_id);
+              // eventos tiene dos campos: recinto (integer) y recinto_id (integer, nullable)
+              // Preferir recinto_id si existe, si no usar recinto
+              const recintoId = eventData?.recinto_id || eventData?.recinto;
+              
+              if (!venueData && recintoId) {
+                console.log('🔍 [DOWNLOAD] Buscando recinto con ID (desde evento):', recintoId);
                 const { data: rec, error: rErr } = await supabaseAdmin
                   .from('recintos')
-                  .select('id, nombre, direccion, ciudad, estado, pais, codigo_postal, telefono, capacidad')
-                  .eq('id', eventData.recinto_id)
+                  .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
+                  .eq('id', recintoId)
                   .maybeSingle();
                 
                 if (rErr) {
                   console.error('❌ [DOWNLOAD] Error obteniendo recinto:', rErr);
                 } else if (rec) {
-                  console.log('✅ [DOWNLOAD] Recinto obtenido:', {
+                  console.log('✅ [DOWNLOAD] Recinto obtenido desde consulta directa:', {
                     id: rec.id,
                     nombre: rec.nombre,
                     direccion: rec.direccion,
@@ -613,16 +655,17 @@ export async function handleDownload(req, res) {
             }
           }
         } else {
-          console.warn('⚠️ [DOWNLOAD] No se encontró función con ID:', payment.funcion_id);
+          console.warn('⚠️ [DOWNLOAD] No se encontró función con ID:', funcionId);
         }
       }
       
-      // Si ya hay evento_id en el pago, usarlo directamente
+      // Si ya hay evento_id en el pago, usarlo directamente (solo si no tenemos eventData)
       if (!eventData && payment.evento_id) {
         console.log('🔍 [DOWNLOAD] Intentando obtener evento directamente con evento_id:', payment.evento_id);
+        // evento_id es UUID, no necesita conversión
         const { data: evt, error: eErr } = await supabaseAdmin
           .from('eventos')
-          .select('id, nombre, imagenes, recinto_id, descripcion, categoria, tipo')
+          .select('id, nombre, imagenes, recinto, recinto_id, descripcion, tags')
           .eq('id', payment.evento_id)
           .maybeSingle();
         
@@ -632,21 +675,39 @@ export async function handleDownload(req, res) {
           console.log('✅ [DOWNLOAD] Evento obtenido por evento_id:', {
             id: evt.id,
             nombre: evt.nombre,
+            recinto: evt.recinto,
             recinto_id: evt.recinto_id
           });
           eventData = evt;
           if (!payment.event) payment.event = eventData;
-          if (eventData?.recinto_id) {
+          
+          // Preferir recinto_id si existe, si no usar recinto
+          const recintoId = eventData?.recinto_id || eventData?.recinto;
+          if (!venueData && recintoId) {
             const { data: rec, error: rErr } = await supabaseAdmin
               .from('recintos')
-              .select('id, nombre, direccion, ciudad, estado, pais, codigo_postal, telefono, capacidad')
-              .eq('id', eventData.recinto_id)
+              .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
+              .eq('id', recintoId)
               .maybeSingle();
             if (!rErr && rec) {
               console.log('✅ [DOWNLOAD] Recinto obtenido por evento_id:', rec.nombre);
               venueData = rec;
             }
           }
+        }
+      }
+      
+      // También verificar si la función tiene recinto_id directamente
+      if (!venueData && funcionData?.recinto_id) {
+        console.log('🔍 [DOWNLOAD] Buscando recinto desde funcion.recinto_id:', funcionData.recinto_id);
+        const { data: rec, error: rErr } = await supabaseAdmin
+          .from('recintos')
+          .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
+          .eq('id', funcionData.recinto_id)
+          .maybeSingle();
+        if (!rErr && rec) {
+          console.log('✅ [DOWNLOAD] Recinto obtenido desde funcion.recinto_id:', rec.nombre);
+          venueData = rec;
         }
       }
       
@@ -1015,7 +1076,7 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
       console.log('📄 [PDF] Obteniendo datos del evento desde evento_id:', payment.evento_id);
       const { data: evt, error: evtErr } = await supabaseAdmin
         .from('eventos')
-        .select('id, nombre, imagenes, recinto_id, descripcion, categoria, tipo')
+        .select('id, nombre, imagenes, recinto, recinto_id, descripcion, tags')
         .eq('id', payment.evento_id)
         .maybeSingle();
       
@@ -1023,6 +1084,25 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
         console.log('✅ [PDF] Evento obtenido:', evt.id, evt.nombre);
         eventData = evt;
         pdfExtras.eventData = evt;
+        
+        // Intentar obtener recinto desde el evento
+        const recintoIdFromEvt = evt?.recinto_id || evt?.recinto;
+        if (!venueData && recintoIdFromEvt) {
+          console.log('🔍 [PDF] Buscando recinto desde evento (evento_id directo):', recintoIdFromEvt);
+          const { data: rec, error: rErr } = await supabaseAdmin
+            .from('recintos')
+            .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
+            .eq('id', recintoIdFromEvt)
+            .maybeSingle();
+          
+          if (!rErr && rec) {
+            console.log('✅ [PDF] Recinto obtenido desde evento:', rec.nombre);
+            venueData = rec;
+            pdfExtras.venueData = rec;
+          } else if (rErr) {
+            console.error('❌ [PDF] Error obteniendo recinto desde evento:', rErr);
+          }
+        }
       } else {
         console.error('❌ [PDF] Error obteniendo evento:', evtErr);
       }
@@ -1031,10 +1111,12 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
     // Si no hay funcionData pero hay funcion_id, intentar obtenerlo
     if (!funcionData && payment.funcion_id && supabaseAdmin) {
       console.log('📄 [PDF] Obteniendo datos de la función desde funcion_id:', payment.funcion_id);
+      // funciones.id es serial (integer)
+      const funcionId = typeof payment.funcion_id === 'string' ? parseInt(payment.funcion_id, 10) : payment.funcion_id;
       const { data: func, error: fErr } = await supabaseAdmin
         .from('funciones')
-        .select('id, fecha_celebracion, evento_id, estado, hora_apertura, hora_inicio')
-        .eq('id', payment.funcion_id)
+        .select('id, fecha_celebracion, evento_id, apertura_puertas, activo, recinto_id')
+        .eq('id', funcionId)
         .maybeSingle();
       
       if (!fErr && func) {
@@ -1046,7 +1128,7 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
         if (!eventData && func.evento_id) {
           const { data: evt, error: eErr } = await supabaseAdmin
             .from('eventos')
-            .select('id, nombre, imagenes, recinto_id, descripcion, categoria, tipo')
+            .select('id, nombre, imagenes, recinto, recinto_id, descripcion, tags')
             .eq('id', func.evento_id)
             .maybeSingle();
           
@@ -1054,6 +1136,39 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
             console.log('✅ [PDF] Evento obtenido desde función:', evt.id, evt.nombre);
             eventData = evt;
             pdfExtras.eventData = evt;
+            
+            // Intentar obtener recinto desde el evento
+            const recintoIdFromEvt = evt?.recinto_id || evt?.recinto;
+            if (!venueData && recintoIdFromEvt) {
+              console.log('🔍 [PDF] Buscando recinto desde evento obtenido:', recintoIdFromEvt);
+              const { data: rec, error: rErr } = await supabaseAdmin
+                .from('recintos')
+                .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
+                .eq('id', recintoIdFromEvt)
+                .maybeSingle();
+              
+              if (!rErr && rec) {
+                console.log('✅ [PDF] Recinto obtenido desde evento:', rec.nombre);
+                venueData = rec;
+                pdfExtras.venueData = rec;
+              }
+            }
+          }
+        }
+        
+        // Si aún no hay venueData, intentar obtenerlo desde funcion.recinto_id
+        if (!venueData && func.recinto_id) {
+          console.log('🔍 [PDF] Buscando recinto desde funcion.recinto_id:', func.recinto_id);
+          const { data: rec, error: rErr } = await supabaseAdmin
+            .from('recintos')
+            .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
+            .eq('id', func.recinto_id)
+            .maybeSingle();
+          
+          if (!rErr && rec) {
+            console.log('✅ [PDF] Recinto obtenido desde funcion.recinto_id:', rec.nombre);
+            venueData = rec;
+            pdfExtras.venueData = rec;
           }
         }
       } else {
@@ -1061,20 +1176,21 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
       }
     }
     
-    // Si no hay venueData pero el evento tiene recinto_id, obtenerlo
-    if (!venueData && eventData?.recinto_id && supabaseAdmin) {
-      console.log('📄 [PDF] Obteniendo datos del recinto desde recinto_id:', eventData.recinto_id);
+    // Si no hay venueData pero el evento tiene recinto_id o recinto, obtenerlo
+    const recintoIdFromEvent = eventData?.recinto_id || eventData?.recinto;
+    if (!venueData && recintoIdFromEvent && supabaseAdmin) {
+      console.log('📄 [PDF] Obteniendo datos del recinto desde recinto_id/recinto:', recintoIdFromEvent);
       const { data: rec, error: rErr } = await supabaseAdmin
         .from('recintos')
-        .select('id, nombre, direccion, ciudad, estado, pais, codigo_postal, telefono, capacidad')
-        .eq('id', eventData.recinto_id)
+        .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
+        .eq('id', recintoIdFromEvent)
         .maybeSingle();
       
       if (!rErr && rec) {
         console.log('✅ [PDF] Recinto obtenido:', rec.nombre);
         venueData = rec;
         pdfExtras.venueData = rec;
-      } else {
+      } else if (rErr) {
         console.error('❌ [PDF] Error obteniendo recinto:', rErr);
       }
     }

@@ -17,7 +17,12 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       hasVenueData: !!venueData,
       eventImagesCount: eventImages ? Object.keys(eventImages).length : 0,
       paymentId: payment?.id,
-      locator: locator
+      locator: locator,
+      eventNombre: pdfExtras?.eventData?.nombre || 'N/A',
+      venueNombre: venueData?.nombre || 'N/A',
+      funcionFecha: pdfExtras?.funcionData?.fecha_celebracion || 'N/A',
+      pdfExtrasKeys: Object.keys(pdfExtras || {}),
+      eventImagesKeys: Object.keys(eventImages || {})
     });
     
     // Asegurar que eventImages es un objeto
@@ -214,7 +219,8 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       if (venueData.direccion) direccionParts.push(venueData.direccion);
       if (venueData.ciudad) direccionParts.push(venueData.ciudad);
       if (venueData.estado) direccionParts.push(venueData.estado);
-      if (venueData.codigo_postal) direccionParts.push(venueData.codigo_postal);
+      // Nota: El campo es codigopostal (sin guión), no codigo_postal
+      if (venueData.codigopostal) direccionParts.push(venueData.codigopostal);
       if (venueData.pais) direccionParts.push(venueData.pais);
       
       if (direccionParts.length > 0) {
@@ -226,18 +232,6 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
           font: helveticaFont 
         });
         y -= 18;
-      }
-      
-      // Teléfono si está disponible
-      if (venueData.telefono) {
-        page.drawText(`Teléfono: ${venueData.telefono}`, { 
-          x: 60, 
-          y, 
-          size: 10, 
-          color: rgb(0.4,0.4,0.4), 
-          font: helveticaFont 
-        });
-        y -= 16;
       }
       
       // Capacidad si está disponible
@@ -340,35 +334,40 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       y -= 18;
     });
     
-    // Información adicional del evento si está disponible
-    try {
-      const eventData = pdfExtras?.eventData || payment?.event || null;
-      if (eventData) {
-        // Categoría del evento
-        if (eventData.categoria) {
-          page.drawText(`Categoría: ${eventData.categoria}`, { 
-            x: 60, 
-            y, 
-            size: 10, 
-            color: rgb(0.4,0.4,0.4), 
-            font: helveticaFont 
-          });
-          y -= 16;
+      // Información adicional del evento si está disponible
+      try {
+        const eventData = pdfExtras?.eventData || payment?.event || null;
+        if (eventData) {
+          // Tags del evento (si está disponible)
+          if (eventData.tags) {
+            try {
+              const tags = typeof eventData.tags === 'string' ? JSON.parse(eventData.tags) : eventData.tags;
+              if (Array.isArray(tags) && tags.length > 0) {
+                page.drawText(`Tags: ${tags.join(', ')}`, { 
+                  x: 60, 
+                  y, 
+                  size: 10, 
+                  color: rgb(0.4,0.4,0.4), 
+                  font: helveticaFont 
+                });
+                y -= 16;
+              }
+            } catch (tagsError) {
+              // Si tags es un string simple, mostrarlo directamente
+              if (typeof eventData.tags === 'string') {
+                page.drawText(`Tags: ${eventData.tags}`, { 
+                  x: 60, 
+                  y, 
+                  size: 10, 
+                  color: rgb(0.4,0.4,0.4), 
+                  font: helveticaFont 
+                });
+                y -= 16;
+              }
+            }
+          }
         }
-        
-        // Tipo de evento
-        if (eventData.tipo) {
-          page.drawText(`Tipo: ${eventData.tipo}`, { 
-            x: 60, 
-            y, 
-            size: 10, 
-            color: rgb(0.4,0.4,0.4), 
-            font: helveticaFont 
-          });
-          y -= 16;
-        }
-      }
-    } catch {}
+      } catch {}
     
     y -= 5; // Espacio adicional
 
@@ -378,9 +377,9 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
       console.log(`📅 [PDF-PAGE] Datos de función:`, {
         hasFuncion: !!funcion,
         fecha_celebracion: funcion?.fecha_celebracion,
-        hora_apertura: funcion?.hora_apertura,
-        hora_inicio: funcion?.hora_inicio,
-        estado: funcion?.estado
+        apertura_puertas: funcion?.apertura_puertas,
+        activo: funcion?.activo,
+        recinto_id: funcion?.recinto_id
       });
       
       if (funcion?.fecha_celebracion) {
@@ -446,18 +445,16 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
           y -= 18;
         }
         
-        // Hora de apertura si está disponible (puede ser un campo separado o parte de fecha_celebracion)
-        if (funcion.hora_apertura) {
-          try {
-            // Si hora_apertura es un string de hora (HH:MM) o una fecha completa
-            let horaApertura = funcion.hora_apertura;
-            if (typeof horaApertura === 'string' && horaApertura.includes('T')) {
-              // Es una fecha completa
-              horaApertura = new Date(horaApertura).toLocaleTimeString('es-ES', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              });
-            }
+      // Hora de apertura si está disponible (apertura_puertas es timestamp)
+      if (funcion.apertura_puertas) {
+        try {
+          const aperturaPuertas = new Date(funcion.apertura_puertas);
+          if (!isNaN(aperturaPuertas.getTime())) {
+            const horaApertura = aperturaPuertas.toLocaleTimeString('es-ES', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              timeZone: 'UTC'
+            });
             page.drawText(`Apertura de puertas: ${horaApertura}`, { 
               x: 60, 
               y, 
@@ -466,53 +463,23 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
               font: helveticaFont 
             });
             y -= 16;
-          } catch (err) {
-            // Si falla, intentar mostrar como string directo
-            try {
-              page.drawText(`Apertura: ${funcion.hora_apertura}`, { 
-                x: 60, 
-                y, 
-                size: 10, 
-                color: rgb(0.3,0.3,0.3), 
-                font: helveticaFont 
-              });
-              y -= 16;
-            } catch {}
           }
+        } catch (err) {
+          console.warn('⚠️ [PDF-PAGE] Error procesando apertura_puertas:', err.message);
         }
-        
-        // Hora de inicio adicional si está disponible y es diferente de fecha_celebracion
-        if (funcion.hora_inicio && funcion.hora_inicio !== funcion.fecha_celebracion) {
-          try {
-            let horaInicio = funcion.hora_inicio;
-            if (typeof horaInicio === 'string' && horaInicio.includes('T')) {
-              horaInicio = new Date(horaInicio).toLocaleTimeString('es-ES', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              });
-            }
-            page.drawText(`Inicio: ${horaInicio}`, { 
-              x: 60, 
-              y, 
-              size: 10, 
-              color: rgb(0.3,0.3,0.3), 
-              font: helveticaFont 
-            });
-            y -= 16;
-          } catch {}
-        }
-        
-        // Estado de la función si está disponible
-        if (funcion.estado) {
-          page.drawText(`Estado: ${funcion.estado}`, { 
-            x: 60, 
-            y, 
-            size: 10, 
-            color: rgb(0.3,0.3,0.3), 
-            font: helveticaFont 
-          });
-          y -= 16;
-        }
+      }
+      
+      // Estado de la función si está disponible (activo)
+      if (funcion.activo !== undefined && funcion.activo !== null) {
+        page.drawText(`Estado: ${funcion.activo ? 'Activo' : 'Inactivo'}`, { 
+          x: 60, 
+          y, 
+          size: 10, 
+          color: rgb(0.3,0.3,0.3), 
+          font: helveticaFont 
+        });
+        y -= 16;
+      }
         
         y -= 5; // Espacio adicional
       } else {
@@ -763,15 +730,19 @@ async function loadEventImages(pdfDoc, eventData, supabaseAdmin) {
     }
 
     // Cargar información del recinto con más datos
-    if (eventData?.recinto_id && supabaseAdmin) {
+    // eventos tiene dos campos: recinto (integer) y recinto_id (integer, nullable)
+    const recintoIdFromEvent = eventData?.recinto_id || eventData?.recinto;
+    if (recintoIdFromEvent && supabaseAdmin) {
       const { data: rec, error: recErr } = await supabaseAdmin
         .from('recintos')
-        .select('id, nombre, direccion, ciudad, estado, pais, codigo_postal, telefono, capacidad')
-        .eq('id', eventData.recinto_id)
+        .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad')
+        .eq('id', recintoIdFromEvent)
         .maybeSingle();
       if (!recErr && rec) {
         venueData = rec;
         console.log('✅ [PDF] Recinto obtenido:', rec.nombre);
+      } else if (recErr) {
+        console.error('❌ [PDF] Error obteniendo recinto:', recErr);
       }
     }
   } catch (imgError) {
