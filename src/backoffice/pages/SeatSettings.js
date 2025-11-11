@@ -27,12 +27,18 @@ import { supabase } from '../../supabaseClient';
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
+const clampValue = (value, fallback, min = 1, max = 120) => {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+};
+
 const SeatSettings = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
   const [currentSettings, setCurrentSettings] = useState({
     lockExpirationMinutes: 15,
+    mobileLockExpirationMinutes: 1,
     enableAutoCleanup: true,
     cleanupInterval: 5,
     preserveTimeMinutes: 5,
@@ -48,18 +54,28 @@ const SeatSettings = () => {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      
+
+      if (typeof window === 'undefined' || !window.localStorage) {
+        form.setFieldsValue(currentSettings);
+        return;
+      }
+
       // Cargar configuraciones desde localStorage (temporal)
-      const lockExpirationMinutes = parseInt(localStorage.getItem('cart_lock_minutes') || '15', 10);
+      const lockExpirationMinutes = clampValue(parseInt(localStorage.getItem('cart_lock_minutes') || '15', 10), 15);
+      const mobileLockExpirationMinutes = clampValue(
+        parseInt(localStorage.getItem('cart_lock_minutes_mobile') || '', 10),
+        currentSettings.mobileLockExpirationMinutes
+      );
       const enableAutoCleanup = localStorage.getItem('seat_auto_cleanup') !== 'false';
-      const cleanupInterval = parseInt(localStorage.getItem('seat_cleanup_interval') || '5', 10);
-      const preserveTimeMinutes = parseInt(localStorage.getItem('seat_preserve_time') || '5', 10);
-      const warningTimeMinutes = parseInt(localStorage.getItem('seat_warning_time') || '3', 10);
+      const cleanupInterval = clampValue(parseInt(localStorage.getItem('seat_cleanup_interval') || '5', 10), 5, 1, 60);
+      const preserveTimeMinutes = clampValue(parseInt(localStorage.getItem('seat_preserve_time') || '5', 10), 5, 1, 30);
+      const warningTimeMinutes = clampValue(parseInt(localStorage.getItem('seat_warning_time') || '3', 10), 3, 1, 30);
       const enableNotifications = localStorage.getItem('seat_notifications') !== 'false';
       const enableRestoration = localStorage.getItem('seat_restoration') !== 'false';
 
       const settings = {
         lockExpirationMinutes,
+        mobileLockExpirationMinutes,
         enableAutoCleanup,
         cleanupInterval,
         preserveTimeMinutes,
@@ -84,11 +100,32 @@ const SeatSettings = () => {
       setSaving(true);
       
       // Guardar en localStorage (temporal - después se migrará a base de datos)
-      localStorage.setItem('cart_lock_minutes', values.lockExpirationMinutes.toString());
-      localStorage.setItem('seat_auto_cleanup', values.enableAutoCleanup.toString());
-      localStorage.setItem('seat_cleanup_interval', values.cleanupInterval.toString());
-      localStorage.setItem('seat_preserve_time', values.preserveTimeMinutes.toString());
-      localStorage.setItem('seat_warning_time', values.warningTimeMinutes.toString());
+      const sanitizedLock = clampValue(values.lockExpirationMinutes, currentSettings.lockExpirationMinutes);
+      const sanitizedMobile = clampValue(
+        values.mobileLockExpirationMinutes,
+        currentSettings.mobileLockExpirationMinutes,
+        1,
+        120
+      );
+      const sanitizedCleanup = clampValue(values.cleanupInterval, currentSettings.cleanupInterval, 1, 60);
+      const sanitizedPreserve = clampValue(values.preserveTimeMinutes, currentSettings.preserveTimeMinutes, 1, 30);
+      const sanitizedWarning = clampValue(values.warningTimeMinutes, currentSettings.warningTimeMinutes, 1, 30);
+
+      const sanitizedValues = {
+        ...values,
+        lockExpirationMinutes: sanitizedLock,
+        mobileLockExpirationMinutes: sanitizedMobile,
+        cleanupInterval: sanitizedCleanup,
+        preserveTimeMinutes: sanitizedPreserve,
+        warningTimeMinutes: sanitizedWarning
+      };
+
+      localStorage.setItem('cart_lock_minutes', sanitizedValues.lockExpirationMinutes.toString());
+      localStorage.setItem('cart_lock_minutes_mobile', sanitizedValues.mobileLockExpirationMinutes.toString());
+      localStorage.setItem('seat_auto_cleanup', sanitizedValues.enableAutoCleanup.toString());
+      localStorage.setItem('seat_cleanup_interval', sanitizedValues.cleanupInterval.toString());
+      localStorage.setItem('seat_preserve_time', sanitizedValues.preserveTimeMinutes.toString());
+      localStorage.setItem('seat_warning_time', sanitizedValues.warningTimeMinutes.toString());
       localStorage.setItem('seat_notifications', values.enableNotifications.toString());
       localStorage.setItem('seat_restoration', values.enableRestoration.toString());
 
@@ -100,7 +137,8 @@ const SeatSettings = () => {
       //     settings: values
       //   });
 
-      setCurrentSettings(values);
+      setCurrentSettings(sanitizedValues);
+      form.setFieldsValue(sanitizedValues);
       message.success('Configuraciones guardadas exitosamente');
       
     } catch (error) {
@@ -114,6 +152,7 @@ const SeatSettings = () => {
   const handleReset = () => {
     const defaultSettings = {
       lockExpirationMinutes: 15,
+      mobileLockExpirationMinutes: 1,
       enableAutoCleanup: true,
       cleanupInterval: 5,
       preserveTimeMinutes: 5,
@@ -124,6 +163,14 @@ const SeatSettings = () => {
     
     form.setFieldsValue(defaultSettings);
     setCurrentSettings(defaultSettings);
+    localStorage.setItem('cart_lock_minutes', '15');
+    localStorage.setItem('cart_lock_minutes_mobile', '1');
+    localStorage.setItem('seat_auto_cleanup', 'true');
+    localStorage.setItem('seat_cleanup_interval', '5');
+    localStorage.setItem('seat_preserve_time', '5');
+    localStorage.setItem('seat_warning_time', '3');
+    localStorage.setItem('seat_notifications', 'true');
+    localStorage.setItem('seat_restoration', 'true');
     message.info('Configuraciones restablecidas a valores por defecto');
   };
 
@@ -172,6 +219,30 @@ const SeatSettings = () => {
                     min={1}
                     max={120}
                     placeholder="15"
+                    addonAfter="minutos"
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="mobileLockExpirationMinutes"
+                  label={
+                    <Space>
+                      <Text strong>Tiempo de Bloqueo en Móviles (minutos)</Text>
+                      <Tooltip title="Tiempo de reserva cuando el cliente compra desde un dispositivo móvil">
+                        <InfoCircleOutlined />
+                      </Tooltip>
+                    </Space>
+                  }
+                  rules={[
+                    { required: true, message: 'Este campo es requerido' },
+                    { type: 'number', min: 1, max: 120, message: 'Debe estar entre 1 y 120 minutos' }
+                  ]}
+                >
+                  <InputNumber
+                    min={1}
+                    max={120}
+                    placeholder="1"
                     addonAfter="minutos"
                     style={{ width: '100%' }}
                   />
@@ -295,6 +366,14 @@ const SeatSettings = () => {
                 </div>
               </Col>
               <Col xs={24} sm={12} md={8}>
+                <div className="text-center p-3 bg-indigo-50 rounded">
+                  <Text strong className="block text-lg">
+                    {currentSettings.mobileLockExpirationMinutes} min
+                  </Text>
+                  <Text type="secondary">Bloqueo en Móviles</Text>
+                </div>
+              </Col>
+              <Col xs={24} sm={12} md={8}>
                 <div className="text-center p-3 bg-green-50 rounded">
                   <Text strong className="block text-lg">
                     {currentSettings.preserveTimeMinutes} min
@@ -350,8 +429,12 @@ const SeatSettings = () => {
       {/* Información Adicional */}
       <Card title="ℹ️ Información" className="mt-6">
         <Paragraph>
-          <strong>Tiempo de Bloqueo:</strong> Es el tiempo total que un asiento permanece bloqueado 
+          <strong>Tiempo de Bloqueo:</strong> Es el tiempo total que un asiento permanece bloqueado
           antes de liberarse automáticamente.
+        </Paragraph>
+        <Paragraph>
+          <strong>Bloqueo en Móviles:</strong> Define un tiempo específico para compras desde teléfonos o
+          tablets, permitiéndote ajustar reservas más cortas o largas según tu estrategia.
         </Paragraph>
         <Paragraph>
           <strong>Tiempo de Preservación:</strong> Durante este tiempo, si el usuario regresa a la página, 
