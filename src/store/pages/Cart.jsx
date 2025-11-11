@@ -241,41 +241,64 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
     const paidSeats = (locatorSeats && Array.isArray(locatorSeats) ? locatorSeats.filter(seat => seat.isPaid) : []);
     const unpaidSeats = (locatorSeats && Array.isArray(locatorSeats) ? locatorSeats.filter(seat => !seat.isPaid) : []);
 
-    // Handle checkout
+    // Handle checkout - Optimizado para mobile (async, no bloqueante)
     const handleCheckout = () => {
+        // Validación rápida primero (síncrona)
         if (itemCount === 0) {
             message.warning('El carrito está vacío');
             return;
         }
         
-        // Validar que todos los asientos tengan IDs válidos
-        const invalidSeats = filteredItems?.filter(item => !(item.id || item._id || item.sillaId)) || [];
-        if (invalidSeats.length > 0) {
-            message.error('Algunos asientos no tienen IDs válidos. Por favor, recarga la página.');
-            return;
-        }
+        // Ejecutar validaciones y navegación de forma no bloqueante
+        // Esto previene que el UI se congele en mobile
+        const executeCheckout = () => {
+            try {
+                // Validar que todos los asientos tengan IDs válidos
+                const invalidSeats = filteredItems?.filter(item => !(item.id || item._id || item.sillaId)) || [];
+                if (invalidSeats.length > 0) {
+                    message.error('Algunos asientos no tienen IDs válidos. Por favor, recarga la página.');
+                    return;
+                }
 
-        // Validar que no haya asientos duplicados
-        const seatIds = filteredItems?.map(item => item.id || item._id || item.sillaId) || [];
-        const uniqueSeatIds = [...new Set(seatIds)];
-        if (seatIds.length !== uniqueSeatIds.length) {
-            message.error('Hay asientos duplicados en el carrito. Por favor, verifica.');
-            return;
-        }
+                // Validar que no haya asientos duplicados (usar Set para mejor performance)
+                const seatIds = filteredItems?.map(item => item.id || item._id || item.sillaId) || [];
+                const uniqueSeatIds = new Set(seatIds);
+                if (seatIds.length !== uniqueSeatIds.size) {
+                    message.error('Hay asientos duplicados en el carrito. Por favor, verifica.');
+                    return;
+                }
+                
+                // Check if user is authenticated
+                if (!user) {
+                    setPendingCheckout(true);
+                    // Dispatch event de forma asíncrona para no bloquear
+                    setTimeout(() => {
+                        window.dispatchEvent(
+                            new CustomEvent('store:open-account-modal', {
+                                detail: { mode: 'login', source: 'cart', redirectTo: '/store/payment' }
+                            })
+                        );
+                    }, 0);
+                    return;
+                }
+                
+                // Navigate de forma asíncrona para no bloquear el UI thread
+                setTimeout(() => {
+                    navigate('/store/payment');
+                }, 0);
+            } catch (error) {
+                console.error('Error en checkout:', error);
+                message.error('Error al procesar el checkout. Por favor, intenta nuevamente.');
+            }
+        };
         
-        // Check if user is authenticated
-        if (!user) {
-            setPendingCheckout(true);
-            window.dispatchEvent(
-                new CustomEvent('store:open-account-modal', {
-                    detail: { mode: 'login', source: 'cart', redirectTo: '/store/payment' }
-                })
-            );
-            return;
+        // En mobile, usar requestIdleCallback si está disponible para mejor UX
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+            requestIdleCallback(executeCheckout, { timeout: 100 });
+        } else {
+            // Fallback: usar setTimeout con delay mínimo
+            setTimeout(executeCheckout, 0);
         }
-        
-        // Redirect to the payment page within the store
-        navigate('/store/payment');
     };
 
     // Handle successful login

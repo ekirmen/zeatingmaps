@@ -19,6 +19,7 @@ import logger from '../utils/logger';
 import { getWebPUrl } from '../utils/imageOptimizer';
 import clickThrottle from '../utils/clickThrottle';
 import { debounce } from '../utils/debounce';
+import { isMobileDevice, getCanvasConfig, getOptimizedStageSize } from '../utils/mobileOptimizations';
 
 // Cache global para imágenes de fondo para evitar recargas constantes
 const backgroundImageCache = new Map();
@@ -1128,14 +1129,29 @@ const SeatingMapUnified = ({
     return { maxX, maxY };
   }, [validatedSeats, validatedMesas]);
 
-  // Memoizar dimensiones del Stage (solo recalcular si cambian las dimensiones máximas)
+  // Memoizar dimensiones del Stage optimizadas para mobile
   const stageDimensions = useMemo(() => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const isMobile = isMobileDevice();
+    const containerWidth = typeof window !== 'undefined' ? window.innerWidth : 800;
+    const containerHeight = typeof window !== 'undefined' ? window.innerHeight : 600;
+    
+    if (isMobile) {
+      // En mobile, usar tamaño optimizado (más pequeño para mejor rendimiento)
+      const optimized = getOptimizedStageSize(
+        Math.min(maxDimensions.maxX + 50, containerWidth - 20),
+        Math.min(maxDimensions.maxY + 50, containerHeight - 250)
+      );
+      return optimized;
+    }
+    
     return {
-      width: isMobile ? Math.min(maxDimensions.maxX + 50, window.innerWidth - 40) : maxDimensions.maxX + 50,
-      height: isMobile ? Math.min(maxDimensions.maxY + 50, window.innerHeight - 200) : maxDimensions.maxY + 50
+      width: maxDimensions.maxX + 50,
+      height: maxDimensions.maxY + 50
     };
   }, [maxDimensions]);
+  
+  // Configuración del canvas optimizada para mobile
+  const canvasConfig = useMemo(() => getCanvasConfig(), []);
 
   if (!mapa) {
     return <div>No map data available</div>;
@@ -1229,14 +1245,21 @@ const SeatingMapUnified = ({
           style={{ 
             border: '1px solid #ccc',
             maxWidth: '100%',
-            margin: '0 auto'
+            margin: '0 auto',
+            // Optimizaciones para mobile
+            touchAction: 'none', // Prevenir gestos del navegador que interfieren
+            WebkitTapHighlightColor: 'transparent' // Eliminar highlight en mobile
           }}
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          draggable
+          draggable={!isMobileDevice() || canvasConfig.listening} // Deshabilitar drag en mobile si es necesario
           ref={stageRef}
+          // Optimizaciones de rendimiento para mobile
+          imageSmoothingEnabled={canvasConfig.imageSmoothingEnabled}
+          hitGraphEnabled={canvasConfig.hitGraphEnabled}
+          listening={canvasConfig.listening}
         >
           {/* Background Layer - Separado para mejor performance */}
           <BackgroundLayer 

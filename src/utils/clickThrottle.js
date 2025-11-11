@@ -117,11 +117,21 @@ class ClickThrottle {
   }
 }
 
-// Instancia global para throttling de clicks
+// Detectar si es mobile para ajustar configuración
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+  const isSmallScreen = window.innerWidth <= 768;
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  return mobileRegex.test(userAgent) || (isSmallScreen && hasTouch);
+};
+
+// Instancia global para throttling de clicks con configuración optimizada para mobile
 const globalClickThrottle = new ClickThrottle({
-  delay: 300, // 300ms entre clicks
-  maxClicks: 10, // Máximo 10 clicks en 5 segundos
-  windowMs: 5000 // Ventana de 5 segundos
+  delay: isMobileDevice() ? 500 : 300, // Mayor delay en mobile (500ms vs 300ms)
+  maxClicks: isMobileDevice() ? 5 : 10, // Menos clicks permitidos en mobile
+  windowMs: isMobileDevice() ? 7000 : 5000 // Ventana de tiempo más larga en mobile
 });
 
 export default globalClickThrottle;
