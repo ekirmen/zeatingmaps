@@ -434,7 +434,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 </h1>
               </div>
               {/* Timer arriba */}
-              {showTimer && timeLeft && timeLeft > 0 && (
+              {showTimer && Number(timeLeft) > 0 && (
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
