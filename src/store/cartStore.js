@@ -3,18 +3,49 @@ import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 
-const getLockExpirationMs = () => {
-  // Detectar si es móvil
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-  
-  // En móvil: 1 minuto (60 segundos) para compra rápida
-  // En desktop: 15 minutos por defecto, o el valor guardado
-  if (isMobile) {
-    return 60 * 1000; // 1 minuto
+const clampMinutes = (value, fallback) => {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.max(1, Math.min(120, value));
+};
+
+const readMinutesFromStorage = (key, fallback) => {
+  if (typeof window === 'undefined') {
+    return fallback;
   }
-  
-  const saved = parseInt(localStorage.getItem('cart_lock_minutes') || '15', 10);
-  const minutes = Number.isFinite(saved) ? Math.max(1, Math.min(120, saved)) : 15;
+
+  try {
+    if (!window.localStorage) {
+      return fallback;
+    }
+
+    const stored = window.localStorage.getItem(key);
+    if (stored == null || stored === '') {
+      return fallback;
+    }
+
+    const parsed = parseInt(stored, 10);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+
+    return clampMinutes(parsed, fallback);
+  } catch (error) {
+    console.warn('[CART_TIMER] No se pudo leer configuración de minutos para', key, error);
+    return fallback;
+  }
+};
+
+const getLockExpirationMs = () => {
+  const defaultMinutes = 15;
+  const baseMinutes = readMinutesFromStorage('cart_lock_minutes', defaultMinutes);
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const mobileMinutes = readMinutesFromStorage('cart_lock_minutes_mobile', NaN);
+
+  const minutes = isMobile && Number.isFinite(mobileMinutes)
+    ? clampMinutes(mobileMinutes, baseMinutes)
+    : baseMinutes;
+
   return minutes * 60 * 1000;
 };
 // const LOCK_EXPIRATION_TIME_MS = getLockExpirationMs(); // No se usa actualmente

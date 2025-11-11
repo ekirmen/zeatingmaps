@@ -135,15 +135,56 @@ async function initializeSession() {
 initializeSession();
 
 // Función para obtener configuraciones de tiempo
+function readMinutesConfig(key, fallback, min = 1, max = 120) {
+  if (typeof window === 'undefined') {
+    return fallback;
+  }
+
+  try {
+    if (!window.localStorage) {
+      return fallback;
+    }
+
+    const stored = window.localStorage.getItem(key);
+    if (stored == null || stored === '') {
+      return fallback;
+    }
+
+    const parsed = parseInt(stored, 10);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+
+    return Math.max(min, Math.min(max, parsed));
+  } catch (error) {
+    console.warn('[SEAT_SETTINGS] No se pudo leer configuración para', key, error);
+    return fallback;
+  }
+}
+
 function getSeatSettings() {
-  const lockExpirationMinutes = parseInt(localStorage.getItem('cart_lock_minutes') || '15', 10);
-  const preserveTimeMinutes = parseInt(localStorage.getItem('seat_preserve_time') || '5', 10);
-  const warningTimeMinutes = parseInt(localStorage.getItem('seat_warning_time') || '3', 10);
-  const enableAutoCleanup = localStorage.getItem('seat_auto_cleanup') !== 'false';
-  const enableRestoration = localStorage.getItem('seat_restoration') !== 'false';
-  
+  const lockExpirationMinutes = readMinutesConfig('cart_lock_minutes', 15);
+  const mobileLockExpirationMinutes = readMinutesConfig('cart_lock_minutes_mobile', lockExpirationMinutes);
+  const preserveTimeMinutes = readMinutesConfig('seat_preserve_time', 5, 1, 30);
+  const warningTimeMinutes = readMinutesConfig('seat_warning_time', 3, 1, 30);
+
+  let enableAutoCleanup = true;
+  let enableRestoration = true;
+
+  if (typeof window !== 'undefined') {
+    try {
+      if (window.localStorage) {
+        enableAutoCleanup = window.localStorage.getItem('seat_auto_cleanup') !== 'false';
+        enableRestoration = window.localStorage.getItem('seat_restoration') !== 'false';
+      }
+    } catch (error) {
+      console.warn('[SEAT_SETTINGS] No se pudo leer banderas booleanas de configuración', error);
+    }
+  }
+
   return {
     lockExpirationMinutes,
+    mobileLockExpirationMinutes,
     preserveTimeMinutes,
     warningTimeMinutes,
     enableAutoCleanup,
