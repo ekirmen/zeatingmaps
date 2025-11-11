@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Modal, Input, Button, message, Drawer } from 'antd';
@@ -255,26 +255,62 @@ const Header = ({ onLogin, onLogout }) => {
     }
   };
 
-  const openAccountModal = () => {
+  const openAccountModal = useCallback((options = {}) => {
     try {
-      setAccountMode('login');
-      setFormData({ email: '', password: '' });
-      setRegisterData({ email: '', password: '', phone: '', phoneCode: '+58' });
+      const {
+        mode = 'login',
+        redirectTo = null,
+        prefill = null
+      } = options;
+      
+      // Primero actualizar el estado del modal
+      setAccountMode(mode);
+      setFormData({ email: prefill?.email || '', password: '' });
+      setRegisterData({ email: prefill?.email || '', password: '', phone: '', phoneCode: '+58' });
       setForgotEmail('');
       setError('');
       setPasswordVisibility({ login: false, register: false });
-      setPostLoginRedirect(null);
-      setIsAccountModalVisible(true);
+      setPostLoginRedirect(redirectTo);
+      
+      // Para iOS Safari: usar requestAnimationFrame para asegurar que el render no bloquee el UI
+      // Esto es más confiable que setTimeout en iOS
+      if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setIsAccountModalVisible(true);
+          });
+        });
+      } else {
+        // Fallback para navegadores sin requestAnimationFrame
+        setTimeout(() => {
+          setIsAccountModalVisible(true);
+        }, 10);
+      }
     } catch (error) {
-      // Silencioso
+      console.error('Error opening account modal:', error);
+      // En caso de error, intentar abrir el modal de todas formas
+      setIsAccountModalVisible(true);
     }
-  };
+  }, []);
 
   const handleSwitchMode = (mode) => {
     setAccountMode(mode);
     setError('');
     setPasswordVisibility({ login: false, register: false });
   };
+
+  // Registrar función global para iOS Safari (más confiable que eventos personalizados)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.openAccountModal = openAccountModal;
+    }
+
+    return () => {
+      if (typeof window !== 'undefined' && window.openAccountModal === openAccountModal) {
+        delete window.openAccountModal;
+      }
+    };
+  }, [openAccountModal]);
 
   useEffect(() => {
     const handleExternalModalOpen = (event) => {
@@ -289,10 +325,14 @@ const Header = ({ onLogin, onLogout }) => {
       const redirectTarget =
         detail.redirectTo || detail.redirect_to || detail.redirect || null;
       setPostLoginRedirect(redirectTarget);
-      setIsAccountModalVisible(true);
+      
+      // Usar setTimeout para iOS Safari
+      setTimeout(() => {
+        setIsAccountModalVisible(true);
+      }, 0);
     };
 
-    // Registrar listener con opciones para mejor compatibilidad en iOS
+    // Registrar listener con opciones para mejor compatibilidad en iOS (fallback)
     const eventOptions = { passive: true, capture: false };
     window.addEventListener('store:open-account-modal', handleExternalModalOpen, eventOptions);
     
@@ -655,14 +695,14 @@ const Header = ({ onLogin, onLogout }) => {
       <Modal
         title={null}
         open={isAccountModalVisible}
-        zIndex={1000}
+        zIndex={10000}
         style={{ position: 'relative' }}
         width={typeof window !== 'undefined' && window.innerWidth <= 768 ? '90%' : 420}
         centered
         maskClosable={true}
-        destroyOnClose={true}
+        destroyOnClose={false}
         getContainer={() => document.body}
-        forceRender={true}
+        forceRender={false}
         afterClose={() => {
           setAccountMode('login');
           setFormData({ email: '', password: '' });
@@ -678,6 +718,7 @@ const Header = ({ onLogin, onLogout }) => {
         wrapClassName="account-modal-wrapper"
         className="account-modal store-modal improved-account-modal"
         bodyStyle={{ padding: 0 }}
+        maskStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
         onCancel={() => {
           setIsAccountModalVisible(false);
           setAccountMode('login');

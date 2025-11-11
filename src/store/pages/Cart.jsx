@@ -271,33 +271,43 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 // Check if user is authenticated
                 if (!user) {
                     setPendingCheckout(true);
-                    // Dispatchear evento en window y document para máxima compatibilidad con iOS
-                    // iOS Safari a veces no captura eventos solo en window
-                    const eventDetail = { 
-                        mode: 'login', 
-                        source: 'cart', 
-                        redirectTo: '/store/payment' 
-                    };
                     
-                    // Crear evento con bubbles para que se propague
-                    const customEvent = new CustomEvent('store:open-account-modal', {
-                        detail: eventDetail,
-                        bubbles: true,
-                        cancelable: true
-                    });
-                    
-                    // Dispatch inmediato en window (para navegadores normales)
-                    window.dispatchEvent(customEvent);
-                    
-                    // También dispatch en document después de requestAnimationFrame (para iOS)
-                    // iOS a veces necesita que el evento se dispare en el document después del window
-                    requestAnimationFrame(() => {
-                        document.dispatchEvent(new CustomEvent('store:open-account-modal', {
+                    // Para iOS Safari: usar función global directamente (más confiable que eventos)
+                    if (typeof window !== 'undefined' && typeof window.openAccountModal === 'function') {
+                        // Llamar directamente - la función ya maneja la asincronía internamente
+                        window.openAccountModal({
+                            mode: 'login',
+                            redirectTo: '/store/payment'
+                        });
+                    } else {
+                        // Fallback: usar eventos personalizados si la función global no está disponible
+                        const eventDetail = { 
+                            mode: 'login', 
+                            source: 'cart', 
+                            redirectTo: '/store/payment' 
+                        };
+                        
+                        // Crear evento con bubbles y composed para mejor compatibilidad
+                        const customEvent = new CustomEvent('store:open-account-modal', {
                             detail: eventDetail,
                             bubbles: true,
-                            cancelable: true
-                        }));
-                    });
+                            cancelable: true,
+                            composed: true
+                        });
+                        
+                        // Dispatch inmediato en window (para navegadores normales)
+                        window.dispatchEvent(customEvent);
+                        
+                        // También dispatch en document después de requestAnimationFrame (para iOS)
+                        requestAnimationFrame(() => {
+                            document.dispatchEvent(new CustomEvent('store:open-account-modal', {
+                                detail: eventDetail,
+                                bubbles: true,
+                                cancelable: true,
+                                composed: true
+                            }));
+                        });
+                    }
                     
                     return;
                 }
