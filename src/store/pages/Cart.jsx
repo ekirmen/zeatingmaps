@@ -271,14 +271,34 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 // Check if user is authenticated
                 if (!user) {
                     setPendingCheckout(true);
-                    // Dispatch event de forma asíncrona para no bloquear
-                    setTimeout(() => {
-                        window.dispatchEvent(
-                            new CustomEvent('store:open-account-modal', {
-                                detail: { mode: 'login', source: 'cart', redirectTo: '/store/payment' }
-                            })
-                        );
-                    }, 0);
+                    // Dispatchear evento en window y document para máxima compatibilidad con iOS
+                    // iOS Safari a veces no captura eventos solo en window
+                    const eventDetail = { 
+                        mode: 'login', 
+                        source: 'cart', 
+                        redirectTo: '/store/payment' 
+                    };
+                    
+                    // Crear evento con bubbles para que se propague
+                    const customEvent = new CustomEvent('store:open-account-modal', {
+                        detail: eventDetail,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    
+                    // Dispatch inmediato en window (para navegadores normales)
+                    window.dispatchEvent(customEvent);
+                    
+                    // También dispatch en document después de requestAnimationFrame (para iOS)
+                    // iOS a veces necesita que el evento se dispare en el document después del window
+                    requestAnimationFrame(() => {
+                        document.dispatchEvent(new CustomEvent('store:open-account-modal', {
+                            detail: eventDetail,
+                            bubbles: true,
+                            cancelable: true
+                        }));
+                    });
+                    
                     return;
                 }
                 
@@ -404,7 +424,14 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                <h1 className="store-text-xl md:store-text-2xl store-font-bold">Carrito de Compras</h1>
+                <h1 className="store-text-xl md:store-text-2xl store-font-bold">
+                  Carrito de Compras
+                  {itemCount > 0 && (
+                    <span className="store-ml-2 store-text-base store-font-normal store-text-gray-500">
+                      ({itemCount})
+                    </span>
+                  )}
+                </h1>
               </div>
               {/* Timer arriba */}
               {showTimer && timeLeft && timeLeft > 0 && (

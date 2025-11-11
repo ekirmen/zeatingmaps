@@ -194,10 +194,26 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         const { data: funcion, error: funcionError } = funcionResult;
         if (funcionError) throw funcionError;
 
-        // Cargar mapa y plantilla en paralelo
+        // Cargar mapa y plantilla en paralelo con cache
         setMapLoadStage('cargandoMapa');
         setMapLoadProgress(40);
         
+        // Intentar cargar mapa desde cache primero
+        const mapaCacheKey = `mapa_${funcion.sala_id}`;
+        const cachedMapa = sessionStorage.getItem(mapaCacheKey);
+        let mapaData = null;
+        
+        if (cachedMapa) {
+          try {
+            mapaData = JSON.parse(cachedMapa);
+            setMapa(mapaData);
+            setMapLoadProgress(60);
+          } catch (e) {
+            console.warn('Error parsing cached mapa:', e);
+          }
+        }
+        
+        // Cargar mapa y plantilla en paralelo
         const mapaQuery = supabase
           .from('mapas')
           .select('*')
@@ -221,10 +237,18 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         setMapLoadProgress(75);
 
-        const { data: mapaData, error: mapaError } = mapaResult;
+        const { data: mapaDataFromAPI, error: mapaError } = mapaResult;
         if (mapaError) throw mapaError;
 
-        setMapa(mapaData);
+        // Actualizar mapa si se cargó desde API (puede ser más reciente que el cache)
+        if (mapaDataFromAPI) {
+          setMapa(mapaDataFromAPI);
+          // Guardar en cache
+          sessionStorage.setItem(mapaCacheKey, JSON.stringify(mapaDataFromAPI));
+        } else if (!mapaData) {
+          // Si no hay datos ni en cache ni en API, establecer null
+          setMapa(null);
+        }
         setMapLoadProgress(85);
 
         // Procesar plantilla

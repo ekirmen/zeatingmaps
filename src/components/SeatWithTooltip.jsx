@@ -69,6 +69,11 @@ const SeatWithTooltip = ({
     }
   }, [tooltipPos, tooltipVisible]);
 
+  // Aumentar área táctil en mobile (radio mucho más grande para facilitar clicks)
+  const isMobile = typeof window !== 'undefined' && (window.innerWidth <= 768 || 'ontouchstart' in window);
+  // En mobile, usar hitStrokeWidth para ampliar el área clickeable sin cambiar el tamaño visual
+  const hitStrokeWidth = isMobile ? Math.max(radius * 2, 25) : 0; // Área de hit 2x el radio en mobile, mínimo 25px
+  
   return (
     <>
       <Group
@@ -76,6 +81,7 @@ const SeatWithTooltip = ({
         onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
       >
+        {/* Círculo visible del asiento con área de hit ampliada en mobile */}
         <Circle
           x={x}
           y={y}
@@ -89,6 +95,11 @@ const SeatWithTooltip = ({
           shadowOpacity={shadowOpacity}
           onClick={onSeatClick}
           onTap={onSeatClick}
+          listening={true}
+          // hitStrokeWidth amplía el área clickeable sin cambiar el tamaño visual
+          hitStrokeWidth={hitStrokeWidth}
+          perfectDrawEnabled={false} // Mejor rendimiento
+          shadowForStrokeEnabled={false} // Mejor rendimiento
           style={{ cursor: 'pointer' }}
         />
         <Text
@@ -100,9 +111,9 @@ const SeatWithTooltip = ({
           fontFamily="Arial"
           align="center"
           width={20}
-          onClick={onSeatClick}
-          onTap={onSeatClick}
-          style={{ cursor: 'pointer' }}
+          listening={false} // El texto no intercepta eventos
+          perfectDrawEnabled={false}
+          style={{ pointerEvents: 'none' }}
         />
       </Group>
       

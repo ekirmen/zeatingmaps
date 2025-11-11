@@ -319,12 +319,9 @@ const ModernEventPage = () => {
     return () => unsubscribe();
   }, [selectedFunctionId, subscribeToFunction, unsubscribe]);
 
-  // Cargar mapa cuando estemos en la vista del mapa
+  // Cargar mapa cuando estemos en la vista del mapa (optimizado con cache)
   useEffect(() => {
-    
-    
     if (!isMapView || !selectedFunctionId) {
-      
       return;
     }
     
@@ -332,47 +329,80 @@ const ModernEventPage = () => {
       try {
         setMapLoading(true);
         
-
         // Obtener sala_id de la función seleccionada (soporta esquemas nuevo y antiguo)
         const selectedFuncion = funciones.find(f => (f.id || f._id) === selectedFunctionId);
         const salaId = selectedFuncion?.sala_id ?? selectedFuncion?.sala;
 
         if (!salaId) {
-          
           setMapa(null);
           setMapLoading(false);
           return;
         }
 
-        // Intentar obtener del caché primero
-        let mapaData = await indexedDBCache.getMapa(salaId);
-        
-        if (!mapaData) {
-          // Si no está en caché, cargar desde la API
-          const { data, error: mapaError } = await supabase
-            .from('mapas')
-            .select('*')
-            .eq('sala_id', salaId)
-            .maybeSingle();
+        // Función para cargar desde API
+        const loadMapaFromAPI = async () => {
+          try {
+            // Intentar obtener del caché IndexedDB primero
+            let mapaData = await indexedDBCache.getMapa(salaId);
+            
+            if (!mapaData) {
+              // Si no está en caché IndexedDB, cargar desde la API
+              const { data, error: mapaError } = await supabase
+                .from('mapas')
+                .select('*')
+                .eq('sala_id', salaId)
+                .maybeSingle();
 
-          if (mapaError) throw mapaError;
-          
-          if (data) {
-            mapaData = data;
-            // Guardar en caché para próximas veces
-            await indexedDBCache.setMapa(salaId, data, data.id);
+              if (mapaError) throw mapaError;
+              
+              if (data) {
+                mapaData = data;
+                // Guardar en caché IndexedDB para próximas veces
+                await indexedDBCache.setMapa(salaId, data, data.id);
+              }
+            }
+
+            if (mapaData) {
+              setMapa(mapaData);
+              // También guardar en sessionStorage para acceso rápido
+              const mapaCacheKey = `mapa_${salaId}`;
+              sessionStorage.setItem(mapaCacheKey, JSON.stringify(mapaData));
+            } else {
+              setMapa(null);
+            }
+          } catch (err) {
+            console.error('Error cargando mapa desde API:', err);
+            throw err;
+          } finally {
+            setMapLoading(false);
+          }
+        };
+
+        // Intentar obtener del caché primero (sessionStorage para acceso rápido)
+        const mapaCacheKey = `mapa_${salaId}`;
+        const cachedMapa = sessionStorage.getItem(mapaCacheKey);
+        
+        if (cachedMapa) {
+          try {
+            const mapaData = JSON.parse(cachedMapa);
+            setMapa(mapaData);
+            setMapLoading(false);
+            // Cargar desde API en background para actualizar cache (no bloquea UI)
+            loadMapaFromAPI().catch(err => {
+              console.warn('Error actualizando cache en background:', err);
+            });
+            return;
+          } catch (e) {
+            console.warn('Error parsing cached mapa:', e);
+            // Si hay error parseando cache, continuar a cargar desde API
           }
         }
-
-        if (mapaData) {
-          setMapa(mapaData);
-        } else {
-          setMapa(null);
-        }
+        
+        // Si no hay cache válido, cargar desde API
+        await loadMapaFromAPI();
       } catch (err) {
         logger.error('Error cargando mapa:', err);
         message.error('Error al cargar el mapa de asientos');
-      } finally {
         setMapLoading(false);
       }
     };

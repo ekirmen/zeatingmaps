@@ -38,12 +38,49 @@ const ModernStorePage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('fecha');
 
-  // Cargar eventos
+  // Cargar eventos con cache optimizado
   useEffect(() => {
     const fetchEvents = async () => {
+      if (!currentTenant?.id) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         
+        // Intentar cargar desde cache primero
+        const cacheKey = `events_${currentTenant.id}_${statusFilter}_${sortBy}`;
+        const cachedEvents = sessionStorage.getItem(cacheKey);
+        const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
+        const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp, 10) : Infinity;
+        const CACHE_TTL = 30000; // 30 segundos de cache
+        
+        // Si hay cache válido (menos de 30 segundos), usarlo
+        if (cachedEvents && cacheAge < CACHE_TTL) {
+          try {
+            const parsedEvents = JSON.parse(cachedEvents);
+            setEvents(parsedEvents);
+            setLoading(false);
+            // Cargar en background para actualizar cache
+            fetchEventsFromAPI();
+            return;
+          } catch (e) {
+            console.warn('Error parsing cached events:', e);
+          }
+        }
+        
+        // Cargar desde API
+        await fetchEventsFromAPI();
+      } catch (err) {
+        console.error('Error fetching events:', err);
+        setError(err);
+        setLoading(false);
+      }
+    };
+
+    const fetchEventsFromAPI = async () => {
+      try {
         let query = supabase
           .from('eventos')
           .select(`
@@ -77,18 +114,22 @@ const ModernStorePage = () => {
 
         if (fetchError) throw fetchError;
         
-        setEvents(data || []);
+        const eventsData = data || [];
+        setEvents(eventsData);
+        
+        // Guardar en cache
+        const cacheKey = `events_${currentTenant.id}_${statusFilter}_${sortBy}`;
+        sessionStorage.setItem(cacheKey, JSON.stringify(eventsData));
+        sessionStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
       } catch (err) {
-        console.error('Error fetching events:', err);
-        setError(err);
+        console.error('Error fetching events from API:', err);
+        throw err;
       } finally {
         setLoading(false);
       }
     };
 
-    if (currentTenant?.id) {
-      fetchEvents();
-    }
+    fetchEvents();
   }, [currentTenant?.id, statusFilter, sortBy]);
 
   // Filtrar eventos por término de búsqueda

@@ -292,10 +292,16 @@ const Header = ({ onLogin, onLogout }) => {
       setIsAccountModalVisible(true);
     };
 
-    window.addEventListener('store:open-account-modal', handleExternalModalOpen);
+    // Registrar listener con opciones para mejor compatibilidad en iOS
+    const eventOptions = { passive: true, capture: false };
+    window.addEventListener('store:open-account-modal', handleExternalModalOpen, eventOptions);
+    
+    // También escuchar eventos en el document para mejor compatibilidad
+    document.addEventListener('store:open-account-modal', handleExternalModalOpen, eventOptions);
 
     return () => {
-      window.removeEventListener('store:open-account-modal', handleExternalModalOpen);
+      window.removeEventListener('store:open-account-modal', handleExternalModalOpen, eventOptions);
+      document.removeEventListener('store:open-account-modal', handleExternalModalOpen, eventOptions);
     };
   }, []);
 
