@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Form,
@@ -30,8 +30,19 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [form] = Form.useForm();
+  const [cooldown, setCooldown] = useState(0);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+
+    const interval = setInterval(() => {
+      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [cooldown]);
 
   const steps = [
     {
@@ -52,22 +63,39 @@ const ForgotPassword = () => {
     }
   ];
 
+  const REQUEST_COOLDOWN_SECONDS = 60;
+
   const handleSendResetEmail = async (values) => {
     try {
+      if (cooldown > 0) {
+        message.warning(
+          `Por seguridad, espera ${cooldown} segundo${cooldown === 1 ? '' : 's'} antes de solicitar otro correo.`
+        );
+        return;
+      }
+
       setLoading(true);
       setEmail(values.email);
 
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: `${window.location.origin}/store/reset-password`
       });
 
       if (error) throw error;
 
       message.success('Email de recuperación enviado correctamente');
+      setCooldown(REQUEST_COOLDOWN_SECONDS);
       setCurrentStep(1);
     } catch (error) {
       console.error('Error sending reset email:', error);
-      message.error('Error al enviar el email de recuperación');
+      if (error?.status === 429) {
+        setCooldown((prev) => (prev > 0 ? prev : REQUEST_COOLDOWN_SECONDS));
+        message.warning(
+          'Ya hemos enviado un correo recientemente. Por seguridad debes esperar un momento antes de solicitar otro.'
+        );
+      } else {
+        message.error(error?.message || 'Error al enviar el email de recuperación');
+      }
     } finally {
       setLoading(false);
     }
@@ -109,7 +137,7 @@ const ForgotPassword = () => {
 
       // Redirigir después de 2 segundos
       setTimeout(() => {
-        navigate('/login');
+        navigate('/store/login');
       }, 2000);
     } catch (error) {
       console.error('Error resetting password:', error);
@@ -155,10 +183,13 @@ const ForgotPassword = () => {
                   type="primary"
                   htmlType="submit"
                   loading={loading}
+                  disabled={cooldown > 0}
                   size="large"
                   block
                 >
-                  Enviar Código de Recuperación
+                  {cooldown > 0
+                    ? `Reintentar en ${cooldown}s`
+                    : 'Enviar Código de Recuperación'}
                 </Button>
               </Form.Item>
             </Form>
@@ -168,7 +199,7 @@ const ForgotPassword = () => {
             <Button
               type="link"
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/store/login')}
             >
               Volver al Login
             </Button>
