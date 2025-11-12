@@ -1,7 +1,7 @@
 // src/store/services/authService.js
 import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from '../../supabaseClient';
-import { STORE_BASE_URL } from '../../utils/siteUrl';
+import { getStoreBaseUrl } from '../../utils/siteUrl';
 import { createAuthError } from '../../utils/authErrorMessages';
 
 const TENANT_STORAGE_KEY = 'zeatingmaps::tenant-context:v1';
@@ -160,10 +160,10 @@ export const registerUser = async ({ email, password, phone }) => {
     }
     user = data.user;
     // send magic link for initial login
-    await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: STORE_BASE_URL } });
+    await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: getStoreBaseUrl() } });
   } else {
     // Fallback to OTP signup if no admin client available
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: STORE_BASE_URL } });
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: getStoreBaseUrl() } });
     if (error) throw new Error(error.message);
     return { user: null, session: null };
   }
@@ -224,7 +224,7 @@ export const registerUser = async ({ email, password, phone }) => {
 // Inicio de sesión (sign in)
 export const loginUser = async ({ email, password }) => {
   if (!password) {
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: STORE_BASE_URL } });
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: getStoreBaseUrl() } });
     if (error) {
       throw await createAuthError({ error, email, supabaseClient: supabase });
     }

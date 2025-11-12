@@ -69,35 +69,51 @@ const joinUrl = (base, path = '') => {
   return `${sanitizedBase}${path.startsWith('/') ? path : `/${path}`}`;
 };
 
-const resolveSiteUrl = () => {
+const getServerSiteUrl = (() => {
+  let cachedValue = null;
+  return () => {
+    if (cachedValue) {
+      return cachedValue;
+    }
+
+    cachedValue = resolveEnvSiteUrl() || 'http://localhost:3000';
+    return cachedValue;
+  };
+})();
+
+const getSiteUrl = () => {
   if (typeof window !== 'undefined' && window.location?.origin) {
-    return sanitizeUrl(window.location.origin) || 'http://localhost:3000';
+    const fromWindow = sanitizeUrl(window.location.origin);
+    if (fromWindow) {
+      return fromWindow;
+    }
   }
 
-  const envUrl = resolveEnvSiteUrl();
-  return envUrl || 'http://localhost:3000';
+  return getServerSiteUrl();
 };
 
-const resolveStoreBaseUrl = () => {
+const resolveSiteUrl = () => getSiteUrl();
+
+const getStoreBaseUrl = () => {
   const envStoreUrl = resolveEnvStoreUrl();
   if (envStoreUrl) {
     return envStoreUrl;
   }
 
-  return joinUrl(resolveSiteUrl(), '/store');
+  return joinUrl(getSiteUrl(), '/store');
 };
 
-const resolveStoreResetPasswordUrl = () => joinUrl(resolveStoreBaseUrl(), '/reset-password');
+const resolveStoreBaseUrl = () => getStoreBaseUrl();
 
-const SITE_URL = resolveSiteUrl();
-const STORE_BASE_URL = resolveStoreBaseUrl();
-const STORE_RESET_PASSWORD_URL = resolveStoreResetPasswordUrl();
+const getStoreResetPasswordUrl = () => joinUrl(getStoreBaseUrl(), '/reset-password');
 
-export default SITE_URL;
+const resolveStoreResetPasswordUrl = () => getStoreResetPasswordUrl();
+
+export default getSiteUrl;
 export {
-  SITE_URL,
-  STORE_BASE_URL,
-  STORE_RESET_PASSWORD_URL,
+  getSiteUrl,
+  getStoreBaseUrl,
+  getStoreResetPasswordUrl,
   resolveSiteUrl,
   resolveStoreBaseUrl,
   resolveStoreResetPasswordUrl,
