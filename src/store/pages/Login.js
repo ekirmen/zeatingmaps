@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../../supabaseClient';
 import { createAuthError, getAuthMessage } from '../../utils/authErrorMessages';
 
-import { SITE_URL } from "../../utils/siteUrl";
+import { STORE_BASE_URL } from '../../utils/siteUrl';
 const Login = ({ onLogin }) => {
   const { t } = useTranslation();
   const [login, setLogin] = useState('');
@@ -51,7 +51,7 @@ const Login = ({ onLogin }) => {
           password,
         }));
       } else {
-        ({ error } = await supabase.auth.signInWithOtp({ email: login, options: { emailRedirectTo: `${SITE_URL}/store` } }));
+        ({ error } = await supabase.auth.signInWithOtp({ email: login, options: { emailRedirectTo: STORE_BASE_URL } }));
       }
 
       if (error) {

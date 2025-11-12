@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { registerUser, loginUser } from '../services/authService';
 import { getAuthMessage } from '../../utils/authErrorMessages';
-import { SITE_URL } from '../../utils/siteUrl';
+import { STORE_RESET_PASSWORD_URL } from '../../utils/siteUrl';
 
 const StoreLogin = () => {
   const { t, i18n } = useTranslation();
@@ -106,7 +106,7 @@ const StoreLogin = () => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: `${SITE_URL}/store/reset-password`,
+        redirectTo: STORE_RESET_PASSWORD_URL,
       });
       if (error) throw error;
       message.success(t('forgot.sent'));
