@@ -19,7 +19,7 @@ import {
   ArrowLeftOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
-import { STORE_RESET_PASSWORD_URL } from '../../utils/siteUrl';
+import { getStoreResetPasswordUrl } from '../../utils/siteUrl';
 import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
@@ -79,7 +79,7 @@ const ForgotPassword = () => {
       setEmail(values.email);
 
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: STORE_RESET_PASSWORD_URL
+        redirectTo: getStoreResetPasswordUrl()
       });
 
       if (error) throw error;
