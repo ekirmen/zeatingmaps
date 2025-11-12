@@ -50,6 +50,24 @@ const SecurityHandler = ({ children }) => {
     }
   }, [location, navigate]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const { hash, pathname } = location;
+    if (!hash) return;
+
+    // Evitar redirección si ya estamos en la pantalla correcta
+    if (pathname.startsWith('/store/reset-password')) return;
+
+    const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+    const authFlowType = hashParams.get('type');
+
+    if (authFlowType === 'recovery' && pathname.startsWith('/store')) {
+      // Mantener el hash para que Supabase pueda procesar el token
+      navigate(`/store/reset-password${hash}`, { replace: true });
+    }
+  }, [location, navigate]);
+
   return <>{children}</>;
 };
 
