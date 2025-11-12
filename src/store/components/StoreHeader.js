@@ -7,7 +7,7 @@ import { supabase } from '../../supabaseClient';
 import { registerUser, loginUser } from '../services/authService';
 import { getAuthMessage } from '../../utils/authErrorMessages';
 import LinkWithRef from './LinkWithRef';
-import { SITE_URL } from '../../utils/siteUrl';
+import { STORE_RESET_PASSWORD_URL } from '../../utils/siteUrl';
 import { useRefParam } from '../../contexts/RefContext';
 import { useHeader } from '../../contexts/HeaderContext';
 import {
@@ -197,7 +197,7 @@ const Header = ({ onLogin, onLogout }) => {
   const handleForgotPassword = async () => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: `${SITE_URL}/store/reset-password`,
+        redirectTo: STORE_RESET_PASSWORD_URL,
       });
       if (error) throw error;
       message.success(t('forgot.sent'));
