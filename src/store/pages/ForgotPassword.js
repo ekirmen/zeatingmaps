@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   Form,
@@ -14,24 +14,36 @@ import {
 import {
   MailOutlined,
   LockOutlined,
-  SafetyOutlined,
   CheckCircleOutlined,
-  ArrowLeftOutlined
+  ArrowLeftOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { getStoreResetPasswordUrl } from '../../utils/siteUrl';
 import { useNavigate } from 'react-router-dom';
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { Step } = Steps;
 
 const ForgotPassword = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
-  const [resetToken, setResetToken] = useState('');
   const [form] = Form.useForm();
   const [cooldown, setCooldown] = useState(0);
+  const steps = useMemo(
+    () => [
+      {
+        title: 'Solicita el enlace seguro',
+        icon: <MailOutlined />
+      },
+      {
+        title: 'Revisa tu correo',
+        icon: <CheckCircleOutlined />
+      }
+    ],
+    []
+  );
 
   const navigate = useNavigate();
 
@@ -44,25 +56,6 @@ const ForgotPassword = () => {
 
     return () => clearInterval(interval);
   }, [cooldown]);
-
-  const steps = [
-    {
-      title: 'Ingresa tu email',
-      icon: <MailOutlined />
-    },
-    {
-      title: 'Verifica el código',
-      icon: <SafetyOutlined />
-    },
-    {
-      title: 'Nueva contraseña',
-      icon: <LockOutlined />
-    },
-    {
-      title: 'Completado',
-      icon: <CheckCircleOutlined />
-    }
-  ];
 
   const REQUEST_COOLDOWN_SECONDS = 60;
 
@@ -84,7 +77,7 @@ const ForgotPassword = () => {
 
       if (error) throw error;
 
-      message.success('Email de recuperación enviado correctamente');
+      message.success('Te enviamos un enlace seguro para restablecer tu contraseña');
       setCooldown(REQUEST_COOLDOWN_SECONDS);
       setCurrentStep(1);
     } catch (error) {
@@ -102,52 +95,6 @@ const ForgotPassword = () => {
     }
   };
 
-  const handleVerifyCode = async (values) => {
-    try {
-      setLoading(true);
-      setResetToken(values.code);
-
-      // En un sistema real, aquí verificarías el código
-      // Por ahora, simulamos la verificación
-      if (values.code === '123456') {
-        message.success('Código verificado correctamente');
-        setCurrentStep(2);
-      } else {
-        message.error('Código inválido');
-      }
-    } catch (error) {
-      console.error('Error verifying code:', error);
-      message.error('Error al verificar el código');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResetPassword = async (values) => {
-    try {
-      setLoading(true);
-
-      const { error } = await supabase.auth.updateUser({
-        password: values.newPassword
-      });
-
-      if (error) throw error;
-
-      message.success('Contraseña actualizada correctamente');
-      setCurrentStep(3);
-
-      // Redirigir después de 2 segundos
-      setTimeout(() => {
-        navigate('/store/login');
-      }, 2000);
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      message.error('Error al actualizar la contraseña');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
@@ -155,7 +102,7 @@ const ForgotPassword = () => {
           <div className="text-center">
             <Title level={3}>¿Olvidaste tu contraseña?</Title>
             <Text type="secondary" className="block mb-6">
-              No te preocupes, te ayudaremos a recuperarla. Ingresa tu email y te enviaremos un código de verificación.
+              Te enviaremos un enlace temporal y de un solo uso a tu correo para que puedas crear una nueva contraseña.
             </Text>
 
             <Form
@@ -190,7 +137,7 @@ const ForgotPassword = () => {
                 >
                   {cooldown > 0
                     ? `Reintentar en ${cooldown}s`
-                    : 'Enviar Código de Recuperación'}
+                    : 'Enviar enlace seguro'}
                 </Button>
               </Form.Item>
             </Form>
@@ -210,152 +157,56 @@ const ForgotPassword = () => {
       case 1:
         return (
           <div className="text-center">
-            <Title level={3}>Verifica tu Email</Title>
-            <Text type="secondary" className="block mb-6">
-              Hemos enviado un código de 6 dígitos a <strong>{email}</strong>
-            </Text>
+            <Title level={3}>Revisa tu correo</Title>
+            <Space direction="vertical" size="middle" className="w-full">
+              <Text type="secondary">
+                Enviamos un enlace de restablecimiento a <strong>{email}</strong>.
+                El enlace expira en pocos minutos y se invalida después del primer uso.
+              </Text>
 
-            <Alert
-              message="Código de Prueba"
-              description="Para demostración, usa el código: 123456"
-              type="info"
-              showIcon
-              className="mb-6"
-            />
+              <Alert
+                message="Cómo continuar"
+                description={(
+                  <Space direction="vertical">
+                    <Paragraph className="mb-0">
+                      1. Abre el correo de recuperación y haz clic en "Restablecer contraseña".
+                    </Paragraph>
+                    <Paragraph className="mb-0">
+                      2. Se abrirá una pestaña segura donde podrás crear tu nueva contraseña.
+                    </Paragraph>
+                    <Paragraph className="mb-0">
+                      3. Si no ves el correo, revisa el spam o solicita uno nuevo.
+                    </Paragraph>
+                  </Space>
+                )}
+                type="info"
+                showIcon
+              />
 
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={handleVerifyCode}
-              className="max-w-md mx-auto"
-            >
-              <Form.Item
-                name="code"
-                label="Código de Verificación"
-                rules={[
-                  { required: true, message: 'Por favor ingresa el código' },
-                  { len: 6, message: 'El código debe tener 6 dígitos' }
-                ]}
-              >
-                <Input
-                  prefix={<SafetyOutlined />}
-                  placeholder="123456"
-                  size="large"
-                  maxLength={6}
-                />
-              </Form.Item>
-
-              <Form.Item>
+              <Space className="w-full" direction="vertical">
                 <Button
                   type="primary"
-                  htmlType="submit"
-                  loading={loading}
                   size="large"
+                  icon={<LockOutlined />}
+                  onClick={() => navigate('/store/login')}
                   block
                 >
-                  Verificar Código
+                  Volver al inicio de sesión
                 </Button>
-              </Form.Item>
-            </Form>
-
-            <div className="mt-4">
-              <Button type="link" onClick={() => setCurrentStep(0)}>
-                Cambiar Email
-              </Button>
-              <Button type="link" onClick={() => handleSendResetEmail({ email })}>
-                Reenviar Código
-              </Button>
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="text-center">
-            <Title level={3}>Nueva Contraseña</Title>
-            <Text type="secondary" className="block mb-6">
-              Crea una nueva contraseña segura para tu cuenta
-            </Text>
-
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={handleResetPassword}
-              className="max-w-md mx-auto"
-            >
-              <Form.Item
-                name="newPassword"
-                label="Nueva Contraseña"
-                rules={[
-                  { required: true, message: 'Por favor ingresa la nueva contraseña' },
-                  { min: 8, message: 'La contraseña debe tener al menos 8 caracteres' },
-                  {
-                    pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                    message: 'La contraseña debe contener mayúsculas, minúsculas y números'
-                  }
-                ]}
-              >
-                <Input.Password
-                  prefix={<LockOutlined />}
-                  placeholder="Nueva contraseña"
-                  size="large"
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="confirmPassword"
-                label="Confirmar Contraseña"
-                dependencies={['newPassword']}
-                rules={[
-                  { required: true, message: 'Por favor confirma la contraseña' },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || getFieldValue('newPassword') === value) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(new Error('Las contraseñas no coinciden'));
-                    },
-                  }),
-                ]}
-              >
-                <Input.Password
-                  prefix={<LockOutlined />}
-                  placeholder="Confirmar contraseña"
-                  size="large"
-                />
-              </Form.Item>
-
-              <Form.Item>
                 <Button
-                  type="primary"
-                  htmlType="submit"
+                  icon={<ReloadOutlined />}
+                  onClick={() => handleSendResetEmail({ email })}
+                  disabled={cooldown > 0}
                   loading={loading}
-                  size="large"
                   block
                 >
-                  Cambiar Contraseña
+                  {cooldown > 0 ? `Reenviar en ${cooldown}s` : 'Reenviar enlace'}
                 </Button>
-              </Form.Item>
-            </Form>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="text-center">
-            <CheckCircleOutlined className="text-6xl text-green-500 mb-4" />
-            <Title level={3}>¡Contraseña Actualizada!</Title>
-            <Text type="secondary" className="block mb-6">
-              Tu contraseña ha sido actualizada correctamente. Serás redirigido al login en unos segundos.
-            </Text>
-
-            <Button
-              type="primary"
-              size="large"
-              onClick={() => navigate('/login')}
-            >
-              Ir al Login
-            </Button>
+                <Button type="link" onClick={() => setCurrentStep(0)} block>
+                  Usar otro correo
+                </Button>
+              </Space>
+            </Space>
           </div>
         );
 
