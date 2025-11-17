@@ -37,7 +37,7 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
           login: formData.login,
           nombre: formData.nombre,
           apellido: formData.apellido,
-          empresa: formData.empresa,
+          tenant_id: formData.empresa,
           telefono: formData.telefono,
           permisos: { role: 'usuario' },
         })
