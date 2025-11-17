@@ -29,42 +29,56 @@ export const RoleProvider = ({ children }) => {
   const loadUserRole = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         setUserRole('guest');
         setLoading(false);
         return;
       }
 
-      // Obtener perfil del usuario
+      // Obtener perfil del usuario (tabla de perfiles)
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (profileError) {
-        console.error('Error loading profile:', profileError);
-        setUserRole('guest');
-        setLoading(false);
-        return;
+      // Determinar rol y permisos adicionales desde el perfil o metadatos
+      let role = 'guest';
+      let extraPermissions = {};
+
+      if (!profileError && profile) {
+        if (profile.permisos?.role) {
+          role = profile.permisos.role;
+        } else if (profile.role) {
+          role = profile.role;
+        } else if (profile.login?.includes('@')) {
+          // Si tiene email, es usuario registrado desde store
+          role = 'usuario_store';
+        }
+
+        extraPermissions = profile.permisos || {};
+      } else {
+        // Fallback a metadatos del usuario si no existe perfil
+        role = user.user_metadata?.permisos?.role || user.user_metadata?.role || 'guest';
+        extraPermissions = user.user_metadata?.permisos || {};
+
+        if (role === 'guest' && user.user_metadata?.login?.includes('@')) {
+          role = 'usuario_store';
+        }
       }
 
-      // Determinar rol basado en el perfil
-      let role = 'guest';
-      
-      if (profile.permisos?.role) {
-        role = profile.permisos.role;
-      } else if (profile.role) {
-        role = profile.role;
-      } else if (profile.login?.includes('@')) {
-        // Si tiene email, es usuario registrado desde store
-        role = 'usuario_store';
-      }
+      // Combinar permisos por rol con permisos personalizados
+      const computedPermissions = getRolePermissions(role);
+      Object.entries(extraPermissions).forEach(([key, value]) => {
+        if (value === true && Object.prototype.hasOwnProperty.call(computedPermissions, key)) {
+          computedPermissions[key] = true;
+        }
+      });
 
       setUserRole(role);
-      setPermissions(getRolePermissions(role));
-      
+      setPermissions(computedPermissions);
+
       // Cargar tenants asignados para usuarios del sistema
       if (['super_admin', 'admin_sistema', 'gerente_sistema', 'soporte_sistema', 'visualizador_sistema'].includes(role)) {
         await loadAssignedTenants(user.id);
