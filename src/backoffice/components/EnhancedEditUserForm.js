@@ -286,9 +286,10 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
         })
         .eq('id', user.id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('No se pudo actualizar el perfil del usuario');
 
       onUpdateUser(data);
       toast.success('Usuario actualizado correctamente');

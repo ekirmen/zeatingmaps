@@ -3,6 +3,40 @@ import { supabase } from '../../supabaseClient';
 class AuditService {
   constructor() {
     this.currentUser = null;
+    this.remoteLoggingDisabled = false;
+  }
+
+  isAuthError(error) {
+    if (!error) return false;
+
+    const message = (error.message || '').toLowerCase();
+    const hint = (error.hint || '').toLowerCase();
+
+    return (
+      error.code === '42501' ||
+      error.code === 'PGRST301' ||
+      error.status === 401 ||
+      error.status === 403 ||
+      message.includes('permission denied') ||
+      message.includes('no api key found') ||
+      message.includes('apikey') ||
+      message.includes('unauthorized') ||
+      message.includes('forbidden') ||
+      hint.includes('no `apikey`') ||
+      hint.includes('api key')
+    );
+  }
+
+  async storeLocally(auditData) {
+    try {
+      const existing = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
+      existing.push({ ...auditData, fallback: true });
+      localStorage.setItem('audit_logs_backup', JSON.stringify(existing.slice(-500)));
+    } catch (storageError) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[AUDIT] No se pudo guardar el log localmente:', storageError);
+      }
+    }
   }
 
   // Inicializar servicio de auditoría
@@ -20,6 +54,36 @@ class AuditService {
   // Registrar acción de auditoría
   async logAction(action, details, tenantId = null, resourceId = null) {
     try {
+      if (this.remoteLoggingDisabled) {
+        await this.storeLocally({
+          action,
+          details: JSON.stringify(details),
+          tenant_id: tenantId,
+          resource_id: resourceId,
+          created_at: new Date().toISOString()
+        });
+        return null;
+      }
+
+      // Asegurar sesión y usuario actualizados
+      if (!this.currentUser) {
+        await this.initialize();
+      }
+
+      const sessionResult = await supabase.auth.getSession();
+      const session = sessionResult?.data?.session;
+
+      if (!session?.access_token) {
+        await this.storeLocally({
+          action,
+          details: JSON.stringify(details),
+          tenant_id: tenantId,
+          resource_id: resourceId,
+          created_at: new Date().toISOString()
+        });
+        return null;
+      }
+
       const auditData = {
         tenant_id: tenantId,
         user_id: this.currentUser?.id,
@@ -37,10 +101,31 @@ class AuditService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (this.isAuthError(error)) {
+          this.remoteLoggingDisabled = true;
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[AUDIT] Registro remoto deshabilitado por error de permisos:', error.message || error.hint);
+          }
+          await this.storeLocally(auditData);
+          return null;
+        }
+
+        throw error;
+      }
       return data;
     } catch (error) {
-      console.error('Error logging audit action:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error logging audit action:', error);
+      }
+      await this.storeLocally({
+        action,
+        details: JSON.stringify(details),
+        tenant_id: tenantId,
+        resource_id: resourceId,
+        created_at: new Date().toISOString(),
+        error: error?.message
+      });
       return null;
     }
   }
