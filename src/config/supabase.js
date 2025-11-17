@@ -43,6 +43,29 @@ const createOptimizedClient = (url, key, options = {}) => {
   const storageKey = storageKeyOption || authOptions.storageKey || 'supabase-auth-token'
   const customHeaders = globalOptions.headers || {}
 
+  // Asegurar que TODAS las peticiones lleven el apiKey de Supabase
+  const withApiKeyHeaders = {
+    apikey: key,
+    Authorization: customHeaders.Authorization || `Bearer ${key}`,
+    'X-Client-Info': 'zeatingmaps-web',
+    ...customHeaders
+  }
+
+  // En algunos entornos (ej. navegadores con proxies) los headers globales no siempre se aplican.
+  // Reemplazamos fetch para inyectar el apikey en cada request y evitar el error 406.
+  const patchedFetch = async (input, init = {}) => {
+    const mergedHeaders = {
+      apikey: key,
+      Authorization: init.headers?.Authorization || `Bearer ${key}`,
+      ...init.headers
+    }
+
+    return (globalOptions.fetch || fetch)(input, {
+      ...init,
+      headers: mergedHeaders
+    })
+  }
+
   return createClient(url, key, {
     ...restOptions,
     auth: {
@@ -54,11 +77,8 @@ const createOptimizedClient = (url, key, options = {}) => {
     },
     global: {
       ...globalOptions,
-      headers: {
-        apikey: key,
-        'X-Client-Info': 'zeatingmaps-web',
-        ...customHeaders
-      }
+      fetch: patchedFetch,
+      headers: withApiKeyHeaders
     }
   })
 }
