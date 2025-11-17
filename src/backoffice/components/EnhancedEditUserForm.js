@@ -2,6 +2,106 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import { toast } from 'react-hot-toast';
 
+const DEFAULT_CHANNELS = {
+  boxOffice: false,
+  internet: false,
+  marcaBlanca: false,
+  test: false
+};
+
+const DEFAULT_PERMISSIONS = {
+  // System Administration
+  SYSTEM_ADMIN: false,
+  TENANT_MANAGEMENT: false,
+  USER_MANAGEMENT: false,
+  BILLING_MANAGEMENT: false,
+  SYSTEM_CONFIGURATION: false,
+
+  // Tenant Administration
+  TENANT_ADMIN: false,
+  TENANT_USERS: false,
+  TENANT_SETTINGS: false,
+  TENANT_BILLING: false,
+
+  // Event Management
+  EVENT_CREATE: false,
+  EVENT_EDIT: false,
+  EVENT_DELETE: false,
+  EVENT_PUBLISH: false,
+  VENUE_MANAGEMENT: false,
+
+  // Sales Management
+  SALES_VIEW: false,
+  SALES_CREATE: false,
+  SALES_EDIT: false,
+  SALES_CANCEL: false,
+  SALES_REFUND: false,
+  SALES_REPORTS: false,
+
+  // Customer Support
+  SUPPORT_TICKETS: false,
+  CUSTOMER_DATA: false,
+  SUPPORT_REPORTS: false,
+
+  // Marketing
+  MARKETING_CAMPAIGNS: false,
+  EMAIL_MARKETING: false,
+  ANALYTICS: false,
+
+  // Finance
+  FINANCE_VIEW: false,
+  FINANCE_EDIT: false,
+  INVOICE_MANAGEMENT: false,
+  PAYMENT_PROCESSING: false,
+
+  // Technical
+  TECHNICAL_SUPPORT: false,
+  API_ACCESS: false,
+  SYSTEM_LOGS: false
+};
+
+const DEFAULT_PAYMENT_METHODS = {
+  efectivo: false,
+  zelle: false,
+  pagoMovil: false,
+  paypal: false,
+  puntoVenta: false,
+  procesadorPago: false
+};
+
+const buildDefaultPermissions = () => ({ ...DEFAULT_PERMISSIONS });
+const buildDefaultChannels = () => ({ ...DEFAULT_CHANNELS });
+const buildDefaultPaymentMethods = () => ({ ...DEFAULT_PAYMENT_METHODS });
+
+const normalizePermissions = (permisos) => {
+  const basePermissions = buildDefaultPermissions();
+
+  if (Array.isArray(permisos)) {
+    permisos.forEach((permission) => {
+      if (Object.prototype.hasOwnProperty.call(basePermissions, permission)) {
+        basePermissions[permission] = true;
+      }
+    });
+    return basePermissions;
+  }
+
+  if (permisos && typeof permisos === 'object') {
+    return { ...basePermissions, ...permisos };
+  }
+
+  return basePermissions;
+};
+
+const normalizeChannels = (canales) => ({
+  ...buildDefaultChannels(),
+  ...(canales && typeof canales === 'object' ? canales : {})
+});
+
+const normalizePaymentMethods = (metodosPago) => ({
+  ...buildDefaultPaymentMethods(),
+  ...(metodosPago && typeof metodosPago === 'object' ? metodosPago : {})
+});
+
 const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
   const [formData, setFormData] = useState({
     // Basic user info
@@ -10,81 +110,20 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
     email: '',
     telefono: '',
     empresa: '',
-    
+
     // User profile and status
     perfil: '',
     activo: true,
-    
+
     // Channels
-    canales: {
-      boxOffice: false,
-      internet: false,
-      marcaBlanca: false,
-      test: false
-    },
-    
+    canales: buildDefaultChannels(),
+
     // Permissions for SaaS multi-tenant system
-    permisos: {
-      // System Administration
-      SYSTEM_ADMIN: false,
-      TENANT_MANAGEMENT: false,
-      USER_MANAGEMENT: false,
-      BILLING_MANAGEMENT: false,
-      SYSTEM_CONFIGURATION: false,
-      
-      // Tenant Administration
-      TENANT_ADMIN: false,
-      TENANT_USERS: false,
-      TENANT_SETTINGS: false,
-      TENANT_BILLING: false,
-      
-      // Event Management
-      EVENT_CREATE: false,
-      EVENT_EDIT: false,
-      EVENT_DELETE: false,
-      EVENT_PUBLISH: false,
-      VENUE_MANAGEMENT: false,
-      
-      // Sales Management
-      SALES_VIEW: false,
-      SALES_CREATE: false,
-      SALES_EDIT: false,
-      SALES_CANCEL: false,
-      SALES_REFUND: false,
-      SALES_REPORTS: false,
-      
-      // Customer Support
-      SUPPORT_TICKETS: false,
-      CUSTOMER_DATA: false,
-      SUPPORT_REPORTS: false,
-      
-      // Marketing
-      MARKETING_CAMPAIGNS: false,
-      EMAIL_MARKETING: false,
-      ANALYTICS: false,
-      
-      // Finance
-      FINANCE_VIEW: false,
-      FINANCE_EDIT: false,
-      INVOICE_MANAGEMENT: false,
-      PAYMENT_PROCESSING: false,
-      
-      // Technical
-      TECHNICAL_SUPPORT: false,
-      API_ACCESS: false,
-      SYSTEM_LOGS: false
-    },
-    
+    permisos: buildDefaultPermissions(),
+
     // Payment methods
-    metodosPago: {
-      efectivo: false,
-      zelle: false,
-      pagoMovil: false,
-      paypal: false,
-      puntoVenta: false,
-      procesadorPago: false
-    },
-    
+    metodosPago: buildDefaultPaymentMethods(),
+
     // Venues access
     recintos: []
   });
@@ -112,51 +151,14 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
       setFormData({
         login: user.login || '',
         nombre: user.nombre || '',
-        email: user.email || '',
+        email: user.login || '',
         telefono: user.telefono || '',
         empresa: user.empresa || '',
         perfil: user.role || '',
         activo: user.activo !== false,
-        canales: user.canales || {
-          boxOffice: false,
-          internet: false,
-          marcaBlanca: false,
-          test: false
-        },
-        permisos: user.permisos || {
-          // System Administration
-          SYSTEM_ADMIN: false, TENANT_MANAGEMENT: false, USER_MANAGEMENT: false,
-          BILLING_MANAGEMENT: false, SYSTEM_CONFIGURATION: false,
-          
-          // Tenant Administration
-          TENANT_ADMIN: false, TENANT_USERS: false, TENANT_SETTINGS: false,
-          TENANT_BILLING: false,
-          
-          // Event Management
-          EVENT_CREATE: false, EVENT_EDIT: false, EVENT_DELETE: false,
-          EVENT_PUBLISH: false, VENUE_MANAGEMENT: false,
-          
-          // Sales Management
-          SALES_VIEW: false, SALES_CREATE: false, SALES_EDIT: false,
-          SALES_CANCEL: false, SALES_REFUND: false, SALES_REPORTS: false,
-          
-          // Customer Support
-          SUPPORT_TICKETS: false, CUSTOMER_DATA: false, SUPPORT_REPORTS: false,
-          
-          // Marketing
-          MARKETING_CAMPAIGNS: false, EMAIL_MARKETING: false, ANALYTICS: false,
-          
-          // Finance
-          FINANCE_VIEW: false, FINANCE_EDIT: false, INVOICE_MANAGEMENT: false,
-          PAYMENT_PROCESSING: false,
-          
-          // Technical
-          TECHNICAL_SUPPORT: false, API_ACCESS: false, SYSTEM_LOGS: false
-        },
-        metodosPago: user.metodospago || {
-          efectivo: false, zelle: false, pagoMovil: false, paypal: false,
-          puntoVenta: false, procesadorPago: false
-        },
+        canales: normalizeChannels(user.canales),
+        permisos: normalizePermissions(user.permisos),
+        metodosPago: normalizePaymentMethods(user.metodospago),
         recintos: user.recintos || []
       });
     }
@@ -242,7 +244,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
   };
 
   const handleSelectAllPermissions = (checked) => {
-    const allPermissions = Object.keys(formData.permisos);
+    const allPermissions = Object.keys(DEFAULT_PERMISSIONS);
     setFormData(prev => ({
       ...prev,
       permisos: allPermissions.reduce((acc, permission) => {
@@ -273,7 +275,6 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
         .update({
           login: formData.login,
           nombre: formData.nombre,
-          email: formData.email,
           telefono: formData.telefono,
           empresa: formData.empresa,
           role: formData.perfil,
