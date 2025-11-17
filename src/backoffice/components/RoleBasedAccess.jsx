@@ -59,19 +59,45 @@ export const RoleProvider = ({ children }) => {
       }
 
       // Obtener perfil del usuario (tabla de perfiles)
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileById, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+
+      // Intentar un fallback por login/email cuando la búsqueda por id falla
+      let profile = profileById;
+      if ((!profile || profileError) && user.email) {
+        const normalizedEmail = user.email.toLowerCase();
+        const { data: profileByLogin } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('login', normalizedEmail)
+          .maybeSingle();
+
+        if (profileByLogin) {
+          profile = profileByLogin;
+        }
+      }
 
       // Determinar rol y permisos adicionales desde el perfil o metadatos
       let role = 'guest';
       let extraPermissions = {};
 
-      if (!profileError && profile) {
-        if (profile.permisos?.role) {
-          role = profile.permisos.role;
+      if (profile) {
+        let parsedPermissions = profile.permisos;
+
+        if (typeof parsedPermissions === 'string') {
+          try {
+            parsedPermissions = JSON.parse(parsedPermissions);
+          } catch (parseError) {
+            console.warn('[RoleBasedAccess] No se pudo parsear permisos:', parseError);
+            parsedPermissions = {};
+          }
+        }
+
+        if (parsedPermissions?.role) {
+          role = parsedPermissions.role;
         } else if (profile.role) {
           role = profile.role;
         } else if (profile.login?.includes('@')) {
@@ -79,7 +105,7 @@ export const RoleProvider = ({ children }) => {
           role = 'usuario_store';
         }
 
-        extraPermissions = profile.permisos || {};
+        extraPermissions = parsedPermissions && typeof parsedPermissions === 'object' ? parsedPermissions : {};
       } else {
         // Fallback a metadatos del usuario si no existe perfil
         role = user.user_metadata?.permisos?.role || user.user_metadata?.role || 'guest';
