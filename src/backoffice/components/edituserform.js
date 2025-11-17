@@ -33,9 +33,10 @@ const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
         .update({ ...rest, tenant_id: empresa })
         .eq('id', user.id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('No se pudo actualizar el perfil del usuario');
 
       onUpdateUser(data);
     } catch (err) {
