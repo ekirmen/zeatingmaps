@@ -17,7 +17,7 @@ const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
         login: user.login || '',
         nombre: user.nombre || '',
         apellido: user.apellido || '',
-        empresa: user.empresa || '',
+        empresa: user.tenant_id || user.empresa || '',
         telefono: user.telefono || '',
       });
     }
@@ -27,9 +27,10 @@ const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
     e.preventDefault();
 
     try {
+      const { empresa, ...rest } = formData;
       const { data, error } = await supabase
         .from('profiles')
-        .update(formData)
+        .update({ ...rest, tenant_id: empresa })
         .eq('id', user.id)
         .select()
         .single();
