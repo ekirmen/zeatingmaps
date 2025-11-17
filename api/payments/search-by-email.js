@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     // Primero buscar el usuario por email
     const { data: user, error: userError } = await supabase
       .from('profiles')
-      .select('id, login, empresa, telefono')
+      .select('id, login, tenant_id:empresa, telefono')
       .eq('login', email)
       .single();
 
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
         funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
         evento_id as event,
         event:eventos(id, nombre),
-        user:profiles!user_id(id, login, empresa, telefono)
+        user:profiles!user_id(id, login, tenant_id:empresa, telefono)
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
