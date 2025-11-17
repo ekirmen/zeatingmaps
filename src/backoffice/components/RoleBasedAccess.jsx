@@ -28,7 +28,29 @@ export const RoleProvider = ({ children }) => {
 
   const loadUserRole = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      let user = null;
+
+      // Intentar obtener primero la sesión local para evitar llamadas innecesarias a la API
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.warn('[RoleBasedAccess] Error leyendo sesión, probando getUser:', sessionError);
+      }
+
+      if (sessionData?.session?.user) {
+        user = sessionData.session.user;
+      } else {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+
+        if (userError) {
+          console.error('Error loading user role:', userError);
+          setUserRole('guest');
+          setLoading(false);
+          return;
+        }
+
+        user = userData?.user || null;
+      }
 
       if (!user) {
         setUserRole('guest');

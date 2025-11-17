@@ -13,8 +13,23 @@ const AuthGuard = ({ children }) => {
 
   const checkAuth = async () => {
     try {
+      // Primero intentar obtener la sesión actual (no requiere llamada a la API)
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.warn('[AuthGuard] Error obteniendo sesión, probando con getUser:', sessionError);
+      }
+
+      const activeUser = sessionData?.session?.user;
+
+      if (activeUser) {
+        setIsAuthenticated(true);
+        return;
+      }
+
+      // Fallback: intentar obtener el usuario directamente (puede requerir llamada de red)
       const { data: { user }, error } = await supabase.auth.getUser();
-      
+
       if (error) {
         console.error('Error checking auth:', error);
         setIsAuthenticated(false);
