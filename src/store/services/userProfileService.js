@@ -208,9 +208,12 @@ export const updateUserProfile = async (userId, profileData) => {
       })
       .eq('id', userId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data) {
+      throw new Error('No se pudo actualizar el perfil (sin filas coincidentes o sin permisos)');
+    }
     return data;
   } catch (error) {
     console.error('Error al actualizar perfil:', error);
