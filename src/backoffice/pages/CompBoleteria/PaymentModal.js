@@ -9,7 +9,7 @@ import determineSeatLockStatus from '../../../services/ticketing/seatStatus';
 import { generateSimpleLocator } from '../../../utils/generateLocator';
 import { useAuth } from '../../../contexts/AuthContext';
 import { isUuid } from '../../../utils/isUuid';
-import API_BASE_URL from '../../../utils/apiBase';
+import { buildRelativeApiUrl } from '../../../utils/apiConfig';
 import downloadTicket from '../../../utils/downloadTicket';
 import { supabase } from '../../../supabaseClient';
 import { createCasheaOrder } from '../../../services/casheaService';
@@ -490,7 +490,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const handleEmailTicket = async () => {
     if (!locator || !emailToSend) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/payments/${locator}/email`, {
+      const emailUrl = buildRelativeApiUrl(`payments/${locator}/email`);
+      const res = await fetch(emailUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailToSend })
