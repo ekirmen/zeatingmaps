@@ -120,6 +120,30 @@ const PaymentSuccess = () => {
     }
   };
 
+  const formatPurchaseDate = (dateString) => {
+    if (!dateString) return 'Fecha no disponible';
+
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return 'Fecha no disponible';
+
+    const day = date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+
+    const time = date
+      .toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      })
+      .toUpperCase();
+
+    return `${day}, ${time}`;
+  };
+
 
   const handleContinuePayment = async () => {
     try {
@@ -170,42 +194,27 @@ const PaymentSuccess = () => {
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <FontAwesomeIcon icon={faCheckCircle} className="text-green-600 text-xl" />
+      <div className="py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6 sm:p-8">
+          <div className="mb-6 md:mb-8 md:flex md:items-center md:justify-between md:text-left text-center">
+            <div className="flex items-center justify-center md:justify-start space-x-4">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <FontAwesomeIcon icon={faCheckCircle} className="text-green-600 text-2xl" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  {isReservation ? 'Reserva Confirmada' : 'Compra Exitosa'}
-                </h1>
-                <p className="text-sm text-gray-600">
-                  {isReservation ? 'Tu reserva ha sido registrada' : 'Tu compra ha sido procesada'}
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {isReservation ? '¡Reserva Exitosa!' : '¡Pago Exitoso!'}
+                </h2>
+                <p className="mt-1 text-base text-gray-600">
+                  {isReservation ? 'Tu reserva ha sido registrada con éxito' : 'Tu compra ha sido registrada con éxito'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="mt-4 md:mt-0 flex items-center space-x-2 justify-center md:justify-end">
               <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
                 {isReservation ? 'Reservado' : 'Pagado'}
               </span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center mb-8">
-            <FontAwesomeIcon icon={faCheckCircle} className="mx-auto h-16 w-16 text-green-500" />
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">
-              {isReservation ? '¡Reserva Exitosa!' : '¡Pago Exitoso!'}
-            </h2>
-            <p className="mt-2 text-lg text-gray-600">
-              {isReservation ? 'Tu reserva ha sido registrada con éxito' : 'Tu compra ha sido registrada con éxito'}
-            </p>
           </div>
 
         <div className="border-t border-b border-gray-200 py-4 my-6">
@@ -229,8 +238,8 @@ const PaymentSuccess = () => {
                 </>
               )}
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Fecha:</span>
-                <span>{paymentDetails.created_at ? new Date(paymentDetails.created_at).toLocaleString() : 'Fecha no disponible'}</span>
+                <span className="text-gray-600">Fecha de la Compra:</span>
+                <span>{formatPurchaseDate(paymentDetails.created_at)}</span>
               </div>
             </>
           )}
