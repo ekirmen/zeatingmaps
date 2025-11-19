@@ -51,18 +51,34 @@ const createOptimizedClient = (url, key, options = {}) => {
     ...customHeaders
   }
 
+  const mergeHeaders = (baseHeaders = {}, overrideHeaders = {}) => {
+    const merged = new Headers(baseHeaders)
+    const overrides = overrideHeaders instanceof Headers ? overrideHeaders : new Headers(overrideHeaders)
+
+    overrides.forEach((value, header) => {
+      merged.set(header, value)
+    })
+
+    return merged
+  }
+
   // En algunos entornos (ej. navegadores con proxies) los headers globales no siempre se aplican.
   // Reemplazamos fetch para inyectar el apikey en cada request y evitar el error 406.
   const patchedFetch = async (input, init = {}) => {
-    const mergedHeaders = {
-      apikey: key,
-      Authorization: init.headers?.Authorization || `Bearer ${key}`,
-      ...init.headers
+    const headers = mergeHeaders(withApiKeyHeaders, init.headers)
+
+    if (!headers.has('apikey')) headers.set('apikey', key)
+    if (!headers.has('Authorization')) headers.set('Authorization', `Bearer ${key}`)
+    if (!headers.has('Accept')) headers.set('Accept', 'application/json')
+
+    const method = (init.method || 'GET').toUpperCase()
+    if (!['GET', 'HEAD'].includes(method) && init.body && !headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json')
     }
 
     return (globalOptions.fetch || fetch)(input, {
       ...init,
-      headers: mergedHeaders
+      headers
     })
   }
 
