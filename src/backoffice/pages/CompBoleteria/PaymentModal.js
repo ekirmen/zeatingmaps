@@ -338,6 +338,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const [seatLockSessionId, setSeatLockSessionId] = useState(null);
   const [casheaOrder, setCasheaOrder] = useState(null);
   const [casheaError, setCasheaError] = useState(null);
+  const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email?.trim());
 
   const parsePaymentsFromTransaction = (paymentsData) => {
     if (!paymentsData) return [];
@@ -488,13 +489,19 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   };
 
   const handleEmailTicket = async () => {
-    if (!locator || !emailToSend) return;
+    const trimmedEmail = emailToSend?.trim();
+    if (!locator || !trimmedEmail) return;
+
+    if (!isValidEmail(trimmedEmail)) {
+      message.error('Ingresa un correo electrónico válido');
+      return;
+    }
     try {
       const emailUrl = buildRelativeApiUrl(`payments/${locator}/email`);
       const res = await fetch(emailUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailToSend })
+        body: JSON.stringify({ email: trimmedEmail })
       });
       const data = await res.json();
       if (res.ok) {
@@ -1276,7 +1283,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   variant="outlined"
                   block
                   onClick={handleEmailTicket}
-                  disabled={!emailToSend}
+                  disabled={!emailToSend || !isValidEmail(emailToSend)}
                 >
                   Enviar por correo
                 </Button>,
