@@ -164,8 +164,17 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       dataIndex: 'status',
       key: 'status',
       render: (status) => {
-        const color = status === 'pagado' ? 'green' : status === 'reservado' ? 'orange' : 'red';
-        const text = status === 'pagado' ? 'Pagado' : status === 'reservado' ? 'Reservado' : 'Pendiente';
+        const normalized = (status || '').toLowerCase();
+        const color = ['pagado', 'completed'].includes(normalized)
+          ? 'green'
+          : ['reservado', 'reserved', 'pending'].includes(normalized)
+            ? 'orange'
+            : 'red';
+        const text = ['pagado', 'completed'].includes(normalized)
+          ? 'Pagado'
+          : ['reservado', 'reserved', 'pending'].includes(normalized)
+            ? 'Reservado'
+            : 'Pendiente';
         return <Tag color={color}>{text}</Tag>;
       },
     },
