@@ -147,6 +147,18 @@ async function resolveEmailConfig(supabaseAdmin, tenantId) {
   return getEnvEmailConfig();
 }
 
+function extractTenantId(payment = {}, explicitTenantId = null) {
+  return (
+    explicitTenantId ||
+    payment.tenant_id ||
+    payment.tenantId ||
+    payment.empresa ||
+    payment.organizer_id ||
+    payment.organizerId ||
+    null
+  );
+}
+
 function createTransporter(config) {
   const auth = config.user && config.pass ? { user: config.user, pass: config.pass } : undefined;
 
@@ -613,7 +625,9 @@ export async function handleEmail(req, res) {
       }
     }
 
-    const emailConfig = await resolveEmailConfig(supabaseAdmin, payment.tenant_id);
+    const tenantId = extractTenantId(payment, req?.body?.tenant_id || req?.body?.tenantId);
+
+    const emailConfig = await resolveEmailConfig(supabaseAdmin, tenantId);
     if (!emailConfig || !emailConfig.host || !emailConfig.fromEmail) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(500).json({
