@@ -244,7 +244,7 @@ class AccessControlService {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, nombre, email, role, created_at')
+        .select('id, nombre, email:login, role, created_at')
         .eq('role', role);
 
       if (error) throw error;

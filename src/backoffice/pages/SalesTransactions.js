@@ -251,7 +251,7 @@ const SalesTransactions = () => {
 
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, nombre, apellido, email')
+        .select('id, nombre, apellido, email:login')
         .in('id', profileIds);
 
       if (profilesError) {
