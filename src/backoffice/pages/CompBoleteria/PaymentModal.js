@@ -339,6 +339,39 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const [casheaOrder, setCasheaOrder] = useState(null);
   const [casheaError, setCasheaError] = useState(null);
 
+  const parsePaymentsFromTransaction = (paymentsData) => {
+    if (!paymentsData) return [];
+
+    let parsedPayments = paymentsData;
+
+    if (!Array.isArray(parsedPayments)) {
+      try {
+        parsedPayments = typeof paymentsData === 'string' ? JSON.parse(paymentsData) : [];
+      } catch (error) {
+        console.warn('No se pudieron parsear los pagos existentes:', error);
+        parsedPayments = [];
+      }
+    }
+
+    if (!Array.isArray(parsedPayments)) return [];
+
+    return parsedPayments.map((payment, index) => {
+      const normalizedAmount = Number(payment.amount ?? payment.importe ?? 0);
+      return {
+        sc: index + 1,
+        formaPago:
+          payment.method ||
+          payment.payment_method ||
+          payment.paymentMethod ||
+          payment.gateway_name ||
+          payment.gatewayName ||
+          'Desconocido',
+        importe: Number.isFinite(normalizedAmount) ? normalizedAmount : 0,
+        metadata: payment.metadata || null,
+      };
+    });
+  };
+
   useEffect(() => {
     if (selectedPaymentMethod !== 'Cashea') {
       setCasheaOrder(null);
@@ -365,6 +398,41 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
   const existingPaymentId = safeCarrito?.[0]?.paymentId;
   const existingLocator = safeCarrito?.[0]?.locator;
+
+  useEffect(() => {
+    const emailCandidate = selectedClient?.email || selectedClient?.correo || selectedClient?.mail;
+    if (emailCandidate) {
+      setEmailToSend(emailCandidate);
+    }
+  }, [selectedClient]);
+
+  useEffect(() => {
+    if (!open || !existingLocator) return;
+
+    const fetchExistingPayments = async () => {
+      try {
+        const transactionResponse = await seatLocatorService.getTransactionWithSeats(existingLocator);
+        const transaction = transactionResponse?.transaction || transactionResponse;
+
+        if (transaction?.locator) {
+          setLocator(transaction.locator);
+        } else {
+          setLocator((prev) => prev || existingLocator);
+        }
+
+        const parsedPayments = parsePaymentsFromTransaction(transaction?.payments || transaction?.payment_methods);
+
+        if (parsedPayments.length > 0) {
+          setPaymentEntries(parsedPayments);
+          setScCounter(parsedPayments.length + 1);
+        }
+      } catch (error) {
+        console.error('Error cargando métodos de pago existentes:', error);
+      }
+    };
+
+    fetchExistingPayments();
+  }, [open, existingLocator]);
 
   // Función para asignar tags del evento al comprador
   const assignEventTagsToUser = async (userId, eventTags) => {
@@ -670,6 +738,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   };
 
   const paymentStatus = getPaymentStatus();
+  const showContinueButton = isFullyPaid && paymentEntries.length > 0;
+  const effectiveLocator = locator || existingLocator || '';
 
   // Generate simple locator of 8 characters (numbers and letters)
   const generateLocator = () => {
@@ -1006,7 +1076,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   return (
     <>
       <Modal
-        title="Payment Details"
+        title="Detalles de Pago"
         open={open}
         onCancel={onCancel}
         width={800}
@@ -1056,16 +1126,28 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <Button onClick={onCancel}>Cancelar</Button>
-              <Button
-                type="default"
-                variant="outlined"
-                block
-                onClick={handlePaymentOrReservation}
-                loading={isProcessing}
-                disabled={!selectedClient || (diferencia === 0 && paymentEntries.length === 0)}  // Updated condition
-              >
-                {diferencia > 0 ? 'Reservar' : 'Pagar'}
-              </Button>
+              {showContinueButton ? (
+                <Button
+                  type="default"
+                  variant="outlined"
+                  block
+                  onClick={() => setShowConfirmation(true)}
+                  disabled={!effectiveLocator}
+                >
+                  Continuar
+                </Button>
+              ) : (
+                <Button
+                  type="default"
+                  variant="outlined"
+                  block
+                  onClick={handlePaymentOrReservation}
+                  loading={isProcessing}
+                  disabled={!selectedClient || (diferencia === 0 && paymentEntries.length === 0)}  // Updated condition
+                >
+                  {diferencia > 0 ? 'Reservar' : 'Pagar'}
+                </Button>
+              )}
             </div>
           </div>
         }
