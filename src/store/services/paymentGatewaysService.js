@@ -342,7 +342,13 @@ export const createPaymentWithValidation = async (paymentData) => {
 /**
  * Crea una transacción de pago
  */
-export const createPaymentTransaction = async (transactionData) => {
+export const createPaymentTransaction = async (transactionData, options = {}) => {
+  const client = options?.client || supabase;
+
+  if (!client) {
+    throw new Error('Supabase client not initialized for createPaymentTransaction');
+  }
+
   try {
     console.log('[PaymentTransaction] Iniciando creación:', {
       orderId: transactionData.orderId,
@@ -373,7 +379,7 @@ export const createPaymentTransaction = async (transactionData) => {
     let gatewayName = transactionData.gatewayName || 'unknown';
     if (gatewayId && !transactionData.gatewayName) {
       try {
-        const { data: gateway } = await supabase
+        const { data: gateway } = await client
           .from('payment_methods')
           .select('name')
           .eq('id', gatewayId)
@@ -598,7 +604,7 @@ export const createPaymentTransaction = async (transactionData) => {
     if (!eventoId && funcionId) {
       try {
         console.log('[PaymentTransaction] Obteniendo evento_id desde función:', funcionId);
-        const { data: funcionData, error: funcionError } = await supabase
+        const { data: funcionData, error: funcionError } = await client
           .from('funciones')
           .select('evento_id')
           .eq('id', funcionId)
@@ -729,7 +735,7 @@ export const createPaymentTransaction = async (transactionData) => {
 
     console.log('[PaymentTransaction] Datos a insertar:', insertData);
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('payment_transactions')
       .insert(insertData)
       .select()
