@@ -20,8 +20,8 @@ export const useClientManagement = (setCarrito) => {
       // Usar directamente la tabla profiles
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, login, nombre, apellido, telefono, email')
-        .or(`login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+        .select('id, login, nombre, apellido, telefono, email:login')
+        .or(`login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%`);
 
       if (error) {
         console.error('Search error:', error);
@@ -36,7 +36,7 @@ export const useClientManagement = (setCarrito) => {
         nombre: p.nombre,
         apellido: p.apellido,
         telefono: p.telefono,
-        email: p.email || '',
+        email: p.email || p.login || '',
       }));
     } catch (error) {
       console.error('Error searching for client:', error);

@@ -57,7 +57,7 @@ const CRM = () => {
       ]);
 
       // 🎯 CARGAR DATOS CRM ESPECIALIZADOS
-      const fetchProfilesMap = async (userIds, selectFields = 'id, nombre, email') => {
+      const fetchProfilesMap = async (userIds, selectFields = 'id, nombre, email:login') => {
         const uniqueIds = Array.from(new Set((userIds || []).filter(Boolean)));
         if (!uniqueIds.length) {
           return new Map();
@@ -89,7 +89,7 @@ const CRM = () => {
           return { data: [], error };
         }
 
-        const profilesMap = await fetchProfilesMap(data?.map((client) => client.user_id), 'id, nombre, email, telefono');
+        const profilesMap = await fetchProfilesMap(data?.map((client) => client.user_id), 'id, nombre, email:login, telefono');
         const enrichedData = (data || []).map((client) => ({
           ...client,
           profile: client.user_id ? profilesMap.get(client.user_id) || null : null

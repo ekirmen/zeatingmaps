@@ -48,9 +48,9 @@ const ClientModals = ({
         // Fallback to direct search if handleUnifiedSearch is not provided
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, login, nombre, apellido, telefono, email')
+          .select('id, login, nombre, apellido, telefono, email:login')
           .or(
-            `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+            `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%`
           );
 
         if (error) throw error;
@@ -58,7 +58,7 @@ const ClientModals = ({
         const mappedResults = data.map((p) => ({
           _id: p.id,
           nombre: p.login,
-          email: p.email || '',
+          email: p.email || p.login || '',
           telefono: p.telefono,
         }));
 

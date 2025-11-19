@@ -74,7 +74,7 @@ const Tags = () => {
             if (userIds.length > 0) {
               const { data: profilesData, error: profilesError } = await supabase
                 .from('profiles')
-                .select('id, nombre, email')
+                .select('id, nombre, email:login')
                 .in('id', userIds);
 
               if (!profilesError && profilesData) {

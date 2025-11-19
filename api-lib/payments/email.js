@@ -354,7 +354,7 @@ export async function handleEmail(req, res) {
           // Fallback: obtener desde profiles
           const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
-            .select('email, login')
+            .select('email:login, login')
             .eq('id', payment.user_id)
             .maybeSingle();
           
