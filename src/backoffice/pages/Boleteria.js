@@ -261,8 +261,8 @@ const Boleteria = () => {
         const seats = parseSeatsCollection(payment.seats);
         const normalizedStatus = (() => {
           const status = (payment.status || '').toLowerCase();
-          if (status === 'pagado' || status === 'vendido') return 'vendido';
-          if (status === 'reservado') return 'reservado';
+          if (['pagado', 'vendido', 'completed'].includes(status)) return 'vendido';
+          if (['reservado', 'pending', 'reserved'].includes(status)) return 'reservado';
           if (status === 'anulado') return 'anulado';
           if (status === 'bloqueado') return 'locked';
           return status || 'locked';
@@ -301,7 +301,7 @@ const Boleteria = () => {
           .from('payment_transactions')
           .select('id, seats, status, locator, user_id')
           .eq('funcion_id', funcionId)
-          .in('status', ['pagado', 'reservado', 'anulado', 'vendido', 'bloqueado']);
+          .in('status', ['pagado', 'reservado', 'anulado', 'vendido', 'bloqueado', 'completed', 'pending', 'reserved']);
 
         if (error) {
           throw error;

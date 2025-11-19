@@ -477,7 +477,7 @@ const loadReservedSeats = async (funcionId) => {
       .from('payment_transactions')
       .select('seats, status, funcion_id, locator, created_at, id')
       .eq('funcion_id', funcionId)
-      .in('status', ['reservado', 'pagado', 'pending'])
+      .in('status', ['reservado', 'pagado', 'pending', 'completed', 'vendido', 'reserved'])
       .order('created_at', { ascending: false });
     
     if (paymentsError) {
