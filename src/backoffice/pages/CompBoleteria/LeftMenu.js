@@ -80,7 +80,42 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         }
       }
 
-      setTicketData({ ...payment, seats });
+      const normalizedSeats = seats.map((seat, index) => {
+        const nombre =
+          seat.nombre ||
+          seat.name ||
+          seat.nombreAsiento ||
+          seat.seatLabel ||
+          seat._id ||
+          seat.id ||
+          `Asiento ${index + 1}`;
+
+        return {
+          key: seat._id || seat.id || index,
+          nombre,
+          nombreZona: seat.nombreZona || seat.zona?.nombre || seat.zona || 'Sin zona',
+          mesa: seat.mesa?.nombre || seat.mesa || '',
+          precio: seat.precio || seat.price || seat.total || 0,
+          raw: seat
+        };
+      });
+
+      let parsedPayments = [];
+      if (Array.isArray(payment.payments)) {
+        parsedPayments = payment.payments;
+      } else if (typeof payment.payments === 'string') {
+        try {
+          parsedPayments = JSON.parse(payment.payments);
+        } catch {
+          try {
+            parsedPayments = JSON.parse(JSON.parse(payment.payments));
+          } catch {
+            parsedPayments = [];
+          }
+        }
+      }
+
+      setTicketData({ ...payment, seats, normalizedSeats, parsedPayments });
       if (payment.user) setUserData(payment.user);
       if (payment.event) setEventData(payment.event);
     } catch (err) {
@@ -411,18 +446,67 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 {ticketData.funcion.fecha_celebracion ? new Date(ticketData.funcion.fecha_celebracion).toLocaleString() : 'Fecha no disponible'}
               </div>
             )}
-            {ticketData.seats && (
+            <div>
+              <strong>Localizador:</strong> {ticketData.locator || 'Sin localizador'}
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <strong>Estado:</strong> {ticketData.status || 'Desconocido'}
+              </div>
+              <div>
+                <strong>Monto:</strong> {ticketData.amount ? `$${Number(ticketData.amount).toFixed(2)} ${ticketData.currency || ''}` : 'No registrado'}
+              </div>
+              <div>
+                <strong>Forma de pago:</strong> {ticketData.payment_method || ticketData.gateway_name || 'No registrado'}
+              </div>
+              <div>
+                <strong>Creado:</strong>{' '}
+                {ticketData.created_at ? new Date(ticketData.created_at).toLocaleString() : 'Fecha no disponible'}
+              </div>
+            </div>
+            {ticketData.normalizedSeats?.length > 0 && (
               <Table
-                dataSource={ticketData.seats}
-                rowKey={(s) => s._id || s.id}
+                dataSource={ticketData.normalizedSeats}
+                rowKey={(s) => s.key}
                 size="small"
                 pagination={false}
                 columns={[
                   { title: 'Asiento', dataIndex: 'nombre' },
+                  { title: 'Mesa', dataIndex: 'mesa' },
                   { title: 'Zona', dataIndex: 'nombreZona' },
-                  { title: 'Precio', dataIndex: 'precio' }
+                  {
+                    title: 'Precio',
+                    dataIndex: 'precio',
+                    render: (value) => `$${Number(value || 0).toFixed(2)}`
+                  }
                 ]}
               />
+            )}
+            {ticketData?.parsedPayments?.length > 0 && (
+              <div className="mt-2">
+                <strong>Pagos registrados</strong>
+                <Table
+                  dataSource={ticketData.parsedPayments}
+                  rowKey={(p, idx) => p.id || p.reference || idx}
+                  size="small"
+                  pagination={false}
+                  className="mt-1"
+                  columns={[
+                    {
+                      title: 'Forma de pago',
+                      dataIndex: 'method',
+                      render: (value) => value || ticketData.payment_method || ticketData.gateway_name || 'N/D'
+                    },
+                    {
+                      title: 'Importe',
+                      dataIndex: 'amount',
+                      render: (value) => `$${Number(value || 0).toFixed(2)}`
+                    },
+                    { title: 'Estado', dataIndex: 'status', render: (value) => value || ticketData.status || 'N/D' },
+                    { title: 'Referencia', dataIndex: 'reference', render: (value) => value || ticketData.locator || 'N/D' }
+                  ]}
+                />
+              </div>
             )}
             <div className="flex gap-2 mt-2">
               <Button type="primary" onClick={loadTicketIntoPOS} block>
