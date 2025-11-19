@@ -15,6 +15,76 @@ const generateUUID = () =>
 
 const isUuid = (value) => typeof value === 'string' && UUID_REGEX.test(value);
 
+const isPermissionOrRlsError = (error) => {
+  if (!error) return false;
+
+  const codesToCheck = new Set(
+    [error.code, error.status, error?.originalError?.code, error?.originalError?.status]
+      .filter(Boolean)
+      .map((code) => String(code).toLowerCase())
+  );
+
+  if (codesToCheck.has('42501') || codesToCheck.has('permission_denied') || codesToCheck.has('403')) {
+    return true;
+  }
+
+  const message = [
+    error.message,
+    error.details,
+    error.hint,
+    error?.originalError?.message,
+    error?.originalError?.details,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return (
+    message.includes('row-level security') ||
+    message.includes('permission denied') ||
+    message.includes('rls') ||
+    message.includes('not authorized') ||
+    message.includes('401')
+  );
+};
+
+const canUseApiTransactionFallback = () => typeof window !== 'undefined' && typeof fetch === 'function';
+
+const createTransactionViaApi = async (payload) => {
+  if (!canUseApiTransactionFallback()) {
+    throw new Error('API fallback is not available in this environment');
+  }
+
+  const response = await fetch('/api/payments/create-transaction', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  let result = null;
+  try {
+    result = await response.json();
+  } catch (parseError) {
+    console.error('❌ [PAYMENT_PROCESSOR] Error parsing API fallback response:', parseError);
+  }
+
+  if (!response.ok || !result?.success || !result?.data) {
+    const errorMessage =
+      result?.error ||
+      result?.message ||
+      response.statusText ||
+      'API fallback failed creating transaction';
+    const fallbackError = new Error(errorMessage);
+    fallbackError.response = response;
+    fallbackError.result = result;
+    throw fallbackError;
+  }
+
+  return result.data;
+};
+
 const tryParseUserValue = (value) => {
   if (typeof value !== 'string') {
     return null;
@@ -216,7 +286,27 @@ const createTransactionAndSyncSeats = async (method, paymentData, options = {}) 
 
   // Función de transacción principal
   const executeTransaction = async () => {
-    const transaction = await createSupabaseTransaction(payload);
+    let transaction = null;
+
+    try {
+      transaction = await createSupabaseTransaction(payload);
+    } catch (primaryError) {
+      if (isPermissionOrRlsError(primaryError)) {
+        console.warn('⚠️ [PAYMENT_PROCESSOR] Primary transaction failed due to permissions. Retrying via API fallback.');
+        try {
+          transaction = await createTransactionViaApi(payload);
+        } catch (apiError) {
+          console.error('❌ [PAYMENT_PROCESSOR] API fallback also failed:', apiError);
+          const combinedError = new Error(apiError.message || 'API fallback failed');
+          combinedError.originalError = primaryError;
+          combinedError.fallbackError = apiError;
+          throw combinedError;
+        }
+      } else {
+        throw primaryError;
+      }
+    }
+
     await finalizeSeatLocks(method, paymentData, options.transactionStatus || transaction.status, options);
     return transaction;
   };
