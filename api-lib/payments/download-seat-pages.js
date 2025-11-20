@@ -105,6 +105,20 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     // Obtener datos del tenant y comprador
     const tenantData = pdfExtras?.tenantData || null;
     const buyerProfile = pdfExtras?.buyerProfile || null;
+
+    const buyerFullName = (() => {
+      const profileName = buyerProfile
+        ? `${cleanTextForPDF(buyerProfile.nombre || '')} ${cleanTextForPDF(buyerProfile.apellido || '')}`.trim()
+        : '';
+
+      if (profileName) return profileName;
+
+      const metadata = payment?.metadata || {};
+      const metaName = metadata.buyer_name || metadata.buyerName || metadata.customer_name || metadata.customerName;
+      if (metaName && typeof metaName === 'string') return cleanTextForPDF(metaName);
+
+      return '';
+    })();
     
     // Generar QR code único para este asiento (usando errorCorrectionLevel: 'L' para modelo más simple)
     let qrImageBytes = null;
@@ -461,6 +475,18 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
         font: helveticaBold,
       });
     }
+
+    // Nombre del comprador en el pie de la columna izquierda
+    if (buyerFullName) {
+      const buyerLabelY = companyInfoY - 26;
+      page.drawText(`COMPRADOR: ${buyerFullName}`, {
+        x: leftX,
+        y: buyerLabelY,
+        size: 10,
+        color: rgb(0, 0, 0),
+        font: helveticaBold,
+      });
+    }
     
     // ==========================================
     // COLUMNA DERECHA - STUB/ENTRADA
@@ -481,18 +507,15 @@ async function drawSeatPage(pdfDoc, page, payment, seat, eventImages, venueData,
     rightY -= 25; // Reducido de 30 a 25
     
     // COMPRADOR (nombre y apellido unidos) - Subido
-    if (buyerProfile && (buyerProfile.nombre || buyerProfile.apellido)) {
-      const buyerFullName = `${cleanTextForPDF(buyerProfile.nombre || '')} ${cleanTextForPDF(buyerProfile.apellido || '')}`.trim();
-      if (buyerFullName) {
-        page.drawText(`COMPRADOR: ${buyerFullName}`, {
-          x: rightX,
-          y: rightY,
-          size: 11,
-          color: rgb(0, 0, 0),
-          font: helveticaBold,
-        });
-        rightY -= 18; // Reducido de 20 a 18
-      }
+    if (buyerFullName) {
+      page.drawText(`COMPRADOR: ${buyerFullName}`, {
+        x: rightX,
+        y: rightY,
+        size: 11,
+        color: rgb(0, 0, 0),
+        font: helveticaBold,
+      });
+      rightY -= 18; // Reducido de 20 a 18
     }
     rightY -= 3; // Reducido de 5 a 3
     

@@ -522,18 +522,19 @@ export async function handleEmail(req, res) {
       if (payment.funcion_id) {
         const { data: func, error: funcError } = await supabaseAdmin
           .from('funciones')
-          .select('id, fecha_celebracion, evento:eventos(id, nombre, imagenes, recinto_id)')
+          .select('id, fecha_celebracion, evento:eventos(id, nombre, imagenes, recinto_id, datosBoleto)')
           .eq('id', payment.funcion_id)
           .maybeSingle();
 
         if (!funcError && func) {
           funcionData = func;
-          eventData = func.event || null;
+          // La columna está aliased como "evento", mantener compatibilidad con el nombre antiguo "event"
+          eventData = func.evento || func.event || null;
           if (!payment.event && eventData) payment.event = eventData;
           if (eventData?.recinto_id) {
             const { data: rec, error: recError } = await supabaseAdmin
               .from('recintos')
-              .select('id, nombre, direccion, ciudad, pais')
+              .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad, latitud, longitud')
               .eq('id', eventData.recinto_id)
               .maybeSingle();
             if (!recError && rec) venueData = rec;
