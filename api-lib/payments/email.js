@@ -501,6 +501,8 @@ export async function handleEmail(req, res) {
     let filename = null;
     let eventTitle = null;
     let downloadUrl = null;
+    let downloadToken = null;
+    let baseUrl = '';
     let pkpassBuffer = null;
     let pkpassFilename = null;
     
@@ -654,17 +656,15 @@ export async function handleEmail(req, res) {
       }
 
       // Generar token de descarga para el enlace en el correo
-      let downloadToken = null;
-      let baseUrl = '';
       const tokenUserId = payment.user_id || payment.userId || providedEmail || 'guest-email';
 
       if (payment.id) {
         try {
           downloadToken = generateDownloadToken(locator, tokenUserId, payment.id);
-          
+
           // Obtener base URL desde variables de entorno o desde req
-          baseUrl = process.env.BASE_URL || 
-                         process.env.REACT_APP_BASE_URL || 
+          baseUrl = process.env.BASE_URL ||
+                         process.env.REACT_APP_BASE_URL ||
                          process.env.API_URL ||
                          (req.headers.origin || req.headers.host ? `https://${req.headers.host}` : 'https://sistema.veneventos.com');
           
