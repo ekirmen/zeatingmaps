@@ -323,6 +323,7 @@ const Pay = () => {
         currency: 'USD',
         items: cartItems,
         locator: locator,
+        userId: user?.id || null,
         user: {
           id: user?.id || null,
           email: user?.email || null
