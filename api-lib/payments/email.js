@@ -75,6 +75,8 @@ async function getTenantEmailConfig(supabaseAdmin, tenantId) {
       .select('*')
       .eq('tenant_id', tenantId)
       .eq('is_active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -97,6 +99,8 @@ async function getGlobalEmailConfig(supabaseAdmin) {
       .from('global_email_config')
       .select('*')
       .eq('is_active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -139,10 +143,16 @@ function getEnvEmailConfig() {
 
 async function resolveEmailConfig(supabaseAdmin, tenantId) {
   const tenantConfig = await getTenantEmailConfig(supabaseAdmin, tenantId);
-  if (tenantConfig) return tenantConfig;
+  if (tenantConfig) {
+    console.log('[EMAIL] Using tenant-specific email config for tenant:', tenantId);
+    return tenantConfig;
+  }
 
   const globalConfig = await getGlobalEmailConfig(supabaseAdmin);
-  if (globalConfig) return globalConfig;
+  if (globalConfig) {
+    console.log('[EMAIL] Using global email config fallback');
+    return globalConfig;
+  }
 
   return getEnvEmailConfig();
 }
@@ -152,6 +162,8 @@ function extractTenantId(payment = {}, explicitTenantId = null) {
     explicitTenantId ||
     payment.tenant_id ||
     payment.tenantId ||
+    payment.empresa_id ||
+    payment.empresaId ||
     payment.empresa ||
     payment.organizer_id ||
     payment.organizerId ||
