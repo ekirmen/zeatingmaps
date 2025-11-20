@@ -97,46 +97,26 @@ const tryParseUserValue = (value) => {
   }
 };
 
-const extractUserIdFromValue = (value) => {
-  if (!value) {
-    return null;
+const resolveExplicitUserId = (paymentData = {}, fallbackId = null) => {
+  const candidates = [
+    paymentData?.user?.id,
+    paymentData?.user?.user_id,
+    paymentData?.user?.userId,
+    paymentData?.userId,
+    paymentData?.user_id,
+    fallbackId,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && isUuid(candidate.trim())) {
+      return candidate.trim();
+    }
   }
 
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (isUuid(trimmed)) {
-      return trimmed;
-    }
-
-    const parsed = tryParseUserValue(trimmed);
+  if (typeof paymentData?.user === 'string') {
+    const parsed = tryParseUserValue(paymentData.user);
     if (parsed) {
-      return extractUserIdFromValue(parsed);
-    }
-
-    const match = trimmed.match(UUID_REGEX);
-    return match ? match[0] : null;
-  }
-
-  if (typeof value === 'object') {
-    const directId = value.id || value.user_id || value.userId;
-    if (typeof directId === 'string' && isUuid(directId.trim())) {
-      return directId.trim();
-    }
-
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        const nested = extractUserIdFromValue(item);
-        if (nested) {
-          return nested;
-        }
-      }
-    } else {
-      for (const key of Object.keys(value)) {
-        const nested = extractUserIdFromValue(value[key]);
-        if (nested) {
-          return nested;
-        }
-      }
+      return resolveExplicitUserId({ user: parsed }, fallbackId);
     }
   }
 
@@ -144,7 +124,7 @@ const extractUserIdFromValue = (value) => {
 };
 
 const normalizeUserPayload = (user, fallbackId = null) => {
-  const resolvedId = extractUserIdFromValue(user) || fallbackId;
+  const resolvedId = resolveExplicitUserId({ user }, fallbackId);
 
   if (!user && !resolvedId) {
     return null;
@@ -208,11 +188,7 @@ const ensureGatewayId = (method, providedGatewayId) => {
 const buildTransactionPayload = (method, paymentData, options = {}) => {
   const paymentMethodName = method.method_name || method.name || method.method_id || 'manual';
 
-  const resolvedUserId =
-    extractUserIdFromValue(paymentData?.user?.id) ||
-    extractUserIdFromValue(paymentData?.user) ||
-    extractUserIdFromValue(paymentData?.userId) ||
-    null;
+  const resolvedUserId = resolveExplicitUserId(paymentData, options.userId);
 
   const payload = {
     orderId: paymentData.orderId,
