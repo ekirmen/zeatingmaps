@@ -242,6 +242,8 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
   // Botones de descarga individual por asiento (solo para pagos completos)
   let downloadButtons = '';
   if (!isReservation && seats && seats.length > 0 && downloadToken && baseUrl) {
+    const fullDownloadUrl = downloadUrl || `${baseUrl}/api/payments/${locator}/download?token=${encodeURIComponent(downloadToken)}&source=email`;
+
     const seatButtons = seats.map((seat, index) => {
       const seatId = seat.seat_id || seat.id || seat._id || `Asiento ${index + 1}`;
       const seatDownloadUrl = `${baseUrl}/api/payments/${locator}/download?token=${encodeURIComponent(downloadToken)}&source=email&seatIndex=${index}`;
@@ -253,9 +255,14 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
         </div>
       `;
     }).join('');
-    
+
     downloadButtons = `
       <div style="margin: 30px 0;">
+        <div style="margin-bottom: 16px;">
+          <a href="${fullDownloadUrl}" style="display: inline-block; padding: 12px 30px; background-color: #1a73e8; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+            Descargar todos los tickets (PDF)
+          </a>
+        </div>
         <h3 style="color: #333; font-size: 18px; margin-bottom: 15px;">Descargar Tickets Individuales:</h3>
         ${seatButtons}
       </div>
