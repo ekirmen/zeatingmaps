@@ -529,6 +529,52 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
 
     let userId = sanitizedUserId;
     let normalizedUser = buildNormalizedUser(transactionData.user, userId);
+
+    const ensureUserExists = async (id) => {
+      if (!id) return false;
+
+      try {
+        const { data, error } = await client
+          .from('profiles')
+          .select('id')
+          .eq('id', id)
+          .single();
+
+        if (error && error.code === 'PGRST116') {
+          // No rows returned
+          return false;
+        }
+
+        if (error) {
+          console.warn('[PaymentTransaction] No se pudo verificar el usuario, continuando sin user_id:', {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint,
+          });
+          return false;
+        }
+
+        return Boolean(data?.id);
+      } catch (verificationError) {
+        console.warn('[PaymentTransaction] Error inesperado verificando usuario:', verificationError);
+        return false;
+      }
+    };
+
+    const userExists = await ensureUserExists(userId);
+    if (!userExists) {
+      if (userId) {
+        console.warn('[PaymentTransaction] user_id no encontrado en profiles, removiendo para evitar FK violation');
+      }
+      userId = null;
+      if (normalizedUser && typeof normalizedUser === 'object') {
+        delete normalizedUser.id;
+        delete normalizedUser.user_id;
+        delete normalizedUser.userId;
+        normalizedUser.providedId = sanitizedUserId;
+      }
+    }
     if (!normalizedUser && userId) {
       normalizedUser = {
         id: userId,
