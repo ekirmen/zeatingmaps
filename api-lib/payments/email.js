@@ -210,7 +210,7 @@ function createTransporter(config) {
   });
 }
 
-function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailType = 'payment_complete', seats = [], downloadToken = null, baseUrl = '' }) {
+function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailType = 'payment_complete', seats = [], downloadToken = null, baseUrl = '', pkpassEnabled = false }) {
   // Determinar el tipo de correo (reserva o pago completo)
   const isReservation = emailType === 'reservation';
   
@@ -223,6 +223,20 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
   // Contenido diferente según el tipo de correo
   let mainContent = '';
   if (isReservation) {
+    const reservationPayUrl = baseUrl
+      ? `${baseUrl.replace(/\/$/, '')}/store/payment-success/${locator}`
+      : '';
+
+    const payButton = reservationPayUrl
+      ? `
+        <div style="margin: 20px 0; text-align: center;">
+          <a href="${reservationPayUrl}" style="display: inline-block; padding: 12px 28px; background-color: #1a73e8; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 15px;">
+            Completar pago de la reserva
+          </a>
+        </div>
+      `
+      : '';
+
     mainContent = `
       <p>Tu reserva ha sido confirmada exitosamente.</p>
       <p><strong>Localizador:</strong> ${locator}</p>
@@ -230,6 +244,7 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
         <strong>⚠️ Importante:</strong> Esta es una reserva temporal. Completa el pago para confirmar tus asientos.
         Te notificaremos cuando tu pago sea procesado y recibirás tus tickets.
       </p>
+      ${payButton}
     `;
   } else {
     mainContent = `
@@ -242,6 +257,8 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
   // Botones de descarga individual por asiento (solo para pagos completos)
   let downloadButtons = '';
   if (!isReservation && seats && seats.length > 0 && downloadToken && baseUrl) {
+    const fullDownloadUrl = downloadUrl || `${baseUrl}/api/payments/${locator}/download?token=${encodeURIComponent(downloadToken)}&source=email`;
+
     const seatButtons = seats.map((seat, index) => {
       const seatId = seat.seat_id || seat.id || seat._id || `Asiento ${index + 1}`;
       const seatDownloadUrl = `${baseUrl}/api/payments/${locator}/download?token=${encodeURIComponent(downloadToken)}&source=email&seatIndex=${index}`;
@@ -253,9 +270,14 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
         </div>
       `;
     }).join('');
-    
+
     downloadButtons = `
       <div style="margin: 30px 0;">
+        <div style="margin-bottom: 16px;">
+          <a href="${fullDownloadUrl}" style="display: inline-block; padding: 12px 30px; background-color: #1a73e8; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+            Descargar todos los tickets (PDF)
+          </a>
+        </div>
         <h3 style="color: #333; font-size: 18px; margin-bottom: 15px;">Descargar Tickets Individuales:</h3>
         ${seatButtons}
       </div>
@@ -285,12 +307,49 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
     `;
   }
 
+  // Botones para descargas en Wallet (.pkpass)
+  let pkpassButtons = '';
+  if (!isReservation && pkpassEnabled && baseUrl) {
+    const walletSeatButtons = Array.isArray(seats) && seats.length > 0
+      ? seats.map((seat, index) => {
+          const seatId = seat.seat_id || seat.id || seat._id || `Asiento ${index + 1}`;
+          const seatPkpassUrl = `${baseUrl}/api/payments/${locator}/pkpass?seatIndex=${index}`;
+          return `
+            <div style="margin: 8px 0;">
+              <a href="${seatPkpassUrl}" style="display: inline-block; padding: 9px 18px; background-color: #34a853; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px;">
+                Añadir a Wallet - Ticket ${index + 1}${seatId !== `Asiento ${index + 1}` ? ` (${seatId})` : ''}
+              </a>
+            </div>
+          `;
+        }).join('')
+      : '';
+
+    const allPkpassUrl = `${baseUrl}/api/payments/${locator}/pkpass?all=true`;
+
+    pkpassButtons = `
+      <div style="margin: 30px 0;">
+        <h3 style="color: #333; font-size: 18px; margin-bottom: 12px;">Añadir a Wallet (.pkpass)</h3>
+        ${walletSeatButtons}
+        <div style="margin: 12px 0;">
+          <a href="${allPkpassUrl}" style="display: inline-block; padding: 10px 22px; background-color: #0b8043; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 15px;">
+            Descargar todos en Wallet (.zip)
+          </a>
+        </div>
+        <div style="margin: 18px 0; padding: 12px; background-color: #e8f0fe; border-left: 4px solid #4285f4; border-radius: 4px;">
+          <p style="margin: 0; color: #1a73e8; font-weight: bold;">ℹ️ Importante:</p>
+          <p style="margin: 6px 0 0 0; color: #1a73e8;">Los archivos Wallet son personales e intransferibles. Descarga solo desde este correo.</p>
+        </div>
+      </div>
+    `;
+  }
+
   const html = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #1a73e8;">${isReservation ? '¡Reserva Confirmada!' : '¡Gracias por tu compra!'}</h2>
       ${bodyEvent}
       ${mainContent}
       ${downloadButtons}
+      ${pkpassButtons}
       <p style="margin-top: 30px;">Si tienes alguna pregunta, responde a este correo.</p>
     </div>
   `;
@@ -299,11 +358,15 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
     isReservation ? '¡Reserva Confirmada!' : '¡Gracias por tu compra!',
     eventTitle ? `Evento: ${eventTitle}` : null,
     `Localizador: ${locator}`,
-    isReservation 
+    isReservation
       ? 'Tu reserva ha sido confirmada. Completa el pago para recibir tus tickets.'
       : 'Adjuntamos tus tickets en formato PDF.',
+    isReservation && baseUrl
+      ? `Completa tu pago aquí: ${baseUrl.replace(/\/$/, '')}/store/payment-success/${locator}`
+      : null,
     (!isReservation && downloadUrl) ? `Descargar tickets: ${downloadUrl}` : null,
     (!isReservation && downloadUrl) ? '⚠️ IMPORTANTE: Este enlace es personal e intransferible. No compartas este enlace con otras personas.' : null,
+    (!isReservation && pkpassEnabled && baseUrl) ? `Wallet (todos): ${baseUrl}/api/payments/${locator}/pkpass?all=true` : null,
     'Si tienes alguna pregunta, responde a este correo.'
   ].filter(Boolean);
 
@@ -334,8 +397,9 @@ export async function handleEmail(req, res) {
     return res.status(400).json({ error: 'Missing locator' });
   }
 
-  // Si no se proporciona email, intentar obtenerlo del pago
+  // Resolver email del comprador (priorizar el email de la cuenta del usuario)
   let email = providedEmail;
+  let accountEmail = null;
 
   const config = getConfig();
   const isValidConfig = validateConfig(config);
@@ -401,31 +465,32 @@ export async function handleEmail(req, res) {
       return res.status(404).json({ error: 'Payment not found' });
     }
 
-    // Si no se proporcionó email, obtenerlo del usuario del pago
-    if (!email && payment.user_id) {
+    // Obtener email del usuario de la cuenta (para store siempre preferimos la cuenta del comprador)
+    if (payment.user_id) {
       try {
-        // Intentar obtener desde auth.users usando admin
         const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(payment.user_id);
         if (!userError && userData?.user?.email) {
-          email = userData.user.email;
-          console.log('📧 [EMAIL] Email obtenido desde auth.users:', email);
+          accountEmail = userData.user.email;
+          console.log('📧 [EMAIL] Email de la cuenta (auth.users):', accountEmail);
         } else {
-          // Fallback: obtener desde profiles
           const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('email:login, login')
             .eq('id', payment.user_id)
             .maybeSingle();
-          
+
           if (!profileError && profile) {
-            email = profile.email || profile.login;
-            console.log('📧 [EMAIL] Email obtenido desde profiles:', email);
+            accountEmail = profile.email || profile.login;
+            console.log('📧 [EMAIL] Email de la cuenta (profiles):', accountEmail);
           }
         }
       } catch (emailError) {
         console.warn('⚠️ [EMAIL] Error obteniendo email del usuario:', emailError);
       }
     }
+
+    // Priorizar email de la cuenta y usar email proporcionado solo como respaldo
+    email = accountEmail || email;
 
     // Si aún no hay email, retornar error
     if (!email) {
@@ -496,11 +561,13 @@ export async function handleEmail(req, res) {
         paymentStatus === 'reserved' ||
         paymentStatus === 'pending');
     
-    // Solo generar PDF y token si es pago completo (no para reservas)
+    // Solo generar PDF si es pago completo (no para reservas)
     let buffer = null;
     let filename = null;
     let eventTitle = null;
     let downloadUrl = null;
+    let downloadToken = null;
+    let baseUrl = '';
     let pkpassBuffer = null;
     let pkpassFilename = null;
     
@@ -518,6 +585,13 @@ export async function handleEmail(req, res) {
     }
     
     const walletEnabled = datosBoleto?.habilitarWallet || false;
+
+    const resolvedBaseUrl = process.env.BASE_URL ||
+                         process.env.REACT_APP_BASE_URL ||
+                         process.env.API_URL ||
+                         (req.headers.origin || req.headers.host ? `https://${req.headers.host}` : 'https://sistema.veneventos.com');
+
+    baseUrl = resolvedBaseUrl || '';
     
     if (!isReservation && !isLinkOnly) {
       // Generar PDF solo para pagos completos
@@ -653,36 +727,29 @@ export async function handleEmail(req, res) {
         }
       }
 
-      // Generar token de descarga para el enlace en el correo
-      let downloadToken = null;
-      let baseUrl = '';
-      const tokenUserId = payment.user_id || payment.userId || providedEmail || 'guest-email';
-
-      if (payment.id) {
-        try {
-          downloadToken = generateDownloadToken(locator, tokenUserId, payment.id);
-          
-          // Obtener base URL desde variables de entorno o desde req
-          baseUrl = process.env.BASE_URL || 
-                         process.env.REACT_APP_BASE_URL || 
-                         process.env.API_URL ||
-                         (req.headers.origin || req.headers.host ? `https://${req.headers.host}` : 'https://sistema.veneventos.com');
-          
-          // Construir URL de descarga con token
-          downloadUrl = `${baseUrl}/api/payments/${locator}/download?token=${encodeURIComponent(downloadToken)}&source=email`;
-          
-          console.log('🔑 [EMAIL] Token de descarga generado para locator:', locator);
-          console.log('🔗 [EMAIL] URL de descarga:', downloadUrl);
-        } catch (tokenError) {
-          console.warn('⚠️ [EMAIL] Error generando token de descarga:', tokenError.message);
-          console.warn('⚠️ [EMAIL] Token error stack:', tokenError.stack);
-          // Continuar sin token, el usuario aún puede descargar desde el PDF adjunto
-        }
-      }
     } else {
       // Para reservas, obtener solo el título del evento
       if (eventData) {
         eventTitle = eventData.nombre;
+      }
+    }
+
+    // Generar token de descarga para el enlace en el correo (incluye modos link-only)
+    if (!isReservation && payment.id) {
+      const tokenUserId = payment.user_id || payment.userId || providedEmail || 'guest-email';
+
+      try {
+        downloadToken = generateDownloadToken(locator, tokenUserId, payment.id);
+
+        // Construir URL de descarga con token
+        downloadUrl = `${baseUrl}/api/payments/${locator}/download?token=${encodeURIComponent(downloadToken)}&source=email`;
+
+        console.log('🔑 [EMAIL] Token de descarga generado para locator:', locator);
+        console.log('🔗 [EMAIL] URL de descarga:', downloadUrl);
+      } catch (tokenError) {
+        console.warn('⚠️ [EMAIL] Error generando token de descarga:', tokenError.message);
+        console.warn('⚠️ [EMAIL] Token error stack:', tokenError.stack);
+        // Continuar sin token, el usuario aún puede descargar desde el PDF adjunto
       }
     }
 
@@ -724,7 +791,8 @@ export async function handleEmail(req, res) {
       emailType,
       seats: parsedSeats,
       downloadToken: downloadToken || null,
-      baseUrl: baseUrl || ''
+      baseUrl: baseUrl || '',
+      pkpassEnabled: walletEnabled
     });
 
     // Preparar adjuntos (PDF y .pkpass si están disponibles)
