@@ -1186,11 +1186,33 @@ export const useSeatLockStore = create((set, get) => ({
             console.warn('⏱️ [SEAT_LOCK_STORE] Timeout en suscripción Realtime:', status);
             get().handleRealtimeChannelIssue('TIMED_OUT', normalizedFuncionId);
           } else if (status === 'CLOSED') {
+            const state = get();
+            const activeRefCount = channelRefCounts.get(expectedTopic) || 0;
+            const isCurrentChannel = state.channel === newChannel;
+
+            // Si el canal cerrado no es el actual o no hay referencias activas, ignorar el evento
+            if (!isCurrentChannel || activeRefCount === 0 || (state.subscriptionRefCount || 0) === 0) {
+              console.log('ℹ️ [SEAT_LOCK_STORE] Cierre de canal esperado o sin referencias activas. Se omite recarga automática.', {
+                topic: expectedTopic,
+                activeRefCount,
+                isCurrentChannel,
+                subscriptionRefCount: state.subscriptionRefCount,
+              });
+
+              if (typeof window !== 'undefined' && state.pendingReloadTimeout) {
+                window.clearTimeout(state.pendingReloadTimeout);
+              }
+
+              set({
+                connectionIssueDetected: false,
+                pendingReloadTimeout: null,
+              });
+              return;
+            }
+
             console.warn('⚠️ [SEAT_LOCK_STORE] Canal cerrado. Esto puede ser normal si el componente se desmontó.');
             // No limpiar el canal del store si se cierra - puede estar siendo usado por otros componentes
-            if ((get().subscriptionRefCount || 0) > 0) {
-              get().handleRealtimeChannelIssue('CLOSED', normalizedFuncionId);
-            }
+            get().handleRealtimeChannelIssue('CLOSED', normalizedFuncionId);
           } else {
             console.log('📡 [SEAT_LOCK_STORE] Estado de suscripción:', status);
           }

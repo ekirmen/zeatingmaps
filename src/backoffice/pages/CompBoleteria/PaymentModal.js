@@ -501,7 +501,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       const res = await fetch(emailUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmedEmail })
+        body: JSON.stringify({ email: trimmedEmail, downloadOnly: true })
       });
       const data = await res.json();
       if (res.ok) {
@@ -509,7 +509,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         setShowConfirmation(false);
         setEmailToSend('');
       } else {
-        message.error(data.message || 'Error al enviar correo');
+        const errorMessage = data?.error?.message || data?.message || 'Error al enviar correo';
+        message.error(errorMessage);
       }
     } catch (err) {
       console.error('Send email error:', err);
