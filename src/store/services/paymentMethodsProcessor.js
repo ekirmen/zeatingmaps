@@ -334,25 +334,17 @@ const createTransactionAndSyncSeats = async (method, paymentData, options = {}) 
   );
 
   if (!result.success) {
-    // Si el rollback también falló, crear transacción de fallback
-    console.warn('⚠️ [PAYMENT_PROCESSOR] Usando transacción de fallback');
-    const { user: _rawUser, ...payloadWithoutUser } = payload;
-    const fallbackTransaction = {
-      id: generateUUID(),
-      ...payloadWithoutUser,
-      user: payload.userId ?? null,
-      user_id: payload.userId ?? null,
-      status: options.transactionStatus || 'pending',
-      created_at: new Date().toISOString(),
-    };
-    
-    try {
-      await finalizeSeatLocks(method, paymentData, fallbackTransaction.status, options);
-    } catch (fallbackError) {
-      console.error('❌ [PAYMENT_PROCESSOR] Error en fallback:', fallbackError);
-    }
-    
-    return fallbackTransaction;
+    console.error('❌ [PAYMENT_PROCESSOR] No se pudo crear la transacción en la base de datos:', {
+      error: result.error,
+      rollbackExecuted: result.rollbackExecuted,
+      originalError: result.originalError,
+      rollbackError: result.rollbackError,
+    });
+
+    // Lanzar un error para que el flujo de pago no continúe si no hubo inserción en DB
+    throw new Error(
+      'No se pudo registrar el pago en la base de datos. Por favor intenta nuevamente o contacta soporte.'
+    );
   }
 
   return result.data;
