@@ -138,23 +138,51 @@ function getEnvEmailConfig() {
     fromEmail,
     fromName,
     replyTo,
+    source: 'env'
   };
 }
 
+function mergeEmailConfigs(primary, fallback) {
+  if (!primary && !fallback) return null;
+  if (!primary) return fallback;
+
+  const merged = { ...fallback, ...primary };
+
+  // Asegurar que la configuración resultante tenga los campos mínimos
+  if (!merged.host || !merged.fromEmail) return null;
+
+  return merged;
+}
+
 async function resolveEmailConfig(supabaseAdmin, tenantId) {
+  const envConfig = getEnvEmailConfig();
+
   const tenantConfig = await getTenantEmailConfig(supabaseAdmin, tenantId);
   if (tenantConfig) {
-    console.log('[EMAIL] Using tenant-specific email config for tenant:', tenantId);
-    return tenantConfig;
+    const mergedTenantConfig = mergeEmailConfigs({ ...tenantConfig, source: 'tenant' }, envConfig);
+    if (mergedTenantConfig) {
+      console.log('[EMAIL] Using tenant-specific email config for tenant:', tenantId);
+      return mergedTenantConfig;
+    }
+    console.warn('[EMAIL] Tenant email config is incomplete, trying global/env fallbacks');
   }
 
   const globalConfig = await getGlobalEmailConfig(supabaseAdmin);
   if (globalConfig) {
-    console.log('[EMAIL] Using global email config fallback');
-    return globalConfig;
+    const mergedGlobalConfig = mergeEmailConfigs({ ...globalConfig, source: 'global' }, envConfig);
+    if (mergedGlobalConfig) {
+      console.log('[EMAIL] Using global email config fallback');
+      return mergedGlobalConfig;
+    }
+    console.warn('[EMAIL] Global email config is incomplete, trying env fallback');
   }
 
-  return getEnvEmailConfig();
+  if (envConfig) {
+    console.log('[EMAIL] Using environment email config fallback');
+    return envConfig;
+  }
+
+  return null;
 }
 
 function extractTenantId(payment = {}, explicitTenantId = null) {
@@ -642,11 +670,14 @@ export async function handleEmail(req, res) {
     const emailConfig = await resolveEmailConfig(supabaseAdmin, tenantId);
     if (!emailConfig || !emailConfig.host || !emailConfig.fromEmail) {
       res.setHeader('Content-Type', 'application/json');
-      return res.status(500).json({
+      return res.status(503).json({
         error: 'Email configuration not available',
-        details: 'Configure SMTP credentials or tenant/global email settings',
+        details:
+          'Configura SMTP en /dashboard/email-config (tenant o global) o variables EMAIL_SMTP_*/SMTP_* en el entorno del servidor',
       });
     }
+
+    console.log('[EMAIL] Resolved email config source:', emailConfig.source || 'unknown');
 
     const transporter = createTransporter(emailConfig);
 
