@@ -223,6 +223,20 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
   // Contenido diferente según el tipo de correo
   let mainContent = '';
   if (isReservation) {
+    const reservationPayUrl = baseUrl
+      ? `${baseUrl.replace(/\/$/, '')}/store/payment-success/${locator}`
+      : '';
+
+    const payButton = reservationPayUrl
+      ? `
+        <div style="margin: 20px 0; text-align: center;">
+          <a href="${reservationPayUrl}" style="display: inline-block; padding: 12px 28px; background-color: #1a73e8; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 15px;">
+            Completar pago de la reserva
+          </a>
+        </div>
+      `
+      : '';
+
     mainContent = `
       <p>Tu reserva ha sido confirmada exitosamente.</p>
       <p><strong>Localizador:</strong> ${locator}</p>
@@ -230,6 +244,7 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
         <strong>⚠️ Importante:</strong> Esta es una reserva temporal. Completa el pago para confirmar tus asientos.
         Te notificaremos cuando tu pago sea procesado y recibirás tus tickets.
       </p>
+      ${payButton}
     `;
   } else {
     mainContent = `
@@ -346,6 +361,9 @@ function buildEmailContent({ locator, eventTitle, recipient, downloadUrl, emailT
     isReservation
       ? 'Tu reserva ha sido confirmada. Completa el pago para recibir tus tickets.'
       : 'Adjuntamos tus tickets en formato PDF.',
+    isReservation && baseUrl
+      ? `Completa tu pago aquí: ${baseUrl.replace(/\/$/, '')}/store/payment-success/${locator}`
+      : null,
     (!isReservation && downloadUrl) ? `Descargar tickets: ${downloadUrl}` : null,
     (!isReservation && downloadUrl) ? '⚠️ IMPORTANTE: Este enlace es personal e intransferible. No compartas este enlace con otras personas.' : null,
     (!isReservation && pkpassEnabled && baseUrl) ? `Wallet (todos): ${baseUrl}/api/payments/${locator}/pkpass?all=true` : null,
@@ -379,8 +397,9 @@ export async function handleEmail(req, res) {
     return res.status(400).json({ error: 'Missing locator' });
   }
 
-  // Si no se proporciona email, intentar obtenerlo del pago
+  // Resolver email del comprador (priorizar el email de la cuenta del usuario)
   let email = providedEmail;
+  let accountEmail = null;
 
   const config = getConfig();
   const isValidConfig = validateConfig(config);
@@ -446,31 +465,32 @@ export async function handleEmail(req, res) {
       return res.status(404).json({ error: 'Payment not found' });
     }
 
-    // Si no se proporcionó email, obtenerlo del usuario del pago
-    if (!email && payment.user_id) {
+    // Obtener email del usuario de la cuenta (para store siempre preferimos la cuenta del comprador)
+    if (payment.user_id) {
       try {
-        // Intentar obtener desde auth.users usando admin
         const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(payment.user_id);
         if (!userError && userData?.user?.email) {
-          email = userData.user.email;
-          console.log('📧 [EMAIL] Email obtenido desde auth.users:', email);
+          accountEmail = userData.user.email;
+          console.log('📧 [EMAIL] Email de la cuenta (auth.users):', accountEmail);
         } else {
-          // Fallback: obtener desde profiles
           const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('email:login, login')
             .eq('id', payment.user_id)
             .maybeSingle();
-          
+
           if (!profileError && profile) {
-            email = profile.email || profile.login;
-            console.log('📧 [EMAIL] Email obtenido desde profiles:', email);
+            accountEmail = profile.email || profile.login;
+            console.log('📧 [EMAIL] Email de la cuenta (profiles):', accountEmail);
           }
         }
       } catch (emailError) {
         console.warn('⚠️ [EMAIL] Error obteniendo email del usuario:', emailError);
       }
     }
+
+    // Priorizar email de la cuenta y usar email proporcionado solo como respaldo
+    email = accountEmail || email;
 
     // Si aún no hay email, retornar error
     if (!email) {
