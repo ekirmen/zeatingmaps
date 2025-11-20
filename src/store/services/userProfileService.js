@@ -9,9 +9,12 @@ export const getUserProfile = async (userId) => {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (profileError) throw profileError;
+
+    // Si el perfil no existe (posible alta antigua o RLS), devolver un stub mínimo
+    const safeProfile = profile || { id: userId, login: null, telefono: null, permisos: {}, tenant_id: null };
 
     // Paso 2: intentar vista overview (si existe)
     let tenantsInfo = [];
@@ -52,7 +55,7 @@ export const getUserProfile = async (userId) => {
       }
     }
 
-    return { ...profile, tenants: tenantsInfo };
+    return { ...safeProfile, tenants: tenantsInfo };
   } catch (error) {
     console.error('Error al obtener perfil:', error);
     throw error;
