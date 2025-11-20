@@ -531,7 +531,7 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
     let normalizedUser = buildNormalizedUser(transactionData.user, userId);
 
     const ensureUserExists = async (id) => {
-      if (!id) return false;
+      if (!id) return { exists: false, verified: false };
 
       try {
         const { data, error } = await client
@@ -540,30 +540,37 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
           .eq('id', id)
           .single();
 
-        if (error && error.code === 'PGRST116') {
+        if (error?.code === 'PGRST116') {
           // No rows returned
-          return false;
+          return { exists: false, verified: true };
         }
 
         if (error) {
-          console.warn('[PaymentTransaction] No se pudo verificar el usuario, continuando sin user_id:', {
+          const isPermissionError =
+            error.code === '42501' || // permission denied
+            (typeof error.message === 'string' && error.message.toLowerCase().includes('permission denied'));
+
+          console.warn('[PaymentTransaction] No se pudo verificar el usuario, manteniendo user_id para que la BD valide:', {
             message: error.message,
             code: error.code,
             details: error.details,
             hint: error.hint,
+            isPermissionError,
           });
-          return false;
+
+          // Si falló por permisos u otra razón inesperada, asumimos que la BD podrá validar el FK
+          return { exists: true, verified: false };
         }
 
-        return Boolean(data?.id);
+        return { exists: Boolean(data?.id), verified: true };
       } catch (verificationError) {
-        console.warn('[PaymentTransaction] Error inesperado verificando usuario:', verificationError);
-        return false;
+        console.warn('[PaymentTransaction] Error inesperado verificando usuario, manteniendo user_id:', verificationError);
+        return { exists: true, verified: false };
       }
     };
 
-    const userExists = await ensureUserExists(userId);
-    if (!userExists) {
+    const { exists: userExists, verified: userVerified } = await ensureUserExists(userId);
+    if (userVerified && !userExists) {
       if (userId) {
         console.warn('[PaymentTransaction] user_id no encontrado en profiles, removiendo para evitar FK violation');
       }
