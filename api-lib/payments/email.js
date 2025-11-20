@@ -522,7 +522,7 @@ export async function handleEmail(req, res) {
       if (payment.funcion_id) {
         const { data: func, error: funcError } = await supabaseAdmin
           .from('funciones')
-          .select('id, fecha_celebracion, evento:eventos(id, nombre, imagenes, recinto_id)')
+          .select('id, fecha_celebracion, evento:eventos(id, nombre, imagenes, recinto_id, datosBoleto)')
           .eq('id', payment.funcion_id)
           .maybeSingle();
 
@@ -534,7 +534,7 @@ export async function handleEmail(req, res) {
           if (eventData?.recinto_id) {
             const { data: rec, error: recError } = await supabaseAdmin
               .from('recintos')
-              .select('id, nombre, direccion, ciudad, pais')
+              .select('id, nombre, direccion, ciudad, estado, pais, codigopostal, capacidad, latitud, longitud')
               .eq('id', eventData.recinto_id)
               .maybeSingle();
             if (!recError && rec) venueData = rec;
