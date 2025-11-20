@@ -320,7 +320,14 @@ export async function handleEmail(req, res) {
   }
 
   const { locator } = req.query;
-  const { email: providedEmail, type } = req.body || {};
+  const {
+    email: providedEmail,
+    type,
+    // Permitir enviar únicamente el enlace de descarga desde boletería
+    // para reducir la posibilidad de errores por adjuntos pesados
+    linkOnly,
+    downloadOnly,
+  } = req.body || {};
 
   if (!locator) {
     res.setHeader('Content-Type', 'application/json');
@@ -474,8 +481,20 @@ export async function handleEmail(req, res) {
 
     // Determinar el tipo de correo desde el body o desde el status del pago
     const paymentStatus = payment.status || 'completed';
-    const emailType = type || (paymentStatus === 'completed' || paymentStatus === 'pagado' ? 'payment_complete' : 'reservation');
-    const isReservation = emailType === 'reservation' || paymentStatus === 'reservado' || paymentStatus === 'reserved' || paymentStatus === 'pending';
+    const emailType =
+      type ||
+      (paymentStatus === 'completed' || paymentStatus === 'pagado'
+        ? 'payment_complete'
+        : 'reservation');
+
+    // linkOnly / downloadOnly fuerza el modo de pago completado sin adjuntos
+    const isLinkOnly = Boolean(linkOnly || downloadOnly || emailType === 'download_link');
+    const isReservation =
+      !isLinkOnly &&
+      (emailType === 'reservation' ||
+        paymentStatus === 'reservado' ||
+        paymentStatus === 'reserved' ||
+        paymentStatus === 'pending');
     
     // Solo generar PDF y token si es pago completo (no para reservas)
     let buffer = null;
@@ -500,7 +519,7 @@ export async function handleEmail(req, res) {
     
     const walletEnabled = datosBoleto?.habilitarWallet || false;
     
-    if (!isReservation) {
+    if (!isReservation && !isLinkOnly) {
       // Generar PDF solo para pagos completos
       try {
         console.log('📄 [EMAIL] Generando PDF para correo...');
@@ -637,9 +656,11 @@ export async function handleEmail(req, res) {
       // Generar token de descarga para el enlace en el correo
       let downloadToken = null;
       let baseUrl = '';
-      if (payment.user_id && payment.id) {
+      const tokenUserId = payment.user_id || payment.userId || providedEmail || 'guest-email';
+
+      if (payment.id) {
         try {
-          downloadToken = generateDownloadToken(locator, payment.user_id, payment.id);
+          downloadToken = generateDownloadToken(locator, tokenUserId, payment.id);
           
           // Obtener base URL desde variables de entorno o desde req
           baseUrl = process.env.BASE_URL || 
@@ -709,15 +730,15 @@ export async function handleEmail(req, res) {
     // Preparar adjuntos (PDF y .pkpass si están disponibles)
     const attachments = [];
     
-    if (buffer && filename) {
+    if (!isLinkOnly && buffer && filename) {
       attachments.push({
         filename,
         content: buffer,
         contentType: 'application/pdf',
       });
     }
-    
-    if (pkpassBuffer && pkpassFilename) {
+
+    if (!isLinkOnly && pkpassBuffer && pkpassFilename) {
       attachments.push({
         filename: pkpassFilename,
         content: pkpassBuffer,
