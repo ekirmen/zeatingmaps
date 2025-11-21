@@ -31,6 +31,8 @@ const DatosCompradorObligatorios = ({
   toggleMostrarDatos,
   datosComprador,
   updateDatosComprador,
+  setAllDatosSolicitados,
+  setAllDatosObligatorios
 }) => {
   const handleSolicitarChange = (e) => {
     const { name, checked } = e.target;
@@ -44,6 +46,9 @@ const DatosCompradorObligatorios = ({
     const { name, checked } = e.target;
     updateDatosComprador(name, 'obligatorio', checked);
   };
+
+  const allSolicitados = Object.values(datosComprador).every((dato) => dato.solicitado);
+  const allObligatorios = Object.values(datosComprador).every((dato) => dato.solicitado && dato.obligatorio);
 
   return (
     <div className="datos-comprador-obligatorios bg-white p-6 rounded-lg border border-gray-200 space-y-4">
@@ -62,8 +67,28 @@ const DatosCompradorObligatorios = ({
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Dato</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Solicitar</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Obligatorio</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                  <div className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={allSolicitados}
+                      onChange={(e) => setAllDatosSolicitados(e.target.checked)}
+                      className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 cursor-pointer"
+                    />
+                    <span>Solicitar</span>
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                  <div className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={allObligatorios}
+                      onChange={(e) => setAllDatosObligatorios(e.target.checked)}
+                      className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 cursor-pointer"
+                    />
+                    <span>Obligatorio</span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
