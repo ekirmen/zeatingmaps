@@ -152,8 +152,11 @@ const resolveAuthErrorInfo = async ({ error, email, supabaseClient } = {}) => {
     const exists = await checkProfileExists(supabaseClient, email);
     if (exists === false) {
       code = 'account_not_found';
-    } else {
+    } else if (exists === true) {
       code = 'invalid_password';
+    } else {
+      // If we cannot verify, prefer to guide the user to register instead of blaming the password
+      code = 'account_not_found';
     }
   }
 

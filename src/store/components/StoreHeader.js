@@ -188,6 +188,21 @@ const Header = ({ onLogin, onLogout }) => {
     } catch (error) {
       const feedbackMessage = getAuthMessage(error, t, 'errors.login');
       const messageType = error?.type && message[error.type] ? error.type : 'error';
+
+      if (error?.code === 'account_not_found') {
+        const registerPrompt =
+          'No tienes cuenta. ¿Deseas crear una? Completa tu número de teléfono para registrarte.';
+        setRegisterData(prev => ({
+          ...prev,
+          email: formData.email,
+          password: formData.password,
+        }));
+        setAccountMode('register');
+        setError(registerPrompt);
+        message.info(registerPrompt);
+        return;
+      }
+
       setError(feedbackMessage);
       message[messageType](feedbackMessage);
       localStorage.removeItem('token');
@@ -731,7 +746,7 @@ const Header = ({ onLogin, onLogout }) => {
         }}
         footer={null}
       >
-        <div className="account-modal-panel">
+        <div className={`account-modal-panel account-mode-${accountMode}`}>
           <button
             type="button"
             className="account-modal-close"
@@ -750,7 +765,7 @@ const Header = ({ onLogin, onLogout }) => {
             <CloseOutlined />
           </button>
 
-          <div className="account-modal-header">
+          <div className={`account-modal-header account-mode-${accountMode}-header`}>
             <div className="account-modal-avatar">
               <UserOutlined />
             </div>
@@ -761,6 +776,13 @@ const Header = ({ onLogin, onLogout }) => {
                 ? 'Crear Cuenta'
                 : 'Recuperar Contraseña'}
             </h2>
+            <div className={`account-mode-pill account-mode-pill-${accountMode}`}>
+              {accountMode === 'login'
+                ? 'Estás en modo de inicio de sesión'
+                : accountMode === 'register'
+                ? 'Estás creando una cuenta nueva'
+                : 'Estás recuperando tu acceso'}
+            </div>
             {accountMode !== 'login' && (
               <p className="account-modal-subtitle">
                 {accountMode === 'register'
