@@ -226,18 +226,24 @@ const Pay = () => {
   const shouldAskBuyerInfo = (mostrar, campos, storedData) => {
     if (!mostrar) return false;
 
-    const entries = Object.entries(campos || {}).filter(([, cfg]) => cfg?.solicitado);
-    if (entries.length === 0) return false;
+    const requestedEntries = Object.entries(campos || {}).filter(([, cfg]) => cfg?.solicitado);
+    if (requestedEntries.length === 0) return false;
 
-    const isFieldMissing = (data) =>
-      entries.some(([key]) => {
+    const requiredEntries = requestedEntries.filter(([, cfg]) => cfg?.obligatorio);
+    const hasRequiredFields = requiredEntries.length > 0;
+
+    const isRequiredFieldMissing = (data) =>
+      requiredEntries.some(([key]) => {
         const value = data?.[key];
         return value == null || String(value).trim() === '';
       });
 
     if (storedData?.__completed) {
-      return isFieldMissing(storedData);
+      return hasRequiredFields ? isRequiredFieldMissing(storedData) : false;
     }
+
+    // Si hay campos solicitados pero ninguno obligatorio, mostrar una vez para permitir completarlos
+    if (!hasRequiredFields) return !storedData;
 
     return true;
   };
@@ -300,8 +306,9 @@ const Pay = () => {
   const handleBuyerInfoSubmit = () => {
     const campos = buyerInfoConfig.campos || {};
     const requestedEntries = Object.entries(campos).filter(([, cfg]) => cfg?.solicitado);
+    const requiredEntries = requestedEntries.filter(([, cfg]) => cfg?.obligatorio);
 
-    const missing = requestedEntries.filter(([key]) => {
+    const missing = requiredEntries.filter(([key]) => {
       const value = buyerInfoData?.[key];
       return !value || String(value).trim() === '';
     });
@@ -777,7 +784,7 @@ const Pay = () => {
             <Form.Item
               key={key}
               label={buyerLabels[key] || key}
-              required
+              required={!!cfg?.obligatorio}
             >
               <Input
                 value={buyerInfoData?.[key] || ''}
