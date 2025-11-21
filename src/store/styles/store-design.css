@@ -1434,6 +1434,18 @@
   color: white;
 }
 
+.account-mode-login-header {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+}
+
+.account-mode-register-header {
+  background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
+}
+
+.account-mode-forgot-header {
+  background: linear-gradient(135deg, #92400e 0%, #f59e0b 100%);
+}
+
 .account-modal-avatar {
   width: 64px;
   height: 64px;
@@ -1452,6 +1464,31 @@
   font-weight: 700;
   margin: 0 0 8px;
   color: white;
+}
+
+.account-mode-pill {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
+  color: #111827;
+  background: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.account-mode-pill-login {
+  color: #1d4ed8;
+}
+
+.account-mode-pill-register {
+  color: #0f766e;
+}
+
+.account-mode-pill-forgot {
+  color: #92400e;
 }
 
 .account-modal-subtitle {

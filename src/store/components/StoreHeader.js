@@ -746,7 +746,7 @@ const Header = ({ onLogin, onLogout }) => {
         }}
         footer={null}
       >
-        <div className="account-modal-panel">
+        <div className={`account-modal-panel account-mode-${accountMode}`}>
           <button
             type="button"
             className="account-modal-close"
@@ -765,7 +765,7 @@ const Header = ({ onLogin, onLogout }) => {
             <CloseOutlined />
           </button>
 
-          <div className="account-modal-header">
+          <div className={`account-modal-header account-mode-${accountMode}-header`}>
             <div className="account-modal-avatar">
               <UserOutlined />
             </div>
@@ -776,6 +776,13 @@ const Header = ({ onLogin, onLogout }) => {
                 ? 'Crear Cuenta'
                 : 'Recuperar Contraseña'}
             </h2>
+            <div className={`account-mode-pill account-mode-pill-${accountMode}`}>
+              {accountMode === 'login'
+                ? 'Estás en modo de inicio de sesión'
+                : accountMode === 'register'
+                ? 'Estás creando una cuenta nueva'
+                : 'Estás recuperando tu acceso'}
+            </div>
             {accountMode !== 'login' && (
               <p className="account-modal-subtitle">
                 {accountMode === 'register'
