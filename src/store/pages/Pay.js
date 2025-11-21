@@ -267,6 +267,13 @@ const Pay = () => {
         }
 
         const parsedConfig = parseJsonField(data.datosComprador) || {};
+        const hasRequestedBuyerFields = Object.values(parsedConfig || {}).some(cfg => cfg?.solicitado);
+
+        const mostrarConfigurado = typeof data.mostrarDatosComprador === 'string'
+          ? data.mostrarDatosComprador === 'true'
+          : !!data.mostrarDatosComprador;
+
+        const shouldShowBuyerData = mostrarConfigurado || hasRequestedBuyerFields;
         const stored = loadStoredBuyerInfo(data.id);
         const defaultData = {
           nombre: user?.user_metadata?.nombre || user?.user_metadata?.name || '',
@@ -276,10 +283,10 @@ const Pay = () => {
           rut: user?.user_metadata?.rut || ''
         };
 
-        setBuyerInfoConfig({ mostrar: data.mostrarDatosComprador, campos: parsedConfig });
+        setBuyerInfoConfig({ mostrar: shouldShowBuyerData, campos: parsedConfig });
         setBuyerInfoData({ ...defaultData, ...(stored || {}) });
 
-        const needsInfo = shouldAskBuyerInfo(data.mostrarDatosComprador, parsedConfig, stored);
+        const needsInfo = shouldAskBuyerInfo(shouldShowBuyerData, parsedConfig, stored);
         setBuyerInfoCompleted(!needsInfo);
         setBuyerModalVisible(needsInfo);
       } catch (configError) {
