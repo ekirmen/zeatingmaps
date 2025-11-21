@@ -225,17 +225,21 @@ const Pay = () => {
 
   const shouldAskBuyerInfo = (mostrar, campos, storedData) => {
     if (!mostrar) return false;
+
     const entries = Object.entries(campos || {}).filter(([, cfg]) => cfg?.solicitado);
     if (entries.length === 0) return false;
-    if (storedData?.__completed) return false;
 
-    return entries.some(([key, cfg]) => {
-      if (!cfg.obligatorio) {
-        return storedData == null;
-      }
-      const value = storedData?.[key];
-      return value == null || String(value).trim() === '';
-    });
+    const isFieldMissing = (data) =>
+      entries.some(([key]) => {
+        const value = data?.[key];
+        return value == null || String(value).trim() === '';
+      });
+
+    if (storedData?.__completed) {
+      return isFieldMissing(storedData);
+    }
+
+    return true;
   };
 
   useEffect(() => {
@@ -297,15 +301,14 @@ const Pay = () => {
     const campos = buyerInfoConfig.campos || {};
     const requestedEntries = Object.entries(campos).filter(([, cfg]) => cfg?.solicitado);
 
-    const missingRequired = requestedEntries
-      .filter(([, cfg]) => cfg.obligatorio)
-      .map(([key]) => ({ key, value: buyerInfoData?.[key] }));
-
-    const missing = missingRequired.filter((entry) => !entry.value || String(entry.value).trim() === '');
+    const missing = requestedEntries.filter(([key]) => {
+      const value = buyerInfoData?.[key];
+      return !value || String(value).trim() === '';
+    });
 
     if (missing.length > 0) {
-      const labels = missing.map((entry) => buyerLabels[entry.key] || entry.key).join(', ');
-      message.error(`Completa los campos obligatorios: ${labels}`);
+      const labels = missing.map(([key]) => buyerLabels[key] || key).join(', ');
+      message.error(`Completa todos los datos del comprador antes de continuar: ${labels}`);
       return;
     }
 
@@ -774,7 +777,7 @@ const Pay = () => {
             <Form.Item
               key={key}
               label={buyerLabels[key] || key}
-              required={cfg.obligatorio}
+              required
             >
               <Input
                 value={buyerInfoData?.[key] || ''}
