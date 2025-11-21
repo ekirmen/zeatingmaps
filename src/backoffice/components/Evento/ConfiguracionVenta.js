@@ -79,6 +79,40 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
     }));
   };
 
+  const setAllDatosSolicitados = (checked) => {
+    const updatedDatos = Object.keys(datosComprador).reduce((acc, key) => {
+      const current = datosComprador[key];
+      acc[key] = {
+        solicitado: checked,
+        obligatorio: checked ? current.obligatorio : false
+      };
+      return acc;
+    }, {});
+
+    setDatosComprador(updatedDatos);
+    setEventoData(prev => ({
+      ...prev,
+      datosComprador: updatedDatos
+    }));
+  };
+
+  const setAllDatosObligatorios = (checked) => {
+    const updatedDatos = Object.keys(datosComprador).reduce((acc, key) => {
+      const current = datosComprador[key];
+      acc[key] = {
+        solicitado: checked ? true : current.solicitado,
+        obligatorio: checked ? true : false
+      };
+      return acc;
+    }, {});
+
+    setDatosComprador(updatedDatos);
+    setEventoData(prev => ({
+      ...prev,
+      datosComprador: updatedDatos
+    }));
+  };
+
   const toggleMostrarDatosComprador = () => {
     setMostrarDatosComprador(prev => {
       const nuevo = !prev;
@@ -138,6 +172,8 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
         toggleMostrarDatos={toggleMostrarDatosComprador}
         datosComprador={datosComprador}
         updateDatosComprador={updateDatosComprador}
+        setAllDatosSolicitados={setAllDatosSolicitados}
+        setAllDatosObligatorios={setAllDatosObligatorios}
       />
       <DatosPorBoleto
         mostrarDatos={mostrarDatosBoleto}
