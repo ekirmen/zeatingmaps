@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { message, Modal, Form, Input } from 'antd';
 import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { getActivePaymentMethods, validatePaymentMethodConfig } from '../services/paymentMethodsService';
@@ -20,6 +20,7 @@ import logger from '../../utils/logger';
 import auditService from '../../services/auditService';
 import { encryptPaymentData } from '../../utils/encryption';
 import { sendPaymentEmailByStatus } from '../services/paymentEmailService';
+import { supabase } from '../../supabaseClient';
 
 
 const Pay = () => {
@@ -50,6 +51,12 @@ const Pay = () => {
   const [pagosPlazosActivos, setPagosPlazosActivos] = useState(null);
   const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(0); // 0 = todas, 1, 2, 3 = número de cuotas
   const [cuotasCalculadas, setCuotasCalculadas] = useState([]);
+  const [buyerConfigLoading, setBuyerConfigLoading] = useState(false);
+  const [buyerInfoConfig, setBuyerInfoConfig] = useState({ mostrar: false, campos: {} });
+  const [buyerInfoData, setBuyerInfoData] = useState({});
+  const [buyerModalVisible, setBuyerModalVisible] = useState(false);
+  const [buyerInfoCompleted, setBuyerInfoCompleted] = useState(false);
+  const [pendingPayment, setPendingPayment] = useState(false);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -159,7 +166,187 @@ const Pay = () => {
     setSelectedGateway(method);
   };
 
+  const buyerLabels = {
+    nombre: 'Nombre',
+    email: 'Email',
+    telefono: 'Teléfono',
+    rut: 'RUT',
+    numeroIdentificacionFiscal: 'Número de identificación fiscal',
+    direccion: 'Dirección / C.P.',
+    nombreFonetico: 'Nombre fonético',
+    apellidosFoneticos: 'Apellidos fonéticos',
+    idioma: 'Idioma',
+    fechaNacimiento: 'Fecha de nacimiento',
+    sexo: 'Sexo',
+    empresa: 'Empresa',
+    departamento: 'Departamento',
+    cargoEmpresa: 'Cargo en la empresa',
+    matricula: 'Matrícula',
+    twitter: 'Twitter',
+    facebook: 'Facebook',
+    youtube: 'YouTube',
+    tiktok: 'TikTok',
+    snapchat: 'Snapchat',
+    instagram: 'Instagram',
+    contactoEmergencia: 'Contacto de emergencia',
+    nacionalidad: 'Nacionalidad'
+  };
+
+  const parseJsonField = (field) => {
+    if (!field) return null;
+    try {
+      return typeof field === 'string' ? JSON.parse(field) : field;
+    } catch (error) {
+      console.warn('[PAY] Error parseando campo JSON:', error);
+      return null;
+    }
+  };
+
+  const getCartEventId = useMemo(() => {
+    return cartItems?.[0]?.eventId || cartItems?.[0]?.eventoId || null;
+  }, [cartItems]);
+
+  const getBuyerStorageKey = (eventId) => {
+    if (!eventId || typeof window === 'undefined') return null;
+    return `buyerInfo:${eventId}:${user?.id || 'anon'}`;
+  };
+
+  const loadStoredBuyerInfo = (eventId) => {
+    const key = getBuyerStorageKey(eventId);
+    if (!key) return null;
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.warn('[PAY] No se pudo leer buyer info almacenada:', error);
+      return null;
+    }
+  };
+
+  const shouldAskBuyerInfo = (mostrar, campos, storedData) => {
+    if (!mostrar) return false;
+    const entries = Object.entries(campos || {}).filter(([, cfg]) => cfg?.solicitado);
+    if (entries.length === 0) return false;
+    if (storedData?.__completed) return false;
+
+    return entries.some(([key, cfg]) => {
+      if (!cfg.obligatorio) {
+        return storedData == null;
+      }
+      const value = storedData?.[key];
+      return value == null || String(value).trim() === '';
+    });
+  };
+
+  useEffect(() => {
+    const loadBuyerConfig = async () => {
+      if (!getCartEventId) return;
+
+      setBuyerConfigLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('eventos')
+          .select('id, mostrarDatosComprador, datosComprador')
+          .eq('id', getCartEventId)
+          .single();
+
+        if (error || !data) {
+          console.warn('[PAY] No se pudo obtener configuración de datos del comprador:', error);
+          setBuyerInfoCompleted(true);
+          return;
+        }
+
+        const parsedConfig = parseJsonField(data.datosComprador) || {};
+        const stored = loadStoredBuyerInfo(data.id);
+        const defaultData = {
+          nombre: user?.user_metadata?.nombre || user?.user_metadata?.name || '',
+          email: user?.email || user?.user_metadata?.email || '',
+          telefono: user?.user_metadata?.telefono || user?.user_metadata?.phone || '',
+          direccion: user?.user_metadata?.direccion || '',
+          rut: user?.user_metadata?.rut || ''
+        };
+
+        setBuyerInfoConfig({ mostrar: data.mostrarDatosComprador, campos: parsedConfig });
+        setBuyerInfoData({ ...defaultData, ...(stored || {}) });
+
+        const needsInfo = shouldAskBuyerInfo(data.mostrarDatosComprador, parsedConfig, stored);
+        setBuyerInfoCompleted(!needsInfo);
+        setBuyerModalVisible(needsInfo);
+      } catch (configError) {
+        console.warn('[PAY] Error cargando configuración de comprador:', configError);
+        setBuyerInfoCompleted(true);
+      } finally {
+        setBuyerConfigLoading(false);
+      }
+    };
+
+    loadBuyerConfig();
+  }, [getCartEventId, user]);
+
+  const persistBuyerInfo = (eventId, dataToSave) => {
+    const key = getBuyerStorageKey(eventId);
+    if (!key) return;
+    try {
+      localStorage.setItem(key, JSON.stringify({ ...dataToSave, __completed: true, savedAt: new Date().toISOString() }));
+    } catch (error) {
+      console.warn('[PAY] No se pudo guardar buyer info:', error);
+    }
+  };
+
+  const handleBuyerInfoSubmit = () => {
+    const campos = buyerInfoConfig.campos || {};
+    const requestedEntries = Object.entries(campos).filter(([, cfg]) => cfg?.solicitado);
+
+    const missingRequired = requestedEntries
+      .filter(([, cfg]) => cfg.obligatorio)
+      .map(([key]) => ({ key, value: buyerInfoData?.[key] }));
+
+    const missing = missingRequired.filter((entry) => !entry.value || String(entry.value).trim() === '');
+
+    if (missing.length > 0) {
+      const labels = missing.map((entry) => buyerLabels[entry.key] || entry.key).join(', ');
+      message.error(`Completa los campos obligatorios: ${labels}`);
+      return;
+    }
+
+    persistBuyerInfo(getCartEventId, buyerInfoData);
+    setBuyerInfoData((prev) => ({ ...prev, __completed: true }));
+    setBuyerInfoCompleted(true);
+    setBuyerModalVisible(false);
+
+    if (pendingPayment) {
+      setPendingPayment(false);
+      setTimeout(() => handleProcessPayment(), 0);
+    }
+  };
+
+  const handleBuyerFieldChange = (key, value) => {
+    setBuyerInfoData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleBuyerModalClose = () => {
+    setBuyerModalVisible(false);
+    setPendingPayment(false);
+  };
+
+  const requestedBuyerFields = useMemo(() => {
+    if (!buyerInfoConfig.mostrar) return [];
+    return Object.entries(buyerInfoConfig.campos || {}).filter(([, cfg]) => cfg?.solicitado);
+  }, [buyerInfoConfig]);
+
   const handleProcessPayment = async () => {
+    if (buyerConfigLoading) {
+      message.loading('Cargando información del comprador...');
+      return;
+    }
+
+    if (!buyerInfoCompleted && shouldAskBuyerInfo(buyerInfoConfig.mostrar, buyerInfoConfig.campos, buyerInfoData)) {
+      setBuyerModalVisible(true);
+      setPendingPayment(true);
+      message.info('Por favor completa los datos del comprador para continuar.');
+      return;
+    }
+
     // Validaciones robustas antes de procesar el pago
     if (!selectedGateway) {
       message.error('Por favor selecciona un método de pago');
@@ -313,9 +500,21 @@ const Pay = () => {
           monto_pendiente: total - montoAPagar,
           dias_entre_pagos: pagosPlazosActivos.diasEntrePagos
         };
-        
+
         console.log('💰 [PAY] Metadata de pagos a plazos:', metadata.pagos_plazos);
       }
+
+      const buyerInfoForPayment = (() => {
+        if (!buyerInfoConfig.mostrar) return null;
+        if (!requestedBuyerFields.length) return null;
+        const payload = {};
+        requestedBuyerFields.forEach(([key]) => {
+          if (buyerInfoData?.[key]) {
+            payload[key] = buyerInfoData[key];
+          }
+        });
+        return Object.keys(payload).length > 0 ? payload : null;
+      })();
 
       paymentData = {
         orderId: locator,
@@ -340,7 +539,8 @@ const Pay = () => {
         },
         eventoId: eventoId, // También pasar directamente como eventoId
         eventId: eventoId,   // Y como eventId para compatibilidad
-        metadata: Object.keys(metadata).length > 0 ? metadata : undefined
+        metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+        buyerInfo: buyerInfoForPayment || undefined
       };
 
       // Encriptar datos sensibles de pago antes de enviarlos
@@ -556,6 +756,38 @@ const Pay = () => {
 
   return (
     <div className="min-h-screen py-4 md:py-8 store-payment-page" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+      <Modal
+        open={buyerModalVisible}
+        title="Datos del Comprador"
+        onOk={handleBuyerInfoSubmit}
+        onCancel={handleBuyerModalClose}
+        okText="Guardar y continuar"
+        cancelText="Cancelar"
+        maskClosable={false}
+        destroyOnClose
+      >
+        <p className="store-text-sm text-gray-700 mb-3">
+          Completa la información solicitada por el organizador. Solo se pedirá una vez por evento.
+        </p>
+        <Form layout="vertical">
+          {requestedBuyerFields.map(([key, cfg]) => (
+            <Form.Item
+              key={key}
+              label={buyerLabels[key] || key}
+              required={cfg.obligatorio}
+            >
+              <Input
+                value={buyerInfoData?.[key] || ''}
+                onChange={(e) => handleBuyerFieldChange(key, e.target.value)}
+                placeholder={`Ingresa ${buyerLabels[key] || key}`}
+              />
+            </Form.Item>
+          ))}
+          {requestedBuyerFields.length === 0 && (
+            <div className="text-sm text-gray-600">No hay campos configurados para solicitar.</div>
+          )}
+        </Form>
+      </Modal>
       {facebookPixel && (
         <FacebookPixel
           pixelId={facebookPixel}
