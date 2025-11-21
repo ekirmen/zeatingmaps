@@ -188,6 +188,21 @@ const Header = ({ onLogin, onLogout }) => {
     } catch (error) {
       const feedbackMessage = getAuthMessage(error, t, 'errors.login');
       const messageType = error?.type && message[error.type] ? error.type : 'error';
+
+      if (error?.code === 'account_not_found') {
+        const registerPrompt =
+          'No tienes cuenta. ¿Deseas crear una? Completa tu número de teléfono para registrarte.';
+        setRegisterData(prev => ({
+          ...prev,
+          email: formData.email,
+          password: formData.password,
+        }));
+        setAccountMode('register');
+        setError(registerPrompt);
+        message.info(registerPrompt);
+        return;
+      }
+
       setError(feedbackMessage);
       message[messageType](feedbackMessage);
       localStorage.removeItem('token');
