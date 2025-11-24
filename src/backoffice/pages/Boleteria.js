@@ -46,6 +46,9 @@ const Boleteria = () => {
   }, [debugState]);
 
   const [foundSeats, setFoundSeats] = useState([]);
+  const [searchAllSeats, setSearchAllSeats] = useState(false);
+  const [searchAllSeatsLoading, setSearchAllSeatsLoading] = useState(false);
+  const [savedCartBeforeSearch, setSavedCartBeforeSearch] = useState(null);
 
   const {
     selectedClient,
@@ -205,6 +208,105 @@ const Boleteria = () => {
 
     loadEntradasAndPrices();
   }, [selectedFuncion?.id, selectedEvent?.id]); // Solo dependencias críticas
+
+  const searchExistingSeats = useCallback(async () => {
+    if (!selectedFuncion?.id) return;
+
+    try {
+      setSearchAllSeatsLoading(true);
+      const funcionId = selectedFuncion.id;
+      const { data, error } = await supabase
+        .from('payment_transactions')
+        .select(`id, locator, status, amount, currency, user:profiles!user_id(login, full_name, email), seats`)
+        .eq('funcion_id', funcionId)
+        .in('status', ['completed', 'vendido', 'reservado', 'pagado', 'pending', 'reserved']);
+
+      if (error) {
+        throw error;
+      }
+
+      const normalizeSeats = (payment) => {
+        const rawSeats = Array.isArray(payment.seats)
+          ? payment.seats
+          : (() => {
+            if (!payment.seats) return [];
+            if (typeof payment.seats === 'string') {
+              try {
+                return JSON.parse(payment.seats);
+              } catch {
+                try {
+                  return JSON.parse(JSON.parse(payment.seats));
+                } catch {
+                  return [];
+                }
+              }
+            }
+            if (typeof payment.seats === 'object') {
+              return payment.seats.seats || [];
+            }
+            return [];
+          })();
+
+        const buyerName = payment.user?.full_name || payment.user?.login || 'Comprador sin nombre';
+        const buyerEmail = payment.user?.email || '';
+        const normalizedStatus = (() => {
+          const status = (payment.status || '').toLowerCase();
+          if (['pagado', 'vendido', 'completed'].includes(status)) return 'vendido';
+          if (['reservado', 'pending', 'reserved'].includes(status)) return 'reservado';
+          return status || 'reservado';
+        })();
+
+        return rawSeats.map((seat, index) => {
+          const seatId = seat._id || seat.id || seat.sillaId || seat.seat_id || `seat-${index}`;
+          const zonaNombre = seat.nombreZona || seat.zona?.nombre || seat.zonaNombre || seat.zona || 'Zona';
+          const nombre = seat.nombre || seat.name || seat.nombreAsiento || seat.seatLabel || seatId;
+          const precio = Number(seat.precio ?? seat.price ?? payment.amount ?? 0);
+
+          return {
+            _id: seatId,
+            sillaId: seatId,
+            nombre,
+            nombreZona: zonaNombre,
+            zona: zonaNombre,
+            zonaId: seat.zonaId || seat.zona?.id || seat.zona_id,
+            precio,
+            tipoPrecio: seat.tipoPrecio || seat.tipo || 'histórico',
+            locator: payment.locator,
+            status: normalizedStatus,
+            buyerName,
+            buyerEmail,
+            funcionId: funcionId,
+            funcionFecha: selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion,
+            modoVenta: 'boleteria'
+          };
+        });
+      };
+
+      const allSeats = (data || []).flatMap(normalizeSeats);
+      setFoundSeats(allSeats);
+      if (!savedCartBeforeSearch) {
+        setSavedCartBeforeSearch(Array.isArray(carrito) ? carrito : []);
+      }
+      setCarrito(allSeats);
+    } catch (error) {
+      logger.error('❌ [Boleteria] Error buscando asientos vendidos/reservados:', error);
+    } finally {
+      setSearchAllSeatsLoading(false);
+    }
+  }, [selectedFuncion, setCarrito, carrito, savedCartBeforeSearch]);
+
+  useEffect(() => {
+    if (!searchAllSeats) {
+      setFoundSeats([]);
+      if (savedCartBeforeSearch) {
+        setCarrito(savedCartBeforeSearch);
+        setSavedCartBeforeSearch(null);
+      }
+      return;
+    }
+
+    searchExistingSeats();
+  }, [searchAllSeats, searchExistingSeats, savedCartBeforeSearch, setCarrito]);
 
   const selectedSeatIds = useMemo(() => {
     if (!Array.isArray(carrito)) return [];
@@ -779,10 +881,23 @@ const Boleteria = () => {
           </div>
 
           {/* Sección ultra compacta de precios dinámicos con selección de entrada */}
-          <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
-            <div className="flex space-x-2 overflow-x-auto">
-              {priceOptions && priceOptions.length > 0 ? (
-                priceOptions.map((option, index) => {
+                  <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
+                    <div className="flex items-center gap-3 px-1 py-1">
+                      <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={searchAllSeats}
+                          onChange={(e) => setSearchAllSeats(e.target.checked)}
+                        />
+                        Buscar
+                      </label>
+                      {searchAllSeatsLoading && (
+                        <span className="text-[11px] text-blue-600">Buscando asientos vendidos/reservados...</span>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 overflow-x-auto">
+                      {priceOptions && priceOptions.length > 0 ? (
+                        priceOptions.map((option, index) => {
                   const isActive = selectedEntradaId === option.entradaId;
                   const precioDisplay = option.minPrecio === option.maxPrecio
                     ? `$${option.minPrecio.toFixed(2)}`

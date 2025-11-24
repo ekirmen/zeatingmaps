@@ -50,7 +50,11 @@ const Cart = ({
         existingGroup.asientos.push({
           _id: item._id,
           nombre: item.nombre,
-          nombreMesa: item.nombreMesa
+          nombreMesa: item.nombreMesa,
+          locator: item.locator,
+          buyerName: item.buyerName,
+          buyerEmail: item.buyerEmail,
+          status: item.status
         });
       } else {
         acc[key].items.push({
@@ -62,7 +66,11 @@ const Cart = ({
           asientos: [{
             _id: item._id,
             nombre: item.nombre,
-            nombreMesa: item.nombreMesa
+            nombreMesa: item.nombreMesa,
+            locator: item.locator,
+            buyerName: item.buyerName,
+            buyerEmail: item.buyerEmail,
+            status: item.status
           }]
         });
       }
@@ -230,6 +238,13 @@ const Cart = ({
                                 <div key={seat._id} className="text-xs flex items-center gap-1">
                                   <span className="text-blue-600">🎫</span>
                                   <span className="font-medium">{mesaName} - {seatName}</span>
+                                  {(seat.locator || seat.buyerName || seat.buyerEmail) && (
+                                    <span className="text-[11px] text-gray-500">
+                                      {seat.locator && <span className="mr-1">🔖 {seat.locator}</span>}
+                                      {seat.buyerName && <span className="mr-1">👤 {seat.buyerName}</span>}
+                                      {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
+                                    </span>
+                                  )}
                                 </div>
                               );
                             } else {
@@ -237,6 +252,13 @@ const Cart = ({
                                 <div key={seat._id} className="text-xs flex items-center gap-1">
                                   <span className="text-green-600">🎫</span>
                                   <span className="font-medium">{seatName}</span>
+                                  {(seat.locator || seat.buyerName || seat.buyerEmail) && (
+                                    <span className="text-[11px] text-gray-500">
+                                      {seat.locator && <span className="mr-1">🔖 {seat.locator}</span>}
+                                      {seat.buyerName && <span className="mr-1">👤 {seat.buyerName}</span>}
+                                      {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
+                                    </span>
+                                  )}
                                 </div>
                               );
                             }
