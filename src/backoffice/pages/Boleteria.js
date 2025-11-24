@@ -876,7 +876,10 @@ const Boleteria = () => {
   const [cartOpen, setCartOpen] = useState(false);
 
   return (
-    <div className="flex flex-col md:flex-row bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0', height: 'calc(100vh - 88px)', position: 'absolute', top: '88px', left: '0', right: '0', bottom: '0' }}>
+    <div
+      className="flex flex-col md:flex-row bg-gray-50 overflow-hidden min-h-[calc(100vh-88px)]"
+      style={{ margin: '0', padding: '0' }}
+    >
       {/* Debug info */}
       {/* Debug logs removed for production performance */}
 
@@ -901,13 +904,13 @@ const Boleteria = () => {
           width={280}
           className="md:hidden"
         >
-          <div className="p-1 border-b border-gray-200 mb-4">
+          <div className="p-2 border-b border-gray-200 mb-4">
             <button
               onClick={() => window.location.href = '/dashboard'}
-              className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-xs"
+              className="flex items-center gap-2 text-sm font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 shadow-sm hover:bg-purple-100 transition"
             >
-              <AiOutlineLeft className="text-xs" />
-              <span>Volver</span>
+              <AiOutlineLeft className="text-base" />
+              <span>Volver al panel</span>
             </button>
           </div>
           <LeftMenu {...leftMenuProps} />
@@ -915,16 +918,16 @@ const Boleteria = () => {
 
         {/* Desktop: Sidebar fijo */}
         <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
-          <div className="p-1 border-b border-gray-200">
+          <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-white">
             <button
               onClick={() => window.location.href = '/dashboard'}
-              className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-xs"
+              className="flex items-center gap-2 text-sm font-semibold text-purple-700 bg-white border border-purple-200 rounded-lg px-3 py-2 shadow-sm hover:bg-purple-50 transition"
             >
-              <AiOutlineLeft className="text-xs" />
-              <span>Volver</span>
+              <AiOutlineLeft className="text-base" />
+              <span>Volver al panel</span>
             </button>
           </div>
-          
+
           <div className="flex-1 overflow-auto p-1">
             <LeftMenu {...leftMenuProps} />
           </div>
@@ -932,11 +935,11 @@ const Boleteria = () => {
       </>
 
       {/* Contenido principal */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-w-0 mt-12 md:mt-0">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-w-0 mt-14 md:mt-0 relative">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header ultra compacto con búsqueda de evento y función */}
-          <div className="bg-white border-b border-gray-200 px-2 py-2 md:px-1 md:py-0.5">
+          <div className="bg-white border-b border-gray-200 px-3 py-2 md:px-1 md:py-0.5 shadow-sm md:shadow-none z-10">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1">
                 <div className="flex items-center gap-1">
@@ -988,8 +991,8 @@ const Boleteria = () => {
           </div>
 
           {/* Navegación ultra compacta con botones estilo tabs */}
-        <div className="bg-white border-b border-gray-200">
-            <div className="flex items-center justify-between px-1 py-0.5">
+        <div className="bg-white border-b border-gray-200 sticky top-14 md:static z-10 shadow-sm md:shadow-none">
+            <div className="flex items-center justify-between px-2 py-1">
               {/* Botón para abrir panel lateral */}
               <div className="flex items-center">
                 <button 
@@ -1104,37 +1107,44 @@ const Boleteria = () => {
               </div>
 
           {/* Mapa de asientos ultra compacto */}
-          <div className="flex-1 bg-white overflow-hidden">
+          <div className="flex-1 bg-white overflow-hidden relative">
             {/* Debug log removed for production performance */}
-                {selectedFuncion && mapa ? (
-              <div className="h-full p-1 overflow-auto">
-                      <LazySeatingMap
-                        funcionId={selectedFuncion?.id || selectedFuncion?._id}
-                        mapa={mapa}
-                        zonas={mapa?.zonas || []}
-                        selectedFuncion={selectedFuncion}
-                        selectedEvent={selectedEvent}
-                        onSeatToggle={handleSeatToggle}
-                        foundSeats={foundSeats}
-                        selectedSeats={selectedSeatIds}
-                        lockedSeats={permanentLocks}
-                        modoVenta={true}
-                        showPrices={true}
-                        showZones={true}
+            {selectedFuncion && mapa ? (
+              <div className="h-full p-2 overflow-auto">
+                <LazySeatingMap
+                  funcionId={selectedFuncion?.id || selectedFuncion?._id}
+                  mapa={mapa}
+                  zonas={mapa?.zonas || []}
+                  selectedFuncion={selectedFuncion}
+                  selectedEvent={selectedEvent}
+                  onSeatToggle={handleSeatToggle}
+                  foundSeats={foundSeats}
+                  selectedSeats={selectedSeatIds}
+                  lockedSeats={permanentLocks}
+                  modoVenta={true}
+                  showPrices={true}
+                  showZones={true}
                   showLegend={false}
-                        allowSeatSelection={true}
-                        debug={true}
-                        isSeatLocked={isSeatLocked}
-                        isSeatLockedByMe={isSeatLockedByMe}
-                      />
-                  </div>
-                ) : (
-              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                    Selecciona una función para ver el mapa de asientos
+                  allowSeatSelection={true}
+                  debug={true}
+                  isSeatLocked={isSeatLocked}
+                  isSeatLockedByMe={isSeatLockedByMe}
+                />
+
+                {carrito?.length > 0 && (
+                  <div className="md:hidden sticky bottom-4 left-0 right-0 mx-2 mt-3 rounded-lg bg-purple-600 text-white text-sm font-semibold px-3 py-2 shadow-lg flex items-center justify-between">
+                    <span>{carrito.length === 1 ? 'Asiento seleccionado' : `${carrito.length} asientos seleccionados`}</span>
+                    <span className="text-xs opacity-90">Continúa la compra en el carrito ➜</span>
                   </div>
                 )}
-          </div>
               </div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                Selecciona una función para ver el mapa de asientos
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Panel derecho - Carrito de compras */}
         {/* Mobile: Botón flotante + Drawer */}
@@ -1151,6 +1161,13 @@ const Boleteria = () => {
               >
                 🛒 {carrito.length}
               </AntButton>
+            </div>
+          )}
+
+          {carrito && carrito.length > 0 && (
+            <div className="hidden md:flex items-center justify-between px-3 py-2 bg-purple-50 text-purple-800 text-sm font-semibold border-t border-purple-100 shadow-inner">
+              <span>{carrito.length === 1 ? 'Tienes 1 asiento listo' : `Tienes ${carrito.length} asientos listos`}</span>
+              <span className="text-xs font-normal text-purple-700">Finaliza la compra en el panel derecho</span>
             </div>
           )}
 
