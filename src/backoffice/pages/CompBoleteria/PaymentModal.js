@@ -747,8 +747,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   };
 
   const paymentStatus = getPaymentStatus();
-  const showContinueButton = isFullyPaid && paymentEntries.length > 0;
   const effectiveLocator = locator || existingLocator || '';
+  const showContinueButton = isFullyPaid && paymentEntries.length > 0;
 
   // Generate simple locator of 8 characters (numbers and letters)
   const generateLocator = () => {
@@ -1141,7 +1141,6 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   variant="outlined"
                   block
                   onClick={() => setShowConfirmation(true)}
-                  disabled={!effectiveLocator}
                 >
                   Continuar
                 </Button>
