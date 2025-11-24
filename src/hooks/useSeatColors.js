@@ -112,7 +112,7 @@ export const useSeatColors = (eventId = null) => {
         case 'seleccionado_por_otro':
           return eventTheme.seatSelectedOther || '#2196F3'; // Azul para seleccionado por otro
         case 'locked':
-          return '#6b7280'; // Gris para bloqueado permanentemente
+          return eventTheme.seatBlocked || '#f56565'; // Rojo para bloqueado permanentemente
         default:
           // Si no hay estado específico, usar el color por defecto
           return '#4CAF50'; // Verde para disponible
@@ -136,7 +136,7 @@ export const useSeatColors = (eventId = null) => {
         return eventTheme.seatCancelled || '#e53e3e';
       }
       if (seat.estado === 'locked') {
-        return '#6b7280';
+        return eventTheme.seatBlocked || '#f56565';
       }
       // Si no hay estado persistente, usar disponible
       return '#4CAF50';
@@ -175,7 +175,7 @@ export const useSeatColors = (eventId = null) => {
     
     // 4. BLOQUEADO PERMANENTEMENTE (desde boleteria)
     if (isPermanentlyLocked || seat.estado === 'locked' || lockInfo?.status === 'locked') {
-      return '#6b7280'; // Gris para asientos bloqueados permanentemente
+      return eventTheme.seatBlocked || '#f56565'; // Rojo para asientos bloqueados permanentemente
     }
     
     // 5. SELECCIONADO POR OTRO USUARIO (temporal) - PRIORIDAD ALTA
