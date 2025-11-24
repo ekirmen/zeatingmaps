@@ -867,19 +867,11 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           amount: paymentEntries.length > 0
             ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
             : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
-          monto: paymentEntries.length > 0
-            ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
-            : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
           // Campos faltantes para compatibilidad y tracking
           order_id: existingPayment ? existingPayment.locator : finalLocator, // lo normalizamos en service a locator
           payment_method: hasCasheaPayment ? 'Cashea' : primaryMethod,
           tenant_id: resolvedTenantId || undefined,
           gateway_name: hasCasheaPayment ? 'Cashea' : 'manual',
-          // columnas legacy de compatibilidad
-          event: eventId,
-          funcion: selectedFuncion.id || selectedFuncion._id,
-          user: (selectedClient.id || selectedClient._id) || null,
-          fecha: new Date().toISOString(),
           ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
         };
 
