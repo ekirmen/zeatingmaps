@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
-import { Modal, Drawer, Button as AntButton } from 'antd';
+import { Modal, Drawer, Button as AntButton, message } from 'antd';
 import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
@@ -114,6 +114,7 @@ const Boleteria = () => {
   const [entradas, setEntradas] = useState([]);
   const [selectedEntradaId, setSelectedEntradaId] = useState(null);
   const [priceOptions, setPriceOptions] = useState([]);
+  const [blockMode, setBlockMode] = useState(false);
 
   // Eliminar useEffect duplicado - ya está manejado arriba
 
@@ -451,6 +452,26 @@ const Boleteria = () => {
     };
   }, [selectedFuncion]);
 
+  const handleBlockModeToggle = useCallback((checked) => {
+    const safeCart = Array.isArray(carrito) ? carrito : [];
+
+    if (checked) {
+      const hasSaleItems = safeCart.some(item => !item.lockAction);
+
+      if (hasSaleItems) {
+        message.warning('Vacía el carrito de venta antes de usar el modo bloqueo/desbloqueo.');
+        return;
+      }
+
+      setBlockMode(true);
+      message.info('Modo bloqueo/desbloqueo activado. Selecciona asientos para bloquear o desbloquear.');
+    } else {
+      setBlockMode(false);
+      setCarrito(prev => (Array.isArray(prev) ? prev.filter(item => !item.lockAction) : []));
+      message.info('Modo bloqueo/desbloqueo desactivado.');
+    }
+  }, [carrito, setCarrito]);
+
   const toggleSeat = useCallback(
     (seatData) => {
       setCarrito(prev => {
@@ -488,6 +509,63 @@ const Boleteria = () => {
       const sillaId = silla._id || silla.id;
       if (!sillaId || !selectedFuncion) return;
 
+      const seatEstado = silla.estado || silla.status || 'disponible';
+
+      if (blockMode) {
+        const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
+
+        if (!funcionId) {
+          message.warning('Selecciona una función antes de bloquear/desbloquear.');
+          return;
+        }
+
+        if (seatEstado !== 'disponible' && seatEstado !== 'bloqueado' && seatEstado !== 'locked') {
+          message.warning('Solo se pueden bloquear asientos disponibles o desbloquear los que ya estén bloqueados.');
+          return;
+        }
+
+        const isCurrentlyBlocked = seatEstado === 'bloqueado' || seatEstado === 'locked';
+        const lockAction = isCurrentlyBlocked ? 'unlock' : 'block';
+
+        setCarrito(prev => {
+          const safePrev = Array.isArray(prev) ? prev.filter(item => item.lockAction) : [];
+          const withoutSeat = safePrev.filter(item => (item._id || item.sillaId || item.id) !== sillaId);
+
+          if (safePrev.length !== (Array.isArray(prev) ? prev.length : 0)) {
+            message.warning('Solo puedes tener asientos de bloqueo/desbloqueo en el carrito.');
+          }
+
+          const seatName = silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
+          const nombreMesa = silla.nombreMesa || silla.mesa_nombre || silla.mesaNombre || silla.tableName || '';
+          const zonaId = silla.zona?.id || silla.zonaId || silla.zona?._id;
+          const nombreZona = silla.zona?.nombre || silla?.zonaNombre || silla?.zona || 'Zona';
+
+          return [
+            ...withoutSeat,
+            {
+              _id: sillaId,
+              sillaId,
+              nombre: seatName,
+              nombreZona,
+              zona: nombreZona,
+              zonaId,
+              funcionId,
+              funcionFecha: selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion,
+              nombreMesa,
+              lockAction,
+              precio: 0,
+              tipoPrecio: lockAction,
+              descuentoNombre: '',
+              modoVenta: 'lock',
+              estadoActual: seatEstado
+            }
+          ];
+        });
+
+        message.success(isCurrentlyBlocked ? 'Asiento marcado para desbloquear' : 'Asiento marcado para bloquear');
+        return;
+      }
+
       // Verificar que se haya seleccionado un tipo de entrada
       if (!selectedEntradaId) {
         logger.warn('⚠️ [Boleteria] No se ha seleccionado un tipo de entrada');
@@ -497,6 +575,11 @@ const Boleteria = () => {
 
       // En modo boletería simplificado, no verificamos bloqueos aquí
       // Los bloqueos se manejan por separado con botones específicos
+
+      if (seatEstado === 'bloqueado' || seatEstado === 'locked') {
+        message.warning('Este asiento está bloqueado. Activa el modo bloqueo/desbloqueo para liberarlo.');
+        return;
+      }
 
       // Resolver zona y precio
       const zona =
@@ -580,7 +663,19 @@ const Boleteria = () => {
         }
       }
     },
-    [selectedFuncion, mapa, selectedPlantilla, selectedEntradaId, priceOptions, toggleSeat, carrito, lockSeat, unlockSeat]
+    [
+      selectedFuncion,
+      mapa,
+      selectedPlantilla,
+      selectedEntradaId,
+      priceOptions,
+      toggleSeat,
+      carrito,
+      lockSeat,
+      unlockSeat,
+      blockMode,
+      setCarrito
+    ]
   );
 
   const allTicketsPaid = carrito.length > 0 && carrito.every(ticket => ticket.pagado);
@@ -663,8 +758,64 @@ const Boleteria = () => {
     onShowUserSearch: () => setIsSearchModalVisible(true),
     onShowSeatModal: () => setIsSeatModalVisible(true),
     seatPayment,
-    setSeatPayment
-  }), [carrito, setCarrito, selectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
+    setSeatPayment,
+    blockMode,
+    onApplyLockActions: async () => {
+      const lockItems = (Array.isArray(carrito) ? carrito : []).filter(item => item.lockAction);
+      if (!lockItems.length) {
+        message.warning('Selecciona asientos para bloquear o desbloquear.');
+        return;
+      }
+
+      if (!selectedFuncion?.id) {
+        message.warning('Selecciona una función para aplicar los cambios.');
+        return;
+      }
+
+      let blockedCount = 0;
+      let unlockedCount = 0;
+
+      for (const item of lockItems) {
+        const seatId = item._id || item.sillaId || item.id;
+        if (!seatId) continue;
+
+        try {
+          if (item.lockAction === 'block') {
+            const locked = await lockSeat(seatId, 'locked', selectedFuncion.id);
+            if (locked) blockedCount += 1;
+          } else {
+            const unlocked = await unlockSeat(seatId, selectedFuncion.id);
+            if (unlocked) unlockedCount += 1;
+          }
+        } catch (error) {
+          logger.error('❌ [Boleteria] Error aplicando bloqueo/desbloqueo:', error);
+        }
+      }
+
+      setCarrito(prev => (Array.isArray(prev) ? prev.filter(item => !item.lockAction) : []));
+      setBlockMode(false);
+
+      if (blockedCount || unlockedCount) {
+        message.success(`Bloqueados: ${blockedCount}, Desbloqueados: ${unlockedCount}`);
+      } else {
+        message.warning('No se aplicaron cambios de bloqueo.');
+      }
+    }
+  }), [
+    carrito,
+    setCarrito,
+    selectedClient,
+    selectedAffiliate,
+    setSelectedAffiliate,
+    clientAbonos,
+    setClientAbonos,
+    seatPayment,
+    setSeatPayment,
+    blockMode,
+    lockSeat,
+    unlockSeat,
+    selectedFuncion?.id
+  ]);
 
   const clientModalsProps = useMemo(() => ({
     isSearchModalVisible,
@@ -890,6 +1041,14 @@ const Boleteria = () => {
                           onChange={(e) => setSearchAllSeats(e.target.checked)}
                         />
                         Buscar
+                      </label>
+                      <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={blockMode}
+                          onChange={(e) => handleBlockModeToggle(e.target.checked)}
+                        />
+                        Bloqueo/Desbloqueo
                       </label>
                       {searchAllSeatsLoading && (
                         <span className="text-[11px] text-blue-600">Buscando asientos vendidos/reservados...</span>
