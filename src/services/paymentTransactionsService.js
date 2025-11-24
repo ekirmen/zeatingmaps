@@ -30,7 +30,7 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
     // Obtener la transacción actual para verificar si el status cambió
     const { data: currentTransaction, error: fetchError } = await supabase
       .from('payment_transactions')
-      .select('id, status, locator, user_id, usuario_id')
+      .select('id, status, locator, user_id')
       .eq('id', transactionId)
       .single();
 
@@ -57,17 +57,17 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
     const statusChangedToCompleted = (previousStatus !== 'completed' && previousStatus !== 'pagado') && 
                                      (newStatus === 'completed' || newStatus === 'pagado');
     
-    if (statusChangedToCompleted && data.locator && (data.user_id || data.usuario_id)) {
+    if (statusChangedToCompleted && data.locator && data.user_id) {
       try {
         // Importar dinámicamente para evitar problemas de ciclo
         const { sendPaymentEmailByStatus } = await import('../store/services/paymentEmailService');
-        
+
         const emailResult = await sendPaymentEmailByStatus({
           locator: data.locator,
-          user_id: data.user_id || data.usuario_id,
+          user_id: data.user_id,
           status: 'completed',
           transactionId: data.id,
-          amount: data.amount || data.monto,
+          amount: data.amount,
         });
         
         if (emailResult.success) {

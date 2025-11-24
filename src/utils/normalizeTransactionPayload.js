@@ -111,11 +111,9 @@ export function buildPaymentTransactionPayload(transactionData = {}) {
       'unknown',
     gateway_name: transactionData.gatewayName ?? transactionData.gateway_name ?? null,
     seats: tryParse(transactionData.seats ?? null),
-    monto: transactionData.monto ?? transactionData.amount ?? null,
     processed_by: ensureUuidOrNull(
       transactionData.processedBy ?? transactionData.processed_by
     ),
-    fecha: transactionData.fecha ?? null,
     payments: tryParse(transactionData.payments ?? null),
     referrer: transactionData.referrer ?? null,
     discountCode: transactionData.discountCode ?? null,
