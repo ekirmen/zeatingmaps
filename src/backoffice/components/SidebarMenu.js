@@ -123,6 +123,7 @@ const SidebarMenu = ({ collapsed }) => {
         { title: 'IVA', path: '/dashboard/iva', icon: faPercent },
         { title: 'Descuentos', path: '/dashboard/descuentos', icon: faPercent },
         { title: 'Abonos', path: '/dashboard/abonos', icon: faCalendarAlt },
+        { title: 'Afiliados', path: '/dashboard/afiliados', icon: faUsers },
         { title: 'Eventos', path: '/dashboard/eventos', icon: faTicketAlt },
         { title: 'Funciones', path: '/dashboard/funciones', icon: faCalendar }
         // { title: 'Donaciones', path: '/dashboard/donaciones', icon: faHandHoldingHeart }, // OCULTO

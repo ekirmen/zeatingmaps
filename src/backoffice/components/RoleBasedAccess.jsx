@@ -168,6 +168,7 @@ export const RoleProvider = ({ children }) => {
       paquetes: false,
       multipase: false,
       abonos: false,
+      afiliados: false,
       iva: false,
       
       // Ventas
@@ -323,6 +324,7 @@ export const RoleProvider = ({ children }) => {
         permissions.paquetes = true;
         permissions.multipase = true;
         permissions.abonos = true;
+        permissions.afiliados = true;
         permissions.iva = true;
         permissions.boleteria = true;
         permissions.reportes = true;
@@ -470,6 +472,7 @@ export const RoleProvider = ({ children }) => {
       '/dashboard/paquetes': 'paquetes',
       '/dashboard/multipase': 'multipase',
       '/dashboard/abonos': 'abonos',
+      '/dashboard/afiliados': 'afiliados',
       '/dashboard/iva': 'iva',
       '/dashboard/boleteria': 'boleteria',
       '/backoffice/boleteria': 'boleteria',
