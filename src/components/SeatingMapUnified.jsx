@@ -441,6 +441,14 @@ const SeatingMapUnified = ({
     // Retornar referencia estable si no hay cambios reales
     return cartItemsRaw;
   }, [cartItemsRaw?.length, cartItemsRaw?.map(item => item.sillaId || item.id || item._id).join(',')]);
+
+  const foundSeatIds = useMemo(() => {
+    if (!Array.isArray(foundSeats)) return [];
+    return foundSeats
+      .map(seat => seat?._id || seat?.sillaId || seat?.id || seat?.seat_id)
+      .filter(Boolean)
+      .map(id => id.toString());
+  }, [foundSeats]);
   
   const selectedSeatIds = useMemo(() => {
     // Obtener asientos seleccionados desde diferentes fuentes
@@ -480,11 +488,14 @@ const SeatingMapUnified = ({
       .map(lock => lock.seat_id.toString())
       .filter(Boolean);
     
+    // 4. Asientos encontrados por búsqueda (resaltado)
+    const searchSeatIds = foundSeatIds;
+
     // Combinar todas las fuentes
-    const allSeatIds = [...new Set([...propSeatIds, ...cartSeatIds, ...lockSeatIds])];
-    
+    const allSeatIds = [...new Set([...propSeatIds, ...cartSeatIds, ...lockSeatIds, ...searchSeatIds])];
+
     return new Set(allSeatIds);
-  }, [selectedSeats, modoVenta, lockedSeatsState, lockedSeats, forceRefresh, cartItems]);
+  }, [selectedSeats, modoVenta, lockedSeatsState, lockedSeats, forceRefresh, cartItems, foundSeatIds]);
 
   const selectedSeatList = useMemo(() => Array.from(selectedSeatIds), [selectedSeatIds]);
 
