@@ -338,6 +338,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const [seatLockSessionId, setSeatLockSessionId] = useState(null);
   const [casheaOrder, setCasheaOrder] = useState(null);
   const [casheaError, setCasheaError] = useState(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email?.trim());
 
   const parsePaymentsFromTransaction = (paymentsData) => {
@@ -488,16 +489,19 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     }
   };
 
+  const effectiveLocator = locator || existingLocator || '';
+
   const handleEmailTicket = async () => {
     const trimmedEmail = emailToSend?.trim();
-    if (!locator || !trimmedEmail) return;
+    if (!effectiveLocator || !trimmedEmail) return;
 
     if (!isValidEmail(trimmedEmail)) {
       message.error('Ingresa un correo electrónico válido');
       return;
     }
     try {
-      const emailUrl = buildRelativeApiUrl(`payments/${locator}/email`);
+      setIsSendingEmail(true);
+      const emailUrl = buildRelativeApiUrl(`payments/${effectiveLocator}/email`);
       const res = await fetch(emailUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -515,12 +519,14 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     } catch (err) {
       console.error('Send email error:', err);
       message.error('Error al enviar correo');
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
   const handleDownloadTicket = async () => {
     try {
-      await downloadTicket(locator);
+      await downloadTicket(effectiveLocator);
     } catch (err) {
       message.error('Error al descargar ticket');
     }
@@ -747,7 +753,6 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   };
 
   const paymentStatus = getPaymentStatus();
-  const effectiveLocator = locator || existingLocator || '';
   const showContinueButton = isFullyPaid && paymentEntries.length > 0;
 
   // Generate simple locator of 8 characters (numbers and letters)
@@ -805,6 +810,11 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       const paymentPromises = Object.entries(seatsByEvent).map(async ([eventId, seats]) => {
         // Verificar si ya existe un pago para estos asientos
         const existingPayment = seats.find(seat => seat.paymentId && seat.locator);
+        const finalLocator = existingPayment?.locator || effectiveLocator || generateLocator();
+
+        if (!effectiveLocator && !existingLocator) {
+          setLocator((prev) => prev || finalLocator);
+        }
 
         const resolvedTenantId = resolveTenantId({
           user,
@@ -849,7 +859,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             ...(item.abonoGroup ? { abonoGroup: item.abonoGroup } : {})
           })),
           // Usar localizador existente si ya hay uno, sino generar uno nuevo
-          locator: existingPayment ? existingPayment.locator : generateLocator(),
+          locator: existingPayment ? existingPayment.locator : finalLocator,
           // Estandarizar estado: 'completed' cuando está totalmente pagado, 'reserved' en caso contrario
           status: paymentStatus,
           payments: normalizedPayments,
@@ -861,7 +871,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
             : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
           // Campos faltantes para compatibilidad y tracking
-          order_id: existingPayment ? existingPayment.locator : undefined, // lo normalizamos en service a locator
+          order_id: existingPayment ? existingPayment.locator : finalLocator, // lo normalizamos en service a locator
           payment_method: hasCasheaPayment ? 'Cashea' : primaryMethod,
           tenant_id: resolvedTenantId || undefined,
           gateway_name: hasCasheaPayment ? 'Cashea' : 'manual',
@@ -966,8 +976,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           });
         }
         if (results && results.length > 0 && results[0]) {
-          setLocator(results[0].locator);
-          const locator = results[0].locator;
+          const locator = results[0].locator || effectiveLocator;
+          setLocator(locator);
           const userId = selectedClient?.id || selectedClient?._id;
 
           // Crear payment_transaction para cada método de pago usado
@@ -1271,11 +1281,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         title="Confirmación"
         open={showConfirmation}
         onCancel={() => setShowConfirmation(false)}
-        footer={[
-          <Button key="close" onClick={() => setShowConfirmation(false)}>
-            Cerrar
-          </Button>,
-          ...(isFullyPaid
+        footer={
+          isFullyPaid
             ? [
                 <Button
                   key="email"
@@ -1283,7 +1290,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   variant="outlined"
                   block
                   onClick={handleEmailTicket}
-                  disabled={!emailToSend || !isValidEmail(emailToSend)}
+                  loading={isSendingEmail}
+                  disabled={!effectiveLocator || !emailToSend || !isValidEmail(emailToSend) || isSendingEmail}
                 >
                   Enviar por correo
                 </Button>,
@@ -1293,16 +1301,16 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   variant="outlined"
                   block
                   onClick={handleDownloadTicket}
-                  disabled={!locator}
+                  disabled={!effectiveLocator}
                 >
                   Descargar Ticket
                 </Button>
               ]
-            : [])
-        ]}
+            : null
+        }
       >
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <h2>Localizador: {locator}</h2>
+          <h2>Localizador: {effectiveLocator || 'Pendiente'}</h2>
           <Input
             placeholder="Correo electrónico"
             value={emailToSend}
