@@ -11,6 +11,7 @@ export const createSeatHandlers = ({
   detallesPlantilla,
   appliedDiscount,
   funciones,
+  selectedFuncionEventId,
   lockSeat,
   unlockSeat,
   isSeatLocked,
@@ -140,7 +141,21 @@ export const createSeatHandlers = ({
       console.log('Agregando asiento al carrito:', seat._id, seat.nombre);
       if (abonoMode) {
         const groupId = `abono-${seat._id}`;
-        const items = funciones.map(f => ({
+        const currentEventId = selectedFuncionEventId
+          || selectedFuncion?.evento_id
+          || selectedFuncion?.evento
+          || selectedFuncion?.eventoId;
+
+        const abonoFunciones = Array.isArray(funciones)
+          ? funciones.filter((f) => {
+              const funcionEventId = f.evento_id || f.evento || f.eventoId;
+              return currentEventId ? funcionEventId === currentEventId : true;
+            })
+          : [];
+
+        const targetFunciones = abonoFunciones.length > 0 ? abonoFunciones : funciones;
+
+        const items = targetFunciones.map(f => ({
           _id: seat._id,
           nombre: seat.nombre,
           nombreMesa: table.nombre,
