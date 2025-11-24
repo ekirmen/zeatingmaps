@@ -120,7 +120,29 @@ export function buildPaymentTransactionPayload(transactionData = {}) {
     reservationDeadline: transactionData.reservationDeadline ?? null,
     metadata: ensureMetadataObject(
       transactionData.metadata ?? transactionData.meta ?? {}
-    )
+    ),
+    // Legacy compatibility mirrors
+    monto:
+      transactionData.monto ??
+      transactionData.amount ??
+      (transactionData.payments
+        ? tryParse(transactionData.payments)?.reduce(
+            (sum, payment) => sum + (Number(payment?.amount) || 0),
+            0
+          )
+        : null),
+    usuario_id:
+      transactionData.usuario_id ??
+      transactionData.user_id ??
+      transactionData.userId ??
+      transactionData.user,
+    event: transactionData.event ?? transactionData.evento_id ?? transactionData.eventId,
+    funcion:
+      transactionData.funcion ??
+      transactionData.funcion_id ??
+      transactionData.functionId ??
+      transactionData.funcionId,
+    fecha: transactionData.fecha ?? transactionData.created_at ?? null
   };
 
   const maybeObjectFields = [

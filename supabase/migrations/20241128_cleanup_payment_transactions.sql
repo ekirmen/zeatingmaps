@@ -28,11 +28,25 @@ ALTER TABLE public.payment_transactions
   REFERENCES public.profiles(id)
   ON DELETE SET NULL;
 
--- Drop legacy/duplicate columns now that data is normalized
-ALTER TABLE public.payment_transactions
-  DROP COLUMN IF EXISTS usuario_id,
-  DROP COLUMN IF EXISTS "user",
-  DROP COLUMN IF EXISTS event,
-  DROP COLUMN IF EXISTS funcion,
-  DROP COLUMN IF EXISTS monto,
-  DROP COLUMN IF EXISTS fecha;
+-- Keep legacy columns in sync with canonical fields for backward compatibility
+CREATE OR REPLACE FUNCTION public.sync_payment_transaction_legacy_columns()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.usuario_id := COALESCE(NEW.user_id, NEW.usuario_id);
+  NEW."user" := COALESCE(NEW.user_id, NEW."user");
+  NEW.monto := COALESCE(NEW.amount, NEW.monto);
+  NEW.event := COALESCE(NEW.evento_id, NEW.event);
+  NEW.funcion := COALESCE(NEW.funcion_id, NEW.funcion);
+  NEW.fecha := COALESCE(NEW.created_at, NEW.fecha, NOW());
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS tr_sync_payment_transactions_legacy ON public.payment_transactions;
+
+CREATE TRIGGER tr_sync_payment_transactions_legacy
+BEFORE INSERT OR UPDATE ON public.payment_transactions
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_payment_transaction_legacy_columns();
