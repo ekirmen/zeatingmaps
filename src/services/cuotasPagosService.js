@@ -82,70 +82,21 @@ export const getCuotasByPaymentTransaction = async (paymentTransactionId) => {
  */
 export const pagarCuotas = async (cuotaIds, paymentData) => {
   try {
-    // Obtener las cuotas
-    const { data: cuotas, error: fetchError } = await supabase
-      .from('cuotas_pagos')
-      .select('*')
-      .in('id', cuotaIds);
+    const response = await fetch('/api/cuotas-pagos/pagar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ cuotaIds, paymentData })
+    });
 
-    if (fetchError) throw fetchError;
+    const result = await response.json();
 
-    if (!cuotas || cuotas.length === 0) {
-      throw new Error('No se encontraron cuotas para pagar');
+    if (!response.ok) {
+      throw new Error(result?.error || 'Error procesando pago de cuotas');
     }
 
-    // Calcular monto total a pagar
-    const montoTotal = cuotas.reduce((sum, cuota) => {
-      const montoPendiente = cuota.monto_cuota - cuota.monto_pagado;
-      return sum + montoPendiente;
-    }, 0);
-
-    // Crear transacción de pago para las cuotas
-    const { data: paymentTransaction, error: transactionError } = await supabase
-      .from('payment_transactions')
-      .insert({
-        order_id: `CUOTAS-${Date.now()}`,
-        amount: montoTotal,
-        currency: paymentData.currency || 'USD',
-        status: 'completed',
-        gateway_transaction_id: paymentData.gatewayTransactionId || null,
-        gateway_response: paymentData.gatewayResponse || null,
-        locator: paymentData.locator || null,
-        tenant_id: paymentData.tenantId,
-        user_id: paymentData.userId,
-        evento_id: cuotas[0].evento_id,
-        funcion_id: cuotas[0].funcion_id,
-        payment_method: paymentData.paymentMethod || 'unknown',
-        gateway_name: paymentData.gatewayName || 'unknown',
-        metadata: {
-          tipo: 'pago_cuotas',
-          cuota_ids: cuotaIds
-        }
-      })
-      .select()
-      .single();
-
-    if (transactionError) throw transactionError;
-
-    // Actualizar las cuotas como pagadas
-    const { error: updateError } = await supabase
-      .from('cuotas_pagos')
-      .update({
-        estado: 'pagada',
-        fecha_pago: new Date().toISOString(),
-        monto_pagado: supabase.raw('monto_cuota'), // Marcar como completamente pagada
-        metodo_pago: paymentData.paymentMethod || 'unknown',
-        transaction_id_cuota: paymentTransaction.id
-      })
-      .in('id', cuotaIds);
-
-    if (updateError) throw updateError;
-
-    return {
-      success: true,
-      paymentTransaction,
-      cuotasPagadas: cuotas.length
-    };
+    return result;
   } catch (error) {
     console.error('Error pagando cuotas:', error);
     throw error;
