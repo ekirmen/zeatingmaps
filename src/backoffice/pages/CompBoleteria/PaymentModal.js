@@ -1092,6 +1092,17 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     }
   };
 
+  const handleContinue = async () => {
+    if (isProcessing) return;
+
+    if (effectiveLocator) {
+      setShowConfirmation(true);
+      return;
+    }
+
+    await handlePaymentOrReservation();
+  };
+
   return (
     <>
       <Modal
@@ -1150,7 +1161,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   type="default"
                   variant="outlined"
                   block
-                  onClick={() => setShowConfirmation(true)}
+                  onClick={handleContinue}
+                  loading={isProcessing}
                 >
                   Continuar
                 </Button>
