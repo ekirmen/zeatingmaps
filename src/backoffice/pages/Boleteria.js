@@ -510,6 +510,23 @@ const Boleteria = () => {
       const sillaId = silla._id || silla.id;
       if (!sillaId || !selectedFuncion) return;
 
+      if (searchAllSeats) {
+        const seatName = silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
+        const nombreZona = silla.nombreZona || silla.zona?.nombre || silla?.zona || 'Zona';
+
+        await toggleSeat({
+          ...silla,
+          _id: sillaId,
+          sillaId,
+          nombre: seatName,
+          nombreZona,
+          zona: nombreZona,
+          modoVenta: 'search'
+        });
+
+        return;
+      }
+
       const seatEstado = silla.estado || silla.status || 'disponible';
 
       if (blockMode) {
@@ -675,7 +692,8 @@ const Boleteria = () => {
       lockSeat,
       unlockSeat,
       blockMode,
-      setCarrito
+      setCarrito,
+      searchAllSeats
     ]
   );
 
@@ -1122,6 +1140,7 @@ const Boleteria = () => {
                   foundSeats={foundSeats}
                   selectedSeats={selectedSeatIds}
                   lockedSeats={permanentLocks}
+                  allowSearchSeatSelection={searchAllSeats}
                   modoVenta={true}
                   showPrices={true}
                   showZones={true}
