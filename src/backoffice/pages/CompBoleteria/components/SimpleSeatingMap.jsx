@@ -279,6 +279,14 @@ const SimpleSeatingMap = ({
         return;
       }
 
+      const rawPrice = selectedPriceOption?.precio ?? selectedPriceOption?.precioOriginal;
+      const priceValue = Number.isFinite(Number(rawPrice)) ? Number(rawPrice) : 0;
+
+      if (!Number.isFinite(priceValue)) {
+        message.error('El precio seleccionado no es válido');
+        return;
+      }
+
       // Restringir a la zona activa si está definida
       const seatZonaId = String(seat?.zona?.id || seat?.zonaId || seat?.zona || '');
       if (selectedZonaId && seatZonaId && String(selectedZonaId) !== seatZonaId) {
@@ -385,7 +393,7 @@ const SimpleSeatingMap = ({
         ...seat,
         mesa: mesa,
         funcion_id: selectedFuncion?.id,
-        precio: selectedPriceOption.precio,
+        precio: priceValue,
         precioInfo: {
           entrada: selectedPriceOption.entrada,
           zona: selectedPriceOption.zona,
@@ -407,8 +415,9 @@ const SimpleSeatingMap = ({
       
       const zonaInfo = selectedPriceOption.zona?.nombre || 'Zona';
       const entradaInfo = selectedPriceOption.entrada?.nombre_entrada || 'Entrada';
-      
-      message.success(`🎫 ${seatInfo} seleccionado - ${entradaInfo} - ${zonaInfo} - $${selectedPriceOption.precio.toFixed(2)}`);
+      const precioInfo = Number.isFinite(priceValue) ? priceValue.toFixed(2) : '0.00';
+
+      message.success(`🎫 ${seatInfo} seleccionado - ${entradaInfo} - ${zonaInfo} - $${precioInfo}`);
       
     } catch (error) {
       console.error('Error al manejar selección de asiento:', error);
