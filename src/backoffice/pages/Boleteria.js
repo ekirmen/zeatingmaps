@@ -857,7 +857,10 @@ const Boleteria = () => {
             const locked = await lockSeat(seatId, 'locked', selectedFuncion.id);
             if (locked) blockedCount += 1;
           } else {
-            const unlocked = await unlockSeat(seatId, selectedFuncion.id);
+            const unlocked = await unlockSeat(seatId, selectedFuncion.id, {
+              allowOverrideSession: true,
+              allowForceUnlock: true
+            });
             if (unlocked) unlockedCount += 1;
           }
         } catch (error) {

@@ -19,7 +19,7 @@ export const createSeatHandlers = ({
   handleSeatAnimation,
   abonoSeats
 }) => {
-  const handleSeatClick = (seat, table) => {
+  const handleSeatClick = async (seat, table) => {
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
     const currentFuncIdNum = typeof currentFuncId === 'object'
       ? (currentFuncId?.id || currentFuncId?._id)
@@ -42,8 +42,26 @@ export const createSeatHandlers = ({
       }
 
       // Verificar si ya está bloqueado por otro usuario
-      if (isSeatLocked(seat._id, currentFuncIdNum) && !isSeatLockedByMe(seat._id, currentFuncIdNum)) {
-        message.warning('Este asiento ya está siendo seleccionado por otro usuario');
+      const [isLocked, lockedByMe] = await Promise.all([
+        isSeatLocked(seat._id, currentFuncIdNum),
+        isSeatLockedByMe(seat._id, currentFuncIdNum)
+      ]);
+
+      if (isLocked && !lockedByMe) {
+        try {
+          const unlocked = await unlockSeat(seat._id, currentFuncIdNum, {
+            allowOverrideSession: true,
+            allowForceUnlock: true
+          });
+          if (unlocked) {
+            message.success('Asiento desbloqueado aunque estaba seleccionado por otro usuario');
+          } else {
+            message.warning('No se pudo desbloquear el asiento seleccionado por otro usuario');
+          }
+        } catch (err) {
+          console.error('❌ Error al forzar desbloqueo de asiento:', err);
+          message.error('Error al desbloquear el asiento de otro usuario');
+        }
         return;
       }
 
@@ -53,7 +71,7 @@ export const createSeatHandlers = ({
         // Desbloquear asiento
         console.log('🔓 Intentando desbloquear asiento:', seat._id, 'para función:', currentFuncId);
         setCarrito(carrito.filter(i => !(i._id === seat._id && i.isBlocked)));
-        unlockSeat(seat._id, currentFuncIdNum).then((result) => {
+        unlockSeat(seat._id, currentFuncIdNum, { allowForceUnlock: true }).then((result) => {
           console.log('✅ Asiento desbloqueado exitosamente:', result);
           message.success('Asiento desbloqueado');
         }).catch(err => {

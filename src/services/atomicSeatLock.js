@@ -185,8 +185,10 @@ class AtomicSeatLockService {
   /**
    * Desbloquea un asiento de forma atómica
    */
-  async unlockSeatAtomically(seatId, funcionId, sessionId) {
+  async unlockSeatAtomically(seatId, funcionId, sessionId, options = {}) {
     try {
+      const { allowPermanentOverride = false } = options || {};
+
       // Rate limiting: Verificar si el request está permitido
       const endpoint = 'unlock_seat_atomically';
       const requestKey = `unlock_${seatId}_${funcionId}_${sessionId}`;
@@ -210,7 +212,10 @@ class AtomicSeatLockService {
         throw new Error('Parámetros requeridos: seatId, funcionId, sessionId');
       }
 
-      const activePermanentLock = await this.getActivePermanentLock(normalizedSeatId, normalizedFuncionId);
+      const activePermanentLock = allowPermanentOverride
+        ? null
+        : await this.getActivePermanentLock(normalizedSeatId, normalizedFuncionId);
+
       if (activePermanentLock) {
         throw new Error('Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.');
       }
