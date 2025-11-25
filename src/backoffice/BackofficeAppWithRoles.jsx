@@ -16,6 +16,7 @@ import Entrada from './pages/Entrada';
 import Productos from './pages/Productos';
 import PlantillasProductos from './pages/PlantillasProductos';
 import ComisionesTasas from './pages/ComisionesTasas';
+import Paquetes from './pages/Paquetes';
 import PaymentGateways from './pages/PaymentGateways';
 import Evento from './pages/Evento';
 import PlantillaPrecios from './pages/PlantillaPrecios';
@@ -210,13 +211,13 @@ const BackofficeAppWithRoles = () => {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="paquetes" 
+          <Route
+            path="paquetes"
             element={
               <ProtectedRoute permission="paquetes">
-                <Abonos />
+                <Paquetes />
               </ProtectedRoute>
-            } 
+            }
           />
           <Route 
             path="multipase" 

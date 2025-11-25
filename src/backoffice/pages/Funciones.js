@@ -234,6 +234,8 @@ const Funciones = () => {
   const [plantillas, setPlantillas] = useState([]);
   const [plantillasComisiones, setPlantillasComisiones] = useState([]);
   const [plantillasProductos, setPlantillasProductos] = useState([]);
+  const [plantillasPaquetes, setPlantillasPaquetes] = useState([]);
+  const [loadingPlantillasPaquetes, setLoadingPlantillasPaquetes] = useState(false);
   const [loadingPlantillasProductos, setLoadingPlantillasProductos] = useState(false);
   const [funciones, setFunciones] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -263,6 +265,7 @@ const Funciones = () => {
     idSala: salaSeleccionada?.id || null,
     idPlantillaEntradas: null,
     idPlantillaProductos: null,
+    idPlantillaPaquetes: null,
     idSpecialProductsTemplate: null,
     idPlantillaCupos: null,
     permitePagoPlazos: false,
@@ -500,6 +503,7 @@ const Funciones = () => {
       idSala: salaSeleccionada?.id || nuevaFuncion.idSala || null,
       idPlantillaEntradas: null,
       idPlantillaProductos: null,
+      idPlantillaPaquetes: null,
       idSpecialProductsTemplate: null,
       idPlantillaCupos: null,
       permitePagoPlazos: false,
@@ -808,6 +812,35 @@ const Funciones = () => {
     fetchPlantillasProductos();
   }, []);
 
+  const fetchPlantillasPaquetes = async () => {
+    setLoadingPlantillasPaquetes(true);
+    try {
+      const { data, error } = await supabase
+        .from('plantillas_paquetes')
+        .select('*')
+        .eq('activo', true)
+        .order('nombre');
+
+      if (error) {
+        if (error.code === '42P01') {
+          setPlantillasPaquetes([]);
+        } else {
+          setPlantillasPaquetes([]);
+        }
+      } else {
+        setPlantillasPaquetes(data || []);
+      }
+    } catch (error) {
+      setPlantillasPaquetes([]);
+    } finally {
+      setLoadingPlantillasPaquetes(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlantillasPaquetes();
+  }, []);
+
   // Actualizar la sala automáticamente cuando cambie la sala seleccionada
   useEffect(() => {
     if (salaSeleccionada?.id) {
@@ -939,6 +972,7 @@ const Funciones = () => {
         plantilla: formatIntegerField(nuevaFuncion.idPlantillaEntradas),
         plantilla_entradas: formatIntegerField(nuevaFuncion.idPlantillaEntradas),
         plantilla_producto: formatIntegerField(nuevaFuncion.idPlantillaProductos),
+        plantilla_paquetes: formatIntegerField(nuevaFuncion.idPlantillaPaquetes),
         plantilla_comisiones: formatIntegerField(nuevaFuncion.idSpecialProductsTemplate),
         plantilla_cupos: formatIntegerField(nuevaFuncion.idPlantillaCupos),
         permite_pago_plazos: nuevaFuncion.permitePagoPlazos,
@@ -1122,6 +1156,7 @@ const Funciones = () => {
         idSala: f.sala_id || null,
         idPlantillaEntradas: f.plantilla_entradas ?? f.plantilla ?? null,
         idPlantillaProductos: f.plantilla_producto || null,
+        idPlantillaPaquetes: f.plantilla_paquetes || null,
         idSpecialProductsTemplate: f.plantilla_comisiones || null,
         idPlantillaCupos: f.plantilla_cupos || null,
 
@@ -1874,7 +1909,24 @@ const Funciones = () => {
                       <option value="">Selecciona pool de códigos</option>
                     </select>
                   </div>
-                  <div className="hidden md:block" />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de paquetes</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      value={nuevaFuncion.idPlantillaPaquetes}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaPaquetes: e.target.value })}
+                    >
+                      <option value="">No existen plantillas de paquetes activas</option>
+                      {plantillasPaquetes.map((plantilla) => (
+                        <option key={plantilla.id} value={plantilla.id}>
+                          {plantilla.nombre}
+                        </option>
+                      ))}
+                    </select>
+                    {loadingPlantillasPaquetes && (
+                      <p className="text-xs text-gray-500 mt-1">Cargando plantillas de paquetes...</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
