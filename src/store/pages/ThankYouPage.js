@@ -20,6 +20,11 @@ const ThankYouPage = () => {
   const [facebookPixel, setFacebookPixel] = useState(null);
   const [purchaseData, setPurchaseData] = useState(null);
 
+  const getSafeAmount = (value) => {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : 0;
+  };
+
   const loadFacebookPixel = async (purchaseData) => {
     try {
       if (purchaseData?.eventId) {
@@ -59,7 +64,7 @@ const ThankYouPage = () => {
             content_name: purchaseData.eventName,
             content_category: 'Evento',
             content_ids: [purchaseData.eventId],
-            value: purchaseData.amount,
+            value: getSafeAmount(purchaseData.amount),
             currency: 'USD',
             num_items: purchaseData.ticketCount,
             transaction_id: purchaseData.transactionId
@@ -99,7 +104,7 @@ const ThankYouPage = () => {
                 <div className="flex justify-between">
                   <Text strong>Total:</Text>
                   <Text strong className="text-green-600">
-                    ${purchaseData.amount.toFixed(2)}
+                    ${getSafeAmount(purchaseData.amount).toFixed(2)}
                   </Text>
                 </div>
                 {purchaseData.transactionId && (
