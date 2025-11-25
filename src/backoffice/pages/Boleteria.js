@@ -551,13 +551,12 @@ const Boleteria = () => {
 
         const blockedStates = ['bloqueado', 'locked', 'lock'];
 
-        if (seatEstado !== 'disponible' && !blockedStates.includes(seatEstado)) {
-          message.warning('Solo se pueden bloquear asientos disponibles o desbloquear los que ya estén bloqueados.');
+        if (!blockedStates.includes(seatEstado)) {
+          message.warning('Solo puedes seleccionar asientos que ya estén bloqueados para desbloquearlos.');
           return;
         }
 
-        const isCurrentlyBlocked = blockedStates.includes(seatEstado);
-        const lockAction = isCurrentlyBlocked ? 'unlock' : 'block';
+        const lockAction = 'unlock';
 
         setCarrito(prev => {
           const safePrev = Array.isArray(prev) ? prev.filter(item => item.lockAction) : [];
@@ -594,7 +593,7 @@ const Boleteria = () => {
           ];
         });
 
-        message.success(isCurrentlyBlocked ? 'Asiento marcado para desbloquear' : 'Asiento marcado para bloquear');
+        message.success('Asiento marcado para desbloquear');
         return;
       }
 
