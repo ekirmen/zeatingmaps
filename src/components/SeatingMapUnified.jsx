@@ -273,7 +273,8 @@ const SeatingMapUnified = ({
   selectedSeats = [],
   lockedSeats = [],
   blockedSeats = null,
-  modoVenta = false
+  modoVenta = false,
+  allowSearchSeatSelection = false
 }) => {
   // Validar y normalizar funcionId
   const normalizedFuncionId = useMemo(() => {
@@ -779,10 +780,10 @@ const SeatingMapUnified = ({
       }
 
       // Verificar si está vendido, reservado o bloqueado permanentemente
-      if (seat.estado === 'vendido' || seat.estado === 'reservado' || seat.estado === 'locked') {
+      if (!allowSearchSeatSelection && (seat.estado === 'vendido' || seat.estado === 'reservado' || seat.estado === 'locked')) {
         logger.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
         if (onSeatError) {
-          const errorMessage = seat.estado === 'vendido' 
+          const errorMessage = seat.estado === 'vendido'
             ? 'Este asiento ya está vendido.' 
             : seat.estado === 'reservado' 
             ? 'Este asiento está reservado.' 
@@ -837,7 +838,12 @@ const SeatingMapUnified = ({
           return lockSeatId === seat._id && lock.session_id !== currentSessionId && lock.status === 'seleccionado';
         });
         
-        if (isSelectedByOtherInStore || isLockedByOther || seat.estado === 'seleccionado_por_otro' || seat.estado === 'vendido' || seat.estado === 'reservado') {
+        if (
+          isSelectedByOtherInStore ||
+          isLockedByOther ||
+          seat.estado === 'seleccionado_por_otro' ||
+          (!allowSearchSeatSelection && (seat.estado === 'vendido' || seat.estado === 'reservado'))
+        ) {
           // Asiento no disponible
           if (onSeatError) {
             const errorMessage = seat.estado === 'vendido' 
@@ -859,7 +865,16 @@ const SeatingMapUnified = ({
       // Llamar a la función de información del asiento si existe
       if (onSeatInfo) onSeatInfo(seat);
     },
-    [onSeatToggle, onSeatInfo, onSeatError, selectedSeatIds, normalizedFuncionId, blockedSeats, modoVenta]
+    [
+      onSeatToggle,
+      onSeatInfo,
+      onSeatError,
+      selectedSeatIds,
+      normalizedFuncionId,
+      blockedSeats,
+      modoVenta,
+      allowSearchSeatSelection
+    ]
   );
 
 
