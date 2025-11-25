@@ -775,7 +775,7 @@ const SeatingMapUnified = ({
 
       // Verificar si está bloqueado localmente (desde props)
       const isLocallyBlocked = blockedSeats && blockedSeats.has && blockedSeats.has(seat._id);
-      if (isLocallyBlocked) {
+      if (isLocallyBlocked && !allowBlockedSeatSelection) {
         logger.warn('❌ [SEATING_MAP] Asiento bloqueado localmente, no se puede seleccionar');
         return;
       }
