@@ -12,15 +12,10 @@ import {
   CrownOutlined,
   SettingOutlined
 } from '@ant-design/icons';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 const UserManagementSimple = () => {
   const [users, setUsers] = useState([]);

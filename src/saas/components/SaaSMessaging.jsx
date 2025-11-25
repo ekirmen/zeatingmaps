@@ -10,16 +10,11 @@ import {
   TeamOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 const SaaSMessaging = () => {
   const [conversations, setConversations] = useState([]);

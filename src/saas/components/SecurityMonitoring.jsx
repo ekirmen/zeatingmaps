@@ -10,16 +10,11 @@ import {
   LockOutlined,
   GlobalOutlined
 } from '@ant-design/icons';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 const SecurityMonitoring = () => {
   const [securityEvents, setSecurityEvents] = useState([]);
