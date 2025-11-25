@@ -19,7 +19,7 @@ export const createSeatHandlers = ({
   handleSeatAnimation,
   abonoSeats
 }) => {
-  const handleSeatClick = (seat, table) => {
+  const handleSeatClick = async (seat, table) => {
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
     const currentFuncIdNum = typeof currentFuncId === 'object'
       ? (currentFuncId?.id || currentFuncId?._id)
@@ -42,8 +42,23 @@ export const createSeatHandlers = ({
       }
 
       // Verificar si ya está bloqueado por otro usuario
-      if (isSeatLocked(seat._id, currentFuncIdNum) && !isSeatLockedByMe(seat._id, currentFuncIdNum)) {
-        message.warning('Este asiento ya está siendo seleccionado por otro usuario');
+      const [isLocked, lockedByMe] = await Promise.all([
+        isSeatLocked(seat._id, currentFuncIdNum),
+        isSeatLockedByMe(seat._id, currentFuncIdNum)
+      ]);
+
+      if (isLocked && !lockedByMe) {
+        try {
+          const unlocked = await unlockSeat(seat._id, currentFuncIdNum, { allowOverrideSession: true });
+          if (unlocked) {
+            message.success('Asiento desbloqueado aunque estaba seleccionado por otro usuario');
+          } else {
+            message.warning('No se pudo desbloquear el asiento seleccionado por otro usuario');
+          }
+        } catch (err) {
+          console.error('❌ Error al forzar desbloqueo de asiento:', err);
+          message.error('Error al desbloquear el asiento de otro usuario');
+        }
         return;
       }
 
