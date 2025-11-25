@@ -5,6 +5,11 @@ import logger from '../../../../utils/logger';
 
 const { Text } = Typography;
 
+const formatCurrency = (value) => {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '0.00';
+};
+
 const ZonesPanel = ({
   selectedFuncion,
   selectedPlantilla,
@@ -584,8 +589,8 @@ const ZonesPanel = ({
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold">${opt.precio.toFixed(2)}</div>
-                      {opt.comision > 0 && <div className="text-gray-500">+${opt.comision.toFixed(2)} comisión</div>}
+                      <div className="font-bold">${formatCurrency(opt.precio)}</div>
+                      {opt.comision > 0 && <div className="text-gray-500">+${formatCurrency(opt.comision)} comisión</div>}
                     </div>
                   </div>
                 );
