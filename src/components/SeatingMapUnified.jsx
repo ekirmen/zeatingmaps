@@ -274,7 +274,8 @@ const SeatingMapUnified = ({
   lockedSeats = [],
   blockedSeats = null,
   modoVenta = false,
-  allowSearchSeatSelection = false
+  allowSearchSeatSelection = false,
+  allowBlockedSeatSelection = false
 }) => {
   // Validar y normalizar funcionId
   const normalizedFuncionId = useMemo(() => {
@@ -780,13 +781,16 @@ const SeatingMapUnified = ({
       }
 
       // Verificar si está vendido, reservado o bloqueado permanentemente
-      if (!allowSearchSeatSelection && (seat.estado === 'vendido' || seat.estado === 'reservado' || seat.estado === 'locked')) {
+      const isLockedSeat = seat.estado === 'locked' || seat.estado === 'bloqueado';
+      const isUnavailable = seat.estado === 'vendido' || seat.estado === 'reservado' || (!allowBlockedSeatSelection && isLockedSeat);
+
+      if (!allowSearchSeatSelection && isUnavailable) {
         logger.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
         if (onSeatError) {
           const errorMessage = seat.estado === 'vendido'
-            ? 'Este asiento ya está vendido.' 
-            : seat.estado === 'reservado' 
-            ? 'Este asiento está reservado.' 
+            ? 'Este asiento ya está vendido.'
+            : seat.estado === 'reservado'
+            ? 'Este asiento está reservado.'
             : 'Este asiento no está disponible.';
           onSeatError(errorMessage);
         }
@@ -873,7 +877,8 @@ const SeatingMapUnified = ({
       normalizedFuncionId,
       blockedSeats,
       modoVenta,
-      allowSearchSeatSelection
+      allowSearchSeatSelection,
+      allowBlockedSeatSelection
     ]
   );
 
