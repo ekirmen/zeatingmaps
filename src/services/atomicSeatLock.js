@@ -101,11 +101,17 @@ class AtomicSeatLockService {
             
             const currentSessionId = this.normalizeSessionIdValue(sessionId);
             const existingSessionId = existingLock.session_id?.toString() || '';
-            
+            const expiresAt = existingLock.expires_at ? new Date(existingLock.expires_at) : null;
+            const isExpired = expiresAt ? expiresAt <= new Date() : false;
+            const isPermanentLock = ['locked', 'bloqueado', 'vendido', 'pagado', 'reservado'].includes(existingLock.status);
+
+            if (isPermanentLock) {
+              throw new Error('Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.');
+            }
+
             // Comparar session_ids normalizados
-            if (currentSessionId === existingSessionId || 
-                (existingLock.expires_at && new Date(existingLock.expires_at) > new Date())) {
-              // Es del mismo usuario o el lock aún es válido, devolver éxito
+            if (currentSessionId === existingSessionId) {
+              // Es del mismo usuario, devolver éxito
               console.log('✅ [ATOMIC_LOCK] Lock existente pertenece al mismo usuario, actualizando...');
               return {
                 success: true,
@@ -113,10 +119,14 @@ class AtomicSeatLockService {
                 alreadyLocked: true,
                 error: null
               };
-            } else {
-              // Es de otro usuario
-              throw new Error('Asiento ya está seleccionado por otro usuario');
             }
+
+            if (isExpired) {
+              throw new Error('El bloqueo existente ya expiró. Intenta seleccionar de nuevo.');
+            }
+
+            // Es de otro usuario y sigue vigente
+            throw new Error('Asiento ya está seleccionado por otro usuario');
           } catch (verifyError) {
             // Si hay error verificando, asumir que es de otro usuario
             if (verifyError.message?.includes('otro usuario')) {
