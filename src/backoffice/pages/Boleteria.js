@@ -187,8 +187,17 @@ const Boleteria = () => {
           // Combinar con información de entradas
           const priceOptionsArray = Object.values(pricesGrouped).map(group => {
             const entrada = entradasData?.find(e => e.id === group.entradaId);
+            const safeMinPrecio = Number.isFinite(group.minPrecio) && group.minPrecio !== Infinity
+              ? group.minPrecio
+              : Number(group.precios?.[0]?.precio ?? 0);
+            const safeMaxPrecio = Number.isFinite(group.maxPrecio) && group.maxPrecio !== -Infinity
+              ? group.maxPrecio
+              : safeMinPrecio;
+
             return {
               ...group,
+              minPrecio: safeMinPrecio,
+              maxPrecio: safeMaxPrecio,
               nombre: entrada?.nombre_entrada || 'Sin nombre',
               tipo: entrada?.tipo_producto || 'General',
               entrada: entrada
@@ -1086,9 +1095,11 @@ const Boleteria = () => {
                       {priceOptions && priceOptions.length > 0 ? (
                         priceOptions.map((option, index) => {
                   const isActive = selectedEntradaId === option.entradaId;
-                  const precioDisplay = option.minPrecio === option.maxPrecio
-                    ? `$${option.minPrecio.toFixed(2)}`
-                    : `$${option.minPrecio.toFixed(2)}-$${option.maxPrecio.toFixed(2)}`;
+                  const minPrecio = Number.isFinite(option.minPrecio) ? option.minPrecio : 0;
+                  const maxPrecio = Number.isFinite(option.maxPrecio) ? option.maxPrecio : minPrecio;
+                  const precioDisplay = minPrecio === maxPrecio
+                    ? `$${minPrecio.toFixed(2)}`
+                    : `$${minPrecio.toFixed(2)}-$${maxPrecio.toFixed(2)}`;
                   
                   // Determinar color según tipo de producto
                   let bgColor = 'bg-gray-200 text-gray-700';
@@ -1187,13 +1198,6 @@ const Boleteria = () => {
               >
                 🛒 {carrito.length}
               </AntButton>
-            </div>
-          )}
-
-          {carrito && carrito.length > 0 && (
-            <div className="hidden md:flex items-center justify-between px-3 py-2 bg-purple-50 text-purple-800 text-sm font-semibold border-t border-purple-100 shadow-inner">
-              <span>{carrito.length === 1 ? 'Tienes 1 asiento listo' : `Tienes ${carrito.length} asientos listos`}</span>
-              <span className="text-xs font-normal text-purple-700">Finaliza la compra en el panel derecho</span>
             </div>
           )}
 
