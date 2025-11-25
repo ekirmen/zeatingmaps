@@ -549,12 +549,14 @@ const Boleteria = () => {
           return;
         }
 
-        if (seatEstado !== 'disponible' && seatEstado !== 'bloqueado' && seatEstado !== 'locked') {
+        const blockedStates = ['bloqueado', 'locked', 'lock'];
+
+        if (seatEstado !== 'disponible' && !blockedStates.includes(seatEstado)) {
           message.warning('Solo se pueden bloquear asientos disponibles o desbloquear los que ya estén bloqueados.');
           return;
         }
 
-        const isCurrentlyBlocked = seatEstado === 'bloqueado' || seatEstado === 'locked';
+        const isCurrentlyBlocked = blockedStates.includes(seatEstado);
         const lockAction = isCurrentlyBlocked ? 'unlock' : 'block';
 
         setCarrito(prev => {
@@ -606,7 +608,7 @@ const Boleteria = () => {
       // En modo boletería simplificado, no verificamos bloqueos aquí
       // Los bloqueos se manejan por separado con botones específicos
 
-      if (seatEstado === 'bloqueado' || seatEstado === 'locked') {
+      if (seatEstado === 'bloqueado' || seatEstado === 'locked' || seatEstado === 'lock') {
         message.warning('Este asiento está bloqueado. Activa el modo bloqueo/desbloqueo para liberarlo.');
         return;
       }
