@@ -29,17 +29,28 @@ const Pay = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentTenant } = useTenant();
-  
+
   // useCartStore almacena los asientos seleccionados en la propiedad `items`
   // En algunos contextos `cart` no existe y producía `undefined`, generando
   // errores al intentar usar `reduce`. Se usa `items` y se asegura un arreglo.
   const { items: cartItems, clearCart, functionId } = useCartStore();
   const { handleError, showSuccess } = useErrorHandler();
-  
+
+  const normalizeAmount = (value) => {
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    return Number.isFinite(value) ? value : 0;
+  };
+
+  const formatCurrency = (value) => normalizeAmount(value).toFixed(2);
+
   // Usar seatLockStore para sincronización en tiempo real
   const { lockedSeats, subscribeToFunction, unsubscribe } = useSeatLockStore();
   const total = (cartItems || []).reduce(
-    (sum, item) => sum + (item.precio || 0),
+    (sum, item) => sum + normalizeAmount(item.precio),
     0
   );
   const [selectedGateway, setSelectedGateway] = useState(null);
@@ -866,7 +877,7 @@ const Pay = () => {
                               </div>
                             </div>
                             <div className="store-text-lg store-font-semibold store-text-primary">
-                              ${total.toFixed(2)}
+                              ${formatCurrency(total)}
                             </div>
                           </div>
                         );
@@ -890,7 +901,7 @@ const Pay = () => {
                             <span className="text-blue-800 break-words">
                               {item.zonaNombre || 'Zona'} - {item.nombreAsiento || `Asiento ${index + 1}`}
                             </span>
-                            <span className="font-medium">${item.precio.toFixed(2)}</span>
+                            <span className="font-medium">${formatCurrency(item.precio)}</span>
                           </div>
                         ))}
                       </div>
@@ -898,7 +909,7 @@ const Pay = () => {
                       {cartItems.map((item, index) => (
                         <div key={index} className="flex flex-col sm:flex-row sm:justify-between store-text-xs md:store-text-sm gap-1">
                           <span className="break-words">{item.nombreEvento}</span>
-                          <span>${item.precio.toFixed(2)}</span>
+                          <span>${formatCurrency(item.precio)}</span>
                         </div>
                       ))}
 
@@ -906,7 +917,7 @@ const Pay = () => {
 
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center store-text-base md:store-text-lg store-font-bold gap-2">
                         <span>Total</span>
-                        <span>${total.toFixed(2)}</span>
+                        <span>${formatCurrency(total)}</span>
                       </div>
 
                       {/* Opciones de Pagos a Plazos - Componente Mejorado */}
@@ -930,7 +941,7 @@ const Pay = () => {
                           <div className="space-y-3">
                             <div className="bg-blue-50 p-3 rounded-lg">
                               <p className="store-text-xs md:store-text-sm text-blue-800 mb-2">
-                                Puedes pagar en {pagosPlazosActivos.cantidadCuotas} cuotas de ${(total / pagosPlazosActivos.cantidadCuotas).toFixed(2)} cada una
+                                Puedes pagar en {pagosPlazosActivos.cantidadCuotas} cuotas de ${formatCurrency(total / pagosPlazosActivos.cantidadCuotas)} cada una
                               </p>
                               <div className="space-y-2">
                                 <label className="block store-text-xs md:store-text-sm font-medium text-gray-700">
@@ -944,7 +955,7 @@ const Pay = () => {
                                   <option value={0}>Todas las cuotas ({pagosPlazosActivos.cantidadCuotas})</option>
                                   {cuotasCalculadas.slice(0, 3).map((cuota, index) => (
                                     <option key={index + 1} value={index + 1}>
-                                      {index + 1} cuota{index + 1 > 1 ? 's' : ''} - ${cuotasCalculadas.slice(0, index + 1).reduce((sum, c) => sum + c.monto, 0).toFixed(2)}
+                                      {index + 1} cuota{index + 1 > 1 ? 's' : ''} - ${formatCurrency(cuotasCalculadas.slice(0, index + 1).reduce((sum, c) => sum + c.monto, 0))}
                                     </option>
                                   ))}
                                 </select>
@@ -952,7 +963,7 @@ const Pay = () => {
                               {cuotasSeleccionadas > 0 && (
                                 <div className="mt-3 p-2 bg-white rounded border border-blue-200">
                                   <p className="store-text-xs md:store-text-sm text-gray-700">
-                                    <strong>Monto a pagar ahora:</strong> ${cuotasCalculadas.slice(0, cuotasSeleccionadas).reduce((sum, c) => sum + c.monto, 0).toFixed(2)}
+                                    <strong>Monto a pagar ahora:</strong> ${formatCurrency(cuotasCalculadas.slice(0, cuotasSeleccionadas).reduce((sum, c) => sum + c.monto, 0))}
                                   </p>
                                   <p className="store-text-xs text-gray-500 mt-1">
                                     Quedarán {pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas} cuota{pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas !== 1 ? 's' : ''} pendiente{pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas !== 1 ? 's' : ''}
@@ -968,11 +979,11 @@ const Pay = () => {
                         <>
                           <div className="flex justify-between store-text-sm store-text-gray-600">
                             <span>Comisión ({selectedGateway.name})</span>
-                            <span>+${pricesWithFees[selectedGateway.id].comision.toFixed(2)}</span>
+                            <span>+${formatCurrency(pricesWithFees[selectedGateway.id].comision)}</span>
                           </div>
                           <div className="flex justify-between items-center store-text-lg store-font-bold store-text-primary">
                             <span>Total Final</span>
-                            <span>${pricesWithFees[selectedGateway.id].precioTotal.toFixed(2)}</span>
+                            <span>${formatCurrency(pricesWithFees[selectedGateway.id].precioTotal)}</span>
                           </div>
                         </>
                       )}

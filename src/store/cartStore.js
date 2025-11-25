@@ -51,6 +51,15 @@ const getLockExpirationMs = () => {
 // const LOCK_EXPIRATION_TIME_MS = getLockExpirationMs(); // No se usa actualmente
 let timer = null;
 
+const toNumberOrZero = (value) => {
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return Number.isFinite(value) ? value : 0;
+};
+
 export const useCartStore = create(
   persist(
     (set, get) => {
@@ -254,12 +263,14 @@ export const useCartStore = create(
             }
             
             // Preparar asiento para el carrito
+            const seatPrecio = toNumberOrZero(seat.precio);
+
             const seatForCart = {
               _id: seatId,
               sillaId: seatId,
               id: seatId,
               nombre: seat.nombre || seat.numero || seatId,
-              precio: seat.precio || 0,
+              precio: seatPrecio,
               zonaId: seat.zonaId || null,
               nombreZona: seat.nombreZona || seat.zona?.nombre || 'Zona',
               mesaId: seat.mesaId || seat.mesa || seat.tableId || null,
@@ -611,8 +622,8 @@ export const useCartStore = create(
 
         calculateTotal: () => {
           const { items, products } = get();
-          const seatsTotal = items.reduce((sum, item) => sum + (item.precio || 0), 0);
-          const productsTotal = products.reduce((sum, item) => sum + (item.precio_total || 0), 0);
+          const seatsTotal = items.reduce((sum, item) => sum + toNumberOrZero(item.precio), 0);
+          const productsTotal = products.reduce((sum, item) => sum + toNumberOrZero(item.precio_total), 0);
           return seatsTotal + productsTotal;
         },
 
@@ -623,12 +634,12 @@ export const useCartStore = create(
 
         getProductsTotal: () => {
           const { products } = get();
-          return products.reduce((sum, item) => sum + (item.precio_total || 0), 0);
+          return products.reduce((sum, item) => sum + toNumberOrZero(item.precio_total), 0);
         },
 
         getSeatsTotal: () => {
           const { items } = get();
-          return items.reduce((sum, item) => sum + (item.precio || 0), 0);
+          return items.reduce((sum, item) => sum + toNumberOrZero(item.precio), 0);
         },
       };
     },
