@@ -280,7 +280,7 @@ const SimpleSeatingMap = ({
       }
 
       const rawPrice = selectedPriceOption?.precio ?? selectedPriceOption?.precioOriginal;
-      const priceValue = Number.isFinite(Number(rawPrice)) ? Number(rawPrice) : 0;
+      const priceValue = Number(rawPrice);
 
       if (!Number.isFinite(priceValue)) {
         message.error('El precio seleccionado no es válido');
