@@ -1509,7 +1509,11 @@ export const useSeatLockStore = create((set, get) => ({
 
     try {
       const parsedOptions = typeof options === 'boolean' ? { allowOverrideSession: options } : (options || {});
-      const { allowOverrideSession = false, sessionIdOverride = null } = parsedOptions;
+      const {
+        allowOverrideSession = false,
+        sessionIdOverride = null,
+        allowForceUnlock = false
+      } = parsedOptions;
 
       const topic = get().channel?.topic;
       const sessionIdFromSource = sessionIdOverride || await getSessionId();
@@ -1569,7 +1573,8 @@ export const useSeatLockStore = create((set, get) => ({
       const result = await atomicSeatLockService.unlockSeatAtomically(
         normalizedSeatId,
         normalizedFuncionId,
-        sessionIdToUse
+        sessionIdToUse,
+        { allowPermanentOverride: allowForceUnlock }
       );
 
       if (!result.success) {

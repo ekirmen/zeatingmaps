@@ -49,7 +49,10 @@ export const createSeatHandlers = ({
 
       if (isLocked && !lockedByMe) {
         try {
-          const unlocked = await unlockSeat(seat._id, currentFuncIdNum, { allowOverrideSession: true });
+          const unlocked = await unlockSeat(seat._id, currentFuncIdNum, {
+            allowOverrideSession: true,
+            allowForceUnlock: true
+          });
           if (unlocked) {
             message.success('Asiento desbloqueado aunque estaba seleccionado por otro usuario');
           } else {
@@ -68,7 +71,7 @@ export const createSeatHandlers = ({
         // Desbloquear asiento
         console.log('🔓 Intentando desbloquear asiento:', seat._id, 'para función:', currentFuncId);
         setCarrito(carrito.filter(i => !(i._id === seat._id && i.isBlocked)));
-        unlockSeat(seat._id, currentFuncIdNum).then((result) => {
+        unlockSeat(seat._id, currentFuncIdNum, { allowForceUnlock: true }).then((result) => {
           console.log('✅ Asiento desbloqueado exitosamente:', result);
           message.success('Asiento desbloqueado');
         }).catch(err => {
