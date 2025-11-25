@@ -18,6 +18,41 @@ class SeatPaymentChecker {
     // Cache para verificaciones batch
     this.batchCache = new Map();
     this.batchCacheTimeout = 30000; // 30 segundos para cache de batch
+
+    // Bandera para evitar llamadas repetidas a un RPC ausente
+    const rpcEnvFlag = process.env.NEXT_PUBLIC_ENABLE_SEAT_PAYMENT_RPC;
+    const envDisablesRpc = typeof rpcEnvFlag === 'string' && ['false', '0', 'off'].includes(rpcEnvFlag.toLowerCase());
+    this.rpcAvailable = !envDisablesRpc;
+    this.rpcDisabledReason = envDisablesRpc ? 'disabled_by_env' : null;
+  }
+
+  disableRpc(reason) {
+    if (!this.rpcAvailable) return;
+
+    this.rpcAvailable = false;
+    this.rpcDisabledReason = reason;
+    console.warn(`[SEAT_PAYMENT_CHECKER] Deshabilitando RPC check_seats_payment_status (${reason}), usando verificación manual`);
+  }
+
+  buildDefaultResultMap(seatIds, source = 'rpc_disabled') {
+    const map = new Map();
+    seatIds.forEach(seatId => {
+      map.set(seatId, {
+        isPaid: false,
+        status: 'disponible',
+        source
+      });
+    });
+    return map;
+  }
+
+  isRpcMissingError(error) {
+    const message = error?.message?.toLowerCase?.() || '';
+    return (
+      error?.code === 'PGRST116' ||
+      message.includes('does not exist') ||
+      message.includes('not found')
+    );
   }
 
   /**
@@ -83,6 +118,11 @@ class SeatPaymentChecker {
     // Normalizar IDs a strings
     const normalizedSeatIds = seatIds.map(id => String(id));
 
+    // Evitar llamadas RPC repetidas si ya sabemos que no existe o está deshabilitado
+    if (!this.rpcAvailable && !options.forceRpc) {
+      return this.buildDefaultResultMap(normalizedSeatIds, this.rpcDisabledReason || 'rpc_disabled');
+    }
+
     // Verificar cache batch primero
     if (useCache) {
       const batchCacheKey = this.getBatchCacheKey(normalizedSeatIds, funcionId, sessionId);
@@ -113,8 +153,8 @@ class SeatPaymentChecker {
           const { data, error } = await Promise.race([checkPromise, timeoutPromise]);
           if (error) {
             // Si la función RPC no existe (404), silenciar el error y continuar
-            if (error.code === 'PGRST116' || error.message?.includes('does not exist') || error.message?.includes('not found')) {
-              console.warn(`[SEAT_PAYMENT_CHECKER] Función RPC check_seats_payment_status no existe, usando verificación manual`);
+            if (this.isRpcMissingError(error)) {
+              this.disableRpc('not_found');
               // Retornar resultados por defecto (no pagados) sin lanzar error
               result = normalizedSeatIds.map(seatId => ({
                 seat_id: seatId,
@@ -148,8 +188,8 @@ class SeatPaymentChecker {
         const { data, error } = await checkPromise;
         if (error) {
           // Si la función RPC no existe (404), silenciar el error y continuar
-          if (error.code === 'PGRST116' || error.message?.includes('does not exist') || error.message?.includes('not found')) {
-            console.warn(`[SEAT_PAYMENT_CHECKER] Función RPC check_seats_payment_status no existe, usando verificación manual`);
+          if (this.isRpcMissingError(error)) {
+            this.disableRpc('not_found');
             // Retornar resultados por defecto (no pagados) sin lanzar error
             result = normalizedSeatIds.map(seatId => ({
               seat_id: seatId,

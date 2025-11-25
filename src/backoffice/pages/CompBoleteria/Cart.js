@@ -3,6 +3,16 @@ import { Button, message, Dropdown, Menu, Card } from 'antd';
 import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
 import downloadTicket from '../../../utils/downloadTicket';
 
+const formatCurrency = (value) => {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '0.00';
+};
+
+const getNumericPrice = (value) => {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
 const Cart = ({
   carrito = [],
   setCarrito,
@@ -41,10 +51,12 @@ const Cart = ({
   );
   const hasLockActions = lockActionItems.length > 0;
 
-  const subtotal = useMemo(
-    () => safeCarrito.reduce((sum, item) => sum + (item.precio || 0), 0),
-    [safeCarrito]
-  );
+  const subtotal = useMemo(() => {
+    return safeCarrito.reduce((sum, item) => {
+      const price = getNumericPrice(item.precio ?? item.precio_total);
+      return sum + price;
+    }, 0);
+  }, [safeCarrito]);
 
   const total = useMemo(() => {
     const commission = selectedAffiliate
@@ -60,10 +72,12 @@ const Cart = ({
         acc[key] = { fecha: item.funcionFecha, items: [] };
       }
       
+      const precioValue = getNumericPrice(item.precio ?? item.precio_total);
+
       // Agrupar por zona y precio
-      const existingGroup = acc[key].items.find(group => 
-        group.zona === item.zona && 
-        group.precio === item.precio &&
+      const existingGroup = acc[key].items.find(group =>
+        group.zona === item.zona &&
+        group.precio === precioValue &&
         group.tipoPrecio === item.tipoPrecio &&
         group.descuentoNombre === item.descuentoNombre
       );
@@ -82,7 +96,7 @@ const Cart = ({
       } else {
         acc[key].items.push({
           zona: item.zona,
-          precio: item.precio,
+          precio: precioValue,
           tipoPrecio: item.tipoPrecio,
           descuentoNombre: item.descuentoNombre,
           cantidad: 1,
@@ -254,7 +268,7 @@ const Cart = ({
                             <span className="text-blue-600">📍</span>
                             <span>{item.zona}</span>
                             <span className="text-gray-400">|</span>
-                            <span className="font-bold text-green-600">${item.precio.toFixed(2)}</span>
+                            <span className="font-bold text-green-600">${formatCurrency(item.precio)}</span>
                           </div>
                           {item.tipoPrecio === 'descuento' && (
                             <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
