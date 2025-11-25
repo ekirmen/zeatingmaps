@@ -764,6 +764,8 @@ export const useSeatLockStore = create((set, get) => ({
             visualState = 'vendido';
           } else if (lock.status === 'reservado') {
             visualState = 'reservado';
+          } else if (lock.status === 'locked') {
+            visualState = 'locked';
           } else if (lock.status === 'seleccionado') {
             // Verificar si es del usuario actual - normalizar session_id para comparar
             const lockSessionId = normalizeSessionId(lock.session_id?.toString() || '');
@@ -927,6 +929,8 @@ export const useSeatLockStore = create((set, get) => ({
                   visualState = 'vendido';
                 } else if (lock.status === 'reservado') {
                   visualState = 'reservado';
+                } else if (lock.status === 'locked') {
+                  visualState = 'locked';
                 } else if (lock.status === 'seleccionado') {
                   const currentSessionIdRaw = localStorage.getItem('anonSessionId');
                   const currentSessionId = normalizeSessionId(currentSessionIdRaw);
@@ -1500,12 +1504,16 @@ export const useSeatLockStore = create((set, get) => ({
   },
 
   // Desbloquear asiento individual usando servicio atómico
-  unlockSeat: async (seatId, overrideFuncionId = null) => {
+  unlockSeat: async (seatId, overrideFuncionId = null, options = {}) => {
     // Iniciando proceso de desbloqueo atómico
-    
+
     try {
+      const parsedOptions = typeof options === 'boolean' ? { allowOverrideSession: options } : (options || {});
+      const { allowOverrideSession = false, sessionIdOverride = null } = parsedOptions;
+
       const topic = get().channel?.topic;
-      const sessionId = normalizeSessionId(await getSessionId());
+      const sessionIdFromSource = sessionIdOverride || await getSessionId();
+      const sessionId = normalizeSessionId(sessionIdFromSource);
 
       const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
       if (!funcionIdRaw) {
@@ -1532,28 +1540,36 @@ export const useSeatLockStore = create((set, get) => ({
         normalizedSessionId
       } = validation;
 
+      let sessionIdToUse = normalizedSessionId;
+
       // Verificar estado local antes del desbloqueo
       const currentSeats = Array.isArray(get().lockedSeats) ? get().lockedSeats : [];
       const seatIdForStore = ensureSeatIdWithPrefix(normalizedSeatId);
       const currentLock = currentSeats.find(
-        s => ensureSeatIdWithPrefix(s.seat_id) === seatIdForStore && normalizeSessionId(s.session_id?.toString() || '') === normalizedSessionId
+        s => ensureSeatIdWithPrefix(s.seat_id) === seatIdForStore
       );
       if (currentLock?.status === 'pagado' || currentLock?.status === 'reservado') {
         console.warn('[SEAT_LOCK] No se puede desbloquear un asiento pagado o reservado');
         return false;
       }
 
+      const lockSessionId = normalizeSessionId(currentLock?.session_id?.toString() || '');
+      if (allowOverrideSession && lockSessionId && lockSessionId !== sessionIdToUse) {
+        console.log('[SEAT_LOCK] Usando session_id del lock para desbloquear:', lockSessionId);
+        sessionIdToUse = lockSessionId;
+      }
+
       console.log('[SEAT_LOCK] Intentando desbloquear asiento:', {
         seat_id: normalizedSeatId,
         funcion_id: normalizedFuncionId,
-        session_id: normalizedSessionId
+        session_id: sessionIdToUse
       });
 
       // Usar servicio atómico para el desbloqueo
       const result = await atomicSeatLockService.unlockSeatAtomically(
         normalizedSeatId,
         normalizedFuncionId,
-        normalizedSessionId
+        sessionIdToUse
       );
 
       if (!result.success) {
@@ -1587,12 +1603,12 @@ export const useSeatLockStore = create((set, get) => ({
           seatIdWithPrefix: seatIdForStore,
           funcionId: normalizedFuncionId,
           status: 'liberado',
-          sessionId: normalizedSessionId,
+          sessionId: sessionIdToUse,
           lock_type: 'seat',
           lock: {
             seat_id: seatIdForStore,
             funcion_id: normalizedFuncionId,
-            session_id: normalizedSessionId,
+            session_id: sessionIdToUse,
             status: 'liberado',
             lock_type: 'seat'
           }
