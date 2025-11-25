@@ -389,14 +389,33 @@ const Pay = () => {
     // Validar que todos los asientos sigan disponibles
     try {
       const unavailableSeats = [];
+      const invalidSeats = [];
       for (const item of cartItems) {
         const seatId = item.sillaId || item.id || item._id;
-        const funcionId = functionId || item.functionId;
-        
+        const funcionId = functionId || item.functionId || item.funcionId;
+
+        // Si no hay IDs consistentes, avisar al cliente que el asiento ya no está disponible
+        if (!seatId || !funcionId) {
+          invalidSeats.push(item.nombre || seatId || 'Asiento sin ID');
+          continue;
+        }
+
+        // Detectar asientos que ya fueron marcados como vendidos/reservados por otro flujo
+        const lockForSeat = lockedSeats.find(lock =>
+          String(lock.seat_id) === String(seatId) &&
+          String(lock.funcion_id) === String(funcionId) &&
+          ['vendido', 'pagado', 'reservado', 'locked'].includes(lock.status)
+        );
+
+        if (lockForSeat) {
+          unavailableSeats.push(item.nombre || seatId);
+          continue;
+        }
+
         if (seatId && funcionId) {
           // Verificar si el asiento está bloqueado por otro usuario
-          const isLockedByOther = lockedSeats.some(lock => 
-            lock.seat_id === seatId && 
+          const isLockedByOther = lockedSeats.some(lock =>
+            lock.seat_id === seatId &&
             lock.funcion_id === funcionId && 
             lock.session_id !== localStorage.getItem('anonSessionId')
           );
@@ -416,8 +435,10 @@ const Pay = () => {
         }
       }
 
-      if (unavailableSeats.length > 0) {
-        message.error(`Los siguientes asientos ya no están disponibles: ${unavailableSeats.join(', ')}. Por favor, actualiza tu selección.`);
+      const seatsWithIssues = [...invalidSeats, ...unavailableSeats];
+
+      if (seatsWithIssues.length > 0) {
+        message.error(`Uno o más asientos ya no están disponibles o fueron modificados: ${seatsWithIssues.join(', ')}. Por favor, selecciona otros asientos para continuar.`);
         return;
       }
     } catch (error) {
