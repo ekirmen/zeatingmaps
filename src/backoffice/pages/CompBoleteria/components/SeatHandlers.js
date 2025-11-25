@@ -39,7 +39,7 @@ export const createSeatHandlers = ({
       }
 
       // Verificar si ya está bloqueado por otro usuario
-      const funcionIdNum = typeof funcionId === 'object' ? (funcionId?.id || funcionId?._id) : funcionId;
+      const funcionIdNum = typeof currentFuncId === 'object' ? (currentFuncId?.id || currentFuncId?._id) : currentFuncId;
       if (isSeatLocked(seat._id, funcionIdNum) && !isSeatLockedByMe(seat._id, funcionIdNum)) {
         message.warning('Este asiento ya está siendo seleccionado por otro usuario');
         return;
