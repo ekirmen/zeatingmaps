@@ -49,6 +49,7 @@ const Boleteria = () => {
   const [searchAllSeats, setSearchAllSeats] = useState(false);
   const [searchAllSeatsLoading, setSearchAllSeatsLoading] = useState(false);
   const [savedCartBeforeSearch, setSavedCartBeforeSearch] = useState(null);
+  const [searchDataLoaded, setSearchDataLoaded] = useState(false);
 
   const {
     selectedClient,
@@ -211,14 +212,14 @@ const Boleteria = () => {
   }, [selectedFuncion?.id, selectedEvent?.id]); // Solo dependencias críticas
 
   const searchExistingSeats = useCallback(async () => {
-    if (!selectedFuncion?.id) return;
+    if (!selectedFuncion?.id || searchAllSeatsLoading) return;
 
     try {
       setSearchAllSeatsLoading(true);
       const funcionId = selectedFuncion.id;
       const { data, error } = await supabase
         .from('payment_transactions')
-        .select(`id, locator, status, amount, currency, user:profiles!user_id(login, full_name, email), seats`)
+        .select(`id, locator, status, amount, currency, user:profiles!user_id(login, nombre, apellido), seats`)
         .eq('funcion_id', funcionId)
         .in('status', ['completed', 'vendido', 'reservado', 'pagado', 'pending', 'reserved']);
 
@@ -248,8 +249,9 @@ const Boleteria = () => {
             return [];
           })();
 
-        const buyerName = payment.user?.full_name || payment.user?.login || 'Comprador sin nombre';
-        const buyerEmail = payment.user?.email || '';
+        const buyerFullName = [payment.user?.nombre, payment.user?.apellido].filter(Boolean).join(' ').trim();
+        const buyerName = buyerFullName || payment.user?.full_name || payment.user?.login || 'Comprador sin nombre';
+        const buyerEmail = payment.user?.login || '';
         const normalizedStatus = (() => {
           const status = (payment.status || '').toLowerCase();
           if (['pagado', 'vendido', 'completed'].includes(status)) return 'vendido';
@@ -288,26 +290,24 @@ const Boleteria = () => {
       if (!savedCartBeforeSearch) {
         setSavedCartBeforeSearch(Array.isArray(carrito) ? carrito : []);
       }
-      setCarrito(allSeats);
+      setSearchDataLoaded(true);
     } catch (error) {
       logger.error('❌ [Boleteria] Error buscando asientos vendidos/reservados:', error);
     } finally {
       setSearchAllSeatsLoading(false);
     }
-  }, [selectedFuncion, setCarrito, carrito, savedCartBeforeSearch]);
+  }, [selectedFuncion, setCarrito, carrito, savedCartBeforeSearch, searchAllSeatsLoading]);
 
   useEffect(() => {
     if (!searchAllSeats) {
       setFoundSeats([]);
+      setSearchDataLoaded(false);
       if (savedCartBeforeSearch) {
         setCarrito(savedCartBeforeSearch);
         setSavedCartBeforeSearch(null);
       }
-      return;
     }
-
-    searchExistingSeats();
-  }, [searchAllSeats, searchExistingSeats, savedCartBeforeSearch, setCarrito]);
+  }, [searchAllSeats, savedCartBeforeSearch, setCarrito]);
 
   const selectedSeatIds = useMemo(() => {
     if (!Array.isArray(carrito)) return [];
@@ -509,6 +509,27 @@ const Boleteria = () => {
       const sillaId = silla._id || silla.id;
       if (!sillaId || !selectedFuncion) return;
 
+      if (searchAllSeats) {
+        if (!searchDataLoaded && !searchAllSeatsLoading) {
+          await searchExistingSeats();
+        }
+
+        const seatName = silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
+        const nombreZona = silla.nombreZona || silla.zona?.nombre || silla?.zona || 'Zona';
+
+        await toggleSeat({
+          ...silla,
+          _id: sillaId,
+          sillaId,
+          nombre: seatName,
+          nombreZona,
+          zona: nombreZona,
+          modoVenta: 'search'
+        });
+
+        return;
+      }
+
       const seatEstado = silla.estado || silla.status || 'disponible';
 
       if (blockMode) {
@@ -674,7 +695,11 @@ const Boleteria = () => {
       lockSeat,
       unlockSeat,
       blockMode,
-      setCarrito
+      setCarrito,
+      searchAllSeats,
+      searchExistingSeats,
+      searchDataLoaded,
+      searchAllSeatsLoading
     ]
   );
 
@@ -1121,6 +1146,7 @@ const Boleteria = () => {
                   foundSeats={foundSeats}
                   selectedSeats={selectedSeatIds}
                   lockedSeats={permanentLocks}
+                  allowSearchSeatSelection={searchAllSeats}
                   modoVenta={true}
                   showPrices={true}
                   showZones={true}
