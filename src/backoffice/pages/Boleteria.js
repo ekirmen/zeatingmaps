@@ -218,7 +218,7 @@ const Boleteria = () => {
       const funcionId = selectedFuncion.id;
       const { data, error } = await supabase
         .from('payment_transactions')
-        .select(`id, locator, status, amount, currency, user:profiles!user_id(login, full_name, email), seats`)
+        .select(`id, locator, status, amount, currency, user:profiles!user_id(login, nombre, apellido), seats`)
         .eq('funcion_id', funcionId)
         .in('status', ['completed', 'vendido', 'reservado', 'pagado', 'pending', 'reserved']);
 
@@ -248,8 +248,9 @@ const Boleteria = () => {
             return [];
           })();
 
-        const buyerName = payment.user?.full_name || payment.user?.login || 'Comprador sin nombre';
-        const buyerEmail = payment.user?.email || '';
+        const buyerFullName = [payment.user?.nombre, payment.user?.apellido].filter(Boolean).join(' ').trim();
+        const buyerName = buyerFullName || payment.user?.full_name || payment.user?.login || 'Comprador sin nombre';
+        const buyerEmail = payment.user?.login || '';
         const normalizedStatus = (() => {
           const status = (payment.status || '').toLowerCase();
           if (['pagado', 'vendido', 'completed'].includes(status)) return 'vendido';
