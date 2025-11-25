@@ -21,6 +21,9 @@ export const createSeatHandlers = ({
 }) => {
   const handleSeatClick = (seat, table) => {
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
+    const currentFuncIdNum = typeof currentFuncId === 'object'
+      ? (currentFuncId?.id || currentFuncId?._id)
+      : currentFuncId;
     const zonaId = seat.zona;
     const zonaObj = Array.isArray(zonas) ? zonas.find(z => (z.id || z._id) === zonaId) : null;
 
@@ -39,8 +42,7 @@ export const createSeatHandlers = ({
       }
 
       // Verificar si ya está bloqueado por otro usuario
-      const funcionIdNum = typeof currentFuncId === 'object' ? (currentFuncId?.id || currentFuncId?._id) : currentFuncId;
-      if (isSeatLocked(seat._id, funcionIdNum) && !isSeatLockedByMe(seat._id, funcionIdNum)) {
+      if (isSeatLocked(seat._id, currentFuncIdNum) && !isSeatLockedByMe(seat._id, currentFuncIdNum)) {
         message.warning('Este asiento ya está siendo seleccionado por otro usuario');
         return;
       }
@@ -51,7 +53,6 @@ export const createSeatHandlers = ({
         // Desbloquear asiento
         console.log('🔓 Intentando desbloquear asiento:', seat._id, 'para función:', currentFuncId);
         setCarrito(carrito.filter(i => !(i._id === seat._id && i.isBlocked)));
-        const currentFuncIdNum = typeof currentFuncId === 'object' ? (currentFuncId?.id || currentFuncId?._id) : currentFuncId;
         unlockSeat(seat._id, currentFuncIdNum).then((result) => {
           console.log('✅ Asiento desbloqueado exitosamente:', result);
           message.success('Asiento desbloqueado');
@@ -62,7 +63,7 @@ export const createSeatHandlers = ({
       } else {
         // Bloquear asiento
         console.log('🔒 Intentando bloquear asiento:', seat._id, 'para función:', currentFuncId);
-        lockSeat(seat._id, currentFuncId).then((result) => {
+        lockSeat(seat._id, currentFuncIdNum).then((result) => {
           console.log('✅ Asiento bloqueado exitosamente:', result);
           setCarrito([
             ...carrito,
@@ -72,7 +73,7 @@ export const createSeatHandlers = ({
               nombreMesa: table.nombre,
               zona: zonaObj?.nombre || seat.zona,
               isBlocked: true,
-              funcionId: currentFuncId,
+              funcionId: currentFuncIdNum,
               funcionFecha: selectedFuncion?.fechaCelebracion,
               precio: 0, // Los asientos bloqueados no tienen precio
             },
@@ -90,7 +91,7 @@ export const createSeatHandlers = ({
     const exists = Array.isArray(carrito) ? carrito.find(
       (i) =>
         i._id === seat._id &&
-        (abonoMode ? i.abonoGroup : i.funcionId === currentFuncId)
+        (abonoMode ? i.abonoGroup : i.funcionId === currentFuncIdNum)
     ) : null;
 
     // Determine pricing from the selected plantilla
@@ -130,13 +131,13 @@ export const createSeatHandlers = ({
       if (abonoMode) {
         const groupId = `abono-${seat._id}`;
         setCarrito(carrito.filter(i => i.abonoGroup !== groupId));
-      } else {
-        setCarrito(
-          carrito.filter(
-            (i) => !(i._id === seat._id && i.funcionId === currentFuncId)
-          )
-        );
-      }
+        } else {
+          setCarrito(
+            carrito.filter(
+              (i) => !(i._id === seat._id && i.funcionId === currentFuncIdNum)
+            )
+          );
+        }
     } else {
       console.log('Agregando asiento al carrito:', seat._id, seat.nombre);
       if (abonoMode) {
@@ -177,7 +178,7 @@ export const createSeatHandlers = ({
           precio: finalPrice,
           tipoPrecio,
           descuentoNombre,
-          funcionId: currentFuncId,
+          funcionId: currentFuncIdNum,
           funcionFecha: selectedFuncion?.fechaCelebracion,
         };
         
