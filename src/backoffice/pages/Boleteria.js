@@ -116,6 +116,7 @@ const Boleteria = () => {
   const [selectedEntradaId, setSelectedEntradaId] = useState(null);
   const [priceOptions, setPriceOptions] = useState([]);
   const [blockMode, setBlockMode] = useState(false);
+  const [blockAction, setBlockAction] = useState(null); // 'block' | 'unlock'
 
   // Eliminar useEffect duplicado - ya está manejado arriba
 
@@ -461,10 +462,9 @@ const Boleteria = () => {
     };
   }, [selectedFuncion]);
 
-  const handleBlockModeToggle = useCallback((checked) => {
-    const safeCart = Array.isArray(carrito) ? carrito : [];
-
-    if (checked) {
+  const handleBlockActionToggle = useCallback(
+    (action) => {
+      const safeCart = Array.isArray(carrito) ? carrito : [];
       const hasSaleItems = safeCart.some(item => !item.lockAction);
 
       if (hasSaleItems) {
@@ -472,14 +472,32 @@ const Boleteria = () => {
         return;
       }
 
+      // Si ya está activo el mismo modo, desactivarlo
+      if (blockMode && blockAction === action) {
+        setBlockMode(false);
+        setBlockAction(null);
+        setCarrito(prev => (Array.isArray(prev) ? prev.filter(item => !item.lockAction) : []));
+        message.info('Modo bloqueo/desbloqueo desactivado.');
+        return;
+      }
+
+      // Limpiar selecciones previas de bloqueo si se cambia la acción
+      const lockItems = safeCart.filter(item => item.lockAction === action);
+      if (lockItems.length !== safeCart.filter(item => item.lockAction).length) {
+        message.info('Se limpiaron los asientos seleccionados del modo anterior.');
+      }
+
+      setCarrito(lockItems);
       setBlockMode(true);
-      message.info('Modo bloqueo/desbloqueo activado. Selecciona asientos para bloquear o desbloquear.');
-    } else {
-      setBlockMode(false);
-      setCarrito(prev => (Array.isArray(prev) ? prev.filter(item => !item.lockAction) : []));
-      message.info('Modo bloqueo/desbloqueo desactivado.');
-    }
-  }, [carrito, setCarrito]);
+      setBlockAction(action);
+      message.info(
+        action === 'block'
+          ? 'Modo BLOQUEAR activado. Selecciona asientos disponibles para bloquearlos.'
+          : 'Modo DESBLOQUEAR activado. Selecciona asientos bloqueados para liberarlos.'
+      );
+    },
+    [blockAction, blockMode, carrito, setCarrito]
+  );
 
   const toggleSeat = useCallback(
     (seatData) => {
@@ -549,18 +567,37 @@ const Boleteria = () => {
           return;
         }
 
-        const blockedStates = ['bloqueado', 'locked', 'lock'];
+        if (!blockAction) {
+          message.warning('Elige si deseas BLOQUEAR o DESBLOQUEAR antes de seleccionar asientos.');
+          return;
+        }
 
-        if (!blockedStates.includes(seatEstado)) {
+        const blockedStates = ['bloqueado', 'locked', 'lock'];
+        const lockAction = blockAction === 'block' ? 'block' : 'unlock';
+
+        if (lockAction === 'block' && blockedStates.includes(seatEstado)) {
+          message.warning('El asiento ya está bloqueado. Usa DESBLOQUEAR si quieres liberarlo.');
+          return;
+        }
+
+        if (lockAction === 'unlock' && !blockedStates.includes(seatEstado)) {
           message.warning('Solo puedes seleccionar asientos que ya estén bloqueados para desbloquearlos.');
           return;
         }
 
-        const lockAction = 'unlock';
-
         setCarrito(prev => {
           const safePrev = Array.isArray(prev) ? prev.filter(item => item.lockAction) : [];
-          const withoutSeat = safePrev.filter(item => (item._id || item.sillaId || item.id) !== sillaId);
+          const existingIndex = safePrev.findIndex(item => (item._id || item.sillaId || item.id) === sillaId);
+
+          // Si el asiento ya está seleccionado con la misma acción, quitarlo
+          if (existingIndex >= 0 && safePrev[existingIndex]?.lockAction === lockAction) {
+            return safePrev.filter((_, index) => index !== existingIndex);
+          }
+
+          // Reemplazar acción si estaba con la contraria
+          const withoutSeat = existingIndex >= 0
+            ? safePrev.filter((_, index) => index !== existingIndex)
+            : safePrev;
 
           if (safePrev.length !== (Array.isArray(prev) ? prev.length : 0)) {
             message.warning('Solo puedes tener asientos de bloqueo/desbloqueo en el carrito.');
@@ -593,7 +630,7 @@ const Boleteria = () => {
           ];
         });
 
-        message.success('Asiento marcado para desbloquear');
+        message.success(lockAction === 'block' ? 'Asiento marcado para bloquear' : 'Asiento marcado para desbloquear');
         return;
       }
 
@@ -705,6 +742,7 @@ const Boleteria = () => {
       lockSeat,
       unlockSeat,
       blockMode,
+      blockAction,
       setCarrito,
       searchAllSeats,
       searchExistingSeats,
@@ -829,6 +867,7 @@ const Boleteria = () => {
 
       setCarrito(prev => (Array.isArray(prev) ? prev.filter(item => !item.lockAction) : []));
       setBlockMode(false);
+      setBlockAction(null);
 
       if (blockedCount || unlockedCount) {
         message.success(`Bloqueados: ${blockedCount}, Desbloqueados: ${unlockedCount}`);
@@ -1080,14 +1119,31 @@ const Boleteria = () => {
                         />
                         Buscar
                       </label>
-                      <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={blockMode}
-                          onChange={(e) => handleBlockModeToggle(e.target.checked)}
-                        />
-                        Bloqueo/Desbloqueo
-                      </label>
+                      <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                        <span className="text-[11px] text-gray-600">Bloqueo:</span>
+                        <button
+                          type="button"
+                          onClick={() => handleBlockActionToggle('block')}
+                          className={`px-2 py-1 rounded border text-[11px] font-semibold ${
+                            blockMode && blockAction === 'block'
+                              ? 'bg-red-100 border-red-400 text-red-700'
+                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          Bloquear
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleBlockActionToggle('unlock')}
+                          className={`px-2 py-1 rounded border text-[11px] font-semibold ${
+                            blockMode && blockAction === 'unlock'
+                              ? 'bg-green-100 border-green-400 text-green-700'
+                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          Desbloquear
+                        </button>
+                      </div>
                       {searchAllSeatsLoading && (
                         <span className="text-[11px] text-blue-600">Buscando asientos vendidos/reservados...</span>
                       )}
@@ -1159,7 +1215,7 @@ const Boleteria = () => {
                   selectedSeats={selectedSeatIds}
                   lockedSeats={permanentLocks}
                   allowSearchSeatSelection={searchAllSeats}
-                  allowBlockedSeatSelection={blockMode}
+                  allowBlockedSeatSelection={blockAction === 'unlock'}
                   modoVenta={true}
                   showPrices={true}
                   showZones={true}
