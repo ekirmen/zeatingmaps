@@ -255,15 +255,21 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
           icon: faLayerGroup,
           permission: 'funciones'
         },
-        { 
-          title: 'Plantillas Cupos', 
-          path: '/dashboard/plantillas-cupos', 
+        {
+          title: 'Plantillas Cupos',
+          path: '/dashboard/plantillas-cupos',
           icon: faChartLine,
           permission: 'plantillas_precios'
         },
-        // { 
-        //   title: 'Filas Virtuales', 
-        //   path: '/dashboard/filas-virtuales', 
+        {
+          title: 'Paquetes',
+          path: '/dashboard/paquetes',
+          icon: faBox,
+          permission: 'paquetes'
+        },
+        // {
+        //   title: 'Filas Virtuales',
+        //   path: '/dashboard/filas-virtuales',
         //   icon: faLayerGroup,
         //   permission: 'funciones'
         // },

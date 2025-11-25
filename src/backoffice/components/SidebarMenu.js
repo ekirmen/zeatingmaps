@@ -118,6 +118,7 @@ const SidebarMenu = ({ collapsed }) => {
         { title: 'Plantillas de precios', path: '/dashboard/plantillas-precios', icon: faPercent },
         { title: 'Productos', path: '/dashboard/productos', icon: faBox },
         { title: 'Plantillas de Productos', path: '/dashboard/plantillas-productos', icon: faBox },
+        { title: 'Paquetes', path: '/dashboard/paquetes', icon: faBox },
         { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: faPercent },
         { title: 'Pasarelas de Pago', path: '/dashboard/payment-gateways', icon: faCreditCard },
         { title: 'IVA', path: '/dashboard/iva', icon: faPercent },

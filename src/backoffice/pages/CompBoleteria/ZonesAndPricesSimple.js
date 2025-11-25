@@ -3,6 +3,7 @@ import { Card, Typography, Space, Tag, Button, Empty, Divider, message, Select }
 import { PlusOutlined } from '@ant-design/icons';
 import { v4 as uuidv4 } from 'uuid';
 import ProductosWidget from './components/ProductosWidget';
+import PaquetesWidget from './components/PaquetesWidget';
 import formatDateString from '../../../utils/formatDateString';
 
 const { Title, Text } = Typography;
@@ -209,6 +210,40 @@ const ZonesAndPricesSimple = ({
     message.success(count === 1 ? `${baseNombre} agregado al carrito` : `${count} unidades agregadas al carrito`);
   }, [selectedFuncion, setCarrito]);
 
+  const handlePackageAdded = useCallback((paquete, quantity) => {
+    if (!setCarrito || !paquete) return;
+    const count = Math.max(1, quantity || 1);
+    const baseNombre = paquete.nombre || 'Paquete';
+    const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
+    const funcionFecha = selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion || null;
+
+    const items = Array.from({ length: count }).map((_, index) => ({
+      _id: `paquete-${paquete.id || index}-${uuidv4()}`,
+      sillaId: null,
+      nombre: baseNombre,
+      nombreZona: 'Paquetes',
+      zona: 'Paquetes',
+      zonaId: `paquete-${paquete.id || baseNombre}`,
+      precio: Number(paquete.precio_especial || paquete.precio || 0),
+      tipoPrecio: 'paquete',
+      descuentoNombre: '',
+      funcionId,
+      funcionFecha,
+      nombreMesa: '',
+      paqueteId: paquete.id,
+      isProduct: true,
+      timestamp: Date.now() + index,
+      modoVenta: 'boleteria',
+    }));
+
+    setCarrito((prev) => {
+      const safePrev = Array.isArray(prev) ? prev : [];
+      return [...safePrev, ...items];
+    });
+
+    message.success(count === 1 ? `${baseNombre} agregado al carrito` : `${count} unidades agregadas al carrito`);
+  }, [selectedFuncion, setCarrito]);
+
   const selectedEventId = selectedEvent?.id || selectedEvent?._id || undefined;
   const selectedFunctionId = selectedFuncion?.id || selectedFuncion?._id || undefined;
   const selectedPlantillaId = selectedPlantilla?.id || selectedPlantilla?._id || undefined;
@@ -384,6 +419,14 @@ const ZonesAndPricesSimple = ({
             <ProductosWidget
               eventoId={selectedEvent?.id || selectedEvent?._id}
               onProductAdded={handleProductAdded}
+            />
+          </Card>
+        )}
+        {selectedEvent && (
+          <Card size="small" title="Paquetes del evento" className="mt-4">
+            <PaquetesWidget
+              eventoId={selectedEvent?.id || selectedEvent?._id}
+              onPackageAdded={handlePackageAdded}
             />
           </Card>
         )}

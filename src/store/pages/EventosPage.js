@@ -15,6 +15,7 @@ import seatPaymentChecker from '../../services/seatPaymentChecker';
 import LazySeatingMap from '../../components/LazySeatingMap';
 import SimpleCart from '../components/SimpleCart';
 import ProductosWidget from '../components/ProductosWidget';
+import PaquetesWidget from '../components/PaquetesWidget';
 import { getZonaColor } from '../../utils/getZonaColor';
 
 const { Option } = Select;
@@ -597,16 +598,27 @@ const EventosPage = ({ forceShowMap = false }) => {
                   </Card>
                 </TabPane>
 
-                <TabPane 
+                <TabPane
                   tab={
                     <span>
                       <ShoppingCartOutlined />
                       Productos
                     </span>
-                  } 
+                  }
                   key="products"
                 >
                   <ProductosWidget eventoId={evento.id} />
+                </TabPane>
+                <TabPane
+                  tab={
+                    <span>
+                      <ShoppingCartOutlined />
+                      Paquetes
+                    </span>
+                  }
+                  key="packages"
+                >
+                  <PaquetesWidget eventoId={evento.id} />
                 </TabPane>
               </Tabs>
             </div>
