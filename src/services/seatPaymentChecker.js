@@ -169,7 +169,15 @@ class SeatPaymentChecker {
                 locator: null
               }));
             } else {
-              throw error;
+              console.error('Error in checkSeatsBatch RPC:', error);
+              this.disableRpc('rpc_error');
+              result = normalizedSeatIds.map(seatId => ({
+                seat_id: seatId,
+                is_paid: false,
+                status: 'error',
+                source: 'rpc_error',
+                locator: null
+              }));
             }
           } else {
             result = data || [];
@@ -204,7 +212,15 @@ class SeatPaymentChecker {
               locator: null
             }));
           } else {
-            throw error;
+            console.error('Error in checkSeatsBatch RPC:', error);
+            this.disableRpc('rpc_error');
+            result = normalizedSeatIds.map(seatId => ({
+              seat_id: seatId,
+              is_paid: false,
+              status: 'error',
+              source: 'rpc_error',
+              locator: null
+            }));
           }
         } else {
           result = data || [];
