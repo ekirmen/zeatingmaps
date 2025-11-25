@@ -49,6 +49,7 @@ const Boleteria = () => {
   const [searchAllSeats, setSearchAllSeats] = useState(false);
   const [searchAllSeatsLoading, setSearchAllSeatsLoading] = useState(false);
   const [savedCartBeforeSearch, setSavedCartBeforeSearch] = useState(null);
+  const [searchDataLoaded, setSearchDataLoaded] = useState(false);
 
   const {
     selectedClient,
@@ -211,7 +212,7 @@ const Boleteria = () => {
   }, [selectedFuncion?.id, selectedEvent?.id]); // Solo dependencias críticas
 
   const searchExistingSeats = useCallback(async () => {
-    if (!selectedFuncion?.id) return;
+    if (!selectedFuncion?.id || searchAllSeatsLoading) return;
 
     try {
       setSearchAllSeatsLoading(true);
@@ -289,26 +290,24 @@ const Boleteria = () => {
       if (!savedCartBeforeSearch) {
         setSavedCartBeforeSearch(Array.isArray(carrito) ? carrito : []);
       }
-      setCarrito(allSeats);
+      setSearchDataLoaded(true);
     } catch (error) {
       logger.error('❌ [Boleteria] Error buscando asientos vendidos/reservados:', error);
     } finally {
       setSearchAllSeatsLoading(false);
     }
-  }, [selectedFuncion, setCarrito, carrito, savedCartBeforeSearch]);
+  }, [selectedFuncion, setCarrito, carrito, savedCartBeforeSearch, searchAllSeatsLoading]);
 
   useEffect(() => {
     if (!searchAllSeats) {
       setFoundSeats([]);
+      setSearchDataLoaded(false);
       if (savedCartBeforeSearch) {
         setCarrito(savedCartBeforeSearch);
         setSavedCartBeforeSearch(null);
       }
-      return;
     }
-
-    searchExistingSeats();
-  }, [searchAllSeats, searchExistingSeats, savedCartBeforeSearch, setCarrito]);
+  }, [searchAllSeats, savedCartBeforeSearch, setCarrito]);
 
   const selectedSeatIds = useMemo(() => {
     if (!Array.isArray(carrito)) return [];
@@ -511,6 +510,10 @@ const Boleteria = () => {
       if (!sillaId || !selectedFuncion) return;
 
       if (searchAllSeats) {
+        if (!searchDataLoaded && !searchAllSeatsLoading) {
+          await searchExistingSeats();
+        }
+
         const seatName = silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
         const nombreZona = silla.nombreZona || silla.zona?.nombre || silla?.zona || 'Zona';
 
@@ -693,7 +696,10 @@ const Boleteria = () => {
       unlockSeat,
       blockMode,
       setCarrito,
-      searchAllSeats
+      searchAllSeats,
+      searchExistingSeats,
+      searchDataLoaded,
+      searchAllSeatsLoading
     ]
   );
 
