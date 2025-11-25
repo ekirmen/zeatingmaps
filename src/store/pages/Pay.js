@@ -404,7 +404,7 @@ const Pay = () => {
         const lockForSeat = lockedSeats.find(lock =>
           String(lock.seat_id) === String(seatId) &&
           String(lock.funcion_id) === String(funcionId) &&
-          ['vendido', 'pagado', 'reservado'].includes(lock.status)
+          ['vendido', 'pagado', 'reservado', 'locked'].includes(lock.status)
         );
 
         if (lockForSeat) {
