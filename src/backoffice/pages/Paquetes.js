@@ -22,7 +22,6 @@ import {
   DeleteOutlined,
   PictureOutlined,
 } from '@ant-design/icons';
-import DashboardLayout from '../components/DashboardLayout';
 import { supabase } from '../../supabaseClient';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
 
@@ -402,10 +401,14 @@ const Paquetes = () => {
   ];
 
   return (
-    <DashboardLayout
-      title="Paquetes"
-      subtitle="Crea paquetes con productos y plantillas de precios específicas por recinto, sala y evento"
-    >
+    <div className="p-2 sm:p-4 lg:p-6">
+      <div className="mb-4">
+        <Title level={2} className="mb-1">Paquetes</Title>
+        <Text type="secondary">
+          Crea paquetes con productos y plantillas de precios específicas por recinto, sala y evento
+        </Text>
+      </div>
+
       <Card className="mb-4">
         <Space wrap>
           <Select
@@ -702,7 +705,7 @@ const Paquetes = () => {
           </Row>
         </Form>
       </Modal>
-    </DashboardLayout>
+    </div>
   );
 };
 
