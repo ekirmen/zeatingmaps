@@ -8,14 +8,9 @@ import {
   BookOutlined,
   TrophyOutlined
 } from '@ant-design/icons';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text, Paragraph } = Typography;
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 const InteractiveTutorials = () => {
   const [tutorials, setTutorials] = useState([]);

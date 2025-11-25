@@ -9,17 +9,12 @@ import {
   ClockCircleOutlined,
   UserOutlined
 } from '@ant-design/icons';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 const { Panel } = Collapse;
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 const DocumentationCenter = () => {
   const [documentation, setDocumentation] = useState([]);
