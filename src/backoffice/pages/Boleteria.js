@@ -1216,6 +1216,7 @@ const Boleteria = () => {
                   lockedSeats={permanentLocks}
                   allowSearchSeatSelection={searchAllSeats}
                   allowBlockedSeatSelection={blockAction === 'unlock'}
+                  disableSeatClickThrottle={blockMode}
                   modoVenta={true}
                   showPrices={true}
                   showZones={true}

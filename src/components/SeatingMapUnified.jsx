@@ -275,7 +275,8 @@ const SeatingMapUnified = ({
   blockedSeats = null,
   modoVenta = false,
   allowSearchSeatSelection = false,
-  allowBlockedSeatSelection = false
+  allowBlockedSeatSelection = false,
+  disableSeatClickThrottle = false
 }) => {
   // Validar y normalizar funcionId
   const normalizedFuncionId = useMemo(() => {
@@ -705,15 +706,20 @@ const SeatingMapUnified = ({
 
       // Throttling: Verificar si el click está permitido
       const seatId = (seat._id || seat.id || seat.sillaId)?.toString();
-      if (!clickThrottle.canClick(seatId)) {
-        if (onSeatError) {
-          onSeatError('Por favor, espera un momento antes de hacer clic nuevamente en este asiento.');
+      if (!disableSeatClickThrottle) {
+        if (!clickThrottle.canClick(seatId)) {
+          if (onSeatError) {
+            onSeatError('Por favor, espera un momento antes de hacer clic nuevamente en este asiento.');
+          }
+          return;
         }
-        return;
-      }
 
-      // Registrar el click para throttling
-      clickThrottle.registerClick(seatId);
+        // Registrar el click para throttling
+        clickThrottle.registerClick(seatId);
+      } else {
+        // Permitir cambios rápidos de acción limpiando el estado previo
+        clickThrottle.clearSeat(seatId);
+      }
 
       // En modo store, verificar estado antes de delegar al onSeatToggle
       if (!modoVenta) {
