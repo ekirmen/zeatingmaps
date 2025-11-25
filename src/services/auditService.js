@@ -11,7 +11,38 @@ class AuditService {
     this.currentUser = null;
     this.tenantId = null;
     this.sessionId = null;
+    this.remoteFetchDisabled = false;
     this.initializeSession();
+  }
+
+  isAuthError(error) {
+    if (!error) return false;
+
+    const message = (error.message || '').toLowerCase();
+    const hint = (error.hint || '').toLowerCase();
+
+    return (
+      error.code === '42501' ||
+      error.code === 'PGRST301' ||
+      error.status === 401 ||
+      error.status === 403 ||
+      message.includes('permission denied') ||
+      message.includes('no api key found') ||
+      message.includes('apikey') ||
+      message.includes('unauthorized') ||
+      message.includes('forbidden') ||
+      hint.includes('no `apikey`') ||
+      hint.includes('api key')
+    );
+  }
+
+  getLocalLogs(limit = 100) {
+    try {
+      const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
+      return localLogs.slice(-limit);
+    } catch {
+      return [];
+    }
   }
 
   /**
@@ -368,6 +399,10 @@ class AuditService {
    */
   async getLogs(filters = {}, limit = 100) {
     try {
+      if (this.remoteFetchDisabled) {
+        return this.getLocalLogs(limit);
+      }
+
       // Verificar que hay una sesión activa
       let session = null;
       try {
@@ -382,12 +417,7 @@ class AuditService {
 
       if (!session) {
         // Si no hay sesión, retornar logs locales si existen
-        try {
-          const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
-          return localLogs.slice(-limit);
-        } catch {
-          return [];
-        }
+        return this.getLocalLogs(limit);
       }
 
       const {
@@ -438,42 +468,18 @@ class AuditService {
 
       if (error) {
         // Detectar errores relacionados con API key, autenticación o permisos
-        const errorMessage = error.message?.toLowerCase() || '';
-        const errorHint = error.hint?.toLowerCase() || '';
-        const isAuthError = 
-          error.code === '42501' || 
-          error.code === 'PGRST301' ||
-          error.status === 401 ||
-          error.status === 403 ||
-          errorMessage.includes('permission denied') ||
-          errorMessage.includes('no api key found') ||
-          errorMessage.includes('apikey') ||
-          errorMessage.includes('unauthorized') ||
-          errorMessage.includes('forbidden') ||
-          errorHint.includes('no `apikey`') ||
-          errorHint.includes('api key');
-
-        if (isAuthError) {
+        if (this.isAuthError(error)) {
+          this.remoteFetchDisabled = true;
           // Si es un error de API key o permisos, retornar logs locales silenciosamente
-          try {
-            const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
-            return localLogs.slice(-limit);
-          } catch {
-            return [];
-          }
+          return this.getLocalLogs(limit);
         }
-        
+
         // Para otros errores, solo lanzar en desarrollo
         if (process.env.NODE_ENV === 'development') {
           throw error;
         }
         // En producción, retornar logs locales como fallback
-        try {
-          const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
-          return localLogs.slice(-limit);
-        } catch {
-          return [];
-        }
+        return this.getLocalLogs(limit);
       }
 
       return data || [];
@@ -483,12 +489,7 @@ class AuditService {
         console.error('[AUDIT] Error obteniendo logs:', error);
       }
       // Intentar retornar logs locales como fallback
-      try {
-        const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
-        return localLogs.slice(-limit);
-      } catch {
-        return [];
-      }
+      return this.getLocalLogs(limit);
     }
   }
 
@@ -497,6 +498,17 @@ class AuditService {
    */
   async getTransactionTrace(transactionId) {
     try {
+      if (this.remoteFetchDisabled) {
+        return this.getLocalLogs().filter(log => {
+          try {
+            const details = JSON.parse(log.details || '{}');
+            return log.resource_id === transactionId || details.transactionId === transactionId;
+          } catch {
+            return log.resource_id === transactionId;
+          }
+        });
+      }
+
       // Verificar que hay una sesión activa
       let session = null;
       try {
@@ -511,19 +523,14 @@ class AuditService {
 
       if (!session) {
         // Si no hay sesión, buscar en logs locales
-        try {
-          const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
-          return localLogs.filter(log => {
-            try {
-              const details = JSON.parse(log.details || '{}');
-              return log.resource_id === transactionId || details.transactionId === transactionId;
-            } catch {
-              return log.resource_id === transactionId;
-            }
-          });
-        } catch {
-          return [];
-        }
+        return this.getLocalLogs().filter(log => {
+          try {
+            const details = JSON.parse(log.details || '{}');
+            return log.resource_id === transactionId || details.transactionId === transactionId;
+          } catch {
+            return log.resource_id === transactionId;
+          }
+        });
       }
 
       const { data, error } = await supabase
@@ -534,42 +541,10 @@ class AuditService {
 
       if (error) {
         // Detectar errores relacionados con API key, autenticación o permisos
-        const isAuthError = 
-          error.code === '42501' || 
-          error.code === 'PGRST301' ||
-          error.status === 401 ||
-          error.status === 403 ||
-          error.message?.toLowerCase().includes('permission denied') ||
-          error.message?.toLowerCase().includes('no api key found') ||
-          error.message?.toLowerCase().includes('apikey') ||
-          error.message?.toLowerCase().includes('unauthorized') ||
-          error.message?.toLowerCase().includes('forbidden');
-
-        if (isAuthError) {
+        if (this.isAuthError(error)) {
+          this.remoteFetchDisabled = true;
           // Si es un error de API key o permisos, buscar en logs locales
-          try {
-            const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
-            return localLogs.filter(log => {
-              try {
-                const details = JSON.parse(log.details || '{}');
-                return log.resource_id === transactionId || details.transactionId === transactionId;
-              } catch {
-                return log.resource_id === transactionId;
-              }
-            });
-          } catch {
-            return [];
-          }
-        }
-        
-        // Para otros errores, solo lanzar en desarrollo
-        if (process.env.NODE_ENV === 'development') {
-          throw error;
-        }
-        // En producción, buscar en logs locales como fallback
-        try {
-          const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
-          return localLogs.filter(log => {
+          return this.getLocalLogs().filter(log => {
             try {
               const details = JSON.parse(log.details || '{}');
               return log.resource_id === transactionId || details.transactionId === transactionId;
@@ -577,9 +552,21 @@ class AuditService {
               return log.resource_id === transactionId;
             }
           });
-        } catch {
-          return [];
         }
+
+        // Para otros errores, solo lanzar en desarrollo
+        if (process.env.NODE_ENV === 'development') {
+          throw error;
+        }
+        // En producción, buscar en logs locales como fallback
+        return this.getLocalLogs().filter(log => {
+          try {
+            const details = JSON.parse(log.details || '{}');
+            return log.resource_id === transactionId || details.transactionId === transactionId;
+          } catch {
+            return log.resource_id === transactionId;
+          }
+        });
       }
 
       return data || [];
@@ -589,19 +576,14 @@ class AuditService {
         console.error('[AUDIT] Error obteniendo trazabilidad:', error);
       }
       // Intentar buscar en logs locales como fallback
-      try {
-        const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
-        return localLogs.filter(log => {
-          try {
-            const details = JSON.parse(log.details || '{}');
-            return log.resource_id === transactionId || details.transactionId === transactionId;
-          } catch {
-            return log.resource_id === transactionId;
-          }
-        });
-      } catch {
-        return [];
-      }
+      return this.getLocalLogs().filter(log => {
+        try {
+          const details = JSON.parse(log.details || '{}');
+          return log.resource_id === transactionId || details.transactionId === transactionId;
+        } catch {
+          return log.resource_id === transactionId;
+        }
+      });
     }
   }
 }
