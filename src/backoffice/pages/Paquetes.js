@@ -73,6 +73,7 @@ const Paquetes = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingPaquete, setEditingPaquete] = useState(null);
+  const [selectedPlantillaId, setSelectedPlantillaId] = useState(null);
 
   const [plantillas, setPlantillas] = useState([]);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
@@ -203,12 +204,14 @@ const Paquetes = () => {
 
   const openCreateModal = () => {
     setEditingPaquete(null);
+    setSelectedPlantillaId(null);
     form.setFieldsValue({ ...emptyPackage, recinto_id: selectedRecinto || null, sala_id: selectedSala || null, evento_id: selectedEvento || null });
     setModalVisible(true);
   };
 
   const openEditModal = (paquete) => {
     setEditingPaquete(paquete);
+    setSelectedPlantillaId(null);
     form.setFieldsValue({
       ...paquete,
       productos_ids: paquete.productos_ids || [],
@@ -274,6 +277,55 @@ const Paquetes = () => {
       evento_id: selectedEvento || plantilla?.evento_id || null,
     });
     setTemplateModalVisible(true);
+  };
+
+  const applyPlantillaToForm = (plantilla, { keepEditing = false } = {}) => {
+    if (!plantilla) return;
+
+    if (!keepEditing) {
+      setEditingPaquete(null);
+    }
+    setSelectedPlantillaId(plantilla.id);
+    setSelectedRecinto(plantilla.recinto_id || null);
+    setSelectedSala(plantilla.sala_id || null);
+    setSelectedEvento(plantilla.evento_id || null);
+
+    form.setFieldsValue({
+      nombre: plantilla.nombre || '',
+      descripcion: plantilla.descripcion || '',
+      precio: plantilla.precio || 0,
+      stock_total: plantilla.stock_total || 0,
+      stock_disponible: plantilla.stock_total || 0,
+      vendidos: 0,
+      imagen_url: plantilla.imagen_url || '',
+      recinto_id: plantilla.recinto_id || null,
+      sala_id: plantilla.sala_id || null,
+      evento_id: plantilla.evento_id || null,
+      productos_ids: [],
+    });
+
+    setModalVisible(true);
+  };
+
+  const handlePlantillaChange = (plantillaId) => {
+    setSelectedPlantillaId(plantillaId || null);
+
+    if (!plantillaId) {
+      const baseValues = editingPaquete
+        ? { ...editingPaquete, productos_ids: editingPaquete.productos_ids || [] }
+        : { ...emptyPackage, recinto_id: selectedRecinto || null, sala_id: selectedSala || null, evento_id: selectedEvento || null };
+
+      form.setFieldsValue({
+        ...baseValues,
+        productos_ids: baseValues.productos_ids || [],
+      });
+      return;
+    }
+
+    const plantilla = plantillas.find((p) => `${p.id}` === `${plantillaId}`);
+    if (plantilla) {
+      applyPlantillaToForm(plantilla, { keepEditing: true });
+    }
   };
 
   const handleSaveTemplate = async () => {
@@ -448,6 +500,7 @@ const Paquetes = () => {
                         <div className="text-sm text-gray-600 mt-1">Precio base: ${Number(plantilla.precio || 0).toFixed(2)}</div>
                       </div>
                       <Space>
+                        <Button onClick={() => applyPlantillaToForm(plantilla)}>Usar</Button>
                         <Button icon={<EditOutlined />} onClick={() => openTemplateModal(plantilla)} />
                       </Space>
                     </div>
@@ -479,6 +532,16 @@ const Paquetes = () => {
         width={720}
       >
         <Form form={form} layout="vertical" initialValues={emptyPackage}>
+          <Form.Item label="Plantilla de paquete">
+            <Select
+              allowClear
+              placeholder="Selecciona una plantilla para precargar"
+              value={selectedPlantillaId}
+              onChange={handlePlantillaChange}
+              options={plantillas.map((p) => ({ value: p.id, label: p.nombre }))}
+            />
+          </Form.Item>
+
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
