@@ -41,7 +41,7 @@ class AtomicSeatLockService {
       
       // Generar locator temporal
       const locator = this.generateTempLocator();
-      
+
       // Preparar datos para la función de base de datos
       const lockData = {
         p_seat_id: normalizedSeatId,
@@ -49,6 +49,31 @@ class AtomicSeatLockService {
         p_session_id: normalizedSessionId,
         p_status: status
       };
+
+      // Validar si ya existe un bloqueo permanente (solo boletería puede liberarlo)
+      const { data: existingLock, error: existingLockError } = await supabase
+        .from('seat_locks')
+        .select('*')
+        .eq('seat_id', normalizedSeatId)
+        .eq('funcion_id', normalizedFuncionId)
+        .eq('lock_type', 'seat')
+        .order('locked_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (existingLockError) {
+        console.warn('⚠️ [ATOMIC_LOCK] No se pudo leer el lock existente antes de bloquear:', existingLockError);
+      }
+
+      if (existingLock) {
+        const expiresAt = existingLock.expires_at ? new Date(existingLock.expires_at) : null;
+        const isExpired = expiresAt ? expiresAt <= new Date() : false;
+        const isPermanentLock = ['locked', 'bloqueado', 'vendido', 'pagado', 'reservado'].includes(existingLock.status);
+
+        if (isPermanentLock && !isExpired) {
+          throw new Error('Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.');
+        }
+      }
 
       // Usar función RPC para bloqueo atómico
       console.log('🔒 [ATOMIC_LOCK] Llamando a lock_seat_atomically con:', lockData);
@@ -101,11 +126,17 @@ class AtomicSeatLockService {
             
             const currentSessionId = this.normalizeSessionIdValue(sessionId);
             const existingSessionId = existingLock.session_id?.toString() || '';
-            
+            const expiresAt = existingLock.expires_at ? new Date(existingLock.expires_at) : null;
+            const isExpired = expiresAt ? expiresAt <= new Date() : false;
+            const isPermanentLock = ['locked', 'bloqueado', 'vendido', 'pagado', 'reservado'].includes(existingLock.status);
+
+            if (isPermanentLock) {
+              throw new Error('Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.');
+            }
+
             // Comparar session_ids normalizados
-            if (currentSessionId === existingSessionId || 
-                (existingLock.expires_at && new Date(existingLock.expires_at) > new Date())) {
-              // Es del mismo usuario o el lock aún es válido, devolver éxito
+            if (currentSessionId === existingSessionId) {
+              // Es del mismo usuario, devolver éxito
               console.log('✅ [ATOMIC_LOCK] Lock existente pertenece al mismo usuario, actualizando...');
               return {
                 success: true,
@@ -113,10 +144,14 @@ class AtomicSeatLockService {
                 alreadyLocked: true,
                 error: null
               };
-            } else {
-              // Es de otro usuario
-              throw new Error('Asiento ya está seleccionado por otro usuario');
             }
+
+            if (isExpired) {
+              throw new Error('El bloqueo existente ya expiró. Intenta seleccionar de nuevo.');
+            }
+
+            // Es de otro usuario y sigue vigente
+            throw new Error('Asiento ya está seleccionado por otro usuario');
           } catch (verifyError) {
             // Si hay error verificando, asumir que es de otro usuario
             if (verifyError.message?.includes('otro usuario')) {
@@ -189,6 +224,31 @@ class AtomicSeatLockService {
 
       if (!normalizedSeatId || !normalizedFuncionId || !normalizedSessionId) {
         throw new Error('Parámetros requeridos: seatId, funcionId, sessionId');
+      }
+
+      // Bloqueos permanentes solo pueden liberarse por boletería
+      const { data: existingLock, error: existingLockError } = await supabase
+        .from('seat_locks')
+        .select('*')
+        .eq('seat_id', normalizedSeatId)
+        .eq('funcion_id', normalizedFuncionId)
+        .eq('lock_type', 'seat')
+        .order('locked_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (existingLockError) {
+        console.warn('⚠️ [ATOMIC_UNLOCK] No se pudo leer el lock existente antes de desbloquear:', existingLockError);
+      }
+
+      if (existingLock) {
+        const expiresAt = existingLock.expires_at ? new Date(existingLock.expires_at) : null;
+        const isExpired = expiresAt ? expiresAt <= new Date() : false;
+        const isPermanentLock = ['locked', 'bloqueado', 'vendido', 'pagado', 'reservado'].includes(existingLock.status);
+
+        if (isPermanentLock && !isExpired) {
+          throw new Error('Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.');
+        }
       }
 
       // Usar función RPC para desbloqueo atómico
