@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { isUuid } from '../utils/isUuid';
 
 /**
  * Servicio optimizado para verificar si asientos ya fueron pagados
@@ -134,12 +135,16 @@ class SeatPaymentChecker {
     }
 
     try {
+      const validUserId = isUuid(sessionId) ? sessionId : null;
+      const parsedFuncionId = Number(funcionId);
+      const normalizedFuncionId = Number.isFinite(parsedFuncionId) ? parsedFuncionId : null;
+
       // Llamar a la función RPC para verificar múltiples asientos
       const checkPromise = supabase.rpc('check_seats_payment_status', {
         p_seat_ids: normalizedSeatIds,
-        p_funcion_id: funcionId,
-        p_session_id: sessionId || null,
-        p_user_id: sessionId || null
+        p_funcion_id: normalizedFuncionId,
+        p_session_id: validUserId,
+        p_user_id: validUserId
       });
 
       // Aplicar timeout si está configurado
