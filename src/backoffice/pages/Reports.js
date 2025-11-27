@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   Row,
@@ -1468,7 +1469,14 @@ const Reports = () => {
                   >
                     Generar Reporte
                   </Button>
-                  <Button 
+                  <Button
+                    type="default"
+                    icon={<CalendarOutlined />}
+                    onClick={handleScheduleReport}
+                  >
+                    Programar este reporte
+                  </Button>
+                  <Button
                     icon={<DownloadOutlined />}
                     onClick={() => setExportModalVisible(true)}
                   >
