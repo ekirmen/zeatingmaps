@@ -90,8 +90,14 @@ const Reports = () => {
   const [deletingReportId, setDeletingReportId] = useState(null);
   const [sendingReportEmail, setSendingReportEmail] = useState(false);
   const [reportEmailPreview, setReportEmailPreview] = useState({ visible: false, subject: '', html: '' });
+  const [reportConfigsAvailable, setReportConfigsAvailable] = useState(true);
+  const [reportConfigsNoticeShown, setReportConfigsNoticeShown] = useState(false);
   const { currentTenant } = useTenant();
   const { user } = useAuth();
+
+  const isMissingReportConfigsTable = (error) =>
+    error?.code === '42P01' ||
+    error?.message?.includes('relation "public.report_configs" does not exist');
 
   const serializeDateRange = (range) => {
     if (!range || range.length !== 2) return null;
@@ -119,6 +125,7 @@ const Reports = () => {
 
   const loadSavedReports = async (showSuccess = false) => {
     if (!currentTenant?.id || !user?.id) return;
+    if (!reportConfigsAvailable) return;
 
     try {
       setSavedReportsLoading(true);
@@ -138,7 +145,18 @@ const Reports = () => {
       }
     } catch (error) {
       console.error('Error loading saved reports', error);
-      message.error('No se pudieron cargar tus reportes guardados');
+      if (isMissingReportConfigsTable(error)) {
+        setReportConfigsAvailable(false);
+        setSavedReports([]);
+        if (!reportConfigsNoticeShown) {
+          message.warning(
+            'Los reportes guardados aún no están disponibles. Un administrador debe ejecutar la migración de report_configs.'
+          );
+          setReportConfigsNoticeShown(true);
+        }
+      } else {
+        message.error('No se pudieron cargar tus reportes guardados');
+      }
     } finally {
       setSavedReportsLoading(false);
     }
@@ -207,6 +225,11 @@ const Reports = () => {
   const handleDeleteSavedReport = async (reportId) => {
     if (!currentTenant?.id || !user?.id) {
       message.error('Selecciona un tenant e inicia sesión para gestionar reportes');
+      return;
+    }
+
+    if (!reportConfigsAvailable) {
+      message.error('No puedes eliminar reportes porque falta la tabla report_configs en la base de datos.');
       return;
     }
 
@@ -306,6 +329,11 @@ const Reports = () => {
         return;
       }
 
+      if (!reportConfigsAvailable) {
+        message.error('Los reportes guardados no están disponibles hasta que se ejecute la migración correspondiente.');
+        return;
+      }
+
       const values = await saveReportForm.validateFields();
       setSavingReport(true);
 
@@ -352,7 +380,12 @@ const Reports = () => {
         return;
       }
       console.error('Error saving report', error);
-      message.error('No se pudo guardar el reporte');
+      if (isMissingReportConfigsTable(error)) {
+        setReportConfigsAvailable(false);
+        message.error('No se pudo guardar el reporte porque falta la tabla report_configs en la base de datos.');
+      } else {
+        message.error('No se pudo guardar el reporte');
+      }
     } finally {
       setSavingReport(false);
     }
