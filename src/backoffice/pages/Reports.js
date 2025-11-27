@@ -95,6 +95,52 @@ const Reports = () => {
   const { currentTenant } = useTenant();
   const { user } = useAuth();
 
+  const normalizeStatus = (status) => {
+    switch (status) {
+      case 'pagado':
+      case 'completed':
+        return 'completed';
+      case 'pendiente':
+      case 'pending':
+        return 'pending';
+      case 'fallido':
+      case 'failed':
+        return 'failed';
+      case 'reservado':
+      case 'reserved':
+        return 'reserved';
+      default:
+        return status || 'unknown';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (normalizeStatus(status)) {
+      case 'completed':
+        return 'green';
+      case 'pending':
+        return 'orange';
+      case 'failed':
+        return 'red';
+      case 'reserved':
+        return 'blue';
+      default:
+        return 'gray';
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    const normalized = normalizeStatus(status);
+    const labels = {
+      completed: 'Completado',
+      pending: 'Pendiente',
+      failed: 'Fallido',
+      reserved: 'Reservado'
+    };
+
+    return labels[normalized] || status?.toString()?.toUpperCase() || 'N/A';
+  };
+
   const isMissingReportConfigsTable = (error) =>
     error?.code === '42P01' ||
     error?.message?.includes('relation "public.report_configs" does not exist');
@@ -445,7 +491,7 @@ const Reports = () => {
           user:profiles!user_id(*),
           event:eventos(*)
         `)
-        .eq('status', 'pagado');
+        .in('status', ['pagado', 'completed']);
 
       if (filters.dateRange) {
         query = query
@@ -524,15 +570,14 @@ const Reports = () => {
         `);
 
       if (filters.status !== 'all') {
-        // Map status values to match database values
         const statusMap = {
-          'completed': 'pagado',
-          'pending': 'pendiente',
-          'failed': 'fallido',
-          'reserved': 'reservado'
+          completed: ['completed', 'pagado'],
+          pending: ['pending', 'pendiente'],
+          failed: ['failed', 'fallido'],
+          reserved: ['reserved', 'reservado']
         };
-        const dbStatus = statusMap[filters.status] || filters.status;
-        query = query.eq('status', dbStatus);
+        const statusFilters = statusMap[filters.status] || [filters.status];
+        query = query.in('status', statusFilters);
       }
 
       if (filters.dateRange) {
@@ -794,11 +839,7 @@ const Reports = () => {
       title: 'Estado',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => (
-        <Tag color={status === 'pagado' ? 'green' : status === 'pendiente' ? 'orange' : status === 'fallido' ? 'red' : 'blue'}>
-          {status?.toUpperCase() || 'N/A'}
-        </Tag>
-      )
+      render: (status) => <Tag color={getStatusColor(status)}>{getStatusLabel(status)}</Tag>
     }
   ];
 
@@ -886,16 +927,7 @@ const Reports = () => {
       title: 'Estado',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => (
-        <Tag color={
-          status === 'pagado' ? 'green' : 
-          status === 'pendiente' ? 'orange' : 
-          status === 'fallido' ? 'red' : 
-          status === 'reservado' ? 'blue' : 'gray'
-        }>
-          {status?.toUpperCase() || 'N/A'}
-        </Tag>
-      )
+      render: (status) => <Tag color={getStatusColor(status)}>{getStatusLabel(status)}</Tag>
     },
     {
       title: 'Fecha',
@@ -1080,7 +1112,7 @@ const Reports = () => {
           newThisWeek: newUsers
         };
       case 'payments':
-        const completedPayments = data.filter(p => p.status === 'pagado').length;
+        const completedPayments = data.filter(p => normalizeStatus(p.status) === 'completed').length;
         const totalAmount = data.reduce((sum, p) => sum + parseFloat(p.monto || 0), 0);
         return {
           total: data.length,
