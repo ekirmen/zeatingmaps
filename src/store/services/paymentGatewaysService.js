@@ -1,11 +1,116 @@
 import { getSupabaseClient } from '../../config/supabase';
+import determineSeatLockStatus from '../../services/ticketing/seatStatus';
 
 const supabase = getSupabaseClient();
 
 const UUID_CANONICAL_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
+const PAYMENT_TABLE_PREFERENCE = ['payment_methods', 'payment_gateways'];
+const paymentTableCache = new Map();
+
+const feeCache = new Map();
+const FEE_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
 const stripInvisibleCharacters = (value) =>
   typeof value === 'string' ? value.replace(/[\u200B-\u200D\uFEFF]/g, '') : value;
+
+const resolvePaymentTable = async (client = supabase) => {
+  if (paymentTableCache.has(client)) {
+    return paymentTableCache.get(client);
+  }
+
+  for (const tableName of PAYMENT_TABLE_PREFERENCE) {
+    try {
+      const { error } = await client.from(tableName).select('id').limit(1);
+
+      // Si no hay error o es "no rows", asumimos que la tabla existe
+      if (!error || error?.code === 'PGRST116') {
+        paymentTableCache.set(client, tableName);
+        return tableName;
+      }
+
+      console.warn(`[PaymentGatewayService] Tabla ${tableName} no disponible, probando fallback`, error);
+    } catch (err) {
+      console.warn(`[PaymentGatewayService] Error resolviendo tabla ${tableName}:`, err);
+    }
+  }
+
+  const fallbackTable = PAYMENT_TABLE_PREFERENCE[0];
+  paymentTableCache.set(client, fallbackTable);
+  return fallbackTable;
+};
+
+const parseJsonSafe = (rawValue) => {
+  if (typeof rawValue !== 'string') return rawValue;
+  try {
+    return JSON.parse(rawValue);
+  } catch (error) {
+    console.warn('[PaymentGatewayService] No se pudo parsear JSON:', error);
+    return rawValue;
+  }
+};
+
+const normalizeFeeStructure = (feeStructure) => {
+  if (!feeStructure) {
+    return { percentage: 0, fixed: 0 };
+  }
+
+  const parsedStructure = typeof feeStructure === 'string' ? parseJsonSafe(feeStructure) : feeStructure;
+  const percentage = parseFloat(parsedStructure?.percentage ?? parsedStructure?.porcentaje ?? 0) || 0;
+  const fixed = parseFloat(parsedStructure?.fixed ?? parsedStructure?.tasa_fija ?? 0) || 0;
+
+  return { percentage, fixed };
+};
+
+const normalizeGatewayConfig = (rawConfig) => {
+  const parsedConfig = parseJsonSafe(rawConfig) || {};
+  const configFeeStructure = parsedConfig?.fee_structure || parsedConfig?.fees;
+
+  return {
+    ...parsedConfig,
+    fee_structure: normalizeFeeStructure(configFeeStructure),
+  };
+};
+
+const normalizeGatewayRecord = (gateway) => {
+  if (!gateway) return null;
+
+  const config = normalizeGatewayConfig(gateway.config);
+  const feeStructure = normalizeFeeStructure(gateway.fee_structure || config?.fee_structure);
+  const supportedCurrencies = gateway.supported_currencies || config.supported_currencies || ['USD'];
+
+  return {
+    ...gateway,
+    config,
+    fee_structure: feeStructure,
+    supported_currencies: supportedCurrencies.map((c) => (typeof c === 'string' ? c.toUpperCase() : c)).filter(Boolean),
+  };
+};
+
+const getCachedFeeProfile = (gatewayId) => {
+  const cached = feeCache.get(gatewayId);
+  if (cached && Date.now() - cached.timestamp < FEE_CACHE_TTL) {
+    return cached.profile;
+  }
+
+  if (cached) {
+    feeCache.delete(gatewayId);
+  }
+
+  return null;
+};
+
+const setCachedFeeProfile = (gatewayId, profile) => {
+  feeCache.set(gatewayId, { profile, timestamp: Date.now() });
+};
+
+export const invalidateGatewayFeeCache = (gatewayId = null) => {
+  if (gatewayId) {
+    feeCache.delete(gatewayId);
+    return;
+  }
+  feeCache.clear();
+};
 
 const sanitizeUuid = (rawValue, { fieldName, required = false } = {}) => {
   if (rawValue === undefined || rawValue === null || rawValue === '') {
@@ -41,15 +146,16 @@ const sanitizeUuid = (rawValue, { fieldName, required = false } = {}) => {
  */
 export const getActivePaymentGateways = async () => {
   try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
-      .from('payment_methods')
+      .from(paymentTable)
       .select('*')
       .eq('enabled', true)
       .order('is_recommended', { ascending: false })
       .order('name');
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeGatewayRecord);
   } catch (error) {
     console.error('Error fetching active payment gateways:', error);
     throw error;
@@ -61,14 +167,15 @@ export const getActivePaymentGateways = async () => {
  */
 export const getAllPaymentGateways = async () => {
   try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
-      .from('payment_methods')
+      .from(paymentTable)
       .select('*')
       .order('is_recommended', { ascending: false })
       .order('name');
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeGatewayRecord);
   } catch (error) {
     console.error('Error fetching all payment gateways:', error);
     throw error;
@@ -80,15 +187,16 @@ export const getAllPaymentGateways = async () => {
  */
 export const getGatewayConfig = async (gatewayId) => {
   try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
-      .from('payment_methods')
-      .select('config')
+      .from(paymentTable)
+      .select('id, config, fee_structure, supported_currencies')
       .eq('id', gatewayId)
       .single();
 
     if (error) throw error;
-    
-    return data?.config || {};
+
+    return normalizeGatewayRecord(data)?.config || {};
   } catch (error) {
     console.error('Error fetching gateway config:', error);
     throw error;
@@ -100,53 +208,112 @@ export const getGatewayConfig = async (gatewayId) => {
  */
 export const getGatewayFees = async (gatewayId) => {
   try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
-      .from('payment_methods')
-      .select('fee_structure')
+      .from(paymentTable)
+      .select('id, fee_structure, config, supported_currencies, name, method_id, type')
       .eq('id', gatewayId)
       .single();
 
     if (error) throw error;
-    
-    const feeStructure = data?.fee_structure || { percentage: 0, fixed: 0 };
+
+    const normalizedGateway = normalizeGatewayRecord(data);
+    const normalizedFees = normalizedGateway?.fee_structure || { percentage: 0, fixed: 0 };
+
     return {
-      tasa_fija: parseFloat(feeStructure.fixed) || 0,
-      porcentaje: parseFloat(feeStructure.percentage) || 0
+      tasa_fija: normalizedFees.fixed,
+      porcentaje: normalizedFees.percentage,
+      supported_currencies: normalizedGateway?.supported_currencies || ['USD'],
+      gateway: normalizedGateway,
     };
   } catch (error) {
     console.error('Error fetching gateway fees:', error);
-    return { tasa_fija: 0, porcentaje: 0 };
+    return { tasa_fija: 0, porcentaje: 0, supported_currencies: ['USD'] };
   }
+};
+
+const getGatewayFeeProfile = async (gatewayId, { forceRefresh = false } = {}) => {
+  if (!gatewayId) {
+    return {
+      tasa_fija: 0,
+      porcentaje: 0,
+      supported_currencies: ['USD'],
+      gateway: null,
+    };
+  }
+
+  if (!forceRefresh) {
+    const cached = getCachedFeeProfile(gatewayId);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  const feeProfile = await getGatewayFees(gatewayId);
+  setCachedFeeProfile(gatewayId, feeProfile);
+  return feeProfile;
 };
 
 /**
  * Calcula el precio con comisiones de una pasarela
  */
-export const calculatePriceWithFees = (basePrice, gatewayId) => {
-  return new Promise(async (resolve) => {
-    try {
-      const fees = await getGatewayFees(gatewayId);
-      const comision = fees.tasa_fija + (basePrice * fees.porcentaje / 100);
-      const totalPrice = basePrice + comision;
-      
-      resolve({
-        precioBase: basePrice,
-        comision: comision,
-        precioTotal: totalPrice,
-        tasa_fija: fees.tasa_fija,
-        porcentaje: fees.porcentaje
-      });
-    } catch (error) {
-      console.error('Error calculating price with fees:', error);
-      resolve({
-        precioBase: basePrice,
-        comision: 0,
-        precioTotal: basePrice,
-        tasa_fija: 0,
-        porcentaje: 0
-      });
+export const calculatePriceWithFees = async (
+  basePrice,
+  gatewayId,
+  { currency = 'USD', forceRefresh = false, allowCurrencyFallback = false } = {}
+) => {
+  const normalizedPrice = Number(basePrice);
+
+  if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
+    throw new Error('basePrice debe ser un número válido y no negativo');
+  }
+
+  const normalizedCurrency = typeof currency === 'string' ? currency.toUpperCase() : 'USD';
+
+  try {
+    const feeProfile = await getGatewayFeeProfile(gatewayId, { forceRefresh });
+    const supportedCurrencies = (feeProfile.supported_currencies || ['USD']).map((c) =>
+      typeof c === 'string' ? c.toUpperCase() : c
+    );
+
+    let resolvedCurrency = normalizedCurrency;
+    if (supportedCurrencies.length > 0 && !supportedCurrencies.includes(normalizedCurrency)) {
+      if (allowCurrencyFallback) {
+        resolvedCurrency = supportedCurrencies[0];
+        console.warn(
+          `[PaymentGatewayService] Moneda ${normalizedCurrency} no soportada, usando ${resolvedCurrency} como fallback`
+        );
+      } else {
+        throw new Error(
+          `La pasarela no soporta la moneda ${normalizedCurrency}. Monedas permitidas: ${supportedCurrencies.join(', ')}`
+        );
+      }
     }
-  });
+
+    const comision = feeProfile.tasa_fija + (normalizedPrice * feeProfile.porcentaje) / 100;
+    const totalPrice = normalizedPrice + comision;
+
+    return {
+      precioBase: normalizedPrice,
+      comision,
+      precioTotal: totalPrice,
+      tasa_fija: feeProfile.tasa_fija,
+      porcentaje: feeProfile.porcentaje,
+      currency: resolvedCurrency,
+      gateway: feeProfile.gateway,
+    };
+  } catch (error) {
+    console.error('Error calculating price with fees:', error);
+    return {
+      precioBase: normalizedPrice,
+      comision: 0,
+      precioTotal: normalizedPrice,
+      tasa_fija: 0,
+      porcentaje: 0,
+      currency: normalizedCurrency,
+      gateway: null,
+    };
+  }
 };
 
 /**
@@ -207,8 +374,9 @@ export const validateGatewayConfig = (gateway) => {
  */
 export const createPaymentGateway = async (gatewayData) => {
   try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
-      .from('payment_gateways')
+      .from(paymentTable)
       .insert([gatewayData])
       .select()
       .single();
@@ -226,8 +394,9 @@ export const createPaymentGateway = async (gatewayData) => {
  */
 export const updatePaymentGateway = async (gatewayId, updates) => {
   try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
-      .from('payment_gateways')
+      .from(paymentTable)
       .update(updates)
       .eq('id', gatewayId)
       .select()
@@ -246,8 +415,9 @@ export const updatePaymentGateway = async (gatewayId, updates) => {
  */
 export const deletePaymentGateway = async (gatewayId) => {
   try {
+    const paymentTable = await resolvePaymentTable();
     const { error } = await supabase
-      .from('payment_gateways')
+      .from(paymentTable)
       .delete()
       .eq('id', gatewayId);
 
@@ -264,8 +434,9 @@ export const deletePaymentGateway = async (gatewayId) => {
  */
 export const getPaymentGatewayByType = async (type) => {
   try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
-      .from('payment_methods')
+      .from(paymentTable)
       .select('*')
       .eq('type', type)
       .eq('enabled', true)
@@ -273,14 +444,7 @@ export const getPaymentGatewayByType = async (type) => {
 
     if (error) throw error;
 
-    if (data) {
-      return {
-        ...data,
-        config: data.config || {}
-      };
-    }
-
-    return null;
+    return normalizeGatewayRecord(data);
   } catch (error) {
     console.error('Error loading payment gateway:', error);
     return null;
@@ -375,17 +539,19 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
       required: false,
     });
 
+    const paymentTable = await resolvePaymentTable(client);
+
     // Get gateway name if gateway_id is provided
     let gatewayName = transactionData.gatewayName || 'unknown';
     if (gatewayId && !transactionData.gatewayName) {
       try {
         const { data: gateway } = await client
-          .from('payment_methods')
-          .select('name')
+          .from(paymentTable)
+          .select('name, method_id')
           .eq('id', gatewayId)
           .single();
         if (gateway) {
-          gatewayName = gateway.name;
+          gatewayName = gateway.name || gateway.method_id || gatewayName;
         }
       } catch (gatewayError) {
         console.warn('Could not fetch gateway name:', gatewayError);
@@ -809,15 +975,102 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
   }
 };
 
+const normalizeStatus = (status) => (typeof status === 'string' ? status.trim().toLowerCase() : '');
+
+const mapSeatLockStatusFromTransaction = ({ transactionStatus, paymentMethod, seatStatusHint = null }) => {
+  if (seatStatusHint) {
+    return seatStatusHint;
+  }
+
+  const normalizedStatus = normalizeStatus(transactionStatus);
+
+  if (
+    [
+      'cancelado',
+      'cancelled',
+      'canceled',
+      'failed',
+      'declined',
+      'rejected',
+      'expired',
+      'refunded',
+      'chargeback',
+      'void',
+      'voided',
+      'error',
+    ].includes(normalizedStatus)
+  ) {
+    return 'disponible';
+  }
+
+  return determineSeatLockStatus({
+    methodId: paymentMethod,
+    transactionStatus,
+    seatStatusHint,
+  });
+};
+
+const reconcileSeatLocksFromTransaction = async (transaction, { seatStatusHint = null } = {}) => {
+  if (!transaction?.locator) {
+    return { updated: 0, reason: 'no_locator' };
+  }
+
+  try {
+    const { data: seatLocks, error } = await supabase
+      .from('seat_locks')
+      .select('id, seat_id, funcion_id, status')
+      .eq('locator', transaction.locator);
+
+    if (error) {
+      throw error;
+    }
+
+    if (!seatLocks || seatLocks.length === 0) {
+      return { updated: 0, reason: 'no_seat_locks' };
+    }
+
+    const targetStatus = mapSeatLockStatusFromTransaction({
+      transactionStatus: transaction.status,
+      paymentMethod: transaction.payment_method || transaction.gateway_name,
+      seatStatusHint,
+    });
+
+    const locksToUpdate = seatLocks.filter((lock) => normalizeStatus(lock.status) !== normalizeStatus(targetStatus));
+    if (locksToUpdate.length === 0) {
+      return { updated: 0, targetStatus, reason: 'already_synced' };
+    }
+
+    const { data: updatedLocks, error: updateError } = await supabase
+      .from('seat_locks')
+      .update({ status: targetStatus, updated_at: new Date().toISOString() })
+      .in('id', locksToUpdate.map((lock) => lock.id))
+      .select('id, seat_id, funcion_id, status');
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return { updated: updatedLocks?.length || 0, targetStatus, locks: updatedLocks };
+  } catch (error) {
+    console.error('[PaymentTransaction] Error reconciliando seat locks:', error);
+    return { updated: 0, error };
+  }
+};
+
 /**
  * Actualiza el estado de una transacción
  */
-export const updatePaymentTransactionStatus = async (transactionId, status, gatewayResponse = null) => {
+export const updatePaymentTransactionStatus = async (
+  transactionId,
+  status,
+  gatewayResponse = null,
+  { seatStatusHint = null, skipSeatReconciliation = false } = {}
+) => {
   try {
     // Obtener la transacción actual para verificar si el status cambió
     const { data: currentTransaction, error: fetchError } = await supabase
       .from('payment_transactions')
-      .select('id, status, locator, user_id')
+      .select('id, status, locator, user_id, payment_method, gateway_name')
       .eq('id', transactionId)
       .single();
 
@@ -825,7 +1078,7 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
       console.warn('⚠️ [UPDATE_STATUS] Error obteniendo transacción actual:', fetchError);
     }
 
-    const updateData = { status };
+    const updateData = { status, updated_at: new Date().toISOString() };
     if (gatewayResponse) {
       updateData.gateway_response = gatewayResponse;
     }
@@ -842,7 +1095,7 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
     // Si el status cambió a 'completed' y antes no lo estaba, enviar correo de pago completo
     const previousStatus = currentTransaction?.status;
     const newStatus = status;
-    const statusChangedToCompleted = (previousStatus !== 'completed' && previousStatus !== 'pagado') && 
+    const statusChangedToCompleted = (previousStatus !== 'completed' && previousStatus !== 'pagado') &&
                                      (newStatus === 'completed' || newStatus === 'pagado');
     
     if (statusChangedToCompleted && data.locator && data.user_id) {
@@ -869,11 +1122,56 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
       }
     }
 
-    return data;
+    const seatReconciliation = skipSeatReconciliation
+      ? null
+      : await reconcileSeatLocksFromTransaction({ ...currentTransaction, ...data, status }, { seatStatusHint });
+
+    return { ...data, seatLocks: seatReconciliation };
   } catch (error) {
     console.error('Error updating payment transaction:', error);
     throw error;
   }
+};
+
+export const processGatewayNotification = async ({
+  transactionId = null,
+  locator = null,
+  status,
+  gatewayResponse = null,
+  seatStatusHint = null,
+} = {}) => {
+  if (!transactionId && !locator) {
+    throw new Error('transactionId o locator son requeridos para procesar la notificación');
+  }
+
+  let transaction = null;
+
+  if (transactionId) {
+    const { data, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('id', transactionId)
+      .single();
+
+    if (error) throw error;
+    transaction = data;
+  } else {
+    const { data, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('locator', locator)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+    transaction = data?.[0] || null;
+  }
+
+  if (!transaction) {
+    throw new Error('No se encontró una transacción para procesar la notificación');
+  }
+
+  return await updatePaymentTransactionStatus(transaction.id, status, gatewayResponse, { seatStatusHint });
 };
 
 /**
