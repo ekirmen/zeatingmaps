@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
   Card, 
   Row, 
@@ -52,6 +53,7 @@ const ScheduledReports = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingReport, setEditingReport] = useState(null);
   const [form] = Form.useForm();
+  const location = useLocation();
 
   const reportTypes = [
     { value: 'sales', label: 'Ventas', icon: <FileTextOutlined /> },
@@ -62,6 +64,8 @@ const ScheduledReports = () => {
     { value: 'promociones', label: 'Promociones', icon: <FileTextOutlined /> },
     { value: 'carritos', label: 'Carritos', icon: <FileTextOutlined /> }
   ];
+
+  const getReportTypeLabel = (value) => reportTypes.find(type => type.value === value)?.label;
 
   const periodicities = [
     { value: 'daily', label: 'Diario' },
@@ -87,6 +91,29 @@ const ScheduledReports = () => {
   useEffect(() => {
     loadData();
   }, [currentTenant?.id]);
+
+  useEffect(() => {
+    const prefill = location.state?.prefillScheduledReport;
+
+    if (!prefill) return;
+
+    const hydratedRange = Array.isArray(prefill.filters?.dateRange)
+      ? prefill.filters.dateRange.map(date => (date ? moment(date) : null))
+      : [];
+
+    const values = {
+      nombre: getReportTypeLabel(prefill.selectedReport)
+        ? `Programación de ${getReportTypeLabel(prefill.selectedReport)}`
+        : 'Nuevo reporte programado',
+      tipo_reporte: prefill.selectedReport,
+      fecha_inicio: hydratedRange?.[0] || null,
+      fecha_fin: hydratedRange?.[1] || null
+    };
+
+    setEditingReport(null);
+    form.setFieldsValue(values);
+    setModalVisible(true);
+  }, [form, location.state]);
 
   const loadData = async () => {
     try {

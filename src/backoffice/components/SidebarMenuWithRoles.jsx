@@ -326,9 +326,24 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         },
         {
           title: 'Reportes',
-          path: '/dashboard/reportes',
           icon: faChartPie,
-          permission: 'reportes'
+          type: 'submenu',
+          submenuId: 'reports-sales',
+          permission: 'reportes',
+          items: [
+            {
+              title: 'Reportes Detallados',
+              path: '/dashboard/reportes',
+              icon: faChartPie,
+              permission: 'reportes'
+            },
+            {
+              title: 'Reportes Programados (acción rápida)',
+              path: '/dashboard/scheduled-reports',
+              icon: faEnvelope,
+              permission: 'reportes'
+            }
+          ]
         },
         { 
           title: 'CRM', 
@@ -528,46 +543,43 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     .filter(Boolean);
 
   // Convertir a formato de menú de Ant Design
-  const menuItems = filteredMenuItems.map(item => {
+  const transformToMenuItems = (items) => items.map(item => {
     if (item.type === 'submenu') {
       return {
         key: item.submenuId,
         icon: <FontAwesomeIcon icon={item.icon} />,
         label: item.title,
-        children: item.items.map(subItem => ({
-          key: subItem.path,
-          icon: <FontAwesomeIcon icon={subItem.icon} />,
-          label: subItem.title,
-          onClick: () => handleMenuClick(subItem.path)
-        }))
-      };
-    } else {
-      return {
-        key: item.path,
-        icon: <FontAwesomeIcon icon={item.icon} />,
-        label: item.title,
-        onClick: () => handleMenuClick(item.path)
+        children: transformToMenuItems(item.items || [])
       };
     }
+
+    return {
+      key: item.path,
+      icon: <FontAwesomeIcon icon={item.icon} />,
+      label: item.title,
+      onClick: () => handleMenuClick(item.path)
+    };
   });
+
+  const menuItems = transformToMenuItems(filteredMenuItems);
   
   // Handler para clicks en el menú (para Drawer)
-  const handleMenuClickWrapper = ({ key }) => {
-    // Buscar el item en el menú
-    for (const item of menuItems) {
-      if (item.key === key) {
-        if (item.onClick) {
-          item.onClick();
-        }
-        return;
-      }
+  const findMenuItemByKey = (items, key) => {
+    for (const item of items) {
+      if (item.key === key) return item;
       if (item.children) {
-        const subItem = item.children.find(c => c.key === key);
-        if (subItem && subItem.onClick) {
-          subItem.onClick();
-          return;
-        }
+        const found = findMenuItemByKey(item.children, key);
+        if (found) return found;
       }
+    }
+
+    return null;
+  };
+
+  const handleMenuClickWrapper = ({ key }) => {
+    const item = findMenuItemByKey(menuItems, key);
+    if (item?.onClick) {
+      item.onClick();
     }
   };
 
