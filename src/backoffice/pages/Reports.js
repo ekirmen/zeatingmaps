@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   Row,
@@ -86,6 +87,7 @@ const Reports = () => {
   const [saveReportForm] = Form.useForm();
   const [sendingReportEmail, setSendingReportEmail] = useState(false);
   const [reportEmailPreview, setReportEmailPreview] = useState({ visible: false, subject: '', html: '' });
+  const navigate = useNavigate();
 
   const serializeDateRange = (range) => {
     if (!range || range.length !== 2) return null;
@@ -99,6 +101,22 @@ const Reports = () => {
     const [start, end] = range;
     if (!start || !end) return null;
     return [dayjs(start), dayjs(end)];
+  };
+
+  const handleScheduleReport = () => {
+    const serializedRange = filters.dateRange?.map(date => date?.toISOString()) || null;
+
+    navigate('/dashboard/scheduled-reports', {
+      state: {
+        prefillScheduledReport: {
+          selectedReport,
+          filters: {
+            ...filters,
+            dateRange: serializedRange
+          }
+        }
+      }
+    });
   };
 
   useEffect(() => {
@@ -1385,7 +1403,14 @@ const Reports = () => {
                   >
                     Generar Reporte
                   </Button>
-                  <Button 
+                  <Button
+                    type="default"
+                    icon={<CalendarOutlined />}
+                    onClick={handleScheduleReport}
+                  >
+                    Programar este reporte
+                  </Button>
+                  <Button
                     icon={<DownloadOutlined />}
                     onClick={() => setExportModalVisible(true)}
                   >

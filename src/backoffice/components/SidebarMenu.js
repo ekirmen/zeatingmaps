@@ -182,7 +182,7 @@ const SidebarMenu = ({ collapsed }) => {
       submenuId: 'reports',
       items: [
         { title: 'Reportes Detallados', path: '/dashboard/reports', icon: faChartBar },
-        { title: 'Programar Correo', path: '/dashboard/scheduled-reports', icon: faEnvelope },
+        { title: 'Reportes Programados (acción rápida)', path: '/dashboard/scheduled-reports', icon: faEnvelope },
         { title: 'Plantillas de Email', path: '/dashboard/email-templates', icon: faPalette }
       ]
     },
