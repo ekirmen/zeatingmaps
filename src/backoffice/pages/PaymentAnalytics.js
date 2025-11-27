@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Card, 
   Row, 
@@ -289,6 +289,7 @@ const PaymentAnalytics = () => {
     const colors = {
       completed: 'green',
       pending: 'orange',
+      reservado: 'gold',
       failed: 'red',
       cancelled: 'gray'
     };
@@ -306,6 +307,33 @@ const PaymentAnalytics = () => {
   const totalRevenue = analyticsData.transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   const totalTransactions = analyticsData.transactions.length;
   const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+  const statusBreakdown = useMemo(() => {
+    const summary = {
+      completed: 0,
+      pending: 0,
+      reservado: 0,
+      failed: 0,
+      cancelled: 0
+    };
+
+    analyticsData.transactions.forEach((tx) => {
+      const key = String(tx.status || '').toLowerCase();
+      if (summary[key] !== undefined) {
+        summary[key] += 1;
+      }
+    });
+
+    return summary;
+  }, [analyticsData.transactions]);
+
+  const operationalRates = useMemo(() => {
+    const total = totalTransactions || 1;
+    return {
+      completion: (statusBreakdown.completed / total) * 100,
+      pendingShare: ((statusBreakdown.pending + statusBreakdown.reservado) / total) * 100,
+      failure: (statusBreakdown.failed / total) * 100,
+    };
+  }, [statusBreakdown, totalTransactions]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -386,6 +414,41 @@ const PaymentAnalytics = () => {
               prefix="$"
               valueStyle={{ color: '#722ed1' }}
             />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Métricas Operativas */}
+      <Row gutter={[16, 16]} className="mb-8">
+        <Col xs={24} sm={8}>
+          <Card>
+            <Statistic
+              title="Pagos confirmados"
+              value={statusBreakdown.completed}
+              suffix={`/ ${totalTransactions || 0}`}
+              valueStyle={{ color: '#3f8600' }}
+            />
+            <Text type="secondary">Tasa de cierre: {operationalRates.completion.toFixed(1)}%</Text>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card>
+            <Statistic
+              title="Pendientes/Reservas"
+              value={statusBreakdown.pending + statusBreakdown.reservado}
+              valueStyle={{ color: '#fa8c16' }}
+            />
+            <Text type="secondary">Participación: {operationalRates.pendingShare.toFixed(1)}%</Text>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card>
+            <Statistic
+              title="Fallidas o canceladas"
+              value={statusBreakdown.failed + statusBreakdown.cancelled}
+              valueStyle={{ color: '#ff4d4f' }}
+            />
+            <Text type="secondary">Revisión: {operationalRates.failure.toFixed(1)}%</Text>
           </Card>
         </Col>
       </Row>
