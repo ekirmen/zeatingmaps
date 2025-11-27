@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Stage, Layer, Circle, Text } from 'react-konva';
+import { Stage, Layer, Circle, Rect, Text, Group } from 'react-konva';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { fetchMapa } from '../services/apistore';
@@ -11,7 +11,7 @@ const SelectSeats = () => {
   const navigate = useNavigate();
   const { refParam } = useRefParam();
   const [mapa, setMapa] = useState(null);
-  const [mesas, setMesas] = useState([]);
+  const [mapElements, setMapElements] = useState([]);
   // Carrito global (persistente)
   const { items, toggleSeat, clearCart } = useCartStore();
   const [loading, setLoading] = useState(true);
@@ -37,13 +37,12 @@ const SelectSeats = () => {
         
         // Si el contenido es un array, procesarlo directamente
         // Si es un objeto, buscar la propiedad 'elementos'
-        const elementos = Array.isArray(data.contenido) 
-          ? data.contenido 
+        const elementos = Array.isArray(data.contenido)
+          ? data.contenido
           : data.contenido.elementos || [];
-        
-        // Filtrar solo las mesas de los elementos
-        const mesasData = elementos.filter(el => el && el.type === 'mesa');
-        setMesas(mesasData);
+
+        // Mantener todos los elementos para soportar zonas, gradas y filas
+        setMapElements(elementos.filter(Boolean));
       } catch (err) {
         setError(err.message);
       } finally {
@@ -124,86 +123,123 @@ const SelectSeats = () => {
       >
         <Stage width={stageSize.width} height={stageSize.height}>
           <Layer>
-            {mesas.map((mesa, mesaIndex) => (
-              <React.Fragment key={mesa._id}>
-                {/* Dibujar la mesa */}
-                <Circle
-                  x={mesa.posicion.x}
-                  y={mesa.posicion.y}
-                  radius={30}
-                  fill="green"
-                  stroke="black"
-                  strokeWidth={2}
-                />
-                <Text
-                  x={mesa.posicion.x - 30}
-                  y={mesa.posicion.y - 10}
-                  text={`Mesa ${mesaIndex + 1}`}
-                  fontSize={14}
-                  fill="black"
-                  align="center"
-                />
+            {mapElements.map((elemento, idx) => {
+              if (elemento.type === 'zona' || elemento.type === 'grada' || elemento.type === 'fila') {
+                const { posicion = {}, dimensiones = {}, nombre, estado, color } = elemento;
+                const overlayColor =
+                  estado === 'reservado'
+                    ? '#666'
+                    : estado === 'pagado'
+                    ? '#999'
+                    : estado === 'bloqueado'
+                    ? 'orange'
+                    : color || 'rgba(0, 128, 0, 0.35)';
 
-                {/* Dibujar las sillas alrededor de la mesa */}
-                {mesa.sillas &&
-                  mesa.sillas.map((silla, sillaIndex) => {
-                    const angle = (sillaIndex * 360) / mesa.sillas.length;
-                    const x =
-                      mesa.posicion.x +
-                      Math.cos((angle * Math.PI) / 180) * 50;
-                    const y =
-                      mesa.posicion.y +
-                      Math.sin((angle * Math.PI) / 180) * 50;
+                return (
+                  <Group key={elemento._id || idx}>
+                    <Rect
+                      x={posicion.x || 0}
+                      y={posicion.y || 0}
+                      width={dimensiones.ancho || dimensiones.width || 60}
+                      height={dimensiones.alto || dimensiones.height || 40}
+                      fill={overlayColor}
+                      stroke="black"
+                      strokeWidth={1}
+                      cornerRadius={4}
+                    />
+                    {nombre && (
+                      <Text
+                        x={(posicion.x || 0) + 6}
+                        y={(posicion.y || 0) + 6}
+                        text={nombre}
+                        fontSize={12}
+                        fill="black"
+                      />
+                    )}
+                  </Group>
+                );
+              }
 
-                    return (
-                      <React.Fragment key={silla._id}>
-                        <Circle
-                          x={x}
-                          y={y}
-                          radius={10}
-                          fill={
-                            (() => {
-                              // Verificar si está bloqueado por mí (sincrónico para renderizado)
-                              const currentSessionId = localStorage.getItem('anonSessionId');
-                              const lockedSeats = useSeatLockStore.getState().lockedSeats;
-                              const isLockedByMe = lockedSeats.some(lock => 
-                                lock.seat_id === silla._id && 
-                                lock.funcion_id === funcionId && 
-                                lock.session_id === currentSessionId
-                              );
-                              return isLockedByMe;
-                            })()
-                              ? 'blue'
-                              : (() => {
-                                  // Verificar si está bloqueado (sincrónico para renderizado)
-                                  const { lockedSeats } = useSeatLockStore.getState();
-                                  return lockedSeats.some(lock => lock.seat_id === silla._id);
-                                })()
-                              ? 'orange'
-                              : silla.estado === 'reservado'
-                              ? '#555'
-                              : silla.estado === 'pagado'
-                              ? 'gray'
-                              : silla.color || 'lightblue'
-                          }
-                          stroke="black"
-                          strokeWidth={1}
-                          onClick={() => toggleSeatSelection(silla)}
-                        />
-                        <Text
-                          x={x - 10}
-                          y={y - 6}
-                          text={`${sillaIndex + 1}`}
-                          fontSize={12}
-                          fill="black"
-                          align="center"
-                          width={20}
-                        />
-                      </React.Fragment>
-                    );
-                  })}
-              </React.Fragment>
-            ))}
+              if (elemento.type === 'mesa') {
+                const mesa = elemento;
+                return (
+                  <React.Fragment key={mesa._id || idx}>
+                    <Circle
+                      x={mesa.posicion?.x || 0}
+                      y={mesa.posicion?.y || 0}
+                      radius={30}
+                      fill={mesa.color || 'green'}
+                      stroke="black"
+                      strokeWidth={2}
+                    />
+                    <Text
+                      x={(mesa.posicion?.x || 0) - 30}
+                      y={(mesa.posicion?.y || 0) - 10}
+                      text={mesa.nombre || `Mesa ${idx + 1}`}
+                      fontSize={14}
+                      fill="black"
+                      align="center"
+                    />
+
+                    {mesa.sillas &&
+                      mesa.sillas.map((silla, sillaIndex) => {
+                        const angle = (sillaIndex * 360) / mesa.sillas.length;
+                        const x =
+                          (mesa.posicion?.x || 0) +
+                          Math.cos((angle * Math.PI) / 180) * 50;
+                        const y =
+                          (mesa.posicion?.y || 0) +
+                          Math.sin((angle * Math.PI) / 180) * 50;
+
+                        const currentSessionId = localStorage.getItem('anonSessionId');
+                        const lockedSeats = useSeatLockStore.getState().lockedSeats;
+                        const isLockedByMe = lockedSeats.some(lock =>
+                          lock.seat_id === silla._id &&
+                          lock.funcion_id === funcionId &&
+                          lock.session_id === currentSessionId
+                        );
+                        const isLocked = lockedSeats.some(lock => lock.seat_id === silla._id);
+                        const seatEstado = silla.estado || useSeatLockStore.getState().getSeatState?.(silla._id);
+
+                        const fillColor = isLockedByMe
+                          ? 'blue'
+                          : isLocked
+                          ? 'orange'
+                          : seatEstado === 'reservado'
+                          ? '#555'
+                          : seatEstado === 'pagado'
+                          ? 'gray'
+                          : silla.color || 'lightblue';
+
+                        return (
+                          <React.Fragment key={silla._id || sillaIndex}>
+                            <Circle
+                              x={x}
+                              y={y}
+                              radius={10}
+                              fill={fillColor}
+                              stroke="black"
+                              strokeWidth={1}
+                              onClick={() => toggleSeatSelection(silla)}
+                            />
+                            <Text
+                              x={x - 10}
+                              y={y - 6}
+                              text={`${sillaIndex + 1}`}
+                              fontSize={12}
+                              fill="black"
+                              align="center"
+                              width={20}
+                            />
+                          </React.Fragment>
+                        );
+                      })}
+                  </React.Fragment>
+                );
+              }
+
+              return null;
+            })}
           </Layer>
         </Stage>
       </div>
