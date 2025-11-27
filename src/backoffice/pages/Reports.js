@@ -53,6 +53,8 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { supabase } from '../../supabaseClient';
+import { useTenant } from '../../contexts/TenantContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { TenantEmailConfigService } from '../services/tenantEmailConfigService';
 import { showEmailDiagnosticsModal } from '../utils/emailDiagnostics';
 
@@ -83,11 +85,15 @@ const Reports = () => {
   const [exportForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState('overview');
   const [savedReports, setSavedReports] = useState([]);
+  const [savedReportsLoading, setSavedReportsLoading] = useState(false);
   const [saveModalVisible, setSaveModalVisible] = useState(false);
   const [saveReportForm] = Form.useForm();
+  const [savingReport, setSavingReport] = useState(false);
+  const [deletingReportId, setDeletingReportId] = useState(null);
   const [sendingReportEmail, setSendingReportEmail] = useState(false);
   const [reportEmailPreview, setReportEmailPreview] = useState({ visible: false, subject: '', html: '' });
-  const navigate = useNavigate();
+  const { currentTenant } = useTenant();
+  const { user } = useAuth();
 
   const serializeDateRange = (range) => {
     if (!range || range.length !== 2) return null;
@@ -103,45 +109,51 @@ const Reports = () => {
     return [dayjs(start), dayjs(end)];
   };
 
-  const handleScheduleReport = () => {
-    const serializedRange = filters.dateRange?.map(date => date?.toISOString()) || null;
+  const normalizeReportConfig = (config) => ({
+    id: config.id,
+    name: config.name,
+    selectedReport: config.selected_report || config.selectedReport || 'sales',
+    dateMode: config.date_mode || config.dateMode || 'fixed',
+    language: config.language || 'es_MX',
+    filters: config.filters || {},
+    schedule: config.schedule || {}
+  });
 
-    navigate('/dashboard/scheduled-reports', {
-      state: {
-        prefillScheduledReport: {
-          selectedReport,
-          filters: {
-            ...filters,
-            dateRange: serializedRange
-          }
-        }
-      }
-    });
-  };
+  const loadSavedReports = async (showSuccess = false) => {
+    if (!currentTenant?.id || !user?.id) return;
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
     try {
-      const storedReports = localStorage.getItem('dashboard.savedReports');
-      if (storedReports) {
-        const parsed = JSON.parse(storedReports);
-        if (Array.isArray(parsed)) {
-          setSavedReports(parsed);
-        }
+      setSavedReportsLoading(true);
+      const { data, error } = await supabase
+        .from('report_configs')
+        .select('*')
+        .eq('tenant_id', currentTenant.id)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setSavedReports((data || []).map(normalizeReportConfig));
+
+      if (showSuccess) {
+        message.success('Reportes sincronizados con el servidor');
       }
     } catch (error) {
       console.error('Error loading saved reports', error);
+      message.error('No se pudieron cargar tus reportes guardados');
+    } finally {
+      setSavedReportsLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem('dashboard.savedReports', JSON.stringify(savedReports));
-    } catch (error) {
-      console.error('Error storing saved reports', error);
+    if (!currentTenant?.id || !user?.id) {
+      setSavedReports([]);
+      return;
     }
-  }, [savedReports]);
+
+    loadSavedReports();
+  }, [currentTenant?.id, user?.id]);
 
   const weekDayOptions = [
     { label: 'L', value: 1 },
@@ -194,9 +206,31 @@ const Reports = () => {
     }
   };
 
-  const handleDeleteSavedReport = (reportId) => {
-    setSavedReports(prev => prev.filter(report => report.id !== reportId));
-    message.info('Reporte eliminado de tus favoritos');
+  const handleDeleteSavedReport = async (reportId) => {
+    if (!currentTenant?.id || !user?.id) {
+      message.error('Selecciona un tenant e inicia sesión para gestionar reportes');
+      return;
+    }
+
+    try {
+      setDeletingReportId(reportId);
+      const { error } = await supabase
+        .from('report_configs')
+        .delete()
+        .eq('id', reportId)
+        .eq('tenant_id', currentTenant.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setSavedReports(prev => prev.filter(report => report.id !== reportId));
+      message.success('Reporte eliminado del servidor');
+    } catch (error) {
+      console.error('Error deleting saved report', error);
+      message.error('No se pudo eliminar el reporte');
+    } finally {
+      setDeletingReportId(null);
+    }
   };
 
   const handleLoadSavedReport = (reportId) => {
@@ -222,7 +256,7 @@ const Reports = () => {
   };
 
   const handleSavedReportsMenuClick = ({ key }) => {
-    if (key === 'empty') return;
+    if (key === 'empty' || key === 'loading') return;
     handleLoadSavedReport(key);
   };
 
@@ -269,7 +303,13 @@ const Reports = () => {
 
   const handleSaveReport = async () => {
     try {
+      if (!currentTenant?.id || !user?.id) {
+        message.error('Selecciona un tenant e inicia sesión para guardar el reporte');
+        return;
+      }
+
       const values = await saveReportForm.validateFields();
+      setSavingReport(true);
 
       const serializedFilters = {
         ...filters,
@@ -279,26 +319,35 @@ const Reports = () => {
       const scheduleEnabled = values.scheduled;
       const scheduleRange = values.scheduleRange ? serializeDateRange(values.scheduleRange) : null;
 
-      const newReport = {
-        id: `report-${Date.now()}`,
-        name: values.name,
-        selectedReport,
-        dateMode: values.dateMode,
-        language: values.language,
-        filters: serializedFilters,
-        schedule: {
-          enabled: scheduleEnabled,
-          dateRange: scheduleEnabled ? scheduleRange : null,
-          emails: scheduleEnabled ? values.emails : '',
-          periodicity: scheduleEnabled ? values.periodicity : 'd',
-          weekDays: scheduleEnabled && values.periodicity === 's' ? values.weekDays || [] : [],
-          dayOfMonth: scheduleEnabled && values.periodicity === 'm' ? values.dayOfMonth || 1 : 1,
-          time: scheduleEnabled && values.time ? values.time.format('HH:mm') : null
-        }
+      const schedule = {
+        enabled: scheduleEnabled,
+        dateRange: scheduleEnabled ? scheduleRange : null,
+        emails: scheduleEnabled ? values.emails : '',
+        periodicity: scheduleEnabled ? values.periodicity : 'd',
+        weekDays: scheduleEnabled && values.periodicity === 's' ? values.weekDays || [] : [],
+        dayOfMonth: scheduleEnabled && values.periodicity === 'm' ? values.dayOfMonth || 1 : 1,
+        time: scheduleEnabled && values.time ? values.time.format('HH:mm') : null
       };
 
-      setSavedReports(prev => [...prev, newReport]);
-      message.success('Reporte guardado correctamente');
+      const { data, error } = await supabase
+        .from('report_configs')
+        .insert({
+          tenant_id: currentTenant.id,
+          user_id: user.id,
+          name: values.name,
+          selected_report: selectedReport,
+          date_mode: values.dateMode,
+          language: values.language,
+          filters: serializedFilters,
+          schedule
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setSavedReports(prev => [normalizeReportConfig(data), ...prev]);
+      message.success('Reporte guardado correctamente en Supabase');
       setSaveModalVisible(false);
     } catch (error) {
       if (error?.errorFields) {
@@ -306,38 +355,55 @@ const Reports = () => {
       }
       console.error('Error saving report', error);
       message.error('No se pudo guardar el reporte');
+    } finally {
+      setSavingReport(false);
     }
   };
 
-  const savedReportsMenuItems = savedReports.length
-    ? savedReports.map(report => ({
-        key: report.id,
-        label: (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>{report.name}</span>
-            <Button
-              type="link"
-              danger
-              size="small"
-              icon={<DeleteOutlined />}
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                handleDeleteSavedReport(report.id);
-              }}
-            >
-              Eliminar
-            </Button>
-          </div>
-        )
-      }))
-    : [
+  const savedReportsMenuItems = savedReportsLoading
+    ? [
         {
-          key: 'empty',
+          key: 'loading',
           disabled: true,
-          label: <Text type="secondary">No hay reportes guardados</Text>
+          label: (
+            <Space size="small">
+              <Spin size="small" />
+              <Text type="secondary">Cargando reportes...</Text>
+            </Space>
+          )
         }
-      ];
+      ]
+    : savedReports.length
+      ? savedReports.map(report => ({
+          key: report.id,
+          label: (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>{report.name}</span>
+              <Button
+                type="link"
+                danger
+                size="small"
+                icon={<DeleteOutlined />}
+                loading={deletingReportId === report.id}
+                disabled={savedReportsLoading}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  handleDeleteSavedReport(report.id);
+                }}
+              >
+                Eliminar
+              </Button>
+            </div>
+          )
+        }))
+      : [
+          {
+            key: 'empty',
+            disabled: true,
+            label: <Text type="secondary">No hay reportes guardados</Text>
+          }
+        ];
 
   const loadSalesReport = async () => {
     try {
@@ -1783,6 +1849,7 @@ const Reports = () => {
         open={saveModalVisible}
         onCancel={() => setSaveModalVisible(false)}
         onOk={handleSaveReport}
+        confirmLoading={savingReport}
         okText="Guardar"
         cancelText="Cancelar"
         destroyOnClose
