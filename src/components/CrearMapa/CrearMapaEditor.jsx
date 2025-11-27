@@ -331,6 +331,10 @@ const CrearMapaEditor = ({
       } else {
         console.log('🖼️ [CREAR_MAPA_EDITOR] No hay elementos para cargar');
       }
+
+      if (Array.isArray(contenidoParseado?.zonas)) {
+        setZonas(contenidoParseado.zonas);
+      }
     } else {
       console.log('🖼️ [CREAR_MAPA_EDITOR] No hay contenido en el mapa');
     }
@@ -796,6 +800,177 @@ const CrearMapaEditor = ({
     message.success(`Elementos ajustados a cuadrícula de ${gridSize}px`);
   }, [snapToCustomGrid, gridSize, elements, addToHistory]);
 
+  const handleAddTexto = useCallback(() => {
+    const nuevoTexto = {
+      _id: `texto_${Date.now()}`,
+      type: 'texto',
+      posicion: { x: 200, y: 200 },
+      contenido: 'Nuevo texto',
+      fontSize: 16,
+      fill: '#111827'
+    };
+
+    setElements(prev => [...prev, nuevoTexto]);
+    addToHistory([...elements, nuevoTexto], 'Agregar texto');
+    message.success('Texto agregado al mapa');
+  }, [addToHistory, elements]);
+
+  const handleAddArea = useCallback(() => {
+    const nuevaArea = {
+      _id: `area_${Date.now()}`,
+      type: 'area',
+      posicion: { x: 150, y: 150 },
+      width: 220,
+      height: 140,
+      fill: 'rgba(52, 152, 219, 0.15)',
+      stroke: '#3498db'
+    };
+
+    setElements(prev => [...prev, nuevaArea]);
+    addToHistory([...elements, nuevaArea], 'Agregar área destacada');
+    message.success('Área agregada');
+  }, [addToHistory, elements]);
+
+  const scaleSelectedElements = useCallback((scaleFactor) => {
+    if (selectedIds.length === 0) {
+      message.warning('Selecciona elementos para escalar');
+      return;
+    }
+
+    const updatedElements = elements.map(el => {
+      if (selectedIds.includes(el._id)) {
+        const currentScale = el.scale || 1;
+        const newScale = currentScale * scaleFactor;
+        return {
+          ...el,
+          scale: newScale,
+          width: el.width ? el.width * scaleFactor : el.width,
+          height: el.height ? el.height * scaleFactor : el.height,
+          radius: el.radius ? el.radius * scaleFactor : el.radius,
+        };
+      }
+      return el;
+    });
+
+    setElements(updatedElements);
+    addToHistory(updatedElements, `Escalar ${selectedIds.length} elemento(s)`);
+    message.success('Elementos escalados');
+  }, [addToHistory, elements, selectedIds]);
+
+  const changeSelectedSeatsState = useCallback((newState) => {
+    const updatedElements = elements.map(el => {
+      if (selectedIds.includes(el._id) && el.type === 'silla') {
+        return {
+          ...el,
+          state: newState,
+          fill: seatStates[newState]?.fill || el.fill,
+          stroke: seatStates[newState]?.stroke || el.stroke,
+          opacity: seatStates[newState]?.opacity ?? el.opacity,
+        };
+      }
+      return el;
+    });
+
+    setElements(updatedElements);
+    addToHistory(updatedElements, 'Actualizar estado de sillas seleccionadas');
+    message.success('Estado aplicado a las sillas seleccionadas');
+  }, [addToHistory, elements, seatStates, selectedIds]);
+
+  const changeMesaSeatsState = useCallback((newState) => {
+    const mesaSeleccionada = elements.find(el => selectedIds.includes(el._id) && el.type === 'mesa');
+    if (!mesaSeleccionada) {
+      message.warning('Selecciona una mesa para actualizar sus sillas');
+      return;
+    }
+
+    const updatedElements = elements.map(el => {
+      if (el.parentId === mesaSeleccionada._id && el.type === 'silla') {
+        return {
+          ...el,
+          state: newState,
+          fill: seatStates[newState]?.fill || el.fill,
+          stroke: seatStates[newState]?.stroke || el.stroke,
+          opacity: seatStates[newState]?.opacity ?? el.opacity,
+        };
+      }
+      return el;
+    });
+
+    setElements(updatedElements);
+    addToHistory(updatedElements, 'Actualizar estado de sillas por mesa');
+    message.success('Estado actualizado para las sillas de la mesa');
+  }, [addToHistory, elements, seatStates, selectedIds]);
+
+  const createManualConnection = useCallback(() => {
+    if (selectedIds.length !== 2) {
+      message.warning('Selecciona exactamente dos sillas para conectarlas');
+      return;
+    }
+
+    const [startSeat, endSeat] = selectedIds.map(id => elements.find(el => el._id === id));
+    if (!startSeat || !endSeat || startSeat.type !== 'silla' || endSeat.type !== 'silla') {
+      message.error('Solo se pueden conectar sillas');
+      return;
+    }
+
+    const nuevaConexion = {
+      _id: `conexion_${Date.now()}`,
+      type: 'conexion',
+      startSeatId: startSeat._id,
+      endSeatId: endSeat._id,
+      stroke: '#8b93a6',
+      strokeWidth: 2,
+      opacity: 0.6,
+      dash: connectionStyle === 'dashed' ? [6, 4] : undefined,
+    };
+
+    setElements(prev => [...prev, nuevaConexion]);
+    addToHistory([...elements, nuevaConexion], 'Crear conexión manual');
+    message.success('Conexión creada');
+  }, [addToHistory, connectionStyle, elements, selectedIds]);
+
+  const removeConnections = useCallback(() => {
+    const seatsSeleccionados = selectedIds.filter(id => elements.find(el => el._id === id && el.type === 'silla'));
+    if (seatsSeleccionados.length === 0) {
+      message.warning('Selecciona sillas para eliminar sus conexiones');
+      return;
+    }
+
+    const elementosFiltrados = elements.filter(el => {
+      if (el.type !== 'conexion') return true;
+      return !seatsSeleccionados.includes(el.startSeatId) && !seatsSeleccionados.includes(el.endSeatId);
+    });
+
+    setElements(elementosFiltrados);
+    addToHistory(elementosFiltrados, 'Eliminar conexiones manuales');
+    message.success('Conexiones eliminadas');
+  }, [addToHistory, elements, selectedIds]);
+
+  const handleCrearSeccion = useCallback(() => {
+    if (sectionPoints.length >= 2) {
+      const xs = sectionPoints.map(p => p.x);
+      const ys = sectionPoints.map(p => p.y);
+      const nuevaSeccion = {
+        _id: `seccion_${Date.now()}`,
+        type: 'area',
+        posicion: { x: Math.min(...xs), y: Math.min(...ys) },
+        width: Math.max(...xs) - Math.min(...xs),
+        height: Math.max(...ys) - Math.min(...ys),
+        fill: 'rgba(46, 204, 113, 0.18)',
+        stroke: '#2ecc71',
+      };
+
+      setElements(prev => [...prev, nuevaSeccion]);
+      addToHistory([...elements, nuevaSeccion], 'Crear sección personalizada');
+    } else {
+      handleAddArea();
+    }
+
+    setIsCreatingSection(false);
+    setSectionPoints([]);
+    message.success('Sección agregada al mapa');
+  }, [addToHistory, elements, handleAddArea, sectionPoints]);
+
   const handleBackgroundUpload = useCallback(async (file) => {
     try {
       // Validar tipo de archivo
@@ -865,6 +1040,7 @@ const CrearMapaEditor = ({
         ...mapa,
         contenido: {
           elementos: elements,
+          zonas,
           configuracion: {
             gridSize,
             showGrid,
@@ -926,7 +1102,7 @@ const CrearMapaEditor = ({
       message.error('Error al guardar el mapa: ' + error.message);
       console.error('Error saving mapa:', error);
     }
-  }, [mapa, elements, gridSize, showGrid, snapToGrid, backgroundImage, backgroundScale, backgroundOpacity, showBackgroundInWeb, onSave]);
+  }, [mapa, elements, gridSize, showGrid, snapToGrid, backgroundImage, backgroundScale, backgroundOpacity, showBackgroundInWeb, zonas, onSave]);
 
   // ===== MANEJADOR DE TECLAS =====
   useEffect(() => {
@@ -1054,13 +1230,17 @@ const CrearMapaEditor = ({
         handleAddMesa();
         break;
       case 'add-sillas':
-        // TODO: Implementar agregar sillas
+        if (selectedIds.length === 1) {
+          handleAddSillasToMesa(selectedIds[0], { rect: { top: 2, right: 2, bottom: 2, left: 2 } });
+        } else {
+          message.warning('Selecciona una mesa para agregar sillas automáticamente');
+        }
         break;
       case 'add-texto':
-        // TODO: Implementar agregar texto
+        handleAddTexto();
         break;
       case 'add-area':
-        // TODO: Implementar agregar área
+        handleAddArea();
         break;
       case 'edit':
         setShowPropertiesPanel(true);
@@ -1074,12 +1254,33 @@ const CrearMapaEditor = ({
       default:
         break;
     }
-  }, [zoomIn, zoomOut, resetZoom, fitToScreen, handleAddMesa, handleDuplicateSelected, handleDeleteSelected]);
+  }, [fitToScreen, handleAddArea, handleAddMesa, handleAddSillasToMesa, handleAddTexto, handleDeleteSelected, handleDuplicateSelected, resetZoom, selectedIds.length, zoomIn, zoomOut]);
 
   // ===== FUNCIONES DE ZONAS =====
   const handleZonasChange = useCallback((newZonas) => {
     setZonas(newZonas);
-  }, []);
+
+    // Sincronizar zonas en el contenido del mapa para que otros módulos las vean
+    setMapa(prev => ({
+      ...prev,
+      contenido: {
+        ...(prev?.contenido || {}),
+        zonas: newZonas,
+      },
+    }));
+
+    if (mapa?.id) {
+      supabase
+        .from('mapas')
+        .update({ contenido: { ...(mapa?.contenido || {}), zonas: newZonas } })
+        .eq('id', mapa.id)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error sincronizando zonas con Supabase:', error);
+          }
+        });
+    }
+  }, [mapa]);
 
   const handleAssignZone = useCallback((zonaId, elementIds) => {
     const zona = zonas.find(z => z.id === zonaId);
@@ -1398,6 +1599,29 @@ const CrearMapaEditor = ({
           />
         );
       }
+      case 'texto':
+        return (
+          <KonvaText
+            key={element._id}
+            {...baseProps}
+            text={element.contenido || 'Texto'}
+            fontSize={element.fontSize || 16}
+            fill={element.fill || '#111827'}
+          />
+        );
+      case 'area':
+        return (
+          <Rect
+            key={element._id}
+            {...baseProps}
+            width={element.width || 200}
+            height={element.height || 150}
+            fill={element.fill || 'rgba(52, 152, 219, 0.15)'}
+            stroke={isSelected ? '#1890ff' : element.stroke || '#3498db'}
+            strokeWidth={isSelected ? 3 : 2}
+            cornerRadius={8}
+          />
+        );
       default:
         return null;
     }
@@ -1615,6 +1839,7 @@ const CrearMapaEditor = ({
               showConnections={showConnections}
               connectionStyle={connectionStyle}
               connectionThreshold={connectionThreshold}
+              changeConnectionThreshold={setConnectionThreshold}
               backgroundImage={backgroundImage}
               backgroundScale={backgroundScale}
               backgroundOpacity={backgroundOpacity}
@@ -1622,18 +1847,18 @@ const CrearMapaEditor = ({
               updateElementProperty={updateElementProperty}
               updateElementSize={updateElementSize}
               duplicarElementos={handleDuplicateSelected}
-              crearSeccion={() => {}} // TODO: Implementar secciones
+              crearSeccion={handleCrearSeccion}
               limpiarSeleccion={() => setSelectedIds([])}
               assignZoneToSelected={assignZoneToSelected}
               scaleElement={scaleElement}
-              scaleSelectedElements={() => {}} // TODO: Implementar
+              scaleSelectedElements={scaleSelectedElements}
               changeSeatState={changeSeatState}
-              changeSelectedSeatsState={() => {}} // TODO: Implementar
-              changeMesaSeatsState={() => {}} // TODO: Implementar
+              changeSelectedSeatsState={changeSelectedSeatsState}
+              changeMesaSeatsState={changeMesaSeatsState}
               setSelectedSeatState={setSelectedSeatState}
               autoConnectSeats={autoConnectSeats}
-              createManualConnection={() => {}} // TODO: Implementar
-              removeConnections={() => {}} // TODO: Implementar
+              createManualConnection={createManualConnection}
+              removeConnections={removeConnections}
               changeConnectionStyle={setConnectionStyle}
               precisePositioning={precisePositioning}
               snapToCustomGrid={handleSnapToGrid}
