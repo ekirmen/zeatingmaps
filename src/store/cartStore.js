@@ -127,6 +127,12 @@ export const useCartStore = create(
 
           const { useSeatLockStore } = await import('../components/seatLockStore');
           const functionId = seat.functionId || seat.funcionId || get().functionId;
+          const sessionId = await useSeatLockStore.getState().getValidSessionId();
+
+          if (!sessionId) {
+            toast.error('No pudimos validar tu sesión. Intenta recargar.');
+            return;
+          }
           
           // functionId extraído
           
@@ -159,7 +165,7 @@ export const useCartStore = create(
               // Desbloquear en BD primero (más rápido que verificar pago)
               (async () => {
                 try {
-                  await useSeatLockStore.getState().unlockSeat(seatId, functionId);
+                  await useSeatLockStore.getState().unlockSeat(seatId, functionId, { sessionIdOverride: sessionId });
                 } catch (err) {
                   console.warn('Error desbloqueando asiento (continuando):', err);
                 }
@@ -368,6 +374,12 @@ export const useCartStore = create(
           const remaining = Math.floor((cartExpiration - Date.now()) / 1000);
           if (remaining > 0) {
             set({ timeLeft: remaining });
+            try {
+              const { useSeatLockStore } = await import('../components/seatLockStore');
+              await useSeatLockStore.getState().restoreCurrentSession();
+            } catch (err) {
+              console.warn('[CART] No se pudo restaurar bloqueos de sesión:', err);
+            }
             startExpirationTimer();
           } else {
             // Expirado: liberar asientos y limpiar

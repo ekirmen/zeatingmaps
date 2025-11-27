@@ -290,6 +290,16 @@ export const useSeatLockStore = create((set, get) => ({
     set({ lockedSeats: validSeats });
   },
 
+  // Helper centralizado para validar/generar session_id y mantenerlo sincronizado
+  getValidSessionId: async () => {
+    const rawSessionId = await getSessionId();
+    const normalized = normalizeSessionId(rawSessionId);
+    if (normalized && normalized !== rawSessionId) {
+      localStorage.setItem('anonSessionId', normalized);
+    }
+    return normalized;
+  },
+
   setMapa: (mapa) => {
     set({ mapa });
   },
