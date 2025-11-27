@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
-import { loadMetaPixel } from '../utils/analytics';
+import { loadMetaPixel, trackEvent } from '../utils/analytics';
 import { useCartStore } from '../../store/cartStore';
 import downloadTicket from '../../utils/downloadTicket';
 import downloadPkpass from '../../utils/downloadPkpass';
 import { useAuth } from '../../contexts/AuthContext';
 import seatLocatorService from '../services/seatLocatorService';
+import { buildRelativeApiUrl } from '../../utils/apiConfig';
 
 const PaymentSuccess = () => {
   const clearCart = useCartStore(state => state.clearCart);
@@ -21,9 +22,22 @@ const PaymentSuccess = () => {
   const { refParam } = useRefParam();
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [walletEnabled, setWalletEnabled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [notificationState, setNotificationState] = useState({ email: false, sms: false });
   const { user, loading: authLoading } = useAuth();
 
   const isReservation = paymentDetails?.status === 'reservado' || paymentDetails?.status === 'pending';
+
+  const refreshLabel = useMemo(() => {
+    if (!lastUpdated) return null;
+    return new Intl.DateTimeFormat('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(lastUpdated);
+  }, [lastUpdated]);
 
   useEffect(() => {
     // Limpiar carrito (sin intentar desbloquear asientos ya vendidos)
@@ -38,6 +52,26 @@ const PaymentSuccess = () => {
   }, []);
 
   useEffect(() => {
+    if (!paymentDetails) return;
+
+    const status = paymentDetails.status || '';
+    if (status === 'completed' || status === 'pagado' || status === 'reservado' || status === 'pending') {
+      trackEvent('payment_status_synced', { status, locator });
+    }
+  }, [paymentDetails, locator]);
+
+  useEffect(() => {
+    if (!paymentDetails) return;
+    if (notificationState.email && notificationState.sms) return;
+
+    const status = paymentDetails.status;
+    if (status === 'completed' || status === 'pagado' || status === 'reservado' || status === 'pending') {
+      sendNotification('email');
+      sendNotification('sms');
+    }
+  }, [paymentDetails, notificationState]);
+
+  useEffect(() => {
     if (!authLoading && !user) {
       navigate('/store/login', { state: { from: location }, replace: true });
     }
@@ -46,49 +80,52 @@ const PaymentSuccess = () => {
   useEffect(() => {
     if (!locator || !user) return;
 
+    let mounted = true;
+    let pollingTimer = null;
+
+    const parseSeats = (transactionWithSeats) => {
+      let seats = transactionWithSeats.seats || [];
+      if (transactionWithSeats.transaction?.seats) {
+        try {
+          if (typeof transactionWithSeats.transaction.seats === 'string') {
+            seats = JSON.parse(transactionWithSeats.transaction.seats);
+          } else if (Array.isArray(transactionWithSeats.transaction.seats)) {
+            seats = transactionWithSeats.transaction.seats;
+          }
+        } catch (e) {
+          console.warn('Error parseando asientos desde transaction:', e);
+          seats = transactionWithSeats.seats || [];
+        }
+      }
+      return seats;
+    };
+
     const fetchPaymentDetails = async () => {
       try {
+        setLoading(true);
         const transactionWithSeats = await seatLocatorService.getTransactionWithSeats(locator);
 
-        if (transactionWithSeats?.transaction) {
-          // Parsear asientos si vienen como string
-          let seats = transactionWithSeats.seats || [];
-          if (transactionWithSeats.transaction.seats) {
-            try {
-              if (typeof transactionWithSeats.transaction.seats === 'string') {
-                seats = JSON.parse(transactionWithSeats.transaction.seats);
-              } else if (Array.isArray(transactionWithSeats.transaction.seats)) {
-                seats = transactionWithSeats.transaction.seats;
-              }
-            } catch (e) {
-              console.warn('Error parseando asientos desde transaction:', e);
-              // Usar seats de transactionWithSeats si hay error
-              seats = transactionWithSeats.seats || [];
-            }
-          }
-          
-          console.log('📋 [PaymentSuccess] Asientos obtenidos:', seats);
-          console.log('📋 [PaymentSuccess] Número de asientos:', seats.length);
-          
+        if (transactionWithSeats?.transaction && mounted) {
+          const seats = parseSeats(transactionWithSeats);
+
           setPaymentDetails({
             ...transactionWithSeats.transaction,
             seats: seats
           });
-          
-          // Verificar si el evento tiene wallet habilitado
+          setLastUpdated(new Date());
+
           if (transactionWithSeats.event?.datosBoleto) {
             try {
               const datosBoleto = typeof transactionWithSeats.event.datosBoleto === 'string'
                 ? JSON.parse(transactionWithSeats.event.datosBoleto)
                 : transactionWithSeats.event.datosBoleto;
-              
+
               setWalletEnabled(datosBoleto?.habilitarWallet === true);
             } catch (e) {
               console.warn('Error parseando datosBoleto:', e);
               setWalletEnabled(false);
             }
           } else {
-            // Si no hay datosBoleto, el wallet no está habilitado
             setWalletEnabled(false);
           }
         } else {
@@ -96,28 +133,89 @@ const PaymentSuccess = () => {
         }
       } catch (error) {
         console.error('Error fetching payment details:', error);
+        setRetryCount((prev) => prev + 1);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchPaymentDetails();
-  }, [locator, user]);
 
+    pollingTimer = setInterval(() => {
+      if (paymentDetails?.status === 'completed' || paymentDetails?.status === 'pagado') {
+        clearInterval(pollingTimer);
+        return;
+      }
+      fetchPaymentDetails();
+    }, 5000);
 
-  const handleDownloadAllTickets = async () => {
+    return () => {
+      mounted = false;
+      if (pollingTimer) clearInterval(pollingTimer);
+    };
+  }, [locator, user, paymentDetails?.status]);
+
+  const sendNotification = async (type) => {
+    const targetEmail = user?.email || paymentDetails?.email;
+    const targetPhone = user?.phone || user?.user_metadata?.phone || paymentDetails?.phone;
+    const isReservationFlow = isReservation;
+
     try {
-      await downloadTicket(locator, null, 'web');
-    } catch {
-      toast.error('No se pudo descargar el ticket');
+      if (type === 'email' && targetEmail) {
+        await fetch(buildRelativeApiUrl(`payments/${locator}/email`), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: targetEmail,
+            type: isReservationFlow ? 'reservation' : 'payment_complete',
+            linkOnly: true,
+          })
+        });
+        setNotificationState((prev) => ({ ...prev, email: true }));
+      }
+
+      if (type === 'sms' && targetPhone) {
+        await fetch(buildRelativeApiUrl('notifications/send-sms'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: targetPhone,
+            locator,
+            status: isReservationFlow ? 'reservation' : 'completed'
+          })
+        });
+        setNotificationState((prev) => ({ ...prev, sms: true }));
+      }
+    } catch (err) {
+      console.warn('No se pudo automatizar la notificación', type, err);
     }
   };
-  
-  const handleDownloadPkpass = async () => {
-    try {
-      await downloadPkpass(locator, null, 'web');
-    } catch (error) {
-      console.error('Error descargando .pkpass:', error);
-      // El error ya se muestra en downloadPkpass
+
+
+  const runWithRetry = async (fn, label) => {
+    let attempt = 0;
+    while (attempt < 3) {
+      try {
+        await fn();
+        return;
+      } catch (err) {
+        attempt += 1;
+        if (attempt >= 3) {
+          console.error(`No se pudo completar ${label} tras ${attempt} intentos`, err);
+          toast.error(`No se pudo completar ${label}`);
+        }
+      }
     }
+  };
+
+  const handleDownloadAllTickets = async () => {
+    await runWithRetry(() => downloadTicket(locator, null, 'web'), 'la descarga de tickets');
+  };
+
+  const handleDownloadPkpass = async () => {
+    await runWithRetry(() => downloadPkpass(locator, null, 'web'), 'la descarga Wallet');
   };
 
   const formatPurchaseDate = (dateString) => {
@@ -180,10 +278,10 @@ const PaymentSuccess = () => {
     );
   }
 
-  if (authLoading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Verificando sesión...</p>
+        <p className="text-gray-600">Verificando sesión y cargando la compra...</p>
       </div>
     );
   }
@@ -218,6 +316,14 @@ const PaymentSuccess = () => {
           </div>
 
         <div className="border-t border-b border-gray-200 py-4 my-6">
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+            <span>
+              Última sincronización: {refreshLabel || 'cargando...'}
+            </span>
+            {retryCount > 0 && (
+              <span>Reintentos: {retryCount}</span>
+            )}
+          </div>
           <div className="flex justify-between items-center mb-4">
             <span className="text-gray-600">Localizador:</span>
             <span className="font-mono font-bold text-lg">{locator}</span>

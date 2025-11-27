@@ -33,13 +33,17 @@ import LegalTerms from './pages/LegalTerms';
 import CmsPage from './pages/CmsPage';
 import EventsVenue from './pages/EventsVenue';
 import { useAuth } from '../contexts/AuthContext'; // para perfil
+import { useTenant } from '../contexts/TenantContext';
 import { useCartStore } from './cartStore';
 import ProtectedRoute from './components/ProtectedRoute';
+import { loadGtm, loadMetaPixel, trackEvent } from './utils/analytics';
 
 const StoreApp = () => {
   const location = useLocation();
   const { user, updateProfile } = useAuth();
   const restoreTimer = useCartStore((s) => s.restoreTimer);
+  const { currentTenant, domainConfig } = useTenant();
+  const previousPath = React.useRef(location.pathname);
   
   const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
   if (DEBUG) {
@@ -52,6 +56,38 @@ const StoreApp = () => {
   React.useEffect(() => {
     restoreTimer();
   }, [restoreTimer]);
+
+  React.useEffect(() => {
+    const analyticsConfig = currentTenant?.analytics || domainConfig?.analytics;
+    const metaPixelId = analyticsConfig?.metaPixelId || localStorage.getItem('metaPixelId');
+    const gtmId = analyticsConfig?.gtmId || analyticsConfig?.gtm_id;
+
+    if (analyticsConfig?.enabled && metaPixelId) {
+      loadMetaPixel(metaPixelId);
+      localStorage.setItem('metaPixelId', metaPixelId);
+    }
+
+    if (analyticsConfig?.enabled && gtmId) {
+      loadGtm(gtmId);
+    }
+  }, [currentTenant?.analytics, domainConfig?.analytics]);
+
+  React.useEffect(() => {
+    const prev = previousPath.current;
+    const current = location.pathname;
+
+    if (prev !== current) {
+      if (prev?.includes('/store/payment') && !current.includes('/store/payment-success')) {
+        trackEvent('checkout_abandoned', { path: prev, next: current });
+      }
+
+      if (current.includes('/store/payment-success') || current.includes('/payment-success')) {
+        trackEvent('checkout_confirmed', { path: current });
+      }
+
+      previousPath.current = current;
+    }
+  }, [location.pathname]);
 
   const showHeader =
     location.pathname.startsWith('/store') ||

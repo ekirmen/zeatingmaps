@@ -215,6 +215,7 @@ export const buildConfigFromTenant = (tenant) => {
       tagline: tenant.branding_config?.tagline || 'Sistema de Gestión de Eventos',
       contactEmail: tenant.branding_config?.contactEmail || tenant.contact_email
     },
+    analytics: tenant.analytics || tenant.analytics_config || {},
     customRoutes: tenant.custom_routes || [],
     isMainDomain: tenant.is_main_domain || false,
     tenantType: tenant.tenant_type || 'company'

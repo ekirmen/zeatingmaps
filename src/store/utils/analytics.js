@@ -36,3 +36,20 @@ export const loadMetaPixel = (pixelId) => {
   window.fbq('init', pixelId);
   window.fbq('track', 'PageView');
 };
+
+export const trackEvent = (name, payload = {}) => {
+  try {
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: name,
+        ...payload,
+      });
+    }
+
+    if (window.fbq) {
+      window.fbq('trackCustom', name, payload);
+    }
+  } catch (err) {
+    console.warn('[Analytics] Error al trackear evento', name, err);
+  }
+};
