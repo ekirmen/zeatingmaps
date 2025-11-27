@@ -47,6 +47,7 @@ const MenuMapa = ({
   showConnections,
   connectionStyle,
   connectionThreshold,
+  changeConnectionThreshold,
   
   // Nuevos estados de fondo
   backgroundImage,
@@ -391,15 +392,15 @@ const MenuMapa = ({
           </div>
           
           <div className="grid grid-cols-2 gap-2">
-            <Button 
+            <Button
               size="small"
               onClick={() => changeSelectedSeatsState(selectedSeatState)}
             >
               Aplicar a Seleccionados
             </Button>
-            <Button 
+            <Button
               size="small"
-              onClick={() => {/* Implementar cambio de estado por mesa */}}
+              onClick={() => changeMesaSeatsState(selectedSeatState)}
             >
               Aplicar por Mesa
             </Button>
@@ -439,23 +440,23 @@ const MenuMapa = ({
               min={20}
               max={100}
               value={connectionThreshold}
-              onChange={(value) => {/* Implementar setConnectionThreshold */}}
+              onChange={changeConnectionThreshold}
               className="w-full"
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2">
-            <Button 
+            <Button
               size="small"
               icon={<LinkOutlined />}
-              onClick={() => {/* Implementar conexión manual */}}
+              onClick={createManualConnection}
             >
               Conectar Manual
             </Button>
-            <Button 
+            <Button
               size="small"
               icon={<DeleteOutlined />}
-              onClick={() => {/* Implementar remover conexiones */}}
+              onClick={removeConnections}
             >
               Remover
             </Button>
