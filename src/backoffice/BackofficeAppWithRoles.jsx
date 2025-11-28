@@ -97,13 +97,21 @@ const BackofficeAppWithRoles = () => {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="liquidaciones" 
+          <Route
+            path="liquidaciones"
             element={
               <ProtectedRoute permission="liquidaciones">
                 <PaymentAnalytics />
               </ProtectedRoute>
-            } 
+            }
+          />
+          <Route
+            path="liquidacion"
+            element={
+              <ProtectedRoute permission="liquidaciones">
+                <PaymentAnalytics />
+              </ProtectedRoute>
+            }
           />
           
           {/* Programación */}
