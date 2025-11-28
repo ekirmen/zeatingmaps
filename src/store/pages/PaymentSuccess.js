@@ -26,9 +26,17 @@ const PaymentSuccess = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [notificationState, setNotificationState] = useState({ email: false, sms: false });
+  const [downloadState, setDownloadState] = useState({ status: 'idle', message: '', progress: 0, type: null });
+  const [groupingMode, setGroupingMode] = useState('none');
   const { user, loading: authLoading } = useAuth();
 
   const isReservation = paymentDetails?.status === 'reservado' || paymentDetails?.status === 'pending';
+  const seats = useMemo(() => paymentDetails?.seats || [], [paymentDetails]);
+  const seatsWithIndex = useMemo(
+    () => seats.map((seat, index) => ({ ...seat, __index: index })),
+    [seats]
+  );
+  const groupedSeats = useMemo(() => groupSeatsBy(seatsWithIndex, groupingMode), [seatsWithIndex, groupingMode]);
 
   const refreshLabel = useMemo(() => {
     if (!lastUpdated) return null;
@@ -211,11 +219,34 @@ const PaymentSuccess = () => {
   };
 
   const handleDownloadAllTickets = async () => {
-    await runWithRetry(() => downloadTicket(locator, null, 'web'), 'la descarga de tickets');
+    setDownloadState({ status: 'running', message: 'Generando todos los PDF...', progress: 15, type: 'pdf' });
+
+    const progressTimer = setInterval(() => {
+      setDownloadState((prev) => {
+        if (prev.status !== 'running') return prev;
+        const nextProgress = Math.min(prev.progress + 15, 85);
+        return { ...prev, progress: nextProgress };
+      });
+    }, 900);
+
+    try {
+      await runWithRetry(() => downloadTicket(locator, null, 'web'), 'la descarga de tickets');
+      setDownloadState({ status: 'success', message: 'PDF listos. Revisa tu carpeta de descargas.', progress: 100, type: 'pdf' });
+    } catch (err) {
+      setDownloadState({ status: 'error', message: 'No pudimos descargar los PDF. Intenta nuevamente.', progress: 0, type: 'pdf' });
+    } finally {
+      clearInterval(progressTimer);
+    }
   };
 
   const handleDownloadPkpass = async () => {
-    await runWithRetry(() => downloadPkpass(locator, null, 'web'), 'la descarga Wallet');
+    setDownloadState({ status: 'running', message: 'Preparando tus Wallet...', progress: 20, type: 'wallet' });
+    try {
+      await runWithRetry(() => downloadPkpass(locator, null, 'web'), 'la descarga Wallet');
+      setDownloadState({ status: 'success', message: 'Archivo Wallet generado.', progress: 100, type: 'wallet' });
+    } catch (err) {
+      setDownloadState({ status: 'error', message: 'No pudimos generar el Wallet. Intenta nuevamente.', progress: 0, type: 'wallet' });
+    }
   };
 
   const formatPurchaseDate = (dateString) => {
@@ -240,6 +271,81 @@ const PaymentSuccess = () => {
       .toUpperCase();
 
     return `${day}, ${time}`;
+  };
+
+  function groupSeatsBy(seats, mode) {
+    if (mode === 'none') return seats;
+
+    const keyForSeat = (seat) => {
+      if (mode === 'zone') return seat.zonaNombre || seat.zona || 'Sin zona';
+      if (mode === 'mesa') return seat.mesaNombre || seat.mesa || 'Sin mesa';
+      return 'General';
+    };
+
+    return seats.reduce((acc, seat) => {
+      const key = keyForSeat(seat);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(seat);
+      return acc;
+    }, {});
+  }
+
+  const renderSeatCard = (seat, indexOverride) => {
+    const ticketIndex = typeof indexOverride === 'number' ? indexOverride : seat.__index || 0;
+    const ticketNumber = ticketIndex + 1;
+    const seatId = seat.seat_id || seat.id || seat._id || `seat-${ticketIndex}`;
+    const zonaNombre = seat.zona_nombre || seat.zonaNombre || seat.zona?.nombre || seat.zona || null;
+    const mesaId = seat.table_id || seat.mesa_id || seat.mesaId || seat.mesa?.id || seat.mesa || null;
+    const filaNombre = seat.fila_nombre || seat.filaNombre || seat.fila?.nombre || seat.fila || seat.row || null;
+    const asientoNumero = seat.asiento || seat.numero || seat.seat || seat.name || seat.asientoNombre || null;
+
+    const infoParts = [];
+    if (zonaNombre) infoParts.push(`Zona: ${zonaNombre}`);
+    if (mesaId) infoParts.push(`Mesa: ${mesaId}`);
+    if (filaNombre && !mesaId) infoParts.push(`Fila: ${filaNombre}`);
+    if (asientoNumero) infoParts.push(`Asiento: ${asientoNumero}`);
+    const infoLine = infoParts.join(' | ');
+
+    return (
+      <div key={seatId || ticketIndex} className="bg-gray-50 p-4 rounded-lg border">
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex-1">
+            <p className="font-medium text-gray-900 mb-2">
+              Ticket N{ticketNumber}
+            </p>
+            {infoLine && (
+              <p className="text-sm text-gray-700 mb-2">
+                {infoLine}
+              </p>
+            )}
+            {seat.precio && (
+              <p className="text-sm text-gray-600 font-semibold mt-1">
+                Precio: ${seat.precio}
+              </p>
+            )}
+          </div>
+          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded ml-2 whitespace-nowrap">
+            Confirmado
+          </span>
+        </div>
+        <button
+          onClick={async (e) => {
+            e.preventDefault();
+            try {
+              console.log(`📥 [PaymentSuccess] Descargando ticket ${ticketNumber} (índice ${ticketIndex})`);
+              await downloadTicket(locator, null, 'web', ticketIndex);
+            } catch (error) {
+              console.error('Error descargando ticket individual:', error);
+              toast.error('Error al descargar el ticket');
+            }
+          }}
+          className="w-full mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+        >
+          <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
+          Descargar Ticket N{ticketNumber}
+        </button>
+      </div>
+    );
   };
 
 
@@ -374,76 +480,57 @@ const PaymentSuccess = () => {
         
         {!isReservation && paymentDetails && (
           <div className="my-6">
-            {paymentDetails.seats && Array.isArray(paymentDetails.seats) && paymentDetails.seats.length > 0 ? (
+            {seats && Array.isArray(seats) && seats.length > 0 ? (
               <>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Tickets ({paymentDetails.seats.length})</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  {paymentDetails.seats.map((seat, index) => {
-                    const ticketNumber = index + 1; // Número del ticket (1, 2, 3...)
-                    const seatId = seat.seat_id || seat.id || seat._id || `seat-${index}`;
-                    const zonaNombre = seat.zona_nombre || seat.zonaNombre || seat.zona?.nombre || seat.zona || null;
-                    const mesaId = seat.table_id || seat.mesa_id || seat.mesaId || seat.mesa?.id || seat.mesa || null;
-                    const filaNombre = seat.fila_nombre || seat.filaNombre || seat.fila?.nombre || seat.fila || seat.row || null;
-                    // Obtener el número real del asiento (puede estar en diferentes campos)
-                    const asientoNumero = seat.asiento || seat.numero || seat.seat || seat.name || seat.asientoNombre || null;
-                    
-                    // Construir la línea de información (Zona, Mesa/Fila, Asiento)
-                    const infoParts = [];
-                    if (zonaNombre) infoParts.push(`Zona: ${zonaNombre}`);
-                    if (mesaId) infoParts.push(`Mesa: ${mesaId}`);
-                    if (filaNombre && !mesaId) infoParts.push(`Fila: ${filaNombre}`);
-                    if (asientoNumero) infoParts.push(`Asiento: ${asientoNumero}`);
-                    const infoLine = infoParts.join(' | ');
-                    
-                    return (
-                      <div key={seatId || index} className="bg-gray-50 p-4 rounded-lg border">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900 mb-2">
-                              Ticket N{ticketNumber}
-                            </p>
-                            {infoLine && (
-                              <p className="text-sm text-gray-700 mb-2">
-                                {infoLine}
-                              </p>
-                            )}
-                            {seat.precio && (
-                              <p className="text-sm text-gray-600 font-semibold mt-1">
-                                Precio: ${seat.precio}
-                              </p>
-                            )}
-                          </div>
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded ml-2 whitespace-nowrap">
-                            Confirmado
-                          </span>
-                        </div>
-                        <button
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            try {
-                              console.log(`📥 [PaymentSuccess] Descargando ticket ${ticketNumber} (índice ${index})`);
-                              await downloadTicket(locator, null, 'web', index);
-                            } catch (error) {
-                              console.error('Error descargando ticket individual:', error);
-                              toast.error('Error al descargar el ticket');
-                            }
-                          }}
-                          className="w-full mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-                        >
-                          <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
-                          Descargar Ticket N{ticketNumber}
-                        </button>
-                      </div>
-                    );
-                  })}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Tickets ({seats.length})</h3>
+                    <p className="text-sm text-gray-600 mt-1">Agrupa por zona o mesa para preparar descargas por bloques.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="groupingMode" className="text-sm text-gray-700 whitespace-nowrap">Organizar por</label>
+                    <select
+                      id="groupingMode"
+                      value={groupingMode}
+                      onChange={(e) => setGroupingMode(e.target.value)}
+                      className="border-gray-300 rounded-md text-sm px-3 py-2"
+                    >
+                      <option value="none">Sin agrupación</option>
+                      <option value="zone">Zona</option>
+                      <option value="mesa">Mesa</option>
+                    </select>
+                  </div>
                 </div>
+
+                {groupingMode === 'none' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {seatsWithIndex.map((seat) => renderSeatCard(seat, seat.__index))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {Object.entries(groupedSeats).map(([groupName, items]) => (
+                      <div key={groupName} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <div>
+                            <p className="font-semibold text-gray-900">{groupName}</p>
+                            <p className="text-xs text-gray-600">{items.length} ticket(s) en este bloque</p>
+                          </div>
+                          <span className="text-xs text-gray-500">Listo para descarga por grupo</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {items.map((seat) => renderSeatCard(seat, seat.__index))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             ) : (
               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
                 <p className="text-sm text-yellow-700">
-                  <strong>Nota:</strong> No se encontraron asientos para esta transacción. 
-                  {paymentDetails.status === 'completed' || paymentDetails.status === 'pagado' 
-                    ? ' Contacta con soporte si necesitas ayuda.' 
+                  <strong>Nota:</strong> No se encontraron asientos para esta transacción.
+                  {paymentDetails.status === 'completed' || paymentDetails.status === 'pagado'
+                    ? ' Contacta con soporte si necesitas ayuda.'
                     : ' Los asientos aparecerán cuando el pago esté completo.'}
                 </p>
               </div>
@@ -496,6 +583,53 @@ const PaymentSuccess = () => {
             Volver al Inicio
           </button>
         </div>
+
+        {downloadState.status !== 'idle' && (
+          <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold text-gray-800">
+                {downloadState.type === 'wallet' ? 'Descarga Wallet' : 'Descarga de PDF'}
+              </p>
+              <span
+                className={`text-xs font-medium px-2 py-1 rounded-full ${
+                  downloadState.status === 'running'
+                    ? 'bg-blue-100 text-blue-700'
+                    : downloadState.status === 'success'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                }`}
+              >
+                {downloadState.status === 'running' && 'En progreso'}
+                {downloadState.status === 'success' && 'Completado'}
+                {downloadState.status === 'error' && 'Con errores'}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+              <div
+                className={`h-2.5 rounded-full ${downloadState.status === 'error' ? 'bg-red-500' : 'bg-blue-600'}`}
+                style={{ width: `${downloadState.progress}%` }}
+              />
+            </div>
+            <p className="text-xs text-gray-600">{downloadState.message}</p>
+
+            {downloadState.status === 'error' && (
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={downloadState.type === 'wallet' ? handleDownloadPkpass : handleDownloadAllTickets}
+                  className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                >
+                  Reintentar descarga
+                </button>
+                <button
+                  onClick={() => setDownloadState({ status: 'idle', message: '', progress: 0, type: null })}
+                  className="px-3 py-2 border border-gray-300 text-sm rounded-md hover:bg-gray-100"
+                >
+                  Ocultar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
 
         {emailSent && (
