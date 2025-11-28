@@ -456,6 +456,7 @@ export const RoleProvider = ({ children }) => {
       '/dashboard/plano': 'plano',
       '/dashboard/crear-mapa': 'recintos',
       '/dashboard/liquidaciones': 'liquidaciones',
+      '/dashboard/liquidacion': 'liquidaciones',
       '/dashboard/entradas': 'entradas',
       '/dashboard/productos': 'productos',
       '/dashboard/plantillas-productos': 'plantillas_productos',

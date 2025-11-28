@@ -20,8 +20,9 @@ import { TenantProvider } from '../contexts/TenantContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { useResponsive } from '../hooks/useResponsive';
 import './styles/dashboard-design.css';
+import DashboardFooter from './components/DashboardFooter';
 
-const { Header, Content } = Layout;
+const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
 
 const BackofficeLayoutWithRoles = ({ children }) => {
@@ -119,11 +120,11 @@ const BackofficeLayoutWithRoles = ({ children }) => {
               
               <Layout>
                 {/* Header */}
-                <Header 
+                <Header
                   className="dashboard-header"
-                  style={{ 
-                    padding: isMobile ? '0 16px' : '0 24px', 
-                    background: '#fff', 
+                  style={{
+                    padding: isMobile ? '0 16px' : '0 24px',
+                    background: '#fff',
                     borderBottom: '1px solid #f0f0f0',
                     display: 'flex',
                     alignItems: 'center',
@@ -143,6 +144,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                         {isMobile ? (
                           <Button
                             type="text"
+                            className="header-icon-btn"
                             icon={<MenuUnfoldOutlined />}
                             onClick={() => setMobileMenuOpen(true)}
                             style={{ fontSize: '18px', width: 40, height: 40, padding: 0 }}
@@ -150,9 +152,10 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                         ) : (
                           <Button
                             type="text"
+                            className="header-icon-btn"
                             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                             onClick={() => setCollapsed(!collapsed)}
-                            style={{ fontSize: '16px', width: 64, height: 64 }}
+                            style={{ fontSize: '16px', width: 48, height: 48 }}
                           />
                         )}
                       </>
@@ -165,13 +168,14 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                     </div>
                   </div>
 
-                  <div className="dashboard-header-right" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
+                  <div className="dashboard-header-right" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                     {/* Notificaciones */}
                     {hasPermission('dashboard') && !isMobile && (
                       <Badge count={0} size="small">
-                        <Button 
-                          type="text" 
-                          icon={<BellOutlined />} 
+                        <Button
+                          type="text"
+                          className="header-icon-btn"
+                          icon={<BellOutlined />}
                           size="large"
                         />
                       </Badge>
@@ -183,9 +187,9 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                       placement="bottomRight"
                       trigger={['click']}
                     >
-                      <Button type="text" style={{ padding: isMobile ? '4px' : '4px 8px' }}>
+                      <Button type="text" className="header-user-btn" style={{ padding: isMobile ? '4px 6px' : '6px 10px' }}>
                         <Space size={isMobile ? 4 : 8}>
-                          <Avatar 
+                          <Avatar
                             size={isMobile ? 'small' : 'default'}
                             icon={<UserOutlined />} 
                             style={{ backgroundColor: '#1890ff' }}
@@ -224,11 +228,11 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                     marginTop: isMobile ? 56 : 64,
                     marginRight: isMobile ? 12 : 24,
                     marginBottom: isMobile ? 12 : 24,
-                    marginLeft: isBoleteriaRoute 
-                      ? (isMobile ? 12 : 24) 
+                    marginLeft: isBoleteriaRoute
+                      ? (isMobile ? 12 : 24)
                       : (isMobile ? 12 : siderWidth + 24),
                     padding: isMobile ? 16 : 24,
-                    minHeight: `calc(100vh - ${isMobile ? 68 : 88}px)`,
+                    minHeight: `calc(100vh - ${isMobile ? 132 : 156}px)`,
                     background: '#f5f5f5',
                     borderRadius: isMobile ? '8px' : '12px',
                     overflow: 'auto',
@@ -237,6 +241,19 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                 >
                   <Outlet />
                 </Content>
+                <Footer
+                  className="dashboard-footer"
+                  style={{
+                    marginLeft: isBoleteriaRoute
+                      ? (isMobile ? 12 : 24)
+                      : (isMobile ? 12 : siderWidth + 24),
+                    marginRight: isMobile ? 12 : 24,
+                    padding: isMobile ? '12px 16px' : '16px 24px',
+                    background: 'transparent'
+                  }}
+                >
+                  <DashboardFooter />
+                </Footer>
               </Layout>
             </Layout>
                      </TagProvider>

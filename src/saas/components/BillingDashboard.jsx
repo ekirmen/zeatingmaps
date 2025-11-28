@@ -16,9 +16,17 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const BillingDashboard = () => {
+  const initialStats = {
+    totalSubscriptions: 0,
+    activeSubscriptions: 0,
+    monthlyRevenue: 0,
+    successRate: 0,
+    failedSubscriptions: 0
+  };
+
   const [loading, setLoading] = useState(false);
   const [subscriptions, setSubscriptions] = useState([]);
-  const [stats, setStats] = useState({});
+  const [stats, setStats] = useState(initialStats);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const [form] = Form.useForm();
@@ -35,9 +43,10 @@ const BillingDashboard = () => {
         billingService.getBillingStats()
       ]);
       setSubscriptions(subscriptionsData);
-      setStats(statsData);
+      setStats({ ...initialStats, ...(statsData || {}) });
     } catch (error) {
       message.error('Error al cargar datos de facturación');
+      setStats(initialStats);
     } finally {
       setLoading(false);
     }
@@ -139,7 +148,7 @@ const BillingDashboard = () => {
       title: 'Próximo Pago',
       dataIndex: 'next_billing_date',
       key: 'next_billing_date',
-      render: (date) => new Date(date).toLocaleDateString(),
+      render: (date) => (date ? new Date(date).toLocaleDateString() : '—'),
     },
     {
       title: 'Acciones',
@@ -214,7 +223,7 @@ const BillingDashboard = () => {
           <Card>
             <Statistic
               title="Ingresos Mensuales"
-              value={`$${stats.monthlyRevenue.toLocaleString()}`}
+              value={`$${Number(stats.monthlyRevenue || 0).toLocaleString()}`}
               prefix={<DollarOutlined />}
               valueStyle={{ color: '#faad14' }}
             />
@@ -224,7 +233,7 @@ const BillingDashboard = () => {
           <Card>
             <Statistic
               title="Tasa de Éxito"
-              value={stats.successRate}
+              value={Number(stats.successRate || 0)}
               suffix="%"
               prefix={<CheckCircleOutlined />}
               valueStyle={{ color: '#52c41a' }}
@@ -234,7 +243,7 @@ const BillingDashboard = () => {
       </Row>
 
       {/* Alertas */}
-      {stats.failedSubscriptions > 0 && (
+      {Number(stats.failedSubscriptions) > 0 && (
         <Alert
           message={`${stats.failedSubscriptions} suscripciones con pagos fallidos`}
           description="Hay suscripciones que requieren atención inmediata."
@@ -374,7 +383,11 @@ const BillingDashboard = () => {
               <Col span={12}>
                 <Text strong>Próximo Pago:</Text>
                 <br />
-                <Text>{new Date(selectedSubscription.next_billing_date).toLocaleDateString()}</Text>
+                <Text>
+                  {selectedSubscription.next_billing_date
+                    ? new Date(selectedSubscription.next_billing_date).toLocaleDateString()
+                    : '—'}
+                </Text>
               </Col>
               <Col span={12}>
                 <Text strong>Pagos Realizados:</Text>

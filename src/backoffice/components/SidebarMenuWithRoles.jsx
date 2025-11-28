@@ -174,9 +174,9 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
           icon: faUsers,
           permission: 'usuarios'
         },
-        { 
-          title: 'Liquidaciones', 
-          path: '/dashboard/liquidaciones', 
+        {
+          title: 'Liquidaciones',
+          path: '/dashboard/liquidacion',
           icon: faMoneyBillWave,
           permission: 'liquidaciones'
         }

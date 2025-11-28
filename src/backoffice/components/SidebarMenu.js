@@ -105,7 +105,7 @@ const SidebarMenu = ({ collapsed }) => {
         { title: 'Recintos', path: '/dashboard/recintos', icon: faBuilding },
         { title: 'Plano', path: '/dashboard/plano', icon: faMap },
         { title: 'Usuarios', path: '/dashboard/usuarios', icon: faUsers },
-        { title: 'Liquidaciones', path: '/dashboard/liquidaciones', icon: faMoneyBillWave }
+        { title: 'Liquidaciones', path: '/dashboard/liquidacion', icon: faMoneyBillWave }
       ]
     },
     {
