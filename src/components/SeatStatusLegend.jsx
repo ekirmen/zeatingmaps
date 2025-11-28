@@ -3,7 +3,13 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import { Button, Popover, Space } from 'antd';
 import { useTheme } from '../contexts/ThemeContext';
 
-const SeatStatusLegend = () => {
+const SeatStatusLegend = ({
+  placement = 'left',
+  buttonType = 'text',
+  size = 'small',
+  inline = false,
+  style = {},
+}) => {
   const [visible, setVisible] = useState(false);
   const { theme } = useTheme();
 
@@ -45,20 +51,24 @@ const SeatStatusLegend = () => {
       trigger="click"
       visible={visible}
       onVisibleChange={setVisible}
-      placement="left"
+      placement={placement}
     >
       <Button
-        type="text"
+        type={buttonType}
         icon={<InfoCircleOutlined />}
-        size="small"
-        style={{ 
-          position: 'absolute', 
-          top: '10px', 
-          right: '50px', 
-          zIndex: 1000,
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          border: '1px solid #d9d9d9'
-        }}
+        size={size}
+        style={inline
+          ? style
+          : {
+              position: 'absolute',
+              top: '10px',
+              right: '50px',
+              zIndex: 20,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              border: '1px solid #d9d9d9',
+              ...style,
+            }
+        }
         title="Leyenda de Estados"
       />
     </Popover>

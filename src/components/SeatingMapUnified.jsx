@@ -1216,9 +1216,9 @@ const SeatingMapUnified = ({
   }
 
   return (
-    <div style={{ 
-      position: 'relative', 
-      width: '100%', 
+    <div style={{
+      position: 'relative',
+      width: '100%',
       height: '100%',
       overflow: 'hidden',
       maxWidth: '100%'
@@ -1233,23 +1233,28 @@ const SeatingMapUnified = ({
         />
       )}
       
-      <SeatStatusLegend />
       {shouldShowSeatLockDebug && <SeatLockDebug funcionId={normalizedFuncionId} />}
-      
+
       {/* Controles de zoom */}
-      <div style={{ 
-        position: 'absolute', 
-        top: 10, 
-        right: 10, 
-        zIndex: 1000,
+      <div style={{
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 20,
         background: 'rgba(255, 255, 255, 0.9)',
         padding: '8px',
         borderRadius: '6px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
       }}>
-        <Space direction="vertical" size="small">
-          <Button 
-            icon={<ZoomInOutlined />} 
+        <Space direction="vertical" size="small" align="center">
+          <SeatStatusLegend
+            inline
+            buttonType="default"
+            placement="left"
+            style={{ width: '100%' }}
+          />
+          <Button
+            icon={<ZoomInOutlined />}
             onClick={handleZoomIn}
             size="small"
             title="Zoom In"
