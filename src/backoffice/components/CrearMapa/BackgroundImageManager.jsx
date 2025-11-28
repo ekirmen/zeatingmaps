@@ -21,7 +21,7 @@ import {
   SearchOutlined,
   FolderOpenOutlined
 } from '@ant-design/icons';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../../supabaseClient';
 
 const { Text, Title } = Typography;
 const { Search } = Input;

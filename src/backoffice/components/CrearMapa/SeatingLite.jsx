@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line, RegularPolygon, Image as KonvaImage } from 'react-konva';
 import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider, Upload, Collapse, ColorPicker, Slider } from 'antd';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../../supabaseClient';
 import seatPaymentChecker from '../../services/seatPaymentChecker';
 import useSeatColors from '../../hooks/useSeatColors';
 import SeatStatusLegend from '../../components/SeatStatusLegend';
