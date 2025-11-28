@@ -1,7 +1,11 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line, RegularPolygon, Image as KonvaImage } from 'react-konva';
 import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider, Upload, Collapse, ColorPicker, Slider } from 'antd';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
+import { supabase } from '../../supabaseClient';
+import seatPaymentChecker from '../../services/seatPaymentChecker';
+import useSeatColors from '../../hooks/useSeatColors';
+import SeatStatusLegend from '../../components/SeatStatusLegend';
 import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined, DownOutlined, UndoOutlined } from '@ant-design/icons';
 
 const pickStringValue = (value) => (typeof value === 'string' && value.trim().length > 0 ? value : null);
@@ -93,6 +97,35 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [backgroundScale, setBackgroundScale] = useState(1); // Escala del fondo
   const [backgroundOpacity, setBackgroundOpacity] = useState(1); // Transparencia del fondo
   const [activeInput, setActiveInput] = useState(null); // Para activar inputs automáticamente
+  const [seatStatusMap, setSeatStatusMap] = useState(new Map());
+  const { getSeatColor } = useSeatColors();
+  const protectedStatuses = ['vendido', 'pagado', 'completed', 'reservado', 'locked', 'bloqueado', 'seleccionado', 'selected'];
+
+  const normalizeSeatStatus = useCallback((status) => {
+    if (!status) return null;
+    const normalized = String(status).toLowerCase();
+    if (['completed', 'pagado', 'paid', 'vendido'].includes(normalized)) return 'vendido';
+    if (['reservado', 'reserved'].includes(normalized)) return 'reservado';
+    if (['locked', 'bloqueado', 'blocked'].includes(normalized)) return 'locked';
+    if (['seleccionado', 'selected', 'seleccionado_por_otro'].includes(normalized)) return 'seleccionado';
+    return normalized;
+  }, []);
+
+  const seatIds = useMemo(
+    () => elements.filter(el => el.type === 'silla').map(el => String(el._id || el.id)).filter(Boolean),
+    [elements]
+  );
+
+  const statusColors = useMemo(() => ({
+    vendido: '#2d3748',
+    pagado: '#2d3748',
+    completed: '#2d3748',
+    reservado: '#805ad5',
+    locked: '#f56565',
+    bloqueado: '#f56565',
+    seleccionado: '#2196F3',
+    selected: '#2196F3',
+  }), []);
   
   // Historial para Ctrl+Z
   const [history, setHistory] = useState([]);
@@ -265,8 +298,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           type: 'background',
           image: img,
           imageData: e.target.result, // Guardar como data URL
-          width: Math.min(800, window.innerWidth - 320 - 80),
-          height: Math.min(600, window.innerHeight - 80),
+          width: img.width || Math.min(800, window.innerWidth - 320 - 80),
+          height: img.height || Math.min(600, window.innerHeight - 80),
           x: 0,
           y: 0
         });
@@ -311,6 +344,55 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   useEffect(() => {
     selectedIdsRef.current = selectedIds;
   }, [selectedIds]);
+
+  useEffect(() => {
+    const loadSeatStatuses = async () => {
+      if (!seatIds.length) {
+        setSeatStatusMap(new Map());
+        return;
+      }
+
+      try {
+        const normalizedIds = seatIds.map(String);
+        const statusMap = new Map();
+
+        try {
+          const sessionId = localStorage.getItem('anonSessionId');
+          const paymentStatuses = await seatPaymentChecker.checkSeatsBatch(normalizedIds, null, sessionId, { useCache: false });
+          paymentStatuses?.forEach((info, seatId) => {
+            const normalizedStatus = normalizeSeatStatus(info?.status);
+            if (normalizedStatus && normalizedStatus !== 'disponible') {
+              statusMap.set(String(seatId), normalizedStatus);
+            }
+          });
+        } catch (paymentError) {
+          console.warn('[CREAR MAPA] No se pudieron cargar estados desde payment_transactions:', paymentError);
+        }
+
+        const { data: seatLocks, error: seatLocksError } = await supabase
+          .from('seat_locks')
+          .select('seat_id,status')
+          .in('seat_id', normalizedIds);
+
+        if (seatLocksError) {
+          console.error('[CREAR MAPA] Error cargando seat_locks:', seatLocksError);
+        } else if (Array.isArray(seatLocks)) {
+          seatLocks.forEach(lock => {
+            const normalizedStatus = normalizeSeatStatus(lock?.status);
+            if (normalizedStatus && normalizedStatus !== 'disponible') {
+              statusMap.set(String(lock.seat_id), normalizedStatus);
+            }
+          });
+        }
+
+        setSeatStatusMap(statusMap);
+      } catch (error) {
+        console.error('[CREAR MAPA] Error inesperado cargando estados de asientos:', error);
+      }
+    };
+
+    loadSeatStatuses();
+  }, [seatIds, normalizeSeatStatus]);
 
   const loadImageFromSource = useCallback((source) => {
     if (!source || typeof window === 'undefined') {
@@ -1017,8 +1099,21 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       // Tecla Suprimir para eliminar elementos seleccionados
       if (ev.key === 'Delete' && selectedIds?.length) {
         ev.preventDefault();
-        setElements(prev => prev.filter(el => !selectedIds.includes(el._id)));
-        setSelectedIds([]);
+        const protectedIds = selectedIds.filter(id => {
+          const status = seatStatusMap.get(String(id));
+          return status && protectedStatuses.includes(status);
+        });
+
+        if (protectedIds.length) {
+          message.warning('No puedes eliminar asientos que están reservados, vendidos o bloqueados.');
+        }
+
+        const deletableIds = selectedIds.filter(id => !protectedIds.includes(id));
+        if (deletableIds.length) {
+          setElements(prev => prev.filter(el => !deletableIds.includes(el._id)));
+        }
+
+        setSelectedIds(protectedIds);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -1285,10 +1380,21 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const seatStroke = element.stroke || (isSelected ? '#1890ff' : '#a8aebc');
       const seatOpacity = element.empty ? 0.5 : 1;
       const shapeToDraw = element.shape || seatShape || 'circle';
+      const seatId = element._id || element.id;
+      const seatStatus = seatStatusMap.get(String(seatId));
+      const baseColor = getSeatColor(
+        { ...element, estado: seatStatus || element.estado },
+        element.zona,
+        selectedIds.includes(seatId),
+        selectedIds,
+        [],
+        seatStatusMap
+      );
+      const seatFill = seatStatus ? (statusColors[seatStatus] || baseColor) : baseColor;
       if (shapeToDraw === 'circle') {
         return (
           <Group {...commonProps} opacity={seatOpacity}>
-            <Circle radius={element.radius || 10} fill={element.fill || '#00d6a4'} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
+            <Circle radius={element.radius || 10} fill={seatFill} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
             {showSeatNumbers && element.numero ? <KonvaText text={String(element.numero)} fontSize={10} fill="#333" x={-4} y={-4} /> : null}
           </Group>
         );
@@ -1296,7 +1402,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       if (shapeToDraw === 'rect') {
         return (
           <Group {...commonProps} opacity={seatOpacity}>
-            <Rect width={element.width || 20} height={element.height || 20} fill={element.fill || '#00d6a4'} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
+            <Rect width={element.width || 20} height={element.height || 20} fill={seatFill} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
             {showSeatNumbers && element.numero ? <KonvaText text={String(element.numero)} fontSize={10} fill="#333" x={-4} y={-4} /> : null}
           </Group>
         );
@@ -1304,14 +1410,14 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       // butaca: rect con respaldo
       return (
         <Group {...commonProps} opacity={seatOpacity}>
-          <Rect width={element.width || 18} height={element.height || 14} y={4} fill={element.fill || '#00d6a4'} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
-          <Rect width={element.width || 18} height={6} y={-6} fill={element.fill || '#00d6a4'} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
+          <Rect width={element.width || 18} height={element.height || 14} y={4} fill={seatFill} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
+          <Rect width={element.width || 18} height={6} y={-6} fill={seatFill} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
           {showSeatNumbers && element.numero ? <KonvaText text={String(element.numero)} fontSize={9} fill="#333" x={-4} y={-2} /> : null}
         </Group>
       );
     }
     return null;
-  }, [selectedIds, isRightPanning, handleElementDblClick, onDragEnd, addOneSeatRectSide, addOneSeatCircleArc, showTableLabels, showSeatNumbers, seatShape]);
+  }, [selectedIds, isRightPanning, handleElementDblClick, onDragEnd, addOneSeatRectSide, addOneSeatCircleArc, showTableLabels, showSeatNumbers, seatShape, seatStatusMap, statusColors, getSeatColor]);
 
   // Render
   return (
@@ -1353,14 +1459,9 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             </Button>
           </div>
           
-          <Button onClick={onCancel} icon={<ArrowLeftOutlined />} block>
-            Volver
-          </Button>
-          <Divider />
-          
-          <Collapse 
-            defaultActiveKey={[]} 
-            ghost 
+          <Collapse
+            defaultActiveKey={[]}
+            ghost
             size="small"
             expandIcon={({ isActive }) => <DownOutlined rotate={isActive ? 180 : 0} />}
           >
@@ -1571,6 +1672,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
 
           {/* Botones de zoom y centrar */}
           <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+            <SeatStatusLegend inline buttonType="default" placement="left" style={{ width: '100%' }} />
             <Button.Group size="small">
               <Button onClick={zoomIn} icon={<ZoomInOutlined />} />
               <Button onClick={zoomOut} icon={<ZoomOutOutlined />} />
