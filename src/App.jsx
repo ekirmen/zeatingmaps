@@ -20,9 +20,15 @@ import LegalTerms from './store/pages/LegalTerms';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import './index.css';
 
+const logDev = (...args) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(...args);
+  }
+};
+
 // Componente de carga
 const LoadingSpinner = () => (
-  <div style={{ 
+  <div style={{
     display: 'flex', 
     justifyContent: 'center', 
     alignItems: 'center', 
@@ -37,8 +43,8 @@ const LoadingSpinner = () => (
 // Componente principal de la aplicación
 const App = () => {
   // TEST: Log simple para verificar si App.jsx funciona
-  console.log('🚀 [App.jsx] Componente principal ejecutándose');
-  console.log('🚀 [App.jsx] Timestamp:', new Date().toISOString());
+  logDev('🚀 [App.jsx] Componente principal ejecutándose');
+  logDev('🚀 [App.jsx] Timestamp:', new Date().toISOString());
   
   const { loading, error, domainConfig } = useTenant();
   
