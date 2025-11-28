@@ -80,6 +80,23 @@ const App = () => {
   const finalShowBackoffice = isMain ? true : showBackoffice;
   const finalShowStore = isMain ? true : showStore;
 
+  const defaultPath = (() => {
+    if (finalShowStore) {
+      return '/store';
+    }
+
+    if (finalShowBackoffice) {
+      return '/dashboard';
+    }
+
+    if (finalShowSaaS) {
+      return '/dashboard';
+    }
+
+    // Fallback cuando no hay módulos activos
+    return '/dashboard';
+  })();
+
   return (
     <ThemeProvider>
       <ConfigProvider theme={theme}>
@@ -107,18 +124,7 @@ const App = () => {
           {/* Ruta principal - Redirigir según configuración */}
           <Route path="/terminos" element={<LegalTerms />} />
           {/* Redirección por defecto */}
-          <Route path="/" element={
-            <Navigate
-              to={
-                finalShowStore
-                  ? "/store"
-                  : finalShowSaaS
-                  ? "/dashboard"
-                  : "/dashboard"
-              }
-              replace
-            />
-          } />
+          <Route path="/" element={<Navigate to={defaultPath} replace />} />
 
           {/* Ruta de fallback global -> 404 de Store si el store está activo; de lo contrario, redirigir al dashboard */}
           <Route
