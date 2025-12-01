@@ -11,7 +11,7 @@ import formatDateString from '../../utils/formatDateString';
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
-import seatPaymentChecker from '../../../services/seatPaymentChecker';
+import seatPaymentChecker from '../../services/seatPaymentChecker';
 import LazySeatingMap from '../../components/LazySeatingMap';
 import SimpleCart from '../components/SimpleCart';
 import ProductosWidget from '../components/ProductosWidget';
