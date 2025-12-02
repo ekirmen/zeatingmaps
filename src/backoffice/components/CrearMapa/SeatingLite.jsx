@@ -3,7 +3,7 @@ import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line, RegularPoly
 import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider, Upload, Collapse, ColorPicker, Slider } from 'antd';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
 import { supabase } from '../../../supabaseClient';
-import seatPaymentChecker from '../../services/seatPaymentChecker';
+import seatPaymentChecker from '../../../services/seatPaymentChecker';
 import useSeatColors from '../../hooks/useSeatColors';
 import SeatStatusLegend from '../../components/SeatStatusLegend';
 import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined, DownOutlined, UndoOutlined } from '@ant-design/icons';
