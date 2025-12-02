@@ -286,7 +286,8 @@ export const getFuncion = async (functionId) => {
  * @returns {Promise<object>} A promise that resolves to the map data.
  * @throws {Error} If the Supabase query fails.
  */
-export const fetchMapa = async (salaIdOrMapId, by = 'sala') => {
+// fetchMapa: if options.minimal === true, return a compact metadata-only map row
+export const fetchMapa = async (salaIdOrMapId, by = 'sala', options = { minimal: false }) => {
   try {
     console.log(`[fetchMapa] Intentando obtener mapa para ${by === 'id' ? 'map id' : 'sala_id'}:`, salaIdOrMapId);
     
@@ -320,9 +321,19 @@ export const fetchMapa = async (salaIdOrMapId, by = 'sala') => {
       throw new Error(`Error al construir query: ${queryError.message}`);
     }
 
-    const finalQuery = by === 'id'
-      ? query.eq('id', salaIdOrMapId).single()
-      : query.eq('sala_id', salaIdOrMapId).single();
+    // If minimal requested, select only a compact set of fields (avoid contenido heavy payload)
+    let finalQuery;
+    if (options && options.minimal) {
+      // Return only identifiers and common lightweight columns (safe subset)
+      // Note: columns chosen based on current schema: id, sala_id, nombre, descripcion, estado, imagen_fondo
+      finalQuery = by === 'id'
+        ? supabase.from('mapas').select('id,sala_id,nombre,descripcion,estado,imagen_fondo').eq('id', salaIdOrMapId).single()
+        : supabase.from('mapas').select('id,sala_id,nombre,descripcion,estado,imagen_fondo').eq('sala_id', salaIdOrMapId).single();
+    } else {
+      finalQuery = by === 'id'
+        ? query.eq('id', salaIdOrMapId).single()
+        : query.eq('sala_id', salaIdOrMapId).single();
+    }
     
     console.log('[fetchMapa] Ejecutando query para:', by === 'id' ? 'ID de mapa' : 'ID de sala', salaIdOrMapId);
     console.log('[fetchMapa] Tipo de query:', typeof finalQuery);
@@ -413,6 +424,29 @@ export const fetchMapa = async (salaIdOrMapId, by = 'sala') => {
 
 // Helper explícito por id de mapa
 export const fetchMapaById = async (mapaId) => fetchMapa(mapaId, 'id');
+
+/**
+ * Fetch only the heavy map content (contenido) for a given sala or map id.
+ * Use this to lazy-load the full map after a minimal initial request.
+ */
+export const fetchMapaContent = async (salaIdOrMapId, by = 'sala') => {
+  try {
+    const finalQuery = by === 'id'
+      ? supabase.from('mapas').select('contenido').eq('id', salaIdOrMapId).single()
+      : supabase.from('mapas').select('contenido').eq('sala_id', salaIdOrMapId).single();
+
+    const { data, error, status } = await finalQuery;
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      console.error('[fetchMapaContent] Error fetching contenido:', error);
+      throw error;
+    }
+    return data?.contenido ?? null;
+  } catch (err) {
+    console.error('[fetchMapaContent] Unexpected error:', err);
+    throw err;
+  }
+};
 
 /**
  * Fetches a seating map associated with an event.

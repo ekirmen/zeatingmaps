@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Stage, Layer, Circle, Rect, Text, Group } from 'react-konva';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
-import { fetchMapa } from '../services/apistore';
+import { fetchMapa, fetchMapaContent } from '../services/apistore';
 import SeatSelectionTimer from '../components/SeatSelectionTimer';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import { useCartStore } from '../cartStore';
@@ -34,20 +34,32 @@ const SelectSeats = () => {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const data = await fetchMapa(salaId);
-        if (!data || !data.contenido) {
-          throw new Error('Datos no válidos o vacíos');
+        // First load a minimal/lightweight version to reduce initial payload and LCP
+        const minimal = await fetchMapa(salaId, 'sala', { minimal: true });
+        if (!minimal) {
+          // If there's no map metadata, try full fetch as fallback
+          const fallback = await fetchMapa(salaId);
+          if (!fallback || !fallback.contenido) throw new Error('Datos no válidos o vacíos');
+          setMapa(fallback);
+          const elementos = Array.isArray(fallback?.contenido) ? fallback.contenido : fallback.contenido?.elementos || [];
+          setMapElements(elementos.filter(Boolean));
+        } else {
+          // Use metadata initially (will not include contenido)
+          setMapa(minimal);
+          // Start loading heavy content in background
+          setLoading(true);
+          fetchMapaContent(salaId, 'sala').then((contenido) => {
+            if (contenido) {
+              const elementos = Array.isArray(contenido) ? contenido : contenido.elementos || [];
+              setMapElements(elementos.filter(Boolean));
+              // merge back into mapa so other code can access mapa.contenido
+              setMapa(prev => ({ ...(prev || {}), contenido }));
+            }
+          }).catch(err => {
+            console.warn('[SelectSeats] Error cargando contenido completo:', err);
+          }).finally(() => setLoading(false));
         }
-        setMapa(data);
         
-        // Si el contenido es un array, procesarlo directamente
-        // Si es un objeto, buscar la propiedad 'elementos'
-        const elementos = Array.isArray(data.contenido)
-          ? data.contenido
-          : data.contenido.elementos || [];
-
-        // Mantener todos los elementos para soportar zonas, gradas y filas
-        setMapElements(elementos.filter(Boolean));
       } catch (err) {
         setError(err.message);
       } finally {
