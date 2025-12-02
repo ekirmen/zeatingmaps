@@ -46,8 +46,8 @@ function main() {
       if (!importPath.startsWith('.')) continue;
       const resolved = resolveImport(f, importPath);
       if (!resolved) {
-        // check if import path includes '/hooks/' or '/services/' — those are likely intended to point to top-level or backoffice
-        if (importPath.includes('/hooks/') || importPath.includes('/services/')) {
+        // check if import path includes '/hooks/', '/services/' or '/components/' — those are likely intended to point to top-level or backoffice
+        if (importPath.includes('/hooks/') || importPath.includes('/services/') || importPath.includes('/components/')) {
           issues.push({ file: f, import: importPath });
         }
       }
