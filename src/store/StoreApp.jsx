@@ -11,7 +11,7 @@ import './styles/store-design.css'; // Modern design system
 import Event from './pages/Event';
 import EventInfo from './pages/EventInfo';
 import BuyEvent from './pages/BuyEvent';
-import SelectSeats from './pages/SelectSeats';
+const SelectSeats = React.lazy(() => import('./pages/SelectSeats'));
 import CartPage from './pages/Cart';
 import Pay from './pages/Pay';
 import FaqPage from './pages/FaqPage';
@@ -103,6 +103,7 @@ const StoreApp = () => {
           <div className="min-h-screen flex flex-col">
             {showHeader && <Header />}
             <div className="flex-grow">
+              <React.Suspense fallback={<div style={{padding:40}}>Cargando...</div>}>
               <Routes>
                   {/* Render modern store page by default */}
                   <Route index element={<ModernStorePage />} />
@@ -152,6 +153,7 @@ const StoreApp = () => {
                 <Route path="404" element={<NotFound />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </React.Suspense>
             </div>
             {showFooter && <BasicFooter />}
             <GlobalCartTimer />
