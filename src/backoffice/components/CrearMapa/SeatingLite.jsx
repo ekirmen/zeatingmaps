@@ -4,7 +4,7 @@ import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider, 
 import { fetchZonasPorSala } from '../../services/apibackoffice';
 import { supabase } from '../../../supabaseClient';
 import seatPaymentChecker from '../../../services/seatPaymentChecker';
-import useSeatColors from '../../hooks/useSeatColors';
+import useSeatColors from '../../../hooks/useSeatColors';
 import SeatStatusLegend from '../../components/SeatStatusLegend';
 import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined, DownOutlined, UndoOutlined } from '@ant-design/icons';
 
