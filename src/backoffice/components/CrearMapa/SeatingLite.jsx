@@ -5,7 +5,7 @@ import { fetchZonasPorSala } from '../../services/apibackoffice';
 import { supabase } from '../../../supabaseClient';
 import seatPaymentChecker from '../../../services/seatPaymentChecker';
 import useSeatColors from '../../../hooks/useSeatColors';
-import SeatStatusLegend from '../../components/SeatStatusLegend';
+import SeatStatusLegend from '../../../components/SeatStatusLegend';
 import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined, DownOutlined, UndoOutlined } from '@ant-design/icons';
 
 const pickStringValue = (value) => (typeof value === 'string' && value.trim().length > 0 ? value : null);
