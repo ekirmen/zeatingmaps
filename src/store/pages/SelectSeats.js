@@ -26,6 +26,11 @@ const SelectSeats = () => {
     isSeatLockedByMe,
   } = useSeatLockStore();
 
+  // Read commonly used seat lock data once to avoid repeated calls inside render loops
+  const lockedSeats = useSeatLockStore(state => state.lockedSeats);
+  const getSeatState = useSeatLockStore(state => state.getSeatState);
+  const currentSessionId = React.useMemo(() => typeof window !== 'undefined' ? localStorage.getItem('anonSessionId') : null, []);
+
   useEffect(() => {
     const cargarDatos = async () => {
       try {
@@ -182,24 +187,23 @@ const SelectSeats = () => {
                     />
 
                     {mesa.sillas &&
-                      mesa.sillas.map((silla, sillaIndex) => {
-                        const angle = (sillaIndex * 360) / mesa.sillas.length;
-                        const x =
-                          (mesa.posicion?.x || 0) +
-                          Math.cos((angle * Math.PI) / 180) * 50;
-                        const y =
-                          (mesa.posicion?.y || 0) +
-                          Math.sin((angle * Math.PI) / 180) * 50;
+                              mesa.sillas.map((silla, sillaIndex) => {
+                                const angle = (sillaIndex * 360) / mesa.sillas.length;
+                                const x =
+                                  (mesa.posicion?.x || 0) +
+                                  Math.cos((angle * Math.PI) / 180) * 50;
+                                const y =
+                                  (mesa.posicion?.y || 0) +
+                                  Math.sin((angle * Math.PI) / 180) * 50;
 
-                        const currentSessionId = localStorage.getItem('anonSessionId');
-                        const lockedSeats = useSeatLockStore.getState().lockedSeats;
-                        const isLockedByMe = lockedSeats.some(lock =>
-                          lock.seat_id === silla._id &&
-                          lock.funcion_id === funcionId &&
-                          lock.session_id === currentSessionId
-                        );
-                        const isLocked = lockedSeats.some(lock => lock.seat_id === silla._id);
-                        const seatEstado = silla.estado || useSeatLockStore.getState().getSeatState?.(silla._id);
+                                // Use memoized values captured outside the map to avoid repeated calls
+                                const isLockedByMe = lockedSeats.some(lock =>
+                                  lock.seat_id === silla._id &&
+                                  lock.funcion_id === funcionId &&
+                                  lock.session_id === currentSessionId
+                                );
+                                const isLocked = lockedSeats.some(lock => lock.seat_id === silla._id);
+                                const seatEstado = silla.estado || getSeatState?.(silla._id);
 
                         const fillColor = isLockedByMe
                           ? 'blue'
