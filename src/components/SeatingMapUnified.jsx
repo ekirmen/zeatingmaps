@@ -629,25 +629,44 @@ const SeatingMapUnified = ({
       imageProgressMap.current.clear();
       return;
     }
+    // Deferir la inicialización de la carga de imágenes para no bloquear
+    // el primer paint. Usar requestIdleCallback si está disponible.
+    let cancelled = false;
+    const initImageLoading = () => {
+      if (cancelled) return;
+      // Inicializar estado de carga
+      setImagesLoading(true);
+      setImageLoadStage('cargandoImagen');
+      setImageLoadProgress(0);
+      imageProgressMap.current.clear();
 
-    // Inicializar estado de carga
-    setImagesLoading(true);
-    setImageLoadStage('cargandoImagen');
-    setImageLoadProgress(0);
-    imageProgressMap.current.clear();
+      // Inicializar progreso para elementos sin URL (considerarlos como cargados)
+      backgroundElements.forEach((bg, index) => {
+        const url = bg.imageUrl || bg.url || bg.src || bg.image?.url || bg.image?.publicUrl || bg.imageData || bg.image?.data;
+        if (!url) {
+          imageProgressMap.current.set(index, 100);
+        } else {
+          imageProgressMap.current.set(index, 0);
+        }
+      });
 
-    // Inicializar progreso para elementos sin URL (considerarlos como cargados)
-    backgroundElements.forEach((bg, index) => {
-      const url = bg.imageUrl || bg.url || bg.src || bg.image?.url || bg.image?.publicUrl || bg.imageData || bg.image?.data;
-      if (!url) {
-        imageProgressMap.current.set(index, 100);
-      } else {
-        imageProgressMap.current.set(index, 0);
-      }
-    });
+      // Las imágenes se cargarán individualmente a través de BackgroundImage
+      // El callback handleImageLoadProgress actualizará el progreso
+    };
 
-    // Las imágenes se cargarán individualmente a través de BackgroundImage
-    // El callback handleImageLoadProgress se encargará de actualizar el progreso
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(initImageLoading, { timeout: 500 });
+      return () => {
+        cancelled = true;
+        try { window.cancelIdleCallback && window.cancelIdleCallback(id); } catch (e) {}
+      };
+    }
+
+    const t = setTimeout(initImageLoading, 50);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
   }, [backgroundElements]);
 
   // const [mapImage, setMapImage] = React.useState(null); // Removido por no usarse

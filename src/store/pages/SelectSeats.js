@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 // react-konva is large; defer loading to runtime so it doesn't inflate the initial bundle.
 // We'll dynamically import it when this page mounts.
 import { useParams, useNavigate } from 'react-router-dom';
@@ -27,24 +27,15 @@ const SelectSeats = () => {
     isSeatLockedByMe,
   } = useSeatLockStore();
 
+  const setVisibleSeats = useSeatLockStore(state => state.setVisibleSeats);
+
   // Read commonly used seat lock data once to avoid repeated calls inside render loops
   const lockedSeats = useSeatLockStore(state => state.lockedSeats);
   const getSeatState = useSeatLockStore(state => state.getSeatState);
   const currentSessionId = React.useMemo(() => typeof window !== 'undefined' ? localStorage.getItem('anonSessionId') : null, []);
 
-  const [Konva, setKonva] = useState(null);
-
-  useEffect(() => {
-    let mounted = true;
-    import('react-konva')
-      .then((mod) => {
-        if (mounted) setKonva(mod);
-      })
-      .catch((err) => {
-        console.warn('[SelectSeats] Error loading react-konva:', err);
-      });
-    return () => { mounted = false; };
-  }, []);
+  // `react-konva` is imported inside the lazily loaded canvas component
+  // to ensure Konva ends up in a separate chunk.
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -137,11 +128,108 @@ const SelectSeats = () => {
     console.log('Tiempo agotado - asientos liberados automáticamente');
   };
 
-  if (!Konva) return <p>Cargando librería de mapa...</p>;
+  const Canvas = React.lazy(() => import('./SelectSeatsCanvas'));
+  const [processedElements, setProcessedElements] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    let worker = null;
+
+    try {
+      worker = new Worker(new URL('../../workers/mapLayout.worker.js', import.meta.url));
+    } catch (err) {
+      console.warn('[SelectSeats] WebWorker not available, falling back to main-thread layout:', err);
+    }
+
+    const computeLocally = (elements) => {
+      try {
+        return elements.map((elemento) => {
+          if (!elemento) return elemento;
+          if (elemento.type === 'mesa' && Array.isArray(elemento.sillas)) {
+            const mesa = { ...elemento };
+            const cx = (mesa.posicion?.x || 0);
+            const cy = (mesa.posicion?.y || 0);
+            const radius = mesa.radio || 50;
+            const total = mesa.sillas.length;
+            mesa.sillas = mesa.sillas.map((silla, idx) => {
+              const angle = (idx * 360) / total;
+              const rad = (angle * Math.PI) / 180;
+              const x = cx + Math.cos(rad) * radius;
+              const y = cy + Math.sin(rad) * radius;
+              return { ...silla, _computed: { x, y, angle } };
+            });
+            return mesa;
+          }
+          if (elemento.type === 'zona' || elemento.type === 'fila' || elemento.type === 'grada') {
+            return { ...elemento, _computed: { x: elemento.posicion?.x || 0, y: elemento.posicion?.y || 0 } };
+          }
+          return elemento;
+        });
+      } catch (err) {
+        console.warn('[SelectSeats] Local compute failed:', err);
+        return elements;
+      }
+    };
+
+    if (worker) {
+      worker.addEventListener('message', (ev) => {
+        if (!mounted) return;
+        const { success, processed, error } = ev.data || {};
+        if (success && Array.isArray(processed)) {
+          setProcessedElements(processed);
+        } else {
+          console.warn('[SelectSeats] Worker processing failed:', error);
+          setProcessedElements(computeLocally(mapElements));
+        }
+      });
+    }
+
+    // Kick off initial processing if we already have elements
+    if (mapElements && mapElements.length) {
+      if (worker) {
+        worker.postMessage({ mapElements, stageSize });
+      } else {
+        setProcessedElements(computeLocally(mapElements));
+      }
+    } else {
+      setProcessedElements([]);
+    }
+
+    return () => {
+      mounted = false;
+      if (worker) worker.terminate();
+    };
+  }, [mapElements, stageSize]);
+
+  // Compute visible seats from processedElements and stage size to limit realtime locks
+  useEffect(() => {
+    try {
+      const width = stageSize.width || window.innerWidth;
+      const height = stageSize.height || window.innerHeight;
+      const visibleIds = new Set();
+
+      (processedElements.length ? processedElements : mapElements).forEach((el) => {
+        if (!el) return;
+        if (el.type === 'mesa' && Array.isArray(el.sillas)) {
+          el.sillas.forEach((silla) => {
+            const x = silla._computed?.x ?? silla.posicion?.x;
+            const y = silla._computed?.y ?? silla.posicion?.y;
+            if (typeof x === 'number' && typeof y === 'number') {
+              if (x >= 0 && x <= width && y >= 0 && y <= height) {
+                visibleIds.add(silla._id || silla.id || silla.sillaId);
+              }
+            }
+          });
+        }
+      });
+
+      setVisibleSeats(Array.from(visibleIds));
+    } catch (err) {
+      console.warn('[SelectSeats] Error computing visible seats:', err);
+    }
+  }, [processedElements, mapElements, stageSize, setVisibleSeats]);
   if (loading) return <p>Cargando asientos...</p>;
   if (error) return <p>Error: {error}</p>;
-
-  const { Stage, Layer, Circle, Rect, Text, Group } = Konva || {};
 
   const backgroundUrl = mapa?.backgroundImage || mapa?.image || mapa?.fondo || null;
 
@@ -155,126 +243,18 @@ const SelectSeats = () => {
           backgroundPosition: 'center',
         }}
       >
-        <Stage width={stageSize.width} height={stageSize.height}>
-          <Layer>
-            {mapElements.map((elemento, idx) => {
-              if (elemento.type === 'zona' || elemento.type === 'grada' || elemento.type === 'fila') {
-                const { posicion = {}, dimensiones = {}, nombre, estado, color } = elemento;
-                const overlayColor =
-                  estado === 'reservado'
-                    ? '#666'
-                    : estado === 'pagado'
-                    ? '#999'
-                    : estado === 'bloqueado'
-                    ? 'orange'
-                    : color || 'rgba(0, 128, 0, 0.35)';
-
-                return (
-                  <Group key={elemento._id || idx}>
-                    <Rect
-                      x={posicion.x || 0}
-                      y={posicion.y || 0}
-                      width={dimensiones.ancho || dimensiones.width || 60}
-                      height={dimensiones.alto || dimensiones.height || 40}
-                      fill={overlayColor}
-                      stroke="black"
-                      strokeWidth={1}
-                      cornerRadius={4}
-                    />
-                    {nombre && (
-                      <Text
-                        x={(posicion.x || 0) + 6}
-                        y={(posicion.y || 0) + 6}
-                        text={nombre}
-                        fontSize={12}
-                        fill="black"
-                      />
-                    )}
-                  </Group>
-                );
-              }
-
-              if (elemento.type === 'mesa') {
-                const mesa = elemento;
-                return (
-                  <React.Fragment key={mesa._id || idx}>
-                    <Circle
-                      x={mesa.posicion?.x || 0}
-                      y={mesa.posicion?.y || 0}
-                      radius={30}
-                      fill={mesa.color || 'green'}
-                      stroke="black"
-                      strokeWidth={2}
-                    />
-                    <Text
-                      x={(mesa.posicion?.x || 0) - 30}
-                      y={(mesa.posicion?.y || 0) - 10}
-                      text={mesa.nombre || `Mesa ${idx + 1}`}
-                      fontSize={14}
-                      fill="black"
-                      align="center"
-                    />
-
-                    {mesa.sillas &&
-                              mesa.sillas.map((silla, sillaIndex) => {
-                                const angle = (sillaIndex * 360) / mesa.sillas.length;
-                                const x =
-                                  (mesa.posicion?.x || 0) +
-                                  Math.cos((angle * Math.PI) / 180) * 50;
-                                const y =
-                                  (mesa.posicion?.y || 0) +
-                                  Math.sin((angle * Math.PI) / 180) * 50;
-
-                                // Use memoized values captured outside the map to avoid repeated calls
-                                const isLockedByMe = lockedSeats.some(lock =>
-                                  lock.seat_id === silla._id &&
-                                  lock.funcion_id === funcionId &&
-                                  lock.session_id === currentSessionId
-                                );
-                                const isLocked = lockedSeats.some(lock => lock.seat_id === silla._id);
-                                const seatEstado = silla.estado || getSeatState?.(silla._id);
-
-                        const fillColor = isLockedByMe
-                          ? 'blue'
-                          : isLocked
-                          ? 'orange'
-                          : seatEstado === 'reservado'
-                          ? '#555'
-                          : seatEstado === 'pagado'
-                          ? 'gray'
-                          : silla.color || 'lightblue';
-
-                        return (
-                          <React.Fragment key={silla._id || sillaIndex}>
-                            <Circle
-                              x={x}
-                              y={y}
-                              radius={10}
-                              fill={fillColor}
-                              stroke="black"
-                              strokeWidth={1}
-                              onClick={() => toggleSeatSelection(silla)}
-                            />
-                            <Text
-                              x={x - 10}
-                              y={y - 6}
-                              text={`${sillaIndex + 1}`}
-                              fontSize={12}
-                              fill="black"
-                              align="center"
-                              width={20}
-                            />
-                          </React.Fragment>
-                        );
-                      })}
-                  </React.Fragment>
-                );
-              }
-
-              return null;
-            })}
-          </Layer>
-        </Stage>
+        <Suspense fallback={<div>Cargando mapa...</div>}>
+          <Canvas
+            mapElements={processedElements.length ? processedElements : mapElements}
+            stageSize={stageSize}
+            funcionId={funcionId}
+            lockedSeats={lockedSeats}
+            getSeatState={getSeatState}
+            currentSessionId={currentSessionId}
+            toggleSeatSelection={toggleSeatSelection}
+            mapa={mapa}
+          />
+        </Suspense>
       </div>
       <div className="w-[300px] overflow-y-auto p-4 bg-white">
         <SeatSelectionTimer

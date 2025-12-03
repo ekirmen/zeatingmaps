@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, Typography, Button, Space, Badge, Drawer } from 'antd';
 import { 
@@ -8,7 +8,9 @@ import {
   ClockCircleOutlined,
   EnvironmentOutlined
 } from '@ant-design/icons';
-import CompactSeatingMap from '../components/CompactSeatingMap';
+// Lazy-load the compact seating map to avoid pulling `react-konva` into
+// the initial bundle for mobile event pages.
+const CompactSeatingMap = lazy(() => import('../components/CompactSeatingMap'));
 import { supabase } from '../../supabaseClient';
 import VisualNotifications from '../../utils/VisualNotifications';
 
@@ -141,28 +143,30 @@ const MobileEventPage = () => {
 
       {/* Mapa de asientos compacto */}
       <Card className="map-card" size="small">
-        <CompactSeatingMap
-          funcionId={funcionId}
-          mapa={mapa}
-          selectedSeats={cartItems}
-          onAddToCart={handleAddToCart}
-          cartItems={cartItems}
-          // Props adicionales para funcionalidad completa
-          lockSeat={() => {}}
-          unlockSeat={() => {}}
-          lockTable={() => {}}
-          unlockTable={() => {}}
-          isSeatLocked={() => false}
-          isSeatLockedByMe={() => false}
-          isTableLocked={() => false}
-          isTableLockedByMe={() => false}
-          isAnySeatInTableLocked={() => false}
-          areAllSeatsInTableLockedByMe={() => false}
-          onSeatToggle={() => {}}
-          onTableToggle={() => {}}
-          onSeatInfo={() => {}}
-          foundSeats={[]}
-        />
+        <Suspense fallback={<div style={{ padding: 12 }}><Text> Cargando mapa...</Text></div>}>
+          <CompactSeatingMap
+            funcionId={funcionId}
+            mapa={mapa}
+            selectedSeats={cartItems}
+            onAddToCart={handleAddToCart}
+            cartItems={cartItems}
+            // Props adicionales para funcionalidad completa
+            lockSeat={() => {}}
+            unlockSeat={() => {}}
+            lockTable={() => {}}
+            unlockTable={() => {}}
+            isSeatLocked={() => false}
+            isSeatLockedByMe={() => false}
+            isTableLocked={() => false}
+            isTableLockedByMe={() => false}
+            isAnySeatInTableLocked={() => false}
+            areAllSeatsInTableLockedByMe={() => false}
+            onSeatToggle={() => {}}
+            onTableToggle={() => {}}
+            onSeatInfo={() => {}}
+            foundSeats={[]}
+          />
+        </Suspense>
       </Card>
 
       {/* Botón flotante del carrito */}

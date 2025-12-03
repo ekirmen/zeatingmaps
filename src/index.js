@@ -114,3 +114,12 @@ root.render(
     </Router>
   </I18nextProvider>
 );
+
+// Remove the initial paint fallback added to `public/index.html` once React has mounted
+try {
+  if (typeof window !== 'undefined' && window.__removeInitialPaint) {
+    window.__removeInitialPaint();
+  }
+} catch (e) {
+  // swallow errors — non-critical
+}

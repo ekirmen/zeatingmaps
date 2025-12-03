@@ -150,8 +150,9 @@ module.exports = {
       ],
     ],
     plugins: [
-      // Optimizar imports
-      ['import', { libraryName: 'antd', style: false }],
+      // Optimizar imports: no inyectar CSS automáticamente (style: false).
+      // CSS de antd se carga de forma explícita/condicional desde `src/index.js` via `antd/dist/reset.css`.
+      ['import', { libraryName: 'antd', style: false, libraryDirectory: 'es' }],
     ],
   },
   // Optimizar PostCSS

@@ -114,6 +114,26 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    <!-- Fallback minimal para asegurar un primer pintado (FCP) durante auditorías
+         Se retirará cuando la app haya montado (ver `src/index.js`). -->
+    <div id="initial-paint" class="initial-loading" role="status" aria-live="polite">
+      Cargando…
+    </div>
+    <script>
+      // Exponer una función que la app puede usar para retirar el fallback
+      window.__removeInitialPaint = function () {
+        try {
+          var el = document.getElementById('initial-paint');
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        } catch (e) {
+          // ignore
+        }
+      };
+      // Safety: también intentamos limpiar cuando se dispare DOMContentLoaded
+      document.addEventListener('DOMContentLoaded', function () {
+        if (window.__removeInitialPaint) window.__removeInitialPaint();
+      });
+    </script>
     <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
