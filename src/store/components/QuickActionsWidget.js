@@ -1,37 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { Card, Button, Space, Typography, Tooltip, Badge } from 'antd';
 import { 
   ShoppingCartOutlined, 
   SaveOutlined, 
   DeleteOutlined, 
   HistoryOutlined,
-  PlusOutlined,
   UserOutlined,
-  PackageOutlined
+  ShoppingOutlined  
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
-import SavedCartsWidget from './SavedCartsWidget';
 
-const { Title, Text } = Typography;
+// Lazy-load del modal para optimizar bundle
+const SavedCartsWidget = lazy(() => import('./SavedCartsWidget'));
+
+const { Text } = Typography;
 
 const QuickActionsWidget = () => {
   const [savedCartsVisible, setSavedCartsVisible] = useState(false);
-  const { 
-    getItemCount, 
-    calculateTotal, 
-    clearCart,
-    items,
-    products
-  } = useCartStore();
+  const { getItemCount, calculateTotal, clearCart, items, products } = useCartStore();
 
-  const itemCount = getItemCount();
-  const total = calculateTotal();
-  const seatsCount = items.length;
-  const productsCount = products.length;
+  // Memoizar cálculos del carrito
+  const { itemCount, total, seatsCount, productsCount } = useMemo(() => ({
+    itemCount: getItemCount(),
+    total: calculateTotal(),
+    seatsCount: items.length,
+    productsCount: products.length
+  }), [getItemCount, calculateTotal, items.length, products.length]);
 
-  const handleClearCart = () => {
-    clearCart();
-  };
+  const handleClearCart = useCallback(() => clearCart(), [clearCart]);
+  const openSavedCarts = useCallback(() => setSavedCartsVisible(true), []);
+  const closeSavedCarts = useCallback(() => setSavedCartsVisible(false), []);
 
   return (
     <>
@@ -62,15 +60,13 @@ const QuickActionsWidget = () => {
                 )}
                 {productsCount > 0 && (
                   <div className="flex items-center space-x-2">
-                    <PackageOutlined className="text-green-500" />
+                    <ShoppingOutlined className="text-green-500" />
                     <Text>{productsCount} productos</Text>
                   </div>
                 )}
                 <div className="flex items-center justify-between pt-1 border-t">
                   <Text strong>Total:</Text>
-                  <Text strong className="text-blue-600">
-                    ${total.toFixed(2)}
-                  </Text>
+                  <Text strong className="text-blue-600">${total.toFixed(2)}</Text>
                 </div>
               </div>
             </div>
@@ -83,7 +79,7 @@ const QuickActionsWidget = () => {
                 type="primary" 
                 icon={<SaveOutlined />}
                 block
-                onClick={() => setSavedCartsVisible(true)}
+                onClick={openSavedCarts}
                 disabled={itemCount === 0}
               >
                 Guardar Carrito
@@ -94,7 +90,7 @@ const QuickActionsWidget = () => {
               <Button 
                 icon={<HistoryOutlined />}
                 block
-                onClick={() => setSavedCartsVisible(true)}
+                onClick={openSavedCarts}
               >
                 Carritos Guardados
               </Button>
@@ -130,10 +126,9 @@ const QuickActionsWidget = () => {
       </Card>
 
       {/* Saved Carts Modal */}
-      <SavedCartsWidget 
-        visible={savedCartsVisible}
-        onClose={() => setSavedCartsVisible(false)}
-      />
+      <Suspense fallback={null}>
+        <SavedCartsWidget visible={savedCartsVisible} onClose={closeSavedCarts} />
+      </Suspense>
     </>
   );
 };
