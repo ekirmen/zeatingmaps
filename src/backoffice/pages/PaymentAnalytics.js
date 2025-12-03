@@ -296,14 +296,6 @@ const PaymentAnalytics = () => {
     return colors[status] || 'blue';
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
   const totalRevenue = analyticsData.transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   const totalTransactions = analyticsData.transactions.length;
   const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
@@ -334,6 +326,14 @@ const PaymentAnalytics = () => {
       failure: (statusBreakdown.failed / total) * 100,
     };
   }, [statusBreakdown, totalTransactions]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">

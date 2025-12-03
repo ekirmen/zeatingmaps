@@ -1,5 +1,12 @@
 import { supabase } from '../supabaseClient';
 
+// Use a fallback logger if no global logger is provided (prevents build eslint no-undef)
+const logger = (typeof window !== 'undefined' && window.logger)
+  ? window.logger
+  : (typeof global !== 'undefined' && global.logger)
+    ? global.logger
+    : console;
+
 // ✅ fetchMapa SIN usar relaciones automáticas
 export const fetchMapa = async (salaId) => {
   if (!salaId) {

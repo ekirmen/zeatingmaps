@@ -1,8 +1,27 @@
+/* eslint-disable import/first */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import './styles/cross-browser.css';
-import 'antd/dist/reset.css';
+
+// Defer loading the full antd reset CSS to reduce initial CSS payload.
+// Load on-demand for admin/backoffice routes, otherwise expose a helper
+// so pages that need antd can request styles later.
+if (typeof window !== 'undefined') {
+  const shouldLoadAntdReset = window.location.pathname.startsWith('/backoffice')
+    || window.location.pathname.startsWith('/admin')
+    || window.location.pathname.startsWith('/dashboard');
+
+  if (shouldLoadAntdReset) {
+    import('antd/dist/reset.css').catch(() => {
+      // swallow errors; best-effort loading of styles
+    });
+  } else {
+    // Allow other modules to opt-in to load antd styles when needed.
+    // Usage: `if (window.loadAntdStyles) window.loadAntdStyles()`
+    window.loadAntdStyles = () => import('antd/dist/reset.css');
+  }
+}
 import App from './App';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';

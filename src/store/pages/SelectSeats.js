@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Stage, Layer, Circle, Rect, Text, Group } from 'react-konva';
+// react-konva is large; defer loading to runtime so it doesn't inflate the initial bundle.
+// We'll dynamically import it when this page mounts.
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { fetchMapa, fetchMapaContent } from '../services/apistore';
@@ -30,6 +31,20 @@ const SelectSeats = () => {
   const lockedSeats = useSeatLockStore(state => state.lockedSeats);
   const getSeatState = useSeatLockStore(state => state.getSeatState);
   const currentSessionId = React.useMemo(() => typeof window !== 'undefined' ? localStorage.getItem('anonSessionId') : null, []);
+
+  const [Konva, setKonva] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    import('react-konva')
+      .then((mod) => {
+        if (mounted) setKonva(mod);
+      })
+      .catch((err) => {
+        console.warn('[SelectSeats] Error loading react-konva:', err);
+      });
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -122,11 +137,13 @@ const SelectSeats = () => {
     console.log('Tiempo agotado - asientos liberados automáticamente');
   };
 
+  if (!Konva) return <p>Cargando librería de mapa...</p>;
   if (loading) return <p>Cargando asientos...</p>;
   if (error) return <p>Error: {error}</p>;
 
-  const backgroundUrl =
-    mapa?.backgroundImage || mapa?.image || mapa?.fondo || null;
+  const { Stage, Layer, Circle, Rect, Text, Group } = Konva || {};
+
+  const backgroundUrl = mapa?.backgroundImage || mapa?.image || mapa?.fondo || null;
 
   return (
     <div className="flex h-screen overflow-hidden">
