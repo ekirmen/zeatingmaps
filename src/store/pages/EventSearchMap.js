@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Input, List, Button } from 'antd';
-import SeatingMap from '../components/SeatingMap';
+import LoadOnVisible from '../../components/LoadOnVisible';
+import { SeatMapSkeleton } from '../../components/SkeletonLoaders';
 import { supabase } from '../../supabaseClient';
 import { fetchMapa, getFunciones } from '../services/apistore';
 
@@ -81,10 +82,15 @@ const EventSearchMap = () => {
       
       {/* ✨ FIX: Use selectedFunc to show details about the selected map */}
       {mapa && selectedFunc && (
-        <div className="border p-4">
-           <h3>Mapa de asientos para la función del {selectedFunc.fechaCelebracion ? new Date(selectedFunc.fechaCelebracion).toLocaleString() : 'fecha no disponible'}</h3>
-          <SeatingMap mapa={mapa} onClickSilla={() => {}} />
-        </div>
+          <div className="border p-4">
+            <h3>Mapa de asientos para la función del {selectedFunc.fechaCelebracion ? new Date(selectedFunc.fechaCelebracion).toLocaleString() : 'fecha no disponible'}</h3>
+            <LoadOnVisible
+              loader={() => import('../../components/SeatingMap')}
+              fallback={<SeatMapSkeleton />}
+              rootMargin="400px"
+              loaderProps={{ mapa, onClickSilla: () => {} }}
+            />
+          </div>
       )}
     </div>
   );

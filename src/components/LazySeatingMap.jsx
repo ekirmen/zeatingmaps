@@ -1,18 +1,17 @@
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { SeatMapSkeleton } from './SkeletonLoaders';
+import LoadOnVisible from './LoadOnVisible';
 
-// Lazy load del componente de mapa (code splitting)
-const SeatingMapUnified = lazy(() => import('./SeatingMapUnified'));
-
-/**
- * Wrapper con lazy loading para SeatingMapUnified
- * Carga el componente solo cuando es necesario
- */
+// Use LoadOnVisible so the heavy SeatingMapUnified bundle is only requested
+// when the map placeholder enters the viewport.
 const LazySeatingMap = (props) => {
   return (
-    <Suspense fallback={<SeatMapSkeleton />}>
-      <SeatingMapUnified {...props} />
-    </Suspense>
+    <LoadOnVisible
+      loader={() => import('./SeatingMapUnified')}
+      fallback={<SeatMapSkeleton />}
+      rootMargin="400px"
+      loaderProps={props}
+    />
   );
 };
 
