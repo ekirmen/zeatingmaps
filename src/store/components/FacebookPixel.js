@@ -36,7 +36,6 @@ const FacebookPixel = ({ pixelId, pixelScript, eventName, eventData = {} }) => {
     let timerId = null;
 
     if ('requestIdleCallback' in window) {
-      // @ts-ignore
       idleId = window.requestIdleCallback(doLoad, { timeout: 2000 });
     } else {
       timerId = setTimeout(doLoad, 2000);
@@ -51,7 +50,7 @@ const FacebookPixel = ({ pixelId, pixelScript, eventName, eventData = {} }) => {
     const removeListeners = () => {
       window.removeEventListener('pointerdown', onFirstInteraction);
       window.removeEventListener('keydown', onFirstInteraction);
-      if (idleId && (window as any).cancelIdleCallback) (window as any).cancelIdleCallback(idleId);
+      if (idleId && typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(idleId);
       if (timerId) clearTimeout(timerId);
     };
 
@@ -76,7 +75,7 @@ const FacebookPixel = ({ pixelId, pixelScript, eventName, eventData = {} }) => {
     return () => {
       try { window.removeEventListener('pointerdown', onFirstInteraction); } catch (e) { }
       try { window.removeEventListener('keydown', onFirstInteraction); } catch (e) { }
-      if (idleId && (window as any).cancelIdleCallback) (window as any).cancelIdleCallback(idleId);
+      if (idleId && typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(idleId);
       if (timerId) clearTimeout(timerId);
       if (scriptRef.current) {
         try { document.head.removeChild(scriptRef.current); } catch (e) { }
