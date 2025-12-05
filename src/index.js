@@ -4,6 +4,17 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import './styles/cross-browser.css';
 
+// Reduce console noise in production: silence verbose methods to avoid
+// excessive CPU and console I/O caused by many debug logs in the bundle.
+if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
+  try {
+    ['log', 'info', 'debug'].forEach((m) => {
+      console[m] = () => {};
+    });
+  } catch (e) {
+    // swallow errors; not critical
+  }
+}
 // Defer loading the full antd reset CSS to reduce initial CSS payload.
 // Load on-demand for admin/backoffice routes, otherwise expose a helper
 // so pages that need antd can request styles later.

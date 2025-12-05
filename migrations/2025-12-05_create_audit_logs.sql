@@ -51,10 +51,20 @@ BEGIN
     JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
     WHERE n.nspname = 'public' AND c.relname = 'audit_logs' AND p.polname = 'audit_logs_insert_authenticated'
   ) THEN
+    -- Allow authenticated users to INSERT audit logs for their tenant.
+    -- The check requires a valid auth uid and that the provided tenant_id (if any)
+    -- matches the tenant claim inside the user's JWT. Adjust the JWT claim
+    -- name below if your tokens use a different key for tenant id.
     CREATE POLICY audit_logs_insert_authenticated
     ON public.audit_logs
     FOR INSERT
-    WITH CHECK (auth.uid() IS NOT NULL);
+    WITH CHECK (
+      auth.uid() IS NOT NULL
+      AND (
+        tenant_id IS NULL
+        OR tenant_id::text = current_setting('request.jwt.claims.tenant_id', true)
+      )
+    );
   END IF;
 END$$;
 

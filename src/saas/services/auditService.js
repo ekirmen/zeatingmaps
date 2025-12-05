@@ -4,6 +4,8 @@ class AuditService {
   constructor() {
     this.currentUser = null;
     this.remoteLoggingDisabled = false;
+    this.queue = [];
+    this.flushTimer = null;
   }
 
   isAuthError(error) {
@@ -54,6 +56,7 @@ class AuditService {
   // Registrar acción de auditoría
   async logAction(action, details, tenantId = null, resourceId = null) {
     try {
+      // If remote logging disabled, store locally immediately
       if (this.remoteLoggingDisabled) {
         await this.storeLocally({
           action,
@@ -65,25 +68,7 @@ class AuditService {
         return null;
       }
 
-      // Asegurar sesión y usuario actualizados
-      if (!this.currentUser) {
-        await this.initialize();
-      }
-
-      const sessionResult = await supabase.auth.getSession();
-      const session = sessionResult?.data?.session;
-
-      if (!session?.access_token) {
-        await this.storeLocally({
-          action,
-          details: JSON.stringify(details),
-          tenant_id: tenantId,
-          resource_id: resourceId,
-          created_at: new Date().toISOString()
-        });
-        return null;
-      }
-
+      // Prepare audit record
       const auditData = {
         tenant_id: tenantId,
         user_id: this.currentUser?.id,
@@ -91,32 +76,30 @@ class AuditService {
         details: JSON.stringify(details),
         resource_id: resourceId,
         ip_address: await this.getClientIP(),
-        user_agent: navigator.userAgent,
+        user_agent: (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : null,
         created_at: new Date().toISOString()
       };
 
-      const { data, error } = await supabase
-        .from('audit_logs')
-        .insert([auditData])
-        .select()
-        .single();
-
-      if (error) {
-        if (this.isAuthError(error)) {
-          this.remoteLoggingDisabled = true;
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('[AUDIT] Registro remoto deshabilitado por error de permisos:', error.message || error.hint);
-          }
-          await this.storeLocally(auditData);
-          return null;
+      // Queue the log for batched delivery to server-side endpoint to avoid
+      // many failing direct requests from the client that hurt performance.
+      this.queue.push(auditData);
+      // If queue grows too large, persist locally to avoid memory pressure
+      if (this.queue.length > 200) {
+        // keep last 200 in queue, stash rest locally
+        const overflow = this.queue.splice(0, this.queue.length - 200);
+        try {
+          const existing = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
+          localStorage.setItem('audit_logs_backup', JSON.stringify(existing.concat(overflow).slice(-500)));
+        } catch (e) {
+          // ignore storage errors
         }
-
-        throw error;
       }
-      return data;
+
+      this.scheduleFlush();
+      return null;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error logging audit action:', error);
+        console.error('Error preparing audit action:', error);
       }
       await this.storeLocally({
         action,
@@ -127,6 +110,66 @@ class AuditService {
         error: error?.message
       });
       return null;
+    }
+  }
+
+  // Schedule a flush to the server-side batching endpoint
+  scheduleFlush() {
+    if (this.flushTimer) return;
+    this.flushTimer = setTimeout(() => this.flushQueue(), 2000);
+  }
+
+  // Flush queued logs to server-side endpoint in a single request
+  async flushQueue() {
+    if (!this.queue.length) {
+      clearTimeout(this.flushTimer);
+      this.flushTimer = null;
+      return;
+    }
+
+    const toSend = this.queue.splice(0, this.queue.length);
+    clearTimeout(this.flushTimer);
+    this.flushTimer = null;
+
+    try {
+      // fire-and-forget but still observe response for auth errors
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+
+      // Try to include current access token if available so server can verify
+      let headers = { 'Content-Type': 'application/json' };
+      try {
+        const sessionResult = await supabase.auth.getSession();
+        const accessToken = sessionResult?.data?.session?.access_token;
+        if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+      } catch (e) {
+        // ignore
+      }
+
+      const res = await fetch('/api/audit/create', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ logs: toSend }),
+        signal: controller.signal,
+        keepalive: true
+      });
+      clearTimeout(timeout);
+
+      if (res.status === 401) {
+        // server indicates not authorized — stop remote attempts
+        this.remoteLoggingDisabled = true;
+        // persist queued items locally
+        try {
+          const existing = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
+          localStorage.setItem('audit_logs_backup', JSON.stringify(existing.concat(toSend).slice(-500)));
+        } catch (e) {}
+      }
+    } catch (err) {
+      // network error or abort — stash locally
+      try {
+        const existing = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
+        localStorage.setItem('audit_logs_backup', JSON.stringify(existing.concat(toSend).slice(-500)));
+      } catch (e) {}
     }
   }
 
