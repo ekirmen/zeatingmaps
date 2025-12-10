@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Modal, Input, Button, message } from 'antd';
+import { Modal, Input, Button, message } from '../../utils/antdComponents';
 import { loginUser } from '../services/authService';
 import { getAuthMessage } from '../../utils/authErrorMessages';
 
@@ -29,10 +29,10 @@ const DashboardLogin = ({ onLogin }) => {
         const token = session.access_token;
         localStorage.setItem('token', token);
         onLogin?.({ token, user });
-        message.success('Inicio de sesión exitoso');
+        message.success('Inicio de sesi³n exitoso');
         setIsModalVisible(false);
       } else {
-        message.success('Se envió un enlace a tu correo');
+        message.success('Se envi³ un enlace a tu correo');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -53,21 +53,21 @@ const DashboardLogin = ({ onLogin }) => {
   };
 
   const handleCancel = () => {
-    // No permitir cerrar el modal si no hay sesión
+    // No permitir cerrar el modal si no hay sesi³n
     if (!localStorage.getItem('token')) {
       return;
     }
     setIsModalVisible(false);
   };
 
-  // Si ya hay sesión, no mostrar el modal
+  // Si ya hay sesi³n, no mostrar el modal
   if (localStorage.getItem('token')) {
     return null;
   }
 
   return (
     <Modal
-      title="Iniciar Sesión - Panel de Administración"
+      title="Iniciar Sesi³n - Panel de Administraci³n"
       open={isModalVisible}
       onCancel={handleCancel}
       footer={null}
@@ -90,7 +90,7 @@ const DashboardLogin = ({ onLogin }) => {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Correo electrónico
+            Correo electr³nico
           </label>
           <Input
             placeholder="tu@email.com"
@@ -104,10 +104,10 @@ const DashboardLogin = ({ onLogin }) => {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Contraseña
+            Contrase±a
           </label>
           <Input.Password
-            placeholder="Tu contraseña"
+            placeholder="Tu contrase±a"
             name="password"
             value={formData.password}
             onChange={handleInputChange}
@@ -127,11 +127,11 @@ const DashboardLogin = ({ onLogin }) => {
             height: '44px'
           }}
         >
-          {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          {loading ? 'Iniciando sesi³n...' : 'Iniciar Sesi³n'}
         </Button>
         
         <div className="text-center text-sm text-gray-500">
-          Solo usuarios autorizados pueden acceder al panel de administración
+          Solo usuarios autorizados pueden acceder al panel de administraci³n
         </div>
       </div>
     </Modal>
@@ -139,3 +139,5 @@ const DashboardLogin = ({ onLogin }) => {
 };
 
 export default DashboardLogin;
+
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, InputNumber, Select, Space, Typography, Divider, Alert, Spin, Row, Col, Badge, Table, Tag } from 'antd';
+import { Card, Button, InputNumber, Select, Space, Typography, Divider, Alert, Spin, Row, Col, Badge, Table, Tag } from '../../../../utils/antdComponents';
 import { ShoppingCartOutlined, PlusOutlined, MinusOutlined, InfoCircleOutlined, UserOutlined, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '../../../../supabaseClient';
 import { fetchZonasPorSala } from '../../../services/apibackoffice';
@@ -29,8 +29,8 @@ const GridSaleMode = ({
       return;
     }
 
-    // En modo Grid, no necesitamos función específica
-    console.log('✅ [GridSaleMode] Loading zonas for evento (modo grid)');
+    // En modo Grid, no necesitamos funci³n espec­fica
+    console.log('œ… [GridSaleMode] Loading zonas for evento (modo grid)');
     loadZonasAndPrecios();
   }, [evento?.id]);
 
@@ -38,7 +38,7 @@ const GridSaleMode = ({
     try {
       setLoadingZonas(true);
       setError(null);
-      // Cargar zonas del evento usando la función estándar
+      // Cargar zonas del evento usando la funci³n est¡ndar
       const zonasData = await fetchZonasPorSala(evento.sala);
       setZonas(zonasData || []);
 
@@ -82,7 +82,7 @@ const GridSaleMode = ({
 
     } catch (err) {
       console.error('Error cargando zonas y precios:', err);
-      setError('Error al cargar información de venta');
+      setError('Error al cargar informaci³n de venta');
     } finally {
       setLoadingZonas(false);
     }
@@ -121,7 +121,7 @@ const GridSaleMode = ({
 
     onAddToCart(item);
 
-    // Limpiar cantidad después de agregar
+    // Limpiar cantidad despu©s de agregar
     setCantidades(prev => ({
       ...prev,
       [zona.id]: 0
@@ -299,7 +299,7 @@ const GridSaleMode = ({
         </Text>
       </div>
 
-      {/* Información del cliente */}
+      {/* Informaci³n del cliente */}
       {selectedClient ? (
         <Card className="mb-4" size="small">
           <div className="flex items-center justify-between">
@@ -438,19 +438,19 @@ const GridSaleMode = ({
         </Card>
       )}
 
-      {/* Información adicional */}
+      {/* Informaci³n adicional */}
       <Card size="small">
         <div className="flex items-start gap-2">
           <InfoCircleOutlined className="text-blue-500 mt-1" />
           <div>
             <Text strong className="block mb-1">
-              Información del modo Grid:
+              Informaci³n del modo Grid:
             </Text>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Las entradas se venden por zona sin selección específica de asientos</li>
-              <li>• El cliente puede elegir cualquier asiento disponible en la zona</li>
-              <li>• Ideal para eventos generales o con asientos no numerados</li>
-              <li>• Los precios se configuran por zona en el dashboard</li>
+              <li>-¢ Las entradas se venden por zona sin selecci³n espec­fica de asientos</li>
+              <li>-¢ El cliente puede elegir cualquier asiento disponible en la zona</li>
+              <li>-¢ Ideal para eventos generales o con asientos no numerados</li>
+              <li>-¢ Los precios se configuran por zona en el dashboard</li>
             </ul>
           </div>
         </div>
@@ -460,3 +460,5 @@ const GridSaleMode = ({
 };
 
 export default GridSaleMode;
+
+

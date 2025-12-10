@@ -1,5 +1,5 @@
 import React from 'react';
-import { Progress, Spin, Card } from 'antd';
+import { Progress, Spin, Card } from '../utils/antdComponents';
 import { LoadingOutlined } from '@ant-design/icons';
 
 /**
@@ -67,4 +67,5 @@ const MapLoadingProgress = ({
 };
 
 export default MapLoadingProgress;
+
 

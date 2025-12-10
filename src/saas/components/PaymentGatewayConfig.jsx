@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Select, Switch, message, Alert, Space, Typography, Row, Col, Tabs, Badge, Table, Spin } from 'antd';
+import { Card, Form, Input, Button, Select, Switch, message, Alert, Space, Typography, Row, Col, Tabs, Badge, Table, Spin } from '../../utils/antdComponents';
 import {
   CreditCardOutlined,
   CheckCircleOutlined,
@@ -46,7 +46,7 @@ const PaymentGatewayConfig = () => {
       const configs = await paymentGatewayService.getAllGatewayConfigs();
       setGatewayConfigs(configs);
 
-      // Cargar valores iniciales del formulario si hay configuración existente
+      // Cargar valores iniciales del formulario si hay configuraci³n existente
       if (configs[activeTab]) {
         const configData = configs[activeTab];
         // El config puede venir como objeto o como string parseado
@@ -59,7 +59,7 @@ const PaymentGatewayConfig = () => {
           is_active: configData.is_active
         });
       } else {
-        // Si no hay configuración, resetear el formulario
+        // Si no hay configuraci³n, resetear el formulario
         form.resetFields();
       }
     } catch (error) {
@@ -127,12 +127,12 @@ const PaymentGatewayConfig = () => {
       const result = await response.json();
 
       if (result.success) {
-        message.success(`✅ Conexión exitosa con ${activeTab.toUpperCase()}: ${result.message}`);
+        message.success(`œ… Conexi³n exitosa con ${activeTab.toUpperCase()}: ${result.message}`);
       } else {
-        message.error(`❌ Error de conexión con ${activeTab.toUpperCase()}: ${result.error}`);
+        message.error(`Œ Error de conexi³n con ${activeTab.toUpperCase()}: ${result.error}`);
       }
     } catch (error) {
-      message.error(`Error al probar conexión con ${activeTab.toUpperCase()}: ${error.message}`);
+      message.error(`Error al probar conexi³n con ${activeTab.toUpperCase()}: ${error.message}`);
     } finally {
       setTestingConnection(prev => ({ ...prev, [activeTab]: false }));
     }
@@ -154,7 +154,7 @@ const PaymentGatewayConfig = () => {
       if (result.success) {
         message.success(`Pago de prueba exitoso con ${activeTab.toUpperCase()}`);
       } else {
-        message.error(`Pago de prueba falló con ${activeTab.toUpperCase()}`);
+        message.error(`Pago de prueba fall³ con ${activeTab.toUpperCase()}`);
       }
     } catch (error) {
       message.error(`Error en prueba de ${activeTab.toUpperCase()}: ${error.message}`);
@@ -165,10 +165,10 @@ const PaymentGatewayConfig = () => {
 
   const getGatewayIcon = (gateway) => {
     const icons = {
-      stripe: '💳',
-      paypal: '🅿️'
+      stripe: 'ðŸ’³',
+      paypal: 'ðŸ…¿ï¸'
     };
-    return icons[gateway] || '💳';
+    return icons[gateway] || 'ðŸ’³';
   };
 
   const getGatewayStatus = (gateway) => {
@@ -193,8 +193,8 @@ const PaymentGatewayConfig = () => {
         <Col span={12}>
           <Form.Item
             name="publishable_key"
-            label="Clave Pública"
-            rules={[{ required: true, message: 'Clave pública requerida' }]}
+            label="Clave Pºblica"
+            rules={[{ required: true, message: 'Clave pºblica requerida' }]}
           >
             <Input placeholder="pk_test_..." />
           </Form.Item>
@@ -214,7 +214,7 @@ const PaymentGatewayConfig = () => {
             initialValue="USD"
           >
             <Select>
-              <Option value="USD">USD - Dólar Americano</Option>
+              <Option value="USD">USD - D³lar Americano</Option>
               <Option value="EUR">EUR - Euro</Option>
               <Option value="MXN">MXN - Peso Mexicano</Option>
             </Select>
@@ -222,7 +222,7 @@ const PaymentGatewayConfig = () => {
         </Col>
         <Col span={24}>
           <Form.Item name="test_mode" valuePropName="checked" initialValue={true}>
-            <Switch checkedChildren="Modo Prueba" unCheckedChildren="Modo Producción" />
+            <Switch checkedChildren="Modo Prueba" unCheckedChildren="Modo Producci³n" />
           </Form.Item>
         </Col>
         <Col span={24}>
@@ -239,7 +239,7 @@ const PaymentGatewayConfig = () => {
               loading={testingConnection.stripe}
               disabled={!form.getFieldValue('secret_key') || !form.getFieldValue('publishable_key')}
             >
-              Probar Conexión
+              Probar Conexi³n
             </Button>
             <Text type="secondary">
               Verifica que las credenciales sean correctas antes de guardar
@@ -286,7 +286,7 @@ const PaymentGatewayConfig = () => {
             initialValue="USD"
           >
             <Select>
-              <Option value="USD">USD - Dólar Americano</Option>
+              <Option value="USD">USD - D³lar Americano</Option>
               <Option value="EUR">EUR - Euro</Option>
               <Option value="MXN">MXN - Peso Mexicano</Option>
             </Select>
@@ -294,7 +294,7 @@ const PaymentGatewayConfig = () => {
         </Col>
         <Col span={24}>
           <Form.Item name="sandbox_mode" valuePropName="checked" initialValue={true}>
-            <Switch checkedChildren="Modo Sandbox" unCheckedChildren="Modo Producción" />
+            <Switch checkedChildren="Modo Sandbox" unCheckedChildren="Modo Producci³n" />
           </Form.Item>
         </Col>
         <Col span={24}>
@@ -311,7 +311,7 @@ const PaymentGatewayConfig = () => {
               loading={testingConnection.paypal}
               disabled={!form.getFieldValue('client_id') || !form.getFieldValue('client_secret')}
             >
-              Probar Conexión
+              Probar Conexi³n
             </Button>
             <Text type="secondary">
               Verifica que las credenciales sean correctas antes de guardar
@@ -405,10 +405,10 @@ const PaymentGatewayConfig = () => {
         <Col span={24}>
           <Title level={2}>
             <CreditCardOutlined style={{ marginRight: '8px' }} />
-            Configuración de Pasarelas de Pago
+            Configuraci³n de Pasarelas de Pago
           </Title>
           <Text type="secondary">
-            Configura las pasarelas de pago para procesar suscripciones automáticamente
+            Configura las pasarelas de pago para procesar suscripciones autom¡ticamente
           </Text>
           {currentTenant && (
             <div style={{ marginTop: '8px' }}>
@@ -417,7 +417,7 @@ const PaymentGatewayConfig = () => {
                 text={
                   <Space>
                     <UserOutlined />
-                    <Text strong>Configuración para:</Text>
+                    <Text strong>Configuraci³n para:</Text>
                     <Text code>{currentTenant.nombre || currentTenant.name || 'Tenant Actual'}</Text>
                   </Space>
                 }
@@ -429,8 +429,8 @@ const PaymentGatewayConfig = () => {
 
       {currentTenant && (
         <Alert
-          message="Configuración por Tenant"
-          description={`Las claves de pago que configures aquí serán específicas para ${currentTenant.nombre || currentTenant.name || 'este tenant'}. Cada tenant tiene sus propias credenciales de Stripe, PayPal, etc.`}
+          message="Configuraci³n por Tenant"
+          description={`Las claves de pago que configures aqu­ ser¡n espec­ficas para ${currentTenant.nombre || currentTenant.name || 'este tenant'}. Cada tenant tiene sus propias credenciales de Stripe, PayPal, etc.`}
           type="info"
           showIcon
           style={{ marginBottom: '16px' }}
@@ -442,7 +442,7 @@ const PaymentGatewayConfig = () => {
           activeKey={activeTab}
           onChange={(key) => {
             setActiveTab(key);
-            // Cargar valores del formulario cuando cambia la pestaña
+            // Cargar valores del formulario cuando cambia la pesta±a
             if (gatewayConfigs[key]) {
               const configData = gatewayConfigs[key];
               // El config puede venir como objeto o como string parseado
@@ -462,7 +462,7 @@ const PaymentGatewayConfig = () => {
           <TabPane
             tab={
               <Space>
-                <span style={{ fontSize: '16px' }}>💳</span>
+                <span style={{ fontSize: '16px' }}>ðŸ’³</span>
                 <span>Stripe</span>
                 <Badge
                   status={getGatewayStatus('stripe').color}
@@ -473,8 +473,8 @@ const PaymentGatewayConfig = () => {
             key="stripe"
           >
             <Alert
-              message="Configuración de Stripe"
-              description="Stripe es una de las pasarelas de pago más populares y confiables. Soporta múltiples métodos de pago y monedas."
+              message="Configuraci³n de Stripe"
+              description="Stripe es una de las pasarelas de pago m¡s populares y confiables. Soporta mºltiples m©todos de pago y monedas."
               type="info"
               showIcon
               style={{ marginBottom: '16px' }}
@@ -485,7 +485,7 @@ const PaymentGatewayConfig = () => {
           <TabPane
             tab={
               <Space>
-                <span style={{ fontSize: '16px' }}>🅿️</span>
+                <span style={{ fontSize: '16px' }}>ðŸ…¿ï¸</span>
                 <span>PayPal</span>
                 <Badge
                   status={getGatewayStatus('paypal').color}
@@ -496,7 +496,7 @@ const PaymentGatewayConfig = () => {
             key="paypal"
           >
             <Alert
-              message="Configuración de PayPal"
+              message="Configuraci³n de PayPal"
               description="PayPal es ideal para pagos internacionales y ofrece una experiencia de usuario familiar."
               type="info"
               showIcon
@@ -511,12 +511,12 @@ const PaymentGatewayConfig = () => {
             tab={
               <Space>
                 <DollarOutlined />
-                <span>Estadísticas</span>
+                <span>Estad­sticas</span>
               </Space>
             }
             key="stats"
           >
-            <Title level={4}>Estadísticas de Pagos por Pasarela</Title>
+            <Title level={4}>Estad­sticas de Pagos por Pasarela</Title>
             {renderGatewayStats()}
           </TabPane>
         </Tabs>
@@ -529,7 +529,7 @@ const PaymentGatewayConfig = () => {
               loading={testingConnection[activeTab]}
               disabled={activeTab === 'stats'}
             >
-              Probar Conexión
+              Probar Conexi³n
             </Button>
             <Button
               icon={<SecurityScanOutlined />}
@@ -546,7 +546,7 @@ const PaymentGatewayConfig = () => {
               loading={loading}
               disabled={activeTab === 'stats'}
             >
-              Guardar Configuración
+              Guardar Configuraci³n
             </Button>
           </Space>
         </div>
@@ -556,3 +556,5 @@ const PaymentGatewayConfig = () => {
 };
 
 export default PaymentGatewayConfig;
+
+

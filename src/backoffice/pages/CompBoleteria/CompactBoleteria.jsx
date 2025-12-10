@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, Space, Typography, Button, Tooltip, Tabs } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Tag, Space, Typography, Button, Tooltip, Tabs } from '../../../utils/antdComponents';
 import { 
   UserOutlined, 
   ShoppingCartOutlined, 
@@ -52,7 +52,7 @@ const CompactBoleteria = ({
     loadEventTheme();
   }, [selectedFuncion, getEventTheme, theme]);
 
-  // Calcular estadísticas de asientos
+  // Calcular estad­sticas de asientos
   const calculateSeatStats = useCallback(() => {
     if (!mapa?.contenido) {
       return;
@@ -87,7 +87,7 @@ const CompactBoleteria = ({
         // Determinar estado del asiento
         let seatStatus = elemento.estado || 'disponible';
         
-        // Verificar si está bloqueado
+        // Verificar si est¡ bloqueado
         const isLocked = Array.isArray(lockedSeats) ? lockedSeats.some(lock => lock.seat_id === elemento._id) : false;
         if (isLocked) {
           const lock = Array.isArray(lockedSeats) ? lockedSeats.find(lock => lock.seat_id === elemento._id) : null;
@@ -159,7 +159,7 @@ const CompactBoleteria = ({
       }
     });
 
-    // Añadir precios a las zonas
+    // A±adir precios a las zonas
     Object.keys(zoneData).forEach(zonaId => {
       const detalle = Array.isArray(plantillaPrecios?.detalles) ? plantillaPrecios.detalles.find(d => d.zonaId === zonaId) : null;
       zoneData[zonaId].precio = detalle?.precio || 0;
@@ -173,7 +173,7 @@ const CompactBoleteria = ({
     calculateSeatStats();
   }, [calculateSeatStats]);
 
-  // Función para obtener el color de un estado
+  // Funci³n para obtener el color de un estado
   const getStatusColor = (status) => {
     switch (status) {
       case 'disponible':
@@ -192,13 +192,13 @@ const CompactBoleteria = ({
     }
   };
 
-  // Función para obtener el porcentaje de ocupación
+  // Funci³n para obtener el porcentaje de ocupaci³n
   const getOccupancyPercentage = (zone) => {
     const occupied = zone.vendidos + zone.reservados + zone.seleccionados;
     return zone.total > 0 ? Math.round((occupied / zone.total) * 100) : 0;
   };
 
-  // Función para manejar clic en asiento
+  // Funci³n para manejar clic en asiento
   const handleSeatClick = (seat) => {
     if (onSeatClick) {
       onSeatClick(seat);
@@ -207,9 +207,9 @@ const CompactBoleteria = ({
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
-      <Title level={2} className="mb-4">🎫 Boletería Compacta</Title>
+      <Title level={2} className="mb-4">ðŸŽ« Boleter­a Compacta</Title>
       
-      {/* Header con estadísticas generales */}
+      {/* Header con estad­sticas generales */}
       <Card className="mb-4">
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={6}>
@@ -248,7 +248,7 @@ const CompactBoleteria = ({
         
         {/* Barra de progreso general */}
         <div className="mt-4">
-          <Text strong>Ocupación General: </Text>
+          <Text strong>Ocupaci³n General: </Text>
           <Progress 
             percent={seatStats.total > 0 ? Math.round(((seatStats.vendidos + seatStats.reservados + seatStats.seleccionados) / seatStats.total) * 100) : 0}
             status="active"
@@ -262,13 +262,13 @@ const CompactBoleteria = ({
 
       {/* Tabs para cambiar entre vistas */}
       <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-4">
-        <TabPane tab="📊 Estadísticas" key="stats" />
-        <TabPane tab="🗺️ Mapa Visual" key="map" />
+        <TabPane tab="ðŸ“Š Estad­sticas" key="stats" />
+        <TabPane tab="ðŸ—ºï¸ Mapa Visual" key="map" />
       </Tabs>
 
       {activeTab === 'stats' ? (
         <>
-          {/* Zonas y estadísticas */}
+          {/* Zonas y estad­sticas */}
           <Row gutter={[16, 16]}>
             {zoneStats.map((zone, index) => (
               <Col xs={24} sm={12} lg={8} xl={6} key={index}>
@@ -284,13 +284,13 @@ const CompactBoleteria = ({
                     </Space>
                   }
                   extra={
-                    <Tooltip title="Ocupación">
+                    <Tooltip title="Ocupaci³n">
                       <Text type="secondary">{getOccupancyPercentage(zone)}%</Text>
                     </Tooltip>
                   }
                 >
                   <div className="space-y-2">
-                    {/* Estadísticas de la zona */}
+                    {/* Estad­sticas de la zona */}
                     <Row gutter={[8, 8]}>
                       <Col span={12}>
                         <Statistic
@@ -354,7 +354,7 @@ const CompactBoleteria = ({
 
           {/* Leyenda de colores */}
           <Card className="mt-4" size="small">
-            <Title level={5}>🎨 Leyenda de Estados</Title>
+            <Title level={5}>ðŸŽ¨ Leyenda de Estados</Title>
             <Row gutter={[16, 8]}>
               <Col>
                 <Space>
@@ -407,12 +407,12 @@ const CompactBoleteria = ({
       ) : (
         /* Vista del mapa visual */
         <div className="text-center p-8">
-          <Title level={3}>🗺️ Mapa Visual</Title>
-          <Text>Esta funcionalidad estará disponible próximamente</Text>
+          <Title level={3}>ðŸ—ºï¸ Mapa Visual</Title>
+          <Text>Esta funcionalidad estar¡ disponible pr³ximamente</Text>
         </div>
       )}
 
-      {/* Botón de actualizar */}
+      {/* Bot³n de actualizar */}
       <div className="mt-4 text-center">
         <Button 
           type="primary" 
@@ -420,7 +420,7 @@ const CompactBoleteria = ({
           onClick={calculateSeatStats}
           loading={loading}
         >
-          🔄 Actualizar Estadísticas
+          ðŸ”„ Actualizar Estad­sticas
         </Button>
       </div>
     </div>
@@ -428,3 +428,5 @@ const CompactBoleteria = ({
 };
 
 export default CompactBoleteria;
+
+

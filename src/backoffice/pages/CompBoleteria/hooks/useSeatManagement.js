@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { message } from 'antd';
+import { message } from '../../../../utils/antdComponents';
 import { useSeatLockStore } from '../../../../components/seatLockStore';
 import { fetchAbonoAvailableSeats } from '../../../../services/supabaseServices';
 
@@ -37,7 +37,7 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
     loadAbonoSeats();
   }, [abonoMode, selectedEvent]);
 
-  // Suscribirse a eventos en tiempo real para la función seleccionada
+  // Suscribirse a eventos en tiempo real para la funci³n seleccionada
   useEffect(() => {
     if (selectedEvent?.id && subscribeToFunction) {
       subscribeToFunction(selectedEvent.id);
@@ -50,7 +50,7 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
     };
   }, [selectedEvent?.id, subscribeToFunction, unsubscribe]);
 
-  // Liberar asientos bloqueados temporalmente al desmontar o recargar la página
+  // Liberar asientos bloqueados temporalmente al desmontar o recargar la p¡gina
   useEffect(() => {
     const cleanupTemp = () => {
       tempBlocks.forEach(id => {
@@ -87,3 +87,4 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
     handleAnimationComplete
   };
 };
+

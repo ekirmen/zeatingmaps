@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, List, Input, Button, Typography, Space, Tag, Avatar, Badge, Drawer, Select, message, Table, Row, Col, Statistic } from 'antd';
+import { Card, List, Input, Button, Typography, Space, Tag, Avatar, Badge, Drawer, Select, message, Table, Row, Col, Statistic } from '../../utils/antdComponents';
 import { 
   MessageOutlined, 
   SendOutlined, 
@@ -204,11 +204,11 @@ const SaaSMessaging = () => {
 
       if (error) throw error;
 
-      message.success('Conversación asignada exitosamente');
+      message.success('Conversaci³n asignada exitosamente');
       loadConversations();
     } catch (error) {
       console.error('Error assigning conversation:', error);
-      message.error('Error al asignar conversación');
+      message.error('Error al asignar conversaci³n');
     }
   };
 
@@ -343,7 +343,7 @@ const SaaSMessaging = () => {
       render: (user) => user?.email || 'Sin asignar',
     },
     {
-      title: 'Último mensaje',
+      title: 'šltimo mensaje',
       dataIndex: 'last_message_at',
       key: 'last_message',
       render: (date) => formatDate(date),
@@ -364,7 +364,7 @@ const SaaSMessaging = () => {
             style={{ width: 120 }}
             onChange={(value) => assignConversation(record.id, value)}
           >
-            <Option value={currentUser?.id}>A mí</Option>
+            <Option value={currentUser?.id}>A m­</Option>
             <Option value={null}>Sin asignar</Option>
           </Select>
         </Space>
@@ -377,14 +377,14 @@ const SaaSMessaging = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <MessageOutlined style={{ marginRight: '8px' }} />
-          Centro de Mensajería SaaS
+          Centro de Mensajer­a SaaS
         </Title>
         <Text type="secondary">
           Gestiona las conversaciones con los tenants
         </Text>
       </div>
 
-      {/* Estadísticas */}
+      {/* Estad­sticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} md={4}>
           <Card>
@@ -463,7 +463,7 @@ const SaaSMessaging = () => {
             style={{ width: 150 }}
           >
             <Option value="all">Todas</Option>
-            <Option value="me">Asignadas a mí</Option>
+            <Option value="me">Asignadas a m­</Option>
             <Option value="unassigned">Sin asignar</Option>
           </Select>
           <Button onClick={loadConversations}>
@@ -500,7 +500,7 @@ const SaaSMessaging = () => {
                   </Tag>
                 </Space>
               ) : (
-                'Selecciona una conversación'
+                'Selecciona una conversaci³n'
               )
             }
             style={{ height: '600px', display: 'flex', flexDirection: 'column' }}
@@ -520,7 +520,7 @@ const SaaSMessaging = () => {
                     <div style={{ textAlign: 'center', marginTop: '50px' }}>
                       <MessageOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
                       <div style={{ marginTop: '16px' }}>
-                        <Text type="secondary">No hay mensajes en esta conversación</Text>
+                        <Text type="secondary">No hay mensajes en esta conversaci³n</Text>
                       </div>
                     </div>
                   ) : (
@@ -556,7 +556,7 @@ const SaaSMessaging = () => {
               <div style={{ textAlign: 'center', marginTop: '100px' }}>
                 <MessageOutlined style={{ fontSize: '64px', color: '#d9d9d9' }} />
                 <div style={{ marginTop: '16px' }}>
-                  <Text type="secondary">Selecciona una conversación para ver los mensajes</Text>
+                  <Text type="secondary">Selecciona una conversaci³n para ver los mensajes</Text>
                 </div>
               </div>
             )}
@@ -568,3 +568,5 @@ const SaaSMessaging = () => {
 };
 
 export default SaaSMessaging;
+
+

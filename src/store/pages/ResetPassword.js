@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Card, Alert, Typography, Input, Button, message, Space } from 'antd';
+import { Card, Alert, Typography, Input, Button, message, Space } from '../../utils/antdComponents';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../supabaseClient';
 
@@ -64,7 +64,7 @@ const ResetPassword = () => {
       return;
     }
     if (password.trim().length < 8) {
-      message.error('La contraseña debe tener al menos 8 caracteres.');
+      message.error('La contrase±a debe tener al menos 8 caracteres.');
       return;
     }
     setLoading(true);
@@ -96,11 +96,11 @@ const ResetPassword = () => {
           <Alert
             type="error"
             showIcon
-            message="El enlace de recuperación no es válido o expiró"
+            message="El enlace de recuperaci³n no es v¡lido o expir³"
             description={(
               <Space direction="vertical">
                 <Typography.Paragraph className="mb-0">
-                  Solicita un nuevo enlace desde la opción "¿Olvidaste tu contraseña?" para continuar.
+                  Solicita un nuevo enlace desde la opci³n "¿Olvidaste tu contrase±a?" para continuar.
                 </Typography.Paragraph>
                 <Button type="primary" onClick={() => navigate('/store/forgot-password')}>
                   Solicitar nuevo enlace
@@ -120,7 +120,7 @@ const ResetPassword = () => {
           {t('password.change')}
         </Typography.Title>
         <Typography.Paragraph type="secondary" className="mb-4">
-          {userEmail ? `Actualiza la contraseña para ${userEmail}` : 'Crea una nueva contraseña segura.'}
+          {userEmail ? `Actualiza la contrase±a para ${userEmail}` : 'Crea una nueva contrase±a segura.'}
         </Typography.Paragraph>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -142,7 +142,7 @@ const ResetPassword = () => {
             {t('button.save')}
           </Button>
           <Button type="link" onClick={() => navigate('/store/login')} block>
-            Volver al inicio de sesión
+            Volver al inicio de sesi³n
           </Button>
         </form>
       </Card>
@@ -151,3 +151,5 @@ const ResetPassword = () => {
 };
 
 export default ResetPassword;
+
+

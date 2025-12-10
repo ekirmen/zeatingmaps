@@ -11,7 +11,7 @@ import {
   Spin,
   Alert,
   Divider
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   BellOutlined,
   CreditCardOutlined,
@@ -36,10 +36,10 @@ const AdminNotificationCenter = () => {
     loadNotifications();
     loadSystemAlerts();
 
-    // Suscribirse a notificaciones y retornar función de limpieza
+    // Suscribirse a notificaciones y retornar funci³n de limpieza
     const cleanup = subscribeToNotifications();
 
-    // Retornar función de limpieza
+    // Retornar funci³n de limpieza
     return () => {
       if (cleanup) {
         cleanup();
@@ -57,7 +57,7 @@ const AdminNotificationCenter = () => {
         .limit(20);
 
       if (error) {
-        // Si la tabla no existe, simplemente establecer un array vacío
+        // Si la tabla no existe, simplemente establecer un array vac­o
         setNotifications([]);
         setUnreadCount(0);
         return;
@@ -76,7 +76,7 @@ const AdminNotificationCenter = () => {
 
   const loadSystemAlerts = async () => {
     try {
-      // 🔔 CONECTAR CON TABLA REAL system_alerts
+      // ðŸ”” CONECTAR CON TABLA REAL system_alerts
       const { data: alertsData, error } = await supabase
         .from('system_alerts')
         .select('*')
@@ -85,13 +85,13 @@ const AdminNotificationCenter = () => {
         .limit(10);
 
       if (error) {
-        // Fallback a datos estáticos si la tabla no existe
+        // Fallback a datos est¡ticos si la tabla no existe
         const staticAlerts = [
           {
             id: 1,
             type: 'warning',
             title: 'Pagos Pendientes',
-            message: 'Hay 5 transacciones pendientes de confirmación',
+            message: 'Hay 5 transacciones pendientes de confirmaci³n',
             priority: 'high',
             time: 'Hace 30 min',
             created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
@@ -130,12 +130,12 @@ const AdminNotificationCenter = () => {
         return;
       }
 
-      // ✅ CONEXIÓN EXITOSA CON TABLA REAL
+      // œ… CONEXI“N EXITOSA CON TABLA REAL
       const formattedAlerts = (alertsData || []).map(alert => ({
         id: alert.id,
         type: alert.type || 'info',
         title: alert.title || 'Alerta del Sistema',
-        message: alert.message || 'Sin descripción',
+        message: alert.message || 'Sin descripci³n',
         priority: alert.priority || 'medium',
         time: formatTimeAgo(alert.created_at),
         created_at: alert.created_at,
@@ -150,7 +150,7 @@ const AdminNotificationCenter = () => {
     }
   };
 
-  // Función auxiliar para formatear tiempo
+  // Funci³n auxiliar para formatear tiempo
   const formatTimeAgo = (dateString) => {
     const now = new Date();
     const date = new Date(dateString);
@@ -163,12 +163,12 @@ const AdminNotificationCenter = () => {
     if (diffInHours < 24) return `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
 
     const diffInDays = Math.floor(diffInHours / 24);
-    return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
+    return `Hace ${diffInDays} d­a${diffInDays > 1 ? 's' : ''}`;
   };
 
   const subscribeToNotifications = () => {
     try {
-      // 🔔 SUSCRIPCIÓN EN TIEMPO REAL A admin_notifications
+      // ðŸ”” SUSCRIPCI“N EN TIEMPO REAL A admin_notifications
       const notificationsChannel = supabase
         .channel('admin_notifications_channel')
         .on(
@@ -198,7 +198,7 @@ const AdminNotificationCenter = () => {
         )
         .subscribe();
 
-      // 🔔 SUSCRIPCIÓN EN TIEMPO REAL A system_alerts
+      // ðŸ”” SUSCRIPCI“N EN TIEMPO REAL A system_alerts
       const alertsChannel = supabase
         .channel('system_alerts_channel')
         .on(
@@ -228,14 +228,14 @@ const AdminNotificationCenter = () => {
           }
         )
         .subscribe();
-      // Retornar función de limpieza
+      // Retornar funci³n de limpieza
       return () => {
         notificationsChannel.unsubscribe();
         alertsChannel.unsubscribe();
       };
 
     } catch (error) {
-      // Fallback a simulación si hay error
+      // Fallback a simulaci³n si hay error
       return () => {
       };
     }
@@ -243,14 +243,14 @@ const AdminNotificationCenter = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      // ✅ CONECTAR CON TABLA REAL admin_notifications
+      // œ… CONECTAR CON TABLA REAL admin_notifications
       const { error } = await supabase
         .from('admin_notifications')
         .update({ read: true, read_at: new Date().toISOString() })
         .eq('id', notificationId);
 
       if (error) {
-        // Fallback a actualización local si hay error
+        // Fallback a actualizaci³n local si hay error
         setNotifications(prev =>
           prev.map(n =>
             n.id === notificationId ? { ...n, read: true } : n
@@ -260,7 +260,7 @@ const AdminNotificationCenter = () => {
         return;
       }
 
-      // ✅ ACTUALIZACIÓN EXITOSA EN BASE DE DATOS
+      // œ… ACTUALIZACI“N EXITOSA EN BASE DE DATOS
       setNotifications(prev =>
         prev.map(n =>
           n.id === notificationId ? { ...n, read: true, read_at: new Date().toISOString() } : n
@@ -270,7 +270,7 @@ const AdminNotificationCenter = () => {
     } catch (error) {
       console.error('Error marking notification as read:', error);
 
-      // Fallback a actualización local
+      // Fallback a actualizaci³n local
       setNotifications(prev =>
         prev.map(n =>
           n.id === notificationId ? { ...n, read: true } : n
@@ -290,7 +290,7 @@ const AdminNotificationCenter = () => {
       );
       setUnreadCount(0);
 
-      // Simular éxito
+      // Simular ©xito
       console.log('All notifications marked as read successfully (simulated)');
 
     } catch (error) {
@@ -341,17 +341,17 @@ const AdminNotificationCenter = () => {
             size="small"
             onClick={markAllAsRead}
           >
-            Marcar todas como leídas
+            Marcar todas como le­das
           </Button>
         )}
       </div>
 
-      {/* Alertas Críticas */}
+      {/* Alertas Cr­ticas */}
       {systemAlerts.filter(alert => alert.priority === 'critical').length > 0 && (
         <div className="mb-4">
           <Alert
-            message="Alertas Críticas"
-            description="Requieren atención inmediata"
+            message="Alertas Cr­ticas"
+            description="Requieren atenci³n inmediata"
             type="error"
             showIcon
             className="mb-2"
@@ -368,7 +368,7 @@ const AdminNotificationCenter = () => {
                       <Text strong style={{ color: '#ff4d4f' }}>
                         {alert.title}
                       </Text>
-                      <Tag color="red">CRÍTICO</Tag>
+                      <Tag color="red">CRTICO</Tag>
                     </div>
                   }
                   description={
@@ -483,3 +483,4 @@ const AdminNotificationCenter = () => {
 };
 
 export default AdminNotificationCenter;
+

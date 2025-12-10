@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, Tooltip, Badge } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Tag, Tooltip, Badge } from '../../../../utils/antdComponents';
 import { 
   UserOutlined, 
   LockOutlined, 
@@ -43,7 +43,7 @@ const ZoneStatsPanel = ({
   };
 
   const getOccupancyStatus = (percentage) => {
-    if (percentage >= 90) return 'Crítico';
+    if (percentage >= 90) return 'Cr­tico';
     if (percentage >= 70) return 'Alto';
     if (percentage >= 50) return 'Medio';
     return 'Bajo';
@@ -141,11 +141,11 @@ const ZoneStatsPanel = ({
                 )}
               </div>
 
-              {/* Barra de ocupación */}
+              {/* Barra de ocupaci³n */}
               {showOccupancy && (
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm text-gray-600">Ocupación</span>
+                    <span className="text-sm text-gray-600">Ocupaci³n</span>
                     <span className="text-sm font-medium">{ocupacion}%</span>
                   </div>
                   <Progress
@@ -157,7 +157,7 @@ const ZoneStatsPanel = ({
                 </div>
               )}
 
-              {/* Estadísticas detalladas */}
+              {/* Estad­sticas detalladas */}
               <Row gutter={[16, 8]}>
                 <Col span={6}>
                   <Statistic
@@ -224,7 +224,7 @@ const ZoneStatsPanel = ({
                 </div>
               )}
 
-              {/* Información adicional */}
+              {/* Informaci³n adicional */}
               <div className="text-xs text-gray-500">
                 <Tooltip title="Haz clic para seleccionar esta zona">
                   <EyeOutlined className="mr-1" />
@@ -240,3 +240,5 @@ const ZoneStatsPanel = ({
 };
 
 export default ZoneStatsPanel;
+
+

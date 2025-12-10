@@ -4,7 +4,7 @@ import {
   Card, Avatar, Descriptions, Button, message, Tabs,
   List, Tag, Space, Row, Col, Statistic,
   Timeline, Empty, Spin, Alert, Input, Modal
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   UserOutlined, ShoppingOutlined, CalendarOutlined,
   CreditCardOutlined, HeartOutlined, SettingOutlined,
@@ -54,7 +54,7 @@ const Profile = () => {
         statsData
       ] = await Promise.all([
         getUserProfile(user.id),
-        getUserPurchasesWithSeats(user.id), // Usar la nueva función con asientos
+        getUserPurchasesWithSeats(user.id), // Usar la nueva funci³n con asientos
         getUserReservations(user.id),
         getUserFavorites(user.id),
         getUserActivityHistory(user.id),
@@ -123,7 +123,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     logout();
-    message.success('Sesión cerrada correctamente');
+    message.success('Sesi³n cerrada correctamente');
   };
 
 
@@ -171,13 +171,13 @@ const Profile = () => {
     return (
       <div style={{ padding: '24px', textAlign: 'center' }}>
         <Alert
-          message="Debes iniciar sesión"
-          description="Para ver tu perfil, necesitas iniciar sesión primero."
+          message="Debes iniciar sesi³n"
+          description="Para ver tu perfil, necesitas iniciar sesi³n primero."
           type="warning"
           showIcon
           action={
             <Button size="small" type="primary" href="/store/login">
-              Iniciar Sesión
+              Iniciar Sesi³n
             </Button>
           }
         />
@@ -267,7 +267,7 @@ const Profile = () => {
                         block
                         size="large"
                       >
-                        Cerrar Sesión
+                        Cerrar Sesi³n
                       </Button>
                     </>
                   )}
@@ -278,7 +278,7 @@ const Profile = () => {
         </Row>
       </Card>
 
-      {/* Estadísticas Reales - Responsive */}
+      {/* Estad­sticas Reales - Responsive */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -326,15 +326,15 @@ const Profile = () => {
         </Col>
       </Row>
 
-      {/* Tabs de Información */}
+      {/* Tabs de Informaci³n */}
       <Card>
         <Tabs defaultActiveKey="profile" size="large">
-          {/* Tab: Información Personal */}
+          {/* Tab: Informaci³n Personal */}
           <TabPane
             tab={
               <span>
                 <UserOutlined />
-                Información Personal
+                Informaci³n Personal
               </span>
             }
             key="profile"
@@ -357,7 +357,7 @@ const Profile = () => {
               <Descriptions.Item label="Email" span={2}>
                 {profile?.email}
               </Descriptions.Item>
-              <Descriptions.Item label="Teléfono">
+              <Descriptions.Item label="Tel©fono">
                 {editing ? (
                   <Input
                     value={editForm.phone}
@@ -376,7 +376,7 @@ const Profile = () => {
               <Descriptions.Item label="Fecha de Registro">
                 {profile?.joinDate}
               </Descriptions.Item>
-              <Descriptions.Item label="Último Acceso">
+              <Descriptions.Item label="šltimo Acceso">
                 {profile?.lastLogin}
               </Descriptions.Item>
             </Descriptions>
@@ -396,7 +396,7 @@ const Profile = () => {
               <List
                 dataSource={purchases}
                 renderItem={(purchase) => {
-                  // Verificar si el wallet está habilitado para esta compra
+                  // Verificar si el wallet est¡ habilitado para esta compra
                   const getWalletEnabled = () => {
                     if (!purchase?.event?.datosBoleto) {
                       return false;
@@ -452,7 +452,7 @@ const Profile = () => {
                               }}
                               block
                             >
-                              📱 Descargar Wallet (.pkpass)
+                              ðŸ“± Descargar Wallet (.pkpass)
                             </Button>
                           )}
                         </Space>
@@ -475,7 +475,7 @@ const Profile = () => {
                             <FileTextOutlined /> {purchase.seats?.length || 0} asientos
                           </div>
                           <div>
-                            <CreditCardOutlined /> {purchase.payment_method || 'Método de pago'}
+                            <CreditCardOutlined /> {purchase.payment_method || 'M©todo de pago'}
                           </div>
                         </Space>
                       }
@@ -494,7 +494,7 @@ const Profile = () => {
               />
             ) : (
               <Empty
-                description="No tienes compras aún"
+                description="No tienes compras aºn"
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               >
                 <Button type="primary" href="/store">
@@ -789,3 +789,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

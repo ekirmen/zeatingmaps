@@ -16,7 +16,7 @@ import {
   Calendar,
   Badge,
   ConfigProvider
-} from 'antd';
+} from '../../utils/antdComponents';
 import locale from 'antd/locale/es_ES';
 import {
   DollarOutlined,
@@ -71,13 +71,13 @@ const Dashboard = () => {
           )
           .subscribe();
 
-        // Retornar función de limpieza
+        // Retornar funci³n de limpieza
         return () => {
           subscription.unsubscribe();
         };
       } catch (error) {
         console.error('Error subscribing to realtime updates:', error);
-        return () => {}; // Función de limpieza vacía en caso de error
+        return () => {}; // Funci³n de limpieza vac­a en caso de error
       }
     };
 
@@ -87,19 +87,19 @@ const Dashboard = () => {
     // Suscribirse a actualizaciones en tiempo real
     const cleanup = subscribeToRealtimeUpdates();
 
-    // Retornar función de limpieza
+    // Retornar funci³n de limpieza
     return () => {
       if (cleanup) {
         cleanup();
       }
     };
-  }, []); // Sin dependencias ya que las funciones están definidas dentro
+  }, []); // Sin dependencias ya que las funciones est¡n definidas dentro
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
 
-      // Cargar estadísticas principales
+      // Cargar estad­sticas principales
       await Promise.all([
         loadRevenueStats(),
         loadTicketStats(),
@@ -118,7 +118,7 @@ const Dashboard = () => {
 
   const loadRevenueStats = async () => {
     try {
-      // Estadísticas de ingresos
+      // Estad­sticas de ingresos
       const { data: transactions, error } = await supabase
         .from('payment_transactions')
         .select('amount, status, created_at')
@@ -172,7 +172,7 @@ const Dashboard = () => {
 
   const loadTicketStats = async () => {
     try {
-      // Estadísticas de tickets
+      // Estad­sticas de tickets
       const { data: tickets, error } = await supabase
         .from('entradas')
         .select('*');
@@ -196,14 +196,14 @@ const Dashboard = () => {
 
   const loadUserStats = async () => {
     try {
-      // Estadísticas de usuarios - incluyendo usuarios activos (últimas 24h)
+      // Estad­sticas de usuarios - incluyendo usuarios activos (ºltimas 24h)
       const { data: users, error: usersError } = await supabase
         .from('profiles')
         .select('id, created_at, last_seen, is_active');
 
       if (usersError) throw usersError;
 
-      // Obtener usuarios activos (últimas 24 horas) desde auth.users o user_sessions si existe
+      // Obtener usuarios activos (ºltimas 24 horas) desde auth.users o user_sessions si existe
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
       // Intentar obtener usuarios activos desde user_sessions o last_login
@@ -235,7 +235,7 @@ const Dashboard = () => {
 
       setStats(prev => ({
         ...prev,
-        activeUsers: activeUsersCount, // Usuarios activos en últimas 24h
+        activeUsers: activeUsersCount, // Usuarios activos en ºltimas 24h
         totalUsers, // Total de usuarios registrados
         newUsersThisWeek
       }));
@@ -325,7 +325,7 @@ const Dashboard = () => {
           id: 1,
           type: 'warning',
           title: 'Pagos pendientes',
-          message: 'Hay 3 transacciones pendientes de confirmación',
+          message: 'Hay 3 transacciones pendientes de confirmaci³n',
           time: 'Hace 2 horas'
         },
         {
@@ -339,7 +339,7 @@ const Dashboard = () => {
           id: 3,
           type: 'success',
           title: 'Venta exitosa',
-          message: 'Se han vendido 15 tickets para "Teatro Clásico"',
+          message: 'Se han vendido 15 tickets para "Teatro Cl¡sico"',
           time: 'Hace 6 horas'
         }
       ];
@@ -428,11 +428,11 @@ const Dashboard = () => {
           Dashboard
         </Title>
         <Text type="secondary" style={{ fontSize: '14px' }}>
-          Resumen general del sistema de boletería
+          Resumen general del sistema de boleter­a
         </Text>
       </div>
 
-      {/* Métricas Principales */}
+      {/* M©tricas Principales */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card style={{ borderRadius: '8px' }}>
@@ -484,7 +484,7 @@ const Dashboard = () => {
               prefix={<UserOutlined />}
             />
             <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
-              {stats.totalUsers} total • +{stats.newUsersThisWeek} esta semana
+              {stats.totalUsers} total -¢ +{stats.newUsersThisWeek} esta semana
             </Text>
           </Card>
         </Col>
@@ -498,17 +498,17 @@ const Dashboard = () => {
               prefix={<ShoppingCartOutlined />}
             />
             <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
-              Requieren atención
+              Requieren atenci³n
             </Text>
           </Card>
         </Col>
       </Row>
 
-      {/* Acciones Rápidas */}
+      {/* Acciones R¡pidas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24}>
           <Card
-            title="Acciones Rápidas"
+            title="Acciones R¡pidas"
             style={{ borderRadius: '8px' }}
           >
             <Row gutter={[16, 16]}>
@@ -521,7 +521,7 @@ const Dashboard = () => {
                   onClick={() => navigate('/backoffice/boleteria')}
                   style={{ height: '48px', fontSize: '14px' }}
                 >
-                  Boletería
+                  Boleter­a
                 </Button>
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
@@ -553,11 +553,11 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Gráficos y Análisis */}
+      {/* Gr¡ficos y An¡lisis */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} lg={16}>
           <Card
-            title="Ventas por Período"
+            title="Ventas por Per­odo"
             extra={<Button type="link" size="small">Ver Detalles</Button>}
             style={{ borderRadius: '8px' }}
           >
@@ -670,7 +670,7 @@ const Dashboard = () => {
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card title="Eventos Próximos" extra={<Button type="link">Ver Todos</Button>}>
+          <Card title="Eventos Pr³ximos" extra={<Button type="link">Ver Todos</Button>}>
             <List
               dataSource={upcomingEvents}
               renderItem={(event) => (
@@ -702,7 +702,7 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Configuración de Métodos de Pago */}
+      {/* Configuraci³n de M©todos de Pago */}
       <Row gutter={[16, 16]} className="mt-8">
         <Col xs={24}>
           <PaymentMethodsConfig />
@@ -781,3 +781,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+

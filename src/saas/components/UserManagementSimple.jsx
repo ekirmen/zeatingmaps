@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Typography, Space, Tag, Select, Input, Modal, Form, message, Row, Col, Statistic, Drawer, Badge, Avatar, Tooltip } from 'antd';
+import { Card, Table, Button, Typography, Space, Tag, Select, Input, Modal, Form, message, Row, Col, Statistic, Drawer, Badge, Avatar, Tooltip } from '../../utils/antdComponents';
 import {
   UserOutlined,
   TeamOutlined,
@@ -68,7 +68,7 @@ const UserManagementSimple = () => {
 
       if (profilesError) throw profilesError;
 
-      // Obtener información adicional de user_tenant_info si existe
+      // Obtener informaci³n adicional de user_tenant_info si existe
       const userIds = profiles?.map(p => p.id) || [];
       const { data: userTenantInfo, error: tenantError } = await supabase
         .from('user_tenant_info')
@@ -170,14 +170,14 @@ const UserManagementSimple = () => {
 
   const loadStats = async () => {
     try {
-      // Obtener estadísticas desde profiles
+      // Obtener estad­sticas desde profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, tenant_id, is_active, activo');
 
       if (profilesError) throw profilesError;
 
-      // Obtener información adicional de user_tenant_info si existe
+      // Obtener informaci³n adicional de user_tenant_info si existe
       const userIds = profiles?.map(p => p.id) || [];
       const { data: userTenantInfo, error: tenantError } = await supabase
         .from('user_tenant_info')
@@ -212,7 +212,7 @@ const UserManagementSimple = () => {
     try {
       const values = await form.validateFields();
 
-      // Actualizar información en profiles
+      // Actualizar informaci³n en profiles
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -226,7 +226,7 @@ const UserManagementSimple = () => {
 
       if (profileError) throw profileError;
 
-      // Actualizar información del usuario en user_tenant_info si existe
+      // Actualizar informaci³n del usuario en user_tenant_info si existe
       const { error: tenantError } = await supabase
         .from('user_tenant_info')
         .update({
@@ -362,7 +362,7 @@ const UserManagementSimple = () => {
       },
     },
     {
-      title: 'Último Login',
+      title: 'šltimo Login',
       dataIndex: 'last_login',
       key: 'last_login',
       render: (date) => date ? new Date(date).toLocaleDateString('es-ES') : 'Nunca',
@@ -400,14 +400,14 @@ const UserManagementSimple = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <TeamOutlined style={{ marginRight: '8px' }} />
-          Gestión de Usuarios
+          Gesti³n de Usuarios
         </Title>
         <Text type="secondary">
           Administra usuarios y roles de todos los tenants
         </Text>
       </div>
 
-      {/* Estadísticas */}
+      {/* Estad­sticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -441,7 +441,7 @@ const UserManagementSimple = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="En línea (24h)"
+              title="En l­nea (24h)"
               value={stats.online || 0}
               valueStyle={{ color: '#1890ff' }}
               prefix={<CrownOutlined />}
@@ -518,7 +518,7 @@ const UserManagementSimple = () => {
         />
       </Card>
 
-      {/* Drawer de edición de usuario */}
+      {/* Drawer de edici³n de usuario */}
       <Drawer
         title="Editar Usuario"
         placement="right"
@@ -581,3 +581,5 @@ const UserManagementSimple = () => {
 };
 
 export default UserManagementSimple;
+
+

@@ -20,7 +20,7 @@ import {
   Tooltip,
   Transfer,
   Tabs
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   PlusOutlined, 
   EditOutlined, 
@@ -65,7 +65,7 @@ const SaasUserManagementSimple = () => {
       color: 'orange', 
       icon: <SettingOutlined />,
       level: 80,
-      description: 'Administración completa de tenants'
+      description: 'Administraci³n completa de tenants'
     },
     { 
       value: 'gerente_sistema', 
@@ -73,7 +73,7 @@ const SaasUserManagementSimple = () => {
       color: 'blue', 
       icon: <SettingOutlined />,
       level: 60,
-      description: 'Gestión de tenants y soporte'
+      description: 'Gesti³n de tenants y soporte'
     },
     { 
       value: 'soporte_sistema', 
@@ -81,7 +81,7 @@ const SaasUserManagementSimple = () => {
       color: 'green', 
       icon: <TeamOutlined />,
       level: 40,
-      description: 'Solo soporte técnico'
+      description: 'Solo soporte t©cnico'
     },
     { 
       value: 'visualizador_sistema', 
@@ -89,7 +89,7 @@ const SaasUserManagementSimple = () => {
       color: 'purple', 
       icon: <EyeOutlined />,
       level: 20,
-      description: 'Solo lectura de información'
+      description: 'Solo lectura de informaci³n'
     }
   ];
 
@@ -234,7 +234,7 @@ const SaasUserManagementSimple = () => {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
         <Title level={3}>Acceso Denegado</Title>
-        <Text>No tienes permisos para acceder a la gestión de usuarios del sistema.</Text>
+        <Text>No tienes permisos para acceder a la gesti³n de usuarios del sistema.</Text>
       </div>
     );
   }
@@ -245,7 +245,7 @@ const SaasUserManagementSimple = () => {
       <div className="mb-6">
         <Row justify="space-between" align="middle">
           <Col>
-            <Title level={2}>Gestión de Usuarios del Sistema</Title>
+            <Title level={2}>Gesti³n de Usuarios del Sistema</Title>
             <Text type="secondary">Administra los usuarios del sistema SaaS y sus asignaciones de tenants</Text>
           </Col>
           <Col>
@@ -260,7 +260,7 @@ const SaasUserManagementSimple = () => {
         </Row>
       </div>
 
-      {/* Información de Roles del Sistema */}
+      {/* Informaci³n de Roles del Sistema */}
       <Card className="mb-6">
         <Title level={4}>Roles del Sistema SaaS</Title>
         <Row gutter={[16, 16]}>
@@ -321,7 +321,7 @@ const SaasUserManagementSimple = () => {
         width={800}
       >
         <Tabs defaultActiveKey="user-info">
-          <TabPane tab="Información del Usuario" key="user-info">
+          <TabPane tab="Informaci³n del Usuario" key="user-info">
             <Form
               form={form}
               layout="vertical"
@@ -343,7 +343,7 @@ const SaasUserManagementSimple = () => {
                     label="Email/Login"
                     rules={[
                       { required: true, message: 'El email es requerido' },
-                      { type: 'email', message: 'Debe ser un email válido' }
+                      { type: 'email', message: 'Debe ser un email v¡lido' }
                     ]}
                   >
                     <Input placeholder="usuario@ejemplo.com" />
@@ -355,7 +355,7 @@ const SaasUserManagementSimple = () => {
                 <Col span={12}>
                   <Form.Item
                     name="telefono"
-                    label="Teléfono"
+                    label="Tel©fono"
                   >
                     <Input placeholder="+1 234 567 8900" />
                   </Form.Item>
@@ -393,7 +393,7 @@ const SaasUserManagementSimple = () => {
             </Form>
           </TabPane>
 
-          <TabPane tab="Asignación de Tenants" key="tenant-assignment">
+          <TabPane tab="Asignaci³n de Tenants" key="tenant-assignment">
             <div style={{ marginBottom: '16px' }}>
               <Text strong>Selecciona los tenants que este usuario puede gestionar:</Text>
             </div>
@@ -433,3 +433,5 @@ const SaasUserManagementSimple = () => {
 };
 
 export default SaasUserManagementSimple;
+
+

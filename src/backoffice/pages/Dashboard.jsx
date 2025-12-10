@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Card, Typography, Space, Button, Progress, List, Avatar, Tag, Pagination } from 'antd';
+import { Row, Col, Card, Typography, Space, Button, Progress, List, Avatar, Tag, Pagination } from '../../utils/antdComponents';
 import { 
   CalendarOutlined, 
   UserOutlined, 
@@ -40,18 +40,18 @@ const Dashboard = () => {
   const tenantContext = useTenant();
   const currentTenant = tenantContext?.currentTenant || null;
 
-  // Función optimizada para cargar datos del dashboard
+  // Funci³n optimizada para cargar datos del dashboard
   const loadDashboardDataOptimized = useCallback(async (forceRefresh = false) => {
     try {
       if (forceRefresh) {
         setRefreshing(true);
-        // Invalidar caché si se fuerza refresh
+        // Invalidar cach© si se fuerza refresh
         invalidateDashboardCache(currentTenant?.id);
       } else {
         setLoading(true);
       }
 
-      // Usar servicio optimizado con función RPC
+      // Usar servicio optimizado con funci³n RPC
       const dashboardData = await getDashboardStats(currentTenant?.id, {
         useCache: !forceRefresh,
         cacheTTL: 2 * 60 * 1000 // 2 minutos
@@ -67,7 +67,7 @@ const Dashboard = () => {
       setRecentEvents(dashboardData.recentEvents || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      // Fallback a método anterior si falla la RPC
+      // Fallback a m©todo anterior si falla la RPC
       try {
         const [eventsCount, usersCount, productsCount] = await Promise.all([
           addTenantFilter(supabase.from('eventos').select('id', { count: 'exact' })),
@@ -104,12 +104,12 @@ const Dashboard = () => {
     loadDashboardDataOptimized();
   }, [loadDashboardDataOptimized]);
 
-  // Función para refrescar datos manualmente
+  // Funci³n para refrescar datos manualmente
   const handleRefresh = () => {
     loadDashboardDataOptimized(true);
   };
 
-  // Paginación para eventos recientes
+  // Paginaci³n para eventos recientes
   const paginatedEvents = recentEvents.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
@@ -156,7 +156,7 @@ const Dashboard = () => {
         </Space>
       }
     >
-      {/* Estadísticas */}
+      {/* Estad­sticas */}
       <div className="dashboard-grid dashboard-grid-4" style={{ marginBottom: '24px' }}>
         <div className="dashboard-stat-card">
           <div className="dashboard-stat-card-header">
@@ -258,7 +258,7 @@ const Dashboard = () => {
                       description={
                         <Space direction="vertical" size="small" style={{ marginTop: '8px' }}>
                           <Text type="secondary" style={{ fontSize: '12px' }}>
-                            {event.fecha} • {event.ubicacion}
+                            {event.fecha} -¢ {event.ubicacion}
                           </Text>
                           <Tag color={getEventStatusColor(event.estado)} style={{ margin: 0 }}>
                             {getEventStatusText(event.estado)}
@@ -318,3 +318,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { message, Modal, Form, Input } from 'antd';
+import { message, Modal, Form, Input } from '../../utils/antdComponents';
 import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { getActivePaymentMethods, validatePaymentMethodConfig } from '../services/paymentMethodsService';
@@ -31,7 +31,7 @@ const Pay = () => {
   const { currentTenant } = useTenant();
 
   // useCartStore almacena los asientos seleccionados en la propiedad `items`
-  // En algunos contextos `cart` no existe y producía `undefined`, generando
+  // En algunos contextos `cart` no existe y produc­a `undefined`, generando
   // errores al intentar usar `reduce`. Se usa `items` y se asegura un arreglo.
   const { items: cartItems, clearCart, functionId } = useCartStore();
   const { handleError, showSuccess } = useErrorHandler();
@@ -47,7 +47,7 @@ const Pay = () => {
 
   const formatCurrency = (value) => normalizeAmount(value).toFixed(2);
 
-  // Usar seatLockStore para sincronización en tiempo real
+  // Usar seatLockStore para sincronizaci³n en tiempo real
   const { lockedSeats, subscribeToFunction, unsubscribe } = useSeatLockStore();
   const total = (cartItems || []).reduce(
     (sum, item) => sum + normalizeAmount(item.precio),
@@ -60,7 +60,7 @@ const Pay = () => {
   const [facebookPixel, setFacebookPixel] = useState(null);
   const [pricesWithFees] = useState({});
   const [pagosPlazosActivos, setPagosPlazosActivos] = useState(null);
-  const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(0); // 0 = todas, 1, 2, 3 = número de cuotas
+  const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(0); // 0 = todas, 1, 2, 3 = nºmero de cuotas
   const [cuotasCalculadas, setCuotasCalculadas] = useState([]);
   const [buyerConfigLoading, setBuyerConfigLoading] = useState(false);
   const [buyerInfoConfig, setBuyerInfoConfig] = useState({ mostrar: false, campos: {} });
@@ -86,29 +86,29 @@ const Pay = () => {
     const loadGateways = async () => {
       try {
         setLoadingMethods(true);
-        logger.log('🛒 [PAY] Cargando métodos de pago...');
+        logger.log('ðŸ›’ [PAY] Cargando m©todos de pago...');
 
         // Obtener el ID del evento del primer item del carrito
         const eventId = cartItems?.[0]?.eventId || null;
-        logger.log('🎫 [PAY] Event ID del carrito:', eventId);
+        logger.log('ðŸŽ« [PAY] Event ID del carrito:', eventId);
 
         const methods = await getActivePaymentMethods(null, eventId);
-        logger.log('📋 [PAY] Métodos obtenidos de la BD:', methods);
+        logger.log('ðŸ“‹ [PAY] M©todos obtenidos de la BD:', methods);
 
         const validMethods = methods.filter(method => {
           const validation = validatePaymentMethodConfig(method);
-          logger.log(`🔍 [PAY] Validando ${method.method_id}:`, validation);
+          logger.log(`ðŸ” [PAY] Validando ${method.method_id}:`, validation);
           return validation.valid;
         });
 
-        logger.log('✅ [PAY] Métodos válidos después del filtro:', validMethods);
+        logger.log('œ… [PAY] M©todos v¡lidos despu©s del filtro:', validMethods);
         setAvailableMethods(validMethods);
 
-        // Por ahora, no calculamos comisiones específicas
-        // Esto se puede implementar más tarde usando la tabla comisiones_tasas
+        // Por ahora, no calculamos comisiones espec­ficas
+        // Esto se puede implementar m¡s tarde usando la tabla comisiones_tasas
       } catch (error) {
-        logger.error('❌ [PAY] Error loading payment gateways:', error);
-        message.error('Error al cargar métodos de pago');
+        logger.error('Œ [PAY] Error loading payment gateways:', error);
+        message.error('Error al cargar m©todos de pago');
       } finally {
         setLoadingMethods(false);
       }
@@ -116,7 +116,7 @@ const Pay = () => {
     const loadFacebookPixel = async () => {
       try {
         if (cartItems && cartItems.length > 0) {
-          // Obtener el píxel del primer evento en el carrito
+          // Obtener el p­xel del primer evento en el carrito
           const firstEventId = cartItems[0]?.eventId;
           if (firstEventId) {
             const pixel = await getFacebookPixelByEvent(firstEventId);
@@ -178,19 +178,19 @@ const Pay = () => {
   const buyerLabels = {
     nombre: 'Nombre',
     email: 'Email',
-    telefono: 'Teléfono',
+    telefono: 'Tel©fono',
     rut: 'RUT',
-    numeroIdentificacionFiscal: 'Número de identificación fiscal',
-    direccion: 'Dirección / C.P.',
-    nombreFonetico: 'Nombre fonético',
-    apellidosFoneticos: 'Apellidos fonéticos',
+    numeroIdentificacionFiscal: 'Nºmero de identificaci³n fiscal',
+    direccion: 'Direcci³n / C.P.',
+    nombreFonetico: 'Nombre fon©tico',
+    apellidosFoneticos: 'Apellidos fon©ticos',
     idioma: 'Idioma',
     fechaNacimiento: 'Fecha de nacimiento',
     sexo: 'Sexo',
     empresa: 'Empresa',
     departamento: 'Departamento',
     cargoEmpresa: 'Cargo en la empresa',
-    matricula: 'Matrícula',
+    matricula: 'Matr­cula',
     twitter: 'Twitter',
     facebook: 'Facebook',
     youtube: 'YouTube',
@@ -357,7 +357,7 @@ const Pay = () => {
 
   const handleProcessPayment = async () => {
     if (buyerConfigLoading) {
-      message.loading('Cargando información del comprador...');
+      message.loading('Cargando informaci³n del comprador...');
       return;
     }
 
@@ -370,7 +370,7 @@ const Pay = () => {
 
     // Validaciones robustas antes de procesar el pago
     if (!selectedGateway) {
-      message.error('Por favor selecciona un método de pago');
+      message.error('Por favor selecciona un m©todo de pago');
       return;
     }
 
@@ -387,7 +387,7 @@ const Pay = () => {
         const seatId = item.sillaId || item.id || item._id;
         const funcionId = functionId || item.functionId || item.funcionId;
 
-        // Si no hay IDs consistentes, avisar al cliente que el asiento ya no está disponible
+        // Si no hay IDs consistentes, avisar al cliente que el asiento ya no est¡ disponible
         if (!seatId || !funcionId) {
           invalidSeats.push(item.nombre || seatId || 'Asiento sin ID');
           continue;
@@ -406,7 +406,7 @@ const Pay = () => {
         }
 
         if (seatId && funcionId) {
-          // Verificar si el asiento está bloqueado por otro usuario
+          // Verificar si el asiento est¡ bloqueado por otro usuario
           const isLockedByOther = lockedSeats.some(lock =>
             lock.seat_id === seatId &&
             lock.funcion_id === funcionId &&
@@ -418,7 +418,7 @@ const Pay = () => {
             continue;
           }
 
-          // Verificar disponibilidad usando el servicio atómico como respaldo
+          // Verificar disponibilidad usando el servicio at³mico como respaldo
           // Pasar el session_id para que solo verifique locks de otros usuarios
           const currentSessionId = localStorage.getItem('anonSessionId');
           const isAvailable = await atomicSeatLockService.isSeatAvailable(seatId, funcionId, currentSessionId);
@@ -431,23 +431,23 @@ const Pay = () => {
       const seatsWithIssues = [...invalidSeats, ...unavailableSeats];
 
       if (seatsWithIssues.length > 0) {
-        message.error(`Uno o más asientos ya no están disponibles o fueron modificados: ${seatsWithIssues.join(', ')}. Por favor, selecciona otros asientos para continuar.`);
+        message.error(`Uno o m¡s asientos ya no est¡n disponibles o fueron modificados: ${seatsWithIssues.join(', ')}. Por favor, selecciona otros asientos para continuar.`);
         return;
       }
     } catch (error) {
       console.error('Error validando disponibilidad de asientos:', error);
-      message.error('Error validando disponibilidad de asientos. Por favor, inténtalo de nuevo.');
+      message.error('Error validando disponibilidad de asientos. Por favor, int©ntalo de nuevo.');
       return;
     }
 
-    // Declarar variables fuera del try para que estén disponibles en el catch
+    // Declarar variables fuera del try para que est©n disponibles en el catch
     let paymentData = null;
     let resolvedTenantId = null;
 
     try {
       setProcessingPayment(true);
 
-      // Generar locator simple de 8 caracteres (números y letras)
+      // Generar locator simple de 8 caracteres (nºmeros y letras)
       const { generateSimpleLocator } = await import('../../utils/generateLocator');
       const locator = generateSimpleLocator();
 
@@ -473,10 +473,10 @@ const Pay = () => {
 
       resolvedTenantId = resolveTenantId(tenantCandidates[0]);
 
-      // Obtener evento_id desde múltiples fuentes
+      // Obtener evento_id desde mºltiples fuentes
       let eventoId = cartItems?.[0]?.eventId || cartItems?.[0]?.eventoId || null;
 
-      // Si no hay evento_id en el carrito pero sí hay funcion_id, obtenerlo desde la función
+      // Si no hay evento_id en el carrito pero s­ hay funcion_id, obtenerlo desde la funci³n
       if (!eventoId && functionId) {
         try {
           const { supabase } = await import('../../supabaseClient');
@@ -496,13 +496,13 @@ const Pay = () => {
         }
       }
 
-      // Calcular el monto a pagar según las cuotas seleccionadas
+      // Calcular el monto a pagar segºn las cuotas seleccionadas
       let montoAPagar = total;
       if (pagosPlazosActivos?.activo && cuotasSeleccionadas > 0 && cuotasCalculadas.length > 0) {
-        // Si se seleccionaron cuotas específicas (1, 2, 3), usar el monto de esas cuotas
+        // Si se seleccionaron cuotas espec­ficas (1, 2, 3), usar el monto de esas cuotas
         montoAPagar = cuotasCalculadas.slice(0, cuotasSeleccionadas).reduce((sum, c) => sum + c.monto, 0);
       } else if (pagosPlazosActivos?.activo && cuotasSeleccionadas === 0) {
-        // Si se seleccionó 0 (todas las cuotas), pagar el total completo
+        // Si se seleccion³ 0 (todas las cuotas), pagar el total completo
         montoAPagar = total;
       }
 
@@ -556,7 +556,7 @@ const Pay = () => {
         evento: {
           id: eventoId
         },
-        eventoId: eventoId, // También pasar directamente como eventoId
+        eventoId: eventoId, // Tambi©n pasar directamente como eventoId
         eventId: eventoId,   // Y como eventId para compatibilidad
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
         buyerInfo: buyerInfoForPayment || undefined
@@ -567,7 +567,7 @@ const Pay = () => {
         return paymentData; // Continuar sin encriptar si falla
       });
 
-      // Registrar inicio de transacción en auditoría
+      // Registrar inicio de transacci³n en auditor­a
       auditService.logPayment('initiated', {
         ...paymentData,
         gateway: selectedGateway?.method_id || selectedGateway?.id,
@@ -579,11 +579,11 @@ const Pay = () => {
 
       const result = await processPaymentMethod(selectedGateway, encryptedPaymentData);
       if (result.success) {
-        // Determinar el status real de la transacción
+        // Determinar el status real de la transacci³n
         const transactionStatus = result.status || 'completed';
         const isReservation = transactionStatus === 'reservado' || transactionStatus === 'reserved' || transactionStatus === 'pending';
 
-        // Registrar pago exitoso en auditoría
+        // Registrar pago exitoso en auditor­a
         auditService.logPayment('completed', {
           ...paymentData,
           transactionId: result.transactionId,
@@ -596,7 +596,7 @@ const Pay = () => {
           severity: 'info'
         }).catch(err => console.error('Error logging payment success:', err));
 
-        // Enviar notificación de éxito
+        // Enviar notificaci³n de ©xito
         await createPaymentSuccessNotification({
           id: result.transactionId,
           amount: montoAPagar,
@@ -618,7 +618,7 @@ const Pay = () => {
             : currentTenant
         });
 
-        // Enviar correo automáticamente según el status
+        // Enviar correo autom¡ticamente segºn el status
         if (result.locator && user?.id) {
           try {
             const emailResult = await sendPaymentEmailByStatus({
@@ -633,28 +633,28 @@ const Pay = () => {
             } else {
             }
           } catch (emailError) {
-            console.error('❌ [PAY] Error enviando correo:', emailError);
-            // No bloquear el flujo si falla el envío de correo
+            console.error('Œ [PAY] Error enviando correo:', emailError);
+            // No bloquear el flujo si falla el env­o de correo
           }
         }
 
         // Limpiar carrito (sin intentar desbloquear asientos ya vendidos)
         clearCart(true);
 
-        // Redirigir según el tipo de pago
+        // Redirigir segºn el tipo de pago
         if (result.requiresRedirect) {
           window.location.href = result.approvalUrl;
         } else if (result.requiresAction) {
           // Para Stripe, mostrar formulario de tarjeta
           navigate('/store/payment-confirm', { state: { result } });
         } else if (result.requiresManualConfirmation) {
-          // Para transferencias, mostrar información
+          // Para transferencias, mostrar informaci³n
           navigate('/store/payment-manual', { state: { result } });
         } else {
           navigate('/store/payment-success', { state: { result, locator: result.locator } });
         }
       } else {
-        // Registrar pago fallido en auditoría
+        // Registrar pago fallido en auditor­a
         auditService.logPayment('failed', {
           ...paymentData,
           error: result.error || 'Payment failed',
@@ -666,12 +666,12 @@ const Pay = () => {
           severity: 'error'
         }).catch(err => console.error('Error logging payment failure:', err));
 
-        message.error(result.error || 'Error al procesar el pago. Por favor, inténtalo de nuevo.');
+        message.error(result.error || 'Error al procesar el pago. Por favor, int©ntalo de nuevo.');
       }
     } catch (error) {
       console.error('Error processing payment:', error);
 
-      // Registrar error de pago en auditoría solo si tenemos los datos necesarios
+      // Registrar error de pago en auditor­a solo si tenemos los datos necesarios
       if (paymentData || resolvedTenantId) {
         auditService.logPayment('error', {
           ...(paymentData || {}),
@@ -721,7 +721,7 @@ const Pay = () => {
       apple_pay: 'Apple Pay',
       google_pay: 'Google Pay',
       transferencia: 'Transferencia Bancaria',
-      pago_movil: 'Pago Móvil',
+      pago_movil: 'Pago M³vil',
       efectivo_tienda: 'Pago en Efectivo en Tienda',
       efectivo: 'Efectivo'
     };
@@ -730,17 +730,17 @@ const Pay = () => {
 
   const getMethodDescription = (methodId) => {
     const descriptions = {
-      stripe: 'Tarjetas de crédito y débito',
-      paypal: 'Pagos a través de PayPal',
-      cashea: 'Compra ahora y paga después con Cashea',
+      stripe: 'Tarjetas de cr©dito y d©bito',
+      paypal: 'Pagos a trav©s de PayPal',
+      cashea: 'Compra ahora y paga despu©s con Cashea',
       apple_pay: 'Pagos para usuarios iOS',
       google_pay: 'Pagos para usuarios Android',
       transferencia: 'Transferencias bancarias directas',
-      pago_movil: 'Pagos móviles (MercadoPago, etc.)',
-      efectivo_tienda: 'Pagos en efectivo en tienda física',
+      pago_movil: 'Pagos m³viles (MercadoPago, etc.)',
+      efectivo_tienda: 'Pagos en efectivo en tienda f­sica',
       efectivo: 'Pagos en efectivo'
     };
-    return descriptions[methodId] || 'Método de pago';
+    return descriptions[methodId] || 'M©todo de pago';
   };
 
 
@@ -749,7 +749,7 @@ const Pay = () => {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
         <div className="store-text-center">
-          <h2 className="store-text-2xl store-font-bold store-text-gray-900 mb-4">Carrito Vacío</h2>
+          <h2 className="store-text-2xl store-font-bold store-text-gray-900 mb-4">Carrito Vac­o</h2>
           <p className="store-text-gray-600 mb-6">No hay productos en tu carrito</p>
           <button onClick={() => navigate('/store')} className="store-button store-button-primary">
             Continuar Comprando
@@ -772,7 +772,7 @@ const Pay = () => {
         destroyOnClose
       >
         <p className="store-text-sm text-gray-700 mb-3">
-          Completa la información solicitada por el organizador. Solo se pedirá una vez por evento.
+          Completa la informaci³n solicitada por el organizador. Solo se pedir¡ una vez por evento.
         </p>
         <Form layout="vertical">
           {requestedBuyerFields.map(([key, cfg]) => (
@@ -812,25 +812,25 @@ const Pay = () => {
             {/* Header */}
             <div className="store-card-header" style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)', color: 'white' }}>
               <h1 className="store-text-xl md:store-text-2xl store-font-bold">Finalizar Compra</h1>
-              <p className="store-text-xs md:store-text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Selecciona tu método de pago</p>
+              <p className="store-text-xs md:store-text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Selecciona tu m©todo de pago</p>
             </div>
 
             <div className="store-card-body">
               <div className="store-grid store-grid-auto">
-                {/* Métodos de Pago */}
+                {/* M©todos de Pago */}
                 <div className="store-space-y-4 md:store-space-y-6">
-                  <h2 className="store-text-lg md:store-text-xl store-font-semibold">Métodos de Pago</h2>
+                  <h2 className="store-text-lg md:store-text-xl store-font-semibold">M©todos de Pago</h2>
 
                   {loadingMethods ? (
                     <div className="store-text-center py-8">
                       <div className="store-loading"></div>
-                      <p className="mt-4 store-text-gray-600">Cargando métodos de pago...</p>
+                      <p className="mt-4 store-text-gray-600">Cargando m©todos de pago...</p>
                     </div>
                   ) : availableMethods.length === 0 ? (
                     <div className="store-alert store-alert-warning">
                       <div>
-                        <h4 className="store-font-semibold">No hay métodos de pago disponibles</h4>
-                        <p className="store-text-sm">Por favor, contacta al administrador para configurar los métodos de pago.</p>
+                        <h4 className="store-font-semibold">No hay m©todos de pago disponibles</h4>
+                        <p className="store-text-sm">Por favor, contacta al administrador para configurar los m©todos de pago.</p>
                       </div>
                     </div>
                   ) : (
@@ -870,7 +870,7 @@ const Pay = () => {
                   </div>
                   <div className="store-card-body">
                     <div className="store-space-y-3">
-                      {/* Información de zona y asientos */}
+                      {/* Informaci³n de zona y asientos */}
                       <div className="bg-blue-50 p-2 md:p-3 rounded-lg mb-3 md:mb-4">
                         <h4 className="font-semibold text-blue-900 mb-2 store-text-sm md:store-text-base">Asientos Seleccionados</h4>
                         {cartItems.map((item, index) => (
@@ -911,7 +911,7 @@ const Pay = () => {
                           disabled={processingPayment}
                         />
                       )}
-                      {/* Código anterior comentado para referencia
+                      {/* C³digo anterior comentado para referencia
                       {pagosPlazosActivos?.activo && cuotasCalculadas.length > 0 && (
                         <div className="border-t border-gray-200 pt-4 mt-4">
                           <h4 className="store-text-sm md:store-text-base store-font-semibold mb-3">Pago a Plazos Disponible</h4>
@@ -922,7 +922,7 @@ const Pay = () => {
                               </p>
                               <div className="space-y-2">
                                 <label className="block store-text-xs md:store-text-sm font-medium text-gray-700">
-                                  ¿Cuántas cuotas deseas pagar ahora?
+                                  ¿Cu¡ntas cuotas deseas pagar ahora?
                                 </label>
                                 <select
                                   className="w-full border border-gray-300 rounded-md px-3 py-2 store-text-sm"
@@ -943,7 +943,7 @@ const Pay = () => {
                                     <strong>Monto a pagar ahora:</strong> ${formatCurrency(cuotasCalculadas.slice(0, cuotasSeleccionadas).reduce((sum, c) => sum + c.monto, 0))}
                                   </p>
                                   <p className="store-text-xs text-gray-500 mt-1">
-                                    Quedarán {pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas} cuota{pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas !== 1 ? 's' : ''} pendiente{pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas !== 1 ? 's' : ''}
+                                    Quedar¡n {pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas} cuota{pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas !== 1 ? 's' : ''} pendiente{pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas !== 1 ? 's' : ''}
                                   </p>
                                 </div>
                               )}
@@ -955,7 +955,7 @@ const Pay = () => {
                       {selectedGateway && pricesWithFees[selectedGateway.id]?.hasFees && (
                         <>
                           <div className="flex justify-between store-text-sm store-text-gray-600">
-                            <span>Comisión ({selectedGateway.name})</span>
+                            <span>Comisi³n ({selectedGateway.name})</span>
                             <span>+${formatCurrency(pricesWithFees[selectedGateway.id].comision)}</span>
                           </div>
                           <div className="flex justify-between items-center store-text-lg store-font-bold store-text-primary">
@@ -965,9 +965,9 @@ const Pay = () => {
                         </>
                       )}
 
-                      {/* Botones de Acción */}
+                      {/* Botones de Acci³n */}
                       <div className="space-y-3">
-                        {/* Botón Principal - Procesar Pago */}
+                        {/* Bot³n Principal - Procesar Pago */}
                         <button
                           className="store-button store-button-primary store-button-lg store-button-block"
                           disabled={!selectedGateway || processingPayment}
@@ -983,13 +983,13 @@ const Pay = () => {
                           )}
                         </button>
 
-                        {/* Botón Secundario - Guardar en Carrito */}
+                        {/* Bot³n Secundario - Guardar en Carrito */}
                         <button
                           className="store-button store-button-default store-button-lg store-button-block"
                           disabled={processingPayment}
                           onClick={() => navigate('/store/cart')}
                         >
-                          Guardar en Carrito para Pagar Después
+                          Guardar en Carrito para Pagar Despu©s
                         </button>
                       </div>
 
@@ -1012,3 +1012,5 @@ const Pay = () => {
 };
 
 export default Pay;
+
+

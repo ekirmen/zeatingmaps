@@ -1,4 +1,4 @@
-import { message } from 'antd';
+import { message } from '../../../../utils/antdComponents';
 
 export const createSeatHandlers = ({
   selectedFuncion,
@@ -27,7 +27,7 @@ export const createSeatHandlers = ({
     const zonaId = seat.zona;
     const zonaObj = Array.isArray(zonas) ? zonas.find(z => (z.id || z._id) === zonaId) : null;
 
-    // Cliente opcional - se puede seleccionar después
+    // Cliente opcional - se puede seleccionar despu©s
     // if (!selectedClient) {
     //   message.info('Seleccione un cliente antes de agregar asientos');
     //   return;
@@ -35,13 +35,13 @@ export const createSeatHandlers = ({
 
     // Modo bloqueo - permite seleccionar asientos para bloquearlos
     if (blockMode) {
-      // Verificar que el asiento no esté vendido, reservado o anulado
+      // Verificar que el asiento no est© vendido, reservado o anulado
       if (seat.estado === 'pagado' || seat.estado === 'reservado' || seat.estado === 'anulado') {
         message.warning(`No se puede bloquear un asiento ${seat.estado}`);
         return;
       }
 
-      // Verificar si ya está bloqueado por otro usuario
+      // Verificar si ya est¡ bloqueado por otro usuario
       const [isLocked, lockedByMe] = await Promise.all([
         isSeatLocked(seat._id, currentFuncIdNum),
         isSeatLockedByMe(seat._id, currentFuncIdNum)
@@ -59,7 +59,7 @@ export const createSeatHandlers = ({
             message.warning('No se pudo desbloquear el asiento seleccionado por otro usuario');
           }
         } catch (err) {
-          console.error('❌ Error al forzar desbloqueo de asiento:', err);
+          console.error('Œ Error al forzar desbloqueo de asiento:', err);
           message.error('Error al desbloquear el asiento de otro usuario');
         }
         return;
@@ -73,7 +73,7 @@ export const createSeatHandlers = ({
         unlockSeat(seat._id, currentFuncIdNum, { allowForceUnlock: true }).then((result) => {
           message.success('Asiento desbloqueado');
         }).catch(err => {
-          console.error('❌ Error al desbloquear asiento:', err);
+          console.error('Œ Error al desbloquear asiento:', err);
           message.error('Error al desbloquear el asiento');
         });
       } else {
@@ -94,7 +94,7 @@ export const createSeatHandlers = ({
           ]);
           message.success('Asiento bloqueado correctamente');
         }).catch(err => {
-          console.error('❌ Error al bloquear asiento:', err);
+          console.error('Œ Error al bloquear asiento:', err);
           message.error('Error al bloquear el asiento');
         });
       }
@@ -202,7 +202,7 @@ export const createSeatHandlers = ({
   };
 
   const handleSelectCompleteTable = (table) => {
-    // Cliente opcional - se puede seleccionar después
+    // Cliente opcional - se puede seleccionar despu©s
     // if (!selectedClient) {
     //   message.info('Seleccione un cliente antes de agregar asientos');
     //   return;
@@ -282,3 +282,4 @@ export const createSeatHandlers = ({
     handleSelectCompleteTable
   };
 };
+

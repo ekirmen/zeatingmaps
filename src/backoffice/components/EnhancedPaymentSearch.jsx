@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Input, Button, Tabs, Table, message, Card, Tag, Space, Typography, Divider } from 'antd';
+import { Input, Button, Tabs, Table, message, Card, Tag, Space, Typography, Divider } from '../../utils/antdComponents';
 import { SearchOutlined, UserOutlined, FileTextOutlined, CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { fetchPaymentByLocator, fetchPaymentsByUserEmail } from '../services/apibackoffice';
 
@@ -13,7 +13,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
   const [searchResults, setSearchResults] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
 
-  // Búsqueda por localizador
+  // Bºsqueda por localizador
   const handleLocatorSearch = async () => {
     if (!searchValue.trim()) {
       message.warning('Por favor ingrese un localizador');
@@ -37,18 +37,18 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       } else {
         setSearchResults([]);
         setUserInfo(null);
-        message.info('No se encontró ningún pago con ese localizador');
+        message.info('No se encontr³ ningºn pago con ese localizador');
       }
     } catch (error) {
-      console.error('Error en búsqueda por localizador:', error);
-      message.error('Error al realizar la búsqueda');
+      console.error('Error en bºsqueda por localizador:', error);
+      message.error('Error al realizar la bºsqueda');
       setSearchResults(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // Búsqueda por email
+  // Bºsqueda por email
   const handleEmailSearch = async () => {
     if (!searchValue.trim()) {
       message.warning('Por favor ingrese un email');
@@ -76,8 +76,8 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
         message.info('No se encontraron pagos para ese email');
       }
     } catch (error) {
-      console.error('Error en búsqueda por email:', error);
-      message.error('Error al realizar la búsqueda');
+      console.error('Error en bºsqueda por email:', error);
+      message.error('Error al realizar la bºsqueda');
       setSearchResults(null);
       setUserInfo(null);
     } finally {
@@ -85,7 +85,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
     }
   };
 
-  // Manejar búsqueda según la pestaña activa
+  // Manejar bºsqueda segºn la pesta±a activa
   const handleSearch = () => {
     if (activeTab === 'locator') {
       handleLocatorSearch();
@@ -127,7 +127,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       render: (event) => event?.nombre || 'N/A',
     },
     {
-      title: 'Función',
+      title: 'Funci³n',
       dataIndex: 'funcion',
       key: 'funcion',
       render: (funcion) => (
@@ -202,7 +202,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
   ];
 
   return (
-    <Card title="Búsqueda de Pagos" style={{ marginBottom: 16 }}>
+    <Card title="Bºsqueda de Pagos" style={{ marginBottom: 16 }}>
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <TabPane 
           tab={
@@ -214,7 +214,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
           key="locator"
         >
           <div style={{ marginBottom: 16 }}>
-            <Text>Ingrese el localizador del pago para encontrar los detalles específicos.</Text>
+            <Text>Ingrese el localizador del pago para encontrar los detalles espec­ficos.</Text>
           </div>
         </TabPane>
         
@@ -253,7 +253,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
         </Space.Compact>
       </div>
 
-      {/* Información del usuario (solo para búsqueda por email) */}
+      {/* Informaci³n del usuario (solo para bºsqueda por email) */}
       {userInfo && activeTab === 'email' && (
         <Card 
           size="small" 
@@ -261,7 +261,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
           title={
             <Space>
               <UserOutlined />
-              Información del Usuario
+              Informaci³n del Usuario
             </Space>
           }
         >
@@ -269,7 +269,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
             <div>
               <div><strong>Email:</strong> {userInfo.login}</div>
               {userInfo.empresa && <div><strong>Empresa:</strong> {userInfo.empresa}</div>}
-              {userInfo.telefono && <div><strong>Teléfono:</strong> {userInfo.telefono}</div>}
+              {userInfo.telefono && <div><strong>Tel©fono:</strong> {userInfo.telefono}</div>}
             </div>
             <Button 
               type="default" 
@@ -282,12 +282,12 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
         </Card>
       )}
 
-      {/* Resultados de la búsqueda */}
+      {/* Resultados de la bºsqueda */}
       {searchResults !== null && (
         <div>
           <Divider>
             <Title level={4}>
-              {activeTab === 'locator' ? 'Resultado de Búsqueda' : 'Pagos Encontrados'}
+              {activeTab === 'locator' ? 'Resultado de Bºsqueda' : 'Pagos Encontrados'}
             </Title>
           </Divider>
           
@@ -312,3 +312,5 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
 };
 
 export default EnhancedPaymentSearch;
+
+

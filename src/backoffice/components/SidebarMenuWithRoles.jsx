@@ -8,7 +8,7 @@ import {
   Typography,
   Space,
   Tag
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   faHome,
   faCogs,
@@ -55,7 +55,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
   const navigate = useNavigate();
   const { hasPermission, getRole, isStoreUser } = useRole();
   
-  // Handler para cuando se hace click en un item del menú
+  // Handler para cuando se hace click en un item del menº
   const handleMenuClick = (path) => {
     navigate(path);
     if (onMenuClick) {
@@ -83,7 +83,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     }
   };
 
-  // Función para mantener el sidebar expandido cuando el usuario está interactuando
+  // Funci³n para mantener el sidebar expandido cuando el usuario est¡ interactuando
   const keepExpanded = () => {
     if (collapsed && temporaryExpanded) {
       // Limpiar timeout anterior si existe
@@ -115,7 +115,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     return null;
   }
 
-  // Función para crear elementos de menú con verificación de permisos
+  // Funci³n para crear elementos de menº con verificaci³n de permisos
   const createMenuItem = (item) => {
     // Verificar si el usuario tiene permisos para este elemento
     if (item.permission && !hasPermission(item.permission)) {
@@ -150,7 +150,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       permission: 'dashboard'
     },
     {
-      title: 'Administración',
+      title: 'Administraci³n',
       icon: faCogs,
       type: 'submenu',
       submenuId: 'admin',
@@ -183,11 +183,11 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       ]
     },
     {
-      title: 'Programación',
+      title: 'Programaci³n',
       icon: faCalendarAlt,
       type: 'submenu',
       submenuId: 'programming',
-      permission: 'eventos', // Mostrar si tiene al menos uno de los permisos de programación
+      permission: 'eventos', // Mostrar si tiene al menos uno de los permisos de programaci³n
       items: [
         { 
           title: 'Entradas', 
@@ -226,7 +226,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         //   permission: 'seguros'
         // },
         // { 
-        //   title: 'Envío', 
+        //   title: 'Env­o', 
         //   path: '/dashboard/envio', 
         //   icon: faTruck,
         //   permission: 'envio'
@@ -313,7 +313,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       permission: 'boleteria', // Mostrar si tiene al menos uno de los permisos de ventas
       items: [
         {
-          title: 'Boletería',
+          title: 'Boleter­a',
           path: '/dashboard/boleteria',
           icon: faTicketAlt,
           permission: 'boleteria'
@@ -338,7 +338,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
               permission: 'reportes'
             },
             {
-              title: 'Reportes Programados (acción rápida)',
+              title: 'Reportes Programados (acci³n r¡pida)',
               path: '/dashboard/scheduled-reports',
               icon: faEnvelope,
               permission: 'reportes'
@@ -358,7 +358,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
           permission: 'tags'
         },
         { 
-          title: 'Comunicación Masiva', 
+          title: 'Comunicaci³n Masiva', 
           path: '/dashboard/email-campaigns', 
           icon: faEnvelope,
           permission: 'email_campaigns'
@@ -366,44 +366,44 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       ]
     },
     {
-      title: 'Configuración',
+      title: 'Configuraci³n',
       icon: faCog,
       type: 'submenu',
       submenuId: 'config',
-      permission: 'settings', // Mostrar si tiene al menos uno de los permisos de configuración
+      permission: 'settings', // Mostrar si tiene al menos uno de los permisos de configuraci³n
       items: [
         { 
-          title: 'Configuración', 
+          title: 'Configuraci³n', 
           path: '/dashboard/settings', 
           icon: faCog,
           permission: 'settings'
         },
         { 
-          title: 'Configuración Asientos', 
+          title: 'Configuraci³n Asientos', 
           path: '/dashboard/seat-settings', 
           icon: faCog,
           permission: 'seat_settings'
         },
         { 
-          title: 'Configuración Impresora', 
+          title: 'Configuraci³n Impresora', 
           path: '/dashboard/printer-settings', 
           icon: faPrint,
           permission: 'printer_settings'
         },
         { 
-          title: 'Configuración Email', 
+          title: 'Configuraci³n Email', 
           path: '/dashboard/email-config', 
           icon: faEnvelope,
           permission: 'email_config'
         },
         { 
-          title: 'Logs de Auditoría', 
+          title: 'Logs de Auditor­a', 
           path: '/dashboard/audit-logs', 
           icon: faFileAlt,
           permission: 'audit_logs'
         },
         { 
-          title: 'Gestión Reembolsos', 
+          title: 'Gesti³n Reembolsos', 
           path: '/dashboard/refund-management', 
           icon: faUndo,
           permission: 'refund_management'
@@ -423,7 +423,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       ]
     },
     {
-      title: 'Personalización',
+      title: 'Personalizaci³n',
       icon: faCog,
       type: 'submenu',
       submenuId: 'personalization',
@@ -448,19 +448,19 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
           permission: 'webstudio'
         },
         { 
-          title: 'Configuración de Asientos', 
+          title: 'Configuraci³n de Asientos', 
           path: '/dashboard/seat-settings', 
           icon: faCog,
           permission: 'seat_settings'
         },
         { 
-          title: 'Configuración de Correo', 
+          title: 'Configuraci³n de Correo', 
           path: '/dashboard/email-config', 
           icon: faEnvelope,
           permission: 'email_config'
         },
         { 
-          title: 'Páginas', 
+          title: 'P¡ginas', 
           path: '/dashboard/pages', 
           icon: faFileAlt,
           permission: 'pages'
@@ -474,7 +474,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       ]
     },
     {
-      title: 'Boletería',
+      title: 'Boleter­a',
       path: '/dashboard/boleteria',
       icon: faTicketAlt,
       type: 'link',
@@ -482,7 +482,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     }
   ];
 
-  // Agregar menú SaaS solo para usuarios del sistema
+  // Agregar menº SaaS solo para usuarios del sistema
   if (hasPermission('saas')) {
     mainMenuItems.push({
       title: 'SaaS',
@@ -504,13 +504,13 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
           permission: 'saas_roles'
         },
         { 
-          title: 'Configuración', 
+          title: 'Configuraci³n', 
           path: '/dashboard/saas/settings', 
           icon: faCog,
           permission: 'saas_settings'
         },
         { 
-          title: 'Facturación', 
+          title: 'Facturaci³n', 
           path: '/dashboard/saas/billing', 
           icon: faMoneyBillWave,
           permission: 'saas_billing'
@@ -522,7 +522,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
           permission: 'saas_payment_gateways'
         },
         { 
-          title: 'Gestión de Roles', 
+          title: 'Gesti³n de Roles', 
           path: '/dashboard/saas/roles', 
           icon: faUserShield,
           permission: 'saas_roles'
@@ -537,12 +537,12 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     });
   }
 
-  // Filtrar elementos del menú basado en permisos
+  // Filtrar elementos del menº basado en permisos
   const filteredMenuItems = mainMenuItems
     .map(createMenuItem)
     .filter(Boolean);
 
-  // Convertir a formato de menú de Ant Design
+  // Convertir a formato de menº de Ant Design
   const transformToMenuItems = (items) => items.map(item => {
     if (item.type === 'submenu') {
       return {
@@ -563,7 +563,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
 
   const menuItems = transformToMenuItems(filteredMenuItems);
   
-  // Handler para clicks en el menú (para Drawer)
+  // Handler para clicks en el menº (para Drawer)
   const findMenuItemByKey = (items, key) => {
     for (const item of items) {
       if (item.key === key) return item;
@@ -585,7 +585,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
 
   const isExpanded = !collapsed || temporaryExpanded || asDrawer;
 
-  // Contenido del menú (reutilizable)
+  // Contenido del menº (reutilizable)
   const menuContent = (
     <>
       {/* Header del Sidebar */}
@@ -603,7 +603,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         </div>
       </div>
 
-      {/* Información del Usuario */}
+      {/* Informaci³n del Usuario */}
       {isExpanded && (
         <div className="p-4 border-b bg-gray-50">
           <Space direction="vertical" size="small" className="w-full">
@@ -620,7 +620,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         </div>
       )}
 
-      {/* Menú */}
+      {/* Menº */}
       <div style={{ flex: 1, overflow: 'auto' }}>
         <Menu
           mode="inline"
@@ -639,7 +639,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         <div className="p-4 border-t bg-gray-50 flex-shrink-0">
           <div className="text-xs text-gray-500 text-center">
             <div>VeeEventos v1.0</div>
-            <div>Sistema de Boletería</div>
+            <div>Sistema de Boleter­a</div>
           </div>
         </div>
       )}
@@ -682,3 +682,5 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
 };
 
 export default SidebarMenuWithRoles;
+
+

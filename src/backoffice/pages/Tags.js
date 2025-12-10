@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, Modal, Form, Select, message, Space, Typography, Tabs } from 'antd';
+import { Card, Button, Input, Modal, Form, Select, message, Space, Typography, Tabs } from '../../utils/antdComponents';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
@@ -44,7 +44,7 @@ const Tags = () => {
         setEventTags(eventData || []);
       }
 
-      // Cargar tags de usuarios (simplificado para evitar errores de relación)
+      // Cargar tags de usuarios (simplificado para evitar errores de relaci³n)
       const { data: userData, error: userError } = await supabase
         .from('user_tags')
         .select('*')
@@ -118,9 +118,9 @@ const Tags = () => {
         return;
       }
       
-      // Validar que el tenant_id sea válido
+      // Validar que el tenant_id sea v¡lido
       if (!currentTenant.id) {
-        message.error('No se puede crear tags sin un tenant válido.');
+        message.error('No se puede crear tags sin un tenant v¡lido.');
         return;
       }
       
@@ -269,7 +269,7 @@ const Tags = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Gestión de Tags</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Gesti³n de Tags</h1>
         <p className="text-gray-600 mb-4">Administra tags para eventos y usuarios</p>
       </div>
       
@@ -360,11 +360,11 @@ const Tags = () => {
             <>
               <Form.Item
                 name="description"
-                label="Descripción"
+                label="Descripci³n"
               >
                 <Input.TextArea 
                   rows={3} 
-                  placeholder="Descripción opcional del tag"
+                  placeholder="Descripci³n opcional del tag"
                 />
               </Form.Item>
 
@@ -399,3 +399,5 @@ const Tags = () => {
 };
 
 export default Tags;
+
+

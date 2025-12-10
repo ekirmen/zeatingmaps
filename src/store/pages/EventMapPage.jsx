@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Spin } from 'antd';
+import { Spin } from '../../utils/antdComponents';
 import { supabase } from '../../supabaseClient';
 import SeatSelectionPage from './SeatSelectionPage';
 
@@ -22,7 +22,7 @@ const EventMapPage = () => {
     return String(parsed);
   }, [funcionParam]);
 
-  // Validar que el evento y función coincidan
+  // Validar que el evento y funci³n coincidan
   useEffect(() => {
     const validateEventAndFunction = async () => {
       if (!eventSlug || !funcionId) {
@@ -49,29 +49,29 @@ const EventMapPage = () => {
         }
 
         if (!funcionData || !funcionData.eventos) {
-          // Si el evento no existe o la función no pertenece, usar seat-selection como fallback
+          // Si el evento no existe o la funci³n no pertenece, usar seat-selection como fallback
           if (funcionId) {
             navigate(`/store/seat-selection/${funcionId}`, { replace: true });
             return;
           }
-          throw new Error('Evento o función no encontrados');
+          throw new Error('Evento o funci³n no encontrados');
         }
 
         setIsValid(true);
       } catch (error) {
         console.error('[EventMapPage] Error validando:', error);
-        // Si hay un error y tenemos función, usar seat-selection como fallback
+        // Si hay un error y tenemos funci³n, usar seat-selection como fallback
         if (funcionId && error.message !== 'Evento no encontrado' && !error.message.includes('no pertenece')) {
           navigate(`/store/seat-selection/${funcionId}`, { replace: true });
         } else if (!funcionId) {
-          // Si no hay función, redirigir a la página principal
+          // Si no hay funci³n, redirigir a la p¡gina principal
           navigate('/store', { replace: true });
         } else {
-          // Mantener en estado de validación para mostrar error
+          // Mantener en estado de validaci³n para mostrar error
           setValidating(false);
         }
       } finally {
-        // Actualizar validating - si hubo una redirección, el componente se desmontará
+        // Actualizar validating - si hubo una redirecci³n, el componente se desmontar¡
         setValidating(false);
       }
     };
@@ -103,3 +103,5 @@ const EventMapPage = () => {
 };
 
 export default EventMapPage;
+
+

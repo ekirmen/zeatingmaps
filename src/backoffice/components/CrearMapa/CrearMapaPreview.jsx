@@ -17,7 +17,7 @@ import {
   List,
   Descriptions,
   Collapse
-} from 'antd';
+} from '../../../utils/antdComponents';
 import {
   EyeOutlined,
   EditOutlined,
@@ -67,7 +67,7 @@ const CrearMapaPreview = ({
       // Calcular escala para ajustar el mapa al contenedor
       const scaleX = containerWidth / width;
       const scaleY = containerHeight / height;
-      const newScale = Math.min(scaleX, scaleY, 1); // No escalar más allá del 100%
+      const newScale = Math.min(scaleX, scaleY, 1); // No escalar m¡s all¡ del 100%
       
       setScale(newScale);
       
@@ -78,7 +78,7 @@ const CrearMapaPreview = ({
     }
   }, [mapa, containerRef.current]);
 
-  // Verificar que el mapa tenga dimensiones válidas
+  // Verificar que el mapa tenga dimensiones v¡lidas
   const getMapDimensions = () => {
     if (mapa?.contenido?.configuracion?.dimensions) {
       return mapa.contenido.configuracion.dimensions;
@@ -119,7 +119,7 @@ const CrearMapaPreview = ({
     setShowFullscreen(!showFullscreen);
   };
 
-  // ===== FUNCIONES DE EXPORTACIÓN =====
+  // ===== FUNCIONES DE EXPORTACI“N =====
   const exportAsImage = () => {
     if (stageRef.current) {
       const dataURL = stageRef.current.toDataURL({
@@ -291,7 +291,7 @@ const CrearMapaPreview = ({
     }
   };
 
-  // ===== ESTADÍSTICAS DEL MAPA =====
+  // ===== ESTADSTICAS DEL MAPA =====
   const getMapaStats = () => {
     if (!mapa?.contenido?.elementos) return {};
     
@@ -325,7 +325,7 @@ const CrearMapaPreview = ({
               Vista Previa: {mapa?.nombre || 'Mapa'}
             </Title>
             <Text type="secondary">
-              {mapa?.descripcion || 'Revisa cómo se verá tu mapa antes de publicarlo'}
+              {mapa?.descripcion || 'Revisa c³mo se ver¡ tu mapa antes de publicarlo'}
             </Text>
           </Col>
           
@@ -367,7 +367,7 @@ const CrearMapaPreview = ({
 
       {/* ===== CONTENIDO PRINCIPAL ===== */}
       <div className="flex-1 flex overflow-hidden">
-        {/* ===== PANEL IZQUIERDO - INFORMACIÓN ===== */}
+        {/* ===== PANEL IZQUIERDO - INFORMACI“N ===== */}
         <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
           <Tabs 
             activeKey={activeTab} 
@@ -375,7 +375,7 @@ const CrearMapaPreview = ({
             className="h-full"
           >
             <TabPane 
-              tab={<span><InfoCircleOutlined />Información</span>} 
+              tab={<span><InfoCircleOutlined />Informaci³n</span>} 
               key="info"
             >
               <div className="p-4">
@@ -388,13 +388,13 @@ const CrearMapaPreview = ({
                       {mapa?.estado === 'active' ? 'Activo' : 'Borrador'}
                     </Tag>
                   </Descriptions.Item>
-                  <Descriptions.Item label="Descripción">
-                    {mapa?.descripcion || 'Sin descripción'}
+                  <Descriptions.Item label="Descripci³n">
+                    {mapa?.descripcion || 'Sin descripci³n'}
                   </Descriptions.Item>
                   <Descriptions.Item label="Dimensiones">
                     {stats.dimensiones.width} x {stats.dimensiones.height} px
                   </Descriptions.Item>
-                  <Descriptions.Item label="Versión">
+                  <Descriptions.Item label="Versi³n">
                     {mapa?.metadata?.version || '1.0.0'}
                   </Descriptions.Item>
                   <Descriptions.Item label="Creado">
@@ -407,7 +407,7 @@ const CrearMapaPreview = ({
 
                 <Divider />
 
-                <Title level={5}>Estadísticas</Title>
+                <Title level={5}>Estad­sticas</Title>
                 <Row gutter={16}>
                   <Col span={12}>
                     <Statistic
@@ -482,7 +482,7 @@ const CrearMapaPreview = ({
                           <Text strong>
                             {element.type === 'mesa' ? 'Mesa' : 
                              element.type === 'silla' ? 'Silla' : 
-                             element.type === 'conexion' ? 'Conexión' : 
+                             element.type === 'conexion' ? 'Conexi³n' : 
                              element.type}
                           </Text>
                           <Tag color={
@@ -502,12 +502,12 @@ const CrearMapaPreview = ({
                         
                         {element.numero && (
                           <Text className="text-sm text-gray-600 block">
-                            Número: {element.numero}
+                            Nºmero: {element.numero}
                           </Text>
                         )}
                         
                         <Text className="text-xs text-gray-500 block">
-                          Posición: ({element.posicion?.x || 0}, {element.posicion?.y || 0})
+                          Posici³n: ({element.posicion?.x || 0}, {element.posicion?.y || 0})
                         </Text>
                       </div>
                     </List.Item>
@@ -517,23 +517,23 @@ const CrearMapaPreview = ({
             </TabPane>
 
             <TabPane 
-              tab={<span><SettingOutlined />Configuración</span>} 
+              tab={<span><SettingOutlined />Configuraci³n</span>} 
               key="config"
             >
               <div className="p-4">
-                <Title level={5}>Configuración del Mapa</Title>
+                <Title level={5}>Configuraci³n del Mapa</Title>
                 
                 <Collapse defaultActiveKey={['grid', 'background']}>
-                  <Panel header="Cuadrícula" key="grid">
+                  <Panel header="Cuadr­cula" key="grid">
                     <Descriptions column={1} size="small">
-                      <Descriptions.Item label="Tamaño">
+                      <Descriptions.Item label="Tama±o">
                         {mapa?.contenido?.configuracion?.gridSize || 20}px
                       </Descriptions.Item>
                       <Descriptions.Item label="Mostrar">
-                        {mapa?.contenido?.configuracion?.showGrid ? 'Sí' : 'No'}
+                        {mapa?.contenido?.configuracion?.showGrid ? 'S­' : 'No'}
                       </Descriptions.Item>
-                      <Descriptions.Item label="Ajustar a cuadrícula">
-                        {mapa?.contenido?.configuracion?.snapToGrid ? 'Sí' : 'No'}
+                      <Descriptions.Item label="Ajustar a cuadr­cula">
+                        {mapa?.contenido?.configuracion?.snapToGrid ? 'S­' : 'No'}
                       </Descriptions.Item>
                     </Descriptions>
                   </Panel>
@@ -554,7 +554,7 @@ const CrearMapaPreview = ({
                             {Math.round((mapa.contenido.configuracion.background.opacity || 1) * 100)}%
                           </Descriptions.Item>
                           <Descriptions.Item label="Mostrar en web">
-                            {mapa.contenido.configuracion.background.showInWeb ? 'Sí' : 'No'}
+                            {mapa.contenido.configuracion.background.showInWeb ? 'S­' : 'No'}
                           </Descriptions.Item>
                         </Descriptions>
                       </div>
@@ -568,7 +568,7 @@ const CrearMapaPreview = ({
           </Tabs>
         </div>
 
-        {/* ===== ÁREA DE VISUALIZACIÓN ===== */}
+        {/* ===== REA DE VISUALIZACI“N ===== */}
         <div className="flex-1 flex flex-col">
           {/* ===== BARRA DE HERRAMIENTAS ===== */}
           <div className="bg-white border-b border-gray-200 p-2">
@@ -686,3 +686,5 @@ const CrearMapaPreview = ({
 };
 
 export default CrearMapaPreview;
+
+

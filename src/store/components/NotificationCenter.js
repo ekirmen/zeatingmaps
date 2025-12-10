@@ -10,7 +10,7 @@ import {
   Tag,
   Empty,
   Spin
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   BellOutlined, 
   CheckCircleOutlined,
@@ -166,7 +166,7 @@ const NotificationCenter = () => {
             size="small"
             onClick={markAllAsRead}
           >
-            Marcar todas como leídas
+            Marcar todas como le­das
           </Button>
         )}
       </div>
@@ -265,3 +265,4 @@ const NotificationCenter = () => {
 };
 
 export default NotificationCenter; 
+

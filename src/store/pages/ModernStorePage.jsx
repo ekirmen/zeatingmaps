@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Spin, Alert, Button, Input, Select, Tag, Badge, Statistic, Empty } from 'antd';
+import { Card, Spin, Alert, Button, Input, Select, Tag, Badge, Statistic, Empty } from '../../utils/antdComponents';
 import {
   CalendarOutlined,
   EnvironmentOutlined,
@@ -56,7 +56,7 @@ const ModernStorePage = () => {
         const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp, 10) : Infinity;
         const CACHE_TTL = 30000; // 30 segundos de cache
 
-        // Si hay cache válido (menos de 30 segundos), usarlo
+        // Si hay cache v¡lido (menos de 30 segundos), usarlo
         if (cachedEvents && cacheAge < CACHE_TTL) {
           try {
             const parsedEvents = JSON.parse(cachedEvents);
@@ -131,7 +131,7 @@ const ModernStorePage = () => {
     fetchEvents();
   }, [currentTenant?.id, statusFilter, sortBy]);
 
-  // Filtrar eventos por término de búsqueda
+  // Filtrar eventos por t©rmino de bºsqueda
   const filteredEvents = events.filter(event => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
@@ -143,7 +143,7 @@ const ModernStorePage = () => {
     );
   });
 
-  // Función para obtener el estado visual del evento
+  // Funci³n para obtener el estado visual del evento
   const getEventStatus = (event) => {
     if (event.desactivado) return { status: 'error', text: 'Desactivado', color: 'red' };
     if (!event.activo) return { status: 'warning', text: 'Inactivo', color: 'orange' };
@@ -153,7 +153,7 @@ const ModernStorePage = () => {
     return { status: 'default', text: 'Disponible', color: 'default' };
   };
 
-  // Función para obtener el modo de venta
+  // Funci³n para obtener el modo de venta
   const getModoVenta = (event) => {
     const modos = {
       'normal': { text: 'Normal', color: 'blue' },
@@ -165,7 +165,7 @@ const ModernStorePage = () => {
     return modos[event.modoVenta] || { text: 'Normal', color: 'default' };
   };
 
-  // Función para parsear tags
+  // Funci³n para parsear tags
   const getEventTags = (event) => {
     if (!event.tags) return [];
     try {
@@ -253,14 +253,14 @@ const ModernStorePage = () => {
             maxWidth: '600px',
             margin: '0 auto'
           }}>
-            Descubre los mejores eventos y experiencias únicas
+            Descubre los mejores eventos y experiencias ºnicas
           </p>
         </div>
       </div>
 
       {/* Contenido principal */}
       <div className="store-container-wrapper" style={{ paddingTop: 'var(--store-space-8)', paddingBottom: 'var(--store-space-8)' }}>
-        {/* Filtros y búsqueda */}
+        {/* Filtros y bºsqueda */}
         <div className="store-card" style={{ marginBottom: 'var(--store-space-8)' }}>
           <div className="store-card-body">
             <div style={{
@@ -343,7 +343,7 @@ const ModernStorePage = () => {
               >
                 {searchTerm && (
                   <Button type="primary" onClick={() => setSearchTerm('')}>
-                    Limpiar búsqueda
+                    Limpiar bºsqueda
                   </Button>
                 )}
               </Empty>
@@ -440,19 +440,19 @@ const ModernStorePage = () => {
 
                   {/* Contenido de la tarjeta */}
                   <div className="store-event-card-content">
-                    {/* Título */}
+                    {/* T­tulo */}
                     <h3 className="store-event-card-title">
                       {event.nombre}
                     </h3>
 
-                    {/* Descripción */}
+                    {/* Descripci³n */}
                     {event.descripcion && (
                       <p className="store-event-card-description">
                         {event.descripcion}
                       </p>
                     )}
 
-                    {/* Información del evento */}
+                    {/* Informaci³n del evento */}
                     <div className="store-event-card-meta">
                       {event.created_at && (
                         <div className="store-event-card-meta-item">
@@ -497,7 +497,7 @@ const ModernStorePage = () => {
                       </div>
                     )}
 
-                    {/* Footer con botón */}
+                    {/* Footer con bot³n */}
                     <div className="store-event-card-footer">
                       <Button
                         type="primary"
@@ -521,7 +521,7 @@ const ModernStorePage = () => {
           </div>
         )}
 
-        {/* Estadísticas generales */}
+        {/* Estad­sticas generales */}
         <div className="store-card">
           <div className="store-card-body">
             <div style={{
@@ -543,7 +543,7 @@ const ModernStorePage = () => {
                 valueStyle={{ color: 'var(--store-success)' }}
               />
               <Statistic
-                title="Próximamente"
+                title="Pr³ximamente"
                 value={events.filter(e => e.estadoVenta === 'pronto').length}
                 prefix={<ClockCircleOutlined />}
                 valueStyle={{ color: 'var(--store-primary)' }}
@@ -563,3 +563,5 @@ const ModernStorePage = () => {
 };
 
 export default ModernStorePage;
+
+

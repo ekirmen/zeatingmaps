@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, List, Input, Button, Typography, Space, Tag, Avatar, Badge, Drawer, Select, message, Upload } from 'antd';
+import { Card, List, Input, Button, Typography, Space, Tag, Avatar, Badge, Drawer, Select, message, Upload } from '../../utils/antdComponents';
 import { 
   MessageOutlined, 
   SendOutlined, 
@@ -182,13 +182,13 @@ const TenantMessaging = () => {
           content: newConversationData.content
         });
 
-      message.success('Conversación creada exitosamente');
+      message.success('Conversaci³n creada exitosamente');
       setNewConversationVisible(false);
       setNewConversationData({ subject: '', priority: 'medium', content: '' });
       loadConversations();
     } catch (error) {
       console.error('Error creating conversation:', error);
-      message.error('Error al crear conversación');
+      message.error('Error al crear conversaci³n');
     }
   };
 
@@ -302,10 +302,10 @@ const TenantMessaging = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <MessageOutlined style={{ marginRight: '8px' }} />
-          Mensajería con Soporte
+          Mensajer­a con Soporte
         </Title>
         <Text type="secondary">
-          Comunícate con nuestro equipo de soporte técnico
+          Comun­cate con nuestro equipo de soporte t©cnico
         </Text>
       </div>
 
@@ -326,7 +326,7 @@ const TenantMessaging = () => {
                 icon={<PlusOutlined />}
                 onClick={() => setNewConversationVisible(true)}
               >
-                Nueva Conversación
+                Nueva Conversaci³n
               </Button>
             }
             loading={loading}
@@ -352,7 +352,7 @@ const TenantMessaging = () => {
                   </Tag>
                 </Space>
               ) : (
-                'Selecciona una conversación'
+                'Selecciona una conversaci³n'
               )
             }
             style={{ height: '600px', display: 'flex', flexDirection: 'column' }}
@@ -372,7 +372,7 @@ const TenantMessaging = () => {
                     <div style={{ textAlign: 'center', marginTop: '50px' }}>
                       <MessageOutlined style={{ fontSize: '48px', color: '#d9d9d9' }} />
                       <div style={{ marginTop: '16px' }}>
-                        <Text type="secondary">No hay mensajes en esta conversación</Text>
+                        <Text type="secondary">No hay mensajes en esta conversaci³n</Text>
                       </div>
                     </div>
                   ) : (
@@ -408,7 +408,7 @@ const TenantMessaging = () => {
               <div style={{ textAlign: 'center', marginTop: '100px' }}>
                 <MessageOutlined style={{ fontSize: '64px', color: '#d9d9d9' }} />
                 <div style={{ marginTop: '16px' }}>
-                  <Text type="secondary">Selecciona una conversación para ver los mensajes</Text>
+                  <Text type="secondary">Selecciona una conversaci³n para ver los mensajes</Text>
                 </div>
               </div>
             )}
@@ -416,9 +416,9 @@ const TenantMessaging = () => {
         </div>
       </div>
 
-      {/* Modal para nueva conversación */}
+      {/* Modal para nueva conversaci³n */}
       <Drawer
-        title="Nueva Conversación"
+        title="Nueva Conversaci³n"
         placement="right"
         width={500}
         open={newConversationVisible}
@@ -429,7 +429,7 @@ const TenantMessaging = () => {
               Cancelar
             </Button>
             <Button type="primary" onClick={createNewConversation}>
-              Crear Conversación
+              Crear Conversaci³n
             </Button>
           </Space>
         }
@@ -474,3 +474,5 @@ const TenantMessaging = () => {
 };
 
 export default TenantMessaging;
+
+

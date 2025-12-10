@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Empty, Spin } from 'antd';
+import { Empty, Spin } from '../utils/antdComponents';
 
 /**
  * Componente de lista optimizada para grandes cantidades de elementos
@@ -206,4 +206,5 @@ export const useVirtualizedList = (items, options = {}) => {
 };
 
 export default VirtualizedList;
+
 

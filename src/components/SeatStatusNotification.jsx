@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Button, Modal } from 'antd';
+import { Alert, Button, Modal } from '../utils/antdComponents';
 import { ClockCircleOutlined, ExclamationCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useSeatLockStore } from './seatLockStore';
 
@@ -147,3 +147,4 @@ const SeatStatusNotification = () => {
 };
 
 export default SeatStatusNotification;
+

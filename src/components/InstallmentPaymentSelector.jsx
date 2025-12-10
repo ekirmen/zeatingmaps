@@ -2,7 +2,7 @@
  * Componente mejorado para seleccionar opciones de pago en cuotas
  */
 import React from 'react';
-import { Card, Radio, Space, Typography, Tag, Alert, Divider, Tooltip } from 'antd';
+import { Card, Radio, Space, Typography, Tag, Alert, Divider, Tooltip } from '../utils/antdComponents';
 import { CreditCardOutlined, CalendarOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
@@ -245,4 +245,5 @@ const InstallmentPaymentSelector = ({
 };
 
 export default InstallmentPaymentSelector;
+
 

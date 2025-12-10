@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Switch, Input, Select, Typography, Space, message, Alert } from 'antd';
+import { Card, Button, Switch, Input, Select, Typography, Space, message, Alert } from '../../../../utils/antdComponents';
 import { BellOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
 import { supabase } from '../../../../supabaseClient';
 
@@ -76,16 +76,16 @@ const PushNotifications = ({ eventId }) => {
 
       if (error) throw error;
 
-      message.success('Configuración guardada correctamente');
+      message.success('Configuraci³n guardada correctamente');
     } catch (error) {
       console.error('Error saving config:', error);
-      message.error('Error al guardar la configuración');
+      message.error('Error al guardar la configuraci³n');
     }
   };
 
   const sendNotification = async () => {
     if (!config.title || !config.message) {
-      message.error('Completa el título y mensaje');
+      message.error('Completa el t­tulo y mensaje');
       return;
     }
 
@@ -104,7 +104,7 @@ const PushNotifications = ({ eventId }) => {
 
       if (error) throw error;
 
-      message.success('Notificación enviada correctamente');
+      message.success('Notificaci³n enviada correctamente');
       loadNotifications();
       
       // Limpiar formulario
@@ -115,7 +115,7 @@ const PushNotifications = ({ eventId }) => {
       }));
     } catch (error) {
       console.error('Error sending notification:', error);
-      message.error('Error al enviar la notificación');
+      message.error('Error al enviar la notificaci³n');
     } finally {
       setIsLoading(false);
     }
@@ -129,16 +129,16 @@ const PushNotifications = ({ eventId }) => {
       </Title>
 
       <Alert
-        message="Comunícate con tu audiencia"
-        description="Envía notificaciones push a los asistentes de tu evento para mantenerlos informados."
+        message="Comun­cate con tu audiencia"
+        description="Env­a notificaciones push a los asistentes de tu evento para mantenerlos informados."
         type="info"
         showIcon
         className="mb-4"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Configuración */}
-        <Card title="Configuración" size="small">
+        {/* Configuraci³n */}
+        <Card title="Configuraci³n" size="small">
           <Space direction="vertical" style={{ width: '100%' }}>
             <div className="flex items-center justify-between">
               <Text>Habilitar notificaciones</Text>
@@ -149,26 +149,26 @@ const PushNotifications = ({ eventId }) => {
             </div>
 
             <Input
-              placeholder="Título de la notificación"
+              placeholder="T­tulo de la notificaci³n"
               value={config.title}
               onChange={(e) => setConfig(prev => ({ ...prev, title: e.target.value }))}
             />
 
             <Input.TextArea
-              placeholder="Mensaje de la notificación"
+              placeholder="Mensaje de la notificaci³n"
               value={config.message}
               onChange={(e) => setConfig(prev => ({ ...prev, message: e.target.value }))}
               rows={3}
             />
 
             <Select
-              placeholder="Tipo de notificación"
+              placeholder="Tipo de notificaci³n"
               value={config.type}
               onChange={(value) => setConfig(prev => ({ ...prev, type: value }))}
               style={{ width: '100%' }}
             >
-              <Option value="info">Información</Option>
-              <Option value="success">Éxito</Option>
+              <Option value="info">Informaci³n</Option>
+              <Option value="success">‰xito</Option>
               <Option value="warning">Advertencia</Option>
               <Option value="error">Error</Option>
             </Select>
@@ -185,17 +185,17 @@ const PushNotifications = ({ eventId }) => {
             </Select>
 
             <Button type="primary" onClick={saveConfig} block>
-              Guardar Configuración
+              Guardar Configuraci³n
             </Button>
           </Space>
         </Card>
 
-        {/* Enviar notificación */}
-        <Card title="Enviar Notificación" size="small">
+        {/* Enviar notificaci³n */}
+        <Card title="Enviar Notificaci³n" size="small">
           <Space direction="vertical" style={{ width: '100%' }}>
             <Alert
-              message="Notificación de prueba"
-              description="Esta notificación se enviará inmediatamente a todos los destinatarios configurados."
+              message="Notificaci³n de prueba"
+              description="Esta notificaci³n se enviar¡ inmediatamente a todos los destinatarios configurados."
               type="warning"
               showIcon
             />
@@ -208,11 +208,11 @@ const PushNotifications = ({ eventId }) => {
               disabled={!config.enabled || !config.title || !config.message}
               block
             >
-              Enviar Notificación
+              Enviar Notificaci³n
             </Button>
 
             <Text type="secondary" className="text-xs">
-              Las notificaciones se envían a través del navegador y aplicaciones móviles.
+              Las notificaciones se env­an a trav©s del navegador y aplicaciones m³viles.
             </Text>
           </Space>
         </Card>
@@ -260,3 +260,5 @@ const PushNotifications = ({ eventId }) => {
 };
 
 export default PushNotifications;
+
+

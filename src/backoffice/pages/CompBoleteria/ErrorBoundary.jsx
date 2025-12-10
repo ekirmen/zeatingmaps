@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Typography, Button, Space, Alert, Divider } from 'antd';
+import { Card, Typography, Button, Space, Alert, Divider } from '../../../utils/antdComponents';
 import { BugOutlined, ReloadOutlined, InfoCircleOutlined } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
@@ -28,8 +28,8 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     // Log del error
-    console.error('🚨 [ErrorBoundary] Error caught:', error);
-    console.error('🚨 [ErrorBoundary] Error info:', errorInfo);
+    console.error('ðŸš¨ [ErrorBoundary] Error caught:', error);
+    console.error('ðŸš¨ [ErrorBoundary] Error info:', errorInfo);
 
     this.setState({
       error: error,
@@ -38,10 +38,10 @@ class ErrorBoundary extends React.Component {
       lastErrorTime: new Date()
     });
 
-    // Log adicional para el error específico de 'R'
+    // Log adicional para el error espec­fico de 'R'
     if (error.message && error.message.includes("Cannot access 'R' before initialization")) {
-      console.error('🚨 [ErrorBoundary] Detected "R" initialization error');
-      console.error('🚨 [ErrorBoundary] Stack trace:', error.stack);
+      console.error('ðŸš¨ [ErrorBoundary] Detected "R" initialization error');
+      console.error('ðŸš¨ [ErrorBoundary] Stack trace:', error.stack);
 
       // Intentar identificar el origen del problema
       this.analyzeRVariableError(error);
@@ -49,7 +49,7 @@ class ErrorBoundary extends React.Component {
   }
 
   analyzeRVariableError(error) {
-    // Verificar imports problemáticos
+    // Verificar imports problem¡ticos
     const problematicImports = [
       'supabaseClient',
       'useBoleteria',
@@ -60,14 +60,14 @@ class ErrorBoundary extends React.Component {
 
     problematicImports.forEach(importName => {
       try {
-        // Intentar importar dinámicamente para detectar problemas
+        // Intentar importar din¡micamente para detectar problemas
         import(`../../../${importName}`).then(module => {
-          console.log(`✅ [ErrorBoundary] ${importName} import successful:`, Object.keys(module));
+          console.log(`œ… [ErrorBoundary] ${importName} import successful:`, Object.keys(module));
         }).catch(importError => {
-          console.error(`❌ [ErrorBoundary] ${importName} import failed:`, importError);
+          console.error(`Œ [ErrorBoundary] ${importName} import failed:`, importError);
         });
       } catch (e) {
-        console.error(`❌ [ErrorBoundary] Error testing ${importName}:`, e);
+        console.error(`Œ [ErrorBoundary] Error testing ${importName}:`, e);
       }
     });
 
@@ -128,15 +128,15 @@ class ErrorBoundary extends React.Component {
                   description={
                     <div>
                       <Paragraph>
-                        Este error indica que el código está intentando usar la variable <Text code>R</Text> antes de que esté inicializada.
+                        Este error indica que el c³digo est¡ intentando usar la variable <Text code>R</Text> antes de que est© inicializada.
                       </Paragraph>
                       <Paragraph>
                         <Text strong>Posibles causas:</Text>
                       </Paragraph>
                       <ul>
-                        <li>Dependencia circular entre módulos</li>
-                        <li>Importación incorrecta de un módulo</li>
-                        <li>Variable declarada con <Text code>let</Text> o <Text code>const</Text> usada antes de su declaración</li>
+                        <li>Dependencia circular entre m³dulos</li>
+                        <li>Importaci³n incorrecta de un m³dulo</li>
+                        <li>Variable declarada con <Text code>let</Text> o <Text code>const</Text> usada antes de su declaraci³n</li>
                         <li>Problema con el bundler (webpack/vite)</li>
                       </ul>
                       <Paragraph>
@@ -144,7 +144,7 @@ class ErrorBoundary extends React.Component {
                       </Paragraph>
                       <ul>
                         <li>Verificar imports circulares</li>
-                        <li>Revisar el orden de declaración de variables</li>
+                        <li>Revisar el orden de declaraci³n de variables</li>
                         <li>Limpiar cache del navegador</li>
                         <li>Reiniciar el servidor de desarrollo</li>
                       </ul>
@@ -159,7 +159,7 @@ class ErrorBoundary extends React.Component {
 
               {/* Error Details */}
               <div>
-                <Title level={5}>📋 Detalles del Error</Title>
+                <Title level={5}>ðŸ“‹ Detalles del Error</Title>
                 <details>
                   <summary>Stack Trace</summary>
                   <pre style={{
@@ -177,7 +177,7 @@ class ErrorBoundary extends React.Component {
 
               {this.state.errorInfo && (
                 <div>
-                  <Title level={5}>📋 Component Stack</Title>
+                  <Title level={5}>ðŸ“‹ Component Stack</Title>
                   <details>
                     <summary>Component Stack</summary>
                     <pre style={{
@@ -210,7 +210,7 @@ class ErrorBoundary extends React.Component {
                     icon={<ReloadOutlined />}
                     onClick={this.handleReload}
                   >
-                    Recargar Página
+                    Recargar P¡gina
                   </Button>
                   <Button
                     icon={<InfoCircleOutlined />}
@@ -225,7 +225,7 @@ class ErrorBoundary extends React.Component {
               {/* Environment Info */}
               <Divider />
               <div>
-                <Title level={5}>🌍 Información del Entorno</Title>
+                <Title level={5}>ðŸŒ Informaci³n del Entorno</Title>
                 <Text>URL: {window.location.href}</Text>
                 <br />
                 <Text>User Agent: {navigator.userAgent}</Text>
@@ -245,3 +245,5 @@ class ErrorBoundary extends React.Component {
 }
 
 export default ErrorBoundary;
+
+

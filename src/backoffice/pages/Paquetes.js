@@ -15,7 +15,7 @@ import {
   Tag,
   Typography,
   message,
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   PlusOutlined,
   EditOutlined,
@@ -249,7 +249,7 @@ const Paquetes = () => {
   const handleDelete = async (paqueteId) => {
     Modal.confirm({
       title: '¿Eliminar paquete?',
-      content: 'Esta acción no se puede deshacer.',
+      content: 'Esta acci³n no se puede deshacer.',
       okText: 'Eliminar',
       okButtonProps: { danger: true },
       cancelText: 'Cancelar',
@@ -359,7 +359,7 @@ const Paquetes = () => {
       render: (text, record) => (
         <Space direction="vertical" size={0}>
           <Text strong>{text}</Text>
-          <Text type="secondary">{record.descripcion || 'Sin descripción'}</Text>
+          <Text type="secondary">{record.descripcion || 'Sin descripci³n'}</Text>
         </Space>
       ),
     },
@@ -405,7 +405,7 @@ const Paquetes = () => {
       <div className="mb-4">
         <Title level={2} className="mb-1">Paquetes</Title>
         <Text type="secondary">
-          Crea paquetes con productos y plantillas de precios específicas por recinto, sala y evento
+          Crea paquetes con productos y plantillas de precios espec­ficas por recinto, sala y evento
         </Text>
       </div>
 
@@ -499,7 +499,7 @@ const Paquetes = () => {
                     <div className="flex items-start justify-between">
                       <div>
                         <Text strong>{plantilla.nombre}</Text>
-                        <div className="text-sm text-gray-500">{plantilla.descripcion || 'Sin descripción'}</div>
+                        <div className="text-sm text-gray-500">{plantilla.descripcion || 'Sin descripci³n'}</div>
                         <div className="text-sm text-gray-600 mt-1">Precio base: ${Number(plantilla.precio || 0).toFixed(2)}</div>
                       </div>
                       <Space>
@@ -516,9 +516,9 @@ const Paquetes = () => {
           <Divider />
 
           <Card>
-            <Title level={5}>Cómo funciona</Title>
+            <Title level={5}>C³mo funciona</Title>
             <ul className="list-disc pl-4 text-sm text-gray-600 space-y-1">
-              <li>Busca por recinto, sala y evento para ver los paquetes específicos.</li>
+              <li>Busca por recinto, sala y evento para ver los paquetes espec­ficos.</li>
               <li>Crea paquetes combinando productos existentes y define stock disponible.</li>
               <li>Las plantillas de precios permiten reutilizar configuraciones entre funciones.</li>
             </ul>
@@ -566,7 +566,7 @@ const Paquetes = () => {
             </Col>
           </Row>
 
-          <Form.Item name="descripcion" label="Descripción">
+          <Form.Item name="descripcion" label="Descripci³n">
             <Input.TextArea rows={3} placeholder="Describe el paquete" />
           </Form.Item>
 
@@ -653,7 +653,7 @@ const Paquetes = () => {
             <Input placeholder="Ej: Paquete familiar" />
           </Form.Item>
 
-          <Form.Item name="descripcion" label="Descripción">
+          <Form.Item name="descripcion" label="Descripci³n">
             <Input.TextArea rows={2} placeholder="Describe el objetivo de la plantilla" />
           </Form.Item>
 
@@ -710,3 +710,5 @@ const Paquetes = () => {
 };
 
 export default Paquetes;
+
+

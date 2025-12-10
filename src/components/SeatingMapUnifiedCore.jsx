@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useMemo, useState, useEffect, memo } from 'react';
 import { Stage, Image } from 'react-konva';
-import { Button, Space, Spin } from 'antd';
+import { Button, Space, Spin } from '../utils/antdComponents';
 import { ZoomInOutlined, ZoomOutOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useSeatLockStore } from './seatLockStore';
 import { useCartStore } from '../store/cartStore';
@@ -1181,3 +1181,4 @@ const SeatingMapUnified = ({
 };
 
 export default memo(SeatingMapUnified);
+

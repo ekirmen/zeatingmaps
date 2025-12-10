@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, Select, Switch, Space, Typography, Divider, message } from 'antd';
+import { Card, Button, Input, Select, Switch, Space, Typography, Divider, message } from '../../../../utils/antdComponents';
 import { PlusOutlined, DeleteOutlined, DragOutlined, EyeOutlined } from '@ant-design/icons';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -11,15 +11,15 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const FIELD_TYPES = [
-  { value: 'text', label: 'Texto', icon: '📝' },
-  { value: 'email', label: 'Email', icon: '📧' },
-  { value: 'phone', label: 'Teléfono', icon: '📞' },
-  { value: 'select', label: 'Selector', icon: '📋' },
-  { value: 'textarea', label: 'Área de texto', icon: '📄' },
-  { value: 'checkbox', label: 'Casilla', icon: '☑️' },
-  { value: 'radio', label: 'Botón radio', icon: '🔘' },
-  { value: 'date', label: 'Fecha', icon: '📅' },
-  { value: 'number', label: 'Número', icon: '🔢' }
+  { value: 'text', label: 'Texto', icon: 'ðŸ“' },
+  { value: 'email', label: 'Email', icon: 'ðŸ“§' },
+  { value: 'phone', label: 'Tel©fono', icon: 'ðŸ“ž' },
+  { value: 'select', label: 'Selector', icon: 'ðŸ“‹' },
+  { value: 'textarea', label: 'rea de texto', icon: 'ðŸ“„' },
+  { value: 'checkbox', label: 'Casilla', icon: '˜‘ï¸' },
+  { value: 'radio', label: 'Bot³n radio', icon: 'ðŸ”˜' },
+  { value: 'date', label: 'Fecha', icon: 'ðŸ“…' },
+  { value: 'number', label: 'Nºmero', icon: 'ðŸ”¢' }
 ];
 
 const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
@@ -27,7 +27,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
     id: null,
     eventId: eventId,
     name: 'Formulario de Compra',
-    description: 'Recopila información de tus clientes',
+    description: 'Recopila informaci³n de tus clientes',
     fields: [],
     settings: {
       columns: 1,
@@ -61,7 +61,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
       label: `Campo ${formConfig.fields.length + 1}`,
       placeholder: '',
       required: false,
-      options: type === 'select' || type === 'radio' ? ['Opción 1', 'Opción 2'] : [],
+      options: type === 'select' || type === 'radio' ? ['Opci³n 1', 'Opci³n 2'] : [],
       validation: {
         minLength: null,
         maxLength: null,
@@ -159,11 +159,11 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
                 size="small" 
                 icon={<PlusOutlined />}
                 onClick={() => {
-                  const newOptions = [...field.options, `Opción ${field.options.length + 1}`];
+                  const newOptions = [...field.options, `Opci³n ${field.options.length + 1}`];
                   updateField(field.id, { options: newOptions });
                 }}
               >
-                Agregar opción
+                Agregar opci³n
               </Button>
             </div>
           )}
@@ -290,7 +290,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
           )}
         </div>
 
-        {/* Área de construcción */}
+        {/* rea de construcci³n */}
         <div className="lg:col-span-2">
           <Card title="Formulario" size="small">
             <div className="space-y-4">
@@ -301,7 +301,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
               />
               
               <Input.TextArea
-                placeholder="Descripción del formulario"
+                placeholder="Descripci³n del formulario"
                 value={formConfig.description}
                 onChange={(e) => setFormConfig(prev => ({ ...prev, description: e.target.value }))}
                 rows={2}
@@ -320,7 +320,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
                   ))}
                 </div>
               ) : (
-                // Modo edición
+                // Modo edici³n
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -372,3 +372,5 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
 };
 
 export default CustomFormBuilder;
+
+

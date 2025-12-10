@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { message } from 'antd';
+﻿import { useState } from 'react';
+import { message } from '../../utils/antdComponents';
 import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from '../../supabaseClient';
 import useSelectedSeatsStore from '../../stores/useSelectedSeatsStore';
@@ -208,3 +208,5 @@ export const useClientManagement = (setCarrito) => {
     clearSearchResults
   };
 };
+
+

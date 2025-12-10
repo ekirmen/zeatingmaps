@@ -11,7 +11,7 @@ import {
   Col, 
   Card,
   Divider
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   PictureOutlined,
   SettingOutlined,
@@ -64,12 +64,12 @@ const BackgroundFilterMenu = ({
     },
     {
       key: 'saturation',
-      label: 'Saturación',
+      label: 'Saturaci³n',
       min: -1,
       max: 1,
       step: 0.1,
       defaultValue: 0,
-      description: 'Ajusta la saturación de los colores'
+      description: 'Ajusta la saturaci³n de los colores'
     },
     {
       key: 'hue',
@@ -227,11 +227,11 @@ const BackgroundFilterMenu = ({
           ))}
         </div>
 
-        {/* ===== INFORMACIÓN ADICIONAL ===== */}
-        <Card size="small" title="Información">
+        {/* ===== INFORMACI“N ADICIONAL ===== */}
+        <Card size="small" title="Informaci³n">
           <Text type="secondary" className="text-sm">
-            Los filtros se aplican en tiempo real. Puedes combinar múltiples filtros 
-            para crear efectos únicos. Usa el botón "Restablecer" para volver a la 
+            Los filtros se aplican en tiempo real. Puedes combinar mºltiples filtros 
+            para crear efectos ºnicos. Usa el bot³n "Restablecer" para volver a la 
             imagen original.
           </Text>
         </Card>
@@ -241,3 +241,5 @@ const BackgroundFilterMenu = ({
 };
 
 export default BackgroundFilterMenu;
+
+

@@ -10,7 +10,7 @@ import {
   Typography,
   Space,
   Divider
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   MailOutlined,
   LockOutlined,
@@ -77,7 +77,7 @@ const ForgotPassword = () => {
 
       if (error) throw error;
 
-      message.success('Te enviamos un enlace seguro para restablecer tu contraseña');
+      message.success('Te enviamos un enlace seguro para restablecer tu contrase±a');
       setCooldown(REQUEST_COOLDOWN_SECONDS);
       setCurrentStep(1);
     } catch (error) {
@@ -88,7 +88,7 @@ const ForgotPassword = () => {
           'Ya hemos enviado un correo recientemente. Por seguridad debes esperar un momento antes de solicitar otro.'
         );
       } else {
-        message.error(error?.message || 'Error al enviar el email de recuperación');
+        message.error(error?.message || 'Error al enviar el email de recuperaci³n');
       }
     } finally {
       setLoading(false);
@@ -100,9 +100,9 @@ const ForgotPassword = () => {
       case 0:
         return (
           <div className="text-center">
-            <Title level={3}>¿Olvidaste tu contraseña?</Title>
+            <Title level={3}>¿Olvidaste tu contrase±a?</Title>
             <Text type="secondary" className="block mb-6">
-              Te enviaremos un enlace temporal y de un solo uso a tu correo para que puedas crear una nueva contraseña.
+              Te enviaremos un enlace temporal y de un solo uso a tu correo para que puedas crear una nueva contrase±a.
             </Text>
 
             <Form
@@ -116,7 +116,7 @@ const ForgotPassword = () => {
                 label="Email"
                 rules={[
                   { required: true, message: 'Por favor ingresa tu email' },
-                  { type: 'email', message: 'Email inválido' }
+                  { type: 'email', message: 'Email inv¡lido' }
                 ]}
               >
                 <Input
@@ -161,18 +161,18 @@ const ForgotPassword = () => {
             <Space direction="vertical" size="middle" className="w-full">
               <Text type="secondary">
                 Enviamos un enlace de restablecimiento a <strong>{email}</strong>.
-                El enlace expira en pocos minutos y se invalida después del primer uso.
+                El enlace expira en pocos minutos y se invalida despu©s del primer uso.
               </Text>
 
               <Alert
-                message="Cómo continuar"
+                message="C³mo continuar"
                 description={(
                   <Space direction="vertical">
                     <Paragraph className="mb-0">
-                      1. Abre el correo de recuperación y haz clic en "Restablecer contraseña".
+                      1. Abre el correo de recuperaci³n y haz clic en "Restablecer contrase±a".
                     </Paragraph>
                     <Paragraph className="mb-0">
-                      2. Se abrirá una pestaña segura donde podrás crear tu nueva contraseña.
+                      2. Se abrir¡ una pesta±a segura donde podr¡s crear tu nueva contrase±a.
                     </Paragraph>
                     <Paragraph className="mb-0">
                       3. Si no ves el correo, revisa el spam o solicita uno nuevo.
@@ -191,7 +191,7 @@ const ForgotPassword = () => {
                   onClick={() => navigate('/store/login')}
                   block
                 >
-                  Volver al inicio de sesión
+                  Volver al inicio de sesi³n
                 </Button>
                 <Button
                   icon={<ReloadOutlined />}
@@ -246,3 +246,5 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
+
+

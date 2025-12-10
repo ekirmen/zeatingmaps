@@ -19,7 +19,7 @@ import {
   Switch,
   InputNumber,
   Collapse
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   BgColorsOutlined, 
   UploadOutlined, 
@@ -216,7 +216,7 @@ const EmailTemplateEditor = ({
         <!-- Body Content -->
         <div style="padding: 20px 0;">
           <h2 style="color: ${designConfig.colors.primary};">Resumen del Reporte</h2>
-          <p>Este es un ejemplo de cómo se verá el contenido del reporte con la configuración actual.</p>
+          <p>Este es un ejemplo de c³mo se ver¡ el contenido del reporte con la configuraci³n actual.</p>
           
           <div style="
             background-color: ${designConfig.colors.success}20;
@@ -225,11 +225,11 @@ const EmailTemplateEditor = ({
             margin: 20px 0;
             border-radius: 4px;
           ">
-            <strong>Estadísticas Principales:</strong>
+            <strong>Estad­sticas Principales:</strong>
             <ul style="margin: 10px 0;">
               <li>Total de ventas: $1,234.56</li>
-              <li>Número de transacciones: 45</li>
-              <li>Período: Enero 2024</li>
+              <li>Nºmero de transacciones: 45</li>
+              <li>Per­odo: Enero 2024</li>
             </ul>
           </div>
         </div>
@@ -273,13 +273,13 @@ const EmailTemplateEditor = ({
       
       {section === 'header' && (
         <>
-          <Form.Item label="Título">
+          <Form.Item label="T­tulo">
             <Input
               value={designConfig.header.title}
               onChange={(e) => updateDesignConfig('header', 'title', e.target.value)}
             />
           </Form.Item>
-          <Form.Item label="Subtítulo">
+          <Form.Item label="Subt­tulo">
             <Input
               value={designConfig.header.subtitle}
               onChange={(e) => updateDesignConfig('header', 'subtitle', e.target.value)}
@@ -311,7 +311,7 @@ const EmailTemplateEditor = ({
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="Tamaño de Fuente">
+              <Form.Item label="Tama±o de Fuente">
                 <InputNumber
                   value={parseInt(designConfig.body.fontSize)}
                   onChange={(value) => updateDesignConfig('body', 'fontSize', `${value}px`)}
@@ -321,7 +321,7 @@ const EmailTemplateEditor = ({
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Altura de Línea">
+              <Form.Item label="Altura de L­nea">
                 <InputNumber
                   value={parseFloat(designConfig.body.lineHeight)}
                   onChange={(value) => updateDesignConfig('body', 'lineHeight', value.toString())}
@@ -407,13 +407,13 @@ const EmailTemplateEditor = ({
 
           <Title level={4}>
             <BgColorsOutlined className="mr-2" />
-            Configuración de Diseño
+            Configuraci³n de Dise±o
           </Title>
 
           <Collapse defaultActiveKey={['header', 'body']}>
             {renderDesignSection('Encabezado', 'header')}
             {renderDesignSection('Cuerpo', 'body')}
-            {renderDesignSection('Pie de Página', 'footer')}
+            {renderDesignSection('Pie de P¡gina', 'footer')}
             
             <Panel header="Colores del Sistema" key="colors">
               <Row gutter={16}>
@@ -424,7 +424,7 @@ const EmailTemplateEditor = ({
                   {renderColorPicker('colors', 'secondary', 'Color Secundario')}
                 </Col>
                 <Col span={8}>
-                  {renderColorPicker('colors', 'success', 'Color de Éxito')}
+                  {renderColorPicker('colors', 'success', 'Color de ‰xito')}
                 </Col>
               </Row>
               <Row gutter={16}>
@@ -435,7 +435,7 @@ const EmailTemplateEditor = ({
                   {renderColorPicker('colors', 'error', 'Color de Error')}
                 </Col>
                 <Col span={8}>
-                  {renderColorPicker('colors', 'info', 'Color de Información')}
+                  {renderColorPicker('colors', 'info', 'Color de Informaci³n')}
                 </Col>
               </Row>
             </Panel>
@@ -443,7 +443,7 @@ const EmailTemplateEditor = ({
             <Panel header="Layout" key="layout">
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item label="Ancho Máximo">
+                  <Form.Item label="Ancho M¡ximo">
                     <InputNumber
                       value={parseInt(designConfig.layout.maxWidth)}
                       onChange={(value) => updateDesignConfig('layout', 'maxWidth', `${value}px`)}
@@ -530,3 +530,5 @@ const EmailTemplateEditor = ({
 };
 
 export default EmailTemplateEditor;
+
+

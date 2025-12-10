@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Table, Button, Tag } from 'antd';
+import { Modal, Table, Button, Tag } from '../../../utils/antdComponents';
 import formatDateString from '../../../utils/formatDateString';
 
 const FunctionModal = ({
@@ -8,7 +8,7 @@ const FunctionModal = ({
   funciones,
   onFunctionSelect,
 }) => {
-  // Función para limpiar/normalizar la función antes de enviarla
+  // Funci³n para limpiar/normalizar la funci³n antes de enviarla
   const normalizeFunction = (funcion) => {
     return {
       ...funcion,
@@ -33,7 +33,7 @@ const FunctionModal = ({
     if (typeof funcion.sala === 'object' && funcion.sala?.nombre) {
       return funcion.sala.nombre;
     }
-    return '—';
+    return '-”';
   };
 
   const columns = [
@@ -68,7 +68,7 @@ const FunctionModal = ({
         }
         
         if (inicioVenta && now < inicioVenta) {
-          return <Tag color="orange">Próximamente</Tag>;
+          return <Tag color="orange">Pr³ximamente</Tag>;
         }
         
         if (finVenta && now > finVenta) {
@@ -100,7 +100,7 @@ const FunctionModal = ({
 
   return (
     <Modal
-      title="Seleccionar Función"
+      title="Seleccionar Funci³n"
       open={visible}
       onCancel={onCancel}
       footer={null}
@@ -129,3 +129,5 @@ const FunctionModal = ({
 };
 
 export default FunctionModal;
+
+

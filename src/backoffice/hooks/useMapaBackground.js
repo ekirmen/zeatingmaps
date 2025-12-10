@@ -1,5 +1,5 @@
-// Hook para manejar imagen de fondo del mapa
-import { message } from 'antd';
+﻿// Hook para manejar imagen de fondo del mapa
+import { message } from '../../utils/antdComponents';
 
 export const useMapaBackground = (elements, setElements) => {
   const backgroundSystem = {
@@ -52,3 +52,5 @@ export const useMapaBackground = (elements, setElements) => {
     backgroundSystem
   };
 };
+
+

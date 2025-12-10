@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Card, Typography, Spin } from 'antd';
+import { Card, Typography, Spin } from '../../../utils/antdComponents';
 
 const { Title, Text } = Typography;
 
@@ -17,7 +17,7 @@ const LazySimpleSeatingMap = (props) => {
               Cargando mapa de asientos...
             </Title>
             <Text type="secondary">
-              Preparando la visualización del mapa
+              Preparando la visualizaci³n del mapa
             </Text>
           </div>
         </Card>
@@ -29,3 +29,5 @@ const LazySimpleSeatingMap = (props) => {
 };
 
 export default LazySimpleSeatingMap;
+
+

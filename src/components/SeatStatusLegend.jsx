@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { Button, Popover, Space } from 'antd';
+import { Button, Popover, Space } from '../utils/antdComponents';
 import { useTheme } from '../contexts/ThemeContext';
 
 const SeatStatusLegend = ({
@@ -76,3 +76,4 @@ const SeatStatusLegend = ({
 };
 
 export default SeatStatusLegend;
+

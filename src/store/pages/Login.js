@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Input, Button, message } from 'antd';
+import { Modal, Input, Button, message } from '../../utils/antdComponents';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../supabaseClient';
 import { createAuthError, getAuthMessage } from '../../utils/authErrorMessages';
@@ -21,7 +21,7 @@ const Login = ({ onLogin }) => {
     }
   }, [user]);
 
-  // Detectar si ya hay sesión activa
+  // Detectar si ya hay sesi³n activa
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
@@ -92,10 +92,10 @@ const Login = ({ onLogin }) => {
         throw new Error(t('errors.fields_required', 'Complete ambos campos'));
 
       if (passwordData.newPassword !== passwordData.confirmPassword)
-        throw new Error(t('errors.passwords_no_match', 'Las contraseñas no coinciden'));
+        throw new Error(t('errors.passwords_no_match', 'Las contrase±as no coinciden'));
 
       if (passwordData.newPassword.length < 6)
-        throw new Error(t('errors.password_min_length', 'Mínimo 6 caracteres'));
+        throw new Error(t('errors.password_min_length', 'M­nimo 6 caracteres'));
 
       const { error } = await supabase.auth.updateUser({
         password: passwordData.newPassword.trim(),
@@ -109,7 +109,7 @@ const Login = ({ onLogin }) => {
       message.success(t('password.updated'));
     } catch (error) {
       console.error(error);
-      message.error(error.message || t('errors.save_password', 'Error al guardar contraseña'));
+      message.error(error.message || t('errors.save_password', 'Error al guardar contrase±a'));
     }
   };
 
@@ -146,7 +146,7 @@ const Login = ({ onLogin }) => {
             className="text-blue-600 hover:underline"
             onClick={() => navigate('/store/forgot-password')}
           >
-            ¿Olvidaste tu contraseña?
+            ¿Olvidaste tu contrase±a?
           </button>
           <button
             type="button"
@@ -161,13 +161,13 @@ const Login = ({ onLogin }) => {
               className="text-green-600 hover:underline"
               onClick={() => setIsPasswordModalVisible(true)}
             >
-              Cambiar contraseña
+              Cambiar contrase±a
             </button>
           )}
         </div>
       </form>
 
-      {/* Modal cambiar contraseña */}
+      {/* Modal cambiar contrase±a */}
       <Modal
         title={t('password.change')}
         open={isPasswordModalVisible}
@@ -197,3 +197,5 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
+
+

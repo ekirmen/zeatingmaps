@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Steps, Button, Typography, Space, Tag, Progress, Modal, List, Avatar, Checkbox } from 'antd';
+import { Card, Steps, Button, Typography, Space, Tag, Progress, Modal, List, Avatar, Checkbox } from '../../utils/antdComponents';
 import { 
   PlayCircleOutlined, 
   CheckCircleOutlined, 
@@ -303,7 +303,7 @@ const InteractiveTutorials = () => {
               dataSource={step.tips}
               renderItem={(tip) => (
                 <List.Item>
-                  <Text type="secondary">💡 {tip}</Text>
+                  <Text type="secondary">ðŸ’¡ {tip}</Text>
                 </List.Item>
               )}
             />
@@ -321,7 +321,7 @@ const InteractiveTutorials = () => {
           Tutoriales Interactivos
         </Title>
         <Text type="secondary">
-          Aprende a usar el sistema paso a paso con guías interactivas
+          Aprende a usar el sistema paso a paso con gu­as interactivas
         </Text>
       </div>
 
@@ -387,3 +387,5 @@ const InteractiveTutorials = () => {
 };
 
 export default InteractiveTutorials;
+
+

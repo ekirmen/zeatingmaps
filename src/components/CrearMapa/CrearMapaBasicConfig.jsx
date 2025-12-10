@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Button, Typography, Space, Card } from 'antd';
+import { Form, Input, Button, Typography, Space, Card } from '../../utils/antdComponents';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -27,16 +27,16 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-custom">
-          <span className="text-4xl text-white">🎨</span>
+          <span className="text-4xl text-white">ðŸŽ¨</span>
         </div>
         <Title level={1} className="mb-4 text-gradient">
           ¡Bienvenido al Creador de Mapas!
         </Title>
         <Title level={3} className="mb-3 text-gray-700">
-          Configuración Básica del Mapa
+          Configuraci³n B¡sica del Mapa
         </Title>
         <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Comienza creando tu mapa de asientos personalizado. Define la información fundamental y luego pasa al editor visual donde podrás diseñar la distribución perfecta.
+          Comienza creando tu mapa de asientos personalizado. Define la informaci³n fundamental y luego pasa al editor visual donde podr¡s dise±ar la distribuci³n perfecta.
         </Text>
       </div>
 
@@ -68,16 +68,16 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
           </Form.Item>
 
           <Form.Item
-            label="Descripción"
+            label="Descripci³n"
             name="descripcion"
             rules={[
-              { required: true, message: 'Por favor ingresa una descripción' },
-              { min: 10, message: 'La descripción debe tener al menos 10 caracteres' }
+              { required: true, message: 'Por favor ingresa una descripci³n' },
+              { min: 10, message: 'La descripci³n debe tener al menos 10 caracteres' }
             ]}
           >
             <TextArea
               rows={4}
-              placeholder="Describe el propósito y características del mapa..."
+              placeholder="Describe el prop³sito y caracter­sticas del mapa..."
               className="text-base"
             />
           </Form.Item>
@@ -88,7 +88,7 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
           >
             <TextArea
               rows={3}
-              placeholder="Información adicional, instrucciones especiales, etc..."
+              placeholder="Informaci³n adicional, instrucciones especiales, etc..."
               className="text-base"
             />
           </Form.Item>
@@ -100,7 +100,7 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
               htmlType="submit"
               className="btn-gradient-primary shadow-custom hover-lift px-12 py-3 h-14 text-lg font-semibold"
             >
-              🎨 Continuar al Editor
+              ðŸŽ¨ Continuar al Editor
             </Button>
           </div>
         </Form>
@@ -110,3 +110,5 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
 };
 
 export default CrearMapaBasicConfig;
+
+

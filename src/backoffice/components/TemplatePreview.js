@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Typography, Space, Tag } from 'antd';
+import { Card, Typography, Space, Tag } from '../../utils/antdComponents';
 import { PrinterOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
@@ -24,7 +24,7 @@ const TemplatePreview = ({ template, ticketData }) => {
     preview += `Precio: $${ticketData.price}\n`;
     preview += `Ticket #: ${ticketData.ticketNumber}\n`;
 
-    // Pie de página
+    // Pie de p¡gina
     if (template.footer) {
       preview += template.footer + '\n';
     }
@@ -40,8 +40,8 @@ const TemplatePreview = ({ template, ticketData }) => {
       height: template.paperHeight,
       fontSize: template.fontSize === '00' ? 'Normal' : 'Doble',
       alignment: template.alignment === '1' ? 'Centro' : 'Izquierda',
-      qrCode: template.showQRCode ? 'Sí' : 'No',
-      barcode: template.showBarcode ? 'Sí' : 'No'
+      qrCode: template.showQRCode ? 'S­' : 'No',
+      barcode: template.showBarcode ? 'S­' : 'No'
     };
   };
 
@@ -72,9 +72,9 @@ const TemplatePreview = ({ template, ticketData }) => {
             <Tag color="blue">Ancho: {info.width}mm</Tag>
             <Tag color="green">Alto: {info.height}mm</Tag>
             <Tag color="orange">Fuente: {info.fontSize}</Tag>
-            <Tag color="purple">Alineación: {info.alignment}</Tag>
+            <Tag color="purple">Alineaci³n: {info.alignment}</Tag>
             <Tag color="cyan">QR Code: {info.qrCode}</Tag>
-            <Tag color="magenta">Código de Barras: {info.barcode}</Tag>
+            <Tag color="magenta">C³digo de Barras: {info.barcode}</Tag>
           </Space>
         </div>
       </Card>
@@ -115,3 +115,4 @@ const TemplatePreview = ({ template, ticketData }) => {
 };
 
 export default TemplatePreview; 
+

@@ -16,7 +16,7 @@ import {
   Col,
   Popconfirm,
   ColorPicker
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   PlusOutlined, 
   EditOutlined, 
@@ -150,7 +150,7 @@ const Cupos = () => {
       loadCupos();
     } catch (error) {
       console.error('Error deleting cupo:', error);
-      message.error('Error al eliminar cupo. Asegúrate de que no esté en uso en ninguna plantilla.');
+      message.error('Error al eliminar cupo. Asegºrate de que no est© en uso en ninguna plantilla.');
     }
   };
 
@@ -208,10 +208,10 @@ const Cupos = () => {
       )
     },
     {
-      title: 'Descripción',
+      title: 'Descripci³n',
       dataIndex: 'descripcion',
       key: 'descripcion',
-      render: (text) => text || <Text type="secondary">—</Text>
+      render: (text) => text || <Text type="secondary">-”</Text>
     },
     {
       title: 'Acciones',
@@ -227,10 +227,10 @@ const Cupos = () => {
             Editar
           </Button>
           <Popconfirm
-            title="¿Estás seguro de eliminar este cupo?"
-            description="Esta acción no se puede deshacer. Asegúrate de que no esté en uso en ninguna plantilla."
+            title="¿Est¡s seguro de eliminar este cupo?"
+            description="Esta acci³n no se puede deshacer. Asegºrate de que no est© en uso en ninguna plantilla."
             onConfirm={() => handleDelete(record.id)}
-            okText="Sí, eliminar"
+            okText="S­, eliminar"
             cancelText="Cancelar"
           >
             <Button 
@@ -253,10 +253,10 @@ const Cupos = () => {
         <Card className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <Title level={2} className="mb-2">Gestión de Cupos</Title>
+              <Title level={2} className="mb-2">Gesti³n de Cupos</Title>
               <Text type="secondary">
                 Crea y administra cupos reutilizables para asignar a plantillas de cupos.
-                Los cupos definen qué canales de venta pueden vender un conjunto de butacas.
+                Los cupos definen qu© canales de venta pueden vender un conjunto de butacas.
               </Text>
             </div>
             <Button
@@ -333,12 +333,12 @@ const Cupos = () => {
             </Form.Item>
 
             <Form.Item
-              label="Descripción"
+              label="Descripci³n"
               name="descripcion"
             >
               <Input.TextArea 
                 rows={3} 
-                placeholder="Descripción opcional del cupo..."
+                placeholder="Descripci³n opcional del cupo..."
               />
             </Form.Item>
 
@@ -346,11 +346,11 @@ const Cupos = () => {
               label="Canales de Venta"
               name="canales_venta"
               rules={[{ required: true, message: 'Debes seleccionar al menos un canal' }]}
-              tooltip="Selecciona los canales de venta que podrán vender entradas de este cupo"
+              tooltip="Selecciona los canales de venta que podr¡n vender entradas de este cupo"
             >
               <Select
                 mode="multiple"
-                placeholder="Selecciona uno o más canales de venta"
+                placeholder="Selecciona uno o m¡s canales de venta"
                 allowClear
               >
                 {canalesVenta.map(canal => (
@@ -376,4 +376,6 @@ const Cupos = () => {
 };
 
 export default Cupos;
+
+
 

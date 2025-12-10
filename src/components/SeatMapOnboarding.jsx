@@ -3,7 +3,7 @@
  * Guía paso a paso para aprender a seleccionar asientos
  */
 import React, { useState, useEffect } from 'react';
-import { Modal, Steps, Button, Card, Typography, Space, Tag } from 'antd';
+import { Modal, Steps, Button, Card, Typography, Space, Tag } from '../utils/antdComponents';
 import {
   UserOutlined,
   ShoppingCartOutlined,
@@ -289,4 +289,5 @@ export const resetOnboarding = () => {
 };
 
 export default SeatMapOnboarding;
+
 

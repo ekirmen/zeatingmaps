@@ -21,7 +21,7 @@ import {
   Rate,
   Alert,
   Checkbox
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   CustomerServiceOutlined, 
   PlusOutlined, 
@@ -267,11 +267,11 @@ const SupportTicketSystem = () => {
       ),
     },
     {
-      title: 'Categoría',
+      title: 'Categor­a',
       dataIndex: 'category',
       key: 'category',
       render: (category) => (
-        <Tag>{category || 'Sin categoría'}</Tag>
+        <Tag>{category || 'Sin categor­a'}</Tag>
       ),
     },
     {
@@ -299,7 +299,7 @@ const SupportTicketSystem = () => {
       ),
     },
     {
-      title: 'Satisfacción',
+      title: 'Satisfacci³n',
       dataIndex: 'satisfaction_rating',
       key: 'satisfaction',
       render: (rating) => (
@@ -427,28 +427,28 @@ const SupportTicketSystem = () => {
         >
           <Form.Item
             name="title"
-            label="Título"
-            rules={[{ required: true, message: 'Título requerido' }]}
+            label="T­tulo"
+            rules={[{ required: true, message: 'T­tulo requerido' }]}
           >
             <Input />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label="Descripción"
-            rules={[{ required: true, message: 'Descripción requerida' }]}
+            label="Descripci³n"
+            rules={[{ required: true, message: 'Descripci³n requerida' }]}
           >
             <TextArea rows={4} />
           </Form.Item>
 
           <Form.Item
             name="category"
-            label="Categoría"
+            label="Categor­a"
           >
             <Select>
-              <Option value="technical">Técnico</Option>
-              <Option value="billing">Facturación</Option>
-              <Option value="feature_request">Solicitud de Característica</Option>
+              <Option value="technical">T©cnico</Option>
+              <Option value="billing">Facturaci³n</Option>
+              <Option value="feature_request">Solicitud de Caracter­stica</Option>
               <Option value="bug_report">Reporte de Error</Option>
               <Option value="general">General</Option>
             </Select>
@@ -617,3 +617,5 @@ const SupportTicketSystem = () => {
 };
 
 export default SupportTicketSystem;
+
+

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { message } from '../../utils/antdComponents';
 import { supabase } from '../../supabaseClient';
 import { createAuthError, getAuthMessage } from '../../utils/authErrorMessages';
 
@@ -18,7 +18,7 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
 
     if (!formData.login || !formData.password) {
-      setError('Por favor, ingresa tu usuario y contraseña');
+      setError('Por favor, ingresa tu usuario y contrase±a');
       return;
     }
 
@@ -30,7 +30,7 @@ const Login = ({ onLogin }) => {
 
       if (error || !data.session) {
         throw await createAuthError({
-          error: error || new Error('Respuesta de inicio de sesión inválida'),
+          error: error || new Error('Respuesta de inicio de sesi³n inv¡lida'),
           email: formData.login,
           supabaseClient: supabase,
         });
@@ -55,7 +55,7 @@ const Login = ({ onLogin }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Iniciar Sesión</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Iniciar Sesi³n</h2>
 
         {error && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-300">
@@ -82,7 +82,7 @@ const Login = ({ onLogin }) => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Contraseña"
+              placeholder="Contrase±a"
               required
               className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -92,7 +92,7 @@ const Login = ({ onLogin }) => {
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition-colors duration-200"
           >
-            Iniciar Sesión
+            Iniciar Sesi³n
           </button>
         </form>
       </div>
@@ -101,3 +101,5 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
+
+

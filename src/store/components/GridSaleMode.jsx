@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, InputNumber, Select, Space, Typography, Divider, Alert, Spin, Row, Col, Badge, Tag } from 'antd';
+import { Card, Button, InputNumber, Select, Space, Typography, Divider, Alert, Spin, Row, Col, Badge, Tag } from '../../utils/antdComponents';
 import { ShoppingCartOutlined, PlusOutlined, MinusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -79,7 +79,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
 
     } catch (err) {
       console.error('Error cargando zonas y precios:', err);
-      setError('Error al cargar información de venta');
+      setError('Error al cargar informaci³n de venta');
     } finally {
       setLoadingZonas(false);
     }
@@ -112,14 +112,14 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
       precio: Number(precio.precio) || 0,
       cantidad: cantidad,
       tipo: 'grid',
-      descripcion: `${zona.nombre} - ${funcion?.nombre || 'Función'}`,
+      descripcion: `${zona.nombre} - ${funcion?.nombre || 'Funci³n'}`,
       fecha: funcion?.fechaCelebracion || funcion?.fecha || null,
       hora: funcion?.hora || null
     };
 
     onAddToCart(item);
     
-    // Limpiar cantidad después de agregar
+    // Limpiar cantidad despu©s de agregar
     setCantidades(prev => ({
       ...prev,
       [zona.id]: 0
@@ -321,19 +321,19 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
         </Card>
       )}
 
-      {/* Información adicional */}
+      {/* Informaci³n adicional */}
       <Card className="mt-4 info-card">
         <div className="flex items-start gap-2">
           <InfoCircleOutlined className="text-blue-500 mt-1" />
           <div>
             <Text strong className="block mb-1">
-              Información importante:
+              Informaci³n importante:
             </Text>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Las entradas son válidas solo para la fecha y hora seleccionada</li>
-              <li>• Una vez confirmado el pago, no se pueden realizar cambios</li>
-              <li>• Presenta tu comprobante en la entrada del evento</li>
-              <li>• Para dudas, contacta al organizador del evento</li>
+              <li>-¢ Las entradas son v¡lidas solo para la fecha y hora seleccionada</li>
+              <li>-¢ Una vez confirmado el pago, no se pueden realizar cambios</li>
+              <li>-¢ Presenta tu comprobante en la entrada del evento</li>
+              <li>-¢ Para dudas, contacta al organizador del evento</li>
             </ul>
           </div>
         </div>
@@ -343,3 +343,5 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
 };
 
 export default GridSaleMode;
+
+

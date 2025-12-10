@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
-import { Spin } from 'antd';
+import { Spin } from '../../utils/antdComponents';
 import DashboardLogin from './DashboardLogin';
 
 const AuthGuard = ({ children }) => {
@@ -13,7 +13,7 @@ const AuthGuard = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      // Primero intentar obtener la sesión actual (no requiere llamada a la API)
+      // Primero intentar obtener la sesi³n actual (no requiere llamada a la API)
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
@@ -54,7 +54,7 @@ const AuthGuard = ({ children }) => {
         gap: '16px'
       }}>
         <Spin size="large" />
-        <div>Verificando autenticación...</div>
+        <div>Verificando autenticaci³n...</div>
       </div>
     );
   }
@@ -75,3 +75,5 @@ const AuthGuard = ({ children }) => {
 };
 
 export default AuthGuard;
+
+

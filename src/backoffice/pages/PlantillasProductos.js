@@ -17,7 +17,7 @@ import {
   Tag,
   Row,
   Col
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   PlusOutlined,
   EditOutlined,
@@ -238,7 +238,7 @@ const PlantillasProductos = () => {
       key: 'nombre',
     },
     {
-      title: 'Descripción',
+      title: 'Descripci³n',
       dataIndex: 'descripcion',
       key: 'descripcion',
       render: (text) => text?.slice(0, 50) + (text?.length > 50 ? '...' : '')
@@ -265,7 +265,7 @@ const PlantillasProductos = () => {
       }
     },
     {
-      title: 'Categoría',
+      title: 'Categor­a',
       dataIndex: 'categoria',
       key: 'categoria',
       render: (categoria) => <Tag color="blue">{categoria}</Tag>
@@ -366,16 +366,16 @@ const PlantillasProductos = () => {
             label="Nombre de la Plantilla"
             rules={[{ required: true, message: 'Por favor ingresa el nombre de la plantilla' }]}
           >
-            <Input placeholder="Ejemplo: Camiseta Estándar" />
+            <Input placeholder="Ejemplo: Camiseta Est¡ndar" />
           </Form.Item>
 
           <Form.Item
             name="descripcion"
-            label="Descripción"
+            label="Descripci³n"
           >
             <TextArea
               rows={4}
-              placeholder="Descripción de la plantilla"
+              placeholder="Descripci³n de la plantilla"
             />
           </Form.Item>
 
@@ -433,12 +433,12 @@ const PlantillasProductos = () => {
 
           <Form.Item
             name="categoria"
-            label="Categoría"
-            rules={[{ required: true, message: 'Por favor selecciona una categoría' }]}
+            label="Categor­a"
+            rules={[{ required: true, message: 'Por favor selecciona una categor­a' }]}
           >
-            <Select placeholder="Selecciona una categoría">
+            <Select placeholder="Selecciona una categor­a">
               <Option value="Merchandising">Merchandising</Option>
-              <Option value="Información">Información</Option>
+              <Option value="Informaci³n">Informaci³n</Option>
               <Option value="Pack">Pack</Option>
               <Option value="Alimentos">Alimentos</Option>
               <Option value="Bebidas">Bebidas</Option>
@@ -497,3 +497,4 @@ const PlantillasProductos = () => {
 };
 
 export default PlantillasProductos;
+

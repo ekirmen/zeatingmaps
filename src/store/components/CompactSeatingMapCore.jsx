@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Stage, Layer, Circle, Rect, Image } from 'react-konva';
-import { Button, Card, Drawer, Badge, Tooltip, Space, Typography, Divider } from 'antd';
+import { Button, Card, Drawer, Badge, Tooltip, Space, Typography, Divider } from '../../utils/antdComponents';
 import {
   ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, CompressOutlined,
   ShoppingCartOutlined, DeleteOutlined, ReloadOutlined
@@ -62,7 +62,7 @@ const CompactSeatingMap = ({
   const handleSeatClick = useCallback((seat, event) => {
     event.cancelBubble = true;
     if (seat.estado === 'vendido' || seat.estado === 'bloqueado') {
-      return VisualNotifications.show('seatBlocked', 'Este asiento no está disponible');
+      return VisualNotifications.show('seatBlocked', 'Este asiento no est¡ disponible');
     }
     setSelectedSeatInfo(seat);
     setShowSeatDetails(true);
@@ -179,7 +179,7 @@ const CompactSeatingMap = ({
       {/* Cart Drawer */}
       <Drawer title="Carrito de Compras" placement="right" open={showCartDrawer} onClose={() => setShowCartDrawer(false)} width={300}>
         {cartItems.length === 0 ? (
-          <div className="text-center py-8 text-gray-500"><ShoppingCartOutlined className="text-4xl mb-2"/><p>Carrito vacío</p></div>
+          <div className="text-center py-8 text-gray-500"><ShoppingCartOutlined className="text-4xl mb-2"/><p>Carrito vac­o</p></div>
         ) : (
           <div className="space-y-2">
             {cartItems.map((item,i)=>(
@@ -212,3 +212,5 @@ const CompactSeatingMap = ({
 };
 
 export default CompactSeatingMap;
+
+

@@ -1,5 +1,5 @@
 // Hook para manejar posicionamiento y coordenadas precisas
-import { message } from 'antd';
+import { message } from '../../utils/antdComponents';
 
 export const useMapaPositioning = (elements, setElements) => {
   const precisePositioning = {
@@ -33,7 +33,7 @@ export const useMapaPositioning = (elements, setElements) => {
       });
     });
 
-    message.success(`Elementos ajustados a cuadrícula de ${gridSize}px`);
+    message.success(`Elementos ajustados a cuadr­cula de ${gridSize}px`);
   };
 
   const snapToGrid = () => {
@@ -46,3 +46,5 @@ export const useMapaPositioning = (elements, setElements) => {
     snapToGrid
   };
 };
+
+

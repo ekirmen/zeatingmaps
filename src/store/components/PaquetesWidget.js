@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Card, Button, Typography, Space, InputNumber, Tag, Image, Input, Badge, Empty } from 'antd';
+﻿import React, { useCallback, useEffect, useState } from 'react';
+import { Card, Button, Typography, Space, InputNumber, Tag, Image, Input, Badge, Empty } from '../../utils/antdComponents';
 import { ShoppingCartOutlined, SearchOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { useCartStore } from '../cartStore';
@@ -207,3 +207,5 @@ const PaquetesWidget = ({ eventoId }) => {
 };
 
 export default PaquetesWidget;
+
+

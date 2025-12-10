@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Card, Table, Form, Button, message, Select, Checkbox } from 'antd';
+import { Modal, Input, Card, Table, Form, Button, message, Select, Checkbox } from '../../../utils/antdComponents';
 import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit, AiOutlineSetting, AiOutlineDown, AiOutlineUp } from 'react-icons/ai';
 import { supabase, supabaseAdmin } from '../../../supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
@@ -149,7 +149,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
 
     if (ticketData.funcion && typeof onFunctionSelect === 'function') {
-      // Pasar un parámetro para indicar que no se debe limpiar el carrito
+      // Pasar un par¡metro para indicar que no se debe limpiar el carrito
       await onFunctionSelect(ticketData.funcion, { preserveCart: true });
     }
 
@@ -189,7 +189,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       const payments = data || [];
 
-      // Si falta información de evento, intentar completarla a partir de la función
+      // Si falta informaci³n de evento, intentar completarla a partir de la funci³n
       for (const payment of payments) {
         if (!payment.event && payment.funcion?.evento_id) {
           await supabase
@@ -231,7 +231,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       const cleanTerm = term.trim();
       if (!cleanTerm) {
         setAccountSearchResults([]);
-        message.info('Usuario no encontrado y/o campo vacío');
+        message.info('Usuario no encontrado y/o campo vac­o');
         return;
       }
 
@@ -241,7 +241,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       if (userError || !userResp || !userResp.user) {
         setAccountSearchResults([]);
-        message.info('Usuario no encontrado y/o campo vacío');
+        message.info('Usuario no encontrado y/o campo vac­o');
         return;
       }
 
@@ -274,7 +274,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       if (!profileData) {
         setAccountSearchResults([]);
-        message.info('Usuario no encontrado y/o campo vacío');
+        message.info('Usuario no encontrado y/o campo vac­o');
         return;
       }
 
@@ -346,18 +346,18 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
   return (
     <div className="relative h-full">
-      {/* Botón para mostrar/ocultar menú */}
+      {/* Bot³n para mostrar/ocultar menº */}
       <div className="absolute top-0 right-0 z-10">
         <Button
           type="text"
           icon={isMenuCollapsed ? <AiOutlineDown /> : <AiOutlineUp />}
           onClick={toggleMenu}
           className="bg-white shadow-md rounded-full w-8 h-8 flex items-center justify-center"
-          title={isMenuCollapsed ? "Mostrar menú" : "Ocultar menú"}
+          title={isMenuCollapsed ? "Mostrar menº" : "Ocultar menº"}
         />
       </div>
 
-      {/* Menú colapsible */}
+      {/* Menº colapsible */}
       <div className={`transition-all duration-300 ease-in-out ${
         isMenuCollapsed ? 'h-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
       }`}>
@@ -371,7 +371,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             onClick={() => setIsAccountModalVisible(true)}
             block
           >
-            Buscar/Añadir Cuenta
+            Buscar/A±adir Cuenta
           </Button>
 
           <Button
@@ -379,7 +379,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             onClick={() => setIsConfigModalVisible(true)}
             block
           >
-            Configuración
+            Configuraci³n
           </Button>
 
           {userData && (
@@ -401,7 +401,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         </div>
       </div>
 
-      {/* MODAL búsqueda */}
+      {/* MODAL bºsqueda */}
       <Modal
         open={isSearchModalVisible}
         title="Buscar Tickets"
@@ -436,7 +436,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             )}
             {ticketData.funcion && (
               <div>
-                <strong>Función:</strong>{' '}
+                <strong>Funci³n:</strong>{' '}
                 {ticketData.funcion.fecha_celebracion ? new Date(ticketData.funcion.fecha_celebracion).toLocaleString() : 'Fecha no disponible'}
               </div>
             )}
@@ -525,14 +525,14 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               { title: 'Localizador', dataIndex: 'locator' },
               { title: 'Evento', dataIndex: 'event_name' },
               {
-                title: 'Función',
+                title: 'Funci³n',
                 dataIndex: 'funcion_fecha',
                 render: (date) => (date ? new Date(date).toLocaleString() : '-')
               },
               { title: 'Estado', dataIndex: 'status' },
               { title: 'Fecha', dataIndex: 'created_at', render: (date) => new Date(date).toLocaleDateString() },
               {
-                title: 'Acción',
+                title: 'Acci³n',
                 render: (_, record) => (
                   <Button type="link" onClick={() => handleTicketSearch(record.locator)}>
                     Ver
@@ -547,7 +547,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       {/* MODAL cuentas */}
       <Modal
         open={isAccountModalVisible}
-        title={isAddingAccount ? 'Añadir Cuenta' : 'Buscar Cuenta'}
+        title={isAddingAccount ? 'A±adir Cuenta' : 'Buscar Cuenta'}
         onCancel={() => {
           setIsAccountModalVisible(false);
           setIsAddingAccount(false);
@@ -564,7 +564,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="telefono" label="Teléfono">
+            <Form.Item name="telefono" label="Tel©fono">
               <Input />
             </Form.Item>
             <Button htmlType="submit" block>
@@ -593,7 +593,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                   { title: 'Nombre', dataIndex: 'login' },
                   { title: 'Email', dataIndex: 'email' },
                   {
-                    title: 'Acción',
+                    title: 'Acci³n',
                     render: (_, record) => (
                       <Button type="link" onClick={() => {
                         setSelectedClient(record);
@@ -611,10 +611,10 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         )}
       </Modal>
 
-      {/* MODAL Configuración */}
+      {/* MODAL Configuraci³n */}
       <Modal
         open={isConfigModalVisible}
-        title="Configuración de Impresión"
+        title="Configuraci³n de Impresi³n"
         onCancel={() => setIsConfigModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setIsConfigModalVisible(false)}>
@@ -630,7 +630,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           form={configForm}
           layout="vertical"
           onFinish={(values) => {
-            message.success('Configuración guardada exitosamente');
+            message.success('Configuraci³n guardada exitosamente');
             setIsConfigModalVisible(false);
           }}
           initialValues={{
@@ -641,7 +641,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           }}
         >
           <div className="space-y-6">
-            {/* Configuración de Tickets */}
+            {/* Configuraci³n de Tickets */}
             <div>
               <h4 className="font-semibold mb-4">Entradas</h4>
               <Form.Item
@@ -658,11 +658,11 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 name="automaticTicketPrint"
                 valuePropName="checked"
               >
-                <Checkbox>Impresión automática de tickets</Checkbox>
+                <Checkbox>Impresi³n autom¡tica de tickets</Checkbox>
               </Form.Item>
             </div>
 
-            {/* Configuración de Recibos */}
+            {/* Configuraci³n de Recibos */}
             <div>
               <h4 className="font-semibold mb-4">Recibo</h4>
               <Form.Item
@@ -677,7 +677,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 name="automaticReceiptPrint"
                 valuePropName="checked"
               >
-                <Checkbox>Impresión automática de recibos</Checkbox>
+                <Checkbox>Impresi³n autom¡tica de recibos</Checkbox>
               </Form.Item>
             </div>
           </div>
@@ -688,3 +688,5 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 };
 
 export default LeftMenu;
+
+

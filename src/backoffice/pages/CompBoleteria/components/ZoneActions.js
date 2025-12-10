@@ -1,4 +1,4 @@
-import { message } from 'antd';
+import { message } from '../../../../utils/antdComponents';
 
 export const createZoneActions = ({
   selectedFuncion,
@@ -16,7 +16,7 @@ export const createZoneActions = ({
     const qty = parseInt(zoneQuantities[zonaId], 10);
     if (!qty || qty <= 0) return;
 
-    // Cliente opcional - se puede seleccionar después
+    // Cliente opcional - se puede seleccionar despu©s
     // if (!selectedClient) {
     //   message.info('Seleccione un cliente antes de agregar asientos');
     // }
@@ -66,7 +66,7 @@ export const createZoneActions = ({
       return;
     }
 
-    // Cliente opcional - se puede seleccionar después
+    // Cliente opcional - se puede seleccionar despu©s
     // if (!selectedClient) {
     //   message.info('Seleccione un cliente antes de agregar asientos');
     // }
@@ -107,3 +107,4 @@ export const createZoneActions = ({
     handleAddSingleZoneTicket
   };
 }; 
+

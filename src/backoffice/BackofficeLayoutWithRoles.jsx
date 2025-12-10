@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Button, Dropdown, Menu, Avatar, Space, Typography, Badge, Result, Drawer } from 'antd';
+import { Layout, Button, Dropdown, Menu, Avatar, Space, Typography, Badge, Result, Drawer } from '../utils/antdComponents';
 import { 
   MenuFoldOutlined, 
   MenuUnfoldOutlined, 
@@ -266,3 +266,4 @@ const BackofficeLayoutWithRoles = ({ children }) => {
 };
 
 export default BackofficeLayoutWithRoles;
+

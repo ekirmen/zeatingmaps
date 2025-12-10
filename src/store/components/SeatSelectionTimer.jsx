@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { message } from 'antd';
+import { message } from '../../utils/antdComponents';
 
 const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) => {
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutos en segundos
@@ -69,3 +69,4 @@ const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) =>
 };
 
 export default SeatSelectionTimer;
+

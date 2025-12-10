@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, message, Popover, List, Empty, Typography } from 'antd';
+import { Button, message, Popover, List, Empty, Typography } from '../../utils/antdComponents';
 import { HeartOutlined, HeartFilled, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -68,7 +68,7 @@ const WishlistButton = ({ event, size = 'default' }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        message.warning('Debes iniciar sesión para guardar favoritos');
+        message.warning('Debes iniciar sesi³n para guardar favoritos');
         return;
       }
 
@@ -226,3 +226,4 @@ const WishlistButton = ({ event, size = 'default' }) => {
 };
 
 export default WishlistButton; 
+

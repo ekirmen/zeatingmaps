@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip, Card, Divider } from 'antd';
+import { Tooltip, Card, Divider } from '../utils/antdComponents';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
 /**
@@ -107,4 +107,5 @@ export const useSeatPrice = (seat, funcionId) => {
 };
 
 export default SeatPriceTooltip;
+
 

@@ -22,7 +22,7 @@ import {
   ColorPicker,
   Upload,
   Progress
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   PlusOutlined,
   DeleteOutlined,
@@ -129,10 +129,10 @@ const CrearMapaEditor = ({
   const [gridSize, setGridSize] = useState(20);
 
   // ===== ESTADOS DE ESCALADO Y ZOOM =====
-  const [scale, setScale] = useState(0.8); // Zoom inicial más pequeño para ver más contenido
+  const [scale, setScale] = useState(0.8); // Zoom inicial m¡s peque±o para ver m¡s contenido
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [minScale, setMinScale] = useState(0.1);
-  const [maxScale, setMaxScale] = useState(5); // Zoom máximo más alto para más detalle
+  const [maxScale, setMaxScale] = useState(5); // Zoom m¡ximo m¡s alto para m¡s detalle
 
   // ===== ESTADOS DE HISTORIAL =====
   const [history, setHistory] = useState([]);
@@ -166,7 +166,7 @@ const CrearMapaEditor = ({
   const [zonas, setZonas] = useState([]);
   const [showZonaManager, setShowZonaManager] = useState(false);
 
-  // ===== ESTADOS DE MENÚ CONTEXTUAL =====
+  // ===== ESTADOS DE MENš CONTEXTUAL =====
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
@@ -178,7 +178,7 @@ const CrearMapaEditor = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [totalSteps] = useState(5);
 
-  // ===== FUNCIÓN PARA CALCULAR PROGRESO =====
+  // ===== FUNCI“N PARA CALCULAR PROGRESO =====
   const calculateProgress = useCallback(() => {
     let progress = 0;
     let step = 1;
@@ -284,30 +284,30 @@ const CrearMapaEditor = ({
         try {
           contenidoParseado = JSON.parse(mapa.contenido);
         } catch (error) {
-          console.error('❌ [CREAR_MAPA_EDITOR] Error parseando contenido:', error);
+          console.error('Œ [CREAR_MAPA_EDITOR] Error parseando contenido:', error);
           return;
         }
       } else {
         contenidoParseado = mapa.contenido;
       }
       if (contenidoParseado?.elementos) {
-        // Verificar si el mapa tiene imágenes optimizadas
+        // Verificar si el mapa tiene im¡genes optimizadas
         const tieneImagenesOptimizadas = mapaImageService.hasOptimizedImages(contenidoParseado.elementos);
         if (tieneImagenesOptimizadas) {
-          // Restaurar imágenes para edición
+          // Restaurar im¡genes para edici³n
           mapaImageService.restoreImagesForEditing(mapa.id, contenidoParseado.elementos)
             .then((elementosRestaurados) => {
               setElements(elementosRestaurados);
-              addToHistory(elementosRestaurados, 'Carga inicial con imágenes restauradas');
+              addToHistory(elementosRestaurados, 'Carga inicial con im¡genes restauradas');
             })
             .catch((error) => {
-              console.error('❌ [CREAR_MAPA_EDITOR] Error restaurando imágenes:', error);
-              // Fallback: cargar elementos sin restaurar imágenes
+              console.error('Œ [CREAR_MAPA_EDITOR] Error restaurando im¡genes:', error);
+              // Fallback: cargar elementos sin restaurar im¡genes
               setElements(contenidoParseado.elementos);
               addToHistory(contenidoParseado.elementos, 'Carga inicial (fallback)');
             });
         } else {
-          // Mapa sin imágenes optimizadas, cargar normalmente
+          // Mapa sin im¡genes optimizadas, cargar normalmente
           setElements(contenidoParseado.elementos);
           addToHistory(contenidoParseado.elementos, 'Carga inicial');
         }
@@ -327,7 +327,7 @@ const CrearMapaEditor = ({
        setSnapToGrid(mapa.contenido.configuracion.snapToGrid);
        setGridSize(mapa.contenido.configuracion.gridSize);
 
-       // Restaurar configuración de imagen de fondo
+       // Restaurar configuraci³n de imagen de fondo
        if (mapa.contenido.configuracion.background) {
          const bg = mapa.contenido.configuracion.background;
          if (bg.position) {
@@ -454,7 +454,7 @@ const CrearMapaEditor = ({
     }
   }, [historyIndex, history]);
 
-  // ===== FUNCIONES DE MANIPULACIÓN =====
+  // ===== FUNCIONES DE MANIPULACI“N =====
   const handleElementClick = useCallback((elementId) => {
     setSelectedIds(prev => {
       if (prev.includes(elementId)) {
@@ -483,12 +483,12 @@ const CrearMapaEditor = ({
   const handleElementRotation = useCallback((elementId, newRotation) => {
     updateElementProperty(elementId, 'rotation', newRotation);
 
-    // Si es una mesa, rotar también las sillas asociadas
+    // Si es una mesa, rotar tambi©n las sillas asociadas
     const element = elements.find(el => el._id === elementId);
     if (element && element.type === 'mesa') {
       const sillasAsociadas = elements.filter(el => el.mesaId === elementId);
       sillasAsociadas.forEach(silla => {
-        // Calcular nueva posición de la silla rotada
+        // Calcular nueva posici³n de la silla rotada
         const mesaCenter = {
           x: element.posicion.x + (element.width || 120) / 2,
           y: element.posicion.y + (element.height || 80) / 2
@@ -519,7 +519,7 @@ const CrearMapaEditor = ({
   }, [addMesa, elements, addToHistory]);
 
   const handleAddSillasToMesa = useCallback((mesaId, sillasConfig) => {
-    // Implementar lógica para agregar sillas según el tipo de mesa
+    // Implementar l³gica para agregar sillas segºn el tipo de mesa
     const mesa = elements.find(el => el._id === mesaId);
     if (!mesa) return;
 
@@ -535,7 +535,7 @@ const CrearMapaEditor = ({
         for (let i = 0; i < top; i++) {
           const x = mesa.posicion.x + (mesa.width / top) * i + (mesa.width / top) / 2;
           const y = mesa.posicion.y - 25;
-          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
             type: 'silla',
@@ -556,7 +556,7 @@ const CrearMapaEditor = ({
         for (let i = 0; i < right; i++) {
           const x = mesa.posicion.x + mesa.width + 25;
           const y = mesa.posicion.y + (mesa.height / right) * i + (mesa.height / right) / 2;
-          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
             type: 'silla',
@@ -577,7 +577,7 @@ const CrearMapaEditor = ({
         for (let i = 0; i < bottom; i++) {
           const x = mesa.posicion.x + (mesa.width / bottom) * i + (mesa.width / bottom) / 2;
           const y = mesa.posicion.y + mesa.height + 25;
-          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
             type: 'silla',
@@ -598,7 +598,7 @@ const CrearMapaEditor = ({
         for (let i = 0; i < left; i++) {
           const x = mesa.posicion.x - 25;
           const y = mesa.posicion.y + (mesa.height / left) * i + (mesa.height / left) / 2;
-          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
             type: 'silla',
@@ -617,7 +617,7 @@ const CrearMapaEditor = ({
         break;
 
       case 'circle':
-        // Sillas en círculo alrededor de la mesa
+        // Sillas en c­rculo alrededor de la mesa
         const { cantidad, radio } = sillasConfig.circle;
         const mesaCenterX = mesa.posicion.x + (mesa.radius || 60);
         const mesaCenterY = mesa.posicion.y + (mesa.radius || 60);
@@ -627,7 +627,7 @@ const CrearMapaEditor = ({
           const angle = (i * 2 * Math.PI) / cantidad;
           const x = mesaCenterX + Math.cos(angle) * sillaRadio;
           const y = mesaCenterY + Math.sin(angle) * sillaRadio;
-          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
 
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
@@ -647,7 +647,7 @@ const CrearMapaEditor = ({
         break;
 
       case 'hexagon':
-        // Sillas en los 6 lados del hexágono
+        // Sillas en los 6 lados del hex¡gono
         const { lados } = sillasConfig.hexagon;
         const hexCenterX = mesa.posicion.x + (mesa.width || 100) / 2;
         const hexCenterY = mesa.posicion.y + (mesa.height || 100) / 2;
@@ -660,7 +660,7 @@ const CrearMapaEditor = ({
               const angle = baseAngle + (i - (cantidad - 1) / 2) * 0.3;
               const x = hexCenterX + Math.cos(angle) * hexRadio;
               const y = hexCenterY + Math.sin(angle) * hexRadio;
-              const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+              const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
 
               nuevasSillas.push({
                 _id: `silla_${Date.now()}_${sillaId++}`,
@@ -695,7 +695,7 @@ const CrearMapaEditor = ({
               const angle = baseAngle + (i - (cantidad - 1) / 2) * 0.2;
               const x = starCenterX + Math.cos(angle) * starRadio;
               const y = starCenterY + Math.sin(angle) * starRadio;
-              const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+              const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
 
               nuevasSillas.push({
                 _id: `silla_${Date.now()}_${sillaId++}`,
@@ -723,7 +723,7 @@ const CrearMapaEditor = ({
     // Agregar las nuevas sillas al mapa
     setElements(prev => [...prev, ...nuevasSillas]);
 
-    // Actualizar la mesa con la configuración de sillas
+    // Actualizar la mesa con la configuraci³n de sillas
     updateElementProperty(mesaId, 'sillasConfig', sillasConfig);
 
     addToHistory([...elements, ...nuevasSillas], `Agregar ${nuevasSillas.length} sillas a mesa ${mesa.shape || mesa.type}`);
@@ -776,8 +776,8 @@ const CrearMapaEditor = ({
 
   const handleSnapToGrid = useCallback(() => {
     snapToCustomGrid(gridSize);
-    addToHistory(elements, `Ajustar a cuadrícula de ${gridSize}px`);
-    message.success(`Elementos ajustados a cuadrícula de ${gridSize}px`);
+    addToHistory(elements, `Ajustar a cuadr­cula de ${gridSize}px`);
+    message.success(`Elementos ajustados a cuadr­cula de ${gridSize}px`);
   }, [snapToCustomGrid, gridSize, elements, addToHistory]);
 
   const handleAddTexto = useCallback(() => {
@@ -807,8 +807,8 @@ const CrearMapaEditor = ({
     };
 
     setElements(prev => [...prev, nuevaArea]);
-    addToHistory([...elements, nuevaArea], 'Agregar área destacada');
-    message.success('Área agregada');
+    addToHistory([...elements, nuevaArea], 'Agregar ¡rea destacada');
+    message.success('rea agregada');
   }, [addToHistory, elements]);
 
   const scaleSelectedElements = useCallback((scaleFactor) => {
@@ -905,8 +905,8 @@ const CrearMapaEditor = ({
     };
 
     setElements(prev => [...prev, nuevaConexion]);
-    addToHistory([...elements, nuevaConexion], 'Crear conexión manual');
-    message.success('Conexión creada');
+    addToHistory([...elements, nuevaConexion], 'Crear conexi³n manual');
+    message.success('Conexi³n creada');
   }, [addToHistory, connectionStyle, elements, selectedIds]);
 
   const removeConnections = useCallback(() => {
@@ -941,14 +941,14 @@ const CrearMapaEditor = ({
       };
 
       setElements(prev => [...prev, nuevaSeccion]);
-      addToHistory([...elements, nuevaSeccion], 'Crear sección personalizada');
+      addToHistory([...elements, nuevaSeccion], 'Crear secci³n personalizada');
     } else {
       handleAddArea();
     }
 
     setIsCreatingSection(false);
     setSectionPoints([]);
-    message.success('Sección agregada al mapa');
+    message.success('Secci³n agregada al mapa');
   }, [addToHistory, elements, handleAddArea, sectionPoints]);
 
   const handleBackgroundUpload = useCallback(async (file) => {
@@ -959,7 +959,7 @@ const CrearMapaEditor = ({
         return false;
       }
 
-      // Validar tamaño (10MB máximo para mapas)
+      // Validar tama±o (10MB m¡ximo para mapas)
       if (file.size > 10 * 1024 * 1024) {
         message.error('La imagen debe pesar 10MB o menos');
         return false;
@@ -990,7 +990,7 @@ const CrearMapaEditor = ({
         showInWeb: showBackgroundInWeb
       });
       message.success('Imagen de fondo subida y cargada correctamente');
-      return false; // Prevenir upload automático
+      return false; // Prevenir upload autom¡tico
     } catch (error) {
       console.error('Error uploading background image:', error);
       message.error('Error al subir la imagen de fondo');
@@ -1013,7 +1013,7 @@ const CrearMapaEditor = ({
       // Validar que elements sea un array
       if (!Array.isArray(elements)) {
         console.error('Elements no es un array:', elements);
-        throw new Error('Error interno: los elementos del mapa no son válidos');
+        throw new Error('Error interno: los elementos del mapa no son v¡lidos');
       }
 
       const mapaToSave = {
@@ -1041,9 +1041,9 @@ const CrearMapaEditor = ({
         await onSave(mapaToSave);
       }
 
-      // Optimizar el mapa después de guardarlo si tiene imágenes
+      // Optimizar el mapa despu©s de guardarlo si tiene im¡genes
       if (mapaImageService.hasOptimizedImages(elements) || elements.some(el => el.type === 'background' && el.imageData)) {
-        console.log('🖼️ [CREAR_MAPA_EDITOR] Elementos con imageData:', elements.filter(el => el.type === 'background' && el.imageData).length);
+        console.log('ðŸ–¼ï¸ [CREAR_MAPA_EDITOR] Elementos con imageData:', elements.filter(el => el.type === 'background' && el.imageData).length);
 
         try {
           const optimizado = await mapaImageService.optimizeMapAfterEditing(mapa.id, elements);
@@ -1058,11 +1058,11 @@ const CrearMapaEditor = ({
             if (!reloadError && mapaActualizado) {
               setMapa(mapaActualizado);
             } else {
-              console.error('❌ [CREAR_MAPA_EDITOR] Error recargando mapa:', reloadError);
+              console.error('Œ [CREAR_MAPA_EDITOR] Error recargando mapa:', reloadError);
             }
           }
         } catch (error) {
-          console.error('❌ [CREAR_MAPA_EDITOR] Error optimizando mapa:', error);
+          console.error('Œ [CREAR_MAPA_EDITOR] Error optimizando mapa:', error);
           // No mostrar error al usuario, solo log
         }
       }
@@ -1163,7 +1163,7 @@ const CrearMapaEditor = ({
     }
   }, []);
 
-  // ===== FUNCIONES DE MENÚ CONTEXTUAL =====
+  // ===== FUNCIONES DE MENš CONTEXTUAL =====
   const handleContextMenu = useCallback((e) => {
     e.evt.preventDefault();
     const stage = e.target.getStage();
@@ -1203,7 +1203,7 @@ const CrearMapaEditor = ({
         if (selectedIds.length === 1) {
           handleAddSillasToMesa(selectedIds[0], { rect: { top: 2, right: 2, bottom: 2, left: 2 } });
         } else {
-          message.warning('Selecciona una mesa para agregar sillas automáticamente');
+          message.warning('Selecciona una mesa para agregar sillas autom¡ticamente');
         }
         break;
       case 'add-texto':
@@ -1230,7 +1230,7 @@ const CrearMapaEditor = ({
   const handleZonasChange = useCallback((newZonas) => {
     setZonas(newZonas);
 
-    // Sincronizar zonas en el contenido del mapa para que otros módulos las vean
+    // Sincronizar zonas en el contenido del mapa para que otros m³dulos las vean
     setMapa(prev => ({
       ...prev,
       contenido: {
@@ -1297,7 +1297,7 @@ const CrearMapaEditor = ({
 
     setElements(elementosActualizados);
 
-    // Si se asignó zona a una mesa, también asignar a sus sillas asociadas
+    // Si se asign³ zona a una mesa, tambi©n asignar a sus sillas asociadas
     elementIds.forEach(elementId => {
       const element = elements.find(el => el._id === elementId);
       if (element && element.type === 'mesa') {
@@ -1349,7 +1349,7 @@ const CrearMapaEditor = ({
            width: node.width() * node.scaleX(),
            height: node.height() * node.scaleY()
          });
-         // Manejar rotación
+         // Manejar rotaci³n
          if (node.rotation() !== (element.rotation || 0)) {
            handleElementRotation(element._id, node.rotation());
          }
@@ -1604,11 +1604,11 @@ const CrearMapaEditor = ({
 
       {/* ===== CONTENIDO PRINCIPAL ===== */}
       <div className="flex-1 flex overflow-hidden">
-                 {/* ===== PANEL IZQUIERDO - MENÚ ===== */}
+                 {/* ===== PANEL IZQUIERDO - MENš ===== */}
          <div className="w-72 bg-white border-r border-gray-200 overflow-y-auto">
-           {/* Flujo de Creación del Mapa */}
+           {/* Flujo de Creaci³n del Mapa */}
                        <div className="p-3 border-b border-gray-200">
-              <Title level={5} className="mb-2">Flujo de Creación del Mapa</Title>
+              <Title level={5} className="mb-2">Flujo de Creaci³n del Mapa</Title>
               <Text type="secondary" className="text-xs mb-3 block">
                 Sigue estos pasos para crear un mapa completo y profesional
               </Text>
@@ -1625,7 +1625,7 @@ const CrearMapaEditor = ({
                     getProgressText().currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'
                   }`}>2</div>
                   <span>Crear Zonas</span>
-                  <span className="text-gray-400">Definir áreas del mapa</span>
+                  <span className="text-gray-400">Definir ¡reas del mapa</span>
                 </div>
                 <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
@@ -1651,7 +1651,7 @@ const CrearMapaEditor = ({
               </div>
             </div>
 
-            {/* Botones de Acción Principal */}
+            {/* Botones de Acci³n Principal */}
             <div className="p-3 border-b border-gray-200">
               <div className="space-y-2">
                 <Button
@@ -1662,7 +1662,7 @@ const CrearMapaEditor = ({
                   size="small"
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  💾 Guardar Mapa
+                  ðŸ’¾ Guardar Mapa
                 </Button>
                 <Button
                   onClick={onCancel}
@@ -1670,7 +1670,7 @@ const CrearMapaEditor = ({
                   size="small"
                   className="border-gray-300 hover:border-gray-400 hover:bg-gray-50"
                 >
-                  ❌ Cancelar
+                  Œ Cancelar
                 </Button>
               </div>
 
@@ -1700,25 +1700,25 @@ const CrearMapaEditor = ({
 
              {/* Instrucciones de uso */}
              <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-800">
-               <div className="font-medium mb-1">💡 Atajos de teclado:</div>
-               <div>• <kbd className="bg-white px-1 rounded">Ctrl+C</kbd> Copiar</div>
-               <div>• <kbd className="bg-white px-1 rounded">Ctrl+V</kbd> Pegar</div>
-               <div>• <kbd className="bg-white px-1 rounded">Ctrl+Z</kbd> Deshacer</div>
-               <div>• <kbd className="bg-white px-1 rounded">Ctrl+Y</kbd> Rehacer</div>
-               <div>• <kbd className="bg-white px-1 rounded">Rueda</kbd> Zoom</div>
-               <div>• <kbd className="bg-white px-1 rounded">Doble clic</kbd> Centrar vista</div>
+               <div className="font-medium mb-1">ðŸ’¡ Atajos de teclado:</div>
+               <div>-¢ <kbd className="bg-white px-1 rounded">Ctrl+C</kbd> Copiar</div>
+               <div>-¢ <kbd className="bg-white px-1 rounded">Ctrl+V</kbd> Pegar</div>
+               <div>-¢ <kbd className="bg-white px-1 rounded">Ctrl+Z</kbd> Deshacer</div>
+               <div>-¢ <kbd className="bg-white px-1 rounded">Ctrl+Y</kbd> Rehacer</div>
+               <div>-¢ <kbd className="bg-white px-1 rounded">Rueda</kbd> Zoom</div>
+               <div>-¢ <kbd className="bg-white px-1 rounded">Doble clic</kbd> Centrar vista</div>
              </div>
             </div>
 
                                    {/* Controles de Imagen de Fondo */}
             {backgroundImage && (
               <div className="p-3 border-b border-gray-200">
-                <Title level={5} className="mb-3">🎨 Imagen de Fondo</Title>
+                <Title level={5} className="mb-3">ðŸŽ¨ Imagen de Fondo</Title>
                 <div className="space-y-3">
-                  {/* Posición X */}
+                  {/* Posici³n X */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">Posición X</span>
+                      <span className="text-xs text-gray-600">Posici³n X</span>
                       <span className="text-xs font-mono text-gray-500">{backgroundPosition.x}px</span>
                     </div>
                     <Slider
@@ -1731,10 +1731,10 @@ const CrearMapaEditor = ({
                     />
                   </div>
 
-                  {/* Posición Y */}
+                  {/* Posici³n Y */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">Posición Y</span>
+                      <span className="text-xs text-gray-600">Posici³n Y</span>
                       <span className="text-xs font-mono text-gray-500">{backgroundPosition.y}px</span>
                     </div>
                     <Slider
@@ -1779,7 +1779,7 @@ const CrearMapaEditor = ({
                     />
                   </div>
 
-                  {/* Botón para centrar imagen */}
+                  {/* Bot³n para centrar imagen */}
                   <Button
                     size="small"
                     onClick={() => setBackgroundPosition({ x: 0, y: 0 })}
@@ -1844,7 +1844,7 @@ const CrearMapaEditor = ({
             />
          </div>
 
-        {/* ===== ÁREA DE TRABAJO CENTRAL ===== */}
+        {/* ===== REA DE TRABAJO CENTRAL ===== */}
         <div className="flex-1 flex flex-col">
                      {/* ===== BARRA DE HERRAMIENTAS DEL MAPA ===== */}
            <div className="bg-white border-b border-gray-200 p-1">
@@ -1897,16 +1897,16 @@ const CrearMapaEditor = ({
                    <Button
                      icon={<ReloadOutlined />}
                      onClick={handleSnapToGrid}
-                     title="Ajustar a cuadrícula"
+                     title="Ajustar a cuadr­cula"
                      size="small"
                    >
-                     Cuadrícula
+                     Cuadr­cula
                    </Button>
                    <Button
                      icon={<LinkOutlined />}
                      onClick={() => autoConnectSeats(selectedIds[0])}
                      disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
-                     title="Conectar asientos automáticamente"
+                     title="Conectar asientos autom¡ticamente"
                      size="small"
                    >
                      Conectar
@@ -1937,11 +1937,11 @@ const CrearMapaEditor = ({
                     <Button
                       icon={activeMode === 'pan' ? <EyeOutlined /> : <AimOutlined />}
                       onClick={() => setActiveMode(activeMode === 'pan' ? 'select' : 'pan')}
-                      title={activeMode === 'pan' ? 'Modo Selección' : 'Modo Pan'}
+                      title={activeMode === 'pan' ? 'Modo Selecci³n' : 'Modo Pan'}
                       size="small"
                       type={activeMode === 'pan' ? 'primary' : 'default'}
                     >
-                      {activeMode === 'pan' ? 'Selección' : 'Pan'}
+                      {activeMode === 'pan' ? 'Selecci³n' : 'Pan'}
                     </Button>
 
                  </Space>
@@ -1950,7 +1950,7 @@ const CrearMapaEditor = ({
                <Col flex="auto">
                                    <Space className="float-right" size="small">
                     <Text className="text-sm text-gray-600">
-                      Modo: {activeMode === 'pan' ? '🖱️ Pan' : '👆 Selección'}
+                      Modo: {activeMode === 'pan' ? 'ðŸ–±ï¸ Pan' : 'ðŸ‘† Selecci³n'}
                     </Text>
                     <Text className="text-sm text-gray-600">
                       Zoom: {Math.round(scale * 100)}%
@@ -2004,7 +2004,7 @@ const CrearMapaEditor = ({
                    fill="#ffffff"
                  />
 
-                {/* Cuadrícula */}
+                {/* Cuadr­cula */}
                 {showGrid && (
                   <Grid
                     width={2000}
@@ -2087,7 +2087,7 @@ const CrearMapaEditor = ({
 
              {/* ===== MODALES Y POPUPS ===== */}
        <Modal
-         title="Configuración Avanzada"
+         title="Configuraci³n Avanzada"
          open={showAdvancedControls}
          onCancel={() => setShowAdvancedControls(false)}
          footer={null}
@@ -2112,7 +2112,7 @@ const CrearMapaEditor = ({
 
                {/* ===== GESTOR DE ZONAS ===== */}
         <Modal
-          title="Gestión de Zonas"
+          title="Gesti³n de Zonas"
           open={showZonaManager}
           onCancel={() => setShowZonaManager(false)}
           footer={null}
@@ -2137,7 +2137,7 @@ const CrearMapaEditor = ({
          onClose={() => setShowBackgroundFilters(false)}
        />
 
-       {/* ===== MENÚ CONTEXTUAL ===== */}
+       {/* ===== MENš CONTEXTUAL ===== */}
        <ContextMenu
          visible={contextMenuVisible}
          position={contextMenuPosition}
@@ -2151,7 +2151,7 @@ const CrearMapaEditor = ({
 
 
 
-      {/* ===== POPUPS DE EDICIÓN ===== */}
+      {/* ===== POPUPS DE EDICI“N ===== */}
       {selectedIds.length === 1 && (
         <>
           <EditPopup
@@ -2212,7 +2212,7 @@ const ElementProperties = ({ element, onUpdate, onAddSillas, onRemoveSillas, onD
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Posición X
+              Posici³n X
             </label>
             <InputNumber
               value={element.posicion?.x || 0}
@@ -2222,7 +2222,7 @@ const ElementProperties = ({ element, onUpdate, onAddSillas, onRemoveSillas, onD
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Posición Y
+              Posici³n Y
             </label>
             <InputNumber
               value={element.posicion?.y || 0}
@@ -2252,13 +2252,13 @@ const AdvancedConfiguration = ({
 }) => {
   return (
     <div className="space-y-6">
-      {/* Configuración de Cuadrícula */}
+      {/* Configuraci³n de Cuadr­cula */}
       <div>
-        <Title level={5}>Cuadrícula</Title>
+        <Title level={5}>Cuadr­cula</Title>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tamaño de cuadrícula: {gridSize}px
+              Tama±o de cuadr­cula: {gridSize}px
             </label>
             <Slider
               min={5}
@@ -2273,19 +2273,19 @@ const AdvancedConfiguration = ({
               checked={showGrid}
               onChange={setShowGrid}
             />
-            <span>Mostrar cuadrícula</span>
+            <span>Mostrar cuadr­cula</span>
           </div>
           <div className="flex items-center space-x-4">
             <Switch
               checked={snapToGrid}
               onChange={setSnapToGrid}
             />
-            <span>Ajustar a cuadrícula</span>
+            <span>Ajustar a cuadr­cula</span>
           </div>
         </div>
       </div>
 
-      {/* Configuración de Fondo */}
+      {/* Configuraci³n de Fondo */}
       <div>
         <Title level={5}>Imagen de Fondo</Title>
         <div className="space-y-4">
@@ -2345,3 +2345,5 @@ const AdvancedConfiguration = ({
 };
 
 export default CrearMapaEditor;
+
+

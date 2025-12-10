@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { message } from 'antd';
+import { message } from '../../utils/antdComponents';
 
 export const useMapaElements = (elements, setElements, selectedIds, selectedZone, numSillas) => {
 
@@ -55,7 +55,7 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
     }));
   };
 
-  // ===== LÍNEAS DE CONEXIÓN INTELIGENTES =====
+  // ===== LƒNEAS DE CONEXIÓN INTELIGENTES =====
   const connectionThreshold = 50; // Distancia máxima para conectar asientos
 
   // Función para conectar asientos automáticamente
@@ -454,3 +454,5 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
     backgroundSystem
   };
 };
+
+

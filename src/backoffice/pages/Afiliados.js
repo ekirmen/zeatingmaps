@@ -1,9 +1,9 @@
 /**
  * Sistema de Afiliados - Replanteado desde Abonos
- * Gestiona programas de afiliados con links únicos, comisiones y dashboard
+ * Gestiona programas de afiliados con links ºnicos, comisiones y dashboard
  */
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Modal, Form, Input, InputNumber, Tag, Space, message, Tooltip, Statistic, Row, Col, Tabs, Badge, Switch, Typography } from 'antd';
+import { Card, Table, Button, Modal, Form, Input, InputNumber, Tag, Space, message, Tooltip, Statistic, Row, Col, Tabs, Badge, Switch, Typography } from '../../utils/antdComponents';
 import { 
   UserAddOutlined, 
   EditOutlined, 
@@ -84,7 +84,7 @@ const Afiliados = () => {
         ventasMes
       });
     } catch (error) {
-      console.error('Error cargando estadísticas:', error);
+      console.error('Error cargando estad­sticas:', error);
     }
   };
 
@@ -108,7 +108,7 @@ const Afiliados = () => {
   const handleDelete = async (id) => {
     Modal.confirm({
       title: '¿Eliminar afiliado?',
-      content: 'Esta acción no se puede deshacer.',
+      content: 'Esta acci³n no se puede deshacer.',
       onOk: async () => {
         try {
           const { error } = await supabase
@@ -183,7 +183,7 @@ const Afiliados = () => {
       key: 'email'
     },
     {
-      title: 'Comisión (%)',
+      title: 'Comisi³n (%)',
       dataIndex: 'comision_porcentaje',
       key: 'comision_porcentaje',
       render: (value) => `${value || 0}%`
@@ -256,7 +256,7 @@ const Afiliados = () => {
         <p className="text-gray-600">Gestiona tus afiliados, comisiones y links de referencia</p>
       </div>
 
-      {/* Estadísticas */}
+      {/* Estad­sticas */}
       <Row gutter={16} className="mb-6">
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -349,7 +349,7 @@ const Afiliados = () => {
             label="Email"
             rules={[
               { required: true, message: 'Ingresa el email' },
-              { type: 'email', message: 'Email inválido' }
+              { type: 'email', message: 'Email inv¡lido' }
             ]}
           >
             <Input placeholder="email@ejemplo.com" />
@@ -357,9 +357,9 @@ const Afiliados = () => {
 
           <Form.Item
             name="comision_porcentaje"
-            label="Comisión (%)"
+            label="Comisi³n (%)"
             rules={[
-              { required: true, message: 'Ingresa el porcentaje de comisión' },
+              { required: true, message: 'Ingresa el porcentaje de comisi³n' },
               { type: 'number', min: 0, max: 100, message: 'Debe estar entre 0 y 100' }
             ]}
           >
@@ -374,11 +374,11 @@ const Afiliados = () => {
 
           <Form.Item
             name="descripcion"
-            label="Descripción"
+            label="Descripci³n"
           >
             <TextArea 
               rows={3} 
-              placeholder="Descripción del afiliado (opcional)"
+              placeholder="Descripci³n del afiliado (opcional)"
             />
           </Form.Item>
 
@@ -396,4 +396,6 @@ const Afiliados = () => {
 };
 
 export default Afiliados;
+
+
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, Typography, Space } from 'antd';
+﻿import React from 'react';
+import { Card, Typography, Space } from '../../utils/antdComponents';
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
 const { Text, Title } = Typography;
@@ -101,3 +101,5 @@ const StatCard = ({
 };
 
 export default StatCard;
+
+

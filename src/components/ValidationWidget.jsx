@@ -9,7 +9,7 @@ import {
   Card,
   Progress,
   Divider
-} from 'antd';
+} from '../utils/antdComponents';
 import { 
   CheckCircleOutlined, 
   ExclamationCircleOutlined, 
@@ -394,3 +394,4 @@ const ValidationWidget = ({
 };
 
 export default ValidationWidget;
+

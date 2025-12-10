@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { message } from 'antd';
+import { message } from '../../../../utils/antdComponents';
 import { fetchMapa, fetchZonasPorSala } from '../../../../services/supabaseServices';
 import { fetchSeatsByFuncion } from '../../../services/supabaseSeats';
 
@@ -15,13 +15,13 @@ export const useMapData = (selectedFuncion) => {
       : selectedFuncion.sala;
   }, [selectedFuncion?.sala]);
 
-  // Memoizar el ID de la función
+  // Memoizar el ID de la funci³n
   const funcionId = useMemo(() =>
     selectedFuncion?.id || selectedFuncion?._id,
     [selectedFuncion?.id, selectedFuncion?._id]
   );
 
-  // Memoizar la función de carga de datos
+  // Memoizar la funci³n de carga de datos
   const loadData = useCallback(async () => {
     if (!salaId) {
       setMapa(null);
@@ -49,7 +49,7 @@ export const useMapData = (selectedFuncion) => {
         try {
           contenidoData = JSON.parse(m.contenido);
         } catch (err) {
-          console.error('❌ Error parseando JSON del contenido:', err);
+          console.error('Œ Error parseando JSON del contenido:', err);
           contenidoData = m.contenido;
         }
       }
@@ -68,7 +68,7 @@ export const useMapData = (selectedFuncion) => {
             sillas: el.sillas.map(s => {
               const st = seatMap[s._id || s.id];
               if (!st) {
-                // Si no hay datos en seatMap, asumir que está disponible
+                // Si no hay datos en seatMap, asumir que est¡ disponible
                 return { ...s, estado: 'disponible' };
               }
 
@@ -113,7 +113,7 @@ export const useMapData = (selectedFuncion) => {
           contenido
         };
 
-        console.log('🎯 Mapa convertido:', {
+        console.log('ðŸŽ¯ Mapa convertido:', {
           contenido: contenido.length,
           zonas: contenido.map(z => ({
             id: z._id,
@@ -133,7 +133,7 @@ export const useMapData = (selectedFuncion) => {
       setMapa(mapped);
       setZonas(Array.isArray(zs) ? zs : []);
     } catch (err) {
-      console.error('❌ Error loading map/zones:', err);
+      console.error('Œ Error loading map/zones:', err);
       message.error('Error cargando mapa');
       setMapa(null);
       setZonas([]);
@@ -146,3 +146,4 @@ export const useMapData = (selectedFuncion) => {
 
   return { mapa, setMapa, zonas, setZonas };
 };
+

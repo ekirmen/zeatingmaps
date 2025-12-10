@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Select, Button, Tooltip, Avatar, Dropdown, Menu } from 'antd';
+import { Select, Button, Tooltip, Avatar, Dropdown, Menu } from '../utils/antdComponents';
 import { useMultiTenant } from '../hooks/useMultiTenant';
 import { 
   BankOutlined, 
@@ -158,3 +158,4 @@ const TenantSwitcher = ({
 };
 
 export default TenantSwitcher;
+

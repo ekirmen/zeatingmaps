@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Skeleton, Card } from 'antd';
+import { Skeleton, Card } from '../utils/antdComponents';
 import '../styles/animations.css';
 
 /**
@@ -60,4 +60,5 @@ export default {
   SeatMapSkeleton,
   CartSkeleton,
 };
+
 

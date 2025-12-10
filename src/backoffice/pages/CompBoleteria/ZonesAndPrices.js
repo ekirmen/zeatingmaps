@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo, useEffect } from 'react';
-import { message } from 'antd';
+import { message } from '../../../utils/antdComponents';
 
 const ZonesAndPrices = ({
   eventos = [],
@@ -70,7 +70,7 @@ const ZonesAndPrices = ({
     }
   }, [eventos, funciones, selectedEvent, selectedFuncion, restoreState, onEventSelect]);
   
-  // Limpiar carrito al cargar la página
+  // Limpiar carrito al cargar la p¡gina
   useEffect(() => {
     if (setCarrito) {
       setCarrito([]);
@@ -204,7 +204,7 @@ const ZonesAndPrices = ({
     <div className="h-full flex flex-col">
       {/* Header con controles */}
       <div className="p-4 border-b border-gray-200 space-y-4">
-        {/* Información del cliente seleccionado */}
+        {/* Informaci³n del cliente seleccionado */}
         {selectedClient && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div className="flex justify-between items-center">
@@ -217,7 +217,7 @@ const ZonesAndPrices = ({
                   <strong>Email:</strong> {selectedClient.email || 'Sin email'}
                 </p>
                 <p className="text-blue-700">
-                  <strong>Teléfono:</strong> {selectedClient.telefono || 'Sin teléfono'}
+                  <strong>Tel©fono:</strong> {selectedClient.telefono || 'Sin tel©fono'}
                 </p>
               </div>
               <button
@@ -225,7 +225,7 @@ const ZonesAndPrices = ({
                 className="text-red-500 hover:text-red-700 text-lg font-bold"
                 title="Quitar cliente"
               >
-                ×
+                —
               </button>
             </div>
           </div>
@@ -246,7 +246,7 @@ const ZonesAndPrices = ({
         {/* Zone Selector */}
         {/* <ZoneSelector {...zoneSelectorProps} /> */}
         
-        {/* Botón para limpiar estado guardado */}
+        {/* Bot³n para limpiar estado guardado */}
         <div className="flex justify-end">
           <button
             onClick={clearState}
@@ -258,7 +258,7 @@ const ZonesAndPrices = ({
         </div>
       </div>
 
-      {/* Área principal del mapa */}
+      {/* rea principal del mapa */}
       <div className="flex-1 overflow-auto">
         {mapa ? (
           <div className="h-full">
@@ -271,7 +271,7 @@ const ZonesAndPrices = ({
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <p className="text-gray-500 text-lg mb-2">No hay mapa disponible</p>
-              <p className="text-gray-400 text-sm">Selecciona un evento y función para ver el mapa de asientos</p>
+              <p className="text-gray-400 text-sm">Selecciona un evento y funci³n para ver el mapa de asientos</p>
             </div>
           </div>
         )}
@@ -290,3 +290,5 @@ const ZonesAndPrices = ({
 };
 
 export default forwardRef(ZonesAndPrices);
+
+

@@ -18,7 +18,7 @@ import {
   Divider,
   Statistic,
   Alert
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   EyeOutlined,
   DownloadOutlined,
@@ -64,7 +64,7 @@ const AuditLogs = () => {
     try {
       setLoading(true);
       
-      // Construir filtros para el servicio de auditoría
+      // Construir filtros para el servicio de auditor­a
       const auditFilters = {};
       
       if (filters.dateRange && filters.dateRange.length === 2) {
@@ -77,8 +77,8 @@ const AuditLogs = () => {
       }
       
       if (filters.user) {
-        // Buscar por usuario (necesitaríamos obtener el ID del usuario)
-        // Por ahora, buscar por acción que contenga el término
+        // Buscar por usuario (necesitar­amos obtener el ID del usuario)
+        // Por ahora, buscar por acci³n que contenga el t©rmino
         auditFilters.action = filters.user;
       }
       
@@ -90,7 +90,7 @@ const AuditLogs = () => {
         auditFilters.resourceType = filters.resourceType;
       }
       
-      // Cargar logs desde el servicio de auditoría
+      // Cargar logs desde el servicio de auditor­a
       const auditLogs = await auditService.getLogs(auditFilters, 100);
       
       // Formatear logs para la tabla
@@ -117,7 +117,7 @@ const AuditLogs = () => {
       
       setLogs(formattedLogs);
       
-      // Calcular estadísticas
+      // Calcular estad­sticas
       setStats({
         total: formattedLogs.length,
         errors: formattedLogs.filter(log => log.severity === 'error').length,
@@ -128,7 +128,7 @@ const AuditLogs = () => {
       
     } catch (error) {
       console.error('Error loading audit logs:', error);
-      message.error('Error al cargar los logs de auditoría');
+      message.error('Error al cargar los logs de auditor­a');
       
       // Cargar logs locales como fallback
       try {
@@ -148,7 +148,7 @@ const AuditLogs = () => {
     }
   };
 
-  // Función helper para obtener descripción de acción
+  // Funci³n helper para obtener descripci³n de acci³n
   const getActionDescription = (log) => {
     const action = log.action || '';
     const details = log.details ? (typeof log.details === 'string' ? JSON.parse(log.details) : log.details) : {};
@@ -160,7 +160,7 @@ const AuditLogs = () => {
     
     if (action.startsWith('seat_')) {
       const seatAction = action.replace('seat_', '');
-      return `Asiento ${seatAction}: ${details.seatId || 'N/A'} - Función ${details.functionId || 'N/A'}`;
+      return `Asiento ${seatAction}: ${details.seatId || 'N/A'} - Funci³n ${details.functionId || 'N/A'}`;
     }
     
     if (action.startsWith('user_')) {
@@ -265,7 +265,7 @@ const AuditLogs = () => {
       )
     },
     {
-      title: 'Acción',
+      title: 'Acci³n',
       dataIndex: 'action',
       key: 'action',
       render: (action) => (
@@ -288,7 +288,7 @@ const AuditLogs = () => {
       )
     },
     {
-      title: 'Descripción',
+      title: 'Descripci³n',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true
@@ -318,7 +318,7 @@ const AuditLogs = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <Title level={2}>Logs de Auditoría</Title>
+        <Title level={2}>Logs de Auditor­a</Title>
         <Text type="secondary">Monitoreo de actividades del sistema</Text>
       </div>
 
@@ -333,7 +333,7 @@ const AuditLogs = () => {
             />
           </Col>
           <Col xs={24} sm={12} md={6}>
-            <Text strong>Acción:</Text>
+            <Text strong>Acci³n:</Text>
             <Select
               value={filters.action}
               onChange={(value) => setFilters(prev => ({ ...prev, action: value }))}
@@ -401,7 +401,7 @@ const AuditLogs = () => {
         </Space>
       </Card>
 
-      {/* Estadísticas */}
+      {/* Estad­sticas */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={8} md={6}>
           <Card>
@@ -433,7 +433,7 @@ const AuditLogs = () => {
         <Col xs={24} sm={8} md={6}>
           <Card>
             <Statistic
-              title="Críticos"
+              title="Cr­ticos"
               value={stats.critical}
               valueStyle={{ color: '#cf1322' }}
             />
@@ -442,7 +442,7 @@ const AuditLogs = () => {
         <Col xs={24} sm={8} md={6}>
           <Card>
             <Statistic
-              title="Información"
+              title="Informaci³n"
               value={stats.info}
               valueStyle={{ color: '#52c41a' }}
             />
@@ -451,7 +451,7 @@ const AuditLogs = () => {
       </Row>
 
       {/* Tabla de Logs */}
-      <Card title="Logs de Auditoría">
+      <Card title="Logs de Auditor­a">
         <Table
           columns={columns}
           dataSource={logs}
@@ -481,7 +481,7 @@ const AuditLogs = () => {
       >
         {selectedLog && (
           <div>
-            <Descriptions title="Información General" bordered>
+            <Descriptions title="Informaci³n General" bordered>
               <Descriptions.Item label="ID" span={3}>
                 {selectedLog.id}
               </Descriptions.Item>
@@ -491,7 +491,7 @@ const AuditLogs = () => {
               <Descriptions.Item label="Usuario" span={3}>
                 {selectedLog.user}
               </Descriptions.Item>
-              <Descriptions.Item label="Acción" span={3}>
+              <Descriptions.Item label="Acci³n" span={3}>
                 <Tag color={getActionColor(selectedLog.action)}>
                   {selectedLog.action.replace('_', ' ').toUpperCase()}
                 </Tag>
@@ -526,7 +526,7 @@ const AuditLogs = () => {
                   <Text ellipsis style={{ maxWidth: 400 }}>{selectedLog.referrer}</Text>
                 </Descriptions.Item>
               )}
-              <Descriptions.Item label="Descripción" span={3}>
+              <Descriptions.Item label="Descripci³n" span={3}>
                 {selectedLog.description}
               </Descriptions.Item>
               <Descriptions.Item label="IP" span={3}>
@@ -557,3 +557,4 @@ const AuditLogs = () => {
 };
 
 export default AuditLogs; 
+

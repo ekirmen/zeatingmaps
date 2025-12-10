@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Radio, Button } from 'antd';
+import { Radio, Button } from '../../utils/antdComponents';
 
 const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
   const [selectedType, setSelectedType] = useState('ROWS_WITH_SECTIONS');
@@ -8,36 +8,36 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
     {
       id: 'ROWS_WITH_SECTIONS',
       title: 'Filas con secciones',
-      description: 'Recintos de tamaño medio y grande, como teatros o estadios',
-      icon: '🏟️',
+      description: 'Recintos de tama±o medio y grande, como teatros o estadios',
+      icon: 'ðŸŸï¸',
       value: 'ROWS_WITH_SECTIONS'
     },
     {
       id: 'ROWS_WITHOUT_SECTIONS',
       title: 'Filas sin secciones',
-      description: 'Recintos pequeños, como pequeños teatros o salas de cine',
-      icon: '🎭',
+      description: 'Recintos peque±os, como peque±os teatros o salas de cine',
+      icon: 'ðŸŽ­',
       value: 'ROWS_WITHOUT_SECTIONS'
     },
     {
       id: 'MIXED',
-      title: 'Diseño mixto',
-      description: 'Todas las herramientas están disponibles (excepto secciones)',
-      icon: '🎨',
+      title: 'Dise±o mixto',
+      description: 'Todas las herramientas est¡n disponibles (excepto secciones)',
+      icon: 'ðŸŽ¨',
       value: 'MIXED'
     },
     {
       id: 'TABLES',
       title: 'Mesas',
       description: 'Plano de mesas, por ejemplo para restaurantes',
-      icon: '🍽️',
+      icon: 'ðŸ½ï¸',
       value: 'TABLES'
     },
     {
       id: 'GENERAL_ADMISSION',
       title: 'Entrada general',
       description: 'Recintos sin asientos, por ejemplo: festivales y conciertos',
-      icon: '🎪',
+      icon: 'ðŸŽª',
       value: 'GENERAL_ADMISSION'
     }
   ];
@@ -81,7 +81,7 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
           color: '#1e293b',
           marginBottom: '2rem'
         }}>
-          🎯 ¿Qué tipo de plano de asientos quieres diseñar?
+          ðŸŽ¯ ¿Qu© tipo de plano de asientos quieres dise±ar?
         </div>
         
         <div style={{ marginBottom: '2rem' }}>
@@ -156,7 +156,7 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
               padding: '0 2rem'
             }}
           >
-            ✅ Seleccionar y Continuar
+            œ… Seleccionar y Continuar
           </Button>
         </div>
       </div>
@@ -165,3 +165,5 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
 };
 
 export default SeatmapTypeSelector;
+
+

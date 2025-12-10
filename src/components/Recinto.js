@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'antd';
+import { Button } from '../utils/antdComponents';
 
 const Recinto = ({ recintos = [], onActualizar, onEliminar }) => (
   <div className="space-y-4">
@@ -19,3 +19,4 @@ const Recinto = ({ recintos = [], onActualizar, onEliminar }) => (
 );
 
 export default Recinto;
+

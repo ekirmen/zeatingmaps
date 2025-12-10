@@ -1,5 +1,5 @@
-import React from 'react';
-import { Table, Card, Space, Button, Input, Select, Typography } from 'antd';
+﻿import React from 'react';
+import { Table, Card, Space, Button, Input, Select, Typography } from '../../utils/antdComponents';
 import { SearchOutlined, ReloadOutlined, PlusOutlined } from '@ant-design/icons';
 
 const { Search } = Input;
@@ -99,3 +99,5 @@ const DataTable = ({
 };
 
 export default DataTable;
+
+

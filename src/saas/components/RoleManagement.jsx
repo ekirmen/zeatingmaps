@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Select, message, Alert, Space, Typography, Row, Col, Table, Modal, Badge, Tag, Tabs, Statistic } from 'antd';
+import { Card, Form, Input, Button, Select, message, Alert, Space, Typography, Row, Col, Table, Modal, Badge, Tag, Tabs, Statistic } from '../../utils/antdComponents';
 import { 
   TeamOutlined, 
   SettingOutlined, 
@@ -148,7 +148,7 @@ const RoleManagement = () => {
         ),
       },
       {
-        title: 'Descripción',
+        title: 'Descripci³n',
         dataIndex: 'description',
         key: 'description',
       },
@@ -164,7 +164,7 @@ const RoleManagement = () => {
               </Tag>
             ))}
             {permissions.length > 3 && (
-              <Tag size="small">+{permissions.length - 3} más</Tag>
+              <Tag size="small">+{permissions.length - 3} m¡s</Tag>
             )}
           </Space>
         ),
@@ -186,7 +186,7 @@ const RoleManagement = () => {
                 size="small" 
                 danger 
                 icon={<DeleteOutlined />}
-                onClick={() => message.warning('Función de eliminación no implementada')}
+                onClick={() => message.warning('Funci³n de eliminaci³n no implementada')}
               >
                 Eliminar
               </Button>
@@ -265,7 +265,7 @@ const RoleManagement = () => {
         rules={[{ required: true, message: 'Seleccione un usuario' }]}
       >
         <Select placeholder="Seleccionar usuario">
-          {/* Aquí se cargarían los usuarios disponibles */}
+          {/* Aqu­ se cargar­an los usuarios disponibles */}
         </Select>
       </Form.Item>
 
@@ -310,10 +310,10 @@ const RoleManagement = () => {
 
       <Form.Item
         name="description"
-        label="Descripción"
-        rules={[{ required: true, message: 'Descripción requerida' }]}
+        label="Descripci³n"
+        rules={[{ required: true, message: 'Descripci³n requerida' }]}
       >
-        <Input.TextArea placeholder="Descripción del rol y sus responsabilidades" />
+        <Input.TextArea placeholder="Descripci³n del rol y sus responsabilidades" />
       </Form.Item>
 
       <Form.Item
@@ -352,7 +352,7 @@ const RoleManagement = () => {
         <Col span={24}>
           <Title level={2}>
             <TeamOutlined style={{ marginRight: '8px' }} />
-            Gestión de Roles y Permisos
+            Gesti³n de Roles y Permisos
           </Title>
           <Text type="secondary">
             Administra los roles de usuario y sus permisos de acceso al sistema
@@ -382,9 +382,9 @@ const RoleManagement = () => {
                 </Button>
                 <Button 
                   icon={<SecurityScanOutlined />}
-                  onClick={() => message.info('Función de exportación no implementada')}
+                  onClick={() => message.info('Funci³n de exportaci³n no implementada')}
                 >
-                  Exportar Configuración
+                  Exportar Configuraci³n
                 </Button>
               </Space>
             </div>
@@ -401,8 +401,8 @@ const RoleManagement = () => {
             key="assign"
           >
             <Alert
-              message="Asignación de Roles"
-              description="Asigna roles a usuarios específicos y configura permisos personalizados."
+              message="Asignaci³n de Roles"
+              description="Asigna roles a usuarios espec­ficos y configura permisos personalizados."
               type="info"
               showIcon
               style={{ marginBottom: '16px' }}
@@ -457,12 +457,12 @@ const RoleManagement = () => {
             tab={
               <Space>
                 <SettingOutlined />
-                <span>Estadísticas</span>
+                <span>Estad­sticas</span>
               </Space>
             } 
             key="stats"
           >
-            <Title level={4}>Distribución de Usuarios por Rol</Title>
+            <Title level={4}>Distribuci³n de Usuarios por Rol</Title>
             {renderRoleStats()}
           </TabPane>
         </Tabs>
@@ -498,3 +498,5 @@ const RoleManagement = () => {
 };
 
 export default RoleManagement;
+
+

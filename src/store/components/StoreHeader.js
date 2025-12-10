@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Modal, Input, Button, message, Drawer } from 'antd';
+import { Modal, Input, Button, message, Drawer } from '../../utils/antdComponents';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { registerUser, loginUser } from '../services/authService';
@@ -138,7 +138,7 @@ const Header = ({ onLogin, onLogout }) => {
         throw new Error(t('errors.fields_required', 'Todos los campos son obligatorios'));
 
       if (registerData.password.length < 6)
-        throw new Error(t('errors.password_min_length', 'Mínimo 6 caracteres'));
+        throw new Error(t('errors.password_min_length', 'M­nimo 6 caracteres'));
 
       await registerUser({
         email: registerData.email.trim(),
@@ -191,7 +191,7 @@ const Header = ({ onLogin, onLogout }) => {
 
       if (error?.code === 'account_not_found') {
         const registerPrompt =
-          'No tienes cuenta. ¿Deseas crear una? Completa tu número de teléfono para registrarte.';
+          'No tienes cuenta. ¿Deseas crear una? Completa tu nºmero de tel©fono para registrarte.';
         setRegisterData(prev => ({
           ...prev,
           email: formData.email,
@@ -247,9 +247,9 @@ const Header = ({ onLogin, onLogout }) => {
       if (!passwordData.newPassword || !passwordData.confirmPassword)
         throw new Error('Complete ambos campos');
       if (passwordData.newPassword !== passwordData.confirmPassword)
-        throw new Error('Las contraseñas no coinciden');
+        throw new Error('Las contrase±as no coinciden');
       if (passwordData.newPassword.length < 6)
-        throw new Error('La contraseña debe tener al menos 6 caracteres');
+        throw new Error('La contrase±a debe tener al menos 6 caracteres');
 
     const { data, error } = await supabase.auth.updateUser({
       password: passwordData.newPassword.trim(),
@@ -266,7 +266,7 @@ const Header = ({ onLogin, onLogout }) => {
     message.success(t('password.updated'));
     navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
-      message.error(error.message || 'Error al guardar contraseña');
+      message.error(error.message || 'Error al guardar contrase±a');
     }
   };
 
@@ -288,7 +288,7 @@ const Header = ({ onLogin, onLogout }) => {
       setPostLoginRedirect(redirectTo);
       
       // Para iOS Safari: usar requestAnimationFrame para asegurar que el render no bloquee el UI
-      // Esto es más confiable que setTimeout en iOS
+      // Esto es m¡s confiable que setTimeout en iOS
       if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -314,7 +314,7 @@ const Header = ({ onLogin, onLogout }) => {
     setPasswordVisibility({ login: false, register: false });
   };
 
-  // Registrar función global para iOS Safari (más confiable que eventos personalizados)
+  // Registrar funci³n global para iOS Safari (m¡s confiable que eventos personalizados)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.openAccountModal = openAccountModal;
@@ -351,7 +351,7 @@ const Header = ({ onLogin, onLogout }) => {
     const eventOptions = { passive: true, capture: false };
     window.addEventListener('store:open-account-modal', handleExternalModalOpen, eventOptions);
     
-    // También escuchar eventos en el document para mejor compatibilidad
+    // Tambi©n escuchar eventos en el document para mejor compatibilidad
     document.addEventListener('store:open-account-modal', handleExternalModalOpen, eventOptions);
 
     return () => {
@@ -637,7 +637,7 @@ const Header = ({ onLogin, onLogout }) => {
                 color: '#1f2937'
               }}
             >
-              <option value="es">Español</option>
+              <option value="es">Espa±ol</option>
               <option value="en">English</option>
             </select>
           </div>
@@ -771,23 +771,23 @@ const Header = ({ onLogin, onLogout }) => {
             </div>
             <h2 className="account-modal-title">
               {accountMode === 'login'
-                ? 'Iniciar Sesión'
+                ? 'Iniciar Sesi³n'
                 : accountMode === 'register'
                 ? 'Crear Cuenta'
-                : 'Recuperar Contraseña'}
+                : 'Recuperar Contrase±a'}
             </h2>
             <div className={`account-mode-pill account-mode-pill-${accountMode}`}>
               {accountMode === 'login'
-                ? 'Estás en modo de inicio de sesión'
+                ? 'Est¡s en modo de inicio de sesi³n'
                 : accountMode === 'register'
-                ? 'Estás creando una cuenta nueva'
-                : 'Estás recuperando tu acceso'}
+                ? 'Est¡s creando una cuenta nueva'
+                : 'Est¡s recuperando tu acceso'}
             </div>
             {accountMode !== 'login' && (
               <p className="account-modal-subtitle">
                 {accountMode === 'register'
                   ? 'Crea tu cuenta y disfruta de beneficios exclusivos'
-                  : 'Te enviaremos un enlace para restablecer tu contraseña'}
+                  : 'Te enviaremos un enlace para restablecer tu contrase±a'}
               </p>
             )}
           </div>
@@ -798,7 +798,7 @@ const Header = ({ onLogin, onLogout }) => {
               className={`account-modal-tab ${accountMode === 'login' ? 'is-active' : ''}`}
               onClick={() => handleSwitchMode('login')}
             >
-              Iniciar Sesión
+              Iniciar Sesi³n
             </button>
             <button
               type="button"
@@ -816,7 +816,7 @@ const Header = ({ onLogin, onLogout }) => {
               <>
                 <div className="account-form-field">
                   <label htmlFor="login_email" className="account-form-label">
-                    Correo electrónico
+                    Correo electr³nico
                   </label>
                   <div className="account-input-wrapper">
                     <MailOutlined className="account-input-icon" />
@@ -836,13 +836,13 @@ const Header = ({ onLogin, onLogout }) => {
 
                 <div className="account-form-field">
                   <label htmlFor="login_password" className="account-form-label">
-                    Contraseña
+                    Contrase±a
                   </label>
                   <div className="account-input-wrapper">
                     <LockOutlined className="account-input-icon" />
                     <input
                       autoComplete="current-password"
-                      placeholder="Tu contraseña"
+                      placeholder="Tu contrase±a"
                       id="login_password"
                       aria-required="true"
                       className="account-input"
@@ -857,7 +857,7 @@ const Header = ({ onLogin, onLogout }) => {
                       onClick={() =>
                         setPasswordVisibility(prev => ({ ...prev, login: !prev.login }))
                       }
-                      aria-label={passwordVisibility.login ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      aria-label={passwordVisibility.login ? 'Ocultar contrase±a' : 'Mostrar contrase±a'}
                     >
                       {passwordVisibility.login ? <EyeInvisibleOutlined /> : <EyeOutlined />}
                     </button>
@@ -869,11 +869,11 @@ const Header = ({ onLogin, onLogout }) => {
                   className="store-button store-button-primary store-button-lg store-button-block account-submit"
                   disabled={isSubmitting.login}
                 >
-                  {isSubmitting.login ? 'Procesando...' : 'Iniciar Sesión'}
+                  {isSubmitting.login ? 'Procesando...' : 'Iniciar Sesi³n'}
                 </button>
 
                 <a className="account-link-muted" href="/store/forgot-password">
-                  ¿Olvidaste tu contraseña?
+                  ¿Olvidaste tu contrase±a?
                 </a>
               </>
             )}
@@ -882,7 +882,7 @@ const Header = ({ onLogin, onLogout }) => {
               <>
                 <div className="account-form-field">
                   <label htmlFor="register_email" className="account-form-label">
-                    Correo electrónico
+                    Correo electr³nico
                   </label>
                   <div className="account-input-wrapper">
                     <MailOutlined className="account-input-icon" />
@@ -901,7 +901,7 @@ const Header = ({ onLogin, onLogout }) => {
 
                 <div className="account-form-field">
                   <label htmlFor="register_phone" className="account-form-label">
-                    Teléfono
+                    Tel©fono
                   </label>
                   <div className="account-phone-group">
                     <div className="account-phone-prefix">
@@ -910,14 +910,14 @@ const Header = ({ onLogin, onLogout }) => {
                         value={registerData.phoneCode}
                         onChange={(e) => setRegisterData({ ...registerData, phoneCode: e.target.value })}
                       >
-                        <option value="+58">🇻🇪 +58</option>
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+52">🇲🇽 +52</option>
-                        <option value="+34">🇪🇸 +34</option>
+                        <option value="+58">ðŸ‡»ðŸ‡ª +58</option>
+                        <option value="+1">ðŸ‡ºðŸ‡¸ +1</option>
+                        <option value="+52">ðŸ‡²ðŸ‡½ +52</option>
+                        <option value="+34">ðŸ‡ªðŸ‡¸ +34</option>
                       </select>
                     </div>
                     <input
-                      placeholder="Número de teléfono"
+                      placeholder="Nºmero de tel©fono"
                       id="register_phone"
                       aria-required="true"
                       className="account-input"
@@ -930,13 +930,13 @@ const Header = ({ onLogin, onLogout }) => {
 
                 <div className="account-form-field">
                   <label htmlFor="register_password" className="account-form-label">
-                    Contraseña
+                    Contrase±a
                   </label>
                   <div className="account-input-wrapper">
                     <LockOutlined className="account-input-icon" />
                     <input
                       autoComplete="new-password"
-                      placeholder="Crea una contraseña segura"
+                      placeholder="Crea una contrase±a segura"
                       id="register_password"
                       aria-required="true"
                       className="account-input"
@@ -950,7 +950,7 @@ const Header = ({ onLogin, onLogout }) => {
                       onClick={() =>
                         setPasswordVisibility(prev => ({ ...prev, register: !prev.register }))
                       }
-                      aria-label={passwordVisibility.register ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      aria-label={passwordVisibility.register ? 'Ocultar contrase±a' : 'Mostrar contrase±a'}
                     >
                       {passwordVisibility.register ? <EyeInvisibleOutlined /> : <EyeOutlined />}
                     </button>
@@ -976,7 +976,7 @@ const Header = ({ onLogin, onLogout }) => {
                     className="account-inline-link"
                     onClick={() => handleSwitchMode('login')}
                   >
-                    Iniciar sesión
+                    Iniciar sesi³n
                   </button>
                 </p>
               </>
@@ -986,7 +986,7 @@ const Header = ({ onLogin, onLogout }) => {
               <>
                 <div className="account-form-field">
                   <label htmlFor="forgot_email" className="account-form-label">
-                    Correo electrónico
+                    Correo electr³nico
                   </label>
                   <div className="account-input-wrapper">
                     <MailOutlined className="account-input-icon" />
@@ -1012,13 +1012,13 @@ const Header = ({ onLogin, onLogout }) => {
                 </button>
 
                 <p className="account-alt-text">
-                  ¿Recordaste tu contraseña?
+                  ¿Recordaste tu contrase±a?
                   <button
                     type="button"
                     className="account-inline-link"
                     onClick={() => handleSwitchMode('login')}
                   >
-                    Iniciar sesión
+                    Iniciar sesi³n
                   </button>
                 </p>
               </>
@@ -1027,7 +1027,7 @@ const Header = ({ onLogin, onLogout }) => {
         </div>
       </Modal>
 
-      {/* Modal Nueva Contraseña */}
+      {/* Modal Nueva Contrase±a */}
       <Modal
         title={t('password.change')}
         open={isPasswordModalVisible}
@@ -1077,3 +1077,5 @@ const Header = ({ onLogin, onLogout }) => {
 };
 
 export default Header;
+
+

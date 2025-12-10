@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Space, Tag, Modal, message, Image, Avatar } from 'antd';
+import { Button, Space, Tag, Modal, message, Image, Avatar } from '../../utils/antdComponents';
 import { 
   PlusOutlined, 
   EditOutlined, 
@@ -51,7 +51,7 @@ const EventosPage = () => {
     }
   };
 
-  // Manejar creación/edición de eventos
+  // Manejar creaci³n/edici³n de eventos
   const handleCreateEvent = () => {
     setEditingEvent(null);
     setShowEventForm(true);
@@ -146,7 +146,7 @@ const EventosPage = () => {
             <div>
               <div style={{ fontWeight: '500' }}>{text}</div>
               <div style={{ fontSize: '12px', color: '#666' }}>
-                {record.fecha_evento} • {record.ubicacion}
+                {record.fecha_evento} -¢ {record.ubicacion}
               </div>
             </div>
           </div>
@@ -203,7 +203,7 @@ const EventosPage = () => {
 
   return (
     <DashboardLayout
-      title="Gestión de Eventos"
+      title="Gesti³n de Eventos"
       subtitle="Administra todos los eventos del sistema"
     >
       <DataTable
@@ -257,13 +257,13 @@ const EventosPage = () => {
               <strong>Nombre:</strong> {selectedEvent.nombre}
             </div>
             <div style={{ marginBottom: '8px' }}>
-              <strong>Descripción:</strong> {selectedEvent.descripcion}
+              <strong>Descripci³n:</strong> {selectedEvent.descripcion}
             </div>
             <div style={{ marginBottom: '8px' }}>
               <strong>Fecha:</strong> {selectedEvent.fecha_evento}
             </div>
             <div style={{ marginBottom: '8px' }}>
-              <strong>Ubicación:</strong> {selectedEvent.ubicacion}
+              <strong>Ubicaci³n:</strong> {selectedEvent.ubicacion}
             </div>
             <div style={{ marginBottom: '8px' }}>
               <strong>Precio:</strong> {selectedEvent.precio ? `$${selectedEvent.precio}` : 'Gratis'}
@@ -278,9 +278,9 @@ const EventosPage = () => {
         )}
       </Modal>
 
-      {/* Modal de confirmación de eliminación */}
+      {/* Modal de confirmaci³n de eliminaci³n */}
       <Modal
-        title="Confirmar Eliminación"
+        title="Confirmar Eliminaci³n"
         visible={deleteModalVisible}
         onOk={confirmDelete}
         onCancel={() => {
@@ -291,8 +291,8 @@ const EventosPage = () => {
         cancelText="Cancelar"
         okButtonProps={{ danger: true }}
       >
-        <p>¿Estás seguro de que quieres eliminar el evento "{eventToDelete?.nombre}"?</p>
-        <p>Esta acción no se puede deshacer.</p>
+        <p>¿Est¡s seguro de que quieres eliminar el evento "{eventToDelete?.nombre}"?</p>
+        <p>Esta acci³n no se puede deshacer.</p>
       </Modal>
 
       {/* Modal para crear/editar evento */}
@@ -316,3 +316,5 @@ const EventosPage = () => {
 };
 
 export default EventosPage;
+
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button, Image, Typography, Space, InputNumber, Input, Select, Tag, Badge, Tooltip, Alert } from 'antd';
+import { Card, Button, Image, Typography, Space, InputNumber, Input, Select, Tag, Badge, Tooltip, Alert } from '../../../../utils/antdComponents';
 import { 
   ShoppingCartOutlined, 
   PlusOutlined, 
@@ -162,7 +162,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
           {showFilters && (
             <Space wrap>
               <Select
-                placeholder="Categoría"
+                placeholder="Categor­a"
                 value={categoryFilter}
                 onChange={setCategoryFilter}
                 style={{ width: 120 }}
@@ -298,3 +298,5 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
 };
 
 export default ProductosWidget;
+
+

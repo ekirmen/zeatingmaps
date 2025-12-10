@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'antd';
+import { Button } from '../utils/antdComponents';
 
 const PlantillaPrecio = ({ plantillas = [], onModificar, onEliminar }) => (
   <div className="space-y-4">
@@ -18,3 +18,4 @@ const PlantillaPrecio = ({ plantillas = [], onModificar, onEliminar }) => (
 );
 
 export default PlantillaPrecio;
+

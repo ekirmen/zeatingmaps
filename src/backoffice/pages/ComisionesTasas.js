@@ -16,7 +16,7 @@ import {
   Tag,
   Tooltip,
   Popconfirm
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   PlusOutlined,
   EditOutlined,
@@ -42,7 +42,7 @@ const ComisionesTasas = () => {
     { id: 'paypal', name: 'PayPal', tipo: 'porcentaje', valor: 2.9, fijo: 0.30 },
     { id: 'transferencia', name: 'Transferencia Bancaria', tipo: 'fijo', valor: 0, fijo: 0 },
     { id: 'efectivo', name: 'Efectivo', tipo: 'fijo', valor: 0, fijo: 0 },
-    { id: 'pago_movil', name: 'Pago Móvil', tipo: 'porcentaje', valor: 3.5, fijo: 0.50 }
+    { id: 'pago_movil', name: 'Pago M³vil', tipo: 'porcentaje', valor: 3.5, fijo: 0.50 }
   ];
 
   useEffect(() => {
@@ -84,7 +84,7 @@ const ComisionesTasas = () => {
       };
 
       if (editingComision) {
-        // Actualizar comisión existente
+        // Actualizar comisi³n existente
         const { error } = await supabase
           .from('comisiones_tasas')
           .update(comisionData)
@@ -99,9 +99,9 @@ const ComisionesTasas = () => {
               : comision
           )
         );
-        message.success('Comisión actualizada correctamente');
+        message.success('Comisi³n actualizada correctamente');
       } else {
-        // Crear nueva comisión
+        // Crear nueva comisi³n
         const { data, error } = await supabase
           .from('comisiones_tasas')
           .insert([comisionData])
@@ -110,7 +110,7 @@ const ComisionesTasas = () => {
         if (error) throw error;
 
         setComisiones(prev => [data[0], ...prev]);
-        message.success('Comisión creada correctamente');
+        message.success('Comisi³n creada correctamente');
       }
 
       setModalVisible(false);
@@ -118,7 +118,7 @@ const ComisionesTasas = () => {
       setEditingComision(null);
     } catch (error) {
       console.error('Error saving comision:', error);
-      message.error('Error al guardar la comisión');
+      message.error('Error al guardar la comisi³n');
     }
   };
 
@@ -138,16 +138,16 @@ const ComisionesTasas = () => {
       if (error) throw error;
 
       setComisiones(prev => prev.filter(comision => comision.id !== id));
-      message.success('Comisión eliminada correctamente');
+      message.success('Comisi³n eliminada correctamente');
     } catch (error) {
       console.error('Error deleting comision:', error);
-      message.error('Error al eliminar la comisión');
+      message.error('Error al eliminar la comisi³n');
     }
   };
 
   const columns = [
     {
-      title: 'Método de Pago',
+      title: 'M©todo de Pago',
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => (
@@ -214,9 +214,9 @@ const ComisionesTasas = () => {
             />
           </Tooltip>
           <Popconfirm
-            title="¿Eliminar esta comisión?"
+            title="¿Eliminar esta comisi³n?"
             onConfirm={() => handleDelete(record.id)}
-            okText="Sí"
+            okText="S­"
             cancelText="No"
           >
             <Tooltip title="Eliminar">
@@ -237,7 +237,7 @@ const ComisionesTasas = () => {
       <div className="mb-6">
         <Title level={2}>Comisiones y Tasas</Title>
         <Text type="secondary">
-          Gestiona las comisiones y tasas aplicadas a cada método de pago
+          Gestiona las comisiones y tasas aplicadas a cada m©todo de pago
         </Text>
       </div>
 
@@ -246,7 +246,7 @@ const ComisionesTasas = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <InfoCircleOutlined className="text-blue-500" />
-              <Text strong>Información Importante</Text>
+              <Text strong>Informaci³n Importante</Text>
             </div>
             <Button
               type="primary"
@@ -257,12 +257,12 @@ const ComisionesTasas = () => {
                 setModalVisible(true);
               }}
             >
-              Nueva Comisión
+              Nueva Comisi³n
             </Button>
           </div>
           <div className="mt-2 p-3 bg-blue-50 rounded-lg">
             <Text type="secondary">
-              Las comisiones configuradas aquí se aplicarán automáticamente al calcular los precios finales.
+              Las comisiones configuradas aqu­ se aplicar¡n autom¡ticamente al calcular los precios finales.
               Los valores se pueden configurar como porcentaje del monto total o como una tasa fija.
             </Text>
           </div>
@@ -283,9 +283,9 @@ const ComisionesTasas = () => {
         />
       </Card>
 
-      {/* Modal para crear/editar comisión */}
+      {/* Modal para crear/editar comisi³n */}
       <Modal
-        title={editingComision ? 'Editar Comisión' : 'Nueva Comisión'}
+        title={editingComision ? 'Editar Comisi³n' : 'Nueva Comisi³n'}
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
@@ -302,7 +302,7 @@ const ComisionesTasas = () => {
         >
           <Form.Item
             name="name"
-            label="Nombre del Método"
+            label="Nombre del M©todo"
             rules={[{ required: true, message: 'El nombre es requerido' }]}
           >
             <Input placeholder="Ej: Stripe, PayPal, Transferencia" />
@@ -310,7 +310,7 @@ const ComisionesTasas = () => {
 
           <Form.Item
             name="tipo"
-            label="Tipo de Comisión"
+            label="Tipo de Comisi³n"
             rules={[{ required: true, message: 'El tipo es requerido' }]}
           >
             <Input.Group compact>
@@ -371,7 +371,7 @@ const ComisionesTasas = () => {
           >
             <div className="flex items-center gap-2">
               <input type="checkbox" defaultChecked />
-              <span>Comisión activa</span>
+              <span>Comisi³n activa</span>
             </div>
           </Form.Item>
 
@@ -382,7 +382,7 @@ const ComisionesTasas = () => {
               Cancelar
             </Button>
             <Button type="primary" htmlType="submit">
-              {editingComision ? 'Actualizar' : 'Crear'} Comisión
+              {editingComision ? 'Actualizar' : 'Crear'} Comisi³n
             </Button>
           </div>
         </Form>
@@ -392,3 +392,5 @@ const ComisionesTasas = () => {
 };
 
 export default ComisionesTasas;
+
+

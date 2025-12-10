@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { message } from 'antd';
+import { message } from '../../utils/antdComponents';
 import realtimeService from '../services/realtimeService';
 import { saveMapa, fetchMapa } from '../services/apibackoffice';
 import { syncSeatsForSala } from '../services/apibackoffice';
@@ -21,7 +21,7 @@ export const useMapaLoadingSaving = () => {
     if (process.env.NODE_ENV === 'development') {
     }
 
-    // Sistema de realtime optimizado - solo en producción
+    // Sistema de realtime optimizado - solo en producci³n
     if (process.env.NODE_ENV === 'production') {
       // Implementar realtime solo cuando sea necesario
     } else {
@@ -61,7 +61,7 @@ export const useMapaLoadingSaving = () => {
             estado: silla.estado || 'disponible'
           };
         })
-        .filter(silla => silla !== null); // Filtrar sillas inválidas
+        .filter(silla => silla !== null); // Filtrar sillas inv¡lidas
       return {
         _id: mesa._id,
         nombre: mesa.nombre || '',
@@ -73,7 +73,7 @@ export const useMapaLoadingSaving = () => {
         zona: mesa.zonaId || mesa.zona?.id || null,
         sillas: sillas
       };
-    }).filter(mesa => mesa !== null); // Filtrar mesas inválidas
+    }).filter(mesa => mesa !== null); // Filtrar mesas inv¡lidas
     // Retornar objeto con contenido, zonas y tenant_id como espera la API local
     return {
       contenido: contenido,
@@ -129,7 +129,7 @@ export const useMapaLoadingSaving = () => {
       // Usar data.data que es la estructura de la API local
       const mapaData = data.data;
 
-      // Cargar zonas si no están disponibles
+      // Cargar zonas si no est¡n disponibles
       let zonasCargadas = mapaData.zonas || [];
       if (zonasCargadas.length === 0) {
         try {
@@ -192,7 +192,7 @@ export const useMapaLoadingSaving = () => {
               ? silla.zona
               : (silla.zona && typeof silla.zona === 'object' ? silla.zona.id : null),
           };
-        }).filter(silla => silla !== null); // Filtrar sillas inválidas
+        }).filter(silla => silla !== null); // Filtrar sillas inv¡lidas
 
         return [...acc, mesaConZona, ...sillas];
       }, []);
@@ -206,7 +206,7 @@ export const useMapaLoadingSaving = () => {
       try {
         const data = await fetchMapa(salaId);
         if (data && data.contenido) {
-          // ... resto del código de transformación existente
+          // ... resto del c³digo de transformaci³n existente
           const elementosCrudos = (data.contenido || []).reduce((acc, mesa) => {
             if (!mesa || !mesa._id) {
               return acc;
@@ -347,3 +347,5 @@ export const useMapaLoadingSaving = () => {
     transformarParaGuardar
   };
 };
+
+

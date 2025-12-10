@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Alert, Spin } from 'antd';
+import { Alert, Spin } from '../../utils/antdComponents';
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import LazySeatingMap from '../../components/LazySeatingMap';
 import { useSeatLockStore } from '../../components/seatLockStore';
@@ -42,7 +42,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   } = useSeatLockStore();
   const lockedSeats = useSeatLockStore((state) => state.lockedSeats);
 
-  // Filtrar items del carrito que pertenecen a esta función (memoizado)
+  // Filtrar items del carrito que pertenecen a esta funci³n (memoizado)
   const funcionCartItems = useMemo(() =>
     cartItems.filter(item =>
       String(item.functionId || item.funcionId) === String(funcionId)
@@ -83,7 +83,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     if (!funcionId) {
       setIsRedirecting(false);
       setRedirectFailed(true);
-      setError('Función inválida');
+      setError('Funci³n inv¡lida');
       setLoading(false);
       return;
     }
@@ -99,7 +99,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       try {
         const funcionNumeric = parseInt(funcionId, 10);
         if (!Number.isFinite(funcionNumeric) || funcionNumeric <= 0) {
-          throw new Error('Función inválida');
+          throw new Error('Funci³n inv¡lida');
         }
 
         // Optimizar: hacer una sola query con join
@@ -118,7 +118,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         navigate(`/store/eventos/${eventSlug}/map?funcion=${funcionNumeric}`, { replace: true });
       } catch (redirectError) {
-        console.error('[SeatSelectionPage] Error preparando redirección:', redirectError);
+        console.error('[SeatSelectionPage] Error preparando redirecci³n:', redirectError);
         setError(redirectError.message || 'No se pudo redirigir al mapa del evento');
         setRedirectFailed(true);
         setLoading(true);
@@ -130,7 +130,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     attemptRedirect();
   }, [autoRedirectToEventMap, funcionId, navigate]);
 
-  // Suscribirse a función
+  // Suscribirse a funci³n
   useEffect(() => {
     if (isRedirecting || !redirectFailed || !funcionId) {
       return undefined;
@@ -155,7 +155,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         const funcionNumeric = parseInt(funcionId, 10);
 
-        // Precargar módulos críticos en paralelo con la carga del mapa
+        // Precargar m³dulos cr­ticos en paralelo con la carga del mapa
         const preloadModules = Promise.all([
           import('../../services/seatPaymentChecker'),
           import('../../components/seatLockStore')
@@ -164,7 +164,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         setMapLoadProgress(15);
 
-        // Cargar función y precargar módulos en paralelo
+        // Cargar funci³n y precargar m³dulos en paralelo
         const funcionQuery = supabase
           .from('funciones')
           .select('sala_id, plantilla')
@@ -225,7 +225,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         const { data: mapaDataFromAPI, error: mapaError } = mapaResult;
         if (mapaError) throw mapaError;
 
-        // Actualizar mapa si se cargó desde API (puede ser más reciente que el cache)
+        // Actualizar mapa si se carg³ desde API (puede ser m¡s reciente que el cache)
         if (mapaDataFromAPI) {
           setMapa(mapaDataFromAPI);
           // Guardar en cache
@@ -247,7 +247,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         // Mostrar 100% inmediatamente
         setMapLoadProgress(100);
 
-        // Ocultar loading rápidamente después de mostrar 100%
+        // Ocultar loading r¡pidamente despu©s de mostrar 100%
         setTimeout(() => {
           setLoading(false);
         }, 100);
@@ -262,7 +262,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     loadMapa();
   }, [funcionId, redirectFailed, isRedirecting]);
 
-  // Función optimizada para obtener datos del asiento (con cache)
+  // Funci³n optimizada para obtener datos del asiento (con cache)
   const getSeatData = useCallback((seat) => {
     const seatId = seat._id || seat.id || seat.sillaId;
     if (!seatId) return null;
@@ -272,7 +272,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       return seatDataCache.current.get(seatId);
     }
 
-    // Obtener zona del asiento (simplificado para móvil)
+    // Obtener zona del asiento (simplificado para m³vil)
     const zona = mapa?.zonas?.find(z => z.asientos?.some(a => a._id === seatId)) ||
                  mapa?.contenido?.find(el => el.sillas?.some(a => a._id === seatId) && (el.zona || el.zonaId)) ||
                  seat.zona || {};
@@ -303,7 +303,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           precio = precioZona.precio || precio;
         }
       } catch (e) {
-        // Silenciar error en móvil para mejor performance
+        // Silenciar error en m³vil para mejor performance
         if (!isMobile) {
         }
       }
@@ -324,7 +324,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   }, [mapa, plantillaPrecios, isMobile]);
 
   const handleSeatToggle = useCallback(async (seat) => {
-    // Obtener datos del asiento (usar cache si está disponible)
+    // Obtener datos del asiento (usar cache si est¡ disponible)
     const seatData = getSeatData(seat);
     if (!seatData) {
       // Si no se pueden obtener datos, usar valores por defecto
@@ -344,7 +344,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       ...seatData
     };
 
-    // En móvil, no esperar respuesta completa (optimistic update)
+    // En m³vil, no esperar respuesta completa (optimistic update)
     if (isMobile) {
       toggleSeat(seatWithData).catch(err => {
         console.error('Error toggling seat:', err);
@@ -458,7 +458,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <ShoppingCartOutlined style={{ fontSize: '20px', color: 'var(--store-primary)' }} />
             <h2 className="store-card-title" style={{ margin: 0 }}>
-              Selección de Asientos
+              Selecci³n de Asientos
             </h2>
           </div>
         </div>
@@ -496,7 +496,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           ) : (
             <Alert
               message="No hay mapa disponible"
-              description="No se encontró un mapa de asientos para esta función."
+              description="No se encontr³ un mapa de asientos para esta funci³n."
               type="warning"
               showIcon
             />
@@ -550,3 +550,5 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 };
 
 export default SeatSelectionPage;
+
+

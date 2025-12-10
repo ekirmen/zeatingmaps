@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dropdown, Button, Space, Menu } from 'antd';
+import { Dropdown, Button, Space, Menu } from '../../utils/antdComponents';
 import {
   PlusOutlined,
   AppstoreOutlined,
@@ -14,7 +14,7 @@ const MesaTypeMenu = ({ onAddMesa, disabled = false }) => {
       key: 'rect',
       icon: <BorderOuterOutlined />,
       label: 'Mesa Cuadrada',
-      description: 'Mesa rectangular estándar',
+      description: 'Mesa rectangular est¡ndar',
       defaultSize: { width: 120, height: 80 }
     },
     {
@@ -87,3 +87,5 @@ const MesaTypeMenu = ({ onAddMesa, disabled = false }) => {
 };
 
 export default MesaTypeMenu;
+
+

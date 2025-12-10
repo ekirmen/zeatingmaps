@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Result } from 'antd';
+import { Button, Result } from '../utils/antdComponents';
 import { useNavigate } from 'react-router-dom';
 
 const NotFoundPage = () => {
@@ -30,3 +30,4 @@ const NotFoundPage = () => {
 };
 
 export default NotFoundPage;
+

@@ -1,6 +1,6 @@
 // Hook simplificado que combina funcionalidades de mapas
 import { v4 as uuidv4 } from 'uuid';
-import { message } from 'antd';
+import { message } from '../../utils/antdComponents';
 import { useMapaScaling } from './useMapaScaling';
 import { useMapaSeatStates } from './useMapaSeatStates';
 import { useMapaPositioning } from './useMapaPositioning';
@@ -17,7 +17,7 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
   const { autoConnectSeats, connectionThreshold } = useMapaConnections(elements, setElements);
   const { addSillasToMesa, limpiarSillasDuplicadas } = useMapaSeats(elements, setElements, selectedZone, numSillas);
 
-  // Creación de mesa
+  // Creaci³n de mesa
   const addMesa = (shape = 'rect') => {
     const id = 'mesa_' + uuidv4();
     const nuevaMesa = {
@@ -58,7 +58,7 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
       if (el._id === id) {
         if (property === 'posicion' && value.x !== undefined && value.y !== undefined) {
           if (!precisePositioning.validate(value.x, value.y)) {
-            message.error('Coordenadas fuera de rango válido');
+            message.error('Coordenadas fuera de rango v¡lido');
             return el;
           }
           value = {
@@ -73,7 +73,7 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
     }));
   };
 
-  // Actualizar tamaño de elementos
+  // Actualizar tama±o de elementos
   const updateElementSize = (id, newWidth, newHeight) => {
     setElements(prev =>
       prev.map(el =>
@@ -94,7 +94,7 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
   };
 
   return {
-    // Funciones básicas
+    // Funciones b¡sicas
     addMesa,
     addSillasToMesa,
     updateElementProperty,
@@ -127,3 +127,5 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
     backgroundSystem
   };
 };
+
+

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { message, Button, Space, Tooltip } from 'antd';
+import { message, Button, Space, Tooltip } from '../../../utils/antdComponents';
 import { DownloadOutlined, FileTextOutlined } from '@ant-design/icons';
 import downloadTicket from '../../../utils/downloadTicket';
 import { buildRelativeApiUrl, checkApiConnectivity } from '../../../utils/apiConfig';
@@ -10,13 +10,13 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
   const testSimpleDownload = async () => {
     setIsLoading(true);
     try {
-      // Probar descarga simple sin autenticación
+      // Probar descarga simple sin autenticaci³n
       const url = buildRelativeApiUrl(`payments/${locator}/download?mode=simple`);
       // Verificar conectividad antes de la descarga
       const connectivityResult = await checkApiConnectivity();
 
       if (!connectivityResult.success) {
-        console.error('❌ [TEST] Problema de conectividad detectado:', connectivityResult.error);
+        console.error('Œ [TEST] Problema de conectividad detectado:', connectivityResult.error);
         message.error('Problema de conectividad: ' + connectivityResult.error);
         return;
       }
@@ -28,7 +28,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 
       const contentType = response.headers.get('Content-Type');
       if (!contentType?.includes('application/pdf')) {
-        throw new Error(`Content-Type inválido: ${contentType}`);
+        throw new Error(`Content-Type inv¡lido: ${contentType}`);
       }
 
       const blob = await response.blob();
@@ -40,20 +40,20 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(urlBlob);
-      message.success('✅ Descarga simple funcionando correctamente');
+      message.success('œ… Descarga simple funcionando correctamente');
 
     } catch (error) {
-      console.error('❌ [SIMPLE-TEST] Error en descarga simple:', error);
+      console.error('Œ [SIMPLE-TEST] Error en descarga simple:', error);
 
-      // Detectar tipos específicos de errores
+      // Detectar tipos espec­ficos de errores
       if (error.message.includes('Failed to fetch')) {
-        console.error('❌ [SIMPLE-TEST] Error de red detectado - posible problema de variables de entorno en Vercel');
-        message.error('❌ Error de red - verificar variables de entorno en Vercel');
+        console.error('Œ [SIMPLE-TEST] Error de red detectado - posible problema de variables de entorno en Vercel');
+        message.error('Œ Error de red - verificar variables de entorno en Vercel');
       } else if (error.message.includes('NetworkError')) {
-        console.error('❌ [SIMPLE-TEST] Error de red - verificar conectividad');
-        message.error('❌ Error de red - verificar conectividad');
+        console.error('Œ [SIMPLE-TEST] Error de red - verificar conectividad');
+        message.error('Œ Error de red - verificar conectividad');
       } else {
-        message.error('❌ Error en descarga simple: ' + error.message);
+        message.error('Œ Error en descarga simple: ' + error.message);
       }
     } finally {
       setIsLoading(false);
@@ -62,7 +62,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 
   const handleDownload = async () => {
     if (!locator) {
-      message.error('ID de ticket no válido');
+      message.error('ID de ticket no v¡lido');
       return;
     }
 
@@ -72,25 +72,25 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
       const connectivityResult = await checkApiConnectivity();
 
       if (!connectivityResult.success) {
-        console.error('❌ [DOWNLOAD] Problema de conectividad detectado:', connectivityResult.error);
+        console.error('Œ [DOWNLOAD] Problema de conectividad detectado:', connectivityResult.error);
         message.error('Problema de conectividad: ' + connectivityResult.error);
         return;
       }
       await downloadTicket(locator);
-      message.success('Ticket descargado con éxito');
+      message.success('Ticket descargado con ©xito');
     } catch (err) {
-      console.error('❌ [DOWNLOAD] Error en descarga principal:', err);
+      console.error('Œ [DOWNLOAD] Error en descarga principal:', err);
 
-      // Detectar tipos específicos de errores
+      // Detectar tipos espec­ficos de errores
       if (err.message.includes('Failed to fetch')) {
-        console.error('❌ [DOWNLOAD] Error de red detectado - posible problema de variables de entorno en Vercel');
-        message.error('❌ Error de red - verificar variables de entorno en Vercel');
+        console.error('Œ [DOWNLOAD] Error de red detectado - posible problema de variables de entorno en Vercel');
+        message.error('Œ Error de red - verificar variables de entorno en Vercel');
       } else if (err.message.includes('NetworkError')) {
-        console.error('❌ [DOWNLOAD] Error de red - verificar conectividad');
-        message.error('❌ Error de red - verificar conectividad');
+        console.error('Œ [DOWNLOAD] Error de red - verificar conectividad');
+        message.error('Œ Error de red - verificar conectividad');
       } else if (err.message.includes('Server returned HTML')) {
-        console.error('❌ [DOWNLOAD] Servidor devuelve HTML - variables de entorno no configuradas en Vercel');
-        message.error('❌ Variables de entorno no configuradas en Vercel');
+        console.error('Œ [DOWNLOAD] Servidor devuelve HTML - variables de entorno no configuradas en Vercel');
+        message.error('Œ Variables de entorno no configuradas en Vercel');
       } else {
         message.error('Fallo en la descarga: ' + err.message);
       }
@@ -101,7 +101,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 
   return (
     <div>
-      {/* Botón principal de descarga */}
+      {/* Bot³n principal de descarga */}
       <Button
         type="primary"
         icon={<DownloadOutlined />}
@@ -113,10 +113,10 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
         Descargar Ticket
       </Button>
 
-      {/* Botón de debug (solo se muestra si showDebugButtons es true) */}
+      {/* Bot³n de debug (solo se muestra si showDebugButtons es true) */}
       {showDebugButtons && (
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Tooltip title="Probar descarga sin autenticación">
+          <Tooltip title="Probar descarga sin autenticaci³n">
             <Button
               icon={<FileTextOutlined />}
               onClick={testSimpleDownload}
@@ -137,10 +137,10 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
             textAlign: 'center'
           }}>
             <strong>Funciones disponibles:</strong><br/>
-            • Descarga principal con autenticación<br/>
-            • Descarga simple para testing<br/>
-            • Verificación de conectividad automática<br/>
-            • Logs detallados en consola<br/>
+            -¢ Descarga principal con autenticaci³n<br/>
+            -¢ Descarga simple para testing<br/>
+            -¢ Verificaci³n de conectividad autom¡tica<br/>
+            -¢ Logs detallados en consola<br/>
             <br/>
             <strong>Debug:</strong> Abre la consola (F12) para ver logs detallados
           </div>
@@ -151,3 +151,5 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 };
 
 export default DownloadTicketButton;
+
+

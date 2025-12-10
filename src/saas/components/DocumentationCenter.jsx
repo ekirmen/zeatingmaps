@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, List, Input, Select, Typography, Space, Tag, Button, Drawer, Divider, Steps, Collapse } from 'antd';
+import { Card, List, Input, Select, Typography, Space, Tag, Button, Drawer, Divider, Steps, Collapse } from '../../utils/antdComponents';
 import { 
   BookOutlined, 
   SearchOutlined, 
@@ -26,14 +26,14 @@ const DocumentationCenter = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
 
   const categories = [
-    { value: 'all', label: 'Todas las categorías' },
+    { value: 'all', label: 'Todas las categor­as' },
     { value: 'getting-started', label: 'Primeros pasos' },
-    { value: 'events', label: 'Gestión de eventos' },
+    { value: 'events', label: 'Gesti³n de eventos' },
     { value: 'tickets', label: 'Sistema de boletos' },
-    { value: 'payments', label: 'Pagos y facturación' },
+    { value: 'payments', label: 'Pagos y facturaci³n' },
     { value: 'users', label: 'Usuarios y permisos' },
-    { value: 'technical', label: 'Configuración técnica' },
-    { value: 'troubleshooting', label: 'Solución de problemas' }
+    { value: 'technical', label: 'Configuraci³n t©cnica' },
+    { value: 'troubleshooting', label: 'Soluci³n de problemas' }
   ];
 
   const difficultyColors = {
@@ -126,7 +126,7 @@ const DocumentationCenter = () => {
               {doc.content.replace(/<[^>]*>/g, '')} {/* Remove HTML tags */}
             </Paragraph>
             <Text type="secondary" style={{ fontSize: '12px' }}>
-              {doc.section && `${doc.section} • `}
+              {doc.section && `${doc.section} -¢ `}
               Actualizado: {new Date(doc.updated_at).toLocaleDateString('es-ES')}
             </Text>
           </div>
@@ -198,10 +198,10 @@ const DocumentationCenter = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <BookOutlined style={{ marginRight: '8px' }} />
-          Centro de Documentación
+          Centro de Documentaci³n
         </Title>
         <Text type="secondary">
-          Encuentra guías, tutoriales y soluciones para usar el sistema
+          Encuentra gu­as, tutoriales y soluciones para usar el sistema
         </Text>
       </div>
 
@@ -209,7 +209,7 @@ const DocumentationCenter = () => {
       <Card style={{ marginBottom: '24px' }}>
         <Space wrap>
           <Search
-            placeholder="Buscar en documentación..."
+            placeholder="Buscar en documentaci³n..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: 300 }}
@@ -230,13 +230,13 @@ const DocumentationCenter = () => {
       </Card>
 
       <div style={{ display: 'flex', gap: '24px' }}>
-        {/* Documentación */}
+        {/* Documentaci³n */}
         <div style={{ flex: 1 }}>
           <Card
             title={
               <Space>
                 <FileTextOutlined />
-                <span>Guías y Documentación</span>
+                <span>Gu­as y Documentaci³n</span>
                 <Tag>{filteredDocs.length}</Tag>
               </Space>
             }
@@ -245,7 +245,7 @@ const DocumentationCenter = () => {
             <List
               dataSource={filteredDocs}
               renderItem={renderDocumentationItem}
-              locale={{ emptyText: 'No se encontró documentación' }}
+              locale={{ emptyText: 'No se encontr³ documentaci³n' }}
             />
           </Card>
         </div>
@@ -319,3 +319,5 @@ const DocumentationCenter = () => {
 };
 
 export default DocumentationCenter;
+
+

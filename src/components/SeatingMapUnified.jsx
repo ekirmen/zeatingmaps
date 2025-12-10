@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import LoadOnVisible from './LoadOnVisible';
 
 export default function SeatingMapUnified(props) {

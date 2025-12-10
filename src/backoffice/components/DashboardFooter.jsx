@@ -1,5 +1,5 @@
 import React from 'react';
-import { Space, Typography } from 'antd';
+import { Space, Typography } from '../../utils/antdComponents';
 import {
   FaFacebookF,
   FaTwitter,
@@ -60,3 +60,5 @@ const DashboardFooter = () => {
 };
 
 export default DashboardFooter;
+
+

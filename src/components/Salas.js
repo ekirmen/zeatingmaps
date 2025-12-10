@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'antd';
+import { Button } from '../utils/antdComponents';
 
 const Salas = ({ salas = [], onModificar, onEliminar }) => (
   <div className="space-y-4">
@@ -16,3 +16,4 @@ const Salas = ({ salas = [], onModificar, onEliminar }) => (
 );
 
 export default Salas;
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, Timeline, Descriptions, Statistic } from 'antd';
+import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, Timeline, Descriptions, Statistic } from '../../utils/antdComponents';
 import { 
   BankOutlined, 
   DollarOutlined, 
@@ -57,7 +57,7 @@ const TenantDetail = () => {
       if (tenantError) throw tenantError;
       setTenant(tenantData);
 
-      // Cargar estadísticas
+      // Cargar estad­sticas
       const { data: eventsData } = await supabase
         .from('eventos')
         .select('id, estado')
@@ -158,12 +158,12 @@ const TenantDetail = () => {
 
   const invoiceColumns = [
     {
-      title: 'Número',
+      title: 'Nºmero',
       dataIndex: 'invoice_number',
       key: 'invoice_number',
     },
     {
-      title: 'Descripción',
+      title: 'Descripci³n',
       dataIndex: 'description',
       key: 'description',
     },
@@ -280,11 +280,11 @@ const TenantDetail = () => {
         </div>
       </div>
 
-      {/* Información básica */}
+      {/* Informaci³n b¡sica */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col span={24}>
           <Card>
-            <Descriptions title="Información de la Empresa" bordered>
+            <Descriptions title="Informaci³n de la Empresa" bordered>
               <Descriptions.Item label="Nombre" span={3}>
                 {tenant.company_name}
               </Descriptions.Item>
@@ -309,7 +309,7 @@ const TenantDetail = () => {
               <Descriptions.Item label="Email de Contacto" span={2}>
                 {tenant.contact_email}
               </Descriptions.Item>
-              <Descriptions.Item label="Teléfono">
+              <Descriptions.Item label="Tel©fono">
                 {tenant.contact_phone || 'No especificado'}
               </Descriptions.Item>
               <Descriptions.Item label="Colores Personalizados" span={3}>
@@ -345,7 +345,7 @@ const TenantDetail = () => {
         </Col>
       </Row>
 
-      {/* Estadísticas */}
+      {/* Estad­sticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -390,14 +390,14 @@ const TenantDetail = () => {
         </Col>
       </Row>
 
-      {/* Tabs con información detallada */}
+      {/* Tabs con informaci³n detallada */}
       <Card>
         <Tabs defaultActiveKey="billing">
           <TabPane 
             tab={
               <span>
                 <CreditCardOutlined />
-                Facturación
+                Facturaci³n
               </span>
             } 
             key="billing"
@@ -423,7 +423,7 @@ const TenantDetail = () => {
             tab={
               <span>
                 <BarChartOutlined />
-                Métricas de Uso
+                M©tricas de Uso
               </span>
             } 
             key="metrics"
@@ -444,35 +444,35 @@ const TenantDetail = () => {
             tab={
               <span>
                 <SettingOutlined />
-                Configuración
+                Configuraci³n
               </span>
             } 
             key="settings"
           >
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <Card title="Configuración del Plan">
+                <Card title="Configuraci³n del Plan">
                   <Descriptions column={1}>
                     <Descriptions.Item label="Plan Actual">
                       <Tag color={getPlanColor(tenant.plan_type)}>
                         {tenant.plan_type?.toUpperCase() || 'BASIC'}
                       </Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label="Límite de Eventos">
+                    <Descriptions.Item label="L­mite de Eventos">
                       {tenant.plan_type === 'basic' ? '5 eventos' :
                        tenant.plan_type === 'pro' ? '50 eventos' :
-                       tenant.plan_type === 'enterprise' ? 'Sin límite' : '5 eventos'}
+                       tenant.plan_type === 'enterprise' ? 'Sin l­mite' : '5 eventos'}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Límite de Usuarios">
+                    <Descriptions.Item label="L­mite de Usuarios">
                       {tenant.plan_type === 'basic' ? '100 usuarios' :
                        tenant.plan_type === 'pro' ? '1000 usuarios' :
-                       tenant.plan_type === 'enterprise' ? 'Sin límite' : '100 usuarios'}
+                       tenant.plan_type === 'enterprise' ? 'Sin l­mite' : '100 usuarios'}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
               </Col>
               <Col span={12}>
-                <Card title="Configuración de Dominio">
+                <Card title="Configuraci³n de Dominio">
                   <Descriptions column={1}>
                     <Descriptions.Item label="Subdominio">
                       {tenant.subdomain}.ticketera.com
@@ -480,7 +480,7 @@ const TenantDetail = () => {
                     <Descriptions.Item label="Estado SSL">
                       <Tag color="green">Activo</Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label="Configuración DNS">
+                    <Descriptions.Item label="Configuraci³n DNS">
                       <Tag color="green">Configurado</Tag>
                     </Descriptions.Item>
                   </Descriptions>
@@ -503,7 +503,7 @@ const TenantDetail = () => {
                 <p>Empresa creada - {new Date(tenant.created_at).toLocaleDateString('es-ES')}</p>
               </Timeline.Item>
               <Timeline.Item color="blue">
-                <p>Configuración inicial completada</p>
+                <p>Configuraci³n inicial completada</p>
               </Timeline.Item>
               <Timeline.Item color="blue">
                 <p>Primer evento creado</p>
@@ -536,7 +536,7 @@ const TenantDetail = () => {
                 label="Subdominio"
                 rules={[
                   { required: true, message: 'El subdominio es requerido' },
-                  { pattern: /^[a-z0-9-]+$/, message: 'Solo letras minúsculas, números y guiones' }
+                  { pattern: /^[a-z0-9-]+$/, message: 'Solo letras minºsculas, nºmeros y guiones' }
                 ]}
               >
                 <Input 
@@ -563,7 +563,7 @@ const TenantDetail = () => {
                 label="Email de Contacto"
                 rules={[
                   { required: true, message: 'El email es requerido' },
-                  { type: 'email', message: 'Email inválido' }
+                  { type: 'email', message: 'Email inv¡lido' }
                 ]}
               >
                 <Input placeholder="contacto@miempresa.com" />
@@ -572,7 +572,7 @@ const TenantDetail = () => {
             <Col span={12}>
               <Form.Item
                 name="contact_phone"
-                label="Teléfono"
+                label="Tel©fono"
               >
                 <Input placeholder="+1 234 567 8900" />
               </Form.Item>
@@ -644,3 +644,5 @@ const TenantDetail = () => {
 };
 
 export default TenantDetail;
+
+

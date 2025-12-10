@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, lazy, Suspense } from 'react';
-import { Card, Button, Space, Typography, Tooltip, Badge } from 'antd';
+import { Card, Button, Space, Typography, Tooltip, Badge } from '../../utils/antdComponents';
 import { 
   ShoppingCartOutlined, 
   SaveOutlined, 
@@ -19,7 +19,7 @@ const QuickActionsWidget = () => {
   const [savedCartsVisible, setSavedCartsVisible] = useState(false);
   const { getItemCount, calculateTotal, clearCart, items, products } = useCartStore();
 
-  // Memoizar cálculos del carrito
+  // Memoizar c¡lculos del carrito
   const { itemCount, total, seatsCount, productsCount } = useMemo(() => ({
     itemCount: getItemCount(),
     total: calculateTotal(),
@@ -37,7 +37,7 @@ const QuickActionsWidget = () => {
         title={
           <div className="flex items-center space-x-2">
             <ShoppingCartOutlined className="text-blue-500" />
-            <span>Acciones Rápidas</span>
+            <span>Acciones R¡pidas</span>
           </div>
         }
         className="mb-4"
@@ -134,3 +134,5 @@ const QuickActionsWidget = () => {
 };
 
 export default QuickActionsWidget;
+
+

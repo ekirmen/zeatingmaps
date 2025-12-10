@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button, Image, Typography, Space, InputNumber, Input, Select, Tag, Badge, Tooltip, Alert } from 'antd';
+import { Card, Button, Image, Typography, Space, InputNumber, Input, Select, Tag, Badge, Tooltip, Alert } from '../../utils/antdComponents';
 import {
   ShoppingCartOutlined,
   PlusOutlined,
@@ -47,7 +47,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
         return;
       }
 
-      // También cargar productos generales activos
+      // Tambi©n cargar productos generales activos
       const { data: productosGenerales, error: errorGenerales } = await supabase
         .from('productos')
         .select('*')
@@ -79,7 +79,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
 
       setProductos(productosUnicos);
 
-      // Extraer categorías únicas
+      // Extraer categor­as ºnicas
       const categoriasUnicas = [...new Set(productosUnicos.map(p => p.categoria).filter(Boolean))];
       setCategories(categoriasUnicas);
 
@@ -99,7 +99,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
   const filterProductos = useCallback(() => {
     let filtered = [...productos];
 
-    // Filtro por búsqueda
+    // Filtro por bºsqueda
     if (searchTerm) {
       filtered = filtered.filter(producto =>
         producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -107,7 +107,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
       );
     }
 
-    // Filtro por categoría
+    // Filtro por categor­a
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(producto => producto.categoria === categoryFilter);
     }
@@ -260,10 +260,10 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
       }
       className="mb-4"
     >
-      {/* Filtros y búsqueda */}
+      {/* Filtros y bºsqueda */}
       <div className="mb-4 space-y-3">
         <Search
-          placeholder="Buscar productos por nombre o descripción..."
+          placeholder="Buscar productos por nombre o descripci³n..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           prefix={<SearchOutlined />}
@@ -275,10 +275,10 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
             <Select
               value={categoryFilter}
               onChange={setCategoryFilter}
-              placeholder="Categoría"
+              placeholder="Categor­a"
               allowClear
             >
-              <Option value="all">Todas las categorías</Option>
+              <Option value="all">Todas las categor­as</Option>
               {categories.map(cat => (
                 <Option key={cat} value={cat}>{cat}</Option>
               ))}
@@ -439,3 +439,4 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
 };
 
 export default ProductosWidget;
+

@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { message } from 'antd';
+﻿import { useState, useMemo } from 'react';
+import { message } from '../../../../utils/antdComponents';
 
 export const useZoneManagement = (selectedPlantilla, getPrecioConDescuento) => {
   const [selectedZonaId, setSelectedZonaId] = useState(null);
@@ -65,3 +65,4 @@ export const useZoneManagement = (selectedPlantilla, getPrecioConDescuento) => {
     handleQuantityChange
   };
 };
+

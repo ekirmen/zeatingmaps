@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Input, Button, message, Spin, Card, Typography, Tag, Divider } from 'antd';
+import { Modal, Input, Button, message, Spin, Card, Typography, Tag, Divider } from '../../../../utils/antdComponents';
 import { SearchOutlined, UserOutlined, CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { supabase } from '../../../../supabaseClient';
 
@@ -14,7 +14,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 
   const handleSearch = async (value) => {
     if (!value || value.trim() === '') {
-      message.warning('Por favor ingresa un localizador válido');
+      message.warning('Por favor ingresa un localizador v¡lido');
       return;
     }
 
@@ -42,11 +42,11 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 
       if (paymentError) {
         console.error('[LocatorSearch] Error searching payment:', paymentError);
-        throw new Error('No se encontró el localizador');
+        throw new Error('No se encontr³ el localizador');
       }
 
       if (!payment) {
-        throw new Error('No se encontró el localizador');
+        throw new Error('No se encontr³ el localizador');
       }
       setSearchResult(payment);
       message.success('Localizador encontrado');
@@ -144,7 +144,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
         {/* Error State */}
         {error && !loading && (
           <div className="text-center py-8">
-            <div className="text-red-500 text-lg mb-2">❌</div>
+            <div className="text-red-500 text-lg mb-2">Œ</div>
             <div className="text-red-600 font-medium">{error}</div>
             <div className="text-gray-500 text-sm mt-2">
               Verifica que el localizador sea correcto
@@ -203,10 +203,10 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                 <div>
                   <Text strong className="flex items-center">
                     <CalendarOutlined className="mr-2" />
-                    Función:
+                    Funci³n:
                   </Text>
                   <div className="ml-6">
-                    <div className="font-medium">Función ID: {searchResult.funcion.id}</div>
+                    <div className="font-medium">Funci³n ID: {searchResult.funcion.id}</div>
                     <div className="text-gray-500 text-sm">
                       {formatDate(searchResult.funcion.fecha_celebracion)}
                     </div>
@@ -226,7 +226,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                       Usuario ID: {searchResult.user_id}
                     </div>
                     <div className="text-gray-500 text-sm">
-                      Información de usuario no disponible
+                      Informaci³n de usuario no disponible
                     </div>
                   </div>
                 </div>
@@ -241,14 +241,14 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                   </Text>
                   <div className="ml-6">
                     <div className="mb-2 text-xs text-gray-500">
-                      🎯 Haz click en cualquier asiento para cargar TODA la transacción completa
+                      ðŸŽ¯ Haz click en cualquier asiento para cargar TODA la transacci³n completa
                     </div>
                     {parseSeats(searchResult.seats || searchResult.gateway_response).map((seat, index) => (
                       <div
                         key={index}
                         className="flex justify-between items-center py-2 px-2 rounded hover:bg-blue-50 cursor-pointer transition-colors border border-transparent hover:border-blue-200"
                         onClick={() => {
-                          // 🎯 CARGAR TODA LA TRANSACCIÓN COMPLETA al hacer click en cualquier asiento
+                          // ðŸŽ¯ CARGAR TODA LA TRANSACCI“N COMPLETA al hacer click en cualquier asiento
                           const allSeats = parseSeats(searchResult.seats || searchResult.gateway_response);
                           const seatsData = allSeats.map((seatItem, seatIndex) => ({
                             _id: seatItem.id || seatItem._id || `seat_${seatIndex}`,
@@ -262,7 +262,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                             status: searchResult.status
                           }));
 
-                          // Disparar evento para cargar TODA la transacción
+                          // Disparar evento para cargar TODA la transacci³n
                           window.dispatchEvent(new CustomEvent('loadSeatToCart', {
                             detail: {
                               seats: seatsData,
@@ -272,7 +272,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                             }
                           }));
 
-                          message.success(`🎫 Transacción completa cargada: ${seatsData.length} asientos desde ${searchResult.locator}`);
+                          message.success(`ðŸŽ« Transacci³n completa cargada: ${seatsData.length} asientos desde ${searchResult.locator}`);
                         }}
                       >
                         <span className="font-medium">
@@ -325,7 +325,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
               <div>
                 <Text strong className="flex items-center">
                   <DollarOutlined className="mr-2" />
-                  Información de Pago:
+                  Informaci³n de Pago:
                 </Text>
                 <div className="ml-6">
                   <div className="flex justify-between items-center py-1">
@@ -354,7 +354,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                   </div>
                   {searchResult.payment_method && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="font-medium">Método:</span>
+                      <span className="font-medium">M©todo:</span>
                       <span className="text-gray-600">{searchResult.payment_method}</span>
                     </div>
                   )}
@@ -369,7 +369,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 
               {/* Created Date */}
               <div>
-                <Text strong>Fecha de Creación:</Text>
+                <Text strong>Fecha de Creaci³n:</Text>
                 <div className="ml-6 text-gray-500">
                   {formatDate(searchResult.created_at)}
                 </div>
@@ -378,7 +378,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
           </Card>
         )}
 
-        {/* Acciones según el estado */}
+        {/* Acciones segºn el estado */}
         {searchResult && (
           <div className="mt-4">
             <div className="flex flex-wrap gap-2">
@@ -391,7 +391,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                       if (searchResult.funcion) {
                         let eventData = searchResult.event;
 
-                        // Si no hay evento pero hay evento_id en la función, buscarlo
+                        // Si no hay evento pero hay evento_id en la funci³n, buscarlo
                         if (!eventData && searchResult.funcion.evento_id) {
                           try {
                             const { data: event, error } = await supabase
@@ -440,10 +440,10 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                             if (error) {
                               console.error('Error fetching seat_locks:', error);
                             } else if (seatLocks && seatLocks.length > 0) {
-                              // Buscar información de zonas desde el mapa
+                              // Buscar informaci³n de zonas desde el mapa
                               let zonasInfo = {};
                               try {
-                                // Primero obtener la sala_id de la función
+                                // Primero obtener la sala_id de la funci³n
                                 const { data: funcion, error: funcionError } = await supabase
                                   .from('funciones')
                                   .select('sala_id')
@@ -467,18 +467,18 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                                 console.error('Error fetching zonas:', e);
                               }
 
-                              // Convertir seat_locks a formato de asientos con información completa
+                              // Convertir seat_locks a formato de asientos con informaci³n completa
                               const seatLocksAsSeats = seatLocks.map(lock => {
-                                // Extraer información del seat_id
+                                // Extraer informaci³n del seat_id
                                 const seatIdParts = lock.seat_id.split('_');
                                 const seatNumber = seatIdParts[seatIdParts.length - 1];
 
-                                // Usar información de zona guardada en seat_locks si está disponible
+                                // Usar informaci³n de zona guardada en seat_locks si est¡ disponible
                                 let zonaNombre = lock.zona_nombre || 'ORO';
                                 let zonaId = lock.zona_id || 'ORO';
                                 let precioAsignado = lock.precio || 10.00;
 
-                                // Si no hay información de zona guardada, buscar en las zonas disponibles
+                                // Si no hay informaci³n de zona guardada, buscar en las zonas disponibles
                                 if (!lock.zona_nombre || !lock.zona_id) {
                                   // Buscar en las zonas disponibles para encontrar la correcta
                                   for (const zona of Object.values(zonasInfo)) {
@@ -519,7 +519,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                           }
                         }
 
-                        // Crear objeto de transacción para el carrito
+                        // Crear objeto de transacci³n para el carrito
                         const transactionData = {
                           id: searchResult.id,
                           locator: searchResult.locator,
@@ -540,10 +540,10 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                           detail: transactionData
                         }));
 
-                        message.success('Transacción cargada en el carrito para completar venta');
+                        message.success('Transacci³n cargada en el carrito para completar venta');
                         onCancel();
                       } else {
-                        message.error('No se pudo cargar la transacción: falta información de la función');
+                        message.error('No se pudo cargar la transacci³n: falta informaci³n de la funci³n');
                       }
                     }}
                   >
@@ -552,7 +552,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                   <Button
                     danger
                     onClick={async () => {
-                      // Anular transacción pendiente
+                      // Anular transacci³n pendiente
                       try {
                         // Actualizar estado en payment_transactions
                         const { error: updateError } = await supabase
@@ -565,7 +565,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 
                         if (updateError) {
                           console.error('Error actualizando payment_transactions:', updateError);
-                          message.error('Error al anular la transacción');
+                          message.error('Error al anular la transacci³n');
                           return;
                         }
 
@@ -580,21 +580,21 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 
                         if (locksError) {
                           console.error('Error actualizando seat_locks:', locksError);
-                          message.warning('Transacción anulada pero puede haber problemas con los asientos');
+                          message.warning('Transacci³n anulada pero puede haber problemas con los asientos');
                         } else {
-                          message.success('Transacción pendiente y asientos anulados correctamente');
+                          message.success('Transacci³n pendiente y asientos anulados correctamente');
                         }
 
-                        // Recargar la búsqueda para mostrar el nuevo estado
+                        // Recargar la bºsqueda para mostrar el nuevo estado
                         onSearch(searchResult.locator);
 
                       } catch (error) {
-                        console.error('Error anulando transacción:', error);
-                        message.error('Error al anular la transacción');
+                        console.error('Error anulando transacci³n:', error);
+                        message.error('Error al anular la transacci³n');
                       }
                     }}
                   >
-                    Anular Transacción
+                    Anular Transacci³n
                   </Button>
                 </>
               )}
@@ -635,7 +635,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                   <Button
                     danger
                     onClick={async () => {
-                      // Anular transacción
+                      // Anular transacci³n
                       try {
                         // Actualizar estado en payment_transactions
                         const { error: updateError } = await supabase
@@ -648,7 +648,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 
                         if (updateError) {
                           console.error('Error actualizando payment_transactions:', updateError);
-                          message.error('Error al anular la transacción');
+                          message.error('Error al anular la transacci³n');
                           return;
                         }
 
@@ -663,21 +663,21 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 
                         if (locksError) {
                           console.error('Error actualizando seat_locks:', locksError);
-                          message.warning('Transacción anulada pero puede haber problemas con los asientos');
+                          message.warning('Transacci³n anulada pero puede haber problemas con los asientos');
                         } else {
-                          message.success('Transacción y asientos anulados correctamente');
+                          message.success('Transacci³n y asientos anulados correctamente');
                         }
 
-                        // Recargar la búsqueda para mostrar el nuevo estado
+                        // Recargar la bºsqueda para mostrar el nuevo estado
                         onSearch(searchResult.locator);
 
                       } catch (error) {
-                        console.error('Error anulando transacción:', error);
-                        message.error('Error al anular la transacción');
+                        console.error('Error anulando transacci³n:', error);
+                        message.error('Error al anular la transacci³n');
                       }
                     }}
                   >
-                    Anular Transacción
+                    Anular Transacci³n
                   </Button>
                 </>
               )}
@@ -685,7 +685,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
               {/* Acciones generales */}
               <Button
                 onClick={() => {
-                  // Imprimir información
+                  // Imprimir informaci³n
                   window.print();
                 }}
               >
@@ -708,7 +708,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
         {/* Instructions */}
         {!searchResult && !loading && !error && (
           <div className="text-center py-8 text-gray-500">
-            <div className="text-lg mb-2">🔍</div>
+            <div className="text-lg mb-2">ðŸ”</div>
             <div className="font-medium mb-2">Buscar por Localizador</div>
             <div className="text-sm">
               Ingresa el localizador completo para encontrar los detalles del pago
@@ -724,3 +724,5 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 };
 
 export default LocatorSearchModal;
+
+

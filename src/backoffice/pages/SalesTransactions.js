@@ -12,9 +12,9 @@ import {
   Table,
   Tag,
   Typography
-} from 'antd';
+} from '../../utils/antdComponents';
 import { EyeInvisibleOutlined, EyeOutlined, ReloadOutlined, SearchOutlined, DeleteOutlined } from '@ant-design/icons';
-import moment from 'moment';
+import { format, parseISO } from 'date-fns';
 
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
@@ -44,7 +44,7 @@ const STATUS_COLORS = {
 };
 
 const SOURCE_LABELS = {
-  box_office: 'Boletería',
+  box_office: 'Boleter­a',
   online: 'Venta Online',
   web: 'Venta Online',
   affiliate: 'Afiliado',
@@ -103,7 +103,7 @@ const SalesTransactions = () => {
       ]);
 
       const handleFuncionesFallback = async (error) => {
-        console.warn('⚠️ [SalesTransactions] Error cargando funciones, usando fallback select("*"):', error);
+        console.warn('š ï¸ [SalesTransactions] Error cargando funciones, usando fallback select("*"):', error);
         let fallbackQuery = supabase
           .from('funciones')
           .select('*');
@@ -115,7 +115,7 @@ const SalesTransactions = () => {
         const fallbackResponse = await fallbackQuery;
 
         if (fallbackResponse.error) {
-          console.error('❌ [SalesTransactions] Error en fallback de funciones:', fallbackResponse.error);
+          console.error('Œ [SalesTransactions] Error en fallback de funciones:', fallbackResponse.error);
           return fallbackResponse;
         }
 
@@ -189,7 +189,7 @@ const SalesTransactions = () => {
             }
 
             if (!nombre) {
-              nombre = `Función ${funcion.id}`;
+              nombre = `Funci³n ${funcion.id}`;
             }
           }
 
@@ -444,7 +444,7 @@ const SalesTransactions = () => {
 
   const handleStatusChange = useCallback(async (transaction, newStatus) => {
     if (!transaction?.id) {
-      message.warning('No se pudo identificar la transacción seleccionada');
+      message.warning('No se pudo identificar la transacci³n seleccionada');
       return;
     }
 
@@ -460,8 +460,8 @@ const SalesTransactions = () => {
         )
       );
     } catch (error) {
-      console.error('Error al actualizar el estado de la transacción:', error);
-      message.error('No se pudo actualizar el estado de la transacción');
+      console.error('Error al actualizar el estado de la transacci³n:', error);
+      message.error('No se pudo actualizar el estado de la transacci³n');
     } finally {
       setUpdatingId(null);
     }
@@ -469,14 +469,14 @@ const SalesTransactions = () => {
 
   const handleHideTransaction = useCallback(async (transaction) => {
     if (!transaction?.id) {
-      message.warning('No se pudo identificar la transacción seleccionada');
+      message.warning('No se pudo identificar la transacci³n seleccionada');
       return;
     }
 
     try {
       setHidingId(transaction.id);
       const updated = await hidePaymentTransaction(transaction.id);
-      message.success('Transacción ocultada correctamente');
+      message.success('Transacci³n ocultada correctamente');
       setTransactions(prev =>
         prev.map(item =>
           item.id === transaction.id
@@ -485,8 +485,8 @@ const SalesTransactions = () => {
         )
       );
     } catch (error) {
-      console.error('Error al ocultar la transacción:', error);
-      message.error('No se pudo ocultar la transacción');
+      console.error('Error al ocultar la transacci³n:', error);
+      message.error('No se pudo ocultar la transacci³n');
     } finally {
       setHidingId(null);
     }
@@ -494,14 +494,14 @@ const SalesTransactions = () => {
 
   const handleUnhideTransaction = useCallback(async (transaction) => {
     if (!transaction?.id) {
-      message.warning('No se pudo identificar la transacción seleccionada');
+      message.warning('No se pudo identificar la transacci³n seleccionada');
       return;
     }
 
     try {
       setHidingId(transaction.id);
       const updated = await unhidePaymentTransaction(transaction.id);
-      message.success('Transacción mostrada nuevamente');
+      message.success('Transacci³n mostrada nuevamente');
       setTransactions(prev =>
         prev.map(item =>
           item.id === transaction.id
@@ -510,8 +510,8 @@ const SalesTransactions = () => {
         )
       );
     } catch (error) {
-      console.error('Error al mostrar la transacción:', error);
-      message.error('No se pudo mostrar la transacción');
+      console.error('Error al mostrar la transacci³n:', error);
+      message.error('No se pudo mostrar la transacci³n');
     } finally {
       setHidingId(null);
     }
@@ -519,18 +519,18 @@ const SalesTransactions = () => {
 
   const handleDeleteTransaction = useCallback(async (transaction) => {
     if (!transaction?.id) {
-      message.warning('No se pudo identificar la transacción seleccionada');
+      message.warning('No se pudo identificar la transacci³n seleccionada');
       return;
     }
 
     try {
       setDeletingId(transaction.id);
       await deletePaymentTransaction(transaction.id);
-      message.success('Transacción eliminada correctamente');
+      message.success('Transacci³n eliminada correctamente');
       setTransactions(prev => prev.filter(item => item.id !== transaction.id));
     } catch (error) {
-      console.error('Error al eliminar la transacción:', error);
-      message.error('No se pudo eliminar la transacción');
+      console.error('Error al eliminar la transacci³n:', error);
+      message.error('No se pudo eliminar la transacci³n');
     } finally {
       setDeletingId(null);
     }
@@ -576,7 +576,7 @@ const SalesTransactions = () => {
           <Text strong>{record?.gateway_name || record?.gateway_id || 'Sin definir'}</Text>
           {record?.payment_method && (
             <Text type="secondary" style={{ fontSize: 12 }}>
-              Método: {record.payment_method.toUpperCase()}
+              M©todo: {record.payment_method.toUpperCase()}
             </Text>
           )}
         </Space>
@@ -607,38 +607,39 @@ const SalesTransactions = () => {
       dataIndex: 'created_at',
       key: 'created_at',
       render: (createdAt) => createdAt
-        ? moment(createdAt).format('DD/MM/YYYY, HH:mm:ss')
+        ? format(new Date(createdAt), 'dd/MM/yyyy, HH:mm:ss')
+
         : 'Sin fecha'
     },
     {
       title: 'Recinto',
       dataIndex: ['venue', 'nombre'],
       key: 'venue',
-      render: (_, record) => record?.venue?.nombre || '—'
+      render: (_, record) => record?.venue?.nombre || '-”'
     },
     {
       title: 'Evento',
       dataIndex: ['event', 'nombre'],
       key: 'event',
-      render: (_, record) => record?.event?.nombre || '—'
+      render: (_, record) => record?.event?.nombre || '-”'
     },
     {
-      title: 'Función',
+      title: 'Funci³n',
       dataIndex: ['funcion', 'id'],
       key: 'funcion',
       render: (_, record) => {
         if (!record?.funcion) {
-          return '—';
+          return '-”';
         }
 
         const date = record.funcion?.fecha || record.funcion?.fecha_celebracion;
         const time = record.funcion?.hora;
         return (
           <Space direction="vertical" size={0}>
-            <Text strong>{record.funcion?.nombre || `Función ${record.funcion?.id}`}</Text>
+            <Text strong>{record.funcion?.nombre || `Funci³n ${record.funcion?.id}`}</Text>
             {(date || time) && (
               <Text type="secondary" style={{ fontSize: 12 }}>
-                {[date ? moment(date).format('DD/MM/YYYY') : null, time].filter(Boolean).join(' · ')}
+                {[date ? format(new Date(date), 'dd/MM/yyyy') : null, time].filter(Boolean).join(' · ')}
               </Text>
             )}
           </Space>
@@ -706,10 +707,10 @@ const SalesTransactions = () => {
               </Button>
             )}
             <Popconfirm
-              title="¿Eliminar transacción?"
-              description="Esta acción no se puede deshacer."
+              title="¿Eliminar transacci³n?"
+              description="Esta acci³n no se puede deshacer."
               onConfirm={() => handleDeleteTransaction(record)}
-              okText="Sí, eliminar"
+              okText="S­, eliminar"
               cancelText="Cancelar"
             >
               <Button
@@ -769,13 +770,13 @@ const SalesTransactions = () => {
         if (funcion.nombre) {
           pieces.push(funcion.nombre);
         } else {
-          pieces.push(`Función ${funcion.id}`);
+          pieces.push(`Funci³n ${funcion.id}`);
         }
 
         const fecha = funcion.fecha || funcion.fecha_celebracion;
         const hora = funcion.hora;
         const schedule = [
-          fecha ? moment(fecha).format('DD/MM/YYYY') : null,
+          fecha ? format(new Date(fecha), 'dd/MM/yyyy') : null,
           hora
         ]
           .filter(Boolean)
@@ -785,7 +786,7 @@ const SalesTransactions = () => {
           pieces.push(schedule);
         }
 
-        return pieces.join(' — ');
+        return pieces.join(' -” ');
       })()
     }))
   ], [filteredFunctions]);
@@ -796,10 +797,10 @@ const SalesTransactions = () => {
         <Col>
           <Space direction="vertical" size={4}>
             <Title level={3} style={{ margin: 0 }}>
-              Gestión de Transacciones
+              Gesti³n de Transacciones
             </Title>
             <Text type="secondary">
-              Visualiza y administra las transacciones de tus ventas en línea y boletería.
+              Visualiza y administra las transacciones de tus ventas en l­nea y boleter­a.
             </Text>
           </Space>
         </Col>
@@ -883,3 +884,5 @@ const SalesTransactions = () => {
 };
 
 export default SalesTransactions;
+
+

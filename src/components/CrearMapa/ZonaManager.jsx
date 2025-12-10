@@ -17,7 +17,7 @@ import {
   Col,
   Card,
   Badge
-} from 'antd';
+} from '../../utils/antdComponents';
 import { createZona, updateZona, deleteZona } from '../../backoffice/services/apibackoffice';
 import {
   PlusOutlined,
@@ -150,7 +150,7 @@ const ZonaManager = ({
   // ===== RENDERIZADO =====
   return (
     <>
-      {/* ===== BOTÓN PARA ABRIR MODAL ===== */}
+      {/* ===== BOT“N PARA ABRIR MODAL ===== */}
       <Button
         type="primary"
         icon={<PlusOutlined />}
@@ -178,9 +178,9 @@ const ZonaManager = ({
                 <Popconfirm
                   key="delete"
                   title="¿Eliminar esta zona?"
-                  description="Esta acción no se puede deshacer"
+                  description="Esta acci³n no se puede deshacer"
                   onConfirm={() => handleDeleteZona(zona.id)}
-                  okText="Sí"
+                  okText="S­"
                   cancelText="No"
                 >
                   <Button
@@ -216,7 +216,7 @@ const ZonaManager = ({
                 description={
                   <Space direction="vertical" size="small">
                     <Text type="secondary">
-                      Aforo: {zona.aforo || 'Sin límite'}
+                      Aforo: {zona.aforo || 'Sin l­mite'}
                     </Text>
                     {zona.descripcion && (
                       <Text type="secondary">{zona.descripcion}</Text>
@@ -229,7 +229,7 @@ const ZonaManager = ({
         />
       </div>
 
-      {/* ===== ASIGNACIÓN DE ZONAS ===== */}
+      {/* ===== ASIGNACI“N DE ZONAS ===== */}
       {selectedElements.length > 0 && (
         <Card size="small" className="mb-4">
           <Title level={6}>Asignar Zona a Elementos Seleccionados</Title>
@@ -255,7 +255,7 @@ const ZonaManager = ({
         </Card>
       )}
 
-      {/* ===== MODAL DE CREACIÓN/EDICIÓN ===== */}
+      {/* ===== MODAL DE CREACI“N/EDICI“N ===== */}
       <Modal
         title={editingZona ? 'Editar Zona' : 'Crear Nueva Zona'}
         open={isModalVisible}
@@ -289,12 +289,12 @@ const ZonaManager = ({
             <Col span={8}>
               <Form.Item
                 name="aforo"
-                label="Aforo Máximo"
+                label="Aforo M¡ximo"
               >
                 <Input 
                   type="number" 
                   min={1}
-                  placeholder="Sin límite"
+                  placeholder="Sin l­mite"
                 />
               </Form.Item>
             </Col>
@@ -334,11 +334,11 @@ const ZonaManager = ({
 
           <Form.Item
             name="descripcion"
-            label="Descripción"
+            label="Descripci³n"
           >
             <TextArea 
               rows={3}
-              placeholder="Descripción opcional de la zona..."
+              placeholder="Descripci³n opcional de la zona..."
             />
           </Form.Item>
 
@@ -359,3 +359,5 @@ const ZonaManager = ({
 };
 
 export default ZonaManager;
+
+

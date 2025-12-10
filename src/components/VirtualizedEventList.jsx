@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Card, Tag, Button } from 'antd';
+import { Card, Tag, Button } from '../utils/antdComponents';
 import { CalendarOutlined, ClockCircleOutlined, DollarOutlined } from '@ant-design/icons';
 import VirtualizedList from './VirtualizedList';
 import { EventListSkeleton } from './SkeletonLoaders';
@@ -115,4 +115,5 @@ const VirtualizedEventList = ({
 };
 
 export default VirtualizedEventList;
+
 

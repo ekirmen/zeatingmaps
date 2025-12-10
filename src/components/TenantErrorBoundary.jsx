@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Card, Button, Typography, Space, Divider } from 'antd';
+import { Alert, Card, Button, Typography, Space, Divider } from '../utils/antdComponents';
 import { ExclamationCircleOutlined, PlusOutlined, DatabaseOutlined } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
@@ -114,3 +114,4 @@ const TenantErrorBoundary = ({ error, onRetry, subdomain }) => {
 };
 
 export default TenantErrorBoundary;
+

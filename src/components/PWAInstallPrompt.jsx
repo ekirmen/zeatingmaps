@@ -2,7 +2,7 @@
  * Componente para mostrar el prompt de instalación de PWA
  */
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Space } from 'antd';
+import { Button, Modal, Space } from '../utils/antdComponents';
 import { DownloadOutlined, CloseOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { promptPWAInstall, installPWA, isPWAInstalled } from '../utils/pwaService';
@@ -118,4 +118,5 @@ const PWAInstallPrompt = () => {
 };
 
 export default PWAInstallPrompt;
+
 

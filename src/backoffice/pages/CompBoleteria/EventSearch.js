@@ -1,5 +1,5 @@
-import React from 'react';
-import { Select, Table, Button, Empty } from 'antd';
+﻿import React from 'react';
+import { Select, Table, Button, Empty } from '../../../utils/antdComponents';
 const { Option } = Select;
 
 const EventSearch = ({ 
@@ -27,3 +27,4 @@ const EventSearch = ({
 };
 
 export default EventSearch;
+

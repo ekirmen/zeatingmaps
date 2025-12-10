@@ -1,4 +1,4 @@
-import { notification } from 'antd';
+import { notification } from '../utils/antdComponents';
 
 // ===== SISTEMA DE NOTIFICACIONES VISUALES =====
 const VisualNotifications = {
@@ -116,3 +116,4 @@ const VisualNotifications = {
 };
 
 export default VisualNotifications;
+

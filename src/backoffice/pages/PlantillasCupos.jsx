@@ -18,7 +18,7 @@ import {
   Popconfirm,
   Tabs,
   Divider
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   PlusOutlined, 
   EditOutlined, 
@@ -226,7 +226,7 @@ const PlantillasCupos = () => {
       loadPlantillas();
     } catch (error) {
       console.error('Error deleting plantilla:', error);
-      message.error('Error al eliminar plantilla. Asegúrate de que no esté en uso en ninguna función.');
+      message.error('Error al eliminar plantilla. Asegºrate de que no est© en uso en ninguna funci³n.');
     }
   };
 
@@ -310,7 +310,7 @@ const PlantillasCupos = () => {
       key: 'recinto',
       render: (_, record) => {
         const recinto = recintos.find(r => r.id === record.recinto_id);
-        return recinto ? recinto.nombre : '—';
+        return recinto ? recinto.nombre : '-”';
       }
     },
     {
@@ -318,7 +318,7 @@ const PlantillasCupos = () => {
       key: 'sala',
       render: (_, record) => {
         const sala = salas.find(s => s.id === record.sala_id);
-        return sala ? sala.nombre : '—';
+        return sala ? sala.nombre : '-”';
       }
     },
     {
@@ -379,10 +379,10 @@ const PlantillasCupos = () => {
             Configurar Zonas
           </Button>
           <Popconfirm
-            title="¿Estás seguro de eliminar esta plantilla?"
-            description="Esta acción no se puede deshacer. Asegúrate de que no esté en uso en ninguna función."
+            title="¿Est¡s seguro de eliminar esta plantilla?"
+            description="Esta acci³n no se puede deshacer. Asegºrate de que no est© en uso en ninguna funci³n."
             onConfirm={() => handleDelete(record.id)}
-            okText="Sí, eliminar"
+            okText="S­, eliminar"
             cancelText="Cancelar"
           >
             <Button 
@@ -444,8 +444,8 @@ const PlantillasCupos = () => {
             <div>
               <Title level={2} className="mb-2">Plantillas de Cupos</Title>
               <Text type="secondary">
-                Crea plantillas que agrupan cupos para facilitar su aplicación a sesiones.
-                Asigna cupos a zonas numeradas (butacas específicas) o no numeradas (aforo general).
+                Crea plantillas que agrupan cupos para facilitar su aplicaci³n a sesiones.
+                Asigna cupos a zonas numeradas (butacas espec­ficas) o no numeradas (aforo general).
               </Text>
             </div>
             <Button
@@ -573,11 +573,11 @@ const PlantillasCupos = () => {
                   label="Cupos"
                   name="cupos"
                   rules={[{ required: true, message: 'Debes seleccionar al menos un cupo' }]}
-                  tooltip="Selecciona los cupos que formarán parte de esta plantilla"
+                  tooltip="Selecciona los cupos que formar¡n parte de esta plantilla"
                 >
                   <Select
                     mode="multiple"
-                    placeholder="Selecciona uno o más cupos"
+                    placeholder="Selecciona uno o m¡s cupos"
                     allowClear
                   >
                     {cupos.map(cupo => (
@@ -609,13 +609,13 @@ const PlantillasCupos = () => {
               <Switch checkedChildren="Activa" unCheckedChildren="Inactiva" />
             </Form.Item>
 
-            {/* Configuración de Zonas */}
+            {/* Configuraci³n de Zonas */}
             {editingPlantilla && form.getFieldValue('cupos') && form.getFieldValue('cupos').length > 0 && (
               <>
                 <Divider />
-                <Title level={5}>Configuración de Zonas</Title>
+                <Title level={5}>Configuraci³n de Zonas</Title>
                 <Text type="secondary" className="block mb-4">
-                  Asigna cupos a zonas numeradas (butacas específicas) o no numeradas (aforo general)
+                  Asigna cupos a zonas numeradas (butacas espec­ficas) o no numeradas (aforo general)
                 </Text>
 
                 <Tabs defaultActiveKey="no_numeradas">
@@ -687,8 +687,8 @@ const PlantillasCupos = () => {
                             style={{ width: '100%', marginBottom: 16 }}
                             onChange={(cupoId) => {
                               setSelectedZona(zona.id);
-                              // Aquí se abriría el mapa para seleccionar butacas
-                              message.info('Funcionalidad de selección de butacas en el mapa próximamente');
+                              // Aqu­ se abrir­a el mapa para seleccionar butacas
+                              message.info('Funcionalidad de selecci³n de butacas en el mapa pr³ximamente');
                             }}
                             aria-label={`Seleccionar cupo para asignar butacas en ${zona.nombre}`}
                           >
@@ -731,4 +731,6 @@ const PlantillasCupos = () => {
 };
 
 export default PlantillasCupos;
+
+
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Tag, Modal, Form, Input, Select, message, Badge, Tabs } from 'antd';
+import { Card, Table, Button, Tag, Modal, Form, Input, Select, message, Badge, Tabs } from '../../utils/antdComponents';
 import { BellOutlined, EyeOutlined, CheckOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -25,7 +25,7 @@ const CRM = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 🎯 CARGAR DATOS BÁSICOS
+      // ðŸŽ¯ CARGAR DATOS BSICOS
       const [eventosData, funcionesData, usuariosData, notificacionesData] = await Promise.all([
         // Eventos
         supabase
@@ -56,7 +56,7 @@ const CRM = () => {
           .order('created_at', { ascending: false })
       ]);
 
-      // 🎯 CARGAR DATOS CRM ESPECIALIZADOS
+      // ðŸŽ¯ CARGAR DATOS CRM ESPECIALIZADOS
       const fetchProfilesMap = async (userIds, selectFields = 'id, nombre, email:login') => {
         const uniqueIds = Array.from(new Set((userIds || []).filter(Boolean)));
         if (!uniqueIds.length) {
@@ -165,13 +165,13 @@ const CRM = () => {
           .order('nombre', { ascending: true })
       ]);
 
-      // ✅ ESTABLECER DATOS BÁSICOS
+      // œ… ESTABLECER DATOS BSICOS
       setEvents(eventosData.data || []);
       setFunctions(funcionesData.data || []);
       setUsers(usuariosData.data || []);
       setNotifications(notificacionesData.data || []);
 
-      // ✅ ESTABLECER DATOS CRM (con fallback si las tablas no existen)
+      // œ… ESTABLECER DATOS CRM (con fallback si las tablas no existen)
       // Guardar datos CRM en el estado (se pueden usar en componentes futuros)
       if (crmClientsData.data) {
       }
@@ -211,7 +211,7 @@ const CRM = () => {
 
       if (error) throw error;
 
-      message.success('Notificación creada exitosamente');
+      message.success('Notificaci³n creada exitosamente');
       setIsNotificationModalVisible(false);
       notificationForm.resetFields();
       setSelectedEvent(null);
@@ -220,7 +220,7 @@ const CRM = () => {
       loadData();
     } catch (error) {
       console.error('Error creating notification:', error);
-      message.error('Error al crear notificación');
+      message.error('Error al crear notificaci³n');
     }
   };
 
@@ -233,17 +233,17 @@ const CRM = () => {
 
       if (error) throw error;
 
-      message.success('Notificación marcada como leída');
+      message.success('Notificaci³n marcada como le­da');
       loadData();
     } catch (error) {
       console.error('Error updating notification:', error);
-      message.error('Error al actualizar notificación');
+      message.error('Error al actualizar notificaci³n');
     }
   };
 
   const notificationColumns = [
     {
-      title: 'Título',
+      title: 'T­tulo',
       dataIndex: 'titulo',
       key: 'titulo',
     },
@@ -269,7 +269,7 @@ const CRM = () => {
       key: 'evento',
     },
     {
-      title: 'Función',
+      title: 'Funci³n',
       dataIndex: ['funciones', 'fecha'],
       key: 'funcion',
       render: (fecha) => fecha ? new Date(fecha).toLocaleDateString() : '-',
@@ -306,7 +306,7 @@ const CRM = () => {
                     <p><strong>Mensaje:</strong> {record.mensaje}</p>
                     <p><strong>Tipo:</strong> {record.tipo}</p>
                     <p><strong>Evento:</strong> {record.eventos?.nombre || 'N/A'}</p>
-                    <p><strong>Función:</strong> {record.funciones?.fecha ? new Date(record.funciones.fecha).toLocaleString() : 'N/A'}</p>
+                    <p><strong>Funci³n:</strong> {record.funciones?.fecha ? new Date(record.funciones.fecha).toLocaleString() : 'N/A'}</p>
                     <p><strong>Usuarios destinatarios:</strong> {record.usuarios_destinatarios?.length || 0}</p>
                   </div>
                 ),
@@ -322,7 +322,7 @@ const CRM = () => {
               icon={<CheckOutlined />}
               onClick={() => handleMarkAsRead(record.id)}
             >
-              Marcar como leída
+              Marcar como le­da
             </Button>
           )}
         </div>
@@ -336,8 +336,8 @@ const CRM = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">CRM - Gestión de Clientes</h1>
-          <p className="text-gray-600">Gestión de clientes, notificaciones y comunicación</p>
+          <h1 className="text-2xl font-bold text-gray-800">CRM - Gesti³n de Clientes</h1>
+          <p className="text-gray-600">Gesti³n de clientes, notificaciones y comunicaci³n</p>
         </div>
         <div className="flex gap-2">
           <Badge count={unreadCount} showZero={false}>
@@ -346,7 +346,7 @@ const CRM = () => {
               onClick={() => setIsNotificationModalVisible(true)}
               type="primary"
             >
-              Crear Notificación
+              Crear Notificaci³n
             </Button>
           </Badge>
         </div>
@@ -370,14 +370,14 @@ const CRM = () => {
         </TabPane>
 
         <TabPane tab="Clientes" key="clients">
-          <Card title="Gestión de Clientes">
+          <Card title="Gesti³n de Clientes">
             <Table
               dataSource={users}
               columns={[
                 { title: 'Nombre', dataIndex: 'login', key: 'login' },
                 { title: 'Email', dataIndex: 'email', key: 'email' },
                 { title: 'Empresa', dataIndex: 'empresa', key: 'empresa' },
-                { title: 'Teléfono', dataIndex: 'telefono', key: 'telefono' },
+                { title: 'Tel©fono', dataIndex: 'telefono', key: 'telefono' },
                 {
                   title: 'Estado',
                   dataIndex: 'activo',
@@ -401,7 +401,7 @@ const CRM = () => {
               dataSource={events}
               columns={[
                 { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
-                { title: 'Descripción', dataIndex: 'descripcion', key: 'descripcion', ellipsis: true },
+                { title: 'Descripci³n', dataIndex: 'descripcion', key: 'descripcion', ellipsis: true },
                 {
                   title: 'Fecha',
                   dataIndex: 'fecha',
@@ -416,9 +416,9 @@ const CRM = () => {
         </TabPane>
       </Tabs>
 
-      {/* Modal para crear notificación */}
+      {/* Modal para crear notificaci³n */}
       <Modal
-        title="Crear Nueva Notificación"
+        title="Crear Nueva Notificaci³n"
         open={isNotificationModalVisible}
         onCancel={() => {
           setIsNotificationModalVisible(false);
@@ -437,10 +437,10 @@ const CRM = () => {
         >
           <Form.Item
             name="titulo"
-            label="Título"
-            rules={[{ required: true, message: 'Por favor ingrese el título' }]}
+            label="T­tulo"
+            rules={[{ required: true, message: 'Por favor ingrese el t­tulo' }]}
           >
-            <Input placeholder="Título de la notificación" />
+            <Input placeholder="T­tulo de la notificaci³n" />
           </Form.Item>
 
           <Form.Item
@@ -448,7 +448,7 @@ const CRM = () => {
             label="Mensaje"
             rules={[{ required: true, message: 'Por favor ingrese el mensaje' }]}
           >
-            <Input.TextArea rows={4} placeholder="Mensaje de la notificación" />
+            <Input.TextArea rows={4} placeholder="Mensaje de la notificaci³n" />
           </Form.Item>
 
           <Form.Item
@@ -478,9 +478,9 @@ const CRM = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="Función (Opcional)">
+          <Form.Item label="Funci³n (Opcional)">
             <Select
-              placeholder="Seleccione una función"
+              placeholder="Seleccione una funci³n"
               value={selectedFunction}
               onChange={setSelectedFunction}
               allowClear
@@ -511,7 +511,7 @@ const CRM = () => {
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
-              Crear Notificación
+              Crear Notificaci³n
             </Button>
           </Form.Item>
         </Form>
@@ -521,3 +521,4 @@ const CRM = () => {
 };
 
 export default CRM;
+

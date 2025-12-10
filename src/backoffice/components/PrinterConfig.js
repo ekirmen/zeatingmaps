@@ -14,7 +14,7 @@ import {
   InputNumber,
   message,
   Tag
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   PrinterOutlined,
   SettingOutlined,
@@ -124,9 +124,9 @@ const PrinterConfig = () => {
       const success = await bocaPrinterService.testConnection();
       
       if (success) {
-        message.success('Conexión de impresora exitosa');
+        message.success('Conexi³n de impresora exitosa');
       } else {
-        message.error('Error en la conexión de impresora');
+        message.error('Error en la conexi³n de impresora');
       }
     } catch (error) {
       console.error('Error testing printer:', error);
@@ -170,10 +170,10 @@ const PrinterConfig = () => {
     try {
       setLoading(true);
       await saveFormatConfig(formatConfig);
-      message.success('Configuración guardada exitosamente');
+      message.success('Configuraci³n guardada exitosamente');
     } catch (error) {
       console.error('Error saving config:', error);
-      message.error('Error al guardar la configuración');
+      message.error('Error al guardar la configuraci³n');
     } finally {
       setLoading(false);
     }
@@ -203,11 +203,11 @@ const PrinterConfig = () => {
   return (
     <div className="printer-config">
       <Title level={2}>
-        <PrinterOutlined /> Configuración de Impresora Boca
+        <PrinterOutlined /> Configuraci³n de Impresora Boca
       </Title>
 
-      {/* Detección de Impresoras */}
-      <Card title="Detección de Impresoras" className="mb-4">
+      {/* Detecci³n de Impresoras */}
+      <Card title="Detecci³n de Impresoras" className="mb-4">
         <Space direction="vertical" style={{ width: '100%' }}>
           <Button 
             type="primary" 
@@ -264,7 +264,7 @@ const PrinterConfig = () => {
                 loading={loading}
                 icon={<ExperimentOutlined />}
               >
-                Probar Conexión
+                Probar Conexi³n
               </Button>
             </Col>
             <Col span={12}>
@@ -301,7 +301,7 @@ const PrinterConfig = () => {
       <Card title="Plantillas Predefinidas" className="mb-4">
         <Alert
           message="Plantillas Listas para Boca"
-          description="Selecciona una plantilla predefinida optimizada para impresoras Boca. Estas plantillas están configuradas con los mejores ajustes para cada tipo de evento."
+          description="Selecciona una plantilla predefinida optimizada para impresoras Boca. Estas plantillas est¡n configuradas con los mejores ajustes para cada tipo de evento."
           type="info"
           showIcon
           className="mb-4"
@@ -316,7 +316,7 @@ const PrinterConfig = () => {
               onClick={() => applyTemplate('default')}
             >
               <div className="text-center">
-                <Title level={5}>🎭 Estándar</Title>
+                <Title level={5}>ðŸŽ­ Est¡ndar</Title>
                 <Text type="secondary">80mm - Eventos normales</Text>
                 <br />
                 <Text type="secondary">Formato profesional</Text>
@@ -331,10 +331,10 @@ const PrinterConfig = () => {
               onClick={() => applyTemplate('small')}
             >
               <div className="text-center">
-                <Title level={5}>📱 Pequeño</Title>
-                <Text type="secondary">58mm - Eventos pequeños</Text>
+                <Title level={5}>ðŸ“± Peque±o</Title>
+                <Text type="secondary">58mm - Eventos peque±os</Text>
                 <br />
-                <Text type="secondary">Compacto y económico</Text>
+                <Text type="secondary">Compacto y econ³mico</Text>
               </div>
             </Card>
           </Col>
@@ -346,10 +346,10 @@ const PrinterConfig = () => {
               onClick={() => applyTemplate('premium')}
             >
               <div className="text-center">
-                <Title level={5}>⭐ Premium</Title>
+                <Title level={5}>­ Premium</Title>
                 <Text type="secondary">112mm - Eventos premium</Text>
                 <br />
-                <Text type="secondary">Máxima calidad</Text>
+                <Text type="secondary">M¡xima calidad</Text>
               </div>
             </Card>
           </Col>
@@ -362,8 +362,8 @@ const PrinterConfig = () => {
         ticketData={previewData}
       />
 
-      {/* Configuración de Formato */}
-      <Card title="Configuración de Formato" className="mb-4">
+      {/* Configuraci³n de Formato */}
+      <Card title="Configuraci³n de Formato" className="mb-4">
         <Form layout="vertical">
           <Row gutter={[16, 16]}>
             <Col span={12}>
@@ -423,7 +423,7 @@ const PrinterConfig = () => {
 
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Form.Item label="Tamaño de Fuente">
+              <Form.Item label="Tama±o de Fuente">
                 <Select
                   value={formatConfig.fontSize}
                   onChange={(value) => handleFormatChange('fontSize', value)}
@@ -431,12 +431,12 @@ const PrinterConfig = () => {
                   <Option value="00">Normal</Option>
                   <Option value="01">Doble Alto</Option>
                   <Option value="02">Doble Ancho</Option>
-                  <Option value="03">Doble Tamaño</Option>
+                  <Option value="03">Doble Tama±o</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Alineación">
+              <Form.Item label="Alineaci³n">
                 <Select
                   value={formatConfig.alignment}
                   onChange={(value) => handleFormatChange('alignment', value)}
@@ -458,18 +458,18 @@ const PrinterConfig = () => {
             />
           </Form.Item>
 
-          <Form.Item label="Pie de Página">
+          <Form.Item label="Pie de P¡gina">
             <TextArea
               value={formatConfig.footer}
               onChange={(e) => handleFormatChange('footer', e.target.value)}
               rows={3}
-              placeholder="Texto del pie de página del ticket"
+              placeholder="Texto del pie de p¡gina del ticket"
             />
           </Form.Item>
 
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Form.Item label="Mostrar Código QR">
+              <Form.Item label="Mostrar C³digo QR">
                 <Switch
                   checked={formatConfig.showQRCode}
                   onChange={(checked) => handleFormatChange('showQRCode', checked)}
@@ -477,7 +477,7 @@ const PrinterConfig = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Mostrar Código de Barras">
+              <Form.Item label="Mostrar C³digo de Barras">
                 <Switch
                   checked={formatConfig.showBarcode}
                   onChange={(checked) => handleFormatChange('showBarcode', checked)}
@@ -494,14 +494,14 @@ const PrinterConfig = () => {
             loading={loading}
             icon={<SaveOutlined />}
           >
-            Guardar Configuración
+            Guardar Configuraci³n
           </Button>
         </div>
       </Card>
 
       <Alert
-        message="Información Importante"
-        description="Asegúrate de que la impresora Boca esté conectada y encendida antes de realizar las pruebas. El sistema detectará automáticamente las impresoras Boca conectadas."
+        message="Informaci³n Importante"
+        description="Asegºrate de que la impresora Boca est© conectada y encendida antes de realizar las pruebas. El sistema detectar¡ autom¡ticamente las impresoras Boca conectadas."
         type="info"
         showIcon
       />
@@ -510,3 +510,4 @@ const PrinterConfig = () => {
 };
 
 export default PrinterConfig; 
+

@@ -13,7 +13,7 @@ import {
   Spin,
   Empty,
   Card
-} from 'antd';
+} from '../../../utils/antdComponents';
 import { 
   UploadOutlined, 
   DeleteOutlined, 
@@ -31,8 +31,8 @@ const BackgroundImageManager = ({
   onImageSelect, 
   currentImage, 
   onImageRemove,
-  title = "Gestor de Imágenes de Fondo",
-  description = "Sube nuevas imágenes o selecciona existentes del repositorio"
+  title = "Gestor de Im¡genes de Fondo",
+  description = "Sube nuevas im¡genes o selecciona existentes del repositorio"
 }) => {
   const [uploading, setUploading] = useState(false);
   const [existingImages, setExistingImages] = useState([]);
@@ -51,7 +51,7 @@ const BackgroundImageManager = ({
     try {
       setLoadingImages(true);
       
-      // Listar imágenes del bucket de productos en la carpeta mapas
+      // Listar im¡genes del bucket de productos en la carpeta mapas
       const { data, error } = await supabase.storage
         .from('productos')
         .list('mapas', {
@@ -67,7 +67,7 @@ const BackgroundImageManager = ({
         file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)
       );
 
-      // Obtener URLs públicas para cada imagen
+      // Obtener URLs pºblicas para cada imagen
       const imagesWithUrls = imageFiles.map(file => ({
         name: file.name,
         path: `mapas/${file.name}`,
@@ -81,7 +81,7 @@ const BackgroundImageManager = ({
       setExistingImages(imagesWithUrls);
     } catch (error) {
       console.error('Error loading existing images:', error);
-      message.error('Error al cargar imágenes existentes');
+      message.error('Error al cargar im¡genes existentes');
     } finally {
       setLoadingImages(false);
     }
@@ -97,7 +97,7 @@ const BackgroundImageManager = ({
         return false;
       }
       
-      // Validar tamaño (10MB máximo para mapas)
+      // Validar tama±o (10MB m¡ximo para mapas)
       if (file.size > 10 * 1024 * 1024) {
         message.error('La imagen debe pesar 10MB o menos');
         return false;
@@ -123,7 +123,7 @@ const BackgroundImageManager = ({
       onImageSelect(publicUrl);
       message.success('Imagen subida correctamente');
       setModalVisible(false);
-      return false; // Prevenir upload automático
+      return false; // Prevenir upload autom¡tico
     } catch (error) {
       console.error('Error uploading image:', error);
       message.error('Error al subir imagen');
@@ -230,7 +230,7 @@ const BackgroundImageManager = ({
       </Space>
 
       <Modal
-        title="Gestor de Imágenes de Fondo"
+        title="Gestor de Im¡genes de Fondo"
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -257,17 +257,17 @@ const BackgroundImageManager = ({
               </Upload>
               
               <div className="text-xs text-gray-500 space-y-1">
-                <div>• Formatos soportados: JPG, PNG, GIF, WebP</div>
-                <div>• Tamaño máximo: 10MB</div>
-                <div>• Resolución recomendada: 1920x1080 o superior</div>
+                <div>-¢ Formatos soportados: JPG, PNG, GIF, WebP</div>
+                <div>-¢ Tama±o m¡ximo: 10MB</div>
+                <div>-¢ Resoluci³n recomendada: 1920x1080 o superior</div>
               </div>
             </div>
           </TabPane>
           
-          <TabPane tab="Imágenes Existentes" key="existing">
+          <TabPane tab="Im¡genes Existentes" key="existing">
             <div className="space-y-4">
               <Search
-                placeholder="Buscar imágenes..."
+                placeholder="Buscar im¡genes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 prefix={<SearchOutlined />}
@@ -276,11 +276,11 @@ const BackgroundImageManager = ({
               {loadingImages ? (
                 <div className="text-center py-8">
                   <Spin size="large" />
-                  <Text className="block mt-2">Cargando imágenes...</Text>
+                  <Text className="block mt-2">Cargando im¡genes...</Text>
                 </div>
               ) : filteredImages.length === 0 ? (
                 <Empty 
-                  description="No se encontraron imágenes"
+                  description="No se encontraron im¡genes"
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                 />
               ) : (
@@ -338,3 +338,5 @@ const BackgroundImageManager = ({
 };
 
 export default BackgroundImageManager;
+
+

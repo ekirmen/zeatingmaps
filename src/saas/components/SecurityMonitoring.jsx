@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Tag, Typography, Space, Button, Badge, Alert, Statistic, Row, Col, Timeline, Select, DatePicker, Drawer } from 'antd';
+import { Card, Table, Tag, Typography, Space, Button, Badge, Alert, Statistic, Row, Col, Timeline, Select, DatePicker, Drawer } from '../../utils/antdComponents';
 import { 
   SecurityScanOutlined, 
   ExclamationCircleOutlined,
@@ -108,12 +108,12 @@ const SecurityMonitoring = () => {
       'login_failed': 'Intento de login fallido',
       'suspicious_login': 'Login sospechoso',
       'unauthorized_access': 'Acceso no autorizado',
-      'data_breach_attempt': 'Intento de violación de datos',
+      'data_breach_attempt': 'Intento de violaci³n de datos',
       'unusual_activity': 'Actividad inusual',
       'password_brute_force': 'Ataque de fuerza bruta',
       'api_abuse': 'Abuso de API',
       'file_upload_attack': 'Ataque de carga de archivos',
-      'sql_injection_attempt': 'Intento de inyección SQL',
+      'sql_injection_attempt': 'Intento de inyecci³n SQL',
       'xss_attempt': 'Intento de XSS'
     };
     return labels[eventType] || eventType;
@@ -269,7 +269,7 @@ const SecurityMonitoring = () => {
         </Text>
       </div>
 
-      {/* Alertas críticas */}
+      {/* Alertas cr­ticas */}
       {stats.activeAlerts > 0 && (
         <Alert
           message={`${stats.activeAlerts} alertas de seguridad activas`}
@@ -279,7 +279,7 @@ const SecurityMonitoring = () => {
         />
       )}
 
-      {/* Estadísticas */}
+      {/* Estad­sticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -293,7 +293,7 @@ const SecurityMonitoring = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="Críticos"
+              title="Cr­ticos"
               value={stats.critical}
               valueStyle={{ color: '#cf1322' }}
               prefix={<ExclamationCircleOutlined />}
@@ -334,7 +334,7 @@ const SecurityMonitoring = () => {
             <Option value="low">Baja</Option>
             <Option value="medium">Media</Option>
             <Option value="high">Alta</Option>
-            <Option value="critical">Crítica</Option>
+            <Option value="critical">Cr­tica</Option>
           </Select>
           <Select
             value={filters.eventType}
@@ -345,7 +345,7 @@ const SecurityMonitoring = () => {
             <Option value="login_failed">Login fallido</Option>
             <Option value="suspicious_login">Login sospechoso</Option>
             <Option value="unauthorized_access">Acceso no autorizado</Option>
-            <Option value="data_breach_attempt">Intento de violación</Option>
+            <Option value="data_breach_attempt">Intento de violaci³n</Option>
             <Option value="unusual_activity">Actividad inusual</Option>
           </Select>
           <RangePicker
@@ -399,7 +399,7 @@ const SecurityMonitoring = () => {
           <div>
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
               <div>
-                <Title level={4}>Información General</Title>
+                <Title level={4}>Informaci³n General</Title>
                 <Space direction="vertical">
                   <Text><strong>Tipo:</strong> {getEventTypeLabel(selectedEvent.event_type)}</Text>
                   <Text><strong>Severidad:</strong> 
@@ -407,13 +407,13 @@ const SecurityMonitoring = () => {
                       {selectedEvent.severity.toUpperCase()}
                     </Tag>
                   </Text>
-                  <Text><strong>Descripción:</strong> {selectedEvent.description}</Text>
+                  <Text><strong>Descripci³n:</strong> {selectedEvent.description}</Text>
                   <Text><strong>Fecha:</strong> {new Date(selectedEvent.created_at).toLocaleString('es-ES')}</Text>
                 </Space>
               </div>
 
               <div>
-                <Title level={4}>Información del Usuario</Title>
+                <Title level={4}>Informaci³n del Usuario</Title>
                 <Space direction="vertical">
                   <Text><strong>Usuario:</strong> {selectedEvent.users?.email || 'Sistema'}</Text>
                   <Text><strong>Tenant:</strong> {selectedEvent.tenants?.name || 'N/A'}</Text>
@@ -459,3 +459,5 @@ const SecurityMonitoring = () => {
 };
 
 export default SecurityMonitoring;
+
+

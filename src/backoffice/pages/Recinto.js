@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Modal, message, Pagination, Empty, Spin } from 'antd';
+import { Button, Input, Modal, message, Pagination, Empty, Spin } from '../../utils/antdComponents';
 import { 
   PlusOutlined, 
   EditOutlined, 
@@ -84,7 +84,7 @@ const Recinto = () => {
       if (errorSala) throw errorSala;
   
       setRecintos((prev) => [...prev, { ...recinto, salas: [sala] }]);
-      message.success('Recinto y sala creados con éxito');
+      message.success('Recinto y sala creados con ©xito');
       setIsCreating(false);
     } catch (error) {
       console.error('Error al crear recinto:', error.message);
@@ -97,7 +97,7 @@ const Recinto = () => {
       await fetchRecintos();
       setIsEditing(false);
       setCurrentRecinto(null);
-      message.success('Recinto actualizado con éxito');
+      message.success('Recinto actualizado con ©xito');
     } catch (error) {
       console.error('Error al actualizar lista de recintos:', error.message);
       message.error('Error al actualizar recinto');
@@ -122,7 +122,7 @@ const Recinto = () => {
         )
       );
   
-      message.success('Sala agregada con éxito');
+      message.success('Sala agregada con ©xito');
       setIsAddingSala(false);
       setCurrentRecinto(null);
     } catch (error) {
@@ -143,7 +143,7 @@ const Recinto = () => {
       await fetchRecintos();
       setIsEditingSala(false);
       setCurrentSala(null);
-      message.success('Sala actualizada con éxito');
+      message.success('Sala actualizada con ©xito');
     } catch (error) {
       console.error('Error al editar sala:', error.message);
       message.error(error.message);
@@ -153,7 +153,7 @@ const Recinto = () => {
   const handleDeleteSala = async (recintoId, salaId) => {
     Modal.confirm({
       title: '¿Eliminar sala?',
-      content: 'Esta acción no se puede deshacer.',
+      content: 'Esta acci³n no se puede deshacer.',
       okText: 'Eliminar',
       okType: 'danger',
       cancelText: 'Cancelar',
@@ -167,7 +167,7 @@ const Recinto = () => {
           if (error) throw error;
 
           await fetchRecintos();
-          message.success('Sala eliminada con éxito');
+          message.success('Sala eliminada con ©xito');
         } catch (error) {
           console.error('Error al eliminar sala:', error.message);
           message.error(error.message);
@@ -179,7 +179,7 @@ const Recinto = () => {
   const handleDeleteRecinto = async (recintoId) => {
     Modal.confirm({
       title: '¿Eliminar recinto?',
-      content: 'Esta acción eliminará el recinto y TODOS los datos relacionados (salas, mapas, eventos, funciones, plantillas, etc.). Esta acción NO se puede deshacer.',
+      content: 'Esta acci³n eliminar¡ el recinto y TODOS los datos relacionados (salas, mapas, eventos, funciones, plantillas, etc.). Esta acci³n NO se puede deshacer.',
       okText: 'Eliminar',
       okType: 'danger',
       cancelText: 'Cancelar',
@@ -191,7 +191,7 @@ const Recinto = () => {
             throw new Error(result?.error || 'Error eliminando el recinto');
           }
           await fetchRecintos();
-          message.success('Recinto y datos relacionados eliminados con éxito');
+          message.success('Recinto y datos relacionados eliminados con ©xito');
         } catch (error) {
           console.error('Error al eliminar recinto:', error);
           message.error(error.message);
@@ -355,7 +355,7 @@ const Recinto = () => {
           >
             {searchTerm ? (
               <Button type="primary" onClick={() => setSearchTerm('')}>
-                Limpiar búsqueda
+                Limpiar bºsqueda
               </Button>
             ) : (
               <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreating(true)}>
@@ -376,7 +376,7 @@ const Recinto = () => {
                   alignItems: isMobile ? 'stretch' : 'flex-start',
                   gap: '16px'
                 }}>
-                  {/* Información del Recinto */}
+                  {/* Informaci³n del Recinto */}
                   <div style={{ flex: 1 }}>
                     <div style={{
                       display: 'flex',
@@ -420,7 +420,7 @@ const Recinto = () => {
                             gap: '4px'
                           }}>
                             <EnvironmentOutlined />
-                            {recinto.direccion || 'Sin dirección'}
+                            {recinto.direccion || 'Sin direcci³n'}
                           </span>
                           {recinto.codigopostal && (
                             <span>CP: {recinto.codigopostal}</span>
@@ -596,7 +596,7 @@ const Recinto = () => {
             ))}
           </div>
 
-          {/* Paginación */}
+          {/* Paginaci³n */}
           {totalPages > 1 && (
             <div style={{
               display: 'flex',
@@ -623,3 +623,5 @@ const Recinto = () => {
 };
 
 export default Recinto;
+
+

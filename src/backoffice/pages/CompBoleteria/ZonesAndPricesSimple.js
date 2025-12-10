@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, forwardRef } from 'react';
-import { Card, Typography, Space, Tag, Button, Empty, Divider, message, Select } from 'antd';
+import { Card, Typography, Space, Tag, Button, Empty, Divider, message, Select } from '../../../utils/antdComponents';
 import { PlusOutlined } from '@ant-design/icons';
 import { v4 as uuidv4 } from 'uuid';
 import ProductosWidget from './components/ProductosWidget';
@@ -250,12 +250,12 @@ const ZonesAndPricesSimple = ({
   return (
     <div className="h-full flex flex-col" ref={ref}>
       <div className="p-4 border-b bg-white">
-        <Title level={4} className="!mb-0">🎫 Gestión de Zonas y Precios</Title>
-        <Text type="secondary">Selecciona el evento, la función y los precios que deseas vender en boletería.</Text>
+        <Title level={4} className="!mb-0">ðŸŽ« Gesti³n de Zonas y Precios</Title>
+        <Text type="secondary">Selecciona el evento, la funci³n y los precios que deseas vender en boleter­a.</Text>
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-4">
-        <Card size="small" title="Selección de evento y función">
+        <Card size="small" title="Selecci³n de evento y funci³n">
           <Space direction="vertical" className="w-full" size="middle">
             <div>
               <Text className="block text-xs text-gray-500 mb-1">Evento</Text>
@@ -277,7 +277,7 @@ const ZonesAndPricesSimple = ({
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <Text className="block text-xs text-gray-500">Función</Text>
+                <Text className="block text-xs text-gray-500">Funci³n</Text>
                 {typeof onShowFunctions === 'function' && funciones.length > 1 && (
                   <Button type="link" size="small" onClick={onShowFunctions}>
                     Ver listado completo
@@ -286,7 +286,7 @@ const ZonesAndPricesSimple = ({
               </div>
               <Select
                 showSearch
-                placeholder={selectedEvent ? 'Selecciona una función' : 'Selecciona primero un evento'}
+                placeholder={selectedEvent ? 'Selecciona una funci³n' : 'Selecciona primero un evento'}
                 value={selectedFunctionId}
                 onChange={value => onFunctionSelect && onFunctionSelect(value)}
                 disabled={!selectedEvent}
@@ -344,7 +344,7 @@ const ZonesAndPricesSimple = ({
           extra={selectedFuncion && zoneGroups.length === 0 ? <Tag color="orange">Sin detalles en la plantilla</Tag> : null}
         >
           {!selectedFuncion && (
-            <Empty description="Selecciona una función para ver las zonas disponibles" />
+            <Empty description="Selecciona una funci³n para ver las zonas disponibles" />
           )}
 
           {selectedFuncion && zoneGroups.length === 0 && (
@@ -387,7 +387,7 @@ const ZonesAndPricesSimple = ({
                           <div className="text-xs text-gray-500">
                             <span className="font-semibold text-green-600">${precio.precio.toFixed(2)}</span>
                             {precio.comision > 0 && (
-                              <span className="ml-2">+ comisión ${precio.comision.toFixed(2)}</span>
+                              <span className="ml-2">+ comisi³n ${precio.comision.toFixed(2)}</span>
                             )}
                           </div>
                           <div className="text-xs text-gray-400 mt-1 capitalize">
@@ -402,7 +402,7 @@ const ZonesAndPricesSimple = ({
                           icon={<PlusOutlined />}
                           onClick={() => handleAddPriceToCart(zona, precio)}
                         >
-                          Añadir rápido
+                          A±adir r¡pido
                         </Button>
                       </div>
                     </Card>
@@ -435,3 +435,5 @@ const ZonesAndPricesSimple = ({
 };
 
 export default forwardRef(ZonesAndPricesSimple);
+
+

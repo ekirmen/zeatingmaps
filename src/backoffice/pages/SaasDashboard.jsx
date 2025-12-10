@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Alert, Tabs, Badge, Avatar, message, Descriptions, Divider, List, Drawer, Dropdown, Menu } from 'antd';
+import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Alert, Tabs, Badge, Avatar, message, Descriptions, Divider, List, Drawer, Dropdown, Menu } from '../../utils/antdComponents';
 import {
   UserOutlined,
   BankOutlined,
@@ -105,7 +105,7 @@ const SaasDashboard = () => {
           id: 3,
           type: 'warning',
           title: 'Mantenimiento Programado',
-          message: 'Mantenimiento programado para mañana a las 2:00 AM',
+          message: 'Mantenimiento programado para ma±ana a las 2:00 AM',
           read: true,
           created_at: new Date(Date.now() - 7200000).toISOString()
         }
@@ -119,10 +119,10 @@ const SaasDashboard = () => {
     }
   }, []);
 
-  // Cargar métricas avanzadas
+  // Cargar m©tricas avanzadas
   const loadAdvancedMetrics = useCallback(async () => {
     try {
-      // Cálculo de crecimiento mensual - CORREGIDO
+      // C¡lculo de crecimiento mensual - CORREGIDO
       const currentDate = new Date();
       const lastMonth = new Date();
       lastMonth.setMonth(lastMonth.getMonth() - 1);
@@ -157,7 +157,7 @@ const SaasDashboard = () => {
       });
     } catch (error) {
       console.error('Error loading advanced metrics:', error);
-      // Establecer métricas por defecto en caso de error
+      // Establecer m©tricas por defecto en caso de error
       setAdvancedMetrics({
         monthlyGrowth: 0,
         churnRate: 0,
@@ -264,7 +264,7 @@ const SaasDashboard = () => {
       });
     } catch (error) {
       console.error('Error loading stats:', error);
-      message.error('Error al cargar estadísticas');
+      message.error('Error al cargar estad­sticas');
     }
   }, []);
 
@@ -300,7 +300,7 @@ const SaasDashboard = () => {
   const handleViewTenant = async (tenant) => {
     setSelectedTenant(tenant);
 
-    // Cargar datos específicos del tenant
+    // Cargar datos espec­ficos del tenant
     try {
       // Cargar eventos del tenant
       const { data: eventosData } = await supabase
@@ -384,7 +384,7 @@ const SaasDashboard = () => {
           plan_type: values.plan_type || 'basic',
           max_users: values.max_users || 10,
           max_events: values.max_events || 50,
-          // Si no se especifica full_url, generarla automáticamente
+          // Si no se especifica full_url, generarla autom¡ticamente
           full_url: values.full_url || (values.subdomain && values.domain ? `${values.subdomain}.${values.domain}` : values.domain)
         };
 
@@ -522,7 +522,7 @@ const SaasDashboard = () => {
                 Crear Backup
               </Menu.Item>
               <Menu.Item key="audit" icon={<AuditOutlined />} onClick={() => message.info(`Ver logs de ${record.company_name}`)}>
-                Ver Auditoría
+                Ver Auditor­a
               </Menu.Item>
               <Menu.Item key="templates" icon={<FileTextOutlined />} onClick={() => message.info(`Templates para ${record.company_name}`)}>
                 Templates
@@ -549,7 +549,7 @@ const SaasDashboard = () => {
         <Col span={18}>
           <Title level={2}>
             <BankOutlined style={{ marginRight: '8px' }} />
-            Panel de Administración SaaS
+            Panel de Administraci³n SaaS
           </Title>
         </Col>
         <Col span={6} style={{ textAlign: 'right' }}>
@@ -581,13 +581,13 @@ const SaasDashboard = () => {
                   Tickets de Soporte ({stats.pendingSupportTickets})
                 </Menu.Item>
                 <Menu.Item key="alerts" icon={<ExclamationCircleOutlined />}>
-                  Alertas Críticas ({stats.criticalAlerts})
+                  Alertas Cr­ticas ({stats.criticalAlerts})
                 </Menu.Item>
                 <Menu.Item key="audit" icon={<AuditOutlined />}>
-                  Logs de Auditoría
+                  Logs de Auditor­a
                 </Menu.Item>
                 <Menu.Item key="backup" icon={<CloudUploadOutlined />}>
-                  Gestión de Backups
+                  Gesti³n de Backups
                 </Menu.Item>
               </Menu>
             }>
@@ -597,10 +597,10 @@ const SaasDashboard = () => {
         </Col>
       </Row>
 
-      {/* Alertas críticas */}
+      {/* Alertas cr­ticas */}
       {stats.criticalAlerts > 0 && (
         <Alert
-          message={`${stats.criticalAlerts} alertas críticas requieren atención`}
+          message={`${stats.criticalAlerts} alertas cr­ticas requieren atenci³n`}
           description="Hay problemas urgentes que necesitan ser resueltos inmediatamente."
           type="error"
           showIcon
@@ -613,7 +613,7 @@ const SaasDashboard = () => {
         />
       )}
 
-      {/* Estadísticas */}
+      {/* Estad­sticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -657,7 +657,7 @@ const SaasDashboard = () => {
         </Col>
       </Row>
 
-      {/* Estadísticas adicionales */}
+      {/* Estad­sticas adicionales */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -701,7 +701,7 @@ const SaasDashboard = () => {
         </Col>
       </Row>
 
-      {/* Métricas avanzadas */}
+      {/* M©tricas avanzadas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -804,7 +804,7 @@ const SaasDashboard = () => {
               style={{ width: '100%' }}
             >
               <Option value="all">Todos los planes</Option>
-              <Option value="basic">Básico</Option>
+              <Option value="basic">B¡sico</Option>
               <Option value="pro">Profesional</Option>
               <Option value="enterprise">Empresarial</Option>
             </Select>
@@ -842,13 +842,13 @@ const SaasDashboard = () => {
 
       {/* Tabla de Empresas */}
       <Card
-        title="Gestión de Empresas"
+        title="Gesti³n de Empresas"
         extra={
           <Space>
-            <Button icon={<AuditOutlined />} onClick={() => message.info('Ver logs de auditoría')}>
-              Auditoría
+            <Button icon={<AuditOutlined />} onClick={() => message.info('Ver logs de auditor­a')}>
+              Auditor­a
             </Button>
-            <Button icon={<CloudUploadOutlined />} onClick={() => message.info('Gestión de backups')}>
+            <Button icon={<CloudUploadOutlined />} onClick={() => message.info('Gesti³n de backups')}>
               Backups
             </Button>
             <Button icon={<FileTextOutlined />} onClick={() => message.info('Templates de soporte')}>
@@ -902,7 +902,7 @@ const SaasDashboard = () => {
               <Form.Item
                 name="contact_email"
                 label="Email de Contacto"
-                rules={[{ required: true, type: 'email', message: 'Email válido requerido' }]}
+                rules={[{ required: true, type: 'email', message: 'Email v¡lido requerido' }]}
               >
                 <Input />
               </Form.Item>
@@ -917,7 +917,7 @@ const SaasDashboard = () => {
                 rules={[{ required: true, message: 'Plan requerido' }]}
               >
                 <Select>
-                  <Option value="basic">Básico</Option>
+                  <Option value="basic">B¡sico</Option>
                   <Option value="pro">Profesional</Option>
                   <Option value="enterprise">Empresarial</Option>
                 </Select>
@@ -963,7 +963,7 @@ const SaasDashboard = () => {
             <Col span={12}>
               <Form.Item
                 name="max_users"
-                label="Usuarios Máximos"
+                label="Usuarios M¡ximos"
               >
                 <Input type="number" />
               </Form.Item>
@@ -971,7 +971,7 @@ const SaasDashboard = () => {
             <Col span={12}>
               <Form.Item
                 name="max_events"
-                label="Eventos Máximos"
+                label="Eventos M¡ximos"
               >
                 <Input type="number" />
               </Form.Item>
@@ -1005,7 +1005,7 @@ const SaasDashboard = () => {
               <Descriptions.Item label="Empresa">{selectedTenant.company_name}</Descriptions.Item>
               <Descriptions.Item label="Subdominio">{selectedTenant.full_url || `${selectedTenant.subdomain}.${selectedTenant.domain || 'veneventos.com'}`}</Descriptions.Item>
               <Descriptions.Item label="Email">{selectedTenant.contact_email}</Descriptions.Item>
-              <Descriptions.Item label="Teléfono">{selectedTenant.contact_phone}</Descriptions.Item>
+              <Descriptions.Item label="Tel©fono">{selectedTenant.contact_phone}</Descriptions.Item>
               <Descriptions.Item label="Plan">
                 <Tag color={getPlanColor(selectedTenant.plan_type)}>
                   {selectedTenant.plan_type?.toUpperCase()}
@@ -1019,10 +1019,10 @@ const SaasDashboard = () => {
                    selectedTenant.status === 'pending' ? 'Pendiente' : selectedTenant.status}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Fecha de Creación">
+              <Descriptions.Item label="Fecha de Creaci³n">
                 {new Date(selectedTenant.created_at).toLocaleDateString()}
               </Descriptions.Item>
-              <Descriptions.Item label="Última Actualización">
+              <Descriptions.Item label="šltima Actualizaci³n">
                 {new Date(selectedTenant.updated_at).toLocaleDateString()}
               </Descriptions.Item>
             </Descriptions>
@@ -1136,7 +1136,7 @@ const SaasDashboard = () => {
                   onClick={() => handleViewClientData(selectedTenant, 'customization')}
                   block
                 >
-                  Ver Personalización del Cliente
+                  Ver Personalizaci³n del Cliente
                 </Button>
               </Col>
               <Col span={12}>
@@ -1181,7 +1181,7 @@ const SaasDashboard = () => {
             <TabPane tab="Productos" key="products">
               <TenantProductsSupport tenant={selectedTenant} onAction={handleSupportAction} />
             </TabPane>
-            <TabPane tab="Configuración" key="config">
+            <TabPane tab="Configuraci³n" key="config">
               <TenantConfigSupport tenant={selectedTenant} onAction={handleSupportAction} />
             </TabPane>
           </Tabs>
@@ -1392,8 +1392,8 @@ const TenantConfigSupport = ({ tenant, onAction }) => {
   return (
     <div>
       <Alert
-        message="Configuración del Tenant"
-        description="Aquí puedes modificar la configuración general del cliente"
+        message="Configuraci³n del Tenant"
+        description="Aqu­ puedes modificar la configuraci³n general del cliente"
         type="info"
         showIcon
         style={{ marginBottom: '16px' }}
@@ -1406,7 +1406,7 @@ const TenantConfigSupport = ({ tenant, onAction }) => {
             description="Actualizar el plan del cliente"
           />
           <Select defaultValue={tenant.plan_type} style={{ width: 120 }}>
-            <Option value="basic">Básico</Option>
+            <Option value="basic">B¡sico</Option>
             <Option value="pro">Profesional</Option>
             <Option value="enterprise">Empresarial</Option>
           </Select>
@@ -1572,7 +1572,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
               <Button size="small" onClick={() => onAction('update_function', { id: item.id, estado: 'active' })}>
                 Activar
               </Button>,
-              <Button size="small" onClick={() => onAction('update_function', { id: item.id, nombre: 'Función Modificada' })}>
+              <Button size="small" onClick={() => onAction('update_function', { id: item.id, nombre: 'Funci³n Modificada' })}>
                 Modificar Nombre
               </Button>
             ]}
@@ -1597,7 +1597,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
           >
             <List.Item.Meta
               title={item.nombre}
-              description={`Dirección: ${item.direccion} - Capacidad: ${item.capacidad} - Estado: ${item.estado}`}
+              description={`Direcci³n: ${item.direccion} - Capacidad: ${item.capacidad} - Estado: ${item.estado}`}
             />
           </List.Item>
         );
@@ -1606,7 +1606,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
           <List.Item
             actions={[
               <Button size="small" onClick={() => onAction('update_commission', { id: item.id, porcentaje: 0 })}>
-                Quitar Comisión
+                Quitar Comisi³n
               </Button>,
               <Button size="small" onClick={() => onAction('update_commission', { id: item.id, estado: 'active' })}>
                 Activar
@@ -1614,7 +1614,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
             ]}
           >
             <List.Item.Meta
-              title={`Comisión ${item.id}`}
+              title={`Comisi³n ${item.id}`}
               description={`Porcentaje: ${item.porcentaje}% - Tipo: ${item.tipo} - Estado: ${item.estado}`}
             />
           </List.Item>
@@ -1650,7 +1650,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
             ]}
           >
             <List.Item.Meta
-              title={`Personalización ${item.id}`}
+              title={`Personalizaci³n ${item.id}`}
               description={`Tema: ${item.tema} - Color: ${item.color_principal} - Estado: ${item.estado}`}
             />
           </List.Item>
@@ -1706,7 +1706,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
       case 'venues': return 'Recintos';
       case 'commissions': return 'Comisiones';
       case 'zones': return 'Zonas';
-      case 'customization': return 'Personalización';
+      case 'customization': return 'Personalizaci³n';
       case 'sales': return 'Ventas';
       case 'reports': return 'Reportes';
       default: return 'Datos';
@@ -1736,3 +1736,5 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
 };
 
 export default SaasDashboard;
+
+

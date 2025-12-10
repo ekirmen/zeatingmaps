@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Input, Button, message } from 'antd';
+import { Input, Button, message } from '../../utils/antdComponents';
 import { useTranslation } from 'react-i18next';
 import { registerUser } from '../services/authService';
 
@@ -36,7 +36,7 @@ const Register = () => {
         phone: `${formData.phoneCode}${formData.phone}`,
       });
       
-      // Si el registro fue exitoso y tenemos una sesión, iniciar sesión automáticamente
+      // Si el registro fue exitoso y tenemos una sesi³n, iniciar sesi³n autom¡ticamente
       if (session && session.access_token) {
         const token = session.access_token;
         localStorage.setItem('token', token);
@@ -105,3 +105,5 @@ const Register = () => {
 };
 
 export default Register;
+
+

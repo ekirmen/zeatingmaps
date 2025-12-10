@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Input, Table, Button, message } from 'antd';
+import { Modal, Input, Table, Button, message } from '../../../utils/antdComponents';
 import { AiOutlineUserAdd } from 'react-icons/ai';
 import { supabase, supabaseAdmin } from '../../../supabaseClient';
 
@@ -24,7 +24,7 @@ const ClientModals = ({
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
-      message.warning('Por favor ingresa un término de búsqueda');
+      message.warning('Por favor ingresa un t©rmino de bºsqueda');
       return;
     }
 
@@ -55,7 +55,7 @@ const ClientModals = ({
       }
     } catch (error) {
       console.error('Search error:', error);
-      message.error(error.message || 'Error en la búsqueda');
+      message.error(error.message || 'Error en la bºsqueda');
     }
   };
 
@@ -104,7 +104,7 @@ const ClientModals = ({
 
       if (profileError) throw profileError;
 
-      message.success('Usuario creado con éxito');
+      message.success('Usuario creado con ©xito');
       setNewClientForm({ nombre: '', email: '', telefono: '' });
       setIsAddingAccount(false);
     } catch (error) {
@@ -127,12 +127,12 @@ const ClientModals = ({
       ellipsis: true,
     },
     {
-      title: 'Teléfono',
+      title: 'Tel©fono',
       dataIndex: 'telefono',
       key: 'telefono',
     },
     {
-      title: 'Acción',
+      title: 'Acci³n',
       key: 'actions',
       render: (_, record) => (
         <Button
@@ -157,7 +157,7 @@ const ClientModals = ({
         if (typeof onSearchCancel === 'function') {
           onSearchCancel();
         } else {
-          console.error('❌ [ClientModals] onSearchCancel no es una función:', onSearchCancel);
+          console.error('Œ [ClientModals] onSearchCancel no es una funci³n:', onSearchCancel);
         }
       }}
       footer={null}
@@ -165,7 +165,7 @@ const ClientModals = ({
       centered
     >
       <div className="space-y-4">
-        {/* Barra de búsqueda */}
+        {/* Barra de bºsqueda */}
         <Input.Search
           placeholder="Buscar por email"
           enterButton="Buscar"
@@ -176,7 +176,7 @@ const ClientModals = ({
           allowClear
         />
 
-        {/* Botón para crear nueva cuenta */}
+        {/* Bot³n para crear nueva cuenta */}
         <Button
           type="default"
           block
@@ -202,7 +202,7 @@ const ClientModals = ({
               onChange={(e) => setNewClientForm({...newClientForm, email: e.target.value})}
             />
             <Input
-              placeholder="Teléfono (opcional)"
+              placeholder="Tel©fono (opcional)"
               value={newClientForm.telefono}
               onChange={(e) => setNewClientForm({...newClientForm, telefono: e.target.value})}
             />
@@ -238,3 +238,5 @@ const ClientModals = ({
 };
 
 export default ClientModals;
+
+

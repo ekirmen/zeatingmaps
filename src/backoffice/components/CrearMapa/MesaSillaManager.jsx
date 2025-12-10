@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Space, Typography, InputNumber, Select, Row, Col, Card } from 'antd';
+import { Modal, Button, Space, Typography, InputNumber, Select, Row, Col, Card } from '../../../utils/antdComponents';
 import { PlusOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -21,7 +21,7 @@ const MesaSillaManager = ({
 
   useEffect(() => {
     if (mesa && visible) {
-      // Cargar configuración existente si la mesa ya tiene sillas
+      // Cargar configuraci³n existente si la mesa ya tiene sillas
       if (mesa.sillasConfig) {
         setSillasConfig(mesa.sillasConfig);
       }
@@ -141,7 +141,7 @@ const MesaSillaManager = ({
       case 'hexagon':
         return (
           <div className="space-y-4">
-            <Title level={5}>Sillas por lado del hexágono</Title>
+            <Title level={5}>Sillas por lado del hex¡gono</Title>
             <Row gutter={8}>
               {[0, 1, 2, 3, 4, 5].map((lado) => (
                 <Col span={4} key={lado}>
@@ -284,7 +284,7 @@ const MesaSillaManager = ({
 
         <div className="bg-gray-50 p-3 rounded">
           <Text type="secondary" className="text-sm">
-            💡 Las sillas se colocarán automáticamente alrededor de la mesa según la configuración.
+            ðŸ’¡ Las sillas se colocar¡n autom¡ticamente alrededor de la mesa segºn la configuraci³n.
             {mesa.shape === 'circle' && ' Para mesas circulares, las sillas se distribuyen uniformemente.'}
             {mesa.shape === 'hexagon' && ' Para mesas hexagonales, las sillas se colocan en cada lado.'}
             {mesa.shape === 'star' && ' Para mesas en forma de estrella, las sillas se colocan en cada punto.'}
@@ -296,3 +296,5 @@ const MesaSillaManager = ({
 };
 
 export default MesaSillaManager;
+
+

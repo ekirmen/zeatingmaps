@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Avatar, Dropdown, Badge, Typography, Space } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Badge, Typography, Space } from '../../utils/antdComponents';
 import { 
   UserOutlined, 
   BellOutlined, 
@@ -65,7 +65,7 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: 'Configuración',
+      label: 'Configuraci³n',
     },
     {
       type: 'divider',
@@ -73,7 +73,7 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Cerrar Sesión',
+      label: 'Cerrar Sesi³n',
       onClick: logout,
     },
   ];
@@ -115,10 +115,10 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
             color: 'white',
             marginBottom: '4px'
           }}>
-            🎫 Ticketera
+            ðŸŽ« Ticketera
           </div>
           <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>
-            Panel de Administración
+            Panel de Administraci³n
           </Text>
         </div>
 
@@ -236,3 +236,5 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
 };
 
 export default DashboardLayout;
+
+

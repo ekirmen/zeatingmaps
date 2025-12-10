@@ -19,7 +19,7 @@ import {
   Badge,
   Tooltip,
   Checkbox
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   PlusOutlined, 
   EditOutlined, 
@@ -56,7 +56,7 @@ const Usuarios = () => {
     { value: 'call_center', label: 'Call Center', color: 'green', icon: <UserOutlined /> },
     { value: 'agencias', label: 'Agencias', color: 'purple', icon: <UserOutlined /> },
     { value: 'contenido_marketing', label: 'Contenido/Marketing', color: 'cyan', icon: <UserOutlined /> },
-    { value: 'atencion_cliente', label: 'Atención al Cliente', color: 'magenta', icon: <UserOutlined /> },
+    { value: 'atencion_cliente', label: 'Atenci³n al Cliente', color: 'magenta', icon: <UserOutlined /> },
     { value: 'vendedor_externo', label: 'Vendedor Externo', color: 'lime', icon: <UserOutlined /> },
     { value: 'reportes', label: 'Reportes', color: 'geekblue', icon: <UserOutlined /> }
   ];
@@ -83,7 +83,7 @@ const Usuarios = () => {
 
       if (error) throw error;
 
-      // Procesar usuarios para mostrar información relevante
+      // Procesar usuarios para mostrar informaci³n relevante
       const processedUsers = (data || []).map(user => ({
         ...user,
         role: user.permisos?.role || user.role || 'usuario_store',
@@ -93,7 +93,7 @@ const Usuarios = () => {
       }));
 
       setUsuarios(processedUsers);
-      console.log('✅ Usuarios cargados:', processedUsers.length, 'para tenant:', getTenantId());
+      console.log('œ… Usuarios cargados:', processedUsers.length, 'para tenant:', getTenantId());
     } catch (error) {
       console.error('Error loading usuarios:', error);
       message.error('Error al cargar usuarios');
@@ -327,7 +327,7 @@ const Usuarios = () => {
       },
     },
     {
-      title: 'Teléfono',
+      title: 'Tel©fono',
       dataIndex: 'telefono',
       key: 'telefono',
       render: (telefono) => telefono || '-',
@@ -343,7 +343,7 @@ const Usuarios = () => {
       ),
     },
     {
-      title: 'Fecha Creación',
+      title: 'Fecha Creaci³n',
       dataIndex: 'created_at',
       key: 'created_at',
       render: (date) => new Date(date).toLocaleDateString(),
@@ -377,9 +377,9 @@ const Usuarios = () => {
           
           {hasPermission('eliminar_usuarios') && (
             <Popconfirm
-              title="¿Estás seguro de eliminar este usuario?"
+              title="¿Est¡s seguro de eliminar este usuario?"
               onConfirm={() => handleDeleteUser(record.id)}
-              okText="Sí"
+              okText="S­"
               cancelText="No"
             >
               <Tooltip title="Eliminar usuario">
@@ -402,7 +402,7 @@ const Usuarios = () => {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
         <Title level={3}>Acceso Denegado</Title>
-        <Text>No tienes permisos para acceder a la gestión de usuarios.</Text>
+        <Text>No tienes permisos para acceder a la gesti³n de usuarios.</Text>
       </div>
     );
   }
@@ -413,7 +413,7 @@ const Usuarios = () => {
       <div className="mb-6">
         <Row justify="space-between" align="middle">
           <Col>
-            <Title level={2}>Gestión de Usuarios</Title>
+            <Title level={2}>Gesti³n de Usuarios</Title>
             <Text type="secondary">Administra los usuarios y sus roles en el sistema</Text>
           </Col>
           <Col>
@@ -430,7 +430,7 @@ const Usuarios = () => {
         </Row>
       </div>
 
-      {/* Información de Roles */}
+      {/* Informaci³n de Roles */}
       <Card className="mb-6">
         <Title level={4}>Roles Disponibles</Title>
         <Row gutter={[16, 16]}>
@@ -506,7 +506,7 @@ const Usuarios = () => {
                 label="Email/Login"
                 rules={[
                   { required: true, message: 'El email es requerido' },
-                  { type: 'email', message: 'Debe ser un email válido' }
+                  { type: 'email', message: 'Debe ser un email v¡lido' }
                 ]}
               >
                 <Input placeholder="usuario@ejemplo.com" />
@@ -518,7 +518,7 @@ const Usuarios = () => {
             <Col span={12}>
               <Form.Item
                 name="telefono"
-                label="Teléfono"
+                label="Tel©fono"
               >
                 <Input placeholder="+1 234 567 8900" />
               </Form.Item>
@@ -570,7 +570,7 @@ const Usuarios = () => {
                         <div>
                           <div style={{ fontWeight: 'bold' }}>{recinto.nombre || 'Sin nombre'}</div>
                           <div style={{ fontSize: '12px', color: '#666' }}>
-                            {recinto.direccion || 'Sin dirección'} - {recinto.ciudad || 'Sin ciudad'}
+                            {recinto.direccion || 'Sin direcci³n'} - {recinto.ciudad || 'Sin ciudad'}
                           </div>
                         </div>
                       </Checkbox>
@@ -606,3 +606,5 @@ const Usuarios = () => {
 };
 
 export default Usuarios;
+
+

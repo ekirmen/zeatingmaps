@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import logger from '../../utils/logger';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, Typography, message } from 'antd';
+import { Button, Card, Typography, message } from '../../utils/antdComponents';
 import {
     DeleteOutlined,
     DownloadOutlined,
@@ -10,7 +10,7 @@ import {
     ClockCircleOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
-// Nota: El carrito debe ser visible incluso en modo incógnito (sin login)
+// Nota: El carrito debe ser visible incluso en modo inc³gnito (sin login)
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../services/facebookPixelService';
 // import ValidationWidget from '../../components/ValidationWidget';
@@ -54,19 +54,19 @@ const TicketDownloadButton = ({ seat, locator, isPaid }) => {
                 message.success('Ticket descargado correctamente');
             } else {
                 const errorText = await response.text().catch(() => 'Error desconocido');
-                console.error('❌ [DOWNLOAD] Error en respuesta:', response.status, errorText);
+                console.error('Œ [DOWNLOAD] Error en respuesta:', response.status, errorText);
                 message.error(`Error al descargar ticket: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
-            // Manejar errores correctamente, asegurándose de que el mensaje sea un string
+            // Manejar errores correctamente, asegur¡ndose de que el mensaje sea un string
             const errorMessage = error instanceof Error
                 ? error.message
                 : typeof error === 'string'
                     ? error
                     : error?.message || 'Error desconocido al descargar el ticket';
 
-            console.error('❌ [DOWNLOAD] Error descargando ticket:', error);
-            console.error('❌ [DOWNLOAD] Error message:', errorMessage);
+            console.error('Œ [DOWNLOAD] Error descargando ticket:', error);
+            console.error('Œ [DOWNLOAD] Error message:', errorMessage);
             message.error(`Error al descargar ticket: ${errorMessage}`);
         } finally {
             setDownloading(false);
@@ -119,21 +119,21 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
                 VisualNotifications.show('purchaseComplete', `${paidSeats.length} tickets descargados correctamente`);
             } else {
                 const errorText = await response.text().catch(() => 'Error desconocido');
-                console.error('❌ [DOWNLOAD] Error en respuesta bulk:', response.status, errorText);
+                console.error('Œ [DOWNLOAD] Error en respuesta bulk:', response.status, errorText);
                 const errorMsg = `Error al descargar tickets: ${response.status} ${response.statusText}`;
                 message.error(errorMsg);
                 VisualNotifications.show('error', errorMsg);
             }
         } catch (error) {
-            // Manejar errores correctamente, asegurándose de que el mensaje sea un string
+            // Manejar errores correctamente, asegur¡ndose de que el mensaje sea un string
             const errorMessage = error instanceof Error
                 ? error.message
                 : typeof error === 'string'
                     ? error
                     : error?.message || 'Error desconocido al descargar los tickets';
 
-            console.error('❌ [DOWNLOAD] Error descargando tickets (bulk):', error);
-            console.error('❌ [DOWNLOAD] Error message:', errorMessage);
+            console.error('Œ [DOWNLOAD] Error descargando tickets (bulk):', error);
+            console.error('Œ [DOWNLOAD] Error message:', errorMessage);
             const errorMsg = `Error al descargar tickets: ${errorMessage}`;
             message.error(errorMsg);
             VisualNotifications.show('error', errorMsg);
@@ -173,11 +173,11 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
         timeLeft
     } = cartStore;
 
-    // Usar props si están disponibles, sino usar el store
+    // Usar props si est¡n disponibles, sino usar el store
     const items = propsItems || storeItems;
     const removeFromCart = propsRemoveFromCart || storeRemoveFromCart;
 
-    // Si hay selectedFunctionId, filtrar items de esa función
+    // Si hay selectedFunctionId, filtrar items de esa funci³n
     const filteredItems = selectedFunctionId
       ? items.filter(item => {
           const itemFunctionId = item.functionId || item.funcionId;
@@ -225,8 +225,8 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
     // Obtener color del temporizador
     const getTimerColor = () => {
       if (!timeLeft || timeLeft <= 0) return '#999';
-      if (timeLeft <= 60) return '#ff4d4f'; // Rojo últimos 60 segundos
-      if (timeLeft <= 300) return '#faad14'; // Amarillo últimos 5 minutos
+      if (timeLeft <= 60) return '#ff4d4f'; // Rojo ºltimos 60 segundos
+      if (timeLeft <= 300) return '#faad14'; // Amarillo ºltimos 5 minutos
       return '#52c41a'; // Verde por defecto
     };
 
@@ -237,20 +237,20 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
 
     // Handle checkout - Optimizado para mobile (async, no bloqueante)
     const handleCheckout = () => {
-        // Validación rápida primero (síncrona)
+        // Validaci³n r¡pida primero (s­ncrona)
         if (itemCount === 0) {
-            message.warning('El carrito está vacío');
+            message.warning('El carrito est¡ vac­o');
             return;
         }
 
-        // Ejecutar validaciones y navegación de forma no bloqueante
+        // Ejecutar validaciones y navegaci³n de forma no bloqueante
         // Esto previene que el UI se congele en mobile
         const executeCheckout = () => {
             try {
-                // Validar que todos los asientos tengan IDs válidos
+                // Validar que todos los asientos tengan IDs v¡lidos
                 const invalidSeats = filteredItems?.filter(item => !(item.id || item._id || item.sillaId)) || [];
                 if (invalidSeats.length > 0) {
-                    message.error('Algunos asientos no tienen IDs válidos. Por favor, recarga la página.');
+                    message.error('Algunos asientos no tienen IDs v¡lidos. Por favor, recarga la p¡gina.');
                     return;
                 }
 
@@ -266,15 +266,15 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 if (!user) {
                     setPendingCheckout(true);
 
-                    // Para iOS Safari: usar función global directamente (más confiable que eventos)
+                    // Para iOS Safari: usar funci³n global directamente (m¡s confiable que eventos)
                     if (typeof window !== 'undefined' && typeof window.openAccountModal === 'function') {
-                        // Llamar directamente - la función ya maneja la asincronía internamente
+                        // Llamar directamente - la funci³n ya maneja la asincron­a internamente
                         window.openAccountModal({
                             mode: 'login',
                             redirectTo: '/store/payment'
                         });
                     } else {
-                        // Fallback: usar eventos personalizados si la función global no está disponible
+                        // Fallback: usar eventos personalizados si la funci³n global no est¡ disponible
                         const eventDetail = {
                             mode: 'login',
                             source: 'cart',
@@ -292,7 +292,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                         // Dispatch inmediato en window (para navegadores normales)
                         window.dispatchEvent(customEvent);
 
-                        // También dispatch en document después de requestAnimationFrame (para iOS)
+                        // Tambi©n dispatch en document despu©s de requestAnimationFrame (para iOS)
                         requestAnimationFrame(() => {
                             document.dispatchEvent(new CustomEvent('store:open-account-modal', {
                                 detail: eventDetail,
@@ -306,7 +306,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                     return;
                 }
 
-                // Navigate de forma asíncrona para no bloquear el UI thread
+                // Navigate de forma as­ncrona para no bloquear el UI thread
                 setTimeout(() => {
                     navigate('/store/payment');
                 }, 0);
@@ -316,11 +316,11 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
             }
         };
 
-        // En mobile, usar requestIdleCallback si está disponible para mejor UX
+        // En mobile, usar requestIdleCallback si est¡ disponible para mejor UX
         if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
             requestIdleCallback(executeCheckout, { timeout: 100 });
         } else {
-            // Fallback: usar setTimeout con delay mínimo
+            // Fallback: usar setTimeout con delay m­nimo
             setTimeout(executeCheckout, 0);
         }
     };
@@ -343,7 +343,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
 
             const currentSessionId = localStorage.getItem('anonSessionId');
 
-            // Agrupar asientos por función para verificación batch
+            // Agrupar asientos por funci³n para verificaci³n batch
             const seatsByFunction = new Map();
             filteredItems.forEach(item => {
                 const seatId = item.sillaId || item._id || item.id;
@@ -357,7 +357,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 }
             });
 
-            // Verificar todos los asientos en batch por función
+            // Verificar todos los asientos en batch por funci³n
             const paidSeatsSet = new Set();
             try {
                 const seatPaymentChecker = await import('../services/seatPaymentChecker');
@@ -409,7 +409,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
         }
     }, [itemCount, filteredItems, subtotal]);
 
-    // El carrito se muestra sin requerir sesión; el login se solicita al pagar
+    // El carrito se muestra sin requerir sesi³n; el login se solicita al pagar
 
     return (
         <>
@@ -480,7 +480,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                         <div className="store-text-center store-text-gray-500 py-8">
                             <ShoppingCartOutlined className="text-4xl mb-2" />
                             <p className="store-text-lg store-font-medium">No hay items en el carrito</p>
-                            <p className="store-text-sm store-text-gray-400 mt-2">Añade asientos al carrito</p>
+                            <p className="store-text-sm store-text-gray-400 mt-2">A±ade asientos al carrito</p>
                         </div>
                     ) : (
                     <>
@@ -544,8 +544,8 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                         </div>
                                         {unpaidSeats.length > 0 && (
                                             <div className="store-alert store-alert-warning mt-3">
-                                                ⚠️ Hay {unpaidSeats.length} asientos pendientes de pago.
-                                                Los tickets solo se pueden descargar cuando estén completamente pagados.
+                                                š ï¸ Hay {unpaidSeats.length} asientos pendientes de pago.
+                                                Los tickets solo se pueden descargar cuando est©n completamente pagados.
                                             </div>
                                         )}
                                     </div>
@@ -675,7 +675,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                         </div>
                     )}
 
-                    {/* Botón de pago - Siempre visible si hay items */}
+                    {/* Bot³n de pago - Siempre visible si hay items */}
                     {itemCount > 0 && (
                         <button
                             onClick={handleCheckout}
@@ -690,7 +690,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                         </button>
                     )}
 
-                    {/* Botón de descarga de tickets pagados */}
+                    {/* Bot³n de descarga de tickets pagados */}
                     {currentLocator && paidSeats.length > 0 && (
                         <button
                             onClick={() => {
@@ -711,3 +711,5 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
 };
 
 export default Cart;
+
+

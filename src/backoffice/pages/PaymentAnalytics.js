@@ -11,8 +11,9 @@ import {
   Typography, 
   Space, 
   Tag,
-  Spin
-} from 'antd';
+  Spin,
+  Empty
+} from '../../utils/antdComponents';
 import { 
   DollarOutlined, 
   CreditCardOutlined, 
@@ -20,32 +21,100 @@ import {
   MobileOutlined, 
   RiseOutlined, 
   BarChartOutlined,
-  // PieChartOutlined,
-  // LineChartOutlined,
-  // AreaChartOutlined
+  LineChartOutlined,
+  PieChartOutlined
 } from '@ant-design/icons';
-import { 
-  LineChart, 
-  Line, 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
-} from 'recharts';
 import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
+
+// Componente simple para gr¡ficos b¡sicos usando divs y CSS
+const SimpleBarChart = ({ data, dataKey, color = '#1890ff', height = 200 }) => {
+  const maxValue = Math.max(...data.map(d => d[dataKey])) || 1;
+  
+  return (
+    <div style={{ height: `${height}px`, display: 'flex', alignItems: 'flex-end', gap: '8px', padding: '16px 0' }}>
+      {data.map((item, index) => {
+        const value = item[dataKey] || 0;
+        const heightPercent = (value / maxValue) * 80;
+        
+        return (
+          <div 
+            key={index}
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <div
+              style={{
+                height: `${heightPercent}%`,
+                backgroundColor: color,
+                width: '80%',
+                borderRadius: '4px 4px 0 0',
+                transition: 'height 0.3s ease'
+              }}
+            />
+            <div style={{ fontSize: '10px', color: '#666', textAlign: 'center' }}>
+              {item.name || item.date || item.month}
+            </div>
+            <div style={{ fontSize: '12px', fontWeight: '500', color: '#333' }}>
+              ${value.toFixed(0)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const SimplePieChart = ({ data, height = 200 }) => {
+  const total = data.reduce((sum, item) => sum + (item.amount || 0), 0);
+  
+  return (
+    <div style={{ height: `${height}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {total === 0 ? (
+        <Empty description="Sin datos" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxWidth: '300px' }}>
+          {data.map((item, index) => {
+            const percentage = total > 0 ? ((item.amount || 0) / total) * 100 : 0;
+            
+            return (
+              <div 
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  width: '100%'
+                }}
+              >
+                <div
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: item.color || '#1890ff',
+                    borderRadius: '2px'
+                  }}
+                />
+                <div style={{ flex: 1, fontSize: '12px' }}>{item.name}</div>
+                <div style={{ fontSize: '12px', fontWeight: '500' }}>
+                  {percentage.toFixed(1)}%
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const PaymentAnalytics = () => {
   const [loading, setLoading] = useState(true);
@@ -69,13 +138,20 @@ const PaymentAnalytics = () => {
     try {
       setLoading(true);
       
+      // Carga solo datos esenciales primero
       await Promise.all([
         loadTransactionData(),
-        loadGatewayStats(),
-        loadDailySales(),
-        loadMonthlyTrends(),
-        loadTopEvents()
+        loadGatewayStats()
       ]);
+      
+      // Carga datos pesados despu©s
+      setTimeout(async () => {
+        await Promise.all([
+          loadDailySales(),
+          loadMonthlyTrends(),
+          loadTopEvents()
+        ]);
+      }, 100);
     } catch (error) {
       console.error('Error loading analytics data:', error);
     } finally {
@@ -87,10 +163,7 @@ const PaymentAnalytics = () => {
     try {
       let query = supabase
         .from('payment_transactions')
-        .select(`
-          *,
-          *
-        `);
+        .select('*');
 
       if (filters.dateRange) {
         query = query
@@ -99,7 +172,7 @@ const PaymentAnalytics = () => {
       }
 
       if (filters.gateway !== 'all') {
-        query = query.eq('payment_gateways.type', filters.gateway);
+        query = query.eq('gateway_id', filters.gateway);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -119,26 +192,20 @@ const PaymentAnalytics = () => {
     try {
       const { data, error } = await supabase
         .from('payment_transactions')
-        .select(`
-          *,
-          *
-        `)
+        .select('*')
         .eq('status', 'completed');
 
       if (error) throw error;
 
-      // Agrupar por gateway
       const gatewayStats = data.reduce((acc, transaction) => {
         const gatewayName = transaction.gateway_id || 'Unknown';
         if (!acc[gatewayName]) {
           acc[gatewayName] = {
             name: gatewayName,
-            count: 0,
             amount: 0,
-            color: getGatewayColor(transaction.payment_gateways?.type)
+            color: getGatewayColor(gatewayName)
           };
         }
-        acc[gatewayName].count += 1;
         acc[gatewayName].amount += parseFloat(transaction.amount || 0);
         return acc;
       }, {});
@@ -158,26 +225,26 @@ const PaymentAnalytics = () => {
         .from('payment_transactions')
         .select('amount, created_at, status')
         .eq('status', 'completed')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true })
+        .limit(30);
 
       if (error) throw error;
 
-      // Agrupar por día
       const dailyData = data.reduce((acc, transaction) => {
-        const date = new Date(transaction.created_at).toLocaleDateString();
+        const date = new Date(transaction.created_at).toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: 'short'
+        });
         if (!acc[date]) {
-          acc[date] = { date, sales: 0, count: 0 };
+          acc[date] = { date, sales: 0 };
         }
         acc[date].sales += parseFloat(transaction.amount || 0);
-        acc[date].count += 1;
         return acc;
       }, {});
 
-      const dailySales = Object.values(dailyData).slice(-30); // Últimos 30 días
-
       setAnalyticsData(prev => ({
         ...prev,
-        dailySales
+        dailySales: Object.values(dailyData)
       }));
     } catch (error) {
       console.error('Error loading daily sales:', error);
@@ -193,28 +260,16 @@ const PaymentAnalytics = () => {
 
       if (error) throw error;
 
-      // Agrupar por mes
       const monthlyData = data.reduce((acc, transaction) => {
         const date = new Date(transaction.created_at);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const monthKey = date.toLocaleDateString('es-ES', { month: 'short' });
         
         if (!acc[monthKey]) {
-          acc[monthKey] = { 
-            month: monthKey, 
-            revenue: 0, 
-            transactions: 0,
-            avgTicket: 0
-          };
+          acc[monthKey] = { month: monthKey, revenue: 0 };
         }
         acc[monthKey].revenue += parseFloat(transaction.amount || 0);
-        acc[monthKey].transactions += 1;
         return acc;
       }, {});
-
-      // Calcular promedio por ticket
-      Object.values(monthlyData).forEach(month => {
-        month.avgTicket = month.transactions > 0 ? month.revenue / month.transactions : 0;
-      });
 
       setAnalyticsData(prev => ({
         ...prev,
@@ -229,28 +284,17 @@ const PaymentAnalytics = () => {
     try {
       const { data, error } = await supabase
         .from('payment_transactions')
-        .select(`
-          amount,
-          eventos (nombre)
-        `)
-        .eq('status', 'completed');
+        .select('amount')
+        .eq('status', 'completed')
+        .limit(10);
 
       if (error) throw error;
 
-      // Agrupar por evento
-      const eventStats = data.reduce((acc, transaction) => {
-        const eventName = transaction.eventos?.nombre || 'Unknown Event';
-        if (!acc[eventName]) {
-          acc[eventName] = { name: eventName, revenue: 0, tickets: 0 };
-        }
-        acc[eventName].revenue += parseFloat(transaction.amount || 0);
-        acc[eventName].tickets += 1;
-        return acc;
-      }, {});
-
-      const topEvents = Object.values(eventStats)
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 10);
+      // Datos de ejemplo para top events (simplificado)
+      const topEvents = data.map((tx, index) => ({
+        name: `Evento ${index + 1}`,
+        revenue: parseFloat(tx.amount || 0)
+      })).sort((a, b) => b.revenue - a.revenue);
 
       setAnalyticsData(prev => ({
         ...prev,
@@ -299,6 +343,7 @@ const PaymentAnalytics = () => {
   const totalRevenue = analyticsData.transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   const totalTransactions = analyticsData.transactions.length;
   const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+  
   const statusBreakdown = useMemo(() => {
     const summary = {
       completed: 0,
@@ -318,15 +363,6 @@ const PaymentAnalytics = () => {
     return summary;
   }, [analyticsData.transactions]);
 
-  const operationalRates = useMemo(() => {
-    const total = totalTransactions || 1;
-    return {
-      completion: (statusBreakdown.completed / total) * 100,
-      pendingShare: ((statusBreakdown.pending + statusBreakdown.reservado) / total) * 100,
-      failure: (statusBreakdown.failed / total) * 100,
-    };
-  }, [statusBreakdown, totalTransactions]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -339,8 +375,8 @@ const PaymentAnalytics = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <Title level={2}>Análisis de Pagos</Title>
-        <Text type="secondary">Métricas detalladas y tendencias de transacciones</Text>
+        <Title level={2}>An¡lisis de Pagos</Title>
+        <Text type="secondary">M©tricas detalladas y tendencias de transacciones</Text>
       </div>
 
       {/* Filtros */}
@@ -364,7 +400,7 @@ const PaymentAnalytics = () => {
               <Option value="stripe">Stripe</Option>
               <Option value="paypal">PayPal</Option>
               <Option value="transfer">Transferencias</Option>
-              <Option value="mobile_payment">Pago Móvil</Option>
+              <Option value="mobile_payment">Pago M³vil</Option>
               <Option value="zelle">Zelle</Option>
               <Option value="reservation">Reservas</Option>
             </Select>
@@ -382,7 +418,7 @@ const PaymentAnalytics = () => {
         </Row>
       </Card>
 
-      {/* Métricas Principales */}
+      {/* M©tricas Principales */}
       <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24} sm={8}>
           <Card>
@@ -418,87 +454,41 @@ const PaymentAnalytics = () => {
         </Col>
       </Row>
 
-      {/* Métricas Operativas */}
-      <Row gutter={[16, 16]} className="mb-8">
-        <Col xs={24} sm={8}>
-          <Card>
-            <Statistic
-              title="Pagos confirmados"
-              value={statusBreakdown.completed}
-              suffix={`/ ${totalTransactions || 0}`}
-              valueStyle={{ color: '#3f8600' }}
-            />
-            <Text type="secondary">Tasa de cierre: {operationalRates.completion.toFixed(1)}%</Text>
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card>
-            <Statistic
-              title="Pendientes/Reservas"
-              value={statusBreakdown.pending + statusBreakdown.reservado}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-            <Text type="secondary">Participación: {operationalRates.pendingShare.toFixed(1)}%</Text>
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card>
-            <Statistic
-              title="Fallidas o canceladas"
-              value={statusBreakdown.failed + statusBreakdown.cancelled}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-            <Text type="secondary">Revisión: {operationalRates.failure.toFixed(1)}%</Text>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Gráficos */}
+      {/* Gr¡ficos Simplificados */}
       <Row gutter={[16, 16]} className="mb-8">
         {/* Ventas Diarias */}
         <Col xs={24} lg={12}>
-          <Card title="Ventas Diarias" extra={<BarChartOutlined />}>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={analyticsData.dailySales}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${value}`, 'Ventas']} />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="sales" 
-                  stroke="#1890ff" 
-                  strokeWidth={2}
-                  name="Ventas"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <Card 
+            title={
+              <Space>
+                <LineChartOutlined />
+                Ventas Diarias
+              </Space>
+            }
+          >
+            {analyticsData.dailySales.length > 0 ? (
+              <SimpleBarChart 
+                data={analyticsData.dailySales} 
+                dataKey="sales" 
+                color="#1890ff"
+              />
+            ) : (
+              <Empty description="Sin datos de ventas diarias" />
+            )}
           </Card>
         </Col>
 
-        {/* Distribución por Pasarela */}
+        {/* Distribuci³n por Pasarela */}
         <Col xs={24} lg={12}>
-          <Card title="Distribución por Pasarela" extra={<BarChartOutlined />}>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={analyticsData.gatewayStats}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="amount"
-                >
-                  {analyticsData.gatewayStats.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`$${value}`, 'Monto']} />
-              </PieChart>
-            </ResponsiveContainer>
+          <Card 
+            title={
+              <Space>
+                <PieChartOutlined />
+                Distribuci³n por Pasarela
+              </Space>
+            }
+          >
+            <SimplePieChart data={analyticsData.gatewayStats} />
           </Card>
         </Col>
       </Row>
@@ -506,108 +496,110 @@ const PaymentAnalytics = () => {
       {/* Tendencias Mensuales */}
       <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24}>
-          <Card title="Tendencias Mensuales" extra={<BarChartOutlined />}>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={analyticsData.monthlyTrends}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value, name) => [
-                  name === 'revenue' ? `$${value}` : value, 
-                  name === 'revenue' ? 'Ingresos' : 
-                  name === 'transactions' ? 'Transacciones' : 'Ticket Promedio'
-                ]} />
-                <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stackId="1" 
-                  stroke="#3f8600" 
-                  fill="#3f8600" 
-                  name="Ingresos"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="avgTicket" 
-                  stackId="2" 
-                  stroke="#722ed1" 
-                  fill="#722ed1" 
-                  name="Ticket Promedio"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <Card 
+            title={
+              <Space>
+                <BarChartOutlined />
+                Tendencias Mensuales
+              </Space>
+            }
+          >
+            {analyticsData.monthlyTrends.length > 0 ? (
+              <SimpleBarChart 
+                data={analyticsData.monthlyTrends} 
+                dataKey="revenue" 
+                color="#3f8600"
+                height={250}
+              />
+            ) : (
+              <Empty description="Sin datos de tendencias mensuales" />
+            )}
           </Card>
         </Col>
       </Row>
 
-      {/* Top Eventos */}
-      <Row gutter={[16, 16]}>
+      {/* Resumen por Estado */}
+      <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24}>
-          <Card title="Top 10 Eventos por Ingresos" extra={<BarChartOutlined />}>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={analyticsData.topEvents} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={150} />
-                <Tooltip formatter={(value) => [`$${value}`, 'Ingresos']} />
-                <Legend />
-                <Bar dataKey="revenue" fill="#1890ff" name="Ingresos" />
-              </BarChart>
-            </ResponsiveContainer>
+          <Card title="Resumen por Estado de Transacci³n">
+            <Row gutter={[16, 16]}>
+              {Object.entries(statusBreakdown).map(([status, count]) => (
+                <Col xs={12} sm={4} key={status}>
+                  <Card size="small">
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: getStatusColor(status) }}>
+                        {count}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666', textTransform: 'capitalize' }}>
+                        {status}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#999' }}>
+                        {totalTransactions > 0 ? ((count / totalTransactions) * 100).toFixed(1) : 0}%
+                      </div>
+                    </div>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
           </Card>
         </Col>
       </Row>
 
       {/* Tabla de Transacciones Recientes */}
-      <Row gutter={[16, 16]} className="mt-8">
+      <Row gutter={[16, 16]}>
         <Col xs={24}>
           <Card title="Transacciones Recientes">
-            <Table
-              dataSource={analyticsData.transactions.slice(0, 10)}
-              columns={[
-                {
-                  title: 'ID',
-                  dataIndex: 'id',
-                  key: 'id',
-                  render: (id) => id.slice(0, 8) + '...'
-                },
-                {
-                  title: 'Monto',
-                  dataIndex: 'amount',
-                  key: 'amount',
-                  render: (amount) => `$${parseFloat(amount).toFixed(2)}`
-                },
-                {
-                  title: 'Pasarela',
-                  dataIndex: 'gateway_id',
-                  key: 'gateway',
-                  render: (name, record) => (
-                    <Space>
-                      {getGatewayIcon(record.gateway_id)}
-                      {name}
-                    </Space>
-                  )
-                },
-                {
-                  title: 'Estado',
-                  dataIndex: 'status',
-                  key: 'status',
-                  render: (status) => (
-                    <Tag color={getStatusColor(status)}>
-                      {status.toUpperCase()}
-                    </Tag>
-                  )
-                },
-                {
-                  title: 'Fecha',
-                  dataIndex: 'created_at',
-                  key: 'created_at',
-                  render: (date) => new Date(date).toLocaleString()
-                }
-              ]}
-              pagination={false}
-              size="small"
-            />
+            {analyticsData.transactions.length > 0 ? (
+              <Table
+                dataSource={analyticsData.transactions.slice(0, 10)}
+                columns={[
+                  {
+                    title: 'ID',
+                    dataIndex: 'id',
+                    key: 'id',
+                    render: (id) => id ? id.slice(0, 8) + '...' : 'N/A'
+                  },
+                  {
+                    title: 'Monto',
+                    dataIndex: 'amount',
+                    key: 'amount',
+                    render: (amount) => `$${parseFloat(amount || 0).toFixed(2)}`
+                  },
+                  {
+                    title: 'Pasarela',
+                    dataIndex: 'gateway_id',
+                    key: 'gateway',
+                    render: (name) => (
+                      <Space>
+                        {getGatewayIcon(name)}
+                        <span>{name || 'Desconocida'}</span>
+                      </Space>
+                    )
+                  },
+                  {
+                    title: 'Estado',
+                    dataIndex: 'status',
+                    key: 'status',
+                    render: (status) => (
+                      <Tag color={getStatusColor(status)}>
+                        {status ? status.toUpperCase() : 'N/A'}
+                      </Tag>
+                    )
+                  },
+                  {
+                    title: 'Fecha',
+                    dataIndex: 'created_at',
+                    key: 'created_at',
+                    render: (date) => date ? new Date(date).toLocaleString() : 'N/A'
+                  }
+                ]}
+                pagination={false}
+                size="small"
+                rowKey="id"
+              />
+            ) : (
+              <Empty description="No hay transacciones recientes" />
+            )}
           </Card>
         </Col>
       </Row>
@@ -615,4 +607,5 @@ const PaymentAnalytics = () => {
   );
 };
 
-export default PaymentAnalytics; 
+export default PaymentAnalytics;
+

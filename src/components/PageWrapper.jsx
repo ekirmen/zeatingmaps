@@ -1,5 +1,5 @@
 import React from 'react';
-import { Spin, Alert, Empty, Button } from 'antd';
+import { Spin, Alert, Empty, Button } from '../utils/antdComponents';
 import { ExclamationCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 
 /**
@@ -109,4 +109,5 @@ export const usePageState = () => {
 
   return { loading, error, setLoading, setError, executeWithState, reset };
 };
+
 

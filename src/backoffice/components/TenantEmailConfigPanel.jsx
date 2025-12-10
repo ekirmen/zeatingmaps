@@ -15,7 +15,7 @@ import {
   Tabs,
   Badge,
   List
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   MailOutlined,
   SettingOutlined,
@@ -69,11 +69,11 @@ const TenantEmailConfigPanel = () => {
     try {
       setLoading(true);
       
-      // Cargar configuración del tenant
+      // Cargar configuraci³n del tenant
       const tenantEmailConfig = await TenantEmailConfigService.getTenantEmailConfig();
       setTenantConfig(tenantEmailConfig);
       
-      // Cargar configuración global
+      // Cargar configuraci³n global
       const globalEmailConfig = await TenantEmailConfigService.getGlobalEmailConfig();
       setGlobalConfig(globalEmailConfig);
       
@@ -121,19 +121,19 @@ const TenantEmailConfigPanel = () => {
       setLoading(true);
       
       if (activeTab === 'tenant') {
-        // Guardar configuración del tenant
+        // Guardar configuraci³n del tenant
         await TenantEmailConfigService.saveTenantEmailConfig(values);
-        message.success('Configuración de correo del tenant guardada exitosamente');
+        message.success('Configuraci³n de correo del tenant guardada exitosamente');
       } else {
-        // Guardar configuración global
+        // Guardar configuraci³n global
         await TenantEmailConfigService.saveGlobalEmailConfig(values);
-        message.success('Configuración global de correo guardada exitosamente');
+        message.success('Configuraci³n global de correo guardada exitosamente');
       }
       
       await loadConfigurations();
       
     } catch (error) {
-      message.error(`Error guardando configuración: ${error.message}`);
+      message.error(`Error guardando configuraci³n: ${error.message}`);
       console.error(error);
     } finally {
       setLoading(false);
@@ -150,7 +150,7 @@ const TenantEmailConfigPanel = () => {
       message.success('¡Correo de prueba enviado exitosamente!');
 
     } catch (error) {
-      message.error(`Error probando configuración: ${error.message}`);
+      message.error(`Error probando configuraci³n: ${error.message}`);
     } finally {
       setTesting(false);
     }
@@ -208,23 +208,23 @@ const TenantEmailConfigPanel = () => {
         <div className="mb-6">
           <Title level={2}>
             <MailOutlined className="mr-2" />
-            Configuración de Correo
+            Configuraci³n de Correo
           </Title>
           <Text type="secondary">
             Configura el servidor SMTP para enviar correos desde tu empresa
           </Text>
         </div>
 
-        {/* Información del tenant actual */}
+        {/* Informaci³n del tenant actual */}
         <Alert
-          message="Configuración de Correo Electrónico"
+          message="Configuraci³n de Correo Electr³nico"
           description="Configura las opciones de correo para reportes y notificaciones"
           type="info"
           showIcon
           className="mb-6"
         />
 
-        {/* Tabs para configuración del tenant vs global */}
+        {/* Tabs para configuraci³n del tenant vs global */}
         <Tabs 
           activeKey={activeTab} 
           onChange={setActiveTab}
@@ -234,7 +234,7 @@ const TenantEmailConfigPanel = () => {
             tab={
               <span>
                 <TeamOutlined />
-                Configuración del Tenant
+                Configuraci³n del Tenant
                 {tenantConfig && !tenantConfig.is_global && (
                   <Badge status="success" style={{ marginLeft: 8 }} />
                 )}
@@ -243,8 +243,8 @@ const TenantEmailConfigPanel = () => {
             key="tenant"
           >
             <Alert
-              message="Configuración específica del tenant"
-              description="Esta configuración solo se aplicará a tu empresa. Si no configuras nada aquí, se usará la configuración global del sistema."
+              message="Configuraci³n espec­fica del tenant"
+              description="Esta configuraci³n solo se aplicar¡ a tu empresa. Si no configuras nada aqu­, se usar¡ la configuraci³n global del sistema."
               type="info"
               showIcon
               className="mb-6"
@@ -256,7 +256,7 @@ const TenantEmailConfigPanel = () => {
               tab={
                 <span>
                   <GlobalOutlined />
-                  Configuración Global
+                  Configuraci³n Global
                   {globalConfig && (
                     <Badge status="processing" style={{ marginLeft: 8 }} />
                   )}
@@ -265,8 +265,8 @@ const TenantEmailConfigPanel = () => {
               key="global"
             >
               <Alert
-                message="Configuración global del sistema"
-                description="Esta configuración se aplicará a todos los tenants que no tengan su propia configuración específica."
+                message="Configuraci³n global del sistema"
+                description="Esta configuraci³n se aplicar¡ a todos los tenants que no tengan su propia configuraci³n espec­fica."
                 type="warning"
                 showIcon
                 className="mb-6"
@@ -276,8 +276,8 @@ const TenantEmailConfigPanel = () => {
         </Tabs>
 
         <Alert
-          message="Información importante"
-          description="Para usar Gmail, Outlook u otros proveedores, necesitarás generar contraseñas de aplicación o habilitar la autenticación de dos factores."
+          message="Informaci³n importante"
+          description="Para usar Gmail, Outlook u otros proveedores, necesitar¡s generar contrase±as de aplicaci³n o habilitar la autenticaci³n de dos factores."
           type="info"
           showIcon
           className="mb-6"
@@ -293,7 +293,7 @@ const TenantEmailConfigPanel = () => {
             provider: 'smtp'
           }}
         >
-          {/* Selección de proveedor */}
+          {/* Selecci³n de proveedor */}
           <Card size="small" className="mb-6">
             <Title level={4}>
               <SettingOutlined className="mr-2" />
@@ -323,10 +323,10 @@ const TenantEmailConfigPanel = () => {
 
           <Divider />
 
-          {/* Configuración SMTP */}
+          {/* Configuraci³n SMTP */}
           <Title level={4}>
             <SecurityScanOutlined className="mr-2" />
-            Configuración SMTP
+            Configuraci³n SMTP
           </Title>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -357,16 +357,16 @@ const TenantEmailConfigPanel = () => {
             </Form.Item>
 
             <Form.Item
-              label="Contraseña"
+              label="Contrase±a"
               name="smtp_pass"
-              rules={[{ required: true, message: 'Ingresa la contraseña SMTP' }]}
+              rules={[{ required: true, message: 'Ingresa la contrase±a SMTP' }]}
             >
-              <Input.Password placeholder="Contraseña del correo" />
+              <Input.Password placeholder="Contrase±a del correo" />
             </Form.Item>
           </div>
 
           <Form.Item
-            label="Conexión Segura (SSL/TLS)"
+            label="Conexi³n Segura (SSL/TLS)"
             name="smtp_secure"
             valuePropName="checked"
             className="mb-6"
@@ -376,19 +376,19 @@ const TenantEmailConfigPanel = () => {
 
           <Divider />
 
-          {/* Configuración del remitente */}
+          {/* Configuraci³n del remitente */}
           <Title level={4}>
             <MailOutlined className="mr-2" />
-            Configuración del Remitente
+            Configuraci³n del Remitente
           </Title>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <Form.Item
-              label="Email de envío"
+              label="Email de env­o"
               name="from_email"
               rules={[
-                { required: true, message: 'Ingresa el email de envío' },
-                { type: 'email', message: 'Ingresa un email válido' }
+                { required: true, message: 'Ingresa el email de env­o' },
+                { type: 'email', message: 'Ingresa un email v¡lido' }
               ]}
             >
               <Input placeholder="reportes@omegaboletos.com" />
@@ -406,13 +406,13 @@ const TenantEmailConfigPanel = () => {
           <Form.Item
             label="Email de respuesta"
             name="reply_to"
-            rules={[{ type: 'email', message: 'Ingresa un email válido' }]}
+            rules={[{ type: 'email', message: 'Ingresa un email v¡lido' }]}
           >
             <Input placeholder="reportes@omegaboletos.com" />
           </Form.Item>
 
           <Form.Item
-            label="Configuración activa"
+            label="Configuraci³n activa"
             name="is_active"
             valuePropName="checked"
             className="mb-6"
@@ -420,7 +420,7 @@ const TenantEmailConfigPanel = () => {
             <Switch />
           </Form.Item>
 
-          {/* Botones de acción */}
+          {/* Botones de acci³n */}
           <div className="space-y-6">
             {/* Botones principales - Responsive */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -433,7 +433,7 @@ const TenantEmailConfigPanel = () => {
                   size="large"
                   className="w-full sm:w-auto"
                 >
-                  Guardar Configuración
+                  Guardar Configuraci³n
                 </Button>
 
                 <Button
@@ -443,13 +443,13 @@ const TenantEmailConfigPanel = () => {
                   size="large"
                   className="w-full sm:w-auto"
                 >
-                  Probar Configuración
+                  Probar Configuraci³n
                 </Button>
               </div>
 
               <div className="text-left sm:text-right">
                 <Text type="secondary" style={{ fontSize: '12px' }}>
-                  {activeTab === 'tenant' ? 'Configuración específica del tenant' : 'Configuración global del sistema'}
+                  {activeTab === 'tenant' ? 'Configuraci³n espec­fica del tenant' : 'Configuraci³n global del sistema'}
                 </Text>
               </div>
             </div>
@@ -459,10 +459,10 @@ const TenantEmailConfigPanel = () => {
             <div>
               <Title level={4}>
                 <ExperimentOutlined className="mr-2" />
-                Pruebas rápidas de correo
+                Pruebas r¡pidas de correo
               </Title>
               <Text type="secondary" className="block mb-4">
-                Envía correos de prueba específicos para validar la recepción interna y los mensajes de bienvenida.
+                Env­a correos de prueba espec­ficos para validar la recepci³n interna y los mensajes de bienvenida.
               </Text>
 
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
@@ -480,7 +480,7 @@ const TenantEmailConfigPanel = () => {
                   <Form.Item
                     name="welcome_target_email"
                     style={{ flex: 1, marginBottom: 0 }}
-                    rules={[{ type: 'email', message: 'Ingresa un email válido' }]}
+                    rules={[{ type: 'email', message: 'Ingresa un email v¡lido' }]}
                   >
                     <Input 
                       placeholder="correo@ejemplo.com" 
@@ -503,27 +503,27 @@ const TenantEmailConfigPanel = () => {
           </div>
         </Form>
 
-        {/* Información adicional */}
+        {/* Informaci³n adicional */}
         <Collapse className="mt-6">
-          <Panel header="Información sobre configuración SMTP" key="1">
+          <Panel header="Informaci³n sobre configuraci³n SMTP" key="1">
             <div className="space-y-4">
               <div>
-                <Title level={5}>Configuración recomendada para Omega Boletos:</Title>
+                <Title level={5}>Configuraci³n recomendada para Omega Boletos:</Title>
                 <ul className="list-disc list-inside space-y-2">
                   <li><strong>Servidor:</strong> mail.omegaboletos.com</li>
                   <li><strong>Puerto:</strong> 465 (SSL/TLS)</li>
                   <li><strong>Usuario:</strong> reportes@omegaboletos.com</li>
-                  <li><strong>Contraseña:</strong> La contraseña de la cuenta de correo</li>
-                  <li><strong>Conexión segura:</strong> Activada</li>
+                  <li><strong>Contrase±a:</strong> La contrase±a de la cuenta de correo</li>
+                  <li><strong>Conexi³n segura:</strong> Activada</li>
                 </ul>
               </div>
               
               <div>
-                <Title level={5}>Configuración para otros proveedores:</Title>
+                <Title level={5}>Configuraci³n para otros proveedores:</Title>
                 <ul className="list-disc list-inside space-y-2">
-                  <li><strong>Gmail:</strong> smtp.gmail.com:587 (TLS) - Requiere contraseña de aplicación</li>
-                  <li><strong>Outlook:</strong> smtp-mail.outlook.com:587 (TLS) - Requiere autenticación de dos factores</li>
-                  <li><strong>Yahoo:</strong> smtp.mail.yahoo.com:587 (TLS) - Requiere contraseña de aplicación</li>
+                  <li><strong>Gmail:</strong> smtp.gmail.com:587 (TLS) - Requiere contrase±a de aplicaci³n</li>
+                  <li><strong>Outlook:</strong> smtp-mail.outlook.com:587 (TLS) - Requiere autenticaci³n de dos factores</li>
+                  <li><strong>Yahoo:</strong> smtp.mail.yahoo.com:587 (TLS) - Requiere contrase±a de aplicaci³n</li>
                 </ul>
               </div>
             </div>
@@ -535,3 +535,5 @@ const TenantEmailConfigPanel = () => {
 };
 
 export default TenantEmailConfigPanel;
+
+

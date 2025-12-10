@@ -1,5 +1,5 @@
-import React from 'react';
-import { message } from 'antd';
+﻿import React from 'react';
+import { message } from '../../../../utils/antdComponents';
 
 const ModeControls = ({ 
   blockMode, 
@@ -28,7 +28,7 @@ const ModeControls = ({
           checked={blockMode}
           onChange={handleBlockModeChange}
         />
-        🔒 Bloquear asientos
+        ðŸ”’ Bloquear asientos
       </label>
       <label className="ml-4 text-sm flex items-center gap-1">
         <input
@@ -43,3 +43,4 @@ const ModeControls = ({
 };
 
 export default ModeControls; 
+

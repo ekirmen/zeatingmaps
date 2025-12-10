@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, List, Tag, Space, Typography, Modal, Input, message, Tooltip, Badge } from 'antd';
+import { Card, Button, List, Tag, Space, Typography, Modal, Input, message, Tooltip, Badge } from '../../utils/antdComponents';
 import { 
   SaveOutlined, 
   DeleteOutlined, 
@@ -115,7 +115,7 @@ const SavedCartsWidget = ({ visible, onClose }) => {
             <ShoppingCartOutlined className="text-4xl text-gray-400 mb-4" />
             <Title level={4} className="text-gray-500">No hay carritos guardados</Title>
             <Text type="secondary">
-              Guarda tu carrito actual para acceder a él más tarde
+              Guarda tu carrito actual para acceder a ©l m¡s tarde
             </Text>
           </div>
         ) : (
@@ -232,3 +232,5 @@ const SavedCartsWidget = ({ visible, onClose }) => {
 };
 
 export default SavedCartsWidget;
+
+

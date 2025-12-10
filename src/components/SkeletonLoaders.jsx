@@ -1,5 +1,5 @@
 import React from 'react';
-import { Skeleton, Card } from 'antd';
+import { Skeleton, Card } from '../utils/antdComponents';
 
 /**
  * Skeleton Loader para el mapa de asientos
@@ -143,4 +143,5 @@ export default {
   PageSkeleton,
   TableSkeleton
 };
+
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Card, Badge, Button, Input, Select, Space, Empty, Spin } from 'antd';
+import { Card, Badge, Button, Input, Select, Space, Empty, Spin } from '../utils/antdComponents';
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import { useFilteredSeatsWorker } from '../hooks/useSeatWorker';
 
@@ -278,4 +278,5 @@ const SeatListView = ({
 };
 
 export default SeatListView;
+
 

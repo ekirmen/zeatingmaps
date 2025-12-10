@@ -1,5 +1,5 @@
-import React from 'react';
-import { Typography } from 'antd';
+﻿import React from 'react';
+import { Typography } from '../../utils/antdComponents';
 import PaymentMethodsConfig from '../components/PaymentMethodsConfig';
 
 const { Title, Text } = Typography;
@@ -20,3 +20,4 @@ const PaymentGateways = () => {
 };
 
 export default PaymentGateways; 
+

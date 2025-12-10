@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Button, Space, Divider } from 'antd';
+import { Menu, Button, Space, Divider } from '../../../utils/antdComponents';
 import {
   EyeOutlined,
   EditOutlined,
@@ -35,11 +35,11 @@ const ContextMenu = ({
   };
 
   const menuItems = [
-    // ===== ACCIONES DE NAVEGACIÓN =====
+    // ===== ACCIONES DE NAVEGACI“N =====
     {
       key: 'navigation',
       type: 'group',
-      label: 'Navegación',
+      label: 'Navegaci³n',
       children: [
         {
           key: 'pan',
@@ -50,7 +50,7 @@ const ContextMenu = ({
         {
           key: 'select',
           icon: <SelectOutlined />,
-          label: 'Modo Selección',
+          label: 'Modo Selecci³n',
           disabled: !canPan
         },
         {
@@ -111,7 +111,7 @@ const ContextMenu = ({
       ]
     });
 
-    // ===== ACCIONES ESPECÍFICAS PARA MESAS =====
+    // ===== ACCIONES ESPECFICAS PARA MESAS =====
     if (selectedElement.type === 'mesa') {
       menuItems.push({
         key: 'mesa-actions',
@@ -148,7 +148,7 @@ const ContextMenu = ({
     }
   }
 
-  // ===== ACCIONES DE CREACIÓN =====
+  // ===== ACCIONES DE CREACI“N =====
   menuItems.push({
     key: 'creation',
     type: 'group',
@@ -182,7 +182,7 @@ const ContextMenu = ({
       {
         key: 'add-area',
         icon: <PlusOutlined />,
-        label: 'Agregar Área'
+        label: 'Agregar rea'
       }
     ]
   });
@@ -211,7 +211,7 @@ const ContextMenu = ({
         }}
       />
       
-      {/* ===== BOTÓN DE CERRAR ===== */}
+      {/* ===== BOT“N DE CERRAR ===== */}
       <div style={{ padding: '8px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
         <Button 
           size="small" 
@@ -226,3 +226,5 @@ const ContextMenu = ({
 };
 
 export default ContextMenu;
+
+

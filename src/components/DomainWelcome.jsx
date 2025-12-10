@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Typography, Space, Button, Divider } from 'antd';
+import { Card, Typography, Space, Button, Divider } from '../utils/antdComponents';
 import { 
   SettingOutlined, 
   ShoppingOutlined,
@@ -170,3 +170,4 @@ const DomainWelcome = () => {
 };
 
 export default DomainWelcome;
+

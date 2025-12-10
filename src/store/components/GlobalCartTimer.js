@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Badge, Button, Tooltip, Modal, Card } from 'antd';
+import { Badge, Button, Tooltip, Modal, Card } from '../../utils/antdComponents';
 import { ClockCircleOutlined, ShoppingCartOutlined, RightOutlined, CreditCardOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { notification, message } from 'antd';
+import { notification, message } from '../../utils/antdComponents';
 import { useSeatLockStore } from '../../components/seatLockStore';
 
 const GlobalCartTimer = () => {
@@ -19,25 +19,25 @@ const GlobalCartTimer = () => {
   const itemCount = getItemCount();
   const total = calculateTotal();
 
-  // Páginas donde NO mostrar el carrito flotante (ya tienen su propio carrito o están en proceso de pago)
+  // P¡ginas donde NO mostrar el carrito flotante (ya tienen su propio carrito o est¡n en proceso de pago)
   const isSeatSelectionPage = location.pathname.includes('/map') || 
                                location.pathname.includes('/seat-selection') || 
                                location.pathname === '/store/cart' ||
                                location.pathname === '/store/payment';
 
-  // Mostrar el carrito flotante si hay items y no estamos en página de selección o pago
+  // Mostrar el carrito flotante si hay items y no estamos en p¡gina de selecci³n o pago
   useEffect(() => {
     setShowTimer(itemCount > 0 && !isSeatSelectionPage);
   }, [itemCount, isSeatSelectionPage]);
 
-  // Verificar expiración del carrito
+  // Verificar expiraci³n del carrito
   useEffect(() => {
     if (!cartExpiration) return;
 
     const checkExpiration = async () => {
       if (Date.now() > cartExpiration) {
         notification.warning({
-          message: 'Tu selección ha expirado',
+          message: 'Tu selecci³n ha expirado',
           description: 'Hemos liberado los asientos de tu carrito por inactividad.',
           placement: 'topRight',
         });
@@ -93,15 +93,15 @@ const GlobalCartTimer = () => {
 
   // Determinar el color del temporizador basado en el tiempo restante
   const getTimerColor = () => {
-    if (timeLeft <= 60) return '#ff4d4f'; // Rojo para últimos 60 segundos
-    if (timeLeft <= 300) return '#faad14'; // Amarillo para últimos 5 minutos
+    if (timeLeft <= 60) return '#ff4d4f'; // Rojo para ºltimos 60 segundos
+    if (timeLeft <= 300) return '#faad14'; // Amarillo para ºltimos 5 minutos
     return '#52c41a'; // Verde para el resto
   };
 
   // Manejar checkout desde el carrito flotante
   const handleCheckout = () => {
     if (itemCount === 0) {
-      message.warning('El carrito está vacío');
+      message.warning('El carrito est¡ vac­o');
       return;
     }
     
@@ -115,7 +115,7 @@ const GlobalCartTimer = () => {
 
   return (
     <>
-      {/* Carrito flotante - Solo mostrar si hay items y no estamos en página de selección */}
+      {/* Carrito flotante - Solo mostrar si hay items y no estamos en p¡gina de selecci³n */}
       {showTimer && (
         <div 
           className="fixed bottom-6 right-6 z-50"
@@ -186,7 +186,7 @@ const GlobalCartTimer = () => {
               )}
             </div>
 
-            {/* Botón de comprar */}
+            {/* Bot³n de comprar */}
             <Button
               type="primary"
               block
@@ -226,7 +226,7 @@ const GlobalCartTimer = () => {
 
       {/* Modal de login/registro */}
       <Modal
-        title="Inicia sesión para continuar"
+        title="Inicia sesi³n para continuar"
         open={showLoginModal}
         onCancel={() => setShowLoginModal(false)}
         footer={[
@@ -237,17 +237,17 @@ const GlobalCartTimer = () => {
             Registrarse
           </Button>,
           <Button key="login" type="primary" onClick={handleLogin}>
-            Iniciar Sesión
+            Iniciar Sesi³n
           </Button>
         ]}
         width={400}
       >
         <div className="text-center py-4">
           <ShoppingCartOutlined className="text-4xl text-blue-500 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Tu carrito está esperando</h3>
+          <h3 className="text-lg font-semibold mb-2">Tu carrito est¡ esperando</h3>
           <p className="text-gray-600 mb-4">
             Tienes {formatTime(timeLeft)} para completar tu compra. 
-            Inicia sesión o regístrate para continuar.
+            Inicia sesi³n o reg­strate para continuar.
           </p>
           
           <div className="bg-blue-50 p-3 rounded mb-4">
@@ -264,7 +264,7 @@ const GlobalCartTimer = () => {
           </div>
 
           <div className="text-xs text-gray-500">
-            ⏰ Tu reserva expira en {formatTime(timeLeft)}
+            ° Tu reserva expira en {formatTime(timeLeft)}
           </div>
         </div>
       </Modal>
@@ -273,3 +273,5 @@ const GlobalCartTimer = () => {
 };
 
 export default GlobalCartTimer;
+
+

@@ -17,7 +17,7 @@ import {
   DatePicker,
   Input,
   Badge
-} from 'antd';
+} from '../../utils/antdComponents';
 import {
   AuditOutlined,
   EyeOutlined,
@@ -63,12 +63,12 @@ const AuditSystem = () => {
     setLoading(true);
     try {
       // La tabla audit_logs no existe, usar datos simulados
-      // Datos simulados para auditoría
+      // Datos simulados para auditor­a
       const simulatedLogs = [
         {
           id: 1,
           action: 'login',
-          details: 'Usuario inició sesión en el sistema',
+          details: 'Usuario inici³ sesi³n en el sistema',
           severity: 'info',
           tenant_id: '9dbdb86f-8424-484c-bb76-0d9fa27573c8',
           created_at: new Date().toISOString(),
@@ -88,7 +88,7 @@ const AuditSystem = () => {
         {
           id: 3,
           action: 'backup_created',
-          details: 'Backup automático del sistema completado',
+          details: 'Backup autom¡tico del sistema completado',
           severity: 'info',
           tenant_id: '9dbdb86f-8424-484c-bb76-0d9fa27573c8',
           created_at: new Date(Date.now() - 7200000).toISOString(),
@@ -101,7 +101,7 @@ const AuditSystem = () => {
 
     } catch (error) {
       console.error('Error loading audit logs:', error);
-      message.error('Error al cargar logs de auditoría');
+      message.error('Error al cargar logs de auditor­a');
       setAuditLogs([]);
     } finally {
       setLoading(false);
@@ -140,7 +140,7 @@ const AuditSystem = () => {
       case 'create': return 'Crear';
       case 'update': return 'Actualizar';
       case 'delete': return 'Eliminar';
-      case 'login': return 'Inicio de Sesión';
+      case 'login': return 'Inicio de Sesi³n';
       case 'backup_created': return 'Backup Creado';
       case 'backup_restored': return 'Backup Restaurado';
       case 'tenant_created': return 'Tenant Creado';
@@ -153,7 +153,7 @@ const AuditSystem = () => {
 
   const columns = [
     {
-      title: 'Acción',
+      title: 'Acci³n',
       dataIndex: 'action',
       key: 'action',
       render: (action) => (
@@ -261,7 +261,7 @@ const AuditSystem = () => {
         title={
           <Space>
             <AuditOutlined />
-            <span>Sistema de Auditoría</span>
+            <span>Sistema de Auditor­a</span>
           </Space>
         }
         extra={
@@ -275,7 +275,7 @@ const AuditSystem = () => {
               style={{ width: 200 }}
             />
             <Select
-              placeholder="Acción"
+              placeholder="Acci³n"
               value={filters.action}
               onChange={(value) => setFilters({...filters, action: value})}
               style={{ width: 120 }}
@@ -302,7 +302,7 @@ const AuditSystem = () => {
             </Select>
             <Button
               icon={<ExportOutlined />}
-              onClick={() => message.info('Exportar logs de auditoría')}
+              onClick={() => message.info('Exportar logs de auditor­a')}
             >
               Exportar
             </Button>
@@ -325,7 +325,7 @@ const AuditSystem = () => {
 
       {/* Drawer para ver detalles del log */}
       <Drawer
-        title={`Log de Auditoría #${selectedLog?.id?.slice(0, 8)}`}
+        title={`Log de Auditor­a #${selectedLog?.id?.slice(0, 8)}`}
         placement="right"
         width={600}
         onClose={() => setDetailDrawerVisible(false)}
@@ -348,11 +348,11 @@ const AuditSystem = () => {
 
             <Divider />
 
-            <Descriptions title="Información del Log" bordered column={1}>
+            <Descriptions title="Informaci³n del Log" bordered column={1}>
               <Descriptions.Item label="ID del Log">
                 {selectedLog.id}
               </Descriptions.Item>
-              <Descriptions.Item label="Acción">
+              <Descriptions.Item label="Acci³n">
                 {getActionText(selectedLog.action)}
               </Descriptions.Item>
               <Descriptions.Item label="Severidad">
@@ -433,3 +433,5 @@ const AuditSystem = () => {
 };
 
 export default AuditSystem;
+
+

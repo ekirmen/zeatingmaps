@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { message } from 'antd';
+import { message } from '../../utils/antdComponents';
 import { AiOutlineClose, AiOutlineClockCircle } from 'react-icons/ai';
 
 const CartWithTimer = ({
@@ -174,7 +174,7 @@ const CartWithTimer = ({
             <span>0 - $0.00</span>
           </div>
           <div className="flex justify-between">
-            <span>Comisiones de transacción:</span>
+            <span>Comisiones de transacci³n:</span>
             <span>0 - $0.00</span>
           </div>
           <div className="border-t border-gray-300 pt-2">
@@ -206,7 +206,7 @@ const CartWithTimer = ({
         {/* Warning when time is low */}
         {timeLeft <= 300 && timeLeft > 0 && (
           <div className="mt-3 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-xs">
-            ⚠️ Tiempo restante: {formatTime(timeLeft)}. Completa tu compra antes de que se liberen los asientos.
+            š ï¸ Tiempo restante: {formatTime(timeLeft)}. Completa tu compra antes de que se liberen los asientos.
           </div>
         )}
       </div>
@@ -215,3 +215,4 @@ const CartWithTimer = ({
 };
 
 export default CartWithTimer;
+

@@ -13,7 +13,7 @@ import {
   Row,
   Col,
   Statistic
-} from 'antd';
+} from '../../../../utils/antdComponents';
 import { 
   ShoppingCartOutlined, 
   DeleteOutlined, 
@@ -51,7 +51,7 @@ const AdvancedCart = ({
     const item = newCarrito[index];
     
     if (delta > 0) {
-      // Agregar más del mismo asiento (si es posible)
+      // Agregar m¡s del mismo asiento (si es posible)
       const newItem = { ...item, _id: `${item._id}_${Date.now()}` };
       newCarrito.splice(index + 1, 0, newItem);
     } else {
@@ -70,7 +70,7 @@ const AdvancedCart = ({
 
   const getSeatStatusText = (item) => {
     if (item.tipoPrecio === 'descuento') return 'Descuento';
-    if (item.tipoPrecio === 'promocion') return 'Promoción';
+    if (item.tipoPrecio === 'promocion') return 'Promoci³n';
     return 'Normal';
   };
 
@@ -126,7 +126,7 @@ const AdvancedCart = ({
           <div className="text-center py-8">
             <ShoppingCartOutlined style={{ fontSize: 32, color: '#d9d9d9' }} />
             <br />
-            <Text type="secondary">Carrito vacío</Text>
+            <Text type="secondary">Carrito vac­o</Text>
           </div>
         )}
       </Card>
@@ -145,7 +145,7 @@ const AdvancedCart = ({
     >
       {carrito.length > 0 ? (
         <div className="space-y-4">
-          {/* Información del cliente */}
+          {/* Informaci³n del cliente */}
           {showClient && (
             <Card size="small" className="bg-blue-50">
               <div className="flex justify-between items-center">
@@ -170,13 +170,13 @@ const AdvancedCart = ({
             </Card>
           )}
 
-          {/* Información de la función */}
+          {/* Informaci³n de la funci³n */}
           {selectedFuncion && (
             <Card size="small" className="bg-green-50">
               <div className="flex items-center space-x-2">
                 <CalendarOutlined />
                 <div>
-                  <Text strong>Función seleccionada</Text>
+                  <Text strong>Funci³n seleccionada</Text>
                   <br />
                   <Text type="secondary" className="text-xs">
                     {new Date(selectedFuncion.fecha_celebracion).toLocaleString()}
@@ -255,7 +255,7 @@ const AdvancedCart = ({
             </Col>
           </Row>
 
-          {/* Botones de acción */}
+          {/* Botones de acci³n */}
           <div className="space-y-2">
             <Button
               type="primary"
@@ -284,7 +284,7 @@ const AdvancedCart = ({
         <div className="text-center py-12">
           <ShoppingCartOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />
           <br />
-          <Title level={4} type="secondary">Carrito vacío</Title>
+          <Title level={4} type="secondary">Carrito vac­o</Title>
           <Text type="secondary">
             Selecciona asientos en el mapa para agregarlos al carrito
           </Text>
@@ -295,3 +295,5 @@ const AdvancedCart = ({
 };
 
 export default AdvancedCart;
+
+

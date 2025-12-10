@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'antd';
+import { Button } from '../utils/antdComponents';
 
 const Funciones = ({ funciones = [], onModificar, onEliminar }) => (
   <div className="space-y-4">
@@ -19,3 +19,4 @@ const Funciones = ({ funciones = [], onModificar, onEliminar }) => (
 );
 
 export default Funciones;
+

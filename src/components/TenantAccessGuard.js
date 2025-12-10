@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTenantAccess } from '../hooks/useTenantAccess';
-import { Alert, Button, Result } from 'antd';
+import { Alert, Button, Result } from '../utils/antdComponents';
 import { useNavigate } from 'react-router-dom';
 
 const TenantAccessGuard = ({ children, fallback, showAlert = true }) => {
@@ -77,3 +77,4 @@ const TenantAccessGuard = ({ children, fallback, showAlert = true }) => {
 };
 
 export default TenantAccessGuard;
+

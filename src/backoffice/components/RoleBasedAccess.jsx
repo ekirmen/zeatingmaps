@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import { message } from 'antd';
+import { message } from '../../utils/antdComponents';
 
 // Contexto para el control de acceso basado en roles
 const RoleContext = createContext();
@@ -30,7 +30,7 @@ export const RoleProvider = ({ children }) => {
     try {
       let user = null;
 
-      // Intentar obtener primero la sesión local para evitar llamadas innecesarias a la API
+      // Intentar obtener primero la sesi³n local para evitar llamadas innecesarias a la API
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
@@ -64,7 +64,7 @@ export const RoleProvider = ({ children }) => {
         .eq('id', user.id)
         .maybeSingle();
 
-      // Intentar un fallback por login/email cuando la búsqueda por id falla
+      // Intentar un fallback por login/email cuando la bºsqueda por id falla
       let profile = profileById;
       if ((!profile || profileError) && user.email) {
         const normalizedEmail = user.email.toLowerCase();
@@ -143,13 +143,13 @@ export const RoleProvider = ({ children }) => {
       // Dashboard principal
       dashboard: false,
 
-      // Administración
+      // Administraci³n
       usuarios: false,
       recintos: false,
       plano: false,
       liquidaciones: false,
 
-      // Programación
+      // Programaci³n
       entradas: false,
       productos: false,
       plantillas_productos: false,
@@ -175,7 +175,7 @@ export const RoleProvider = ({ children }) => {
       crm: false,
       tags: false,
 
-      // Configuración
+      // Configuraci³n
       settings: false,
       seat_settings: false,
       printer_settings: false,
@@ -215,7 +215,7 @@ export const RoleProvider = ({ children }) => {
       configurar_sistema: false,
       acceder_saas: false,
 
-      // Gestión de tenants
+      // Gesti³n de tenants
       gestionar_tenants: false,
       asignar_tenants: false,
       ver_todos_tenants: false
@@ -231,7 +231,7 @@ export const RoleProvider = ({ children }) => {
         break;
 
       case 'admin_sistema':
-        // Nivel 80 - Administración completa de tenants
+        // Nivel 80 - Administraci³n completa de tenants
         permissions.dashboard = true;
         permissions.saas = true;
         permissions.saas_settings = true;
@@ -256,7 +256,7 @@ export const RoleProvider = ({ children }) => {
         break;
 
       case 'gerente_sistema':
-        // Nivel 60 - Gestión de tenants y soporte
+        // Nivel 60 - Gesti³n de tenants y soporte
         permissions.dashboard = true;
         permissions.saas = true;
         permissions.saas_settings = true;
@@ -276,7 +276,7 @@ export const RoleProvider = ({ children }) => {
         break;
 
       case 'soporte_sistema':
-        // Nivel 40 - Solo soporte técnico
+        // Nivel 40 - Solo soporte t©cnico
         permissions.dashboard = true;
         permissions.saas = true;
         permissions.tenant_read = true;
@@ -287,7 +287,7 @@ export const RoleProvider = ({ children }) => {
         break;
 
       case 'visualizador_sistema':
-        // Nivel 20 - Solo lectura de información
+        // Nivel 20 - Solo lectura de informaci³n
         permissions.dashboard = true;
         permissions.saas = true;
         permissions.tenant_read = true;
@@ -435,12 +435,12 @@ export const RoleProvider = ({ children }) => {
     return permissions;
   };
 
-  // Función para verificar si el usuario tiene un permiso específico
+  // Funci³n para verificar si el usuario tiene un permiso espec­fico
   const hasPermission = (permission) => {
     return permissions[permission] || false;
   };
 
-  // Función para verificar si el usuario puede acceder a una ruta
+  // Funci³n para verificar si el usuario puede acceder a una ruta
   const canAccess = (path) => {
     if (!userRole || userRole === 'guest' || userRole === 'usuario_store') {
       return false;
@@ -497,9 +497,9 @@ export const RoleProvider = ({ children }) => {
     // Verificar ruta exacta primero
     let permission = routePermissions[path];
 
-    // Si no se encuentra, verificar rutas con parámetros
+    // Si no se encuentra, verificar rutas con par¡metros
     if (!permission) {
-      // Verificar rutas con parámetros dinámicos
+      // Verificar rutas con par¡metros din¡micos
       for (const [route, perm] of Object.entries(routePermissions)) {
         if (path.startsWith(route + '/')) {
           permission = perm;
@@ -511,13 +511,13 @@ export const RoleProvider = ({ children }) => {
     return permission ? hasPermission(permission) : false;
   };
 
-  // Función para obtener el rol del usuario
+  // Funci³n para obtener el rol del usuario
   const getRole = () => userRole;
 
-  // Función para verificar si es administrador
+  // Funci³n para verificar si es administrador
   const isAdmin = () => userRole === 'admin' || userRole === 'gerente';
 
-  // Función para cargar tenants asignados
+  // Funci³n para cargar tenants asignados
   const loadAssignedTenants = async (userId) => {
     try {
       const { data, error } = await supabase
@@ -543,19 +543,19 @@ export const RoleProvider = ({ children }) => {
     }
   };
 
-  // Función para verificar si es usuario de store
+  // Funci³n para verificar si es usuario de store
   const isStoreUser = () => userRole === 'usuario_store';
 
-  // Función para verificar si es usuario del sistema SaaS
+  // Funci³n para verificar si es usuario del sistema SaaS
   const isSystemUser = () => ['super_admin', 'admin_sistema', 'gerente_sistema', 'soporte_sistema', 'visualizador_sistema'].includes(userRole);
 
-  // Función para verificar si puede acceder a un tenant específico
+  // Funci³n para verificar si puede acceder a un tenant espec­fico
   const canAccessTenant = (tenantId) => {
     if (canAccessAllTenants) return true;
     return assignedTenants.some(tenant => tenant.id === tenantId);
   };
 
-  // Función para obtener tenants accesibles
+  // Funci³n para obtener tenants accesibles
   const getAccessibleTenants = () => {
     if (canAccessAllTenants) return 'all';
     return assignedTenants;
@@ -594,7 +594,7 @@ export const ProtectedRoute = ({ children, permission, fallback = null }) => {
   }
 
   if (!hasPermission(permission)) {
-    return fallback || <div>No tienes permisos para acceder a esta sección.</div>;
+    return fallback || <div>No tienes permisos para acceder a esta secci³n.</div>;
   }
 
   return children;
@@ -607,3 +607,5 @@ export const ConditionalRender = ({ permission, children, fallback = null }) => 
 };
 
 export default RoleProvider;
+
+

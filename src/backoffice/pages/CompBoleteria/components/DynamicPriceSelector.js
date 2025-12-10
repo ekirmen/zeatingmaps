@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, Badge, Button, Space, Typography, Divider } from 'antd';
+import { Card, Badge, Button, Space, Typography, Divider } from '../../../../utils/antdComponents';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { supabase } from '../../../../supabaseClient';
-import { message } from 'antd'; // Added message import
+import { message } from '../../../../utils/antdComponents'; // Added message import
 
 const { Text, Title } = Typography;
 
@@ -25,7 +25,7 @@ const DynamicPriceSelector = ({
 
     setLoading(true);
     try {
-      // Usar plantilla ya seleccionada si viene como prop, si no, cargar con la función
+      // Usar plantilla ya seleccionada si viene como prop, si no, cargar con la funci³n
       let plantilla = selectedPlantilla;
       let funcion = selectedFuncion;
 
@@ -38,13 +38,13 @@ const DynamicPriceSelector = ({
 
         if (funcionError) {
           console.error('Error loading funcion:', funcionError);
-          message.error('Error al cargar la función');
+          message.error('Error al cargar la funci³n');
           return;
         }
 
         if (!funcionData) {
-          console.error('No se encontró la función');
-          message.error('No se encontró la función');
+          console.error('No se encontr³ la funci³n');
+          message.error('No se encontr³ la funci³n');
           return;
         }
 
@@ -53,8 +53,8 @@ const DynamicPriceSelector = ({
       }
 
       if (!plantilla) {
-        console.error('La función no tiene plantilla asignada');
-        message.error('La función no tiene plantilla de precios asignada');
+        console.error('La funci³n no tiene plantilla asignada');
+        message.error('La funci³n no tiene plantilla de precios asignada');
         return;
       }
       // Cargar las entradas disponibles para este evento (para resolver nombres)
@@ -69,7 +69,7 @@ const DynamicPriceSelector = ({
         return;
       }
 
-      // Cargar las zonas del mapa (filtrar por la sala de la función) para resolver nombres de zona
+      // Cargar las zonas del mapa (filtrar por la sala de la funci³n) para resolver nombres de zona
       // Resolver salaId de forma robusta
       const salaId = funcion.sala?.id || funcion.sala_id || funcion.sala;
       const { data: zonas, error: zonasError } = await supabase
@@ -103,11 +103,11 @@ const DynamicPriceSelector = ({
         });
       }
 
-      // Construir mapas para resolución rápida
+      // Construir mapas para resoluci³n r¡pida
       const entradasById = new Map((entradas || []).map(e => [String(e.id), e]));
       const zonasById = new Map((zonas || []).map(z => [String(z.id), z]));
 
-      // Crear opciones ÚNICAMENTE desde los detalles de la plantilla
+      // Crear opciones šNICAMENTE desde los detalles de la plantilla
       const options = [];
       for (const detalle of plantillaDetalles) {
         const zonaKey = String(detalle.zonaId ?? detalle.zona?.id ?? detalle.zona);
@@ -150,18 +150,18 @@ const DynamicPriceSelector = ({
     onPriceSelect(priceOption);
   };
 
-  // No usamos categorías heurísticas ni íconos genéricos. Todo viene de BD.
+  // No usamos categor­as heur­sticas ni ­conos gen©ricos. Todo viene de BD.
 
-  // Generar botones dinámicos basados en zonas
+  // Generar botones din¡micos basados en zonas
   const generateZonaButtons = () => {
     if (!priceOptions.length) return [];
 
-    // Obtener zonas únicas de la base de datos
+    // Obtener zonas ºnicas de la base de datos
     const uniqueZonas = [...new Set(priceOptions.map(opt => opt.zona.nombre))];
 
     const buttons = [];
 
-    // Botón "Todas"
+    // Bot³n "Todas"
     buttons.push(
       <Button
         key="all"
@@ -172,7 +172,7 @@ const DynamicPriceSelector = ({
       </Button>
     );
 
-    // Botones por cada zona única
+    // Botones por cada zona ºnica
     uniqueZonas.forEach(zonaNombre => {
       const count = priceOptions.filter(opt => opt.zona.nombre === zonaNombre).length;
 
@@ -221,7 +221,7 @@ const DynamicPriceSelector = ({
     return (
       <div className="mb-6">
         <div className="text-center py-4">
-          <p className="text-gray-600">Selecciona un evento y función para ver las opciones de precio</p>
+          <p className="text-gray-600">Selecciona un evento y funci³n para ver las opciones de precio</p>
         </div>
       </div>
     );
@@ -252,7 +252,7 @@ const DynamicPriceSelector = ({
             <div key={zonaNombre} className="border rounded">
               <div className="px-3 py-2 bg-gray-50 text-xs font-semibold flex items-center justify-between">
                 <span>{zonaNombre}</span>
-                <span className="text-gray-500">{options.length} opción(es)</span>
+                <span className="text-gray-500">{options.length} opci³n(es)</span>
               </div>
               <div className="divide-y">
                 {options.map((option) => (
@@ -273,7 +273,7 @@ const DynamicPriceSelector = ({
                     <div className="text-right">
                       <div className="font-bold">${option.precio.toFixed(2)}</div>
                       {option.comision > 0 && (
-                        <div className="text-gray-500">+${option.comision.toFixed(2)} comisión</div>
+                        <div className="text-gray-500">+${option.comision.toFixed(2)} comisi³n</div>
                       )}
                     </div>
                   </div>
@@ -288,3 +288,4 @@ const DynamicPriceSelector = ({
 };
 
 export default DynamicPriceSelector;
+

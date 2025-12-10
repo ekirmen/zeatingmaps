@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Card, Button, Typography, Spin, Tag, message, Alert } from 'antd';
+import { Card, Button, Typography, Spin, Tag, message, Alert } from '../../../../utils/antdComponents';
 import { supabase } from '../../../../supabaseClient';
 import logger from '../../../../utils/logger';
 
@@ -34,9 +34,9 @@ const ZonesPanel = ({
   const [debugInfo, setDebugInfo] = useState({});
   const [dataLoaded, setDataLoaded] = useState(false);
 
-  // Función para extraer detalles de la plantilla
+  // Funci³n para extraer detalles de la plantilla
   const extractDetalles = useCallback((funcion, plantilla) => {
-    logger.log('🔍 extractDetalles - Iniciando extracción...');
+    logger.log('ðŸ” extractDetalles - Iniciando extracci³n...');
     // Debug logs removed for production performance
 
     let detalles = [];
@@ -51,9 +51,9 @@ const ZonesPanel = ({
         } else {
           detalles = plantilla.detalles;
         }
-        logger.log('✅ Detalles extraídos desde selectedPlantilla.detalles');
+        logger.log('œ… Detalles extra­dos desde selectedPlantilla.detalles');
       } catch (e) {
-        logger.error('❌ Error parsing selectedPlantilla.detalles:', e);
+        logger.error('Œ Error parsing selectedPlantilla.detalles:', e);
         detalles = [];
       }
     }
@@ -66,9 +66,9 @@ const ZonesPanel = ({
         } else {
           detalles = funcion.plantilla.detalles;
         }
-        logger.log('✅ Detalles extraídos desde funcion.plantilla.detalles');
+        logger.log('œ… Detalles extra­dos desde funcion.plantilla.detalles');
       } catch (e) {
-        logger.error('❌ Error parsing funcion.plantilla.detalles:', e);
+        logger.error('Œ Error parsing funcion.plantilla.detalles:', e);
         detalles = [];
       }
     }
@@ -81,27 +81,27 @@ const ZonesPanel = ({
         } else {
           detalles = funcion.plantilla_entradas.detalles;
         }
-        logger.log('✅ Detalles extraídos desde funcion.plantilla_entradas.detalles');
+        logger.log('œ… Detalles extra­dos desde funcion.plantilla_entradas.detalles');
       } catch (e) {
-        logger.error('❌ Error parsing funcion.plantilla_entradas.detalles:', e);
+        logger.error('Œ Error parsing funcion.plantilla_entradas.detalles:', e);
         detalles = [];
       }
     }
 
-    logger.log('📋 Detalles extraídos:', detalles?.length || 0);
-    logger.log('📋 Fuente:', source);
+    logger.log('ðŸ“‹ Detalles extra­dos:', detalles?.length || 0);
+    logger.log('ðŸ“‹ Fuente:', source);
 
     return { detalles, source };
   }, []);
 
   const loadPriceOptions = useCallback(async () => {
-    logger.log('🚀 loadPriceOptions - INICIANDO');
+    logger.log('ðŸš€ loadPriceOptions - INICIANDO');
     // Debug logs removed for production performance
 
     if (!selectedFuncion) {
-      logger.log('❌ No hay selectedFuncion');
+      logger.log('Œ No hay selectedFuncion');
       setPriceOptions([]);
-      setDebugInfo({ error: 'No hay función seleccionada' });
+      setDebugInfo({ error: 'No hay funci³n seleccionada' });
       return;
     }
 
@@ -112,14 +112,14 @@ const ZonesPanel = ({
       // Extraer detalles de la plantilla
       const { detalles, source } = extractDetalles(selectedFuncion, selectedPlantilla);
       
-      logger.log('📋 Detalles extraídos:', detalles?.length || 0);
-      logger.log('📋 Fuente de detalles:', source);
+      logger.log('ðŸ“‹ Detalles extra­dos:', detalles?.length || 0);
+      logger.log('ðŸ“‹ Fuente de detalles:', source);
       
       if (!Array.isArray(detalles) || detalles.length === 0) {
-        logger.log('❌ No hay detalles válidos en la plantilla');
+        logger.log('Œ No hay detalles v¡lidos en la plantilla');
         setPriceOptions([]);
         setDebugInfo({ 
-          error: 'No hay detalles válidos en la plantilla',
+          error: 'No hay detalles v¡lidos en la plantilla',
           source,
           detalles: detalles,
           selectedPlantilla: selectedPlantilla,
@@ -130,23 +130,23 @@ const ZonesPanel = ({
 
       // Obtener sala ID
       const salaId = selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
-      logger.log('🏢 Sala ID:', salaId);
+      logger.log('ðŸ¢ Sala ID:', salaId);
 
       if (!salaId) {
-        logger.log('❌ No se pudo obtener el ID de la sala');
+        logger.log('Œ No se pudo obtener el ID de la sala');
         setPriceOptions([]);
         setDebugInfo({ error: 'No se pudo obtener el ID de la sala' });
         return;
       }
 
       // Cargar entradas y zonas desde la BD
-      logger.log('📥 Cargando entradas y zonas desde BD...');
+      logger.log('ðŸ“¥ Cargando entradas y zonas desde BD...');
       
       // Consulta de entradas
       const entradasQuery = supabase.from('entradas').select('*').order('nombre_entrada');
       // Debug log removed for production performance
       
-      // Consulta de zonas con más logging
+      // Consulta de zonas con m¡s logging
       const zonasQuery = supabase
         .from('zonas')
         .select('*')
@@ -160,35 +160,35 @@ const ZonesPanel = ({
         zonasQuery,
       ]);
 
-      logger.log('📦 Resultado entradas:', { data: entradas?.length || 0, error: entradasError });
-      logger.log('🎯 Resultado zonas:', { data: zonas?.length || 0, error: zonasError });
+      logger.log('ðŸ“¦ Resultado entradas:', { data: entradas?.length || 0, error: entradasError });
+      logger.log('ðŸŽ¯ Resultado zonas:', { data: zonas?.length || 0, error: zonasError });
 
       if (entradasError) {
-        logger.error('❌ Error cargando entradas:', entradasError);
+        logger.error('Œ Error cargando entradas:', entradasError);
         setPriceOptions([]);
         setDebugInfo({ error: `Error cargando entradas: ${entradasError.message}` });
         return;
       }
 
       if (zonasError) {
-        logger.error('❌ Error cargando zonas:', zonasError);
+        logger.error('Œ Error cargando zonas:', zonasError);
         setPriceOptions([]);
         setDebugInfo({ error: `Error cargando zonas: ${zonasError.message}` });
         return;
       }
 
-      logger.log('✅ Consultas exitosas - Entradas:', entradas?.length || 0, 'Zonas:', zonas?.length || 0);
+      logger.log('œ… Consultas exitosas - Entradas:', entradas?.length || 0, 'Zonas:', zonas?.length || 0);
 
       if (!entradas || entradas.length === 0) {
-        logger.log('❌ No se pudieron cargar entradas');
+        logger.log('Œ No se pudieron cargar entradas');
         setPriceOptions([]);
         setDebugInfo({ error: 'No se pudieron cargar entradas', entradas, zonas });
         return;
       }
 
       if (!zonas || zonas.length === 0) {
-        logger.log('❌ No se pudieron cargar zonas');
-        logger.log('🔍 Intentando consulta alternativa...');
+        logger.log('Œ No se pudieron cargar zonas');
+        logger.log('ðŸ” Intentando consulta alternativa...');
         
         // Intentar consulta alternativa sin filtros
         try {
@@ -197,14 +197,14 @@ const ZonesPanel = ({
             .select('*')
             .order('nombre');
           
-          logger.log('🔍 Todas las zonas en la BD:', todasLasZonas?.length || 0);
-          logger.log('🔍 Error consulta alternativa:', errorTodas);
+          logger.log('ðŸ” Todas las zonas en la BD:', todasLasZonas?.length || 0);
+          logger.log('ðŸ” Error consulta alternativa:', errorTodas);
           
           if (todasLasZonas && todasLasZonas.length > 0) {
-            logger.log('🔍 Zonas disponibles en la BD:', todasLasZonas?.length || 0);
+            logger.log('ðŸ” Zonas disponibles en la BD:', todasLasZonas?.length || 0);
           }
         } catch (e) {
-          logger.error('❌ Error en consulta alternativa:', e);
+          logger.error('Œ Error en consulta alternativa:', e);
         }
         
         setPriceOptions([]);
@@ -218,12 +218,12 @@ const ZonesPanel = ({
         return;
       }
 
-      // Crear mapas para búsqueda rápida
+      // Crear mapas para bºsqueda r¡pida
       const entradasById = new Map(entradas.map(e => [String(e.id), e]));
       const zonasById = new Map(zonas.map(z => [String(z.id), z]));
 
-      logger.log('🗺️ Mapa de entradas por ID:', Array.from(entradasById.keys()).length);
-      logger.log('🎯 Mapa de zonas por ID:', Array.from(zonasById.keys()).length);
+      logger.log('ðŸ—ºï¸ Mapa de entradas por ID:', Array.from(entradasById.keys()).length);
+      logger.log('ðŸŽ¯ Mapa de zonas por ID:', Array.from(zonasById.keys()).length);
 
       // Procesar detalles y agrupar por zona
       const zonasAgrupadas = new Map();
@@ -231,16 +231,16 @@ const ZonesPanel = ({
       let detallesConError = 0;
 
       detalles.forEach((detalle, index) => {
-        logger.log(`🔍 Procesando detalle ${index}`);
+        logger.log(`ðŸ” Procesando detalle ${index}`);
         
         // Validar que detalle no sea null/undefined
         if (!detalle || typeof detalle !== 'object') {
-          logger.warn(`❌ Detalle ${index} es null/undefined o no es un objeto`);
+          logger.warn(`Œ Detalle ${index} es null/undefined o no es un objeto`);
           detallesConError++;
           return;
         }
         
-        // Extraer campos con múltiples nombres posibles
+        // Extraer campos con mºltiples nombres posibles
         const zonaId = detalle.zonaId || detalle.zona_id || detalle.zona?.id || detalle.id_zona || detalle.idZona;
         const entradaId = detalle.entradaId || detalle.entrada_id || detalle.entrada?.id || detalle.id_entrada || detalle.idEntrada || detalle.productoId || detalle.producto_id;
         const precio = parseFloat(detalle.precio || detalle.price || detalle.monto || detalle.valor || 0);
@@ -249,7 +249,7 @@ const ZonesPanel = ({
         logger.log(`  - zonaId: ${zonaId}, entradaId: ${entradaId}, precio: ${precio}`);
 
         if (!zonaId || !entradaId) {
-          logger.log(`  ❌ Saltando - zonaId o entradaId faltante`);
+          logger.log(`  Œ Saltando - zonaId o entradaId faltante`);
           detallesConError++;
           return;
         }
@@ -259,26 +259,26 @@ const ZonesPanel = ({
         const entrada = entradasById.get(String(entradaId));
 
         if (!zona) {
-          logger.warn(`❌ Zona ${zonaId} no encontrada en BD`);
+          logger.warn(`Œ Zona ${zonaId} no encontrada en BD`);
           detallesConError++;
           return;
         }
 
         if (!entrada) {
-          logger.warn(`❌ Entrada ${entradaId} no encontrada en BD`);
+          logger.warn(`Œ Entrada ${entradaId} no encontrada en BD`);
           detallesConError++;
           return;
         }
 
         // Validar que zona y entrada tengan las propiedades necesarias
         if (!zona.nombre) {
-          logger.warn(`❌ Zona ${zonaId} no tiene nombre`);
+          logger.warn(`Œ Zona ${zonaId} no tiene nombre`);
           detallesConError++;
           return;
         }
 
         if (!entrada.nombre_entrada) {
-          logger.warn(`❌ Entrada ${entradaId} no tiene nombre_entrada`);
+          logger.warn(`Œ Entrada ${entradaId} no tiene nombre_entrada`);
           detallesConError++;
           return;
         }
@@ -309,19 +309,19 @@ const ZonesPanel = ({
             comision: comision,
             color: zona.color || entrada.color || '#6366f1'
           });
-          logger.log(`  ✅ Precio agregado a zona ${zonaId}`);
+          logger.log(`  œ… Precio agregado a zona ${zonaId}`);
           detallesProcesados++;
         } else {
-          logger.log(`  ⚠️ Entrada ${entradaId} ya existe en zona ${zonaId}`);
+          logger.log(`  š ï¸ Entrada ${entradaId} ya existe en zona ${zonaId}`);
         }
       });
 
-      logger.log('🏗️ Zonas agrupadas:', zonasAgrupadas?.length || 0);
-      logger.log(`📊 Resumen: ${detallesProcesados} detalles procesados, ${detallesConError} con error`);
+      logger.log('ðŸ—ï¸ Zonas agrupadas:', zonasAgrupadas?.length || 0);
+      logger.log(`ðŸ“Š Resumen: ${detallesProcesados} detalles procesados, ${detallesConError} con error`);
 
-      // Convertir a array y calcular estadísticas
+      // Convertir a array y calcular estad­sticas
       const opciones = Array.from(zonasAgrupadas.values()).map(grupo => {
-        // Calcular estadísticas de ocupación si hay mapa
+        // Calcular estad­sticas de ocupaci³n si hay mapa
         if (mapa) {
           const asientosZona = Object.values(mapa).filter(asiento => 
             String(asiento.zona_id) === String(grupo.zona.id)
@@ -336,10 +336,10 @@ const ZonesPanel = ({
         return grupo;
       });
 
-      logger.log('🎯 Opciones de precio finales:', opciones?.length || 0);
+      logger.log('ðŸŽ¯ Opciones de precio finales:', opciones?.length || 0);
       setPriceOptions(opciones);
       
-      // Actualizar información de debug
+      // Actualizar informaci³n de debug
       setDebugInfo({
         success: true,
         source,
@@ -351,22 +351,22 @@ const ZonesPanel = ({
         zonasCargadas: zonas.length
       });
 
-      // Restaurar selección previa si existe
+      // Restaurar selecci³n previa si existe
       if (selectedZonaId && !opciones.find(o => o.zona.id === selectedZonaId)) {
         setActiveZonaId(opciones[0]?.zona.id || null);
       } else if (selectedZonaId) {
         setActiveZonaId(selectedZonaId);
       }
 
-      // Notificar al padre que los precios están cargados
+      // Notificar al padre que los precios est¡n cargados
       if (onPricesLoaded) {
         onPricesLoaded(opciones);
       }
 
-      logger.log('✅ loadPriceOptions completado exitosamente');
+      logger.log('œ… loadPriceOptions completado exitosamente');
 
     } catch (error) {
-      logger.error('💥 Error cargando opciones de precio:', error);
+      logger.error('ðŸ’¥ Error cargando opciones de precio:', error);
       setPriceOptions([]);
       setDebugInfo({ error: error.message || 'Error desconocido' });
       message.error('Error al cargar zonas y precios');
@@ -375,7 +375,7 @@ const ZonesPanel = ({
     }
   }, [selectedFuncion, selectedPlantilla, onPricesLoaded, extractDetalles]); // Removido mapa y selectedZonaId
 
-  // Cargar datos cuando cambie la función o plantilla
+  // Cargar datos cuando cambie la funci³n o plantilla
   useEffect(() => {
     if (selectedFuncion && !dataLoaded) {
       setDataLoaded(true);
@@ -383,14 +383,14 @@ const ZonesPanel = ({
     }
   }, [selectedFuncion, selectedPlantilla, dataLoaded]); // Solo se ejecuta una vez
 
-  // Resetear dataLoaded cuando cambie la función para permitir recarga
+  // Resetear dataLoaded cuando cambie la funci³n para permitir recarga
   useEffect(() => {
     if (selectedFuncion) {
       setDataLoaded(false);
     }
-  }, [selectedFuncion?.id]); // Solo cuando cambie el ID de la función
+  }, [selectedFuncion?.id]); // Solo cuando cambie el ID de la funci³n
 
-  // Sync external selectedZonaId → internal activeZonaId
+  // Sync external selectedZonaId †’ internal activeZonaId
   useEffect(() => {
     if (selectedZonaId && selectedZonaId !== activeZonaId) {
       if (priceOptions.find(o => o.zona.id === selectedZonaId)) {
@@ -399,12 +399,12 @@ const ZonesPanel = ({
     }
   }, [selectedZonaId, activeZonaId, priceOptions]);
 
-  // Actualizar estadísticas cuando cambie el mapa (sin recargar todo)
+  // Actualizar estad­sticas cuando cambie el mapa (sin recargar todo)
   useEffect(() => {
     if (mapa && priceOptions.length > 0) {
-      logger.log('🔄 Mapa cambió, actualizando estadísticas...');
+      logger.log('ðŸ”„ Mapa cambi³, actualizando estad­sticas...');
       const opcionesActualizadas = priceOptions.map(grupo => {
-        // Calcular estadísticas de ocupación si hay mapa
+        // Calcular estad­sticas de ocupaci³n si hay mapa
         const asientosZona = Object.values(mapa).filter(asiento => 
           String(asiento.zona_id) === String(grupo.zona.id)
         );
@@ -427,7 +427,7 @@ const ZonesPanel = ({
 
   return (
     <div className="space-y-3">
-      {/* Información de Debug */}
+      {/* Informaci³n de Debug */}
       {debugInfo.error && (
         <Alert
           message="Error al cargar zonas"
@@ -477,40 +477,40 @@ const ZonesPanel = ({
           <div className="text-xs text-gray-500 px-2 py-1">
             <div>No hay zonas configuradas en la plantilla</div>
             <div className="text-[10px] mt-1">
-              Debug: {selectedFuncion ? 'Función seleccionada' : 'Sin función'} | 
+              Debug: {selectedFuncion ? 'Funci³n seleccionada' : 'Sin funci³n'} | 
               {selectedPlantilla ? 'Plantilla cargada' : 'Sin plantilla'} | 
               {selectedPlantilla?.detalles ? 'Con detalles' : 'Sin detalles'}
             </div>
             <button 
               onClick={() => {
-                logger.log('🔍 Debug - Datos actuales');
+                logger.log('ðŸ” Debug - Datos actuales');
                 setDataLoaded(false); // Resetear para permitir recarga
                 loadPriceOptions();
               }}
               className="mt-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
             >
-              🔍 Debug - Recargar
+              ðŸ” Debug - Recargar
             </button>
             
             <button 
               onClick={async () => {
-                logger.log('🔍 Debug - Probar consultas de BD...');
+                logger.log('ðŸ” Debug - Probar consultas de BD...');
                 const salaId = selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
-                logger.log('🏢 Sala ID:', salaId);
+                logger.log('ðŸ¢ Sala ID:', salaId);
                 
                 // Probar consulta de entradas
                 const { data: entradas, error: entradasError } = await supabase
                   .from('entradas')
                   .select('*')
                   .order('nombre_entrada');
-                logger.log('📦 Entradas (sin filtro):', { data: entradas?.length || 0, error: entradasError });
+                logger.log('ðŸ“¦ Entradas (sin filtro):', { data: entradas?.length || 0, error: entradasError });
                 
                 // Probar consulta de zonas sin filtro
                 const { data: zonas, error: zonasError } = await supabase
                   .from('zonas')
                   .select('*')
                   .order('nombre');
-                logger.log('🎯 Zonas (sin filtro):', { data: zonas?.length || 0, error: zonasError });
+                logger.log('ðŸŽ¯ Zonas (sin filtro):', { data: zonas?.length || 0, error: zonasError });
                 
                 // Probar consulta de zonas con filtro
                 if (salaId) {
@@ -519,12 +519,12 @@ const ZonesPanel = ({
                     .select('*')
                     .eq('sala_id', String(salaId))
                     .order('nombre');
-                  logger.log('🎯 Zonas filtradas por sala:', { data: zonasFiltradas?.length || 0, error: zonasFiltradasError });
+                  logger.log('ðŸŽ¯ Zonas filtradas por sala:', { data: zonasFiltradas?.length || 0, error: zonasFiltradasError });
                 }
               }}
               className="mt-2 ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
             >
-              🗄️ Debug - Consultas BD
+              ðŸ—„ï¸ Debug - Consultas BD
             </button>
           </div>
         )}
@@ -548,7 +548,7 @@ const ZonesPanel = ({
               <div className="text-xs font-semibold" style={{ color: zonaData.zona.color || '#333' }}>
                 {zonaData.zona.nombre}
               </div>
-              <div className="text-[10px] text-gray-500">Ocupación: {zonaData.ocupacion || 0}%</div>
+              <div className="text-[10px] text-gray-500">Ocupaci³n: {zonaData.ocupacion || 0}%</div>
             </div>
           ))
         )}
@@ -590,7 +590,7 @@ const ZonesPanel = ({
                     </div>
                     <div className="text-right">
                       <div className="font-bold">${formatCurrency(opt.precio)}</div>
-                      {opt.comision > 0 && <div className="text-gray-500">+${formatCurrency(opt.comision)} comisión</div>}
+                      {opt.comision > 0 && <div className="text-gray-500">+${formatCurrency(opt.comision)} comisi³n</div>}
                     </div>
                   </div>
                 );
@@ -603,5 +603,7 @@ const ZonesPanel = ({
 };
 
 export default ZonesPanel;
+
+
 
 

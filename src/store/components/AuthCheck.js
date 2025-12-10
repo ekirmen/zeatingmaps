@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Button, Form, Input, message, Alert } from 'antd';
+import { Modal, Button, Form, Input, message, Alert } from '../../utils/antdComponents';
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
@@ -15,7 +15,7 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
     setLoading(true);
     try {
       await login(values);
-      message.success('Inicio de sesión exitoso');
+      message.success('Inicio de sesi³n exitoso');
       onSuccess();
       onClose();
     } catch (error) {
@@ -71,11 +71,11 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
       title={
         <div className="text-center">
           <h2 className="text-xl font-bold">
-            {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
+            {isLogin ? 'Iniciar Sesi³n' : 'Registrarse'}
           </h2>
           <p className="text-gray-600 mt-1">
             {isLogin 
-              ? 'Inicia sesión para completar tu compra' 
+              ? 'Inicia sesi³n para completar tu compra' 
               : 'Crea una cuenta para continuar'
             }
           </p>
@@ -130,11 +130,11 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
 
               <Form.Item
                 name="telefono"
-                rules={[{ required: true, message: 'Por favor ingresa tu teléfono' }]}
+                rules={[{ required: true, message: 'Por favor ingresa tu tel©fono' }]}
               >
                 <Input
                   prefix={<PhoneOutlined />}
-                  placeholder="Teléfono"
+                  placeholder="Tel©fono"
                 />
               </Form.Item>
             </>
@@ -144,7 +144,7 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
             name="email"
             rules={[
               { required: true, message: 'Por favor ingresa tu email' },
-              { type: 'email', message: 'Por favor ingresa un email válido' }
+              { type: 'email', message: 'Por favor ingresa un email v¡lido' }
             ]}
           >
             <Input
@@ -157,13 +157,13 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
           <Form.Item
             name="password"
             rules={[
-              { required: true, message: 'Por favor ingresa tu contraseña' },
-              { min: 6, message: 'La contraseña debe tener al menos 6 caracteres' }
+              { required: true, message: 'Por favor ingresa tu contrase±a' },
+              { min: 6, message: 'La contrase±a debe tener al menos 6 caracteres' }
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Contraseña"
+              placeholder="Contrase±a"
             />
           </Form.Item>
 
@@ -172,20 +172,20 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
               name="confirmPassword"
               dependencies={['password']}
               rules={[
-                { required: true, message: 'Por favor confirma tu contraseña' },
+                { required: true, message: 'Por favor confirma tu contrase±a' },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
                     if (!value || getFieldValue('password') === value) {
                       return Promise.resolve();
                     }
-                    return Promise.reject(new Error('Las contraseñas no coinciden'));
+                    return Promise.reject(new Error('Las contrase±as no coinciden'));
                   },
                 }),
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined />}
-                placeholder="Confirmar contraseña"
+                placeholder="Confirmar contrase±a"
               />
             </Form.Item>
           )}
@@ -198,7 +198,7 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
               block
               size="large"
             >
-              {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
+              {isLogin ? 'Iniciar Sesi³n' : 'Registrarse'}
             </Button>
           </Form.Item>
         </Form>
@@ -206,8 +206,8 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
         <div className="text-center">
           <Button type="link" onClick={switchMode}>
             {isLogin 
-              ? '¿No tienes cuenta? Regístrate aquí' 
-              : '¿Ya tienes cuenta? Inicia sesión aquí'
+              ? '¿No tienes cuenta? Reg­strate aqu­' 
+              : '¿Ya tienes cuenta? Inicia sesi³n aqu­'
             }
           </Button>
         </div>
@@ -217,3 +217,5 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
 };
 
 export default AuthCheck;
+
+

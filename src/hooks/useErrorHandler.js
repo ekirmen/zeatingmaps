@@ -1,4 +1,4 @@
-import { message } from 'antd';
+import { message } from '../utils/antdComponents';
 import { useCallback } from 'react';
 
 /**
@@ -217,3 +217,4 @@ export const useErrorHandler = () => {
     showInfo
   };
 };
+

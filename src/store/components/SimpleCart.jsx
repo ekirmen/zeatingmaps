@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo, useEffect } from 'react';
-import { Card, Button, Typography, Space, Divider, Badge } from 'antd';
+import { Card, Button, Typography, Space, Divider, Badge } from '../../utils/antdComponents';
 import { ShoppingCartOutlined, DeleteOutlined, CreditCardOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +19,7 @@ const SimpleCart = memo(() => {
   // Debug logging solo en desarrollo
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      logger.log('🛒 [SIMPLE_CART] Renderizando con:', { itemCount, total, seatsCount, productsCount });
+      logger.log('ðŸ›’ [SIMPLE_CART] Renderizando con:', { itemCount, total, seatsCount, productsCount });
     }
   }, [itemCount, total, seatsCount, productsCount]);
 
@@ -67,7 +67,7 @@ const SimpleCart = memo(() => {
       {cartSummary.isEmpty ? (
         <div className="text-center py-8">
           <ShoppingCartOutlined className="text-4xl text-gray-400 mb-2" />
-          <Text type="secondary">Tu carrito está vacío</Text>
+          <Text type="secondary">Tu carrito est¡ vac­o</Text>
           <br />
           <Text type="secondary" className="text-sm">Selecciona asientos en el mapa</Text>
         </div>
@@ -151,3 +151,5 @@ const SimpleCart = memo(() => {
 SimpleCart.displayName = 'SimpleCart';
 
 export default SimpleCart;
+
+

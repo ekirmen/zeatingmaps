@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // <- Cambiado
-import { message } from 'antd';
+import { message } from '../utils/antdComponents';
 import API_BASE_URL from '../utils/apiBase';
 
 const Login = ({ onLogin }) => {
@@ -61,3 +61,4 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
+

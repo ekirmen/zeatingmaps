@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
-import { Modal, Drawer, Button as AntButton, message } from 'antd';
+import { Modal, Drawer, Button, message } from '../../utils/antdComponents';
 import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
@@ -42,7 +42,7 @@ const Boleteria = () => {
   }), [selectedEvent?.id, selectedFuncion?.id, eventos?.length, funciones?.length]);
   
   useEffect(() => {
-    logger.log('🎫 [Boleteria] Estado actual:', debugState);
+    logger.log('Ã°Å¸Å½Â« [Boleteria] Estado actual:', debugState);
   }, [debugState]);
 
   const [foundSeats, setFoundSeats] = useState([]);
@@ -75,27 +75,27 @@ const Boleteria = () => {
   const subscribeToFunction = seatLockStore.subscribeToFunction;
   const unsubscribe = seatLockStore.unsubscribe;
 
-  // Suscribirse a eventos en tiempo real para la función seleccionada (optimizado)
+  // Suscribirse a eventos en tiempo real para la funciÂ³n seleccionada (optimizado)
   const subscriptionFuncionId = useRef(null);
   useEffect(() => {
     const currentFuncionId = selectedFuncion?.id;
     
-    // Solo suscribirse si cambió la función
+    // Solo suscribirse si cambiÂ³ la funciÂ³n
     if (currentFuncionId && currentFuncionId !== subscriptionFuncionId.current && subscribeToFunction) {
-      // Desuscribirse de la función anterior si existe
+      // Desuscribirse de la funciÂ³n anterior si existe
       if (subscriptionFuncionId.current && unsubscribe) {
-        logger.log('🔔 [Boleteria] Desuscribiéndose de función anterior:', subscriptionFuncionId.current);
+        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de funciÂ³n anterior:', subscriptionFuncionId.current);
         unsubscribe();
       }
       
-      logger.log('🔔 [Boleteria] Suscribiéndose a función:', currentFuncionId);
+      logger.log('Ã°Å¸â€â€ [Boleteria] SuscribiÂ©ndose a funciÂ³n:', currentFuncionId);
       subscribeToFunction(currentFuncionId);
       subscriptionFuncionId.current = currentFuncionId;
     }
 
     return () => {
       if (unsubscribe && subscriptionFuncionId.current) {
-        logger.log('🔔 [Boleteria] Desuscribiéndose de función:', subscriptionFuncionId.current);
+        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de funciÂ³n:', subscriptionFuncionId.current);
         unsubscribe();
         subscriptionFuncionId.current = null;
       }
@@ -111,14 +111,14 @@ const Boleteria = () => {
   const [isSeatModalVisible, setIsSeatModalVisible] = useState(false);
   const [permanentLocks, setPermanentLocks] = useState([]);
   
-  // Estados para gestión de precios y entradas
+  // Estados para gestiÂ³n de precios y entradas
   const [entradas, setEntradas] = useState([]);
   const [selectedEntradaId, setSelectedEntradaId] = useState(null);
   const [priceOptions, setPriceOptions] = useState([]);
   const [blockMode, setBlockMode] = useState(false);
   const [blockAction, setBlockAction] = useState(null); // 'block' | 'unlock'
 
-  // Eliminar useEffect duplicado - ya está manejado arriba
+  // Eliminar useEffect duplicado - ya estÂ¡ manejado arriba
 
   // useEffect para cargar entradas y opciones de precio (optimizado - solo cuando cambian funcion o evento)
   const prevFuncionId = useRef(null);
@@ -128,7 +128,7 @@ const Boleteria = () => {
     const currentFuncionId = selectedFuncion?.id;
     const currentEventId = selectedEvent?.id;
     
-    // Solo cargar si cambió la función o el evento
+    // Solo cargar si cambiÂ³ la funciÂ³n o el evento
     if (!selectedFuncion || !selectedEvent) return;
     if (currentFuncionId === prevFuncionId.current && currentEventId === prevEventId.current) return;
     
@@ -137,12 +137,12 @@ const Boleteria = () => {
     
     const loadEntradasAndPrices = async () => {
       try {
-        logger.log('🎫 [Boleteria] Cargando entradas y precios...');
+        logger.log('Ã°Å¸Å½Â« [Boleteria] Cargando entradas y precios...');
         
         // Cargar entradas del recinto
         const recintoId = selectedEvent.recinto || selectedEvent.recinto_id;
         if (!recintoId) {
-          logger.warn('No se encontró recinto_id');
+          logger.warn('No se encontrÂ³ recinto_id');
           return;
         }
 
@@ -156,7 +156,7 @@ const Boleteria = () => {
           return;
         }
 
-        logger.log('✅ Entradas cargadas:', entradasData);
+        logger.log('Å“â€¦ Entradas cargadas:', entradasData);
         setEntradas(entradasData || []);
 
         // Procesar plantilla de precios
@@ -185,7 +185,7 @@ const Boleteria = () => {
             pricesGrouped[entradaId].maxPrecio = Math.max(pricesGrouped[entradaId].maxPrecio, detalle.precio || 0);
           });
 
-          // Combinar con información de entradas
+          // Combinar con informaciÂ³n de entradas
           const priceOptionsArray = Object.values(pricesGrouped).map(group => {
             const entrada = entradasData?.find(e => e.id === group.entradaId);
             const safeMinPrecio = Number.isFinite(group.minPrecio) && group.minPrecio !== Infinity
@@ -205,7 +205,7 @@ const Boleteria = () => {
             };
           });
 
-          logger.log('✅ Opciones de precio procesadas:', priceOptionsArray);
+          logger.log('Å“â€¦ Opciones de precio procesadas:', priceOptionsArray);
           setPriceOptions(priceOptionsArray);
 
           // Seleccionar la primera entrada por defecto solo si no hay una seleccionada
@@ -219,7 +219,7 @@ const Boleteria = () => {
     };
 
     loadEntradasAndPrices();
-  }, [selectedFuncion?.id, selectedEvent?.id]); // Solo dependencias críticas
+  }, [selectedFuncion?.id, selectedEvent?.id]); // Solo dependencias crÂ­ticas
 
   const searchExistingSeats = useCallback(async () => {
     if (!selectedFuncion?.id || searchAllSeatsLoading) return;
@@ -283,7 +283,7 @@ const Boleteria = () => {
             zona: zonaNombre,
             zonaId: seat.zonaId || seat.zona?.id || seat.zona_id,
             precio,
-            tipoPrecio: seat.tipoPrecio || seat.tipo || 'histórico',
+            tipoPrecio: seat.tipoPrecio || seat.tipo || 'histÂ³rico',
             locator: payment.locator,
             status: normalizedStatus,
             buyerName,
@@ -302,7 +302,7 @@ const Boleteria = () => {
       }
       setSearchDataLoaded(true);
     } catch (error) {
-      logger.error('❌ [Boleteria] Error buscando asientos vendidos/reservados:', error);
+      logger.error('ÂÅ’ [Boleteria] Error buscando asientos vendidos/reservados:', error);
     } finally {
       setSearchAllSeatsLoading(false);
     }
@@ -425,7 +425,7 @@ const Boleteria = () => {
         const locks = buildLocksFromPayments(data || []);
         setPermanentLocks(locks);
       } catch (error) {
-        logger.error('❌ [Boleteria] Error cargando asientos vendidos/reservados:', error);
+        logger.error('ÂÅ’ [Boleteria] Error cargando asientos vendidos/reservados:', error);
         if (isMounted) {
           setPermanentLocks([]);
         }
@@ -468,11 +468,11 @@ const Boleteria = () => {
       const hasSaleItems = safeCart.some(item => !item.lockAction);
 
       if (hasSaleItems) {
-        message.warning('Vacía el carrito de venta antes de usar el modo bloqueo/desbloqueo.');
+        message.warning('VacÂ­a el carrito de venta antes de usar el modo bloqueo/desbloqueo.');
         return;
       }
 
-      // Si ya está activo el mismo modo, desactivarlo
+      // Si ya estÂ¡ activo el mismo modo, desactivarlo
       if (blockMode && blockAction === action) {
         setBlockMode(false);
         setBlockAction(null);
@@ -481,7 +481,7 @@ const Boleteria = () => {
         return;
       }
 
-      // Limpiar selecciones previas de bloqueo si se cambia la acción
+      // Limpiar selecciones previas de bloqueo si se cambia la acciÂ³n
       const lockItems = safeCart.filter(item => item.lockAction === action);
       if (lockItems.length !== safeCart.filter(item => item.lockAction).length) {
         message.info('Se limpiaron los asientos seleccionados del modo anterior.');
@@ -506,7 +506,7 @@ const Boleteria = () => {
         const seatId = seatData?._id || seatData?.sillaId || seatData?.id;
 
         if (!seatId) {
-          logger.warn('⚠️ [Boleteria] toggleSeat llamado sin identificador válido:', seatData);
+          logger.warn('Å¡Â Ã¯Â¸Â [Boleteria] toggleSeat llamado sin identificador vÂ¡lido:', seatData);
           return safePrev;
         }
 
@@ -563,7 +563,7 @@ const Boleteria = () => {
         const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
 
         if (!funcionId) {
-          message.warning('Selecciona una función antes de bloquear/desbloquear.');
+          message.warning('Selecciona una funciÂ³n antes de bloquear/desbloquear.');
           return;
         }
 
@@ -576,12 +576,12 @@ const Boleteria = () => {
         const lockAction = blockAction === 'block' ? 'block' : 'unlock';
 
         if (lockAction === 'block' && blockedStates.includes(seatEstado)) {
-          message.warning('El asiento ya está bloqueado. Usa DESBLOQUEAR si quieres liberarlo.');
+          message.warning('El asiento ya estÂ¡ bloqueado. Usa DESBLOQUEAR si quieres liberarlo.');
           return;
         }
 
         if (lockAction === 'unlock' && !blockedStates.includes(seatEstado)) {
-          message.warning('Solo puedes seleccionar asientos que ya estén bloqueados para desbloquearlos.');
+          message.warning('Solo puedes seleccionar asientos que ya estÂ©n bloqueados para desbloquearlos.');
           return;
         }
 
@@ -589,12 +589,12 @@ const Boleteria = () => {
           const safePrev = Array.isArray(prev) ? prev.filter(item => item.lockAction) : [];
           const existingIndex = safePrev.findIndex(item => (item._id || item.sillaId || item.id) === sillaId);
 
-          // Si el asiento ya está seleccionado con la misma acción, quitarlo
+          // Si el asiento ya estÂ¡ seleccionado con la misma acciÂ³n, quitarlo
           if (existingIndex >= 0 && safePrev[existingIndex]?.lockAction === lockAction) {
             return safePrev.filter((_, index) => index !== existingIndex);
           }
 
-          // Reemplazar acción si estaba con la contraria
+          // Reemplazar acciÂ³n si estaba con la contraria
           const withoutSeat = existingIndex >= 0
             ? safePrev.filter((_, index) => index !== existingIndex)
             : safePrev;
@@ -636,16 +636,16 @@ const Boleteria = () => {
 
       // Verificar que se haya seleccionado un tipo de entrada
       if (!selectedEntradaId) {
-        logger.warn('⚠️ [Boleteria] No se ha seleccionado un tipo de entrada');
-        // Aquí podrías mostrar un mensaje al usuario
+        logger.warn('Å¡Â Ã¯Â¸Â [Boleteria] No se ha seleccionado un tipo de entrada');
+        // AquÂ­ podrÂ­as mostrar un mensaje al usuario
         return;
       }
 
-      // En modo boletería simplificado, no verificamos bloqueos aquí
-      // Los bloqueos se manejan por separado con botones específicos
+      // En modo boleterÂ­a simplificado, no verificamos bloqueos aquÂ­
+      // Los bloqueos se manejan por separado con botones especÂ­ficos
 
       if (seatEstado === 'bloqueado' || seatEstado === 'locked' || seatEstado === 'lock') {
-        message.warning('Este asiento está bloqueado. Activa el modo bloqueo/desbloqueo para liberarlo.');
+        message.warning('Este asiento estÂ¡ bloqueado. Activa el modo bloqueo/desbloqueo para liberarlo.');
         return;
       }
 
@@ -662,7 +662,7 @@ const Boleteria = () => {
         try {
           detalle = JSON.parse(detalle);
         } catch (error) {
-          logger.warn('⚠️ [Boleteria] No se pudo parsear la plantilla de precios:', error);
+          logger.warn('Å¡Â Ã¯Â¸Â [Boleteria] No se pudo parsear la plantilla de precios:', error);
           detalle = [];
         }
       }
@@ -683,7 +683,7 @@ const Boleteria = () => {
       const detalleFinal = detalleZona || detalleZonaFallback;
       const precio = Number(detalleFinal?.precio) || 0;
 
-      // Obtener información del tipo de entrada seleccionado
+      // Obtener informaciÂ³n del tipo de entrada seleccionado
       const entradaSeleccionada = priceOptions?.find(option => option.entradaId === selectedEntradaId);
       const tipoPrecio = entradaSeleccionada?.nombre || detalleFinal?.tipoEntrada || detalleFinal?.tipo || 'general';
       const descuentoNombre = detalleFinal?.descuentoNombre || detalleFinal?.descuento || '';
@@ -712,22 +712,22 @@ const Boleteria = () => {
         modoVenta: 'boleteria'
       };
 
-      // Verificar si el asiento ya está en el carrito
+      // Verificar si el asiento ya estÂ¡ en el carrito
       const exists = carrito.some(item => item.sillaId === sillaId);
       
       if (exists) {
         // Deseleccionar: quitar del carrito y desbloquear en BD
         await toggleSeat(cartItem);
         await unlockSeat(sillaId, funcionId);
-        logger.log('🔄 [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
+        logger.log('Ã°Å¸â€â€ž [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
       } else {
         // Seleccionar: bloquear en BD primero, luego agregar al carrito
         const lockResult = await lockSeat(sillaId, 'seleccionado', funcionId);
         if (lockResult) {
           await toggleSeat(cartItem);
-          logger.log('✅ [Boleteria] Asiento seleccionado y bloqueado:', sillaId);
+          logger.log('Å“â€¦ [Boleteria] Asiento seleccionado y bloqueado:', sillaId);
         } else {
-          logger.log('❌ [Boleteria] No se pudo bloquear el asiento:', sillaId);
+          logger.log('ÂÅ’ [Boleteria] No se pudo bloquear el asiento:', sillaId);
         }
       }
     },
@@ -841,7 +841,7 @@ const Boleteria = () => {
       }
 
       if (!selectedFuncion?.id) {
-        message.warning('Selecciona una función para aplicar los cambios.');
+        message.warning('Selecciona una funciÂ³n para aplicar los cambios.');
         return;
       }
 
@@ -864,7 +864,7 @@ const Boleteria = () => {
             if (unlocked) unlockedCount += 1;
           }
         } catch (error) {
-          logger.error('❌ [Boleteria] Error aplicando bloqueo/desbloqueo:', error);
+          logger.error('ÂÅ’ [Boleteria] Error aplicando bloqueo/desbloqueo:', error);
         }
       }
 
@@ -962,7 +962,7 @@ const Boleteria = () => {
 
       {/* Sidebar izquierdo - Mobile: Drawer, Desktop: Sidebar */}
       <>
-        {/* Mobile: Botón para abrir sidebar */}
+        {/* Mobile: BotÂ³n para abrir sidebar */}
         <div className="md:hidden fixed top-2 left-2 z-50">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -974,7 +974,7 @@ const Boleteria = () => {
 
         {/* Mobile: Drawer para sidebar */}
         <Drawer
-          title="Menú"
+          title="MenÂº"
           placement="left"
           onClose={() => setSidebarOpen(false)}
           open={sidebarOpen}
@@ -1015,7 +1015,7 @@ const Boleteria = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-w-0 mt-14 md:mt-0 relative">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header ultra compacto con búsqueda de evento y función */}
+          {/* Header ultra compacto con bÂºsqueda de evento y funciÂ³n */}
           <div className="bg-white border-b border-gray-200 px-3 py-2 md:px-1 md:py-0.5 shadow-sm md:shadow-none z-10">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1">
@@ -1040,7 +1040,7 @@ const Boleteria = () => {
                   </select>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-500">Función:</span>
+                  <span className="text-xs text-gray-500">FunciÂ³n:</span>
                   <select 
                     className="text-xs border border-gray-300 rounded px-1 py-0.5 min-w-0 flex-1"
                     value={selectedFuncion?.id || ''}
@@ -1052,7 +1052,7 @@ const Boleteria = () => {
                     }}
                     disabled={!selectedEvent}
                   >
-                    <option value="">Selecciona función</option>
+                    <option value="">Selecciona funciÂ³n</option>
                     {funciones?.filter(func => func.evento_id === selectedEvent?.id).map(funcion => (
                       <option key={funcion.id} value={funcion.id}>
                         {new Date(funcion.fecha_celebracion).toLocaleDateString()} {new Date(funcion.fecha_celebracion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
@@ -1062,15 +1062,15 @@ const Boleteria = () => {
                 </div>
               </div>
               <div className="text-xs text-gray-400 flex-shrink-0">
-                🟢🟡🔴🟣⚫
+                Ã°Å¸Å¸Â¢Ã°Å¸Å¸Â¡Ã°Å¸â€Â´Ã°Å¸Å¸Â£Å¡Â«
               </div>
             </div>
           </div>
 
-          {/* Navegación ultra compacta con botones estilo tabs */}
+          {/* NavegaciÂ³n ultra compacta con botones estilo tabs */}
         <div className="bg-white border-b border-gray-200 sticky top-14 md:static z-10 shadow-sm md:shadow-none">
             <div className="flex items-center justify-between px-2 py-1">
-              {/* Botón para abrir panel lateral */}
+              {/* BotÂ³n para abrir panel lateral */}
               <div className="flex items-center">
                 <button 
                   className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -1080,38 +1080,38 @@ const Boleteria = () => {
                 </button>
               </div>
 
-              {/* Botones de navegación principales */}
+              {/* Botones de navegaciÂ³n principales */}
               <div className="flex space-x-1">
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  🏷️ Zonas
+                  Ã°Å¸ÂÂ·Ã¯Â¸Â Zonas
                 </button>
                 <button className="px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded">
-                  🗺️ Mapa
+                  Ã°Å¸â€”ÂºÃ¯Â¸Â Mapa
                 </button>
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  🍔 Productos
+                  Ã°Å¸Ââ€ Productos
                 </button>
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  ⚙️ Otros
+                  Å¡â„¢Ã¯Â¸Â Otros
                 </button>
         </div>
 
               {/* Botones secundarios */}
               <div className="flex items-center space-x-1">
                 <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="Cliente">
-                  <i className="text-sm">👤</i>
+                  <i className="text-sm">Ã°Å¸â€˜Â¤</i>
                 </button>
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="Fidelización">
-                  <i className="text-sm">💳</i>
+                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="FidelizaciÂ³n">
+                  <i className="text-sm">Ã°Å¸â€™Â³</i>
                 </button>
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="Información">
-                  <i className="text-sm">ℹ️</i>
+                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="InformaciÂ³n">
+                  <i className="text-sm">â€žÂ¹Ã¯Â¸Â</i>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Sección ultra compacta de precios dinámicos con selección de entrada */}
+          {/* SecciÂ³n ultra compacta de precios dinÂ¡micos con selecciÂ³n de entrada */}
                   <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
                     <div className="flex items-center gap-3 px-1 py-1">
                       <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
@@ -1161,7 +1161,7 @@ const Boleteria = () => {
                     ? `$${minPrecio.toFixed(2)}`
                     : `$${minPrecio.toFixed(2)}-$${maxPrecio.toFixed(2)}`;
                   
-                  // Determinar color según tipo de producto
+                  // Determinar color segÂºn tipo de producto
                   let bgColor = 'bg-gray-200 text-gray-700';
                   if (isActive) {
                     bgColor = 'bg-purple-600 text-white';
@@ -1175,7 +1175,7 @@ const Boleteria = () => {
                     <button 
                       key={option.entradaId}
                       onClick={() => {
-                        logger.log('🎫 Entrada seleccionada:', option);
+                        logger.log('Ã°Å¸Å½Â« Entrada seleccionada:', option);
                         setSelectedEntradaId(option.entradaId);
                       }}
                       className={`flex-shrink-0 px-2 py-1 rounded font-medium text-xs ${
@@ -1196,7 +1196,7 @@ const Boleteria = () => {
                 })
               ) : (
                 <div className="text-xs text-gray-500 py-1">
-                  {selectedFuncion ? 'Cargando precios...' : 'Selecciona una función para ver precios'}
+                  {selectedFuncion ? 'Cargando precios...' : 'Selecciona una funciÂ³n para ver precios'}
                 </div>
               )}
                 </div>
@@ -1233,22 +1233,22 @@ const Boleteria = () => {
                 {carrito?.length > 0 && (
                   <div className="md:hidden sticky bottom-4 left-0 right-0 mx-2 mt-3 rounded-lg bg-purple-600 text-white text-sm font-semibold px-3 py-2 shadow-lg flex items-center justify-between">
                     <span>{carrito.length === 1 ? 'Asiento seleccionado' : `${carrito.length} asientos seleccionados`}</span>
-                    <span className="text-xs opacity-90">Continúa la compra en el carrito ➜</span>
+                    <span className="text-xs opacity-90">ContinÂºa la compra en el carrito Å¾Å“</span>
                   </div>
                 )}
               </div>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                Selecciona una función para ver el mapa de asientos
+                Selecciona una funciÂ³n para ver el mapa de asientos
               </div>
             )}
           </div>
         </div>
 
         {/* Panel derecho - Carrito de compras */}
-        {/* Mobile: Botón flotante + Drawer */}
+        {/* Mobile: BotÂ³n flotante + Drawer */}
         <>
-          {/* Mobile: Botón flotante para carrito */}
+          {/* Mobile: BotÂ³n flotante para carrito */}
           {carrito && carrito.length > 0 && (
             <div className="md:hidden fixed bottom-4 right-4 z-50">
               <AntButton
@@ -1258,7 +1258,7 @@ const Boleteria = () => {
                 onClick={() => setCartOpen(true)}
                 className="shadow-lg"
               >
-                🛒 {carrito.length}
+                Ã°Å¸â€ºâ€™ {carrito.length}
               </AntButton>
             </div>
           )}
@@ -1296,7 +1296,7 @@ const Boleteria = () => {
         onCancel={() => setIsSeatModalVisible(false)}
         footer={null}
         width={800}
-        title="Información del Asiento"
+        title="InformaciÂ³n del Asiento"
       >
         {seatPayment && (
           <div>
@@ -1313,3 +1313,5 @@ const Boleteria = () => {
 };
 
 export default Boleteria;
+
+

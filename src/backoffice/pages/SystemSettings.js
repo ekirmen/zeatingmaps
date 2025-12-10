@@ -17,7 +17,7 @@ import {
   Modal,
   message,
   Spin
-} from 'antd';
+} from '../../utils/antdComponents';
 import { 
   SettingOutlined,
   UploadOutlined,
@@ -142,10 +142,10 @@ const SystemSettings = () => {
       if (error) throw error;
 
       setSettings(updatedSettings);
-      message.success('Configuración guardada correctamente');
+      message.success('Configuraci³n guardada correctamente');
     } catch (error) {
       console.error('Error saving settings:', error);
-      message.error('Error al guardar la configuración');
+      message.error('Error al guardar la configuraci³n');
     } finally {
       setLoading(false);
     }
@@ -155,7 +155,7 @@ const SystemSettings = () => {
     try {
       setLoading(true);
       
-      // Simular creación de backup
+      // Simular creaci³n de backup
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       const newBackup = {
@@ -184,7 +184,7 @@ const SystemSettings = () => {
     try {
       setLoading(true);
       
-      // Simular restauración
+      // Simular restauraci³n
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       message.success('Backup restaurado correctamente');
@@ -221,8 +221,8 @@ const SystemSettings = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <Title level={2}>Configuración del Sistema</Title>
-        <Text type="secondary">Gestiona la configuración general del sistema</Text>
+        <Title level={2}>Configuraci³n del Sistema</Title>
+        <Text type="secondary">Gestiona la configuraci³n general del sistema</Text>
       </div>
 
       <Form
@@ -231,13 +231,13 @@ const SystemSettings = () => {
         onFinish={saveSettings}
         initialValues={settings}
       >
-        {/* Configuración de Backup */}
-        <Card title="Configuración de Backup" className="mb-6">
+        {/* Configuraci³n de Backup */}
+        <Card title="Configuraci³n de Backup" className="mb-6">
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
               <Form.Item
                 name={['backup', 'enabled']}
-                label="Backup Automático"
+                label="Backup Autom¡tico"
                 valuePropName="checked"
               >
                 <Switch />
@@ -259,7 +259,7 @@ const SystemSettings = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name={['backup', 'retention']}
-                label="Retención (días)"
+                label="Retenci³n (d­as)"
               >
                 <Input type="number" min={1} max={365} />
               </Form.Item>
@@ -287,15 +287,15 @@ const SystemSettings = () => {
             </Button>
             <Button 
               icon={<DownloadOutlined />}
-              onClick={() => message.info('Descargando último backup...')}
+              onClick={() => message.info('Descargando ºltimo backup...')}
             >
-              Descargar Último Backup
+              Descargar šltimo Backup
             </Button>
           </Space>
         </Card>
 
-        {/* Configuración de Notificaciones */}
-        <Card title="Configuración de Notificaciones" className="mb-6">
+        {/* Configuraci³n de Notificaciones */}
+        <Card title="Configuraci³n de Notificaciones" className="mb-6">
           <Row gutter={[16, 16]}>
             <Col xs={24} md={8}>
               <Form.Item
@@ -327,13 +327,13 @@ const SystemSettings = () => {
           </Row>
         </Card>
 
-        {/* Configuración de Seguridad */}
-        <Card title="Configuración de Seguridad" className="mb-6">
+        {/* Configuraci³n de Seguridad */}
+        <Card title="Configuraci³n de Seguridad" className="mb-6">
           <Row gutter={[16, 16]}>
             <Col xs={24} md={8}>
               <Form.Item
                 name={['security', 'twoFactor']}
-                label="Autenticación de Dos Factores"
+                label="Autenticaci³n de Dos Factores"
                 valuePropName="checked"
               >
                 <Switch />
@@ -342,7 +342,7 @@ const SystemSettings = () => {
             <Col xs={24} md={8}>
               <Form.Item
                 name={['security', 'sessionTimeout']}
-                label="Timeout de Sesión (minutos)"
+                label="Timeout de Sesi³n (minutos)"
               >
                 <Input type="number" min={5} max={480} />
               </Form.Item>
@@ -350,10 +350,10 @@ const SystemSettings = () => {
             <Col xs={24} md={8}>
               <Form.Item
                 name={['security', 'passwordPolicy']}
-                label="Política de Contraseñas"
+                label="Pol­tica de Contrase±as"
               >
                 <Select>
-                  <Option value="weak">Débil</Option>
+                  <Option value="weak">D©bil</Option>
                   <Option value="medium">Media</Option>
                   <Option value="strong">Fuerte</Option>
                 </Select>
@@ -362,8 +362,8 @@ const SystemSettings = () => {
           </Row>
         </Card>
 
-        {/* Configuración de Rendimiento */}
-        <Card title="Configuración de Rendimiento" className="mb-6">
+        {/* Configuraci³n de Rendimiento */}
+        <Card title="Configuraci³n de Rendimiento" className="mb-6">
           <Row gutter={[16, 16]}>
             <Col xs={24} md={8}>
               <Form.Item
@@ -377,7 +377,7 @@ const SystemSettings = () => {
             <Col xs={24} md={8}>
               <Form.Item
                 name={['performance', 'compression']}
-                label="Compresión"
+                label="Compresi³n"
                 valuePropName="checked"
               >
                 <Switch />
@@ -403,7 +403,7 @@ const SystemSettings = () => {
             icon={<SettingOutlined />}
             size="large"
           >
-            Guardar Configuración
+            Guardar Configuraci³n
           </Button>
         </Form.Item>
       </Form>
@@ -442,14 +442,14 @@ const SystemSettings = () => {
                       {backup.status.toUpperCase()}
                     </Tag>
                     <Tag color={backup.type === 'automated' ? 'blue' : 'green'}>
-                      {backup.type === 'automated' ? 'Automático' : 'Manual'}
+                      {backup.type === 'automated' ? 'Autom¡tico' : 'Manual'}
                     </Tag>
                   </Space>
                 }
                 description={
                   <div>
                     <Text type="secondary">
-                      {backup.date.toLocaleString()} • {backup.size} • {backup.duration}
+                      {backup.date.toLocaleString()} -¢ {backup.size} -¢ {backup.duration}
                     </Text>
                   </div>
                 }
@@ -472,14 +472,14 @@ const SystemSettings = () => {
         >
           <Form.Item
             name="description"
-            label="Descripción (opcional)"
+            label="Descripci³n (opcional)"
           >
-            <TextArea rows={3} placeholder="Descripción del backup..." />
+            <TextArea rows={3} placeholder="Descripci³n del backup..." />
           </Form.Item>
 
           <Alert
-            message="Información del Backup"
-            description="El backup incluirá todos los datos de la base de datos y archivos del sistema. Este proceso puede tomar varios minutos."
+            message="Informaci³n del Backup"
+            description="El backup incluir¡ todos los datos de la base de datos y archivos del sistema. Este proceso puede tomar varios minutos."
             type="info"
             showIcon
             className="mb-4"
@@ -507,3 +507,4 @@ const SystemSettings = () => {
 };
 
 export default SystemSettings; 
+

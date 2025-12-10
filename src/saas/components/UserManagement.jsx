@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Typography, Space, Tag, Select, Input, Modal, Form, message, Row, Col, Statistic, Drawer, Tabs, Badge, Avatar, Tooltip } from 'antd';
+import { Card, Table, Button, Typography, Space, Tag, Select, Input, Modal, Form, message, Row, Col, Statistic, Drawer, Tabs, Badge, Avatar, Tooltip } from '../../utils/antdComponents';
 import { 
   UserOutlined, 
   TeamOutlined, 
@@ -52,7 +52,7 @@ const UserManagement = () => {
       
       if (authError) throw authError;
 
-      // Luego obtener la información de tenant para cada usuario
+      // Luego obtener la informaci³n de tenant para cada usuario
       const { data: userTenantInfo, error: tenantError } = await supabase
         .from('user_tenant_info')
         .select(`
@@ -67,7 +67,7 @@ const UserManagement = () => {
 
       if (tenantError) throw tenantError;
 
-      // Combinar la información
+      // Combinar la informaci³n
       const combinedUsers = authUsers.users.map(authUser => {
         const tenantInfo = userTenantInfo?.find(uti => uti.user_id === authUser.id);
         return {
@@ -190,7 +190,7 @@ const UserManagement = () => {
     try {
       const values = await form.validateFields();
       
-      // Actualizar información del usuario
+      // Actualizar informaci³n del usuario
       const { error: userError } = await supabase
         .from('user_tenant_info')
         .update({
@@ -328,7 +328,7 @@ const UserManagement = () => {
       ),
     },
     {
-      title: 'Último Login',
+      title: 'šltimo Login',
       dataIndex: 'last_login',
       key: 'last_login',
       render: (date) => date ? new Date(date).toLocaleDateString('es-ES') : 'Nunca',
@@ -366,14 +366,14 @@ const UserManagement = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <TeamOutlined style={{ marginRight: '8px' }} />
-          Gestión de Usuarios
+          Gesti³n de Usuarios
         </Title>
         <Text type="secondary">
           Administra usuarios y roles de todos los tenants
         </Text>
       </div>
 
-      {/* Estadísticas */}
+      {/* Estad­sticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -407,7 +407,7 @@ const UserManagement = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="En línea (24h)"
+              title="En l­nea (24h)"
               value={stats.online || 0}
               valueStyle={{ color: '#1890ff' }}
               prefix={<CrownOutlined />}
@@ -484,7 +484,7 @@ const UserManagement = () => {
         />
       </Card>
 
-      {/* Drawer de edición de usuario */}
+      {/* Drawer de edici³n de usuario */}
       <Drawer
         title="Editar Usuario"
         placement="right"
@@ -548,3 +548,5 @@ const UserManagement = () => {
 };
 
 export default UserManagement;
+
+

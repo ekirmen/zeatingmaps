@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Dropdown, Menu, Modal, Form, Input, message, Avatar, Badge } from 'antd';
+import { Button, Dropdown, Menu, Modal, Form, Input, message, Avatar, Badge } from '../utils/antdComponents';
 import { 
   UserOutlined, 
   SettingOutlined, 
@@ -350,3 +350,4 @@ export const UserMenu = () => {
 };
 
 export default UserMenu;
+

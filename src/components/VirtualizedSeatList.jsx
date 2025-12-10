@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge, Button } from 'antd';
+import { Badge, Button } from '../utils/antdComponents';
 import VirtualizedList from './VirtualizedList';
 import { SeatListSkeleton } from './SkeletonLoaders';
 
@@ -97,4 +97,5 @@ const VirtualizedSeatList = ({
 };
 
 export default VirtualizedSeatList;
+
 

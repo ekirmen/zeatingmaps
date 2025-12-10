@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Button, Space, Typography, message, Spin, Empty } from 'antd';
+import { Card, Button, Space, Typography, message, Spin, Empty } from '../../utils/antdComponents';
 import { ArrowLeftOutlined, SaveOutlined, EyeOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import CrearMapaEditor from '../../components/CrearMapa/CrearMapaEditor';
@@ -20,7 +20,7 @@ const CrearMapaPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  // Validar que el componente esté montado antes de hacer operaciones
+  // Validar que el componente est© montado antes de hacer operaciones
   const [isMounted, setIsMounted] = useState(false);
 
   // Establecer isMounted inmediatamente
@@ -31,7 +31,7 @@ const CrearMapaPage = () => {
     };
   }, []);
 
-  // Inicialización del componente
+  // Inicializaci³n del componente
   useEffect(() => {
     if (isMounted && salaId) {
       loadSalaInfo();
@@ -55,7 +55,7 @@ const CrearMapaPage = () => {
     }
   }, [isMounted, salaId]);
 
-  // Solo ejecutar operaciones si el componente está montado
+  // Solo ejecutar operaciones si el componente est¡ montado
   const safeSetState = useCallback((setter, value) => {
     const setterName = setter.name || setter.toString().slice(0, 50);
     if (isMounted) {
@@ -72,7 +72,7 @@ const CrearMapaPage = () => {
   // Validar estado antes de renderizar
   const validateState = useCallback(() => {
     try {
-      // Verificar que los estados sean válidos
+      // Verificar que los estados sean v¡lidos
       if (loading !== true && loading !== false) {
         return false;
       }
@@ -132,11 +132,11 @@ const CrearMapaPage = () => {
       const structureOk = await checkMapasTableStructure();
 
       if (structureOk) {
-        message.success('Campos faltantes agregados exitosamente. Reintentando operación...');
-        // Reintentar la operación original
+        message.success('Campos faltantes agregados exitosamente. Reintentando operaci³n...');
+        // Reintentar la operaci³n original
         return true;
       } else {
-        message.error('No se pudieron agregar los campos faltantes automáticamente.');
+        message.error('No se pudieron agregar los campos faltantes autom¡ticamente.');
         return false;
       }
     }
@@ -146,7 +146,7 @@ const CrearMapaPage = () => {
   // Agregar campos faltantes a la tabla mapas existente
   const addMissingFieldsToMapas = async (missingFields) => {
     try {
-      // Opción 1: Usar RPC exec_sql si existe
+      // Opci³n 1: Usar RPC exec_sql si existe
       try {
         let alterSQL = '';
 
@@ -173,13 +173,13 @@ const CrearMapaPage = () => {
       } catch (rpcError) {
       }
 
-      // Opción 2: Intentar insertar un registro con campos faltantes para ver el error específico
+      // Opci³n 2: Intentar insertar un registro con campos faltantes para ver el error espec­fico
       try {
         const testRecord = {
           sala_id: salaId,
           contenido: {},
           nombre: 'Test Mapa',
-          descripcion: 'Descripción de prueba',
+          descripcion: 'Descripci³n de prueba',
           estado: 'draft'
         };
 
@@ -229,19 +229,19 @@ const CrearMapaPage = () => {
       // Si hay error de columna faltante (42703), intentar autocorregir
       if (error.code === '42703') {
         console.warn('[DEBUG] Columnas faltantes detectadas (42703):', error.message);
-        message.warning('La tabla mapas existe pero faltan columnas. Intentando agregarlas automáticamente...');
+        message.warning('La tabla mapas existe pero faltan columnas. Intentando agregarlas autom¡ticamente...');
         // Intentar agregar las columnas opcionales comunes
         const fieldsToTry = ['created_at', 'nombre', 'descripcion', 'estado'];
         const added = await addMissingFieldsToMapas(fieldsToTry);
         if (added) {
-          // Reintentar la validación
+          // Reintentar la validaci³n
           const retry = await supabase.from('mapas').select(fullProjection).limit(1);
           if (!retry.error) {
             message.success('Campos faltantes agregados exitosamente');
             return true;
           }
         }
-        message.error('No se pudieron agregar todas las columnas requeridas automáticamente.');
+        message.error('No se pudieron agregar todas las columnas requeridas autom¡ticamente.');
         return false;
       }
 
@@ -256,7 +256,7 @@ const CrearMapaPage = () => {
   // Crear la tabla mapas si no existe (solo en desarrollo)
   const createMapasTable = async () => {
     try {
-      // Opción 1: Usar RPC exec_sql si existe
+      // Opci³n 1: Usar RPC exec_sql si existe
       try {
         const { error } = await supabase.rpc('exec_sql', {
           sql: `
@@ -279,9 +279,9 @@ const CrearMapaPage = () => {
       } catch (rpcError) {
       }
 
-      // Opción 2: Intentar crear la tabla con una consulta simple
+      // Opci³n 2: Intentar crear la tabla con una consulta simple
       try {
-        // Intentar insertar un registro de prueba (esto creará la tabla si no existe)
+        // Intentar insertar un registro de prueba (esto crear¡ la tabla si no existe)
         const { error: insertError } = await supabase
           .from('mapas')
           .insert({
@@ -316,7 +316,7 @@ const CrearMapaPage = () => {
       if (error) {
         return false;
       }
-      // Si es la tabla mapas, verificar también su estructura
+      // Si es la tabla mapas, verificar tambi©n su estructura
       if (tableName === 'mapas') {
         await checkMapasTableStructure();
       }
@@ -327,12 +327,12 @@ const CrearMapaPage = () => {
     }
   };
 
-  // Cargar información de la sala
+  // Cargar informaci³n de la sala
   const loadSalaInfo = async () => {
     try {
       setLoading(true);
 
-      // Obtener información de la sala
+      // Obtener informaci³n de la sala
       const { data: salaData, error: salaError } = await supabase
         .from('salas')
         .select(`
@@ -370,7 +370,7 @@ const CrearMapaPage = () => {
           }
         }
 
-        // Si la tabla es accesible, buscar el mapa específico
+        // Si la tabla es accesible, buscar el mapa espec­fico
         const { data: mapaData, error: mapaError } = await supabase
           .from('mapas')
           .select('id,sala_id,contenido,tenant_id,updated_at,created_at,nombre,descripcion,estado,imagen_fondo')
@@ -382,13 +382,13 @@ const CrearMapaPage = () => {
         if (mapaData && !mapaError) {
           safeSetState(setMapa, mapaData);
         } else if (mapaError) {
-          // Mostrar mensaje específico según el tipo de error
+          // Mostrar mensaje espec­fico segºn el tipo de error
           if (mapaError.code === 'PGRST116') {
-            message.warning('No se encontró un mapa existente para esta sala. Se creará uno nuevo.');
+            message.warning('No se encontr³ un mapa existente para esta sala. Se crear¡ uno nuevo.');
           } else if (mapaError.code === '42P01') {
             message.error('Error: La tabla mapas no existe o no es accesible.');
           } else if (mapaError.code === '42703') {
-            message.warning('La tabla mapas existe pero le faltan algunos campos. Intentando agregarlos automáticamente...');
+            message.warning('La tabla mapas existe pero le faltan algunos campos. Intentando agregarlos autom¡ticamente...');
             // Intentar agregar campos faltantes
             const fieldsAdded = await handleMissingFieldsError(mapaError);
             if (fieldsAdded) {
@@ -404,7 +404,7 @@ const CrearMapaPage = () => {
 
                 if (retryData && !retryError) {
                   safeSetState(setMapa, retryData);
-                  safeSetState(setLoading, false); // Establecer loading aquí también
+                  safeSetState(setLoading, false); // Establecer loading aqu­ tambi©n
                   return;
                 }
               } catch (retryError) {
@@ -414,19 +414,19 @@ const CrearMapaPage = () => {
             message.warning(`Error al cargar mapa existente: ${mapaError.message}`);
           }
 
-          // No es crítico, continuar sin mapa
+          // No es cr­tico, continuar sin mapa
         }
       } catch (mapaError) {
         // Si hay error de permisos o RLS, continuar sin mapa
       }
 
-      // Establecer loading a false aquí, después de todas las operaciones
+      // Establecer loading a false aqu­, despu©s de todas las operaciones
       safeSetState(setLoading, false);
 
     } catch (error) {
       console.error('Error loading sala info:', error);
-      message.error('Error al cargar información de la sala: ' + error.message);
-      // Establecer loading a false también en caso de error
+      message.error('Error al cargar informaci³n de la sala: ' + error.message);
+      // Establecer loading a false tambi©n en caso de error
       safeSetState(setLoading, false);
     }
   };
@@ -521,14 +521,14 @@ const CrearMapaPage = () => {
       // Debug: Check authentication and tenant
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) {
-        throw new Error('Usuario no autenticado. Por favor, inicie sesión nuevamente.');
+        throw new Error('Usuario no autenticado. Por favor, inicie sesi³n nuevamente.');
       }
 
       // Obtener tenant del usuario (obligatorio)
       const userTenantId = await getCurrentTenantId(user.id);
       const validTenantId = await ensureValidTenantId(userTenantId);
       if (!validTenantId) {
-        throw new Error('Tu cuenta no tiene un tenant válido asociado.');
+        throw new Error('Tu cuenta no tiene un tenant v¡lido asociado.');
       }
 
       // Prepare base data
@@ -575,7 +575,7 @@ const CrearMapaPage = () => {
           sala_id: salaId
         };
 
-        console.log('[DEBUG] Insert data (pre-ejecución):', insertData);
+        console.log('[DEBUG] Insert data (pre-ejecuci³n):', insertData);
 
         const { data, error } = await supabase
           .from('mapas')
@@ -592,7 +592,7 @@ const CrearMapaPage = () => {
         message.success('Mapa creado exitosamente');
       }
 
-      // Permanecer en la página de creación tras guardar según petición
+      // Permanecer en la p¡gina de creaci³n tras guardar segºn petici³n
 
     } catch (error) {
       console.error('Error saving mapa:', error);
@@ -613,9 +613,9 @@ const CrearMapaPage = () => {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-red-600 mb-4">Error de Estado</h2>
-            <p className="text-gray-600 mb-4">El estado del componente es inválido. Recargando...</p>
+            <p className="text-gray-600 mb-4">El estado del componente es inv¡lido. Recargando...</p>
             <Button onClick={() => window.location.reload()} type="primary">
-              Recargar Página
+              Recargar P¡gina
             </Button>
           </div>
         </div>
@@ -626,7 +626,7 @@ const CrearMapaPage = () => {
       <div className="min-h-screen flex flex-col items-center justify-center">
         <Spin size="large" />
         <div className="mt-4 text-center">
-          <p className="text-gray-600 mb-2">Cargando información de la sala...</p>
+          <p className="text-gray-600 mb-2">Cargando informaci³n de la sala...</p>
           <Button
             onClick={() => {
               setLoading(false);
@@ -662,9 +662,9 @@ const CrearMapaPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-red-600 mb-4">Error de Estado</h2>
-          <p className="text-gray-600 mb-4">El estado del componente es inválido. Recargando...</p>
+          <p className="text-gray-600 mb-4">El estado del componente es inv¡lido. Recargando...</p>
           <Button onClick={() => window.location.reload()} type="primary">
-            Recargar Página
+            Recargar P¡gina
           </Button>
         </div>
       </div>
@@ -700,7 +700,7 @@ const CrearMapaPage = () => {
             </div>
 
             <Space>
-              {/* Botones de vista previa/guardar removidos a petición */}
+              {/* Botones de vista previa/guardar removidos a petici³n */}
             </Space>
           </div>
         </div>
@@ -744,3 +744,5 @@ const CrearMapaPage = () => {
 };
 
 export default CrearMapaPage;
+
+
