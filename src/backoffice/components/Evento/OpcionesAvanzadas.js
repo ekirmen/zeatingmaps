@@ -131,7 +131,6 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           .select('*');
 
         if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
-          console.warn('Error loading payment methods:', error);
         }
 
         if (!isSubscribed) return;
@@ -200,8 +199,6 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
 
     // Para eventos nuevos sin configuración explícita, activar TODOS los métodos habilitados en payment-gateways
     if (!isExistingEvent && !hasExplicitSelection) {
-      console.log('🆕 [OPCIONES_AVANZADAS] Evento nuevo detectado, activando todos los métodos habilitados:', metodosHabilitados);
-      
       setForm(prev => ({
         ...prev,
         otrasOpciones: {
@@ -227,7 +224,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         // Mantener si está habilitado globalmente O si ya estaba seleccionado (para no perder la selección del usuario)
         return metodosHabilitados.includes(m) || metodos.find(method => method._id === m);
       });
-      
+
       // Solo actualizar si hay diferencias (para evitar loops infinitos)
       if (metodosPermitidosFiltrados.length !== selection.length) {
         setForm(prev => ({
@@ -259,11 +256,11 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
     const metodosHabilitados = metodos
       .filter(m => m.habilitado === true)
       .map(m => m._id);
-    
+
     const metodosPagoPermitidos = isNewEvent && metodosHabilitados.length > 0
       ? metodosHabilitados // Para eventos nuevos, activar todos los habilitados por defecto
       : (eventoData?.otrasOpciones?.metodosPagoPermitidos || []); // Para eventos existentes, usar los guardados
-    
+
     setForm({
       otrasOpciones: {
         observacionesEmail: {
@@ -346,16 +343,14 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   const handleMetodoToggle = (metodo) => {
     const metodoInfo = metodos.find(m => m._id === metodo);
     if (!metodoInfo) {
-      console.warn('⚠️ [OPCIONES_AVANZADAS] Método no encontrado:', metodo);
       return;
     }
 
     setForm(prev => {
       const seleccionado = prev.otrasOpciones.metodosPagoPermitidos.includes(metodo);
-      
+
       // Si está seleccionado, permitir desactivarlo (siempre)
       if (seleccionado) {
-        console.log('🔴 [OPCIONES_AVANZADAS] Desactivando método:', metodoInfo.metodo);
         const nuevos = prev.otrasOpciones.metodosPagoPermitidos.filter(m => m !== metodo);
         const updated = {
           ...prev,
@@ -373,16 +368,14 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         }));
         return updated;
       }
-      
+
       // Si no está seleccionado, solo permitir activarlo si está habilitado en payment-gateways
       if (!metodoInfo.habilitado) {
-        console.warn('⚠️ [OPCIONES_AVANZADAS] No se puede activar método no habilitado en payment-gateways:', metodoInfo.metodo);
         // No permitir activar métodos que no están habilitados en payment-gateways
         return prev;
       }
-      
+
       // Activar el método
-      console.log('🟢 [OPCIONES_AVANZADAS] Activando método:', metodoInfo.metodo);
       const nuevos = [...prev.otrasOpciones.metodosPagoPermitidos, metodo];
       const updated = {
         ...prev,
@@ -496,13 +489,13 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
               // Solo deshabilitar si NO está habilitado en payment-gateways Y NO está seleccionado
               // Permitir desactivar métodos que ya están seleccionados aunque no estén habilitados
               const isDisabled = !isEnabled && !isChecked;
-              
+
               return (
-                <label 
-                  key={m._id} 
+                <label
+                  key={m._id}
                   className={`inline-flex items-center gap-3 p-2 border border-gray-200 rounded-md ${
-                    isDisabled 
-                      ? 'opacity-50 cursor-not-allowed bg-gray-100' 
+                    isDisabled
+                      ? 'opacity-50 cursor-not-allowed bg-gray-100'
                       : 'hover:bg-gray-50 cursor-pointer'
                   }`}
                 >

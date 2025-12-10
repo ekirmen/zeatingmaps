@@ -62,10 +62,9 @@ const SelectSeats = () => {
               setMapa(prev => ({ ...(prev || {}), contenido }));
             }
           }).catch(err => {
-            console.warn('[SelectSeats] Error cargando contenido completo:', err);
           }).finally(() => setLoading(false));
         }
-        
+
       } catch (err) {
         setError(err.message);
       } finally {
@@ -125,7 +124,6 @@ const SelectSeats = () => {
 
   const handleTimeExpired = () => {
     // Opcional: realizar acciones adicionales cuando se agota el tiempo
-    console.log('Tiempo agotado - asientos liberados automáticamente');
   };
 
   const Canvas = React.lazy(() => import('./SelectSeatsCanvas'));
@@ -138,7 +136,6 @@ const SelectSeats = () => {
     try {
       worker = new Worker(new URL('../../workers/mapLayout.worker.js', import.meta.url));
     } catch (err) {
-      console.warn('[SelectSeats] WebWorker not available, falling back to main-thread layout:', err);
     }
 
     const computeLocally = (elements) => {
@@ -166,7 +163,6 @@ const SelectSeats = () => {
           return elemento;
         });
       } catch (err) {
-        console.warn('[SelectSeats] Local compute failed:', err);
         return elements;
       }
     };
@@ -178,7 +174,6 @@ const SelectSeats = () => {
         if (success && Array.isArray(processed)) {
           setProcessedElements(processed);
         } else {
-          console.warn('[SelectSeats] Worker processing failed:', error);
           setProcessedElements(computeLocally(mapElements));
         }
       });
@@ -225,7 +220,6 @@ const SelectSeats = () => {
 
       setVisibleSeats(Array.from(visibleIds));
     } catch (err) {
-      console.warn('[SelectSeats] Error computing visible seats:', err);
     }
   }, [processedElements, mapElements, stageSize, setVisibleSeats]);
   if (loading) return <p>Cargando asientos...</p>;

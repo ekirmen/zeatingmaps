@@ -73,8 +73,6 @@ export const createOrUpdateSeat = async (seatId, funcionId, zonaId, payload) => 
         console.error('Error updating seat:', error.message, error);
         throw error;
       }
-
-      console.log(`Seat ${seatId} updated successfully.`);
       return data;
     } else {
       // Insert new seat
@@ -95,8 +93,6 @@ export const createOrUpdateSeat = async (seatId, funcionId, zonaId, payload) => 
         console.error('Error inserting seat:', error.message, error);
         throw error;
       }
-
-      console.log(`Seat ${seatId} inserted successfully.`);
       return data;
     }
   } catch (error) {
@@ -138,7 +134,6 @@ export const unlockSeat = async (seatId, funcionId, userId = null) => {
     // Optionally add a check for locked_by for more secure unlocking
     if (userId) {
       query = query.eq('locked_by', userId);
-      console.log(`Attempting to unlock seat ${seatId} by user ${userId} for funcion ${funcionId}.`);
     } else {
       console.log(`Attempting to unlock seat ${seatId} for funcion ${funcionId} (no specific user).`);
     }
@@ -151,11 +146,8 @@ export const unlockSeat = async (seatId, funcionId, userId = null) => {
     }
 
     if (!data || data.length === 0) {
-      console.warn(`Unlock operation for seat ${seatId} did not affect any rows. It might not have been locked by this user or was already unlocked.`);
       return null; // No row was updated
     }
-
-    console.log(`Seat ${seatId} unlocked successfully.`);
     return data; // Return the updated data
   } catch (error) {
     console.error('Error in unlockSeat:', error.message);

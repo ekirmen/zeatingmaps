@@ -8,7 +8,6 @@ export const fetchCanalesVenta = async () => {
     // Obtener el usuario autenticado
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.warn('Usuario no autenticado, retornando canales vacíos');
       return [];
     }
 
@@ -20,12 +19,8 @@ export const fetchCanalesVenta = async () => {
       .single();
 
     if (profileError || !profile?.tenant_id) {
-      console.warn('Usuario sin tenant_id válido, retornando canales vacíos');
       return [];
     }
-
-    console.log('🔍 [canalVentaService] Obteniendo canales para tenant:', profile.tenant_id);
-
     const { data, error } = await supabase
       .from('canales_venta')
       .select('*')
@@ -37,8 +32,6 @@ export const fetchCanalesVenta = async () => {
       console.error('Error fetching canales venta:', error);
       throw new Error('Error fetching canales venta: ' + error.message);
     }
-
-    console.log('🔍 [canalVentaService] Canales obtenidos:', data);
     return data || [];
   } catch (error) {
     console.error('Error in fetchCanalesVenta:', error);

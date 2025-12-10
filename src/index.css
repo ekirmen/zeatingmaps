@@ -5,6 +5,16 @@
 /* Importar optimizaciones móviles */
 @import './styles/mobile-optimizations.css';
 
+/* Animación pulse para skeletons - mejora percepción de carga */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 :root {
   --headerBg: #ffffff;
   --headerText: #000000;

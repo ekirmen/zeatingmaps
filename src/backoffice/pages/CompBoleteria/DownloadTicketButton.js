@@ -12,33 +12,25 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
     try {
       // Probar descarga simple sin autenticación
       const url = buildRelativeApiUrl(`payments/${locator}/download?mode=simple`);
-      console.log('🧪 [TEST] Probando descarga simple en:', url);
-      
       // Verificar conectividad antes de la descarga
-      console.log('🔍 [TEST] Verificando conectividad antes de la descarga...');
       const connectivityResult = await checkApiConnectivity();
-      
+
       if (!connectivityResult.success) {
         console.error('❌ [TEST] Problema de conectividad detectado:', connectivityResult.error);
         message.error('Problema de conectividad: ' + connectivityResult.error);
         return;
       }
-      
-      console.log('✅ [TEST] Conectividad verificada, procediendo con descarga...');
-      
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const contentType = response.headers.get('Content-Type');
-      console.log('🧪 [TEST] Content-Type recibido:', contentType);
-      
       if (!contentType?.includes('application/pdf')) {
         throw new Error(`Content-Type inválido: ${contentType}`);
       }
-      
+
       const blob = await response.blob();
       const urlBlob = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -48,13 +40,11 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(urlBlob);
-      
-      console.log('✅ [SIMPLE-TEST] Descarga simple exitosa');
       message.success('✅ Descarga simple funcionando correctamente');
-      
+
     } catch (error) {
       console.error('❌ [SIMPLE-TEST] Error en descarga simple:', error);
-      
+
       // Detectar tipos específicos de errores
       if (error.message.includes('Failed to fetch')) {
         console.error('❌ [SIMPLE-TEST] Error de red detectado - posible problema de variables de entorno en Vercel');
@@ -78,25 +68,19 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 
     setIsLoading(true);
     try {
-      console.log('🚀 [DOWNLOAD] Iniciando descarga del ticket:', locator);
-      
       // Verificar conectividad antes de la descarga
-      console.log('🔍 [DOWNLOAD] Verificando conectividad antes de la descarga...');
       const connectivityResult = await checkApiConnectivity();
-      
+
       if (!connectivityResult.success) {
         console.error('❌ [DOWNLOAD] Problema de conectividad detectado:', connectivityResult.error);
         message.error('Problema de conectividad: ' + connectivityResult.error);
         return;
       }
-      
-      console.log('✅ [DOWNLOAD] Conectividad verificada, procediendo con descarga...');
-      
       await downloadTicket(locator);
       message.success('Ticket descargado con éxito');
     } catch (err) {
       console.error('❌ [DOWNLOAD] Error en descarga principal:', err);
-      
+
       // Detectar tipos específicos de errores
       if (err.message.includes('Failed to fetch')) {
         console.error('❌ [DOWNLOAD] Error de red detectado - posible problema de variables de entorno en Vercel');
@@ -118,8 +102,8 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
   return (
     <div>
       {/* Botón principal de descarga */}
-      <Button 
-        type="primary" 
+      <Button
+        type="primary"
         icon={<DownloadOutlined />}
         onClick={handleDownload}
         loading={isLoading}
@@ -128,12 +112,12 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
       >
         Descargar Ticket
       </Button>
-      
+
       {/* Botón de debug (solo se muestra si showDebugButtons es true) */}
       {showDebugButtons && (
         <Space direction="vertical" style={{ width: '100%' }}>
           <Tooltip title="Probar descarga sin autenticación">
-            <Button 
+            <Button
               icon={<FileTextOutlined />}
               onClick={testSimpleDownload}
               disabled={isLoading}
@@ -143,11 +127,11 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
               Test Descarga Simple
             </Button>
           </Tooltip>
-          
-          <div style={{ 
-            padding: '8px', 
-            backgroundColor: '#f0f9ff', 
-            border: '1px solid #bae6fd', 
+
+          <div style={{
+            padding: '8px',
+            backgroundColor: '#f0f9ff',
+            border: '1px solid #bae6fd',
             borderRadius: '4px',
             fontSize: '12px',
             textAlign: 'center'

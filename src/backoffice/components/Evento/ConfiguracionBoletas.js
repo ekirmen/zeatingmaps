@@ -9,14 +9,14 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   const [pdfOption, setPdfOption] = useState('single');
   const { currentTenant } = useTenant();
   const [uploading, setUploading] = useState(false);
-  
+
   // Update initial state with existing images
   const getPreview = (img, imageType) => {
     // Si es un objeto con publicUrl (de Supabase)
     if (img && typeof img === 'object' && img.publicUrl) {
       return img.publicUrl;
     }
-    
+
     // Si es un objeto con url (de Supabase)
     if (img && typeof img === 'object' && img.url) {
       // Si ya es una URL completa, devolverla
@@ -28,7 +28,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
       const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
       return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${img.url}`;
     }
-    
+
     // Si es un string
     if (typeof img === 'string') {
       // Leave absolute URLs untouched
@@ -43,11 +43,11 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
       // Otherwise prefix with API base URL
       return `${API_BASE_URL}${img}`;
     }
-    
+
     if (img instanceof File) {
       return URL.createObjectURL(img);
     }
-    
+
     return null;
   };
 
@@ -65,7 +65,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   // Sincronizar previews cuando cambien los datos del evento
   useEffect(() => {
     if (eventoData?.imagenes) {
-      console.log('🔄 [ConfiguracionBoletas] Sincronizando previews:', eventoData.imagenes);
       setImagesPreviews({
         logoHorizontal: getPreview(eventoData.imagenes?.logoHorizontal, 'logoHorizontal'),
         banner: getPreview(eventoData.imagenes?.banner, 'banner'),
@@ -91,14 +90,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
     const filePath = `${eventId}/${fileName}`;
 
     try {
-      console.log('🚀 [ConfiguracionBoletas] Subiendo imagen:', {
-        bucketName,
-        filePath,
-        fileName,
-        imageType,
-        fileSize: file.size
-      });
-
       const { data, error } = await supabase.storage
         .from(bucketName)
         .upload(filePath, file, {
@@ -112,9 +103,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
-
-      console.log('✅ [ConfiguracionBoletas] Imagen subida exitosamente:', publicUrl);
-
       return {
         url: filePath,
         publicUrl: publicUrl,
@@ -157,7 +145,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
 
     const previewUrl = URL.createObjectURL(file);
     const img = new Image();
-    
+
     img.onload = async () => {
       const reqDim = dimensions[imageType];
       if (reqDim && (img.width !== reqDim.width || img.height !== reqDim.height)) {
@@ -168,10 +156,10 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
 
       try {
         setUploading(true);
-        
+
         // Subir imagen a Supabase Storage
         const imageData = await uploadImageToSupabase(file, imageType);
-        
+
         // Actualizar preview con URL pública
         setImagesPreviews(prev => ({
           ...prev,
@@ -187,12 +175,8 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
               [imageType]: imageData
             }
           };
-          console.log('📝 [ConfiguracionBoletas] Actualizando eventoData:', newData.imagenes);
           return newData;
         });
-
-        console.log('✅ [ConfiguracionBoletas] Imagen procesada exitosamente');
-        
       } catch (error) {
         console.error('❌ [ConfiguracionBoletas] Error procesando imagen:', error);
         alert(`Error al subir la imagen: ${error.message}`);
@@ -201,13 +185,13 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
         setUploading(false);
       }
     };
-    
+
     img.onerror = () => {
       URL.revokeObjectURL(previewUrl);
       alert('No se pudo leer la imagen');
       setUploading(false);
     };
-    
+
     img.src = previewUrl;
   };
 
@@ -237,10 +221,10 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   // Add save button at the end of the images-upload section
   return (
     <div className="tab-content space-y-6">
-      
+
       <section className="ticket-formats space-y-4">
         <h4 className="font-semibold text-lg mb-4">Formatos de boleta</h4>
-        
+
         {/* Diseño responsive: vertical en mobile, horizontal en desktop */}
         <div className="space-y-4">
           {/* Mobile: Vertical Stack */}
@@ -309,7 +293,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
               <span className="text-sm font-medium text-gray-700">Permitir impresión en taquilla</span>
             </label>
           </div>
-          
+
           {/* Desktop: Horizontal Layout */}
           <div className="hidden md:grid md:grid-cols-3 gap-4">
             <div className="col-span-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -351,7 +335,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 )}
               </label>
             </div>
-            
+
             <div className="col-span-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
               <label className="flex flex-col gap-2 cursor-pointer">
                 <div className="flex items-center gap-2">
@@ -381,7 +365,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 )}
               </label>
             </div>
-            
+
             <div className="col-span-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2" />

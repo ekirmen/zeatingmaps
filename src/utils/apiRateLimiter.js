@@ -30,9 +30,6 @@ class ApiRateLimiter {
 
     // Verificar límite global
     if (this.requestHistory.length >= this.maxRequests) {
-      console.warn(
-        `[API_RATE_LIMITER] Límite global excedido: ${this.requestHistory.length} requests en ${this.windowMs}ms`
-      );
       return false;
     }
 
@@ -46,11 +43,8 @@ class ApiRateLimiter {
     );
 
     if (endpointRequests.length >= this.perEndpointLimit) {
-      console.warn(
-        `[API_RATE_LIMITER] Límite por endpoint excedido: ${endpointRequests.length} requests para ${endpoint} en ${this.windowMs}ms`
-      );
       this.blockedEndpoints.add(endpoint);
-      
+
       // Desbloquear después de la ventana de tiempo
       setTimeout(() => {
         this.blockedEndpoints.delete(endpoint);
@@ -61,7 +55,6 @@ class ApiRateLimiter {
 
     // Verificar si el endpoint está bloqueado
     if (this.blockedEndpoints.has(endpoint)) {
-      console.warn(`[API_RATE_LIMITER] Endpoint bloqueado temporalmente: ${endpoint}`);
       return false;
     }
 
@@ -69,7 +62,6 @@ class ApiRateLimiter {
     if (requestKey) {
       const lastRequest = this.pendingRequests.get(requestKey);
       if (lastRequest && now - lastRequest < 1000) {
-        console.warn(`[API_RATE_LIMITER] Request duplicado bloqueado: ${requestKey}`);
         return false;
       }
     }
@@ -98,7 +90,7 @@ class ApiRateLimiter {
 
     if (requestKey) {
       this.pendingRequests.set(requestKey, now);
-      
+
       // Limpiar después de 1 segundo
       setTimeout(() => {
         this.pendingRequests.delete(requestKey);
@@ -165,7 +157,7 @@ class ApiRateLimiter {
    */
   getWaitTime(endpoint) {
     const now = Date.now();
-    
+
     // Si el endpoint está bloqueado, retornar tiempo restante
     if (this.blockedEndpoints.has(endpoint)) {
       return this.windowMs;

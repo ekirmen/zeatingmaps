@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Table, 
-  Modal, 
-  Form, 
-  Input, 
-  InputNumber, 
-  Upload, 
-  message, 
-  Space, 
+import {
+  Card,
+  Button,
+  Table,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Upload,
+  message,
+  Space,
   Typography,
   Select,
   Switch,
@@ -18,10 +18,10 @@ import {
   Row,
   Col
 } from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   UploadOutlined,
   CopyOutlined,
   EnvironmentOutlined,
@@ -56,7 +56,6 @@ const PlantillasProductos = () => {
         .order('nombre');
 
       if (error) {
-        console.warn('Error loading recintos:', error);
         setRecintos([]);
         return;
       }
@@ -76,7 +75,6 @@ const PlantillasProductos = () => {
         .order('nombre');
 
       if (error) {
-        console.warn('Error loading salas:', error);
         setSalas([]);
         return;
       }
@@ -96,7 +94,6 @@ const PlantillasProductos = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Error loading plantillas:', error);
         setPlantillas([]);
         return;
       }
@@ -113,20 +110,20 @@ const PlantillasProductos = () => {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      
+
       if (editingPlantilla) {
         const { error } = await supabase
           .from('plantillas_productos')
           .update(values)
           .eq('id', editingPlantilla.id);
-        
+
         if (error) throw error;
         message.success('Plantilla actualizada correctamente');
       } else {
         const { error } = await supabase
           .from('plantillas_productos')
           .insert([values]);
-        
+
         if (error) throw error;
         message.success('Plantilla creada correctamente');
       }
@@ -161,7 +158,7 @@ const PlantillasProductos = () => {
         .from('plantillas_productos')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
       message.success('Plantilla eliminada correctamente');
       loadPlantillas();
@@ -182,7 +179,7 @@ const PlantillasProductos = () => {
           categoria: plantilla.categoria,
           activo: false
         }]);
-      
+
       if (error) throw error;
       message.success('Plantilla duplicada correctamente');
       loadPlantillas();
@@ -195,7 +192,7 @@ const PlantillasProductos = () => {
   const handleImageUpload = async (file) => {
     try {
       setUploading(true);
-      
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `plantillas-productos/${fileName}`;
@@ -318,12 +315,12 @@ const PlantillasProductos = () => {
   return (
     <div className="p-6">
       <Title level={2}>Plantillas de Productos</Title>
-      
-      <Card 
-        title="Plantillas" 
+
+      <Card
+        title="Plantillas"
         extra={
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<PlusOutlined />}
             onClick={() => {
               setEditingPlantilla(null);
@@ -376,8 +373,8 @@ const PlantillasProductos = () => {
             name="descripcion"
             label="Descripción"
           >
-            <TextArea 
-              rows={4} 
+            <TextArea
+              rows={4}
               placeholder="Descripción de la plantilla"
             />
           </Form.Item>
@@ -402,7 +399,7 @@ const PlantillasProductos = () => {
                 label="Recinto"
                 rules={[{ required: true, message: 'Por favor selecciona un recinto' }]}
               >
-                <Select 
+                <Select
                   placeholder="Selecciona un recinto"
                   onChange={(value) => {
                     loadSalas(value);
@@ -460,8 +457,8 @@ const PlantillasProductos = () => {
               showUploadList={false}
               accept="image/*"
             >
-              <Button 
-                icon={<UploadOutlined />} 
+              <Button
+                icon={<UploadOutlined />}
                 loading={uploading}
                 disabled={uploading}
               >
@@ -499,4 +496,4 @@ const PlantillasProductos = () => {
   );
 };
 
-export default PlantillasProductos; 
+export default PlantillasProductos;

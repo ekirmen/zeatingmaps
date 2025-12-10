@@ -168,7 +168,6 @@ const SalesTransactions = () => {
                 hora = `${hours}:${minutes}`;
               }
             } catch (parseError) {
-              console.warn('⚠️ [SalesTransactions] No se pudo calcular la hora de la función:', parseError);
             }
           }
 
@@ -186,7 +185,6 @@ const SalesTransactions = () => {
                   }).format(parsed);
                 }
               } catch (formatError) {
-                console.warn('⚠️ [SalesTransactions] No se pudo formatear el nombre de la función:', formatError);
               }
             }
 

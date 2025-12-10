@@ -8,8 +8,6 @@ import {
 } from './index';
 
 const EmailWidgetRenderer = ({ widgetType, config = {}, onConfigChange }) => {
-  console.log('🧩 [EmailWidgetRenderer] Rendering widget:', widgetType, config);
-
   const renderWidget = () => {
     switch (widgetType) {
       case 'Botón':

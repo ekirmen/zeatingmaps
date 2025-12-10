@@ -61,13 +61,11 @@ if (typeof window !== 'undefined') {
   import('./utils/indexedDBCache').then(({ default: indexedDBCache }) => {
     // Inicializar caché
     indexedDBCache.init().catch((error) => {
-      console.warn('Error inicializando IndexedDB cache:', error);
     });
 
     // Limpiar caché expirado cada 24 horas
     setInterval(() => {
       indexedDBCache.cleanup().catch((error) => {
-        console.warn('Error limpiando caché:', error);
       });
     }, 24 * 60 * 60 * 1000); // 24 horas
 
@@ -80,7 +78,6 @@ if (typeof window !== 'undefined') {
       indexedDBCache.cleanup().then(() => {
         localStorage.setItem('lastIndexedDBCleanup', now.toString());
       }).catch((error) => {
-        console.warn('Error en limpieza inicial de caché:', error);
       });
     }
   });
@@ -90,15 +87,14 @@ if (typeof window !== 'undefined') {
 if (process.env.NODE_ENV === 'production') {
   // Reportar Core Web Vitals
   reportWebVitals(sendToAnalytics);
-  
+
   // Iniciar monitor de performance
   performanceMonitor.startMonitoring((metric) => {
     // Log en desarrollo para debugging
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Performance Monitor]', metric);
     }
   });
-  
+
   // Exponer en window para debugging
   if (process.env.NODE_ENV === 'development') {
     window.performanceMonitor = performanceMonitor;

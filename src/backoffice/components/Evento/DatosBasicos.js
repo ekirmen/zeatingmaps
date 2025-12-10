@@ -35,10 +35,8 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
 
   // Sync local form state whenever the selected event changes
   useEffect(() => {
-    console.log('🔍 [DatosBasicos] eventoData recibido:', eventoData);
-    console.log('🔍 [DatosBasicos] tags originales:', eventoData?.tags);
     console.log('🔍 [DatosBasicos] tags normalizados:', normalizeTags(eventoData?.tags));
-    
+
     setForm({
       nombre: eventoData?.nombre || '',
       slug: eventoData?.slug || '',
@@ -58,10 +56,9 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
     const tagsContext = useTags();
     tags = tagsContext.tags || [];
   } catch (error) {
-    console.warn('TagProvider no disponible, usando tags vacíos');
     tags = [];
   }
-  
+
   const [selectedTag, setSelectedTag] = useState('');
 
   const handleChange = (e) => {
@@ -104,10 +101,6 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
     // Asegurar que form.tags sea un array
     const currentTags = Array.isArray(form.tags) ? form.tags : [];
     const updated = [...currentTags, selectedTag];
-    
-    console.log('🔍 [DatosBasicos] Añadiendo tag:', selectedTag);
-    console.log('🔍 [DatosBasicos] Tags actualizados:', updated);
-    
     setForm(prev => ({ ...prev, tags: updated }));
     setEventoData(prev => ({ ...prev, tags: updated }));
     setSelectedTag('');
@@ -117,10 +110,6 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
     // Asegurar que form.tags sea un array
     const currentTags = Array.isArray(form.tags) ? form.tags : [];
     const updated = currentTags.filter(t => t !== id);
-    
-    console.log('🔍 [DatosBasicos] Eliminando tag:', id);
-    console.log('🔍 [DatosBasicos] Tags actualizados:', updated);
-    
     setForm(prev => ({ ...prev, tags: updated }));
     setEventoData(prev => ({ ...prev, tags: updated }));
   };
@@ -180,8 +169,8 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
               <div
                 key={s.id}
                 className={`contenedor-sector cursor-pointer p-4 border-2 rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:shadow-md ${
-                  form.sector === s.label 
-                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-blue-600 shadow-lg' 
+                  form.sector === s.label
+                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-blue-600 shadow-lg'
                     : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
                 }`}
                 onClick={() => handleSectorSelect(s.label)}
@@ -193,7 +182,7 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
               </div>
             ))}
           </div>
-          
+
           {/* Campo de sector personalizado */}
           {form.sector === 'Otros' && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
@@ -214,15 +203,15 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
               </p>
             </div>
           )}
-          
+
           {/* Mostrar sector seleccionado */}
           {form.sector && (
             <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700">Sector seleccionado:</span>
                 <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                  {form.sector === 'Otros' && form.sectorPersonalizado 
-                    ? form.sectorPersonalizado 
+                  {form.sector === 'Otros' && form.sectorPersonalizado
+                    ? form.sectorPersonalizado
                     : form.sector
                   }
                 </span>
@@ -234,9 +223,9 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
         <div className="form-group mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-3">Tags:</label>
           <div className="flex items-center gap-3 mb-3">
-            <select 
-              value={selectedTag} 
-              onChange={e => setSelectedTag(e.target.value)} 
+            <select
+              value={selectedTag}
+              onChange={e => setSelectedTag(e.target.value)}
               className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-700"
             >
               <option value="">Seleccionar tag</option>
@@ -244,9 +233,9 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
                 <option key={tag._id} value={tag._id}>{tag.name}</option>
               ))}
             </select>
-            <button 
-              type="button" 
-              onClick={handleTagAdd} 
+            <button
+              type="button"
+              onClick={handleTagAdd}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Añadir
@@ -259,9 +248,9 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
                 return (
                   <span key={id} className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 px-3 py-2 rounded-full flex items-center gap-2 border border-blue-200">
                     <span className="text-sm font-medium">{t ? t.name : id}</span>
-                    <button 
-                      type="button" 
-                      className="w-5 h-5 bg-blue-200 hover:bg-blue-300 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold transition-colors" 
+                    <button
+                      type="button"
+                      className="w-5 h-5 bg-blue-200 hover:bg-blue-300 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
                       onClick={() => handleRemoveTag(id)}
                     >
                       ×
@@ -312,7 +301,7 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
                 <p className="text-xs text-gray-500">El evento estará disponible para los usuarios</p>
               </div>
             </label>
-            
+
             <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
               <input
                 type="checkbox"
@@ -326,7 +315,7 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
                 <p className="text-xs text-gray-500">El evento no aparecerá en listados públicos</p>
               </div>
             </label>
-            
+
             <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
               <input
                 type="checkbox"

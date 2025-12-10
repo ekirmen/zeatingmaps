@@ -199,11 +199,11 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   // Estado para páginas reales de la base de datos
   const [cmsPages, setCmsPages] = useState([]);
   const [loadingPages, setLoadingPages] = useState(true);
-  
+
   // Estado para la página seleccionada (usando datos reales)
   const [selectedPage, setSelectedPage] = useState(null);
   const [widgets, setWidgets] = useState(defaultWidgets);
-  
+
   // Estado para manejar errores de carga
   const [loadError, setLoadError] = useState(null);
   const [draggingIdx, setDraggingIdx] = useState(null);
@@ -246,7 +246,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   useEffect(() => {
     const loadCmsPages = async () => {
       if (!tenantId) return;
-      
+
       setLoadingPages(true);
       try {
         // Cargar páginas del tenant actual usando el hook optimizado
@@ -282,7 +282,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
         // Remover duplicados por ID y validar que tengan campos requeridos
         const uniquePages = allPages
-          .filter((page, index, self) => 
+          .filter((page, index, self) =>
             index === self.findIndex(p => p.id === page.id)
           )
           .map(page => ({
@@ -293,21 +293,15 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           }));
 
         setCmsPages(uniquePages);
-        
+
         // Seleccionar la primera página por defecto
         if (uniquePages.length > 0 && !selectedPage) {
           const firstPage = uniquePages[0];
           // Asegurarse de que la página tenga todos los campos necesarios
           if (firstPage && firstPage.id) {
             setSelectedPage(firstPage);
-            console.log('✅ [WebStudio] Primera página seleccionada:', firstPage);
           }
         }
-        
-        console.log('✅ [WebStudio] Páginas CMS cargadas:', uniquePages.length);
-        console.log('📄 [WebStudio] Páginas del sistema:', systemPages?.length || 0);
-        console.log('📄 [WebStudio] Páginas del tenant:', tenantPages?.length || 0);
-        
       } catch (error) {
         console.error('❌ [WebStudio] Error cargando páginas CMS:', error);
         setLoadError(error.message);
@@ -328,20 +322,19 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   // Cargar widgets cuando cambie la página seleccionada
   useEffect(() => {
     if (!selectedPage) return;
-    
+
     const loadPage = async () => {
       setPageLoaded(false);
       try {
         // Usar el ID de la página para cargar desde la base de datos
         const data = await fetchCmsPage(selectedPage.id);
-        
+
         if (data) {
           // Página encontrada en la base de datos
           console.log(`✅ [WebStudio] Página cargada desde BD: ${data.slug} (ID: ${data.id})`);
           setWidgets(data.widgets || defaultWidgets);
         } else {
           // Página no encontrada, usar localStorage como fallback
-          console.log(`⚠️ [WebStudio] Página no encontrada en BD, usando localStorage: ${selectedPage.id}`);
           const saved = localStorage.getItem(`cms-page-${selectedPage.id}`);
           if (saved) {
             setWidgets(JSON.parse(saved));
@@ -372,10 +365,9 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         // Usar el slug de la página, no el ID
         const pageSlug = selectedPage.slug || selectedPage.id;
         console.log(`💾 [WebStudio] Auto-save para página: ${pageSlug} (ID: ${selectedPage.id})`);
-        
+
         await saveCmsPage(pageSlug, widgets);
         localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
-        console.log(`✅ [WebStudio] Auto-save exitoso para: ${pageSlug}`);
       } catch (err) {
         console.error('❌ [WebStudio] Auto save failed:', err);
         // No hacer nada más, solo loggear el error
@@ -417,7 +409,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   const updateWidget = (area, index, newConfig) => {
     setWidgets(prev => ({
       ...prev,
-      [area]: prev[area].map((widget, i) => 
+      [area]: prev[area].map((widget, i) =>
         i === index ? { ...widget, config: { ...widget.config, ...newConfig } } : widget
       )
     }));
@@ -425,7 +417,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
   const moveWidget = (area, fromIndex, toIndex) => {
     if (toIndex < 0 || toIndex >= widgets[area].length) return;
-    
+
     setWidgets(prev => {
       const updated = [...prev[area]];
       const [moved] = updated.splice(fromIndex, 1);
@@ -440,7 +432,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
       ...widgetToDuplicate,
       config: { ...widgetToDuplicate.config }
     };
-    
+
     setWidgets(prev => ({
       ...prev,
       [area]: [
@@ -449,7 +441,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         ...prev[area].slice(index + 1)
       ]
     }));
-    
+
     toast.success('Widget duplicado');
   };
 
@@ -472,8 +464,6 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         toast.error('No hay página seleccionada');
         return;
       }
-      
-      console.log('Guardando página...', selectedPage.id, widgets);
       await saveCmsPage(selectedPage.id, widgets);
       localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
       toast.success('Página guardada exitosamente');
@@ -574,7 +564,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
       // Crear slug a partir del nombre
       const slug = newPageData.url.replace(/^\//, '').toLowerCase().replace(/\s+/g, '-');
-      
+
       // Crear la página en la base de datos
       const { data: newPage, error } = await supabase
         .from('cms_pages')
@@ -599,10 +589,10 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
       // Agregar la nueva página al estado local
       setCmsPages(prevPages => [...prevPages, newPage]);
-      
+
       // Seleccionar la nueva página
       setSelectedPage(newPage);
-      
+
       toast.success('Página creada exitosamente');
       handleCloseNewPage();
     } catch (error) {
@@ -622,38 +612,38 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     if (editingPage && editingField) {
       try {
         const updatedPage = { ...editingPage, [editingField]: editingValue };
-        
+
         // Actualizar en la base de datos
         const { error } = await supabase
           .from('cms_pages')
           .update({ [editingField]: editingValue })
           .eq('id', editingPage.id);
-        
+
         if (error) {
           console.error('Error actualizando página:', error);
           toast.error('Error al actualizar la página');
           return;
         }
-        
+
         // Actualizar en el estado local
-        setCmsPages(prevPages => 
-          prevPages.map(page => 
+        setCmsPages(prevPages =>
+          prevPages.map(page =>
             page.id === editingPage.id ? updatedPage : page
           )
         );
-        
+
         // Si es la página seleccionada, actualizarla también
         if (selectedPage && selectedPage.id === editingPage.id) {
           setSelectedPage(updatedPage);
         }
-        
+
         toast.success('Página actualizada exitosamente');
       } catch (error) {
         console.error('Error inesperado al actualizar:', error);
         toast.error('Error inesperado al actualizar la página');
       }
     }
-    
+
     setEditingPage(null);
     setEditingField(null);
     setEditingValue('');
@@ -688,7 +678,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
   const handleContextMenuAction = async (action) => {
     const { item, type } = contextMenu;
-    
+
     switch (action) {
       case 'edit':
         if (type === 'page') {
@@ -717,16 +707,16 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                 .from('cms_pages')
                 .delete()
                 .eq('id', item.id);
-              
+
               if (error) {
                 console.error('Error eliminando página:', error);
                 toast.error('Error al eliminar la página');
                 return;
               }
-              
+
               // Eliminar del estado local
               setCmsPages(prevPages => prevPages.filter(page => page.id !== item.id));
-              
+
               // Si es la página seleccionada, seleccionar otra
               if (selectedPage && selectedPage.id === item.id) {
                 const remainingPages = cmsPages.filter(page => page.id !== item.id);
@@ -736,7 +726,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                   setSelectedPage(null);
                 }
               }
-              
+
               toast.success('Página eliminada exitosamente');
             } catch (error) {
               console.error('Error inesperado al eliminar:', error);
@@ -753,7 +743,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
       default:
         break;
     }
-    
+
     closeContextMenu();
   };
 
@@ -859,7 +849,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           {/* Content */}
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
             <div className="large-12 columns properties-container">
-              
+
               {/* Widget-specific configuration */}
               {editingWidget.type === 'Listado de eventos' && (
                 <>
@@ -901,8 +891,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                             onChange={(e) => {
                               setEditingWidget({
                                 ...editingWidget,
-                                config: { 
-                                  ...editingWidget.config, 
+                                config: {
+                                  ...editingWidget.config,
                                   contentType: e.target.value,
                                   // Reset tag category when changing content type
                                   tagCategory: e.target.value === 'tags-categoria' ? editingWidget.config?.tagCategory : ''
@@ -1280,7 +1270,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             </div>
           </div>
               </div>
-      
+
       {/* Email Test Panel */}
       <EmailTestPanel />
 
@@ -1334,7 +1324,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
               <div className="grid grid-cols-1 gap-6">
                 {/* Nombre */}
@@ -1467,10 +1457,10 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
       {/* Context Menu */}
       {contextMenu.show && (
-        <div 
+        <div
           className="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg py-1 min-w-[150px]"
-          style={{ 
-            left: contextMenu.x, 
+          style={{
+            left: contextMenu.x,
             top: contextMenu.y,
             transform: 'translate(-50%, -100%)'
           }}
@@ -1502,8 +1492,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
       {/* Click outside to close context menu */}
       {contextMenu.show && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={closeContextMenu}
         />
       )}
@@ -1530,7 +1520,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
         {/* Mapa del sitio */}
         <div className="mb-6">
-          <button 
+          <button
             className="w-full text-left p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             onClick={handleSiteMap}
           >
@@ -1548,7 +1538,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             >
               Páginas {pagesExpanded ? '▼' : '▶'}
             </button>
-            
+
             {pagesExpanded && (
               <div className="p-3 bg-white border-t border-gray-300">
                 {loadingPages ? (
@@ -1560,8 +1550,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                   <div className="text-center py-4 text-red-500">
                     <p className="text-sm mb-2">Error al cargar páginas:</p>
                     <p className="text-xs">{loadError}</p>
-                    <button 
-                      onClick={() => window.location.reload()} 
+                    <button
+                      onClick={() => window.location.reload()}
                       className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200"
                     >
                       Reintentar
@@ -1723,7 +1713,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             >
               Correos electrónicos {emailsExpanded ? '▼' : '▶'}
             </button>
-            
+
             {emailsExpanded && (
               <div className="p-3 bg-white border-t border-gray-300">
                 <div className="space-y-1 max-h-60 overflow-y-auto">
@@ -1791,7 +1781,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
               {widgetsExpanded ? '▼' : '▶'}
             </button>
           </div>
-          
+
           {widgetsExpanded && (
             <div className="space-y-4">
               {/* Categoría: Widgets de Eventos */}
@@ -1900,8 +1890,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             onClick={handleSave}
             disabled={!selectedPage}
             className={`w-full py-2 rounded transition-colors ${
-              selectedPage 
-                ? 'bg-green-600 hover:bg-green-700 text-white' 
+              selectedPage
+                ? 'bg-green-600 hover:bg-green-700 text-white'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
@@ -1911,8 +1901,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             onClick={handleClearCache}
             disabled={!selectedPage}
             className={`w-full py-2 rounded transition-colors ${
-              selectedPage 
-                ? 'bg-gray-400 hover:bg-gray-500 text-white' 
+              selectedPage
+                ? 'bg-gray-400 hover:bg-gray-500 text-white'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
@@ -1931,8 +1921,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           {selectedPage && (
             <p className="text-gray-600">
               URL: /{selectedPage.slug || selectedPage.url} • Tipo: {
-                ['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'].includes(selectedPage.slug) 
-                  ? 'Página del sistema' 
+                ['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'].includes(selectedPage.slug)
+                  ? 'Página del sistema'
                   : 'Página personalizada'
               }
             </p>

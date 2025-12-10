@@ -1218,12 +1218,15 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           >
             <Collapse.Panel header="Zonas" key="zones">
               <Space direction="vertical" size="small" className="w-full">
+                <label htmlFor="zone-select" className="sr-only">Seleccionar zona</label>
                 <Select
+                  id="zone-select"
                   placeholder="Seleccione zona"
                   value={selectedZoneId}
                   onChange={setSelectedZoneId}
                   className="w-full"
                   options={(zones || []).map(z => ({ label: z.nombre, value: String(z.id) }))}
+                  aria-label="Seleccionar zona"
                 />
                 <Button onClick={assignZoneToSelection} disabled={!selectedIds?.length || !selectedZoneId} block size="small">
                   Asignar a seleccionado

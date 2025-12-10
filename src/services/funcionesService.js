@@ -13,10 +13,8 @@ export const funcionesService = {
   async crearFuncion(funcionData) {
     try {
       const { data, error } = await supabaseWithTracking.insert('funciones', funcionData);
-      
+
       if (error) throw error;
-      
-      console.log('✅ Función creada con tracking:', data[0]);
       return data[0];
     } catch (error) {
       console.error('❌ Error al crear función:', error);
@@ -33,10 +31,8 @@ export const funcionesService = {
   async actualizarFuncion(id, funcionData) {
     try {
       const { data, error } = await supabaseWithTracking.update('funciones', funcionData, { id });
-      
+
       if (error) throw error;
-      
-      console.log('✅ Función actualizada con tracking:', data[0]);
       return data[0];
     } catch (error) {
       console.error('❌ Error al actualizar función:', error);
@@ -56,7 +52,7 @@ export const funcionesService = {
         '*',
         { evento_id: eventoId }
       );
-      
+
       if (error) throw error;
       return data;
     } catch (error) {
@@ -77,7 +73,7 @@ export const funcionesService = {
         '*',
         { id }
       );
-      
+
       if (error) throw error;
       return data[0];
     } catch (error) {
@@ -94,10 +90,8 @@ export const funcionesService = {
   async eliminarFuncion(id) {
     try {
       const { error } = await supabaseWithTracking.delete('funciones', { id });
-      
+
       if (error) throw error;
-      
-      console.log('✅ Función eliminada:', id);
       return true;
     } catch (error) {
       console.error('❌ Error al eliminar función:', error);
@@ -120,7 +114,7 @@ export const funcionesService = {
         .eq('visible_en_store', true)
         .gte('fecha_celebracion', new Date().toISOString())
         .order('fecha_celebracion', { ascending: true });
-      
+
       if (error) throw error;
       return data;
     } catch (error) {
@@ -143,7 +137,7 @@ export const funcionesService = {
         .eq('activo', true)
         .eq('visible_en_boleteria', true)
         .order('fecha_celebracion', { ascending: true });
-      
+
       if (error) throw error;
       return data;
     } catch (error) {

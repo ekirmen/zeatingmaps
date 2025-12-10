@@ -9,10 +9,8 @@ const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) =>
     if (selectedSeats.length > 0) {
       setIsVisible(true);
       setTimeLeft(15 * 60); // Reset timer when seats are selected
-      console.log('Asientos seleccionados. Iniciando temporizador de 15 minutos.');
     } else {
       setIsVisible(false);
-      console.log('No hay asientos seleccionados. Ocultando temporizador.');
     }
   }, [selectedSeats.length]);
 
@@ -22,7 +20,6 @@ const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) =>
         setTimeLeft(prev => {
           if (prev <= 1) {
             // Tiempo agotado - limpiar asientos seleccionados
-            console.log('Tiempo agotado. Limpiando asientos seleccionados automáticamente.');
             onSeatsCleared();
             message.warning('Tiempo agotado. Los asientos han sido liberados.');
             onTimeExpired && onTimeExpired();
@@ -71,4 +68,4 @@ const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) =>
   );
 };
 
-export default SeatSelectionTimer; 
+export default SeatSelectionTimer;

@@ -48,27 +48,20 @@ export const useAuth = () => {
 
       // Obtener sesión actual
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError) {
         throw sessionError;
       }
 
       if (session?.user) {
         setUser(session.user);
-        
+
         // Obtener perfil del usuario
         const profile = await fetchUserProfile(session.user.id);
         setUserProfile(profile);
-        
-        console.log('[useAuth] Usuario autenticado:', {
-          id: session.user.id,
-          email: session.user.email,
-          profile: profile
-        });
       } else {
         setUser(null);
         setUserProfile(null);
-        console.log('[useAuth] No hay sesión activa');
       }
     } catch (err) {
       console.error('[useAuth] Error validando sesión:', err);
@@ -110,13 +103,6 @@ export const useAuth = () => {
 
         const profile = await fetchUserProfile(data.user.id);
         setUserProfile(profile);
-
-        console.log('[useAuth] Login exitoso:', {
-          id: data.user.id,
-          email: data.user.email,
-          profile: profile
-        });
-
         return { success: true, user: data.user, profile };
       }
 
@@ -141,17 +127,15 @@ export const useAuth = () => {
   const signOut = async () => {
     try {
       setLoading(true);
-      
+
       const supabase = getSupabaseClient();
       if (supabase) {
         await supabase.auth.signOut();
       }
-      
+
       setUser(null);
       setUserProfile(null);
       setError(null);
-      
-      console.log('[useAuth] Sesión cerrada exitosamente');
     } catch (err) {
       console.error('[useAuth] Error cerrando sesión:', err);
       setError(err.message);
@@ -163,15 +147,15 @@ export const useAuth = () => {
   // Verificar permisos
   const hasPermission = useCallback((permission) => {
     if (!userProfile) return false;
-    
+
     // Super admin tiene todos los permisos
     if (userProfile.role === 'super_admin') return true;
-    
+
     // Verificar permisos específicos del rol
     if (userProfile.permissions && Array.isArray(userProfile.permissions)) {
       return userProfile.permissions.includes(permission);
     }
-    
+
     return false;
   }, [userProfile]);
 
@@ -193,15 +177,15 @@ export const useAuth = () => {
   // Verificar acceso a tenant
   const hasTenantAccess = useCallback((targetTenantId) => {
     if (!userProfile) return false;
-    
+
     // Super admin tiene acceso a todos los tenants
     if (isSuperAdmin()) return true;
-    
+
     // Tenant admin solo tiene acceso a su propio tenant
     if (isTenantAdmin()) {
       return userProfile.tenant_id === targetTenantId;
     }
-    
+
     return false;
   }, [userProfile, isSuperAdmin, isTenantAdmin]);
 
@@ -229,8 +213,6 @@ export const useAuth = () => {
       }
 
       setUserProfile(data);
-      console.log('[useAuth] Perfil actualizado:', data);
-      
       return { success: true, profile: data };
     } catch (err) {
       console.error('[useAuth] Error actualizando perfil:', err);
@@ -253,8 +235,6 @@ export const useAuth = () => {
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[useAuth] Auth state change:', event, session?.user?.id);
-        
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
           const profile = await fetchUserProfile(session.user.id);
@@ -279,19 +259,19 @@ export const useAuth = () => {
     userProfile,
     loading,
     error,
-    
+
     // Métodos de autenticación
     signIn,
     signOut,
     updateProfile,
-    
+
     // Verificaciones de permisos
     hasPermission,
     isSuperAdmin,
     isTenantAdmin,
     isAdmin,
     hasTenantAccess,
-    
+
     // Utilidades
     isAuthenticated: !!user,
     isReady: !loading && !error

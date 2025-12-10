@@ -34,7 +34,6 @@ export const RoleProvider = ({ children }) => {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
-        console.warn('[RoleBasedAccess] Error leyendo sesión, probando getUser:', sessionError);
       }
 
       if (sessionData?.session?.user) {
@@ -91,7 +90,6 @@ export const RoleProvider = ({ children }) => {
           try {
             parsedPermissions = JSON.parse(parsedPermissions);
           } catch (parseError) {
-            console.warn('[RoleBasedAccess] No se pudo parsear permisos:', parseError);
             parsedPermissions = {};
           }
         }
@@ -144,13 +142,13 @@ export const RoleProvider = ({ children }) => {
     const permissions = {
       // Dashboard principal
       dashboard: false,
-      
+
       // Administración
       usuarios: false,
       recintos: false,
       plano: false,
       liquidaciones: false,
-      
+
       // Programación
       entradas: false,
       productos: false,
@@ -170,13 +168,13 @@ export const RoleProvider = ({ children }) => {
       abonos: false,
       afiliados: false,
       iva: false,
-      
+
       // Ventas
       boleteria: false,
       reportes: false,
       crm: false,
       tags: false,
-      
+
       // Configuración
       settings: false,
       seat_settings: false,
@@ -186,7 +184,7 @@ export const RoleProvider = ({ children }) => {
       refund_management: false,
       payment_analytics: false,
       payment_gateways: false,
-      
+
       // SaaS - Nuevos roles del sistema
       saas: false,
       saas_settings: false,
@@ -194,7 +192,7 @@ export const RoleProvider = ({ children }) => {
       saas_payment_gateways: false,
       saas_roles: false,
       saas_api_explorer: false,
-      
+
       // Permisos SaaS granulares
       tenant_read: false,
       tenant_write: false,
@@ -206,7 +204,7 @@ export const RoleProvider = ({ children }) => {
       analytics_read: false,
       notifications_read: false,
       notifications_write: false,
-      
+
       // Funciones especiales
       crear_usuarios: false,
       editar_usuarios: false,
@@ -216,7 +214,7 @@ export const RoleProvider = ({ children }) => {
       exportar_datos: false,
       configurar_sistema: false,
       acceder_saas: false,
-      
+
       // Gestión de tenants
       gestionar_tenants: false,
       asignar_tenants: false,
@@ -231,7 +229,7 @@ export const RoleProvider = ({ children }) => {
           permissions[key] = true;
         });
         break;
-        
+
       case 'admin_sistema':
         // Nivel 80 - Administración completa de tenants
         permissions.dashboard = true;
@@ -256,7 +254,7 @@ export const RoleProvider = ({ children }) => {
         permissions.editar_usuarios = true;
         permissions.eliminar_usuarios = true;
         break;
-        
+
       case 'gerente_sistema':
         // Nivel 60 - Gestión de tenants y soporte
         permissions.dashboard = true;
@@ -276,7 +274,7 @@ export const RoleProvider = ({ children }) => {
         permissions.crear_usuarios = true;
         permissions.editar_usuarios = true;
         break;
-        
+
       case 'soporte_sistema':
         // Nivel 40 - Solo soporte técnico
         permissions.dashboard = true;
@@ -287,7 +285,7 @@ export const RoleProvider = ({ children }) => {
         permissions.notifications_read = true;
         permissions.ver_todos_tenants = true;
         break;
-        
+
       case 'visualizador_sistema':
         // Nivel 20 - Solo lectura de información
         permissions.dashboard = true;
@@ -297,7 +295,7 @@ export const RoleProvider = ({ children }) => {
         permissions.notifications_read = true;
         permissions.ver_todos_tenants = true;
         break;
-        
+
       // ROLES DE TENANT (mantener compatibilidad)
       case 'tenant_admin':
       case 'admin':
@@ -345,7 +343,7 @@ export const RoleProvider = ({ children }) => {
         permissions.crear_reportes = true;
         permissions.exportar_datos = true;
         permissions.configurar_sistema = true;
-        
+
         // Permisos SaaS para tenant_admin
         permissions.saas = true;
         permissions.saas_settings = true;
@@ -354,7 +352,7 @@ export const RoleProvider = ({ children }) => {
         permissions.saas_roles = true;
         permissions.saas_api_explorer = true;
         break;
-        
+
       case 'taquilla':
         permissions.dashboard = true;
         permissions.boleteria = true;
@@ -364,7 +362,7 @@ export const RoleProvider = ({ children }) => {
         permissions.reportes = true;
         permissions.ver_reportes = true;
         break;
-        
+
       case 'call_center':
         permissions.dashboard = true;
         permissions.boleteria = true;
@@ -375,7 +373,7 @@ export const RoleProvider = ({ children }) => {
         permissions.reportes = true;
         permissions.ver_reportes = true;
         break;
-        
+
       case 'agencias':
         permissions.dashboard = true;
         permissions.boleteria = true;
@@ -385,7 +383,7 @@ export const RoleProvider = ({ children }) => {
         permissions.reportes = true;
         permissions.ver_reportes = true;
         break;
-        
+
       case 'contenido_marketing':
         permissions.dashboard = true;
         permissions.eventos = true;
@@ -394,7 +392,7 @@ export const RoleProvider = ({ children }) => {
         permissions.plantillas_productos = true;
         permissions.tags = true;
         break;
-        
+
       case 'atencion_cliente':
         permissions.dashboard = true;
         permissions.crm = true;
@@ -402,7 +400,7 @@ export const RoleProvider = ({ children }) => {
         permissions.ver_reportes = true;
         permissions.refund_management = true;
         break;
-        
+
       case 'vendedor_externo':
         permissions.dashboard = true;
         permissions.boleteria = true;
@@ -413,7 +411,7 @@ export const RoleProvider = ({ children }) => {
         permissions.reportes = true;
         permissions.ver_reportes = true;
         break;
-        
+
       case 'reportes':
         permissions.dashboard = true;
         permissions.reportes = true;
@@ -422,12 +420,12 @@ export const RoleProvider = ({ children }) => {
         permissions.exportar_datos = true;
         permissions.payment_analytics = true;
         break;
-        
+
       case 'usuario_store':
         // Usuarios registrados desde store - NO acceso al dashboard
         permissions.dashboard = false;
         break;
-        
+
       case 'guest':
       default:
         // Sin acceso
@@ -447,7 +445,7 @@ export const RoleProvider = ({ children }) => {
     if (!userRole || userRole === 'guest' || userRole === 'usuario_store') {
       return false;
     }
-    
+
     // Mapear rutas a permisos
     const routePermissions = {
       '/dashboard': 'dashboard',
@@ -498,7 +496,7 @@ export const RoleProvider = ({ children }) => {
 
     // Verificar ruta exacta primero
     let permission = routePermissions[path];
-    
+
     // Si no se encuentra, verificar rutas con parámetros
     if (!permission) {
       // Verificar rutas con parámetros dinámicos
@@ -509,7 +507,7 @@ export const RoleProvider = ({ children }) => {
         }
       }
     }
-    
+
     return permission ? hasPermission(permission) : false;
   };
 
@@ -535,7 +533,7 @@ export const RoleProvider = ({ children }) => {
 
       const tenantList = (data || []).map(assignment => assignment.tenants).filter(Boolean);
       setAssignedTenants(tenantList);
-      
+
       // Super admin puede acceder a todos los tenants
       setCanAccessAllTenants(userRole === 'super_admin');
     } catch (error) {

@@ -6,20 +6,20 @@ const isDev = process.env.NODE_ENV === 'development';
 
 export const logger = {
   log: (...args) => {
-    if (isDev) console.log(...args);
+    if (isDev)
   },
   warn: (...args) => {
-    if (isDev) console.warn(...args);
+    if (isDev)
   },
   error: (...args) => {
     // Errores siempre se muestran
     console.error(...args);
   },
   info: (...args) => {
-    if (isDev) console.info(...args);
+    if (isDev)
   },
   debug: (...args) => {
-    if (isDev) console.debug(...args);
+    if (isDev)
   }
 };
 

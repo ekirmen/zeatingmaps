@@ -7,9 +7,9 @@ const { Title, Text, Paragraph } = Typography;
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { 
-      hasError: false, 
-      error: null, 
+    this.state = {
+      hasError: false,
+      error: null,
       errorInfo: null,
       errorCount: 0,
       lastErrorTime: null
@@ -18,8 +18,8 @@ class ErrorBoundary extends React.Component {
 
   static getDerivedStateFromError(error) {
     // Actualizar el estado para que el siguiente render muestre la UI de fallback
-    return { 
-      hasError: true, 
+    return {
+      hasError: true,
       error: error,
       errorCount: this.state?.errorCount + 1 || 1,
       lastErrorTime: new Date()
@@ -30,7 +30,7 @@ class ErrorBoundary extends React.Component {
     // Log del error
     console.error('🚨 [ErrorBoundary] Error caught:', error);
     console.error('🚨 [ErrorBoundary] Error info:', errorInfo);
-    
+
     this.setState({
       error: error,
       errorInfo: errorInfo,
@@ -42,15 +42,13 @@ class ErrorBoundary extends React.Component {
     if (error.message && error.message.includes("Cannot access 'R' before initialization")) {
       console.error('🚨 [ErrorBoundary] Detected "R" initialization error');
       console.error('🚨 [ErrorBoundary] Stack trace:', error.stack);
-      
+
       // Intentar identificar el origen del problema
       this.analyzeRVariableError(error);
     }
   }
 
   analyzeRVariableError(error) {
-    console.log('🔍 [ErrorBoundary] Analyzing "R" variable error...');
-    
     // Verificar imports problemáticos
     const problematicImports = [
       'supabaseClient',
@@ -74,23 +72,17 @@ class ErrorBoundary extends React.Component {
     });
 
     // Verificar variables globales
-    console.log('🔍 [ErrorBoundary] Global variables check:');
-    console.log('- window.R:', typeof window.R);
-    console.log('- global.R:', typeof global?.R);
-    console.log('- this.R:', typeof this.R);
   }
 
   handleRetry = () => {
-    console.log('🔄 [ErrorBoundary] Retrying...');
-    this.setState({ 
-      hasError: false, 
-      error: null, 
-      errorInfo: null 
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null
     });
   }
 
   handleReload = () => {
-    console.log('🔄 [ErrorBoundary] Reloading page...');
     window.location.reload();
   }
 
@@ -98,7 +90,7 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="p-4 bg-gray-50 min-h-screen">
-          <Card 
+          <Card
             title={
               <Space>
                 <BugOutlined style={{ color: '#ff4d4f' }} />
@@ -170,10 +162,10 @@ class ErrorBoundary extends React.Component {
                 <Title level={5}>📋 Detalles del Error</Title>
                 <details>
                   <summary>Stack Trace</summary>
-                  <pre style={{ 
-                    fontSize: '12px', 
-                    backgroundColor: '#f5f5f5', 
-                    padding: '8px', 
+                  <pre style={{
+                    fontSize: '12px',
+                    backgroundColor: '#f5f5f5',
+                    padding: '8px',
                     borderRadius: '4px',
                     overflow: 'auto',
                     maxHeight: '200px'
@@ -188,10 +180,10 @@ class ErrorBoundary extends React.Component {
                   <Title level={5}>📋 Component Stack</Title>
                   <details>
                     <summary>Component Stack</summary>
-                    <pre style={{ 
-                      fontSize: '12px', 
-                      backgroundColor: '#f5f5f5', 
-                      padding: '8px', 
+                    <pre style={{
+                      fontSize: '12px',
+                      backgroundColor: '#f5f5f5',
+                      padding: '8px',
                       borderRadius: '4px',
                       overflow: 'auto',
                       maxHeight: '200px'
@@ -207,24 +199,22 @@ class ErrorBoundary extends React.Component {
               {/* Actions */}
               <div style={{ textAlign: 'center' }}>
                 <Space>
-                  <Button 
-                    type="primary" 
+                  <Button
+                    type="primary"
                     icon={<ReloadOutlined />}
                     onClick={this.handleRetry}
                   >
                     Reintentar
                   </Button>
-                  <Button 
+                  <Button
                     icon={<ReloadOutlined />}
                     onClick={this.handleReload}
                   >
                     Recargar Página
                   </Button>
-                  <Button 
+                  <Button
                     icon={<InfoCircleOutlined />}
                     onClick={() => {
-                      console.log('🔍 [ErrorBoundary] Current state:', this.state);
-                      console.log('🔍 [ErrorBoundary] Error object:', this.state.error);
                     }}
                   >
                     Debug Info

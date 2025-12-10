@@ -38,7 +38,7 @@ const CompactSeatingMap = ({
     const img = new window.Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => { setMapImage(img); setImageLoaded(true); };
-    img.onerror = () => { console.warn('Error loading map background image'); setImageLoaded(true); };
+    img.onerror = () => {  setImageLoaded(true); };
     img.src = resolveImageUrl(mapa.imagen_fondo);
   }, [mapa?.imagen_fondo]);
 

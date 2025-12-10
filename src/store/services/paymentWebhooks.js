@@ -19,7 +19,6 @@ export const handleStripeWebhook = async (event) => {
         await handlePaymentCanceled(data.object);
         break;
       default:
-        console.log(`Unhandled Stripe event: ${type}`);
     }
 
     return { success: true };
@@ -47,7 +46,6 @@ export const handlePayPalWebhook = async (event) => {
         await handlePaymentCanceled(resource);
         break;
       default:
-        console.log(`Unhandled PayPal event: ${event_type}`);
     }
 
     return { success: true };
@@ -76,7 +74,6 @@ export const handleMercadoPagoWebhook = async (event) => {
         }
         break;
       default:
-        console.log(`Unhandled MercadoPago event: ${type}`);
     }
 
     return { success: true };
@@ -102,7 +99,7 @@ const handlePaymentSuccess = async (paymentData) => {
 
     if (transactions && transactions.length > 0) {
       const transaction = transactions[0];
-      
+
       // Obtener la transacción actualizada después de cambiar el status
       // updatePaymentTransactionStatus ahora maneja el envío de correos automáticamente
       const updatedTransaction = await updatePaymentTransactionStatus(
@@ -141,7 +138,7 @@ const handlePaymentFailure = async (paymentData) => {
 
     if (transactions && transactions.length > 0) {
       const transaction = transactions[0];
-      
+
       await updatePaymentTransactionStatus(
         transaction.id,
         'failed',
@@ -175,7 +172,7 @@ const handlePaymentCanceled = async (paymentData) => {
 
     if (transactions && transactions.length > 0) {
       const transaction = transactions[0];
-      
+
       await updatePaymentTransactionStatus(
         transaction.id,
         'cancelled',
@@ -225,8 +222,6 @@ const updateSeatsStatus = async (orderId, status) => {
 const sendPaymentSuccessNotification = async (transaction) => {
   try {
     // Aquí implementarías el envío de email/SMS
-    console.log('Payment success notification sent for transaction:', transaction.id);
-    
     // Ejemplo de envío de email
     // await sendEmail({
     //   to: user.email,
@@ -244,8 +239,6 @@ const sendPaymentSuccessNotification = async (transaction) => {
  */
 const sendPaymentFailureNotification = async (transaction) => {
   try {
-    console.log('Payment failure notification sent for transaction:', transaction.id);
-    
     // await sendEmail({
     //   to: user.email,
     //   subject: 'Pago Fallido',
@@ -263,7 +256,6 @@ const sendPaymentFailureNotification = async (transaction) => {
 const updateInventory = async (orderId) => {
   try {
     // Implementar lógica de actualización de inventario
-    console.log('Inventory updated for order:', orderId);
   } catch (error) {
     console.error('Error updating inventory:', error);
   }
@@ -279,10 +271,10 @@ export const verifyWebhookSignature = (payload, signature, secret) => {
     // const stripe = require('stripe');
     // const event = stripe.webhooks.constructEvent(payload, signature, secret);
     // return event;
-    
+
     return true; // Placeholder
   } catch (error) {
     console.error('Webhook signature verification failed:', error);
     return false;
   }
-}; 
+};

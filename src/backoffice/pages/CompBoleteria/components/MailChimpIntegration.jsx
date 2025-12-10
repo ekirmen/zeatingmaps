@@ -132,7 +132,6 @@ const MailChimpIntegration = ({ eventId }) => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('Customer subscribed to MailChimp');
       } else {
         console.error('Error subscribing customer:', result.error);
       }
@@ -214,7 +213,7 @@ const MailChimpIntegration = ({ eventId }) => {
           {/* Configuraciones avanzadas */}
           <div>
             <Text strong>Configuraciones Avanzadas</Text>
-            
+
             <div className="space-y-4 mt-2">
               <div className="flex items-center justify-between">
                 <div>

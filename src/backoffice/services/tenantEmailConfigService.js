@@ -41,7 +41,6 @@ export class TenantEmailConfigService {
 
       if (error) {
         if (this.isMissingTenantEmailTable(error)) {
-          console.warn('Tabla tenant_email_config no disponible. Usando configuración global como fallback.');
           return await this.getGlobalEmailConfig();
         }
         if (error.code === 'PGRST116') {
@@ -71,7 +70,6 @@ export class TenantEmailConfigService {
 
       if (error) {
         if (this.isMissingTenantEmailTable(error)) {
-          console.warn('Tabla global_email_config no disponible. Usando configuración por defecto.');
           return this.getDefaultEmailConfig();
         }
         if (error.code === 'PGRST116') {
@@ -473,12 +471,12 @@ export class TenantEmailConfigService {
     try {
       // Primero intentar obtener configuración del tenant
       const tenantConfig = await this.getTenantEmailConfig(tenantId);
-      
+
       // Si el tenant tiene configuración específica y está activa, usarla
       if (tenantConfig && !tenantConfig.is_global && tenantConfig.is_active) {
         return tenantConfig;
       }
-      
+
       // Si no, usar configuración global
       return await this.getGlobalEmailConfig();
     } catch (error) {

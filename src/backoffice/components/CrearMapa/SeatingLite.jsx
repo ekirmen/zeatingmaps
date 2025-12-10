@@ -126,7 +126,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     seleccionado: '#2196F3',
     selected: '#2196F3',
   }), []);
-  
+
   // Historial para Ctrl+Z
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -200,7 +200,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       default: return { start: 0, end: 2 * Math.PI };
     }
   };
-  
+
   // Texto y formas
   const addTexto = useCallback(() => {
     const el = {
@@ -281,7 +281,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       message.error('Solo se permiten archivos de imagen!');
       return false;
     }
-    
+
     const isLt1M = file.size / 1024 / 1024 < 1;
     if (!isLt1M) {
       message.error('La imagen debe ser menor a 1MB!');
@@ -366,7 +366,6 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             }
           });
         } catch (paymentError) {
-          console.warn('[CREAR MAPA] No se pudieron cargar estados desde payment_transactions:', paymentError);
         }
 
         const { data: seatLocks, error: seatLocksError } = await supabase
@@ -548,7 +547,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         }));
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [backgroundImageElement]);
@@ -561,8 +560,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         const deltaY = e.clientY - popupDrag.startPos.y;
         const newX = popupDrag.offset.x + deltaX;
         const newY = popupDrag.offset.y + deltaY;
-        setPopupDrag(prev => ({ 
-          ...prev, 
+        setPopupDrag(prev => ({
+          ...prev,
           offset: { x: newX, y: newY },
           startPos: { x: e.clientX, y: e.clientY }
         }));
@@ -657,7 +656,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const curr = prev.find(el => el._id === id);
       if (!curr || !curr.posicion) return prev;
       const next = prev.map(el => el._id === id ? { ...el, posicion: { x: nx, y: ny } } : el);
-      
+
       // Si se está moviendo una silla y hay múltiples sillas seleccionadas, mover el grupo con el mismo delta
       if (curr && curr.type === 'silla' && Array.isArray(selectedIdsRef.current) && selectedIdsRef.current.length > 1) {
         const dx = nx - (curr.posicion.x || 0);
@@ -671,7 +670,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           return el;
         });
       }
-      
+
       // Si se está moviendo cualquier elemento y hay múltiples elementos seleccionados, mover el grupo
       if (Array.isArray(selectedIdsRef.current) && selectedIdsRef.current.length > 1 && selectedIdsRef.current.includes(id)) {
         const dx = nx - (curr.posicion.x || 0);
@@ -795,12 +794,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         throw new Error('El contenido del mapa debe ser un array');
       }
       let listWithMeta = upsertMetaConfig(elements);
-      
+
       // Añadir el fondo al contenido si existe
       if (backgroundImageElement) {
         listWithMeta = [...listWithMeta, backgroundImageElement];
       }
-      
+
       const payload = {
         nombre: 'Mapa de Sala',
         descripcion: '',
@@ -850,7 +849,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       let base = elements.filter(e => !(e.type === 'silla' && e.mesaId === mesa._id && e.side));
       const { top, right, bottom, left } = rectSideCounts;
       const allPositions = [];
-      
+
       // Calcular todas las posiciones
       // top
       for (let i = 0; i < top; i++) {
@@ -876,17 +875,17 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         const y = mesa.posicion.y + ((mesa.height || 80) / (left + 1)) * (i + 1);
         allPositions.push({ x, y, side: 'left', sideIndex: i, sideCount: left });
       }
-      
+
       // Ordenar todas las posiciones de izquierda a derecha
       allPositions.sort((a, b) => a.x - b.x);
-      
+
       // Crear asientos con las posiciones ordenadas
       allPositions.forEach(pos => {
-        const base = createBaseSeat(mesa, seq++, { 
-          posicion: { x: pos.x, y: pos.y }, 
-          side: pos.side, 
-          sideIndex: pos.sideIndex, 
-          sideCount: pos.sideCount 
+        const base = createBaseSeat(mesa, seq++, {
+          posicion: { x: pos.x, y: pos.y },
+          side: pos.side,
+          sideIndex: pos.sideIndex,
+          sideCount: pos.sideCount
         });
         nuevas.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
       });
@@ -928,24 +927,24 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     for (let i = 0; i < n; i++) {
       let x = 0, y = 0;
       if (side === 'top') {
-        x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1); 
+        x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1);
         y = mesa.posicion.y - seatSpacing;
       } else if (side === 'right') {
-        x = mesa.posicion.x + (mesa.width || 120) + seatSpacing; 
+        x = mesa.posicion.x + (mesa.width || 120) + seatSpacing;
         y = mesa.posicion.y + ((mesa.height || 80) / (n + 1)) * (i + 1);
       } else if (side === 'bottom') {
-        x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1); 
+        x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1);
         y = mesa.posicion.y + (mesa.height || 80) + seatSpacing;
       } else {
-        x = mesa.posicion.x - seatSpacing; 
+        x = mesa.posicion.x - seatSpacing;
         y = mesa.posicion.y + ((mesa.height || 80) / (n + 1)) * (i + 1);
       }
       positions.push({ x, y, index: i });
     }
-    
+
     // Ordenar posiciones de izquierda a derecha
     positions.sort((a, b) => a.x - b.x);
-    
+
     // Crear asientos con las posiciones ordenadas
     positions.forEach((pos, i) => {
       const base = {
@@ -1247,16 +1246,16 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     // auto-flip vertical
     if (top < 0) top = py + margin + popupDrag.offset.y;
     if (top + popupH > container.clientHeight) top = container.clientHeight - popupH - margin + popupDrag.offset.y;
-    return { 
-      position: 'absolute', 
-      left, 
-      top, 
-      background: 'white', 
-      border: '1px solid #e5e7eb', 
-      borderRadius: 8, 
-      padding: 12, 
-      boxShadow: '0 4px 10px rgba(0,0,0,0.08)', 
-      maxWidth: popupW, 
+    return {
+      position: 'absolute',
+      left,
+      top,
+      background: 'white',
+      border: '1px solid #e5e7eb',
+      borderRadius: 8,
+      padding: 12,
+      boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
+      maxWidth: popupW,
       zIndex: 10,
       cursor: popupDrag.isDragging ? 'grabbing' : 'grab',
       userSelect: 'none'
@@ -1431,34 +1430,34 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             <h3 className="text-sm font-medium mb-1">Editar Mapa</h3>
             <span className="text-xs text-gray-500">Sala: {salaId}</span>
           </div>
-          
+
           {/* Botón de guardar */}
           <Button type="primary" onClick={handleSaveClick} icon={<SaveOutlined />} block>
             Guardar Mapa
           </Button>
-          
+
           {/* Botones de deshacer/rehacer */}
           <div className="flex gap-1">
-            <Button 
-              onClick={undo} 
+            <Button
+              onClick={undo}
               disabled={historyIndex <= 0}
-              icon={<UndoOutlined />} 
+              icon={<UndoOutlined />}
               size="small"
               title="Ctrl+Z"
             >
               Deshacer
             </Button>
-            <Button 
-              onClick={redo} 
+            <Button
+              onClick={redo}
               disabled={historyIndex >= history.length - 1}
-              icon={<UndoOutlined style={{ transform: 'scaleX(-1)' }} />} 
+              icon={<UndoOutlined style={{ transform: 'scaleX(-1)' }} />}
               size="small"
               title="Ctrl+Y"
             >
               Rehacer
             </Button>
           </div>
-          
+
           <Collapse
             defaultActiveKey={[]}
             ghost
@@ -1501,8 +1500,16 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                   <Checkbox checked={showSeatNumbers} onChange={(e) => setShowSeatNumbers(e.target.checked)}>Mostrar números</Checkbox>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span>Forma silla:</span>
-                  <Select value={seatShape} onChange={setSeatShape} options={[{value:'circle',label:'Redonda'},{value:'rect',label:'Cuadrada'},{value:'butaca',label:'Butaca'}]} size="small" style={{ width: 100 }} />
+                  <label htmlFor="seat-shape-select">Forma silla:</label>
+                  <Select 
+                    id="seat-shape-select"
+                    value={seatShape} 
+                    onChange={setSeatShape} 
+                    options={[{value:'circle',label:'Redonda'},{value:'rect',label:'Cuadrada'},{value:'butaca',label:'Butaca'}]} 
+                    size="small" 
+                    style={{ width: 100 }}
+                    aria-label="Seleccionar forma de silla"
+                  />
                 </div>
                 <Button onClick={() => setRowMode(m => !m)} type={rowMode ? 'primary' : 'default'} block size="small">
                   {rowMode ? 'Modo fila: activo' : 'Crear fila (arrastre)'}
@@ -1521,8 +1528,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             <Collapse.Panel header="Fondo y Grid" key="background">
               <Space direction="vertical" size="small" className="w-full">
                 <div className="flex items-center gap-2">
-                  <Checkbox 
-                    checked={showGrid} 
+                  <Checkbox
+                    checked={showGrid}
                     onChange={(e) => setShowGrid(e.target.checked)}
                   >
                     Mostrar grid
@@ -1536,11 +1543,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                 {showGrid && (
                   <div className="flex items-center gap-2">
                     <span className="text-xs">Tamaño:</span>
-                    <InputNumber 
-                      min={5} 
-                      max={100} 
-                      value={gridSize} 
-                      onChange={setGridSize} 
+                    <InputNumber
+                      min={5}
+                      max={100}
+                      value={gridSize}
+                      onChange={setGridSize}
                       size="small"
                       style={{ width: 60 }}
                     />
@@ -1677,12 +1684,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
               <Button onClick={zoomIn} icon={<ZoomInOutlined />} />
               <Button onClick={zoomOut} icon={<ZoomOutOutlined />} />
             </Button.Group>
-            <Button 
+            <Button
               size="small"
               onClick={() => {
                 setStagePos({ x: 0, y: 0 });
                 setScale(1);
-              }} 
+              }}
               icon={<AimOutlined />}
             >
               Centrar
@@ -1692,16 +1699,16 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           {/* Popup contextual de propiedades rápidas */}
           {selectedEl && (
             <div style={computePopupStyle()}>
-              <div 
-                className="font-medium mb-2 bg-gray-50 p-2 -m-2 mb-2 rounded-t cursor-grab" 
+              <div
+                className="font-medium mb-2 bg-gray-50 p-2 -m-2 mb-2 rounded-t cursor-grab"
                 style={{ cursor: 'grab' }}
                 onMouseDown={(e) => {
                   if (e.button === 0) { // Left click
                     e.stopPropagation();
-                    setPopupDrag({ 
-                      isDragging: true, 
-                      startPos: { x: e.clientX, y: e.clientY }, 
-                      offset: popupDrag.offset 
+                    setPopupDrag({
+                      isDragging: true,
+                      startPos: { x: e.clientX, y: e.clientY },
+                      offset: popupDrag.offset
                     });
                   }
                 }}
@@ -1710,7 +1717,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
               </div>
               <Space direction="vertical" size="small" className="w-full">
                 <Input placeholder="Nombre" value={selectedEl.nombre || ''} onChange={e => updateSelectedProp('nombre', e.target.value)} />
-                
+
                 {/* Propiedades específicas por tipo */}
                 {selectedEl.type === 'mesa' && selectedEl.shape === 'rect' && (
                   <>
@@ -1761,8 +1768,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                       <span>Tamaño nombre</span>
                       <InputNumber min={8} max={48} value={selectedEl.labelSize || 14} onChange={v => updateSelectedProp('labelSize', v)} />
                       <span>Color</span>
-                      <ColorPicker 
-                        value={selectedEl.labelColor || '#333333'} 
+                      <ColorPicker
+                        value={selectedEl.labelColor || '#333333'}
                         onChange={(color) => updateSelectedProp('labelColor', color.toHexString())}
                         size="small"
                       />
@@ -1800,11 +1807,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs">Espaciado:</span>
-                      <InputNumber 
-                        size="small" 
-                        min={10} 
-                        max={100} 
-                        value={seatSpacing} 
+                      <InputNumber
+                        size="small"
+                        min={10}
+                        max={100}
+                        value={seatSpacing}
                         onChange={setSeatSpacing}
                         style={{ width: 60 }}
                       />
@@ -1823,7 +1830,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     <Button size="small" onClick={addSeatsToMesaAll} block>Añadir en todos los lados</Button>
                   </>
                 )}
-                
+
                 {selectedEl.type === 'mesa' && selectedEl.shape === 'circle' && (
                   <>
                     <div className="flex items-center gap-2">
@@ -1845,19 +1852,19 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                       <span>Tamaño nombre</span>
                       <InputNumber min={8} max={48} value={selectedEl.labelSize || 14} onChange={v => updateSelectedProp('labelSize', v)} />
                       <span>Color</span>
-                      <ColorPicker 
-                        value={selectedEl.labelColor || '#333333'} 
+                      <ColorPicker
+                        value={selectedEl.labelColor || '#333333'}
                         onChange={(color) => updateSelectedProp('labelColor', color.toHexString())}
                         size="small"
                       />
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs">Espaciado:</span>
-                      <InputNumber 
-                        size="small" 
-                        min={10} 
-                        max={100} 
-                        value={seatSpacing} 
+                      <InputNumber
+                        size="small"
+                        min={10}
+                        max={100}
+                        value={seatSpacing}
                         onChange={setSeatSpacing}
                         style={{ width: 60 }}
                       />
@@ -1866,18 +1873,18 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     <div className="text-xs text-gray-600 mb-1">Asientos por arco:</div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs">Arco:</span>
-                      <Select 
-                        value={circleArc} 
-                        onChange={setCircleArc} 
+                      <Select
+                        value={circleArc}
+                        onChange={setCircleArc}
                         options={[{value:'top',label:'Arriba'},{value:'right',label:'Derecha'},{value:'bottom',label:'Abajo'},{value:'left',label:'Izquierda'}]}
                         size="small"
                         style={{ width: 80 }}
                       />
                       <span className="text-xs">Cant:</span>
-                      <InputNumber 
-                        min={0} 
-                        max={50} 
-                        value={circleArcCount} 
+                      <InputNumber
+                        min={0}
+                        max={50}
+                        value={circleArcCount}
                         onChange={setCircleArcCount}
                         size="small"
                         style={{ width: 50 }}
@@ -1886,10 +1893,10 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs">360°:</span>
-                      <InputNumber 
-                        min={0} 
-                        max={60} 
-                        value={circleSeatsCount} 
+                      <InputNumber
+                        min={0}
+                        max={60}
+                        value={circleSeatsCount}
                         onChange={setCircleSeatsCount}
                         size="small"
                         style={{ width: 50 }}
@@ -1898,15 +1905,15 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     </div>
                   </>
                 )}
-                
+
                 {selectedEl.type === 'silla' && (
                   <>
                     <div className="flex items-center gap-2">
                       <span>N°</span>
-                      <InputNumber 
-                        min={1} 
-                        max={9999} 
-                        value={selectedEl.numero || 1} 
+                      <InputNumber
+                        min={1}
+                        max={9999}
+                        value={selectedEl.numero || 1}
                         onChange={v => updateSelectedProp('numero', v)}
                         autoFocus={activeInput === 'numero'}
                         onFocus={() => setActiveInput('numero')}
@@ -1934,7 +1941,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     </div>
                   </>
                 )}
-                
+
                 {selectedEl.type === 'texto' && (
                   <>
                     <Input placeholder="Texto" value={selectedEl.text || ''} onChange={e => updateSelectedProp('text', e.target.value)} />
@@ -1955,15 +1962,15 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Color</span>
-                      <ColorPicker 
-                        value={selectedEl.fill || '#333333'} 
+                      <ColorPicker
+                        value={selectedEl.fill || '#333333'}
                         onChange={(color) => updateSelectedProp('fill', color.toHexString())}
                         size="small"
                       />
                     </div>
                   </>
                 )}
-                
+
                 {selectedEl.type === 'forma' && (
                   <>
                     {selectedEl.kind === 'rect' && (
@@ -2034,16 +2041,16 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Relleno</span>
-                      <ColorPicker 
-                        value={selectedEl.fill || '#eaeaea'} 
+                      <ColorPicker
+                        value={selectedEl.fill || '#eaeaea'}
                         onChange={(color) => updateSelectedProp('fill', color.toHexString())}
                         size="small"
                       />
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Borde</span>
-                      <ColorPicker 
-                        value={selectedEl.stroke || '#999999'} 
+                      <ColorPicker
+                        value={selectedEl.stroke || '#999999'}
                         onChange={(color) => updateSelectedProp('stroke', color.toHexString())}
                         size="small"
                       />

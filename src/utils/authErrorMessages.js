@@ -104,7 +104,6 @@ const checkProfileExists = async (supabaseClient, email) => {
 
     return !!emailMatch;
   } catch (lookupError) {
-    console.warn('[authErrorMessages] Error verificando existencia de usuario:', lookupError);
     return null;
   }
 };

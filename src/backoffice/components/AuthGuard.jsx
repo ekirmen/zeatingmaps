@@ -17,7 +17,6 @@ const AuthGuard = ({ children }) => {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
-        console.warn('[AuthGuard] Error obteniendo sesión, probando con getUser:', sessionError);
       }
 
       const activeUser = sessionData?.session?.user;
@@ -46,10 +45,10 @@ const AuthGuard = ({ children }) => {
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100vh',
         flexDirection: 'column',
         gap: '16px'
@@ -63,11 +62,11 @@ const AuthGuard = ({ children }) => {
   if (!isAuthenticated) {
     // Mostrar modal de login del dashboard
     return (
-      <DashboardLogin 
+      <DashboardLogin
         onLogin={() => {
           setIsAuthenticated(true);
           setLoading(false);
-        }} 
+        }}
       />
     );
   }

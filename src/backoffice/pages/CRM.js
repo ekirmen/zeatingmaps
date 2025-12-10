@@ -32,19 +32,19 @@ const CRM = () => {
           .from('eventos_con_funciones_activas')
           .select('*')
           .order('created_at', { ascending: false }),
-        
+
         // Funciones
         supabase
           .from('funciones')
           .select('*')
           .order('fecha', { ascending: false }),
-        
+
         // Usuarios (profiles)
         supabase
           .from('profiles')
           .select('*')
           .order('created_at', { ascending: false }),
-        
+
         // Notificaciones
         supabase
           .from('notifications')
@@ -172,29 +172,16 @@ const CRM = () => {
       setNotifications(notificacionesData.data || []);
 
       // ✅ ESTABLECER DATOS CRM (con fallback si las tablas no existen)
-      console.log('📊 Datos CRM cargados:', {
-        clients: crmClientsData.data?.length || 0,
-        interactions: crmInteractionsData.data?.length || 0,
-        notes: crmNotesData.data?.length || 0,
-        opportunities: crmOpportunitiesData.data?.length || 0,
-        tags: crmTagsData.data?.length || 0
-      });
-
       // Guardar datos CRM en el estado (se pueden usar en componentes futuros)
       if (crmClientsData.data) {
-        console.log('✅ Clientes CRM cargados:', crmClientsData.data.length);
       }
       if (crmInteractionsData.data) {
-        console.log('✅ Interacciones CRM cargadas:', crmInteractionsData.data.length);
       }
       if (crmNotesData.data) {
-        console.log('✅ Notas CRM cargadas:', crmNotesData.data.length);
       }
       if (crmOpportunitiesData.data) {
-        console.log('✅ Oportunidades CRM cargadas:', crmOpportunitiesData.data.length);
       }
       if (crmTagsData.data) {
-        console.log('✅ Tags CRM cargados:', crmTagsData.data.length);
       }
 
     } catch (error) {
@@ -533,4 +520,4 @@ const CRM = () => {
   );
 };
 
-export default CRM; 
+export default CRM;

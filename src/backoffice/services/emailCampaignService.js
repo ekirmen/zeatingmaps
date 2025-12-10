@@ -20,7 +20,7 @@ export const emailCampaignService = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       // ✅ PROCESAR DATOS DE CAMPAÑAS
       const processedCampaigns = (data || []).map(campaign => ({
         ...campaign,
@@ -32,10 +32,8 @@ export const emailCampaignService = {
         template_name: campaign.templates?.nombre || 'Sin plantilla',
         template_type: campaign.templates?.tipo || 'personalizada'
       }));
-
-      console.log('📧 Campañas de email cargadas:', processedCampaigns.length);
       return processedCampaigns;
-      
+
     } catch (error) {
       console.error('Error fetching campaigns:', error);
       toast.error('Error al cargar las campañas');
@@ -60,7 +58,7 @@ export const emailCampaignService = {
         .single();
 
       if (error) throw error;
-      
+
       // ✅ PROCESAR DATOS DE CAMPAÑA ESPECÍFICA
       const processedCampaign = {
         ...data,
@@ -79,10 +77,8 @@ export const emailCampaignService = {
           contenido: data.templates.contenido
         } : null
       };
-
-      console.log('📧 Campaña específica cargada:', processedCampaign.nombre);
       return processedCampaign;
-      
+
     } catch (error) {
       console.error('Error fetching campaign:', error);
       toast.error('Error al cargar la campaña');
@@ -105,11 +101,9 @@ export const emailCampaignService = {
         .single();
 
       if (error) throw error;
-      
-      console.log('📧 Nueva campaña creada:', data.nombre);
       toast.success('Campaña creada exitosamente');
       return data;
-      
+
     } catch (error) {
       console.error('Error creating campaign:', error);
       toast.error('Error al crear la campaña');
@@ -126,11 +120,9 @@ export const emailCampaignService = {
         .eq('id', id);
 
       if (error) throw error;
-      
-      console.log('📧 Campaña eliminada:', id);
       toast.success('Campaña eliminada exitosamente');
       return true;
-      
+
     } catch (error) {
       console.error('Error deleting campaign:', error);
       toast.error('Error al eliminar la campaña');
@@ -147,10 +139,8 @@ export const emailCampaignService = {
         .order('nombre', { ascending: true });
 
       if (error) throw error;
-      
-      console.log('📧 Plantillas de email cargadas:', data?.length || 0);
       return data || [];
-      
+
     } catch (error) {
       console.error('Error fetching email templates:', error);
       toast.error('Error al cargar las plantillas');
@@ -167,11 +157,9 @@ export const emailCampaignService = {
         .single();
 
       if (error) throw error;
-      
-      console.log('✅ Plantilla de email creada:', data.nombre);
       toast.success('Plantilla creada exitosamente');
       return data;
-      
+
     } catch (error) {
       console.error('Error creating email template:', error);
       toast.error('Error al crear la plantilla');
@@ -197,10 +185,8 @@ export const emailCampaignService = {
       const { data, error } = await query;
 
       if (error) throw error;
-      
-      console.log('📧 Logs de email cargados:', data?.length || 0);
       return data || [];
-      
+
     } catch (error) {
       console.error('Error fetching email logs:', error);
       toast.error('Error al cargar los logs');
@@ -384,7 +370,7 @@ export const emailCampaignService = {
     } catch (error) {
       console.error('Error sending campaign:', error);
       toast.error('Error al enviar la campaña');
-      
+
       // Actualizar estado a error
       await supabaseClient
         .from('email_campaigns')
@@ -641,4 +627,4 @@ export const emailCampaignService = {
   }
 };
 
-export default emailCampaignService; 
+export default emailCampaignService;

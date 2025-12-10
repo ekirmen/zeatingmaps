@@ -49,24 +49,24 @@ export const waitForContext = (contextName, timeout = 3000) => {
   return new Promise((resolve, reject) => {
     let attempts = 0;
     const maxAttempts = Math.floor(timeout / 100);
-    
+
     const checkContext = () => {
       attempts++;
-      
+
       // Verificar si el contexto está disponible
       if (window.__contexts && window.__contexts[contextName]) {
         resolve(window.__contexts[contextName]);
         return;
       }
-      
+
       if (attempts >= maxAttempts) {
         reject(new Error(`Contexto ${contextName} no disponible en ${timeout}ms`));
         return;
       }
-      
+
       setTimeout(checkContext, 100);
     };
-    
+
     checkContext();
   });
 };
@@ -77,7 +77,6 @@ export const registerContext = (name, context) => {
     window.__contexts = {};
   }
   window.__contexts[name] = context;
-  console.log(`✅ [APP_INIT] Contexto ${name} registrado`);
 };
 
 // Función para limpiar contextos registrados
@@ -86,7 +85,6 @@ export const clearRegisteredContexts = () => {
     Object.keys(window.__contexts).forEach(key => {
       delete window.__contexts[key];
     });
-    console.log('🧹 [APP_INIT] Contextos registrados limpiados');
   }
 };
 
@@ -115,27 +113,19 @@ export const checkAppState = () => {
       }
     })()
   };
-  
-  console.log('🔍 [APP_INIT] Estado de la aplicación:', state);
   return state;
 };
 
 // Función para inicializar la aplicación de forma segura
 export const initializeApp = async () => {
   try {
-    console.log('🚀 [APP_INIT] Iniciando aplicación...');
-    
     // Esperar a que el DOM esté listo
     await waitForDOM();
-    console.log('✅ [APP_INIT] DOM listo');
-    
     // Verificar estado inicial
     checkAppState();
-    
+
     // Esperar un poco más para asegurar que todos los módulos estén cargados
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    console.log('✅ [APP_INIT] Aplicación inicializada correctamente');
     return true;
   } catch (error) {
     console.error('❌ [APP_INIT] Error durante la inicialización:', error);
@@ -147,9 +137,7 @@ export const initializeApp = async () => {
 export const cleanupApp = () => {
   try {
     clearRegisteredContexts();
-    console.log('🧹 [APP_INIT] Limpieza de aplicación completada');
   } catch (error) {
-    console.warn('⚠️ [APP_INIT] Error durante la limpieza:', error);
   }
 };
 

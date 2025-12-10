@@ -7,14 +7,14 @@ import resolveImageUrl, { resolveEventImageWithTenant } from '../../../utils/res
 const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   const { currentTenant } = useTenant();
   const [uploading, setUploading] = useState(false);
-  
+
   // Update the image preview handling for new bucket structure
   const getPreview = (img, imageType) => {
     // Si es un objeto con publicUrl (de Supabase)
     if (img && typeof img === 'object' && img.publicUrl) {
       return img.publicUrl;
     }
-    
+
     // Si es un objeto con url (de Supabase)
     if (img && typeof img === 'object' && img.url) {
       // Si ya es una URL completa, devolverla
@@ -26,7 +26,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
       const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
       return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${img.url}`;
     }
-    
+
     // Si es un string
     if (typeof img === 'string') {
       // If it's already an absolute URL, return it unchanged
@@ -41,11 +41,11 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
       // Fallback to old API base URL
       return `${API_BASE_URL}${img}`;
     }
-    
+
     if (img instanceof File) {
       return URL.createObjectURL(img);
     }
-    
+
     return null;
   };
 
@@ -68,7 +68,6 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   // Sincronizar previews cuando cambien los datos del evento
   useEffect(() => {
     if (eventoData?.imagenes) {
-      console.log('🔄 [DisenoEspectaculo] Sincronizando previews:', eventoData.imagenes);
       setImagesPreviews({
         banner: getPreview(eventoData.imagenes?.banner, 'banner'),
         obraImagen: getPreview(eventoData.imagenes?.obraImagen, 'obraImagen'),
@@ -86,7 +85,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
       });
     }
   }, [eventoData?.imagenes, currentTenant?.id, eventoData?.id]);
-  
+
   // Store uploaded images when saving instead of immediately
 
   // Nueva función para subir imagen a Supabase Storage
@@ -101,14 +100,6 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
     const filePath = `${eventId}/${fileName}`;
 
     try {
-      console.log('🚀 [DisenoEspectaculo] Subiendo imagen:', {
-        bucketName,
-        filePath,
-        fileName,
-        imageType,
-        fileSize: file.size
-      });
-
       const { data, error } = await supabase.storage
         .from(bucketName)
         .upload(filePath, file, {
@@ -122,9 +113,6 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
-
-      console.log('✅ [DisenoEspectaculo] Imagen subida exitosamente:', publicUrl);
-
       return {
         url: filePath,
         publicUrl: publicUrl,
@@ -162,7 +150,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
 
     const previewUrl = URL.createObjectURL(file);
     const img = new Image();
-    
+
     img.onload = async () => {
       const reqDim = dimensions[imageType];
       if (reqDim && (img.width !== reqDim.width || img.height !== reqDim.height)) {
@@ -173,10 +161,10 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
 
       try {
         setUploading(true);
-        
+
         // Subir imagen a Supabase Storage
         const imageData = await uploadImageToSupabase(file, imageType);
-        
+
         // Actualizar preview con URL pública
         if (imageType === 'espectaculo') {
           setImagesPreviews(prev => ({
@@ -201,12 +189,8 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
                 : imageData
             }
           };
-          console.log('📝 [DisenoEspectaculo] Actualizando eventoData:', newData.imagenes);
           return newData;
         });
-
-        console.log('✅ [DisenoEspectaculo] Imagen procesada exitosamente');
-        
       } catch (error) {
         console.error('❌ [DisenoEspectaculo] Error procesando imagen:', error);
         alert(`Error al subir la imagen: ${error.message}`);
@@ -215,31 +199,27 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         setUploading(false);
       }
     };
-    
+
     img.onerror = () => {
       URL.revokeObjectURL(previewUrl);
       alert('No se pudo leer la imagen');
       setUploading(false);
     };
-    
+
     img.src = previewUrl;
   };
 
   const deleteEspectaculoImage = async (index) => {
     const imageToDelete = eventoData.imagenes?.espectaculo?.[index];
-    
+
     // Eliminar de Supabase Storage si tiene datos de bucket
     if (imageToDelete?.bucket && imageToDelete?.url) {
       try {
-        console.log('🗑️ [DisenoEspectaculo] Eliminando imagen de Supabase:', imageToDelete.url);
-        
         const { error } = await supabase.storage
           .from(imageToDelete.bucket)
           .remove([imageToDelete.url]);
 
         if (error) throw error;
-        
-        console.log('✅ [DisenoEspectaculo] Imagen eliminada de Supabase Storage');
       } catch (error) {
         console.error('❌ [DisenoEspectaculo] Error eliminando imagen de Supabase:', error);
         // Continuar con la eliminación local aunque falle en Supabase
@@ -262,8 +242,6 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         espectaculo: updatedData
       }
     }));
-
-    console.log('✅ [DisenoEspectaculo] Imagen eliminada del estado local');
   };
 
   const handleDescriptionChange = (value) => {
@@ -323,16 +301,16 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
           ].map(({ type, label }) => (
             <div key={type} className="image-upload-item flex flex-col gap-2 items-start">
               <h5 className="font-medium">{label}</h5>
-              <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ 
-                width: type === 'logoVertical' || type === 'bannerPublicidad' ? '200px' : '320px', 
-                height: type === 'logoVertical' || type === 'bannerPublicidad' ? '300px' : 
-                       type === 'portada' ? '167px' : 
-                       type === 'logoHorizontal' || type === 'logoPassbook' || type === 'passbookBanner' ? '100px' : '214px' 
+              <div className="image-preview border border-gray-300 flex items-center justify-center" style={{
+                width: type === 'logoVertical' || type === 'bannerPublicidad' ? '200px' : '320px',
+                height: type === 'logoVertical' || type === 'bannerPublicidad' ? '300px' :
+                       type === 'portada' ? '167px' :
+                       type === 'logoHorizontal' || type === 'logoPassbook' || type === 'passbookBanner' ? '100px' : '214px'
               }}>
                 {imagesPreviews[type] ? (
-                  <img 
-                    src={imagesPreviews[type]} 
-                    alt={`Preview ${type}`} 
+                  <img
+                    src={imagesPreviews[type]}
+                    alt={`Preview ${type}`}
                     onLoad={() => console.log(`✅ [DisenoEspectaculo] Imagen ${type} cargada:`, imagesPreviews[type])}
                     onError={() => console.error(`❌ [DisenoEspectaculo] Error cargando imagen ${type}:`, imagesPreviews[type])}
                     style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}

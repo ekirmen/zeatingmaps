@@ -4,20 +4,17 @@ const cors = require('cors');
 module.exports = function(app) {
   // Crear una instancia de Express para manejar las rutas de API
   const apiRouter = express.Router();
-  
+
   // Middleware para parsear JSON
   apiRouter.use(express.json());
-  
+
   // Middleware CORS
   apiRouter.use(cors());
-  
+
   // Endpoint para realtime-sync
   apiRouter.post('/realtime-sync', (req, res) => {
     try {
       const { salaId, action } = req.body;
-      
-      console.log(`[API LOCAL] Realtime sync - Sala: ${salaId}, Acción: ${action}`);
-      
       // Simular respuesta exitosa
       return res.status(200).json({
         success: true,
@@ -26,7 +23,7 @@ module.exports = function(app) {
           timestamp: new Date().toISOString()
         }
       });
-      
+
     } catch (error) {
       console.error('[API LOCAL] Error en realtime-sync:', error);
       return res.status(500).json({
@@ -36,15 +33,12 @@ module.exports = function(app) {
       });
     }
   });
-  
+
   // Endpoint para guardar mapas
   apiRouter.post('/mapas/:salaId/save', (req, res) => {
     try {
       const { salaId } = req.params;
       const { contenido, zonas } = req.body;
-      
-      console.log(`[API LOCAL] Guardando mapa para sala ${salaId}:`, { contenido, zonas });
-      
       const savedMapa = {
         id: `mapa-${salaId}`,
         sala_id: parseInt(salaId),
@@ -53,16 +47,13 @@ module.exports = function(app) {
         updated_at: new Date().toISOString(),
         timestamp: Date.now()
       };
-      
-      console.log(`[API LOCAL] Mapa guardado exitosamente:`, savedMapa);
-      
       return res.status(200).json({
         success: true,
         message: 'Mapa guardado exitosamente',
         data: savedMapa,
         timestamp: new Date().toISOString()
       });
-      
+
     } catch (error) {
       console.error('[API LOCAL] Error al guardar mapa:', error);
       return res.status(500).json({
@@ -72,14 +63,11 @@ module.exports = function(app) {
       });
     }
   });
-  
+
   // Endpoint para obtener mapas
   apiRouter.get('/mapas/:salaId', (req, res) => {
     try {
       const { salaId } = req.params;
-      
-      console.log(`[API LOCAL] Obteniendo mapa para sala ${salaId}`);
-      
       const mockMapa = {
         id: `mapa-${salaId}`,
         sala_id: parseInt(salaId),
@@ -104,13 +92,13 @@ module.exports = function(app) {
         ],
         updated_at: new Date().toISOString()
       };
-      
+
       return res.status(200).json({
         success: true,
         data: mockMapa,
         timestamp: new Date().toISOString()
       });
-      
+
     } catch (error) {
       console.error('[API LOCAL] Error al obtener mapa:', error);
       return res.status(500).json({
@@ -120,10 +108,8 @@ module.exports = function(app) {
       });
     }
   });
-  
-  
+
+
   // Usar el router de API en la ruta /api
   app.use('/api', apiRouter);
-  
-  console.log('🚀 API local configurada en /api');
 };

@@ -14,21 +14,19 @@ const EventoFormWithTracking = ({ tenantId, onEventoCreated }) => {
     fecha_fin: '',
     tenant_id: tenantId
   });
-  
+
   const [loading, setLoading] = useState(false);
   const { getCurrentUser } = useUserTracking();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       // El tracking se agrega automáticamente en el servicio
       const nuevoEvento = await eventosService.crearEvento(evento);
-      
-      console.log('🎉 Evento creado exitosamente:', nuevoEvento);
       console.log('👤 Creado por:', getCurrentUser());
-      
+
       // Limpiar formulario
       setEvento({
         nombre: '',
@@ -37,12 +35,12 @@ const EventoFormWithTracking = ({ tenantId, onEventoCreated }) => {
         fecha_fin: '',
         tenant_id: tenantId
       });
-      
+
       // Notificar al componente padre
       if (onEventoCreated) {
         onEventoCreated(nuevoEvento);
       }
-      
+
     } catch (error) {
       console.error('❌ Error al crear evento:', error);
       alert('Error al crear el evento. Por favor, inténtalo de nuevo.');
@@ -65,7 +63,7 @@ const EventoFormWithTracking = ({ tenantId, onEventoCreated }) => {
       <p className="text-sm text-gray-600 mb-4">
         👤 Usuario actual: <strong>{getCurrentUser()}</strong>
       </p>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">

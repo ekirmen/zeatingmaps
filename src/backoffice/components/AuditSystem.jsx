@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Space, 
-  Typography, 
-  Tag, 
-  Timeline, 
-  Avatar, 
-  Tooltip, 
+import {
+  Card,
+  Table,
+  Button,
+  Space,
+  Typography,
+  Tag,
+  Timeline,
+  Avatar,
+  Tooltip,
   message,
   Drawer,
   Descriptions,
@@ -18,9 +18,9 @@ import {
   Input,
   Badge
 } from 'antd';
-import { 
-  AuditOutlined, 
-  EyeOutlined, 
+import {
+  AuditOutlined,
+  EyeOutlined,
   SearchOutlined,
   FilterOutlined,
   ExportOutlined,
@@ -63,8 +63,6 @@ const AuditSystem = () => {
     setLoading(true);
     try {
       // La tabla audit_logs no existe, usar datos simulados
-      console.log('Audit logs table not available, using simulated data');
-      
       // Datos simulados para auditoría
       const simulatedLogs = [
         {
@@ -98,9 +96,9 @@ const AuditSystem = () => {
           admin_user: { email: 'admin@veneventos.com' }
         }
       ];
-      
+
       setAuditLogs(simulatedLogs);
-      
+
     } catch (error) {
       console.error('Error loading audit logs:', error);
       message.error('Error al cargar logs de auditoría');
@@ -246,8 +244,8 @@ const AuditSystem = () => {
       title: 'Acciones',
       key: 'actions',
       render: (_, record) => (
-        <Button 
-          size="small" 
+        <Button
+          size="small"
           icon={<EyeOutlined />}
           onClick={() => handleViewLog(record)}
         >
@@ -302,8 +300,8 @@ const AuditSystem = () => {
               <Option value="error">Error</Option>
               <Option value="critical">Critical</Option>
             </Select>
-            <Button 
-              icon={<ExportOutlined />} 
+            <Button
+              icon={<ExportOutlined />}
               onClick={() => message.info('Exportar logs de auditoría')}
             >
               Exportar
@@ -407,7 +405,7 @@ const AuditSystem = () => {
               <>
                 <Divider />
                 <Title level={5}>Cambios Realizados</Title>
-                
+
                 {selectedLog.old_values && (
                   <Card size="small" style={{ marginBottom: 8 }}>
                     <Title level={6}>Valores Anteriores</Title>
@@ -416,7 +414,7 @@ const AuditSystem = () => {
                     </pre>
                   </Card>
                 )}
-                
+
                 {selectedLog.new_values && (
                   <Card size="small">
                     <Title level={6}>Valores Nuevos</Title>

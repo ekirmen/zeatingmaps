@@ -101,7 +101,6 @@ const PaymentSuccess = () => {
             seats = transactionWithSeats.transaction.seats;
           }
         } catch (e) {
-          console.warn('Error parseando asientos desde transaction:', e);
           seats = transactionWithSeats.seats || [];
         }
       }
@@ -130,7 +129,6 @@ const PaymentSuccess = () => {
 
               setWalletEnabled(datosBoleto?.habilitarWallet === true);
             } catch (e) {
-              console.warn('Error parseando datosBoleto:', e);
               setWalletEnabled(false);
             }
           } else {
@@ -197,7 +195,6 @@ const PaymentSuccess = () => {
         setNotificationState((prev) => ({ ...prev, sms: true }));
       }
     } catch (err) {
-      console.warn('No se pudo automatizar la notificación', type, err);
     }
   };
 
@@ -456,7 +453,7 @@ const PaymentSuccess = () => {
             </>
           )}
         </div>
-        
+
         {isReservation && (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
             <div className="flex">
@@ -465,8 +462,8 @@ const PaymentSuccess = () => {
                   <strong>Reserva temporal:</strong> Tienes tiempo limitado para completar el pago.
                 </p>
                 <p className="text-sm text-yellow-700 mt-2">
-                  <strong>Tiempo para pagar:</strong> {paymentDetails?.tiempo_caducidad_reservas ? 
-                    `${Math.abs(paymentDetails.tiempo_caducidad_reservas)} minutos` : 
+                  <strong>Tiempo para pagar:</strong> {paymentDetails?.tiempo_caducidad_reservas ?
+                    `${Math.abs(paymentDetails.tiempo_caducidad_reservas)} minutos` :
                     'Contacta para más información'
                   }
                 </p>
@@ -477,7 +474,7 @@ const PaymentSuccess = () => {
             </div>
           </div>
         )}
-        
+
         {!isReservation && paymentDetails && (
           <div className="my-6">
             {seats && Array.isArray(seats) && seats.length > 0 ? (

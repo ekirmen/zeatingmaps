@@ -53,7 +53,7 @@ class PerformanceMonitor {
    */
   reportMetric(name, metric, onMetric) {
     const rating = this.getRating(name, metric.value);
-    
+
     const metricData = {
       name,
       value: metric.value,
@@ -64,9 +64,6 @@ class PerformanceMonitor {
       navigationType: metric.navigationType,
       timestamp: Date.now(),
     };
-
-    console.log(`[Performance] ${name}:`, metricData);
-
     // Enviar a callback si existe
     if (onMetric) {
       onMetric(metricData);

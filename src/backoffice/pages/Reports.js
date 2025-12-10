@@ -55,7 +55,6 @@ import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { TenantEmailConfigService } from '../services/tenantEmailConfigService';
-import { showEmailDiagnosticsModal } from '../utils/emailDiagnostics';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -1351,26 +1350,9 @@ const Reports = () => {
       });
 
       message.success('Enviamos el resumen del reporte a tu bandeja de entrada.');
-
-      if (result?.diagnostics) {
-        showEmailDiagnosticsModal(result.diagnostics, {
-          success: true,
-          title: 'Reporte enviado por correo',
-          message: 'El servidor SMTP aceptó el resumen del reporte correctamente.'
-        });
-      }
     } catch (error) {
-      console.error('Error enviando resumen del reporte:', error);
       const errorMessage = error?.message || 'Error enviando el correo de resumen';
       message.error(errorMessage);
-
-      if (error?.diagnostics) {
-        showEmailDiagnosticsModal(error.diagnostics, {
-          success: false,
-          title: 'Error enviando resumen',
-          message: errorMessage
-        });
-      }
     } finally {
       setSendingReportEmail(false);
     }

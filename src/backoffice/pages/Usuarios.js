@@ -31,10 +31,10 @@ const Usuarios = () => {
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       // Aplicar filtro de tenant para multiempresas
       query = addTenantFilter(query);
-      
+
       const { data, error } = await query;
 
       if (error) {
@@ -61,7 +61,6 @@ const Usuarios = () => {
       }));
 
       setProfiles(processedProfiles);
-      console.log('👥 Usuarios cargados:', processedProfiles.length);
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error al cargar usuarios');
@@ -84,7 +83,7 @@ const Usuarios = () => {
 
   const handleDelete = async (userId) => {
     if (!window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) return;
-    
+
     try {
       const { error } = await supabase.from('profiles').delete().eq('id', userId);
       if (error) {
@@ -130,7 +129,7 @@ const Usuarios = () => {
     u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.telefono?.includes(searchTerm)
   );
-  
+
   const indexOfLast = currentPage * recordsPerPage;
   const indexOfFirst = indexOfLast - recordsPerPage;
   const current = filtered.slice(indexOfFirst, indexOfLast);

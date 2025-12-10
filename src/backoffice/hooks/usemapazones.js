@@ -3,7 +3,6 @@ export const useMapaZones = (elements, setElements, selectedIds, selectedZone) =
  // 🔁 Aplica la zona a sillas seleccionadas directamente o anidadas dentro de mesas
  const assignZoneToSillas = () => {
   if (!selectedZone || selectedIds.length === 0) {
-    console.warn('Selecciona al menos una silla o mesa y una zona');
     return;
   }
 
@@ -38,7 +37,6 @@ export const useMapaZones = (elements, setElements, selectedIds, selectedZone) =
  // 🔁 Aplica la zona a todos los elementos seleccionados (mesas, sillas, textos, etc.)
   const assignZoneToSelected = () => {
     if (!selectedZone || selectedIds.length === 0) {
-      console.warn('Selecciona al menos un elemento y una zona');
       return;
     }
 

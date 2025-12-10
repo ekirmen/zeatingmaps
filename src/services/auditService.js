@@ -58,11 +58,11 @@ class AuditService {
         // No hay sesión activa, continuar sin usuario
         this.currentUser = null;
       }
-      
+
       // Obtener tenant ID del contexto
       const tenantId = localStorage.getItem('currentTenantId');
       this.tenantId = tenantId;
-      
+
       // Generar o recuperar session ID
       let sessionId = localStorage.getItem('auditSessionId');
       if (!sessionId) {
@@ -151,7 +151,7 @@ class AuditService {
       try {
         const sessionResult = await supabase.auth.getSession();
         session = sessionResult?.data?.session;
-        
+
         // Verificar que el cliente de Supabase tenga las credenciales configuradas
         // Si no hay acceso token, no intentar insertar
         if (session && !session.access_token) {
@@ -160,7 +160,6 @@ class AuditService {
       } catch (sessionError) {
         // Si hay error obteniendo la sesión, continuar sin sesión
         if (process.env.NODE_ENV === 'development') {
-          console.warn('[AUDIT] Error obteniendo sesión:', sessionError);
         }
         session = null;
       }
@@ -185,8 +184,8 @@ class AuditService {
           // Detectar errores relacionados con API key, autenticación o permisos
           const errorMessage = error.message?.toLowerCase() || '';
           const errorHint = error.hint?.toLowerCase() || '';
-          const isAuthError = 
-            error.code === '42501' || 
+          const isAuthError =
+            error.code === '42501' ||
             error.code === 'PGRST301' ||
             error.status === 401 ||
             error.status === 403 ||
@@ -207,7 +206,7 @@ class AuditService {
             await this.storeLocally(auditData);
             return null;
           }
-          
+
           // Para otros errores, solo loggear en desarrollo
           if (process.env.NODE_ENV === 'development') {
             console.error('[AUDIT] Error registrando acción:', error);
@@ -217,7 +216,6 @@ class AuditService {
         }
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('[AUDIT] Acción registrada:', action, data?.id);
         }
         return data;
       } catch (dbError) {
@@ -286,12 +284,12 @@ class AuditService {
 
       const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
       localLogs.push(auditData);
-      
+
       // Mantener solo los últimos 100 registros
       if (localLogs.length > 100) {
         localLogs.shift();
       }
-      
+
       localStorage.setItem('audit_logs_backup', JSON.stringify(localLogs));
     } catch (error) {
       // Solo loggear en desarrollo, silenciosamente en producción
@@ -411,7 +409,6 @@ class AuditService {
       } catch (sessionError) {
         // Si hay error obteniendo la sesión, usar logs locales
         if (process.env.NODE_ENV === 'development') {
-          console.warn('[AUDIT] Error obteniendo sesión en getLogs:', sessionError);
         }
       }
 
@@ -517,7 +514,6 @@ class AuditService {
       } catch (sessionError) {
         // Si hay error obteniendo la sesión, usar logs locales
         if (process.env.NODE_ENV === 'development') {
-          console.warn('[AUDIT] Error obteniendo sesión en getTransactionTrace:', sessionError);
         }
       }
 

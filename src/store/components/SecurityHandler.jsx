@@ -13,16 +13,16 @@ const SecurityHandler = ({ children }) => {
   useEffect(() => {
     // Verificar si hay parámetros sensibles en la URL
     const urlParams = new URLSearchParams(location.search);
-    
+
     // Parámetros realmente sensibles (credenciales directas)
     const sensitiveParams = ['email', 'password', 'key', 'secret'];
-    
+
     // Parámetros de autenticación que pueden estar en la URL (no remover)
     const authParams = ['token', 'access_token', 'refresh_token', 'code'];
-    
+
     // Verificar solo parámetros realmente sensibles
     const hasSensitiveData = sensitiveParams.some(param => urlParams.has(param));
-    
+
     if (hasSensitiveData) {
       // Mostrar advertencia de seguridad
       message.warning({
@@ -41,12 +41,11 @@ const SecurityHandler = ({ children }) => {
       // Construir nueva URL limpia
       const newSearch = cleanParams.toString();
       const newUrl = `${location.pathname}${newSearch ? `?${newSearch}` : ''}`;
-      
+
       // Reemplazar la URL actual sin parámetros sensibles
       window.history.replaceState({}, '', newUrl);
-      
+
       // Log de seguridad (sin datos sensibles)
-      console.warn('🚨 SECURITY WARNING: Sensitive parameters detected and removed from URL');
     }
   }, [location, navigate]);
 

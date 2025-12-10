@@ -13,28 +13,26 @@ const getEncryptionKey = async () => {
   if (encryptionKeyCache) {
     return encryptionKeyCache;
   }
-  
+
   // En producción, esta clave DEBE venir de variables de entorno
   // Genera una clave segura usando: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
   // Configúrala en el archivo .env como: REACT_APP_ENCRYPTION_KEY=tu-clave-aqui
   const ENCRYPTION_KEY = process.env.REACT_APP_ENCRYPTION_KEY || 'ven-eventos-encryption-key-2024-default-change-in-production';
-  
+
   // Advertencia en desarrollo si se usa la clave por defecto
   if (!process.env.REACT_APP_ENCRYPTION_KEY && process.env.NODE_ENV !== 'production') {
-    console.warn('[ENCRYPTION] ⚠️ ADVERTENCIA: Usando clave de encriptación por defecto. ' +
-      'Para producción, configura REACT_APP_ENCRYPTION_KEY en tu archivo .env');
   }
-  
+
   // Convertir la clave a formato que pueda usar Web Crypto API
   const encoder = new TextEncoder();
   const keyData = encoder.encode(ENCRYPTION_KEY);
-  
+
   try {
     // Crear un hash de la clave para asegurar 32 bytes (256 bits)
     // Usar SHA-256 para hash la clave y obtener exactamente 32 bytes
     const hashBuffer = await crypto.subtle.digest('SHA-256', keyData);
     const hashArray = new Uint8Array(hashBuffer);
-    
+
     // Importar la clave hasheada directamente como clave AES-GCM
     const encryptionKey = await crypto.subtle.importKey(
       'raw',
@@ -43,23 +41,21 @@ const getEncryptionKey = async () => {
       false,
       ['encrypt', 'decrypt']
     );
-    
+
     encryptionKeyCache = encryptionKey;
     return encryptionKey;
   } catch (error) {
     // Si falla, usar método simplificado expandiendo la clave
-    console.warn('[ENCRYPTION] Error en hash, usando clave expandida:', error.message);
-    
     // Expandir la clave a 32 bytes (256 bits) para AES-256-GCM
     const keyBytes = encoder.encode(ENCRYPTION_KEY);
     const keyArray = new Uint8Array(32);
-    
+
     // Crear un hash simple expandiendo la clave
     for (let i = 0; i < 32; i++) {
       const byteIndex = i % keyBytes.length;
       keyArray[i] = keyBytes[byteIndex] ^ (i * 7) ^ (keyBytes.length * 13);
     }
-    
+
     // Importar la clave expandida directamente
     const simpleKey = await crypto.subtle.importKey(
       'raw',
@@ -68,7 +64,7 @@ const getEncryptionKey = async () => {
       false,
       ['encrypt', 'decrypt']
     );
-    
+
     encryptionKeyCache = simpleKey;
     return simpleKey;
   }
@@ -87,20 +83,20 @@ const generateIV = () => {
 export const encryptSensitiveData = async (data) => {
   try {
     if (!data) return null;
-    
+
     // Convertir a string si es un objeto
     const dataString = typeof data === 'string' ? data : JSON.stringify(data);
-    
+
     // Obtener clave de encriptación
     const key = await getEncryptionKey();
-    
+
     // Generar IV
     const iv = generateIV();
-    
+
     // Convertir datos a ArrayBuffer
     const encoder = new TextEncoder();
     const dataBuffer = encoder.encode(dataString);
-    
+
     // Encriptar
     const encryptedBuffer = await crypto.subtle.encrypt(
       {
@@ -110,15 +106,15 @@ export const encryptSensitiveData = async (data) => {
       key,
       dataBuffer
     );
-    
+
     // Combinar IV y datos encriptados
     const combined = new Uint8Array(iv.length + encryptedBuffer.byteLength);
     combined.set(iv, 0);
     combined.set(new Uint8Array(encryptedBuffer), iv.length);
-    
+
     // Convertir a base64 para almacenamiento
     const base64 = btoa(String.fromCharCode(...combined));
-    
+
     return base64;
   } catch (error) {
     console.error('[ENCRYPTION] Error encriptando datos:', error);
@@ -134,21 +130,21 @@ export const encryptSensitiveData = async (data) => {
 export const decryptSensitiveData = async (encryptedData) => {
   try {
     if (!encryptedData) return null;
-    
+
     // Convertir de base64 a ArrayBuffer
     const binaryString = atob(encryptedData);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    
+
     // Extraer IV (primeros 12 bytes)
     const iv = bytes.slice(0, 12);
     const encrypted = bytes.slice(12);
-    
+
     // Obtener clave de encriptación
     const key = await getEncryptionKey();
-    
+
     // Desencriptar
     const decryptedBuffer = await crypto.subtle.decrypt(
       {
@@ -158,11 +154,11 @@ export const decryptSensitiveData = async (encryptedData) => {
       key,
       encrypted
     );
-    
+
     // Convertir a string
     const decoder = new TextDecoder();
     const decryptedString = decoder.decode(decryptedBuffer);
-    
+
     // Intentar parsear como JSON, si falla retornar string
     try {
       return JSON.parse(decryptedString);
@@ -187,7 +183,6 @@ export const setEncryptedItem = async (key, data) => {
   } catch (error) {
     console.error(`[ENCRYPTION] Error guardando ${key}:`, error);
     // Fallback: guardar sin encriptar si falla (con advertencia)
-    console.warn(`[ENCRYPTION] Guardando ${key} sin encriptar como fallback`);
     localStorage.setItem(key, typeof data === 'string' ? data : JSON.stringify(data));
   }
 };
@@ -201,7 +196,7 @@ export const getEncryptedItem = async (key) => {
   try {
     const encrypted = localStorage.getItem(key);
     if (!encrypted) return null;
-    
+
     // Intentar desencriptar
     try {
       return await decryptSensitiveData(encrypted);
@@ -227,7 +222,7 @@ export const getEncryptedItem = async (key) => {
 export const encryptPaymentData = async (paymentData) => {
   try {
     const encrypted = { ...paymentData };
-    
+
     // Campos sensibles a encriptar
     const sensitiveFields = [
       'cardNumber',
@@ -243,7 +238,7 @@ export const encryptPaymentData = async (paymentData) => {
       'apiKey',
       'privateKey'
     ];
-    
+
     // Encriptar campos sensibles
     for (const field of sensitiveFields) {
       if (encrypted[field]) {
@@ -251,7 +246,7 @@ export const encryptPaymentData = async (paymentData) => {
         encrypted[`${field}_encrypted`] = true;
       }
     }
-    
+
     return encrypted;
   } catch (error) {
     console.error('[ENCRYPTION] Error encriptando datos de pago:', error);
@@ -268,11 +263,11 @@ export const hashData = async (data) => {
     const dataString = typeof data === 'string' ? data : JSON.stringify(data);
     const encoder = new TextEncoder();
     const dataBuffer = encoder.encode(dataString);
-    
+
     const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
+
     return hashHex;
   } catch (error) {
     console.error('[ENCRYPTION] Error hasheando datos:', error);

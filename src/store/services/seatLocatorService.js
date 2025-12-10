@@ -61,7 +61,6 @@ const resolveBrowserSessionId = () => {
       null
     );
   } catch (err) {
-    console.warn('Could not resolve browser session id:', err);
     return null;
   }
 };
@@ -77,7 +76,6 @@ class SeatLocatorService {
     try {
       const { data, error } = await supabase.rpc('connect_seats_with_locator');
       if (error) throw error;
-      console.log('🔗 Connected seats with locator:', data);
       return data;
     } catch (error) {
       console.error('Error connecting seats with locator:', error);
@@ -132,10 +130,7 @@ class SeatLocatorService {
               seats: Array.isArray(parsed?.seats) ? parsed.seats : [],
             };
           } catch (parseErr) {
-            console.warn(
-              'Could not parse RPC response as JSON (dual args), falling back:',
-              parseErr
-            );
+            // Could not parse RPC response as JSON (dual args), falling back
           }
         } else if (typeof data === 'object' && data !== null) {
           return {
@@ -146,16 +141,10 @@ class SeatLocatorService {
       }
 
       if (error) {
-        console.warn(
-          'RPC (dual args) get_transaction_with_seats failed, trying single-arg:',
-          error
-        );
+        // RPC (dual args) get_transaction_with_seats failed, trying single-arg
       }
     } catch (rpcErr) {
-      console.warn(
-        'RPC (dual args) get_transaction_with_seats threw, trying single-arg:',
-        rpcErr
-      );
+      // RPC (dual args) get_transaction_with_seats threw, trying single-arg
     }
 
     // 2) RPC intento mínimo (solo transaction_locator)
@@ -174,10 +163,7 @@ class SeatLocatorService {
               seats: Array.isArray(parsed?.seats) ? parsed.seats : [],
             };
           } catch (parseErr) {
-            console.warn(
-              'Could not parse RPC response as JSON (single arg), falling back:',
-              parseErr
-            );
+            // Could not parse RPC response as JSON (single arg), falling back
           }
         } else if (typeof data === 'object' && data !== null) {
           return {
@@ -217,7 +203,6 @@ class SeatLocatorService {
       if (!seatsError && Array.isArray(seatsFromLocks) && seatsFromLocks.length > 0) {
         seats = seatsFromLocks;
       } else if (seatsError) {
-        console.warn('Error fetching seats from seat_locks by locator:', seatsError);
       }
 
       // Si no hay asientos en seat_locks, intentar parsear desde transaction.seats
@@ -229,7 +214,7 @@ class SeatLocatorService {
           } else if (typeof transaction.seats === 'string') {
             parsedSeats = JSON.parse(transaction.seats);
           }
-          
+
           // Normalizar los asientos para que tengan la misma estructura que seat_locks
           if (Array.isArray(parsedSeats) && parsedSeats.length > 0) {
             seats = parsedSeats.map((seat, index) => ({
@@ -246,10 +231,8 @@ class SeatLocatorService {
               tenant_id: transaction.tenant_id || null,
               metadata: seat.metadata || {}
             }));
-            console.log(`✅ [seatLocatorService] Obtenidos ${seats.length} asientos desde transaction.seats`);
           }
         } catch (parseError) {
-          console.warn('Error parseando asientos desde transaction.seats:', parseError);
         }
       }
 
@@ -390,10 +373,6 @@ class SeatLocatorService {
       let response = await runUpdateSequence(updateData);
 
       if (response.error && isMissingColumnError(response.error, 'precio') && updateData.precio !== undefined) {
-        console.warn(
-          '[SeatLocatorService] "precio" column unavailable, retrying without it.'
-        );
-
         const fallbackUpdate = { ...updateData };
         delete fallbackUpdate.precio;
         response = await runUpdateSequence(fallbackUpdate);
@@ -402,14 +381,6 @@ class SeatLocatorService {
       if (response.error) throw response.error;
 
       const updatedRows = Array.isArray(response.data) ? response.data : [];
-      console.log('✅ Updated seats with locator/state:', {
-        locator,
-        updated: updatedRows.length,
-        status,
-        tenantId,
-        funcionId,
-      });
-
       return {
         data: updatedRows,
         updated: updatedRows.length,
@@ -495,8 +466,6 @@ class SeatLocatorService {
         .select();
 
       if (error) throw error;
-
-      console.log('🔓 Released user seats:', data);
       return data;
     } catch (error) {
       console.error('Error releasing user seats:', error);

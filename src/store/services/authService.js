@@ -30,7 +30,6 @@ const getCurrentTenantId = () => {
           return cachedTenantId;
         }
       } catch (parseError) {
-        console.warn('⚠️ No se pudo parsear el contexto de tenant cacheado:', parseError);
       }
     }
 
@@ -49,10 +48,8 @@ const getCurrentTenantId = () => {
     }
 
     // Si no se puede obtener el tenant, mostrar advertencia
-    console.warn('⚠️ No se pudo obtener el tenant_id. El usuario se registrará sin empresa asignada.');
     return null;
   } catch (error) {
-    console.warn('No se pudo obtener el tenant ID:', error);
     return null;
   }
 };
@@ -99,13 +96,13 @@ export const switchUserTenant = async (userId, newTenantId) => {
     });
 
     if (error) throw error;
-    
+
     if (data) {
       // Actualizar el tenant activo en localStorage
       localStorage.setItem('currentTenantId', newTenantId);
       return true;
     }
-    
+
     return false;
   } catch (error) {
     console.error('Error al cambiar tenant:', error);
@@ -172,9 +169,8 @@ export const registerUser = async ({ email, password, phone }) => {
 
   // Obtener el tenant_id actual
   const tenantId = getCurrentTenantId();
-  
+
   if (!tenantId) {
-    console.warn('⚠️ No se pudo obtener el tenant_id para el usuario registrado');
     // En producción, esto debería ser un error crítico
     // throw new Error('No se pudo determinar la empresa para el registro');
   }
@@ -191,7 +187,6 @@ export const registerUser = async ({ email, password, phone }) => {
     });
 
   if (profileError) {
-    console.warn('⚠️ Error al crear perfil:', profileError.message);
   }
 
   // Agregar usuario al tenant actual usando la nueva tabla user_tenants
@@ -205,17 +200,13 @@ export const registerUser = async ({ email, password, phone }) => {
       });
 
       if (tenantError) {
-        console.warn('⚠️ Error al agregar usuario al tenant:', tenantError.message);
       } else {
-        console.log('✅ Usuario agregado exitosamente al tenant:', tenantId);
       }
     } catch (error) {
-      console.warn('⚠️ Error al agregar usuario al tenant:', error.message);
     }
   }
 
   if (profileError) {
-    console.warn('⚠️ Error al crear perfil:', profileError.message);
   }
 
   return { user, session };
@@ -255,27 +246,20 @@ export const loginUser = async ({ email, password }) => {
         .single();
 
       if (profileError) {
-        console.warn('⚠️ No se pudo verificar el perfil del usuario:', profileError);
       } else {
         // Verificar que el usuario tenga un tenant_id válido
         if (!profile.tenant_id) {
-          console.warn('⚠️ Usuario sin tenant_id asignado');
           // En producción, esto podría ser un error crítico
         }
-        
+
         // Verificar que el usuario tenga acceso al tenant actual
         const currentTenantId = getCurrentTenantId();
         if (currentTenantId && profile.tenant_id && profile.tenant_id !== currentTenantId) {
-          console.warn('⚠️ Usuario intentando acceder a empresa diferente:', {
-            userTenant: profile.tenant_id,
-            currentTenant: currentTenantId
-          });
           // En producción, esto debería ser un error de acceso denegado
           // throw new Error('No tienes acceso a esta empresa');
         }
       }
     } catch (error) {
-      console.warn('⚠️ Error al verificar acceso del usuario:', error);
     }
   }
 
@@ -287,7 +271,6 @@ export const verifyTenantAccess = async (userId) => {
   try {
     const currentTenantId = getCurrentTenantId();
     if (!currentTenantId) {
-      console.warn('⚠️ No se pudo obtener el tenant actual');
       return { hasAccess: false, reason: 'No se pudo determinar la empresa' };
     }
 
@@ -307,8 +290,8 @@ export const verifyTenantAccess = async (userId) => {
     }
 
     if (profile.tenant_id !== currentTenantId) {
-      return { 
-        hasAccess: false, 
+      return {
+        hasAccess: false,
         reason: 'Usuario no tiene acceso a esta empresa',
         userTenant: profile.tenant_id,
         currentTenant: currentTenantId

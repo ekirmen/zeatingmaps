@@ -15,7 +15,6 @@ class SeatWorkerService {
    */
   initWorker() {
     if (typeof Worker === 'undefined') {
-      console.warn('[SeatWorkerService] Web Workers no están disponibles en este navegador');
       return;
     }
 
@@ -29,20 +28,18 @@ class SeatWorkerService {
         // En producción, detectar si estamos en un subdirectorio (store, backoffice, etc.)
         const pathname = window.location.pathname;
         const basePath = pathname.match(/^\/(store|backoffice|dashboard|saas)/)?.[0] || '';
-        
+
         // Construir URL: basePath puede ser "/store" o ""
         // Si hay basePath, Vercel lo reescribe automáticamente a la raíz
-        workerUrl = basePath 
+        workerUrl = basePath
           ? `${window.location.origin}${basePath}/seatCalculations.worker.js`
           : `${window.location.origin}/seatCalculations.worker.js`;
       } else {
         // En desarrollo, usar ruta relativa
-        workerUrl = process.env.PUBLIC_URL 
+        workerUrl = process.env.PUBLIC_URL
           ? `${process.env.PUBLIC_URL}/seatCalculations.worker.js`
           : '/seatCalculations.worker.js';
       }
-      
-      console.log('[SeatWorkerService] Inicializando worker desde:', workerUrl);
       this.worker = new Worker(workerUrl);
 
       this.worker.onmessage = (e) => {
@@ -91,7 +88,6 @@ class SeatWorkerService {
     return new Promise((resolve, reject) => {
       if (!this.worker) {
         // Fallback: ejecutar en el hilo principal si el worker no está disponible
-        console.warn('[SeatWorkerService] Worker no disponible, ejecutando en hilo principal');
         try {
           const result = this.executeSync(type, payload);
           resolve(result);

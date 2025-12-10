@@ -6,11 +6,9 @@ import { buildRelativeApiUrl } from '../../utils/apiConfig';
  */
 export async function sendReservationEmail(locator, userId, transactionData = {}) {
   try {
-    console.log('📧 [EMAIL_SERVICE] Enviando correo de reserva para locator:', locator);
-    
     // No necesitamos obtener el email aquí, el servidor lo obtendrá automáticamente
     const emailUrl = buildRelativeApiUrl(`payments/${locator}/email`);
-    
+
     const response = await fetch(emailUrl, {
       method: 'POST',
       headers: {
@@ -29,7 +27,6 @@ export async function sendReservationEmail(locator, userId, transactionData = {}
     }
 
     const data = await response.json();
-    console.log('✅ [EMAIL_SERVICE] Correo de reserva enviado exitosamente');
     return { success: true, data };
   } catch (error) {
     console.error('[EMAIL_SERVICE] Error enviando correo de reserva:', error);
@@ -43,11 +40,9 @@ export async function sendReservationEmail(locator, userId, transactionData = {}
  */
 export async function sendPaymentCompleteEmail(locator, userId, transactionData = {}) {
   try {
-    console.log('📧 [EMAIL_SERVICE] Enviando correo de pago completo para locator:', locator);
-    
     // No necesitamos obtener el email aquí, el servidor lo obtendrá automáticamente
     const emailUrl = buildRelativeApiUrl(`payments/${locator}/email`);
-    
+
     const response = await fetch(emailUrl, {
       method: 'POST',
       headers: {
@@ -66,7 +61,6 @@ export async function sendPaymentCompleteEmail(locator, userId, transactionData 
     }
 
     const data = await response.json();
-    console.log('✅ [EMAIL_SERVICE] Correo de pago completo enviado exitosamente');
     return { success: true, data };
   } catch (error) {
     console.error('[EMAIL_SERVICE] Error enviando correo de pago completo:', error);
@@ -84,12 +78,10 @@ export async function sendPaymentEmailByStatus(transaction) {
     const userId = transaction.user_id || transaction.userId || transaction.user?.id;
 
     if (!locator) {
-      console.warn('[EMAIL_SERVICE] No se proporcionó locator, no se enviará correo');
       return { success: false, error: 'No se proporcionó locator' };
     }
 
     if (!userId) {
-      console.warn('[EMAIL_SERVICE] No se proporcionó userId, no se enviará correo');
       return { success: false, error: 'No se proporcionó userId' };
     }
 
@@ -101,7 +93,6 @@ export async function sendPaymentEmailByStatus(transaction) {
       // Reserva o pago pendiente: enviar correo de reserva
       return await sendReservationEmail(locator, userId, transaction);
     } else {
-      console.log('[EMAIL_SERVICE] Status no requiere envío de correo:', status);
       return { success: false, error: `Status ${status} no requiere envío de correo` };
     }
   } catch (error) {

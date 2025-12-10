@@ -19,54 +19,38 @@ export const useMapaLoadingSaving = () => {
     if (!salaId) return;
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[RealtimeService] Configurando suscripción para sala:', salaId);
     }
 
     // Sistema de realtime optimizado - solo en producción
     if (process.env.NODE_ENV === 'production') {
       // Implementar realtime solo cuando sea necesario
-      console.log('[RealtimeService] Sistema de realtime habilitado para producción');
     } else {
-      console.log('[RealtimeService] Sistema de realtime deshabilitado en desarrollo');
     }
-    
+
     // Cleanup al desmontar
     return () => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[RealtimeService] Cleanup completado');
       }
     };
   }, [salaId]);
 
   const transformarParaGuardar = (elements, zones = []) => {
-    console.log('[transformarParaGuardar] Elementos recibidos:', elements);
-    console.log('[transformarParaGuardar] Zonas recibidas:', zones);
-    console.log('[transformarParaGuardar] Tenant actual:', currentTenant?.id);
-    
     if (!elements || !Array.isArray(elements)) {
-      console.warn('[transformarParaGuardar] Elements no es un array válido:', elements);
       return { contenido: [], zonas: zones || [], tenant_id: currentTenant?.id };
     }
-    
+
     const mesas = elements.filter(el => el && el.type === 'mesa');
-    console.log('[transformarParaGuardar] Mesas encontradas:', mesas.length);
-    
     const contenido = mesas.map(mesa => {
       if (!mesa || !mesa._id) {
-        console.warn('[transformarParaGuardar] Mesa inválida:', mesa);
         return null;
       }
-      
-      console.log('[transformarParaGuardar] Procesando mesa:', mesa);
-      
       const sillas = elements
         .filter(el => el && el.type === 'silla' && el.parentId === mesa._id)
         .map(silla => {
           if (!silla || !silla._id) {
-            console.warn('[transformarParaGuardar] Silla inválida:', silla);
             return null;
           }
-          
+
           return {
             _id: silla._id,
             nombre: silla.nombre || '',
@@ -78,9 +62,6 @@ export const useMapaLoadingSaving = () => {
           };
         })
         .filter(silla => silla !== null); // Filtrar sillas inválidas
-      
-      console.log('[transformarParaGuardar] Sillas de la mesa:', sillas.length);
-      
       return {
         _id: mesa._id,
         nombre: mesa.nombre || '',
@@ -93,9 +74,6 @@ export const useMapaLoadingSaving = () => {
         sillas: sillas
       };
     }).filter(mesa => mesa !== null); // Filtrar mesas inválidas
-
-    console.log('[transformarParaGuardar] Contenido final:', contenido);
-    
     // Retornar objeto con contenido, zonas y tenant_id como espera la API local
     return {
       contenido: contenido,
@@ -106,29 +84,19 @@ export const useMapaLoadingSaving = () => {
 
   const loadMapa = useCallback(async (salaId, setElements, setZones) => {
     if (!salaId) {
-      console.log('[loadMapa] No hay salaId, saliendo');
       return;
     }
-    
-    console.log('[loadMapa] Iniciando carga para sala:', salaId);
-    console.log('[loadMapa] setElements es función:', typeof setElements === 'function');
-    console.log('[loadMapa] setZones es función:', typeof setZones === 'function');
-    
     setIsLoading(true);
-    
+
     try {
       // Usar la API local en lugar de Supabase
       const response = await fetch(`/api/mapas/${salaId}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      console.log('[loadMapa] Datos recibidos de API local:', data);
-      
       if (!data.success || !data.data || !data.data.contenido) {
-        console.log('[loadMapa] No hay datos de mapa, inicializando con elementos de prueba');
-        
         // Crear elementos de prueba para verificar que el renderizado funciona
         const elementosPrueba = [
           {
@@ -153,11 +121,8 @@ export const useMapaLoadingSaving = () => {
             sillas: []
           }
         ];
-        
-        console.log('[loadMapa] Creando elementos de prueba:', elementosPrueba);
         setElements(elementosPrueba);
         setZones([]);
-        console.log('[loadMapa] Elementos de prueba establecidos');
         return;
       }
 
@@ -173,17 +138,15 @@ export const useMapaLoadingSaving = () => {
             zonasCargadas = await zonasResponse.json();
           }
         } catch (error) {
-          console.warn('[loadMapa] Error cargando zonas:', error);
         }
       }
 
       // Transformar elementos del mapa
       const elementosCrudos = (mapaData.contenido || []).reduce((acc, mesa) => {
         if (!mesa || !mesa._id) {
-          console.warn('[loadMapa] Mesa inválida encontrada:', mesa);
           return acc;
         }
-        
+
         // Create mesa with all necessary properties
         const mesaConZona = {
           ...mesa,
@@ -204,10 +167,9 @@ export const useMapaLoadingSaving = () => {
         // Transform sillas array
         const sillas = (mesa.sillas || []).map(silla => {
           if (!silla || !silla._id) {
-            console.warn('[loadMapa] Silla inválida encontrada:', silla);
             return null;
           }
-          
+
           return {
             ...silla,
             type: 'silla',
@@ -234,35 +196,22 @@ export const useMapaLoadingSaving = () => {
 
         return [...acc, mesaConZona, ...sillas];
       }, []);
-
-      console.log('[loadMapa] Elementos transformados:', elementosCrudos.length);
-      
       // Guardar referencia de los elementos cargados para evitar recargas innecesarias
       lastSavedElements.current = JSON.stringify(elementosCrudos);
-      
-      console.log('[loadMapa] Estableciendo elementos y zonas:', {
-        elementosCount: elementosCrudos.length,
-        zonasCount: zonasCargadas.length
-      });
-      
       setZones(zonasCargadas);
       setElements(elementosCrudos);
-      
-      console.log('[loadMapa] Elementos y zonas establecidos exitosamente');
     } catch (error) {
       console.error('Error al cargar el mapa desde API local:', error);
       // Fallback: intentar cargar desde Supabase si la API local falla
       try {
-        console.log('[loadMapa] Fallback: intentando cargar desde Supabase...');
         const data = await fetchMapa(salaId);
         if (data && data.contenido) {
           // ... resto del código de transformación existente
           const elementosCrudos = (data.contenido || []).reduce((acc, mesa) => {
             if (!mesa || !mesa._id) {
-              console.warn('[loadMapa] Mesa inválida encontrada en fallback:', mesa);
               return acc;
             }
-            
+
             const mesaConZona = {
               ...mesa,
               type: 'mesa',
@@ -281,10 +230,9 @@ export const useMapaLoadingSaving = () => {
 
             const sillas = (mesa.sillas || []).map(silla => {
               if (!silla || !silla._id) {
-                console.warn('[loadMapa] Silla inválida encontrada en fallback:', silla);
                 return null;
               }
-              
+
               return {
                 ...silla,
                 type: 'silla',
@@ -335,22 +283,15 @@ export const useMapaLoadingSaving = () => {
 
     // Validar que zones sea un array
     const zonasValidas = Array.isArray(zones) ? zones : [];
-    console.log('[handleSave] Zonas validadas:', zonasValidas);
-
     // Verificar si realmente hay cambios que guardar
     const currentElementsString = JSON.stringify(elements);
     if (lastSavedElements.current === currentElementsString) {
-      console.log('[handleSave] No hay cambios que guardar, saltando guardado');
       return;
     }
-
-    console.log('[handleSave] Iniciando guardado para sala:', salaId);
     setIsSaving(true);
 
     try {
       const datosParaGuardar = transformarParaGuardar(elements, zonasValidas);
-      console.log('[handleSave] Datos a guardar:', datosParaGuardar);
-
       // Usar la API local en lugar de Supabase
       const response = await fetch(`/api/mapas/${salaId}/save`, {
         method: 'POST',
@@ -365,8 +306,6 @@ export const useMapaLoadingSaving = () => {
       }
 
       const result = await response.json();
-      console.log('[handleSave] Mapa guardado exitosamente en API local:', result);
-
       // Actualizar la referencia de elementos guardados
       lastSavedElements.current = currentElementsString;
       setLastSavedAt(new Date().toISOString());
@@ -378,16 +317,15 @@ export const useMapaLoadingSaving = () => {
 
     } catch (error) {
       console.error('[handleSave] Error al guardar en API local:', error);
-      
+
       // Fallback: intentar guardar en Supabase si la API local falla
       try {
-        console.log('[handleSave] Fallback: intentando guardar en Supabase...');
         const result = await saveMapa(salaId, transformarParaGuardar(elements, zonasValidas), zonasValidas);
         console.log('[handleSave] Mapa guardado exitosamente en Supabase (fallback):', result);
-        
+
         lastSavedElements.current = currentElementsString;
         setLastSavedAt(new Date().toISOString());
-        
+
         if (realtimeService) {
           realtimeService.notifyChange(salaId, 'mapa_updated');
         }

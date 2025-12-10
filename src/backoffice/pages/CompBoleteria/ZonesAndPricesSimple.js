@@ -25,7 +25,6 @@ const parseDetalles = (selectedPlantilla, selectedFuncion) => {
         return parsed;
       }
     } catch (error) {
-      console.warn('⚠️ [ZonesAndPricesSimple] No se pudieron parsear los detalles de la plantilla:', error);
     }
   }
 
@@ -60,8 +59,8 @@ const ZonesAndPricesSimple = ({
 
     // Si el contenido es un array, procesarlo directamente
     // Si es un objeto, buscar la propiedad 'elementos'
-    const elementos = Array.isArray(mapa.contenido) 
-      ? mapa.contenido 
+    const elementos = Array.isArray(mapa.contenido)
+      ? mapa.contenido
       : mapa.contenido.elementos || [];
 
     if (!Array.isArray(elementos)) {

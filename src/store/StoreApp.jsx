@@ -53,7 +53,7 @@ const StoreApp = () => {
   const previousPath = React.useRef(location.pathname);
   const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
 
-  if (DEBUG) console.log('🚀 StoreApp render', location.pathname, user);
+  if (DEBUG)
 
   React.useEffect(() => restoreTimer(), [restoreTimer]);
 

@@ -77,16 +77,16 @@ class SeatPaymentChecker {
   getCachedResult(seatId, funcionId, sessionId) {
     const key = this.getCacheKey(seatId, funcionId, sessionId);
     const cached = this.cache.get(key);
-    
+
     if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
       return cached.result;
     }
-    
+
     // Limpiar cache expirado
     if (cached) {
       this.cache.delete(key);
     }
-    
+
     return null;
   }
 
@@ -128,7 +128,7 @@ class SeatPaymentChecker {
     if (useCache) {
       const batchCacheKey = this.getBatchCacheKey(normalizedSeatIds, funcionId, sessionId);
       const cachedBatch = this.batchCache.get(batchCacheKey);
-      
+
       if (cachedBatch && Date.now() - cachedBatch.timestamp < this.batchCacheTimeout) {
         return cachedBatch.data;
       }
@@ -150,10 +150,10 @@ class SeatPaymentChecker {
       // Aplicar timeout si está configurado
       let result;
       if (timeout > 0) {
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Timeout')), timeout)
         );
-        
+
         try {
           const { data, error } = await Promise.race([checkPromise, timeoutPromise]);
           if (error) {
@@ -184,7 +184,6 @@ class SeatPaymentChecker {
           }
         } catch (err) {
           if (err.message === 'Timeout') {
-            console.warn(`[SEAT_PAYMENT_CHECKER] Timeout en verificación batch, asumiendo no pagados`);
             // Retornar resultados por defecto (no pagados)
             result = normalizedSeatIds.map(seatId => ({
               seat_id: seatId,
@@ -235,7 +234,7 @@ class SeatPaymentChecker {
           status: row.status,
           source: row.source
         });
-        
+
         // Actualizar cache individual para cada asiento
         if (useCache && sessionId) {
           this.setCachedResult(row.seat_id, funcionId, sessionId, {
@@ -292,14 +291,14 @@ class SeatPaymentChecker {
   async isSeatPaidByUser(seatId, funcionId, sessionId, options = {}) {
     try {
       const { timeout = 3000, useCache = true } = options;
-      
+
       // Verificar cache primero (solo si useCache es true)
       if (useCache) {
         const cachedResult = this.getCachedResult(seatId, funcionId, sessionId);
         if (cachedResult) {
           return cachedResult;
         }
-        
+
         // Verificar cache negativo (asientos que NO están pagados)
         const cacheKey = this.getCacheKey(seatId, funcionId, sessionId);
         const notPaidCached = this.notPaidCache.get(cacheKey);
@@ -329,7 +328,7 @@ class SeatPaymentChecker {
         status: 'error',
         source: 'error'
       };
-      
+
       // No guardar resultado de error en cache (para permitir reintento)
       return errorResult;
     }
@@ -377,7 +376,7 @@ class SeatPaymentChecker {
    */
   parseSeatsFromPayment(seatsData) {
     if (!seatsData) return [];
-    
+
     try {
       if (typeof seatsData === 'string') {
         return JSON.parse(seatsData);

@@ -13,10 +13,8 @@ export const recintosService = {
   async crearRecinto(recintoData) {
     try {
       const { data, error } = await supabaseWithTracking.insert('recintos', recintoData);
-      
+
       if (error) throw error;
-      
-      console.log('✅ Recinto creado con tracking:', data[0]);
       return data[0];
     } catch (error) {
       console.error('❌ Error al crear recinto:', error);
@@ -33,10 +31,8 @@ export const recintosService = {
   async actualizarRecinto(id, recintoData) {
     try {
       const { data, error } = await supabaseWithTracking.update('recintos', recintoData, { id });
-      
+
       if (error) throw error;
-      
-      console.log('✅ Recinto actualizado con tracking:', data[0]);
       return data[0];
     } catch (error) {
       console.error('❌ Error al actualizar recinto:', error);
@@ -56,7 +52,7 @@ export const recintosService = {
         '*',
         { tenant_id: tenantId }
       );
-      
+
       if (error) throw error;
       return data;
     } catch (error) {
@@ -77,7 +73,7 @@ export const recintosService = {
         '*',
         { id }
       );
-      
+
       if (error) throw error;
       return data[0];
     } catch (error) {
@@ -94,10 +90,8 @@ export const recintosService = {
   async eliminarRecinto(id) {
     try {
       const { error } = await supabaseWithTracking.delete('recintos', { id });
-      
+
       if (error) throw error;
-      
-      console.log('✅ Recinto eliminado:', id);
       return true;
     } catch (error) {
       console.error('❌ Error al eliminar recinto:', error);
@@ -117,7 +111,7 @@ export const recintosService = {
         .select('*')
         .eq('tenant_id', tenantId)
         .order('nombre', { ascending: true });
-      
+
       if (error) throw error;
       return data;
     } catch (error) {

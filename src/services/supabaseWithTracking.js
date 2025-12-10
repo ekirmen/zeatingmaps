@@ -20,7 +20,6 @@ class SupabaseWithTracking {
       if (!user) return 'anonymous';
       return user.email || user.id || 'anonymous';
     } catch (error) {
-      console.warn('Error obteniendo usuario actual:', error);
       return 'anonymous';
     }
   }
@@ -33,7 +32,7 @@ class SupabaseWithTracking {
   async addInsertTracking(data) {
     const currentUser = await this.getCurrentUser();
     const now = new Date().toISOString();
-    
+
     return {
       ...data,
       created_by: currentUser,
@@ -51,7 +50,7 @@ class SupabaseWithTracking {
   async addUpdateTracking(data) {
     const currentUser = await this.getCurrentUser();
     const now = new Date().toISOString();
-    
+
     return {
       ...data,
       updated_by: currentUser,
@@ -68,7 +67,7 @@ class SupabaseWithTracking {
   async insert(table, data) {
     try {
       let dataWithTracking;
-      
+
       if (Array.isArray(data)) {
         // Si es un array, agregar tracking a cada elemento
         dataWithTracking = await Promise.all(
@@ -78,7 +77,7 @@ class SupabaseWithTracking {
         // Si es un objeto, agregar tracking
         dataWithTracking = await this.addInsertTracking(data);
       }
-      
+
       return await this.supabase.from(table).insert(dataWithTracking);
     } catch (error) {
       console.error(`Error en insert con tracking para tabla ${table}:`, error);
@@ -96,16 +95,16 @@ class SupabaseWithTracking {
   async update(table, data, filter) {
     try {
       const dataWithTracking = await this.addUpdateTracking(data);
-      
+
       let query = this.supabase.from(table).update(dataWithTracking);
-      
+
       // Aplicar filtros
       if (filter) {
         Object.keys(filter).forEach(key => {
           query = query.eq(key, filter[key]);
         });
       }
-      
+
       return await query;
     } catch (error) {
       console.error(`Error en update con tracking para tabla ${table}:`, error);
@@ -122,17 +121,15 @@ class SupabaseWithTracking {
   async delete(table, filter) {
     try {
       const currentUser = await this.getCurrentUser();
-      console.log(`Usuario ${currentUser} eliminando de tabla ${table}:`, filter);
-      
       let query = this.supabase.from(table).delete();
-      
+
       // Aplicar filtros
       if (filter) {
         Object.keys(filter).forEach(key => {
           query = query.eq(key, filter[key]);
         });
       }
-      
+
       return await query;
     } catch (error) {
       console.error(`Error en delete para tabla ${table}:`, error);
@@ -150,7 +147,7 @@ class SupabaseWithTracking {
   async select(table, select = '*', filter = {}) {
     try {
       let query = this.supabase.from(table).select(select);
-      
+
       // Aplicar filtros
       if (filter) {
         Object.keys(filter).forEach(key => {
@@ -161,7 +158,7 @@ class SupabaseWithTracking {
           }
         });
       }
-      
+
       return await query;
     } catch (error) {
       // Error logging removed for production performance
@@ -179,7 +176,7 @@ class SupabaseWithTracking {
   async upsert(table, data, options = {}) {
     try {
       let dataWithTracking;
-      
+
       if (Array.isArray(data)) {
         // Para upsert, agregar tracking de inserción
         dataWithTracking = await Promise.all(
@@ -188,7 +185,7 @@ class SupabaseWithTracking {
       } else {
         dataWithTracking = await this.addInsertTracking(data);
       }
-      
+
       return await this.supabase.from(table).upsert(dataWithTracking, options);
     } catch (error) {
       console.error(`Error en upsert con tracking para tabla ${table}:`, error);

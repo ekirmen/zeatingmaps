@@ -13,10 +13,8 @@ export const eventosService = {
   async crearEvento(eventoData) {
     try {
       const { data, error } = await supabaseWithTracking.insert('eventos', eventoData);
-      
+
       if (error) throw error;
-      
-      console.log('✅ Evento creado con tracking:', data[0]);
       return data[0];
     } catch (error) {
       console.error('❌ Error al crear evento:', error);
@@ -33,10 +31,8 @@ export const eventosService = {
   async actualizarEvento(id, eventoData) {
     try {
       const { data, error } = await supabaseWithTracking.update('eventos', eventoData, { id });
-      
+
       if (error) throw error;
-      
-      console.log('✅ Evento actualizado con tracking:', data[0]);
       return data[0];
     } catch (error) {
       console.error('❌ Error al actualizar evento:', error);
@@ -57,7 +53,7 @@ export const eventosService = {
         '*',
         { tenant_id: tenantId, ...options }
       );
-      
+
       if (error) throw error;
       return data;
     } catch (error) {
@@ -78,7 +74,7 @@ export const eventosService = {
         '*',
         { id }
       );
-      
+
       if (error) throw error;
       return data[0];
     } catch (error) {
@@ -95,10 +91,8 @@ export const eventosService = {
   async eliminarEvento(id) {
     try {
       const { error } = await supabaseWithTracking.delete('eventos', { id });
-      
+
       if (error) throw error;
-      
-      console.log('✅ Evento eliminado:', id);
       return true;
     } catch (error) {
       console.error('❌ Error al eliminar evento:', error);
@@ -120,7 +114,7 @@ export const eventosService = {
         .eq('oculto', false)
         .eq('desactivado', false)
         .order('fecha_inicio', { ascending: true });
-      
+
       if (error) throw error;
       return data;
     } catch (error) {

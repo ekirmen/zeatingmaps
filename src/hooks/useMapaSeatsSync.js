@@ -11,36 +11,23 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
   // Función para extraer asientos del mapa (sin useCallback para evitar dependencias circulares)
   const extractSeatsFromMapa = (mapa) => {
     if (!mapa?.contenido) {
-      console.log('🔍 [useMapaSeatsSync] No hay contenido en el mapa');
       return [];
     }
 
     let allSeats = [];
-    // console.log('🔍 [useMapaSeatsSync] Procesando mapa con', mapa.contenido.length, 'elementos');
-    // console.log('🔍 [useMapaSeatsSync] Tipo de contenido:', typeof mapa.contenido);
+    //
+    //
     // console.log('🔍 [useMapaSeatsSync] Es array?', Array.isArray(mapa.contenido));
 
     // Si el contenido es un array, procesar cada elemento
     // Si es un objeto, buscar la propiedad 'elementos'
-    const elementos = Array.isArray(mapa.contenido) 
-      ? mapa.contenido 
+    const elementos = Array.isArray(mapa.contenido)
+      ? mapa.contenido
       : mapa.contenido.elementos || [];
-    
+
     if (Array.isArray(elementos)) {
       elementos.forEach((elemento, index) => {
-        // console.log(`🔍 [useMapaSeatsSync] Elemento ${index}:`, {
-        //   _id: elemento._id,
-        //   type: elemento.type,
-        //   hasSillas: !!elemento.sillas,
-        //   sillasLength: elemento.sillas?.length,
-        //   nombre: elemento.nombre,
-        //   shape: elemento.shape,
-        //   x: elemento.x,
-        //   y: elemento.y,
-        //   posicion: elemento.posicion,
-        //   fill: elemento.fill,
-        //   estado: elemento.estado
-        // });
+        //
         // ESTRUCTURA EXACTA DEL JSON DEL USUARIO
         // Caso 1: Mesa con un arreglo de sillas
         if (elemento._id && elemento.sillas && Array.isArray(elemento.sillas)) {
@@ -64,22 +51,22 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
                 width: silla.width || 20,
                 height: silla.height || 20
               };
-              
+
               allSeats.push(seatData);
             }
           });
         // Caso 2: Asiento individual suelto (no dentro de una mesa)
         } else if (elemento._id && (elemento.type === 'silla' || elemento.type === 'circle' || elemento.type === 'rect')) {
           // Procesando asiento individual
-          
+
           // Determinar el estado del asiento basado en la información disponible
           let estado = elemento.estado || 'disponible';
-          
+
           // Si el asiento tiene información de zona, usar esa información
           if (elemento.zona) {
             // Asiento en zona
           }
-          
+
           // Asignar zona automáticamente basándose en la posición
           let zonaAsignada = elemento.zona;
           if (!zonaAsignada) {
@@ -117,7 +104,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
         // Caso 3: Elemento que puede ser un asiento pero no tiene el tipo correcto
         } else if (elemento._id && elemento.nombre && (elemento.x !== undefined || elemento.posicion)) {
           // Procesando elemento como asiento potencial
-          
+
           const seatData = {
             ...elemento,
             mesa_id: null,
@@ -137,19 +124,10 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
           allSeats.push(seatData);
           // Asiento potencial agregado
         } else {
-          console.log(`❌ [useMapaSeatsSync] Elemento no reconocido:`, {
-            _id: elemento._id,
-            type: elemento.type,
-            hasSillas: !!elemento.sillas,
-            nombre: elemento.nombre,
-            x: elemento.x,
-            posicion: elemento.posicion
-          });
-          
           // Filtrar elementos que NO son asientos
           const isNonSeatElement = elemento._id && (
-            elemento._id.startsWith('bg_') || 
-            elemento._id.startsWith('txt_') || 
+            elemento._id.startsWith('bg_') ||
+            elemento._id.startsWith('txt_') ||
             elemento._id.startsWith('shape_') ||
             elemento._id.startsWith('line_') ||
             elemento._id.startsWith('rect_') ||
@@ -159,15 +137,14 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             elemento.type === 'line' ||
             elemento.type === 'shape'
           );
-          
+
           if (isNonSeatElement) {
             console.log(`🚫 [useMapaSeatsSync] Elemento ignorado (no es asiento):`, elemento._id);
             return; // Saltar este elemento
           }
-          
+
           // ÚLTIMO RECURSO: Solo si tiene _id, coordenadas y NO es un elemento de fondo/texto
           if (elemento._id && (elemento.x !== undefined || elemento.y !== undefined || elemento.posicion)) {
-            console.log(`🚨 [useMapaSeatsSync] FORZANDO elemento como asiento:`, elemento._id);
             // Asignar zona automáticamente basándose en la posición
             let zonaAsignada = elemento.zona;
             if (!zonaAsignada) {
@@ -200,18 +177,12 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
               empty: elemento.empty !== undefined ? elemento.empty : false
             };
             allSeats.push(seatData);
-            console.log(`🚨 [useMapaSeatsSync] Asiento forzado agregado:`, {
-              _id: seatData._id,
-              estado: seatData.estado,
-              zona: seatData.zona?.nombre,
-              fill: seatData.fill
-            });
           }
         }
       });
     }
 
-    // console.log(`🎫 [useMapaSeatsSync] Total asientos procesados:`, allSeats.length);
+    //
     return allSeats;
   };
 
@@ -219,23 +190,17 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
   const seatsData = useMemo(() => {
     const currentMapaId = mapa?.id;
     const lastProcessed = processedRef.current;
-    
+
     // Si ya procesamos estos datos exactos, devolver el cache
-    if (lastProcessed.mapaId === currentMapaId && 
-        lastProcessed.funcionId === funcionId && 
+    if (lastProcessed.mapaId === currentMapaId &&
+        lastProcessed.funcionId === funcionId &&
         seatsDataRef.current) {
       return seatsDataRef.current;
     }
-    
+
     // Solo loggear cuando realmente procesamos
-    // console.log('🔄 [useMapaSeatsSync] Procesando asientos - primera vez o datos cambiaron:', { 
-    //   mapa: !!mapa, 
-    //   funcionId,
-    //   mapaId: currentMapaId,
-    //   lastMapaId: lastProcessed.mapaId,
-    //   lastFuncionId: lastProcessed.funcionId
-    // });
-    
+    //
+
     if (!mapa || !funcionId) {
       return [];
     }
@@ -243,15 +208,15 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     try {
       // Extraer asientos del mapa
       const seatsFromMapa = extractSeatsFromMapa(mapa);
-      // console.log('✅ [useMapaSeatsSync] Asientos procesados:', seatsFromMapa.length);
-      
+      //
+
       // Guardar en cache
       seatsDataRef.current = seatsFromMapa;
       processedRef.current = {
         mapaId: currentMapaId,
         funcionId
       };
-      
+
       return seatsFromMapa;
     } catch (err) {
       console.error('❌ [useMapaSeatsSync] Error procesando asientos:', err);

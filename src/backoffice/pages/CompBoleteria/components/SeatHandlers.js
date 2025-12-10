@@ -66,13 +66,11 @@ export const createSeatHandlers = ({
       }
 
       const blockedExists = Array.isArray(carrito) ? carrito.find(i => i._id === seat._id && i.isBlocked) : null;
-      
+
       if (blockedExists) {
         // Desbloquear asiento
-        console.log('🔓 Intentando desbloquear asiento:', seat._id, 'para función:', currentFuncId);
         setCarrito(carrito.filter(i => !(i._id === seat._id && i.isBlocked)));
         unlockSeat(seat._id, currentFuncIdNum, { allowForceUnlock: true }).then((result) => {
-          console.log('✅ Asiento desbloqueado exitosamente:', result);
           message.success('Asiento desbloqueado');
         }).catch(err => {
           console.error('❌ Error al desbloquear asiento:', err);
@@ -80,9 +78,7 @@ export const createSeatHandlers = ({
         });
       } else {
         // Bloquear asiento
-        console.log('🔒 Intentando bloquear asiento:', seat._id, 'para función:', currentFuncId);
         lockSeat(seat._id, currentFuncIdNum).then((result) => {
-          console.log('✅ Asiento bloqueado exitosamente:', result);
           setCarrito([
             ...carrito,
             {
@@ -117,7 +113,7 @@ export const createSeatHandlers = ({
       const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
       return id === zonaId;
     }) : null;
-    
+
     if (!detalle) {
       message.error('Zona sin precio configurado');
       return;
@@ -145,7 +141,6 @@ export const createSeatHandlers = ({
     }
 
     if (exists) {
-      console.log('Removiendo asiento del carrito:', seat._id);
       if (abonoMode) {
         const groupId = `abono-${seat._id}`;
         setCarrito(carrito.filter(i => i.abonoGroup !== groupId));
@@ -157,7 +152,6 @@ export const createSeatHandlers = ({
           );
         }
     } else {
-      console.log('Agregando asiento al carrito:', seat._id, seat.nombre);
       if (abonoMode) {
         const groupId = `abono-${seat._id}`;
         const currentEventId = selectedFuncionEventId
@@ -199,10 +193,8 @@ export const createSeatHandlers = ({
           funcionId: currentFuncIdNum,
           funcionFecha: selectedFuncion?.fechaCelebracion,
         };
-        
+
         setCarrito([...carrito, newSeat]);
-        console.log('Asiento agregado exitosamente. Carrito actual:', [...carrito, newSeat].length, 'elementos');
-        
         // Trigger animation
         handleSeatAnimation(newSeat);
       }
@@ -235,13 +227,13 @@ export const createSeatHandlers = ({
     availableSeats.forEach(seat => {
       const zonaId = seat.zona;
       const zonaObj = Array.isArray(zonas) ? zonas.find(z => (z.id || z._id) === zonaId) : null;
-      
+
       // Determine pricing from the selected plantilla
       const detalle = Array.isArray(detallesPlantilla) ? detallesPlantilla.find(d => {
         const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
         return id === zonaId;
       }) : null;
-      
+
       if (!detalle) {
         message.error(`Zona ${zonaObj?.nombre || zonaId} sin precio configurado`);
         return;
@@ -289,4 +281,4 @@ export const createSeatHandlers = ({
     handleSeatClick,
     handleSelectCompleteTable
   };
-}; 
+};

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Badge, 
-  Popover, 
-  List, 
-  Button, 
-  Typography, 
+import {
+  Badge,
+  Popover,
+  List,
+  Button,
+  Typography,
   Avatar,
   Tag,
   Empty,
@@ -12,8 +12,8 @@ import {
   Alert,
   Divider
 } from 'antd';
-import { 
-  BellOutlined, 
+import {
+  BellOutlined,
   CreditCardOutlined,
   UserOutlined,
   FileTextOutlined,
@@ -35,10 +35,10 @@ const AdminNotificationCenter = () => {
   useEffect(() => {
     loadNotifications();
     loadSystemAlerts();
-    
+
     // Suscribirse a notificaciones y retornar función de limpieza
     const cleanup = subscribeToNotifications();
-    
+
     // Retornar función de limpieza
     return () => {
       if (cleanup) {
@@ -58,7 +58,6 @@ const AdminNotificationCenter = () => {
 
       if (error) {
         // Si la tabla no existe, simplemente establecer un array vacío
-        console.warn('Tabla admin_notifications no disponible:', error.message);
         setNotifications([]);
         setUnreadCount(0);
         return;
@@ -68,7 +67,6 @@ const AdminNotificationCenter = () => {
       setUnreadCount(data?.filter(n => !n.read).length || 0);
     } catch (error) {
       // Manejar cualquier otro error de manera silenciosa
-      console.warn('Error loading notifications:', error);
       setNotifications([]);
       setUnreadCount(0);
     } finally {
@@ -87,8 +85,6 @@ const AdminNotificationCenter = () => {
         .limit(10);
 
       if (error) {
-        console.warn('Tabla system_alerts no disponible, usando datos estáticos:', error.message);
-        
         // Fallback a datos estáticos si la tabla no existe
         const staticAlerts = [
           {
@@ -128,7 +124,7 @@ const AdminNotificationCenter = () => {
             created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
           }
         ];
-        
+
         setSystemAlerts(staticAlerts);
         console.log('System alerts loaded (static fallback):', staticAlerts.length);
         return;
@@ -146,10 +142,8 @@ const AdminNotificationCenter = () => {
         active: alert.active,
         category: alert.category
       }));
-      
+
       setSystemAlerts(formattedAlerts);
-      console.log('✅ System alerts loaded from database:', formattedAlerts.length);
-      
     } catch (error) {
       console.error('Error loading system alerts:', error);
       setSystemAlerts([]);
@@ -161,13 +155,13 @@ const AdminNotificationCenter = () => {
     const now = new Date();
     const date = new Date(dateString);
     const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Hace un momento';
     if (diffInMinutes < 60) return `Hace ${diffInMinutes} min`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
   };
@@ -185,7 +179,6 @@ const AdminNotificationCenter = () => {
             table: 'admin_notifications'
           },
           (payload) => {
-            console.log('🔔 Nueva notificación recibida:', payload.new);
             setNotifications(prev => [payload.new, ...prev]);
             setUnreadCount(prev => prev + 1);
           }
@@ -198,8 +191,7 @@ const AdminNotificationCenter = () => {
             table: 'admin_notifications'
           },
           (payload) => {
-            console.log('🔔 Notificación actualizada:', payload.new);
-            setNotifications(prev => 
+            setNotifications(prev =>
               prev.map(n => n.id === payload.new.id ? payload.new : n)
             );
           }
@@ -217,7 +209,6 @@ const AdminNotificationCenter = () => {
             table: 'system_alerts'
           },
           (payload) => {
-            console.log('🚨 Nueva alerta del sistema:', payload.new);
             if (payload.new.active) {
               setSystemAlerts(prev => [payload.new, ...prev]);
             }
@@ -231,30 +222,21 @@ const AdminNotificationCenter = () => {
             table: 'system_alerts'
           },
           (payload) => {
-            console.log('🚨 Alerta del sistema actualizada:', payload.new);
-            setSystemAlerts(prev => 
+            setSystemAlerts(prev =>
               prev.map(a => a.id === payload.new.id ? payload.new : a)
             );
           }
         )
         .subscribe();
-
-      console.log('✅ Suscripciones en tiempo real activadas');
-      
       // Retornar función de limpieza
       return () => {
         notificationsChannel.unsubscribe();
         alertsChannel.unsubscribe();
-        console.log('🔔 Suscripciones desactivadas');
       };
-      
+
     } catch (error) {
-      console.warn('Error setting up real-time subscriptions:', error);
-      
       // Fallback a simulación si hay error
-      console.log('[NOTIFICATIONS] Using simulated subscription due to error');
       return () => {
-        console.log('[NOTIFICATIONS] Simulated subscription cleaned up');
       };
     }
   };
@@ -268,11 +250,9 @@ const AdminNotificationCenter = () => {
         .eq('id', notificationId);
 
       if (error) {
-        console.warn('Error updating notification in database, using local update:', error.message);
-        
         // Fallback a actualización local si hay error
-        setNotifications(prev => 
-          prev.map(n => 
+        setNotifications(prev =>
+          prev.map(n =>
             n.id === notificationId ? { ...n, read: true } : n
           )
         );
@@ -281,21 +261,18 @@ const AdminNotificationCenter = () => {
       }
 
       // ✅ ACTUALIZACIÓN EXITOSA EN BASE DE DATOS
-      setNotifications(prev => 
-        prev.map(n => 
+      setNotifications(prev =>
+        prev.map(n =>
           n.id === notificationId ? { ...n, read: true, read_at: new Date().toISOString() } : n
         )
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
-      
-      console.log('✅ Notificación marcada como leída en base de datos');
-      
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      
+
       // Fallback a actualización local
-      setNotifications(prev => 
-        prev.map(n => 
+      setNotifications(prev =>
+        prev.map(n =>
           n.id === notificationId ? { ...n, read: true } : n
         )
       );
@@ -307,15 +284,15 @@ const AdminNotificationCenter = () => {
     try {
       // La tabla admin_notifications no existe, simular la funcionalidad
       console.log('Marking all notifications as read (simulated)');
-      
-      setNotifications(prev => 
+
+      setNotifications(prev =>
         prev.map(n => ({ ...n, read: true }))
       );
       setUnreadCount(0);
-      
+
       // Simular éxito
       console.log('All notifications marked as read successfully (simulated)');
-      
+
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
@@ -359,8 +336,8 @@ const AdminNotificationCenter = () => {
       <div className="flex justify-between items-center mb-4">
         <Title level={5} style={{ margin: 0 }}>Notificaciones</Title>
         {unreadCount > 0 && (
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             size="small"
             onClick={markAllAsRead}
           >
@@ -434,7 +411,7 @@ const AdminNotificationCenter = () => {
             >
               <List.Item.Meta
                 avatar={
-                  <Avatar 
+                  <Avatar
                     icon={getNotificationIcon(notification.type)}
                     size="small"
                   />
@@ -444,8 +421,8 @@ const AdminNotificationCenter = () => {
                     <Text strong={!notification.read}>
                       {notification.title}
                     </Text>
-                    <Tag 
-                      color={getPriorityColor(notification.priority)} 
+                    <Tag
+                      color={getPriorityColor(notification.priority)}
                       size="small"
                     >
                       {notification.priority?.toUpperCase()}
@@ -505,4 +482,4 @@ const AdminNotificationCenter = () => {
   );
 };
 
-export default AdminNotificationCenter; 
+export default AdminNotificationCenter;

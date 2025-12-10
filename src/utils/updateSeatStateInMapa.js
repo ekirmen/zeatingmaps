@@ -5,7 +5,6 @@
 
 export const updateSeatStateInMapa = (mapa, seatId, newState) => {
   if (!mapa?.contenido || !Array.isArray(mapa.contenido)) {
-    console.warn('⚠️ [updateSeatStateInMapa] Mapa o contenido inválido');
     return mapa;
   }
 
@@ -18,7 +17,6 @@ export const updateSeatStateInMapa = (mapa, seatId, newState) => {
           ...elemento,
           sillas: elemento.sillas.map(silla => {
             if (silla._id === seatId) {
-              console.log(`🔄 [updateSeatStateInMapa] Actualizando estado del asiento ${seatId} de "${silla.estado}" a "${newState}"`);
               return {
                 ...silla,
                 estado: newState
@@ -28,16 +26,15 @@ export const updateSeatStateInMapa = (mapa, seatId, newState) => {
           })
         };
       }
-      
+
       // Caso 2: Asiento individual
       if (elemento._id === seatId) {
-        console.log(`🔄 [updateSeatStateInMapa] Actualizando estado del asiento ${seatId} de "${elemento.estado}" a "${newState}"`);
         return {
           ...elemento,
           estado: newState
         };
       }
-      
+
       return elemento;
     })
   };
@@ -61,7 +58,7 @@ export const getSeatStateFromMapa = (mapa, seatId) => {
         return silla.estado;
       }
     }
-    
+
     // Caso 2: Asiento individual
     if (elemento._id === seatId) {
       return elemento.estado;

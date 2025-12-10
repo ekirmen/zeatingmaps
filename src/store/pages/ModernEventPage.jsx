@@ -7,10 +7,10 @@ import SeatListView from '../../components/SeatListView';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useMapaSeatsSync } from '../../hooks/useMapaSeatsSync';
 import { useSeatWorker, useZonesWorker } from '../../hooks/useSeatWorker';
-import { 
-  CalendarOutlined, 
-  EnvironmentOutlined, 
-  ClockCircleOutlined, 
+import {
+  CalendarOutlined,
+  EnvironmentOutlined,
+  ClockCircleOutlined,
   ShoppingCartOutlined,
   ShareAltOutlined,
   InfoCircleOutlined,
@@ -52,7 +52,7 @@ const ModernEventPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  
+
   // Detectar si estamos en la vista del mapa
   const isMapView = location.pathname.includes('/map');
 
@@ -62,7 +62,7 @@ const ModernEventPage = () => {
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
   const [selectedFunctionId, setSelectedFunctionId] = useState(null);
-  
+
   // Debug logs eliminados
   const [mapa, setMapa] = useState(null);
   const [mapLoading, setMapLoading] = useState(false);
@@ -77,7 +77,7 @@ const ModernEventPage = () => {
 
   // Extraer asientos del mapa usando el hook de sincronización
   const { seatsData: syncedSeats } = useMapaSeatsSync(mapa, selectedFunctionId);
-  
+
   // Procesar asientos usando Web Worker si hay muchos (50+)
   // Para listas pequeñas, el overhead del worker no vale la pena
   const { processedSeats: workerProcessedSeats } = useSeatWorker(
@@ -88,21 +88,21 @@ const ModernEventPage = () => {
       groupByZone: false
     }
   );
-  
+
   // Calcular zonas usando Web Worker si hay muchos asientos
   const { zones: calculatedZones } = useZonesWorker(
     syncedSeats && syncedSeats.length >= 50 ? syncedSeats : []
   );
-  
+
   // Preparar asientos para la vista de lista
   const seatsForList = useMemo(() => {
     if (!syncedSeats || syncedSeats.length === 0) return [];
-    
+
     // Si usamos el worker, usar los asientos procesados
     const seatsToProcess = (syncedSeats.length >= 50 && workerProcessedSeats && workerProcessedSeats.length > 0)
       ? workerProcessedSeats
       : syncedSeats;
-    
+
     return seatsToProcess.map(seat => ({
       ...seat,
       _id: seat._id || seat.id || seat.sillaId,
@@ -117,7 +117,7 @@ const ModernEventPage = () => {
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const cartItems = useCartStore((state) => state.items);
   const getItemCount = useCartStore((state) => state.getItemCount);
-  
+
   // Store unificado para sincronización con boletería
   const {
     selectedSeats,
@@ -141,7 +141,7 @@ const ModernEventPage = () => {
 
   // useSeatLocksArray eliminado - usar useSeatLockStore en su lugar
   // const { lockedSeats: realLockedSeats } = useSeatLockStore();
-  
+
   // Debug: Log de seat_locks cargados (usando useSeatLockStore)
   useEffect(() => {
     const { lockedSeats } = useSeatLockStore.getState();
@@ -200,10 +200,10 @@ const ModernEventPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Intentar obtener del caché primero
         let eventData = await indexedDBCache.getEvento(eventSlug);
-        
+
         if (!eventData) {
           // Si no está en caché, cargar desde la API
           // Usar .eq() para búsqueda exacta (case-sensitive) ya que los slugs deben ser únicos
@@ -218,15 +218,14 @@ const ModernEventPage = () => {
             throw eventError;
           }
           if (!data) {
-            console.warn('[ModernEventPage] Evento no encontrado con slug:', eventSlug);
             throw new Error('Evento no encontrado');
           }
-          
+
           eventData = data;
           // Guardar en caché
           await indexedDBCache.setEvento(eventData);
         }
-        
+
         setEvento(eventData);
 
         // Cargar recinto
@@ -242,7 +241,7 @@ const ModernEventPage = () => {
 
         // Intentar obtener funciones del caché
         let funcionesData = await indexedDBCache.getFunciones(eventData.id);
-        
+
         if (!funcionesData || funcionesData.length === 0) {
           // Si no están en caché, cargar desde la API
           funcionesData = await getFunciones(eventData.id);
@@ -251,7 +250,7 @@ const ModernEventPage = () => {
             await indexedDBCache.setFunciones(eventData.id, funcionesData);
           }
         }
-        
+
         setFunciones(funcionesData || []);
         setFuncionesForCountdown(funcionesData || []);
 
@@ -283,7 +282,7 @@ const ModernEventPage = () => {
         setLoading(false);
       }
     };
-    
+
     if (eventSlug && eventSlug.trim() !== '') {
       fetchData();
     } else {
@@ -324,11 +323,11 @@ const ModernEventPage = () => {
     if (!isMapView || !selectedFunctionId) {
       return;
     }
-    
+
     const fetchMapa = async () => {
       try {
         setMapLoading(true);
-        
+
         // Obtener sala_id de la función seleccionada (soporta esquemas nuevo y antiguo)
         const selectedFuncion = funciones.find(f => (f.id || f._id) === selectedFunctionId);
         const salaId = selectedFuncion?.sala_id ?? selectedFuncion?.sala;
@@ -344,7 +343,7 @@ const ModernEventPage = () => {
           try {
             // Intentar obtener del caché IndexedDB primero
             let mapaData = await indexedDBCache.getMapa(salaId);
-            
+
             if (!mapaData) {
               // Si no está en caché IndexedDB, cargar desde la API
               const { data, error: mapaError } = await supabase
@@ -354,7 +353,7 @@ const ModernEventPage = () => {
                 .maybeSingle();
 
               if (mapaError) throw mapaError;
-              
+
               if (data) {
                 mapaData = data;
                 // Guardar en caché IndexedDB para próximas veces
@@ -381,7 +380,7 @@ const ModernEventPage = () => {
         // Intentar obtener del caché primero (sessionStorage para acceso rápido)
         const mapaCacheKey = `mapa_${salaId}`;
         const cachedMapa = sessionStorage.getItem(mapaCacheKey);
-        
+
         if (cachedMapa) {
           try {
             const mapaData = JSON.parse(cachedMapa);
@@ -389,15 +388,13 @@ const ModernEventPage = () => {
             setMapLoading(false);
             // Cargar desde API en background para actualizar cache (no bloquea UI)
             loadMapaFromAPI().catch(err => {
-              console.warn('Error actualizando cache en background:', err);
             });
             return;
           } catch (e) {
-            console.warn('Error parsing cached mapa:', e);
             // Si hay error parseando cache, continuar a cargar desde API
           }
         }
-        
+
         // Si no hay cache válido, cargar desde API
         await loadMapaFromAPI();
       } catch (err) {
@@ -415,7 +412,7 @@ const ModernEventPage = () => {
   // Si ya estamos en el mapa, solo actualizar la función seleccionada
   const handleFunctionSelect = (functionId) => {
     setSelectedFunctionId(functionId);
-    
+
     // Si NO estamos en la vista del mapa, navegar al mapa con la función seleccionada
     if (!isMapView) {
       navigate(`/store/eventos/${eventSlug}/map?funcion=${functionId}`, { replace: false });
@@ -438,7 +435,7 @@ const ModernEventPage = () => {
 
         // Obtener recinto_id desde evento (más rápido que consultar función)
         const recintoId = evento.recinto_id || evento.recinto;
-        
+
         if (!recintoId) return;
 
         // Consulta optimizada: solo obtener el máximo quantity_step
@@ -473,7 +470,7 @@ const ModernEventPage = () => {
 
     const seatId = typeof seatOrId === 'string' ? seatOrId : (seatOrId?._id || seatOrId?.id);
     if (!seatId) {
-      
+
       return;
     }
 
@@ -524,7 +521,7 @@ const ModernEventPage = () => {
         zona: { nombre: 'General' },
         functionId: selectedFunctionId,
       };
-      
+
       addSeatToUnified(seatData);
       toggleSeat({
         sillaId: seatId,
@@ -552,7 +549,7 @@ const ModernEventPage = () => {
   };
 
   const handleTableToggle = (table) => {
-    
+
     // Por ahora solo mostrar información de la mesa
     // En el futuro se puede implementar lógica para seleccionar toda la mesa
   };
@@ -564,7 +561,7 @@ const ModernEventPage = () => {
     try {
       return typeof field === 'string' ? JSON.parse(field) : field;
     } catch (e) {
-      
+
       return null;
     }
   };
@@ -620,7 +617,7 @@ const ModernEventPage = () => {
   };
 
   // Hook para countdown - debe estar antes de cualquier early return
-  const countdownTarget = evento?.estadoVenta === 'proximamente-countdown' 
+  const countdownTarget = evento?.estadoVenta === 'proximamente-countdown'
     ? (findNextStart(funcionesForCountdown, 'internet') || findNextStart(funcionesForCountdown, 'boxOffice'))
     : null;
   const cd = useCountdown(countdownTarget);
@@ -680,21 +677,21 @@ const ModernEventPage = () => {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-4">
-                <Button 
-                  icon={<ArrowLeftOutlined />} 
+                <Button
+                  icon={<ArrowLeftOutlined />}
                   onClick={() => navigate(`/store/eventos/${eventSlug}`)}
                 >
                   Volver a Evento
                 </Button>
                 <div className="flex items-center space-x-3">
-                  <div 
+                  <div
                     className="w-12 h-8 bg-cover bg-center bg-no-repeat rounded"
                     style={{
                       backgroundImage: `url(${(() => {
                         try {
                           if (evento?.imagenes) {
-                            const images = typeof evento.imagenes === 'string' 
-                              ? JSON.parse(evento.imagenes) 
+                            const images = typeof evento.imagenes === 'string'
+                              ? JSON.parse(evento.imagenes)
                               : evento.imagenes;
                             const bannerImage = images.banner || images.portada || images.obraImagen;
                             if (bannerImage?.url || bannerImage?.publicUrl) {
@@ -716,7 +713,7 @@ const ModernEventPage = () => {
                 <Tag color={modoVenta.color}>{modoVenta.text}</Tag>
               </div>
             </div>
-            
+
             {/* Información de la función */}
             {(() => {
               const funcionSel = funciones.find(f => String(f.id) === String(selectedFunctionId));
@@ -763,7 +760,7 @@ const ModernEventPage = () => {
           <div className="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8 min-h-[600px]">
             {/* Mapa de asientos - 2/3 del ancho en desktop, 100% en móvil */}
             <div className="flex-1 lg:flex-[2] min-w-0 w-full lg:w-auto">
-              <Card 
+              <Card
                 title={
                   <div className="flex items-center">
                     <ShoppingCartOutlined className="text-blue-500 mr-2" />
@@ -827,7 +824,7 @@ const ModernEventPage = () => {
                           </Button>
                         </div>
                       )}
-                      
+
                       {viewMode === 'list' && isMobile ? (
                         seatsForList.length === 0 ? (
                           <SeatMapSkeleton />
@@ -905,10 +902,10 @@ const ModernEventPage = () => {
           className="w-full h-full object-cover"
           showDebug={DEBUG}
         />
-        
+
         {/* Overlay con gradiente */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-        
+
         {/* Contenido del hero - Solo título */}
         <div className="absolute inset-0 flex items-end">
           <div className="w-full px-4 pb-6">
@@ -929,8 +926,8 @@ const ModernEventPage = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-3 justify-end">
-                      <Button 
-                        type="primary" 
+                      <Button
+                        type="primary"
                         size="large"
                         icon={<ShareAltOutlined />}
                         onClick={() => {
@@ -1012,7 +1009,7 @@ const ModernEventPage = () => {
 
             {/* Información básica del evento - solo admin (estilo tickera) */}
             {isTenantAdmin && (
-              <Card 
+              <Card
                 title={
                   <div className="flex items-center">
                     <InfoCircleOutlined className="text-blue-500 mr-2" />
@@ -1044,21 +1041,21 @@ const ModernEventPage = () => {
                     <Tag color={modoVenta.color}>{modoVenta.text}</Tag>
                   </Descriptions.Item>
                   <Descriptions.Item label="Activo">
-                    <Badge 
-                      status={evento.activo ? 'success' : 'error'} 
-                      text={evento.activo ? 'Sí' : 'No'} 
+                    <Badge
+                      status={evento.activo ? 'success' : 'error'}
+                      text={evento.activo ? 'Sí' : 'No'}
                     />
                   </Descriptions.Item>
                   <Descriptions.Item label="Oculto">
-                    <Badge 
-                      status={evento.oculto ? 'error' : 'success'} 
-                      text={evento.oculto ? 'Sí' : 'No'} 
+                    <Badge
+                      status={evento.oculto ? 'error' : 'success'}
+                      text={evento.oculto ? 'Sí' : 'No'}
                     />
                   </Descriptions.Item>
                   <Descriptions.Item label="Desactivado">
-                    <Badge 
-                      status={evento.desactivado ? 'error' : 'success'} 
-                      text={evento.desactivado ? 'Sí' : 'No'} 
+                    <Badge
+                      status={evento.desactivado ? 'error' : 'success'}
+                      text={evento.desactivado ? 'Sí' : 'No'}
                     />
                   </Descriptions.Item>
                   <Descriptions.Item label="Creado">
@@ -1070,7 +1067,7 @@ const ModernEventPage = () => {
 
             {/* Descripción HTML */}
             {evento.descripcionHTML && (
-              <Card 
+              <Card
                 title={
                   <div className="flex items-center">
                     <FileTextOutlined className="text-green-500 mr-2" />
@@ -1079,7 +1076,7 @@ const ModernEventPage = () => {
                 }
                 className="mb-6 shadow-sm border border-gray-200 rounded-xl"
               >
-                <div 
+                <div
                   className="prose max-w-none"
                   dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
                 />
@@ -1088,7 +1085,7 @@ const ModernEventPage = () => {
 
 
             {/* Funciones disponibles */}
-            <Card 
+            <Card
               title={
                 <div className="flex items-center">
                   <CalendarOutlined className="text-blue-500 mr-2" />
@@ -1107,7 +1104,7 @@ const ModernEventPage = () => {
               ) : (
                 <div className="space-y-4">
                   {funciones.map((funcion) => (
-                    <div 
+                    <div
                       key={funcion.id || funcion._id}
                       className={`p-4 md:p-6 border-2 rounded-xl transition-all duration-200 ${
                         selectedFunctionId === (funcion.id || funcion._id)
@@ -1199,7 +1196,7 @@ const ModernEventPage = () => {
 
             {/* Analytics - solo admin */}
             {isTenantAdmin && Object.keys(analytics).length > 0 && (
-              <Card 
+              <Card
                 title={
                   <div className="flex items-center">
                     <BarChartOutlined className="text-green-500 mr-2" />
@@ -1228,7 +1225,7 @@ const ModernEventPage = () => {
             <div className="sticky top-8 space-y-6">
               {/* Estadísticas del evento - solo admin */}
               {isTenantAdmin && (
-                <Card 
+                <Card
                   title={
                     <div className="flex items-center">
                       <TrophyOutlined className="text-yellow-500 mr-2" />
@@ -1238,19 +1235,19 @@ const ModernEventPage = () => {
                   className="shadow-sm border border-gray-200 rounded-xl"
                 >
                   <div className="space-y-4">
-                    <Statistic 
-                      title="Funciones" 
-                      value={funciones.length} 
+                    <Statistic
+                      title="Funciones"
+                      value={funciones.length}
                       prefix={<CalendarOutlined />}
                     />
-                    <Statistic 
-                      title="Estado" 
+                    <Statistic
+                      title="Estado"
                       value={eventStatus.text}
                       prefix={eventStatus.icon}
                     />
                     {venueInfo && (
-                      <Statistic 
-                        title="Recinto" 
+                      <Statistic
+                        title="Recinto"
                         value={venueInfo.nombre}
                         prefix={<EnvironmentOutlined />}
                       />
@@ -1262,7 +1259,7 @@ const ModernEventPage = () => {
 
               {/* Información técnica - solo admin */}
               {isTenantAdmin && (
-                <Card 
+                <Card
                   title={
                     <div className="flex items-center">
                       <InfoCircleOutlined className="text-gray-500 mr-2" />
@@ -1294,7 +1291,7 @@ const ModernEventPage = () => {
 
               {/* Video de YouTube */}
               {evento.url_video && (
-                <Card 
+                <Card
                   title={
                     <div className="flex items-center">
                       <span className="text-xl font-semibold">Video del Evento</span>

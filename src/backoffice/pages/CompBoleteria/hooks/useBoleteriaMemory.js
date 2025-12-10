@@ -32,7 +32,7 @@ export const useBoleteriaMemory = () => {
         selectedPlantilla: newState.selectedPlantilla?.id || newState.selectedPlantilla?._id,
         timestamp: Date.now()
       };
-      
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
       setLastState(stateToSave);
     } catch (error) {
@@ -47,29 +47,27 @@ export const useBoleteriaMemory = () => {
     }
 
     // Verificar que el evento aún existe
-    const event = eventos.find(e => 
+    const event = eventos.find(e =>
       e.id === lastState.selectedEvent || e._id === lastState.selectedEvent
     );
-    
+
     if (!event) {
-      console.log('Evento guardado ya no existe');
       return null;
     }
 
     // Verificar que la función aún existe
-    const funcion = funciones.find(f => 
+    const funcion = funciones.find(f =>
       f.id === lastState.selectedFuncion || f._id === lastState.selectedFuncion
     );
-    
+
     if (!funcion) {
-      console.log('Función guardada ya no existe');
       return null;
     }
 
     // Verificar que la plantilla aún existe
     let plantilla = null;
     if (lastState.selectedPlantilla) {
-      plantilla = plantillas.find(p => 
+      plantilla = plantillas.find(p =>
         p.id === lastState.selectedPlantilla || p._id === lastState.selectedPlantilla
       );
     }

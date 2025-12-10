@@ -9,7 +9,6 @@
 export const trackEvent = (name, properties = {}) => {
   // Solo ejecutar en producción
   if (process.env.NODE_ENV !== 'production') {
-    console.log('🔍 [ANALYTICS] Evento trackeado (desarrollo):', { name, properties });
     return;
   }
 
@@ -17,12 +16,10 @@ export const trackEvent = (name, properties = {}) => {
     // Verificar que window.va existe y tiene el método track
     if (window.va && typeof window.va.track === 'function') {
       window.va.track(name, properties);
-      console.log('📊 [ANALYTICS] Evento trackeado:', { name, properties });
     } else {
       // Silenciosamente ignorar si Vercel Analytics no está disponible
       // No mostrar warning en producción para evitar ruido en la consola
       if (process.env.NODE_ENV === 'development') {
-        console.warn('⚠️ [ANALYTICS] Vercel Analytics no disponible o método track no existe');
       }
     }
   } catch (error) {

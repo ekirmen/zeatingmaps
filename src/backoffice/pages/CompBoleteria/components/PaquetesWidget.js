@@ -23,7 +23,6 @@ const PaquetesWidget = ({ eventoId, onPackageAdded }) => {
         .eq('activo', true);
 
       if (errorEvento) {
-        console.warn('Error cargando paquetes evento', errorEvento);
       }
 
       const { data: paquetesGenerales, error: errorGenerales } = await supabase
@@ -32,7 +31,6 @@ const PaquetesWidget = ({ eventoId, onPackageAdded }) => {
         .eq('activo', true);
 
       if (errorGenerales) {
-        console.warn('Error cargando paquetes generales', errorGenerales);
       }
 
       const paquetesEventoData = paquetesEvento?.map((p) => ({

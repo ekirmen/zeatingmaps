@@ -29,7 +29,6 @@ import {
 } from '@ant-design/icons';
 import { TenantEmailConfigService } from '../services/tenantEmailConfigService';
 import { supabase } from '../../supabaseClient';
-import { showEmailDiagnosticsModal } from '../utils/emailDiagnostics';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -149,24 +148,9 @@ const TenantEmailConfigPanel = () => {
       const result = await TenantEmailConfigService.testEmailConfig(values);
 
       message.success('¡Correo de prueba enviado exitosamente!');
-      if (result?.diagnostics) {
-        showEmailDiagnosticsModal(result.diagnostics, {
-          success: true,
-          title: 'Resultado de la prueba SMTP',
-          message: 'La configuración de correo respondió correctamente.'
-        });
-      }
 
     } catch (error) {
       message.error(`Error probando configuración: ${error.message}`);
-      console.error(error);
-      if (error?.diagnostics) {
-        showEmailDiagnosticsModal(error.diagnostics, {
-          success: false,
-          title: 'Error en la prueba SMTP',
-          message: error.message
-        });
-      }
     } finally {
       setTesting(false);
     }
@@ -180,25 +164,10 @@ const TenantEmailConfigPanel = () => {
       const result = await TenantEmailConfigService.sendInboundTestEmail(values);
 
       message.success('Correo de prueba enviado a email@omegaboletos.com');
-      if (result?.diagnostics) {
-        showEmailDiagnosticsModal(result.diagnostics, {
-          success: true,
-          title: 'Prueba de entrada enviada',
-          message: 'Se envió un correo de prueba a email@omegaboletos.com.'
-        });
-      }
 
     } catch (error) {
       if (error?.message) {
         message.error(`Error enviando la prueba: ${error.message}`);
-      }
-      console.error(error);
-      if (error?.diagnostics) {
-        showEmailDiagnosticsModal(error.diagnostics, {
-          success: false,
-          title: 'Error en la prueba de entrada',
-          message: error.message
-        });
       }
     } finally {
       setSendingInbound(false);
@@ -221,25 +190,10 @@ const TenantEmailConfigPanel = () => {
       const result = await TenantEmailConfigService.sendWelcomeEmail(values, welcomeEmail);
 
       message.success(`Correo de bienvenida enviado a ${welcomeEmail}`);
-      if (result?.diagnostics) {
-        showEmailDiagnosticsModal(result.diagnostics, {
-          success: true,
-          title: 'Bienvenida enviada',
-          message: `Se envió un correo de bienvenida a ${welcomeEmail}.`
-        });
-      }
 
     } catch (error) {
       if (error?.message) {
         message.error(`Error enviando la bienvenida: ${error.message}`);
-      }
-      console.error(error);
-      if (error?.diagnostics) {
-        showEmailDiagnosticsModal(error.diagnostics, {
-          success: false,
-          title: 'Error enviando bienvenida',
-          message: error.message
-        });
       }
     } finally {
       setSendingWelcome(false);

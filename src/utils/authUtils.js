@@ -7,18 +7,15 @@ import { supabase } from '../config/supabase';
 export const checkAuthentication = async () => {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
-    
+
     if (error) {
       console.error('Error verificando sesión:', error);
       return { session: null, error };
     }
 
     if (!session?.user) {
-      console.warn('No hay una sesión activa');
       return { session: null, error: new Error('No hay una sesión activa') };
     }
-
-    console.log('🔐 Usuario autenticado:', session.user.email);
     return { session, error: null };
   } catch (err) {
     console.error('Error inesperado verificando autenticación:', err);
@@ -32,12 +29,12 @@ export const checkAuthentication = async () => {
  */
 export const requireAuthentication = async () => {
   const { session, error } = await checkAuthentication();
-  
+
   if (error || !session) {
     alert('No hay una sesión activa. Por favor, inicie sesión.');
     return false;
   }
-  
+
   return true;
 };
 
@@ -57,14 +54,13 @@ export const getAuthenticatedUserId = async () => {
 export const refreshSession = async () => {
   try {
     const { data: { session }, error } = await supabase.auth.refreshSession();
-    
+
     if (error) {
       console.error('Error refrescando sesión:', error);
       return { session: null, error };
     }
 
     if (session) {
-      console.log('🔄 Sesión refrescada exitosamente');
       return { session, error: null };
     }
 
@@ -82,12 +78,11 @@ export const refreshSession = async () => {
 export const checkAndRefreshAuth = async () => {
   // Primero verificar la sesión actual
   const { session, error } = await checkAuthentication();
-  
+
   if (session && !error) {
     return { session, error: null };
   }
 
   // Si no hay sesión o hay error, intentar refrescar
-  console.log('🔄 Intentando refrescar sesión...');
   return await refreshSession();
 };

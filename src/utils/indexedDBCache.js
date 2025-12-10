@@ -27,7 +27,6 @@ class IndexedDBCache {
 
     this.initPromise = new Promise((resolve, reject) => {
       if (typeof window === 'undefined' || !window.indexedDB) {
-        console.warn('[IndexedDB] IndexedDB no está disponible');
         resolve(null);
         return;
       }
@@ -41,7 +40,6 @@ class IndexedDBCache {
 
       request.onsuccess = () => {
         this.db = request.result;
-        console.log('[IndexedDB] Base de datos inicializada');
         resolve(this.db);
       };
 
@@ -70,8 +68,6 @@ class IndexedDBCache {
           funcionesStore.createIndex('sala_id', 'sala_id', { unique: false });
           funcionesStore.createIndex('updated_at', 'updated_at', { unique: false });
         }
-
-        console.log('[IndexedDB] Stores creados');
       };
     });
 
@@ -97,19 +93,17 @@ class IndexedDBCache {
         const mapas = request.result;
         if (mapas && mapas.length > 0) {
           // Retornar el más reciente
-          const mapa = mapas.sort((a, b) => 
+          const mapa = mapas.sort((a, b) =>
             new Date(b.updated_at || b.cached_at) - new Date(a.updated_at || a.cached_at)
           )[0];
-          
+
           // Verificar si el caché es válido (24 horas)
           const cacheAge = Date.now() - new Date(mapa.cached_at).getTime();
           const maxAge = 24 * 60 * 60 * 1000; // 24 horas
-          
+
           if (cacheAge > maxAge) {
-            console.log('[IndexedDB] Caché de mapa expirado');
             resolve(null);
           } else {
-            console.log('[IndexedDB] Mapa obtenido del caché');
             resolve(mapa.data);
           }
         } else {
@@ -138,7 +132,7 @@ class IndexedDBCache {
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([STORES.MAPAS], 'readwrite');
       const store = transaction.objectStore(STORES.MAPAS);
-      
+
       const cacheEntry = {
         id: mapaId || `mapa_${salaId}_${Date.now()}`,
         sala_id: salaId,
@@ -150,7 +144,6 @@ class IndexedDBCache {
       const request = store.put(cacheEntry);
 
       request.onsuccess = () => {
-        console.log('[IndexedDB] Mapa guardado en caché');
         resolve();
       };
 
@@ -182,12 +175,10 @@ class IndexedDBCache {
           // Verificar si el caché es válido (1 hora)
           const cacheAge = Date.now() - new Date(evento.cached_at).getTime();
           const maxAge = 60 * 60 * 1000; // 1 hora
-          
+
           if (cacheAge > maxAge) {
-            console.log('[IndexedDB] Caché de evento expirado');
             resolve(null);
           } else {
-            console.log('[IndexedDB] Evento obtenido del caché');
             resolve(evento.data);
           }
         } else {
@@ -214,7 +205,7 @@ class IndexedDBCache {
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([STORES.EVENTOS], 'readwrite');
       const store = transaction.objectStore(STORES.EVENTOS);
-      
+
       const cacheEntry = {
         id: eventoData.id,
         slug: eventoData.slug,
@@ -227,7 +218,6 @@ class IndexedDBCache {
       const request = store.put(cacheEntry);
 
       request.onsuccess = () => {
-        console.log('[IndexedDB] Evento guardado en caché');
         resolve();
       };
 
@@ -264,7 +254,6 @@ class IndexedDBCache {
           });
 
           if (validFunciones.length > 0) {
-            console.log('[IndexedDB] Funciones obtenidas del caché');
             resolve(validFunciones.map(f => f.data));
           } else {
             resolve([]);
@@ -294,11 +283,11 @@ class IndexedDBCache {
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([STORES.FUNCIONES], 'readwrite');
       const store = transaction.objectStore(STORES.FUNCIONES);
-      
+
       // Eliminar funciones antiguas del mismo evento
       const index = store.index('evento_id');
       const deleteRequest = index.openCursor(IDBKeyRange.only(eventoId));
-      
+
       deleteRequest.onsuccess = (event) => {
         const cursor = event.target.result;
         if (cursor) {
@@ -319,7 +308,6 @@ class IndexedDBCache {
           });
 
           Promise.all(promises).then(() => {
-            console.log('[IndexedDB] Funciones guardadas en caché');
             resolve();
           }).catch(reject);
         }
@@ -359,7 +347,6 @@ class IndexedDBCache {
             }
             cursor.continue();
           } else {
-            console.log(`[IndexedDB] Limpieza de ${storeName}: ${deleted} entradas eliminadas`);
             resolve(deleted);
           }
         };
@@ -376,7 +363,6 @@ class IndexedDBCache {
         cleanupStore(STORES.EVENTOS),
         cleanupStore(STORES.FUNCIONES)
       ]);
-      console.log('[IndexedDB] Limpieza completada');
     } catch (error) {
       console.error('[IndexedDB] Error en limpieza:', error);
     }
@@ -392,9 +378,8 @@ class IndexedDBCache {
 
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([STORES.MAPAS, STORES.EVENTOS, STORES.FUNCIONES], 'readwrite');
-      
+
       transaction.oncomplete = () => {
-        console.log('[IndexedDB] Caché limpiado');
         resolve();
       };
 

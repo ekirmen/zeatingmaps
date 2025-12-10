@@ -35,7 +35,6 @@ const BackgroundImage = ({ config, onLoadProgress }) => {
 
     image.onerror = (err) => {
       if (!cancelled) {
-        console.warn('BackgroundImage load error', err);
         setImg(null);
         if (onLoadProgress) onLoadProgress(100);
       }

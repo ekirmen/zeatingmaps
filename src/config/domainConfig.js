@@ -161,7 +161,6 @@ export const getCurrentDomainConfig = () => {
       return buildStaticDomainConfig(window.location.hostname);
     }
   } catch (error) {
-    console.warn('Error al obtener configuración del dominio:', error);
   }
 
   return buildStaticDomainConfig('localhost');
@@ -183,7 +182,6 @@ export const isMainDomain = () => {
       return normalizeHostnameInternal(window.location.hostname) === 'sistema.veneventos.com';
     }
   } catch (error) {
-    console.warn('Error al detectar dominio principal:', error);
   }
 
   return false;

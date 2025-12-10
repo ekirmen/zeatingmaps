@@ -1,15 +1,11 @@
 // Importar handlers usando ES modules estáticos
 // Las importaciones deben ser estáticas para Vercel serverless functions
-import { handleDebug } from '../../../api-lib/payments/debug.js';
-import { handleDiagnostic } from '../../../api-lib/payments/diagnostic.js';
 import { handleDownload } from '../../../api-lib/payments/download.js';
 import { handleEmail } from '../../../api-lib/payments/email.js';
 import { handleValidate } from '../../../api-lib/payments/validate.js';
 import { handlePkpass } from '../../../api-lib/payments/pkpass.js';
 
 const ACTION_HANDLERS = {
-  debug: handleDebug,
-  diagnostic: handleDiagnostic,
   download: handleDownload,
   email: handleEmail,
   validate: handleValidate,

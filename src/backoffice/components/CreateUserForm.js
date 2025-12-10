@@ -52,9 +52,8 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
           const { data: recintos, error: recintosError } = await supabase
             .from('recintos')
             .select('id');
-          
+
           if (recintosError) {
-            console.warn('No se pudieron obtener recintos para asignar:', recintosError);
           } else if (recintos && recintos.length > 0) {
             // Crear registros en recintos_usuario para cada recinto
             const recintosUsuario = recintos.map(recinto => ({
@@ -68,13 +67,10 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
               .upsert(recintosUsuario, { onConflict: 'usuario_id,recinto_id' });
 
             if (asignacionError) {
-              console.warn('Error al asignar recintos al usuario:', asignacionError);
             } else {
-              console.log(`✅ ${recintos.length} recintos asignados automáticamente al usuario administrador`);
             }
           }
         } catch (error) {
-          console.warn('Error en asignación automática de recintos:', error);
         }
       }
 
@@ -106,14 +102,14 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
           />
         </div>
       ))}
-      
+
       <div>
         <label className="block text-sm font-medium text-gray-700">Rol:</label>
         <select
           value={formData.permisos?.role || 'usuario'}
-          onChange={(e) => setFormData({ 
-            ...formData, 
-            permisos: { ...formData.permisos, role: e.target.value } 
+          onChange={(e) => setFormData({
+            ...formData,
+            permisos: { ...formData.permisos, role: e.target.value }
           })}
           className="w-full border rounded px-3 py-2"
         >

@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
 import { AiOutlineClose, AiOutlineClockCircle } from 'react-icons/ai';
 
-const CartWithTimer = ({ 
-  carrito = [], 
-  setCarrito, 
-  onPaymentClick, 
+const CartWithTimer = ({
+  carrito = [],
+  setCarrito,
+  onPaymentClick,
   selectedClient,
   selectedAffiliate,
   fixed = false
@@ -50,10 +50,8 @@ const CartWithTimer = ({
     if (safeCarrito.length > 0) {
       setIsVisible(true);
       setTimeLeft(15 * 60); // Reset timer when cart has items
-      console.log('Carrito actualizado. Elementos:', safeCarrito.length);
     } else {
       setIsVisible(false);
-      console.log('Carrito vacío. Ocultando componente.');
     }
   }, [safeCarrito.length]);
 
@@ -63,7 +61,6 @@ const CartWithTimer = ({
         setTimeLeft(prev => {
           if (prev <= 1) {
             // Tiempo agotado - limpiar carrito
-            console.log('Tiempo agotado. Limpiando carrito automáticamente.');
             setCarrito([]);
             message.warning('Tiempo agotado. Los asientos han sido liberados.');
             return 0;
@@ -99,7 +96,7 @@ const CartWithTimer = ({
     return null;
   }
 
-  const containerClasses = fixed 
+  const containerClasses = fixed
     ? "w-full h-full bg-white border border-gray-200 overflow-hidden"
     : "fixed top-4 right-4 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[calc(100vh-2rem)] overflow-hidden";
 
@@ -118,7 +115,7 @@ const CartWithTimer = ({
 
       {/* Timer Progress Bar */}
       <div className="bg-gray-200 h-1">
-        <div 
+        <div
           className="bg-red-500 h-1 transition-all duration-1000"
           style={{ width: `${(timeLeft / (15 * 60)) * 100}%` }}
         />
@@ -144,7 +141,7 @@ const CartWithTimer = ({
                 )}
               </div>
             </div>
-            
+
             {/* Individual seats */}
             <div className="space-y-1">
               {group.asientos.map((seat) => (
@@ -197,7 +194,7 @@ const CartWithTimer = ({
           >
             Pagos/Detalles
           </button>
-          
+
           <button
             onClick={handleClearCart}
             className="w-full bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-400 transition-colors"
@@ -217,4 +214,4 @@ const CartWithTimer = ({
   );
 };
 
-export default CartWithTimer; 
+export default CartWithTimer;

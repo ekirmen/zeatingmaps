@@ -15,9 +15,9 @@ const AuthStatus = ({ showDetails = false }) => {
     const checkAuth = async () => {
       try {
         setAuthState(prev => ({ ...prev, loading: true }));
-        
+
         const { session, error } = await checkAndRefreshAuth();
-        
+
         setAuthState({
           isAuthenticated: !!session?.user,
           user: session?.user || null,
@@ -40,7 +40,6 @@ const AuthStatus = ({ showDetails = false }) => {
 
     // Escuchar cambios en el estado de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 Auth state changed:', event, session?.user?.email);
       setAuthState({
         isAuthenticated: !!session?.user,
         user: session?.user || null,
@@ -59,10 +58,10 @@ const AuthStatus = ({ showDetails = false }) => {
 
   if (showDetails) {
     return (
-      <div style={{ 
-        padding: '10px', 
-        border: '1px solid #ccc', 
-        borderRadius: '5px', 
+      <div style={{
+        padding: '10px',
+        border: '1px solid #ccc',
+        borderRadius: '5px',
         margin: '10px 0',
         backgroundColor: authState.isAuthenticated ? '#e8f5e8' : '#ffe8e8'
       }}>
@@ -85,15 +84,15 @@ const AuthStatus = ({ showDetails = false }) => {
   }
 
   return (
-    <div style={{ 
-      padding: '5px 10px', 
-      borderRadius: '3px', 
+    <div style={{
+      padding: '5px 10px',
+      borderRadius: '3px',
       fontSize: '12px',
       backgroundColor: authState.isAuthenticated ? '#e8f5e8' : '#ffe8e8',
       color: authState.isAuthenticated ? '#2d5a2d' : '#8b0000'
     }}>
-      {authState.isAuthenticated ? 
-        `✅ ${authState.user?.email}` : 
+      {authState.isAuthenticated ?
+        `✅ ${authState.user?.email}` :
         '❌ No autenticado'
       }
     </div>

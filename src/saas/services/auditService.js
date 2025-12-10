@@ -36,7 +36,6 @@ class AuditService {
       localStorage.setItem('audit_logs_backup', JSON.stringify(existing.slice(-500)));
     } catch (storageError) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn('[AUDIT] No se pudo guardar el log localmente:', storageError);
       }
     }
   }
@@ -266,7 +265,7 @@ class AuditService {
   // Obtener cambios entre objetos
   getObjectChanges(oldObj, newObj) {
     const changes = {};
-    
+
     for (const key in newObj) {
       if (oldObj[key] !== newObj[key]) {
         changes[key] = {
@@ -275,7 +274,7 @@ class AuditService {
         };
       }
     }
-    
+
     return changes;
   }
 
@@ -301,23 +300,23 @@ class AuditService {
       if (filters.tenantId) {
         query = query.eq('tenant_id', filters.tenantId);
       }
-      
+
       if (filters.action) {
         query = query.eq('action', filters.action);
       }
-      
+
       if (filters.userId) {
         query = query.eq('user_id', filters.userId);
       }
-      
+
       if (filters.startDate) {
         query = query.gte('created_at', filters.startDate);
       }
-      
+
       if (filters.endDate) {
         query = query.lte('created_at', filters.endDate);
       }
-      
+
       if (filters.limit) {
         query = query.limit(filters.limit);
       }
@@ -400,7 +399,7 @@ class AuditService {
   async exportAuditLogs(filters = {}) {
     try {
       const logs = await this.getAuditLogs({ ...filters, limit: 10000 });
-      
+
       const csvData = logs.map(log => ({
         created_at: log.created_at,
         action: log.action,
@@ -459,7 +458,7 @@ class AuditService {
       if (filters.tenantId) {
         query = query.eq('tenant_id', filters.tenantId);
       }
-      
+
       if (filters.limit) {
         query = query.limit(filters.limit);
       }

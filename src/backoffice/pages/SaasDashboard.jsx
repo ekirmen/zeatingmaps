@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Alert, Tabs, Badge, Avatar, message, Descriptions, Divider, List, Drawer, Dropdown, Menu } from 'antd';
-import { 
-  UserOutlined, 
-  BankOutlined, 
-  DollarOutlined, 
-  CheckCircleOutlined, 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  UserOutlined,
+  BankOutlined,
+  DollarOutlined,
+  CheckCircleOutlined,
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   EyeOutlined,
   SettingOutlined,
   BarChartOutlined,
@@ -49,7 +49,7 @@ const SaasDashboard = () => {
   const [clientDataDrawerVisible, setClientDataDrawerVisible] = useState(false);
   const [selectedClientData, setSelectedClientData] = useState(null);
   const [form] = Form.useForm();
-  
+
   // Nuevos estados para funcionalidades mejoradas
   const [notifications, setNotifications] = useState([]);
   const [filters, setFilters] = useState({
@@ -65,7 +65,7 @@ const SaasDashboard = () => {
     topPerformingTenants: [],
     recentActivity: []
   });
-  
+
   const [stats, setStats] = useState({
     totalTenants: 0,
     activeTenants: 0,
@@ -83,8 +83,6 @@ const SaasDashboard = () => {
   const loadNotifications = useCallback(async () => {
     try {
       // La tabla notifications no existe, usar datos simulados
-      console.log('Notifications table not available, using simulated data');
-      
       // Datos simulados para notificaciones
       const simulatedNotifications = [
         {
@@ -112,9 +110,9 @@ const SaasDashboard = () => {
           created_at: new Date(Date.now() - 7200000).toISOString()
         }
       ];
-      
+
       setNotifications(simulatedNotifications);
-      
+
     } catch (error) {
       console.error('Error loading notifications:', error);
       setNotifications([]);
@@ -128,12 +126,12 @@ const SaasDashboard = () => {
       const currentDate = new Date();
       const lastMonth = new Date();
       lastMonth.setMonth(lastMonth.getMonth() - 1);
-      
+
       // Formato de fecha CORRECTO para Supabase
       const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const lastMonthStart = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
       const lastMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
-      
+
       const [currentMonthTenants, lastMonthTenants] = await Promise.all([
         supabase.from('tenants').select('id').gte('created_at', currentMonthStart.toISOString()),
         supabase.from('tenants').select('id').gte('created_at', lastMonthStart.toISOString()).lt('created_at', lastMonthEnd.toISOString())
@@ -201,7 +199,6 @@ const SaasDashboard = () => {
       await logAuditAction('backup_created', { tenant_id: tenantId });
     } catch (error) {
       // Si la tabla no existe, mostrar mensaje alternativo
-      console.log('Backup table not available, using alternative method');
       message.success('Backup simulado exitosamente');
       await logAuditAction('backup_created', { tenant_id: tenantId });
     }
@@ -211,7 +208,7 @@ const SaasDashboard = () => {
     setLoading(true);
     try {
       let query = supabase.from('tenants').select('*');
-      
+
       // Aplicar filtros avanzados
       if (filters.status !== 'all') {
         query = query.eq('status', filters.status);
@@ -222,9 +219,9 @@ const SaasDashboard = () => {
       if (filters.searchTerm) {
         query = query.or(`company_name.ilike.%${filters.searchTerm}%,contact_email.ilike.%${filters.searchTerm}%`);
       }
-      
+
       const { data, error } = await query.order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       setTenants(data || []);
     } catch (error) {
@@ -302,7 +299,7 @@ const SaasDashboard = () => {
 
   const handleViewTenant = async (tenant) => {
     setSelectedTenant(tenant);
-    
+
     // Cargar datos específicos del tenant
     try {
       // Cargar eventos del tenant
@@ -353,7 +350,7 @@ const SaasDashboard = () => {
       console.error('Error loading tenant data:', error);
       message.error('Error al cargar datos del tenant');
     }
-    
+
     setTenantDetailVisible(true);
   };
 
@@ -375,7 +372,7 @@ const SaasDashboard = () => {
           .from('tenants')
           .update(values)
           .eq('id', editingTenant.id);
-        
+
         if (error) throw error;
         message.success('Tenant actualizado exitosamente');
         await logAuditAction('tenant_updated', { tenant_id: editingTenant.id, changes: values });
@@ -390,16 +387,16 @@ const SaasDashboard = () => {
           // Si no se especifica full_url, generarla automáticamente
           full_url: values.full_url || (values.subdomain && values.domain ? `${values.subdomain}.${values.domain}` : values.domain)
         };
-        
+
         const { error } = await supabase
           .from('tenants')
           .insert([tenantData]);
-        
+
         if (error) throw error;
         message.success('Tenant creado exitosamente');
         await logAuditAction('tenant_created', { tenant_data: tenantData });
       }
-      
+
       setModalVisible(false);
       loadTenants();
       loadStats();
@@ -415,7 +412,7 @@ const SaasDashboard = () => {
         .from('tenants')
         .delete()
         .eq('id', tenantId);
-      
+
       if (error) throw error;
       message.success('Tenant eliminado exitosamente');
       await logAuditAction('tenant_deleted', { tenant_id: tenantId });
@@ -455,8 +452,8 @@ const SaasDashboard = () => {
       key: 'company_name',
       render: (text, record) => (
         <Space>
-          <Avatar 
-            src={record.logo_url} 
+          <Avatar
+            src={record.logo_url}
             icon={<BankOutlined />}
             style={{ backgroundColor: record.primary_color }}
           />
@@ -498,9 +495,9 @@ const SaasDashboard = () => {
       key: 'status',
       render: (status) => (
         <Tag color={getStatusColor(status)}>
-          {status === 'active' ? 'Activo' : 
-           status === 'inactive' ? 'Inactivo' : 
-           status === 'suspended' ? 'Suspendido' : 
+          {status === 'active' ? 'Activo' :
+           status === 'inactive' ? 'Inactivo' :
+           status === 'suspended' ? 'Suspendido' :
            status === 'pending' ? 'Pendiente' : status}
         </Tag>
       ),
@@ -577,7 +574,7 @@ const SaasDashboard = () => {
                 <Button icon={<BellOutlined />} shape="circle" />
               </Badge>
             </Dropdown>
-            
+
             <Dropdown overlay={
               <Menu>
                 <Menu.Item key="tickets" icon={<CustomerServiceOutlined />}>
@@ -813,8 +810,8 @@ const SaasDashboard = () => {
             </Select>
           </Col>
           <Col xs={24} sm={4}>
-            <Button 
-              icon={<FilterOutlined />} 
+            <Button
+              icon={<FilterOutlined />}
               onClick={() => loadTenants()}
               type="primary"
             >
@@ -823,8 +820,8 @@ const SaasDashboard = () => {
           </Col>
           <Col xs={24} sm={6}>
             <Space>
-              <Button 
-                icon={<ReloadOutlined />} 
+              <Button
+                icon={<ReloadOutlined />}
                 onClick={() => {
                   setFilters({status: 'all', plan: 'all', dateRange: null, searchTerm: ''});
                   loadTenants();
@@ -832,8 +829,8 @@ const SaasDashboard = () => {
               >
                 Limpiar
               </Button>
-              <Button 
-                icon={<ExportOutlined />} 
+              <Button
+                icon={<ExportOutlined />}
                 onClick={() => message.info('Exportar datos')}
               >
                 Exportar
@@ -1016,9 +1013,9 @@ const SaasDashboard = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Estado">
                 <Tag color={getStatusColor(selectedTenant.status)}>
-                  {selectedTenant.status === 'active' ? 'Activo' : 
-                   selectedTenant.status === 'inactive' ? 'Inactivo' : 
-                   selectedTenant.status === 'suspended' ? 'Suspendido' : 
+                  {selectedTenant.status === 'active' ? 'Activo' :
+                   selectedTenant.status === 'inactive' ? 'Inactivo' :
+                   selectedTenant.status === 'suspended' ? 'Suspendido' :
                    selectedTenant.status === 'pending' ? 'Pendiente' : selectedTenant.status}
                 </Tag>
               </Descriptions.Item>
@@ -1035,8 +1032,8 @@ const SaasDashboard = () => {
             <Title level={4}>Acciones de Soporte</Title>
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <Button 
-                  icon={<ToolOutlined />} 
+                <Button
+                  icon={<ToolOutlined />}
                   onClick={() => handleSupportAction(selectedTenant)}
                   block
                 >
@@ -1044,8 +1041,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<DatabaseOutlined />} 
+                <Button
+                  icon={<DatabaseOutlined />}
                   onClick={() => window.open(`https://${selectedTenant.full_url || `${selectedTenant.subdomain}.${selectedTenant.domain || 'veneventos.com'}`}`, '_blank')}
                   block
                 >
@@ -1053,8 +1050,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<KeyOutlined />} 
+                <Button
+                  icon={<KeyOutlined />}
                   onClick={() => window.open(`https://${selectedTenant.full_url || `${selectedTenant.subdomain}.${selectedTenant.domain || 'veneventos.com'}`}/dashboard`, '_blank')}
                   block
                 >
@@ -1062,8 +1059,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<FileTextOutlined />} 
+                <Button
+                  icon={<FileTextOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'events')}
                   block
                 >
@@ -1071,8 +1068,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<UserOutlined />} 
+                <Button
+                  icon={<UserOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'users')}
                   block
                 >
@@ -1080,8 +1077,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<ShoppingOutlined />} 
+                <Button
+                  icon={<ShoppingOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'products')}
                   block
                 >
@@ -1089,8 +1086,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<CreditCardOutlined />} 
+                <Button
+                  icon={<CreditCardOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'tickets')}
                   block
                 >
@@ -1098,8 +1095,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<CalendarOutlined />} 
+                <Button
+                  icon={<CalendarOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'functions')}
                   block
                 >
@@ -1107,8 +1104,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<BankOutlined />} 
+                <Button
+                  icon={<BankOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'venues')}
                   block
                 >
@@ -1116,8 +1113,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<BarChartOutlined />} 
+                <Button
+                  icon={<BarChartOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'commissions')}
                   block
                 >
@@ -1125,8 +1122,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<SettingOutlined />} 
+                <Button
+                  icon={<SettingOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'zones')}
                   block
                 >
@@ -1134,8 +1131,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<GlobalOutlined />} 
+                <Button
+                  icon={<GlobalOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'customization')}
                   block
                 >
@@ -1143,8 +1140,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<DollarOutlined />} 
+                <Button
+                  icon={<DollarOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'sales')}
                   block
                 >
@@ -1152,8 +1149,8 @@ const SaasDashboard = () => {
                 </Button>
               </Col>
               <Col span={12}>
-                <Button 
-                  icon={<FileTextOutlined />} 
+                <Button
+                  icon={<FileTextOutlined />}
                   onClick={() => handleViewClientData(selectedTenant, 'reports')}
                   block
                 >
@@ -1200,8 +1197,8 @@ const SaasDashboard = () => {
         visible={clientDataDrawerVisible}
       >
         {selectedClientData && (
-          <ClientDataViewer 
-            tenant={selectedClientData.tenant} 
+          <ClientDataViewer
+            tenant={selectedClientData.tenant}
             dataType={selectedClientData.type}
             onAction={handleSupportAction}
           />
@@ -1401,7 +1398,7 @@ const TenantConfigSupport = ({ tenant, onAction }) => {
         showIcon
         style={{ marginBottom: '16px' }}
       />
-      
+
       <List>
         <List.Item>
           <List.Item.Meta
@@ -1414,7 +1411,7 @@ const TenantConfigSupport = ({ tenant, onAction }) => {
             <Option value="enterprise">Empresarial</Option>
           </Select>
         </List.Item>
-        
+
         <List.Item>
           <List.Item.Meta
             title="Cambiar Estado"
@@ -1722,7 +1719,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
         <Title level={4}>{getDataTypeTitle()} de {tenant.company_name}</Title>
         <Text type="secondary">Total: {data.length} elementos</Text>
       </div>
-      
+
       <List
         loading={loading}
         dataSource={data}

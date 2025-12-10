@@ -14,15 +14,6 @@ const ClientModals = ({
   handleUnifiedSearch,
   clearSearchResults,
 }) => {
-  console.log('🔍 [ClientModals] Props recibidas:', {
-    isSearchModalVisible,
-    searchResults: searchResults?.length || 0,
-    paymentResults: paymentResults?.length || 0,
-    searchLoading,
-    onSearchCancel: typeof onSearchCancel,
-    onClientSelect: typeof onClientSelect,
-    handleUnifiedSearch: typeof handleUnifiedSearch
-  });
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [newClientForm, setNewClientForm] = useState({
@@ -32,8 +23,6 @@ const ClientModals = ({
   });
 
   const handleSearch = async () => {
-    console.log('🔍 [ClientModals] Iniciando búsqueda con término:', searchTerm);
-    console.log('🔍 [ClientModals] handleUnifiedSearch type:', typeof handleUnifiedSearch);
     if (!searchTerm.trim()) {
       message.warning('Por favor ingresa un término de búsqueda');
       return;
@@ -41,9 +30,7 @@ const ClientModals = ({
 
     try {
       if (handleUnifiedSearch && typeof handleUnifiedSearch === 'function') {
-        console.log('🔍 [ClientModals] Usando handleUnifiedSearch');
         const result = await handleUnifiedSearch(searchTerm);
-        console.log('🔍 [ClientModals] Resultado de búsqueda:', result);
       } else {
         // Fallback to direct search if handleUnifiedSearch is not provided
         const { data, error } = await supabase
@@ -166,8 +153,6 @@ const ClientModals = ({
       title="Buscar Cuenta"
       open={isSearchModalVisible}
       onCancel={() => {
-        console.log('🔍 [ClientModals] onCancel llamado');
-        console.log('🔍 [ClientModals] onSearchCancel type:', typeof onSearchCancel);
         resetSearch();
         if (typeof onSearchCancel === 'function') {
           onSearchCancel();
@@ -192,9 +177,9 @@ const ClientModals = ({
         />
 
         {/* Botón para crear nueva cuenta */}
-        <Button 
-          type="default" 
-          block 
+        <Button
+          type="default"
+          block
           icon={<AiOutlineUserAdd />}
           onClick={() => setIsAddingAccount(true)}
         >
@@ -222,8 +207,8 @@ const ClientModals = ({
               onChange={(e) => setNewClientForm({...newClientForm, telefono: e.target.value})}
             />
             <div className="flex gap-2">
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 onClick={handleAddClient}
                 disabled={!newClientForm.nombre || !newClientForm.email}
               >

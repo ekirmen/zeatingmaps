@@ -13,7 +13,7 @@ export class TicketEmailService {
 
       // Generar el HTML del ticket
       const ticketHTML = this.generateTicketHTML(ticketData);
-      
+
       // Enviar correo usando la configuración de la empresa
       const result = await this.sendEmail({
         to: recipientEmail,
@@ -34,15 +34,6 @@ export class TicketEmailService {
     try {
       // Aquí implementarías la lógica real de envío usando nodemailer o similar
       // Por ahora simulamos el envío
-      
-      console.log('Enviando correo con configuración:', {
-        to,
-        subject,
-        smtpHost: emailConfig.smtp_host,
-        smtpPort: emailConfig.smtp_port,
-        from: emailConfig.from_email
-      });
-
       // Simular delay de envío
       await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -244,7 +235,7 @@ export class TicketEmailService {
       }
 
       const ticketsHTML = this.generateMultipleTicketsHTML(ticketsData);
-      
+
       const result = await this.sendEmail({
         to: recipientEmail,
         subject: `Tus tickets para ${ticketsData.eventName}`,

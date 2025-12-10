@@ -100,44 +100,35 @@ const NUM_PLAZOS = [2, 3, 4, 5, 6, 7, 8, 10, 12];
 
 const Funciones = () => {
   const { currentTenant } = useTenant();
-  
+
   // Verificar autenticación al cargar el componente
   useEffect(() => {
     const checkInitialAuth = async () => {
-      console.log('🔍 [Funciones] Verificando autenticación inicial...');
       const { session, error } = await checkAndRefreshAuth();
       if (error || !session?.user) {
-        console.warn('⚠️ [Funciones] Usuario no autenticado al cargar componente');
-        console.log('🔍 [Funciones] Estado:', { session: !!session, user: !!session?.user, error });
       } else {
-        console.log('✅ [Funciones] Usuario autenticado:', session.user.email);
       }
     };
-    
+
     checkInitialAuth();
-    
+
     // Exponer función de prueba globalmente para debugging
     window.testFuncionesAuth = async () => {
-      console.log('🧪 Probando autenticación de funciones...');
       try {
         const { session, error } = await checkAndRefreshAuth();
         if (error || !session?.user) {
           console.error('❌ No hay sesión activa');
           return;
         }
-        
-        console.log('✅ Usuario autenticado:', session.user.email);
-        
         // Probar lectura
         const { data, error: readError } = await supabase
           .from('funciones')
           .select('id, fecha_celebracion')
           .limit(1);
-          
+
         if (readError) {
           console.error('❌ Error leyendo funciones:', readError);
         } else {
-          console.log('✅ Lectura exitosa:', data);
         }
       } catch (err) {
         console.error('❌ Error en prueba:', err);
@@ -146,44 +137,31 @@ const Funciones = () => {
 
     // Función para verificar el estado actual del componente
     window.checkFuncionesState = () => {
-      console.log('🔍 Estado actual del componente Funciones:');
-      console.log('  - Funciones en estado:', funciones?.length || 0);
-      console.log('  - Sala seleccionada:', salaSeleccionada);
-      console.log('  - Recinto seleccionado:', recintoSeleccionado);
-      console.log('  - Eventos:', eventos?.length || 0);
-      console.log('  - Funciones array:', funciones);
     };
 
     // Función para forzar la recarga de funciones
     window.reloadFunciones = async () => {
-      console.log('🔄 Forzando recarga de funciones...');
       await loadFunciones();
-      console.log('✅ Recarga completada');
     };
 
     // Función para probar carga de funciones
     window.testLoadFunciones = async () => {
-      console.log('🧪 Probando carga de funciones...');
       try {
         // Probar diferentes nombres de tabla
         const tableNames = ['funciones', 'function', 'sessions', 'eventos_sessions'];
-        
+
         for (const tableName of tableNames) {
-          console.log(`🔍 Probando tabla: ${tableName}`);
-          
           const { data, error } = await supabase
             .from(tableName)
             .select('*')
             .limit(1);
-            
+
           if (error) {
             if (error.code === 'PGRST116') {
               console.log(`❌ Tabla '${tableName}' no existe (404)`);
             } else {
-              console.log(`⚠️ Tabla '${tableName}' existe pero hay error:`, error.message);
             }
           } else {
-            console.log(`✅ Tabla '${tableName}' existe y es accesible:`, data);
             break; // Si encontramos una tabla que funciona, usarla
           }
         }
@@ -193,11 +171,10 @@ const Funciones = () => {
           .from('funciones')
           .select('id, fecha_celebracion, sala_id, evento_id, tenant_id, creadopor')
           .limit(10);
-          
+
         if (allError) {
           console.error('❌ Error leyendo todas las funciones:', allError);
         } else {
-          console.log('✅ Todas las funciones:', allFunciones);
         }
 
         // Probar con filtro de sala
@@ -206,11 +183,10 @@ const Funciones = () => {
             .from('funciones')
             .select('id, fecha_celebracion, sala_id, evento_id, tenant_id, creadopor')
             .eq('sala_id', salaSeleccionada.id);
-            
+
           if (salaError) {
             console.error('❌ Error leyendo funciones de sala:', salaError);
           } else {
-            console.log('✅ Funciones de sala', salaSeleccionada.id, ':', salaFunciones);
           }
         }
       } catch (err) {
@@ -219,15 +195,11 @@ const Funciones = () => {
     };
   }, []);
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
-  
+
   // Debug: Mostrar estado de recinto y sala
   useEffect(() => {
-    console.log('🔍 [Funciones] Estado actual:');
-    console.log('  - Recinto seleccionado:', recintoSeleccionado);
-    console.log('  - Sala seleccionada:', salaSeleccionada);
-    console.log('  - Recintos disponibles:', recintos?.length || 0);
   }, [recintoSeleccionado, salaSeleccionada, recintos]);
-  
+
   // Debug eliminado
   const [eventos, setEventos] = useState([]);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
@@ -368,14 +340,14 @@ const Funciones = () => {
     try {
       const date = new Date(isoString);
       if (isNaN(date.getTime())) return '';
-      
+
       // Get local date components
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
-      
+
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     } catch (error) {
       console.error('Error formatting datetime-local:', error);
@@ -392,16 +364,16 @@ const Funciones = () => {
   // Helper function to convert empty strings to null for UUID fields
   const formatUUIDField = (value) => {
     if (value === '' || value === null || value === undefined) return null;
-    
+
     // Convert to string if it's a number or other type
     const stringValue = String(value);
-    
+
     // Check if it's a valid UUID format (basic check)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (uuidRegex.test(stringValue)) {
       return stringValue;
     }
-    
+
     // If it's not a valid UUID, return null
     /* omitido */
     return null;
@@ -410,23 +382,23 @@ const Funciones = () => {
   // Helper function for ID fields that can be integers or UUIDs
   const formatIDField = (value) => {
     if (value === '' || value === null || value === undefined) return null;
-    
+
     // If it's already a number, return it
     if (typeof value === 'number') return value;
-    
+
     // Convert to string and check if it's a number
     const stringValue = String(value);
     const numValue = parseInt(stringValue);
-    
+
     // If it's a valid number, return it
     if (!isNaN(numValue)) return numValue;
-    
+
     // If it's not a number, check if it's a valid UUID
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (uuidRegex.test(stringValue)) {
       return stringValue;
     }
-    
+
     // If it's neither a number nor a UUID, return null
     /* omitido */
     return null;
@@ -461,7 +433,7 @@ const Funciones = () => {
     const day = String(fecha.getDate()).padStart(2, '0');
     const hours = String(fecha.getHours()).padStart(2, '0');
     const minutes = String(fecha.getMinutes()).padStart(2, '0');
-    
+
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
@@ -557,18 +529,15 @@ const Funciones = () => {
   useEffect(() => {
     const fetchEventos = async () => {
       if (salaSeleccionada && recintoSeleccionado) {
-        console.log('🔍 [fetchEventos] Cargando eventos para recinto:', recintoSeleccionado.id, 'sala:', salaSeleccionada.id);
-        
         const { data, error } = await supabase
           .from('eventos')
           .select('*')
           .eq('recinto', recintoSeleccionado.id)
           .eq('sala', salaSeleccionada.id);
-        
+
         if (error) {
           console.error('❌ [fetchEventos] Error cargando eventos:', error);
         } else {
-          console.log('✅ [fetchEventos] Eventos cargados:', data?.length || 0);
           setEventos(data || []);
         }
       }
@@ -580,12 +549,8 @@ const Funciones = () => {
   // Fetch funciones
   const loadFunciones = useCallback(async () => {
     if (!salaSeleccionada?.id) {
-      console.log('⚠️ [loadFunciones] No hay sala seleccionada');
       return;
     }
-    
-    console.log('🔍 [loadFunciones] Cargando funciones para sala:', salaSeleccionada.id);
-    
     try {
       // Intentar con la tabla 'funciones' primero
       let { data, error } = await supabase
@@ -649,33 +614,27 @@ const Funciones = () => {
         `)
         .eq('sala_id', salaSeleccionada.id)
         .order('fecha_celebracion', { ascending: true });
-      
+
       // Si la tabla 'funciones' no existe (404), intentar con nombres alternativos
       if (error && error.code === 'PGRST116') {
-        console.log('⚠️ [loadFunciones] Tabla "funciones" no existe, probando alternativas...');
-        
         const alternativeTables = ['sessions', 'eventos_sessions', 'function'];
-        
+
         for (const tableName of alternativeTables) {
-          console.log(`🔍 [loadFunciones] Probando tabla: ${tableName}`);
-          
           const result = await supabase
             .from(tableName)
             .select('*')
             .eq('sala_id', salaSeleccionada.id)
             .limit(10);
-            
+
           if (!result.error) {
-            console.log(`✅ [loadFunciones] Tabla encontrada: ${tableName}`);
             data = result.data;
             error = null;
             break;
           } else if (result.error.code !== 'PGRST116') {
-            console.log(`⚠️ [loadFunciones] Tabla ${tableName} existe pero hay error:`, result.error.message);
           }
         }
       }
-      
+
       if (error) {
         console.error('❌ [loadFunciones] Error cargando funciones:', error);
         console.error('🔍 [loadFunciones] Detalles del error:', {
@@ -684,19 +643,16 @@ const Funciones = () => {
           details: error.details,
           hint: error.hint
         });
-        
+
         // Si es un error 404, mostrar mensaje específico
         if (error.code === 'PGRST116') {
           console.error('💡 [loadFunciones] La tabla "funciones" no existe en la base de datos');
           console.error('💡 [loadFunciones] Necesitas crear la tabla o verificar el nombre correcto');
         }
-        
+
         setFunciones([]);
         return;
       }
-      
-      console.log('✅ [loadFunciones] Funciones cargadas:', data?.length || 0);
-      console.log('📋 [loadFunciones] Datos de funciones:', data);
       setFunciones(data || []);
     } catch (error) {
       console.error('❌ [loadFunciones] Error inesperado:', error);
@@ -860,27 +816,17 @@ const Funciones = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       // Verificar autenticación antes de proceder
-      console.log('🔍 Verificando autenticación antes de crear función...');
-      
       const { session, error: authError } = await checkAndRefreshAuth();
       if (authError || !session?.user) {
         console.error('❌ Error de autenticación:', authError);
-        console.log('🔍 Estado de autenticación:', { session: !!session, user: !!session?.user, error: authError });
-        
         // Intentar obtener más información sobre el estado de autenticación
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        console.log('🔍 Sesión actual:', { session: !!currentSession, user: !!currentSession?.user, error: sessionError });
-        
         alert('Error de autenticación. Por favor, inicie sesión nuevamente.');
         return;
       }
-
-      console.log('✅ Usuario autenticado:', session.user.email);
-      console.log('🆔 User ID:', session.user.id);
-
       // Validar que la fecha de inicio de venta sea anterior a la fecha de celebración
       if (new Date(nuevaFuncion.fechaInicioVenta) >= new Date(nuevaFuncion.fechaCelebracion)) {
         alert('La fecha de inicio de venta debe ser anterior a la fecha de celebración');
@@ -1000,9 +946,6 @@ const Funciones = () => {
         recinto_id: formatIDField(recintoSeleccionado?.id),
         creadopor: session.user.id // Usar el ID del usuario de la sesión
       };
-
-      console.log('📝 Datos de función a guardar:', funcionData);
-
       // Validación final antes de enviar
       if (!funcionData.sala_id) {
         alert('Error: El ID de la sala no puede ser null. Por favor, seleccione una sala.');
@@ -1016,15 +959,12 @@ const Funciones = () => {
       }
 
       if (editingFuncion) {
-        console.log('🔄 Actualizando función existente:', editingFuncion.id);
-        console.log('📝 Datos a actualizar:', funcionData);
-        
         const { data: updatedData, error } = await supabase
           .from('funciones')
           .update(funcionData)
           .eq('id', editingFuncion.id)
           .select();
-        
+
         if (error) {
           console.error('❌ Error actualizando función:', error);
           console.error('🔍 Detalles del error:', {
@@ -1035,17 +975,13 @@ const Funciones = () => {
           });
           throw error;
         }
-        console.log('✅ Función actualizada exitosamente:', updatedData);
         alert('Función actualizada exitosamente');
       } else {
-        console.log('➕ Creando nueva función');
-        console.log('📝 Datos a insertar:', funcionData);
-        
         const { data: insertedData, error } = await supabase
           .from('funciones')
           .insert([funcionData])
           .select();
-        
+
         if (error) {
           console.error('❌ Error creando función:', error);
           console.error('🔍 Detalles del error:', {
@@ -1056,34 +992,28 @@ const Funciones = () => {
           });
           throw error;
         }
-        console.log('✅ Función creada exitosamente:', insertedData);
-        
         // Enviar notificación push si la función está en canal internet
         if (insertedData && insertedData[0]) {
           try {
             // Asegurar que la función tenga los datos necesarios para la notificación
             const funcionCreada = insertedData[0];
-            
+
             // Si canales viene como string, parsearlo para la verificación
             if (typeof funcionCreada.canales === 'string') {
               try {
                 funcionCreada.canales = JSON.parse(funcionCreada.canales);
               } catch (e) {
-                console.warn('[Funciones] Error parseando canales para notificación:', e);
               }
             }
-            
+
             const { sendFunctionCreatedNotification } = await import('../../services/eventPushNotifications');
             const result = await sendFunctionCreatedNotification(funcionCreada);
-            
+
             if (result) {
               if (result.skipped) {
-                console.log('[Funciones] Función no está en canal internet, notificación omitida');
               } else if (result.sent > 0) {
-                console.log(`[Funciones] ✅ Notificaciones push enviadas: ${result.sent} de ${result.recipients} usuarios`);
                 alert(`Función creada exitosamente. Notificaciones enviadas a ${result.sent} usuarios.`);
               } else {
-                console.log('[Funciones] No hay usuarios suscritos a notificaciones push');
                 alert('Función creada exitosamente');
               }
             } else {
@@ -1102,7 +1032,7 @@ const Funciones = () => {
       setModalIsOpen(false);
       setEditingFuncion(null);
       resetNuevaFuncion();
-      
+
       loadFunciones();
     } catch (error) {
       console.error('❌ Error al guardar la función:', error);
@@ -1258,7 +1188,7 @@ const Funciones = () => {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-900">Funciones</h1>
-              <button 
+              <button
                 onClick={() => {
                   setRecintoSeleccionado(null);
                   setSalaSeleccionada(null);
@@ -1269,7 +1199,7 @@ const Funciones = () => {
                 Limpiar Filtros
               </button>
             </div>
-            
+
             <div className="flex flex-wrap items-end gap-3">
               <div className="min-w-[220px]">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Recinto</label>
@@ -1327,7 +1257,7 @@ const Funciones = () => {
                 </div>
               )}
 
-              <button 
+              <button
                 onClick={() => {
                   setEditingFuncion(null);
                   loadLastNuevaFuncion();
@@ -1385,7 +1315,7 @@ const Funciones = () => {
                 {funciones.length === 0 ? (
                   <tr>
                     <td colSpan="11" className="px-4 py-8 text-center text-gray-500 bg-gray-50">
-                      {recintoSeleccionado || salaSeleccionada || eventoSeleccionado 
+                      {recintoSeleccionado || salaSeleccionada || eventoSeleccionado
                         ? 'No se encontraron funciones con los filtros seleccionados'
                         : 'No hay funciones creadas. Crea una nueva función para comenzar.'
                       }
@@ -1393,11 +1323,11 @@ const Funciones = () => {
                   </tr>
                 ) : (
                   funciones.map((funcion, index) => (
-                    <tr 
-                      key={funcion.id} 
+                    <tr
+                      key={funcion.id}
                       className={`border-b transition-colors ${
-                        index % 2 === 0 
-                          ? 'bg-white hover:bg-blue-50' 
+                        index % 2 === 0
+                          ? 'bg-white hover:bg-blue-50'
                           : 'bg-gray-50 hover:bg-blue-100'
                       }`}
                     >
@@ -1409,8 +1339,8 @@ const Funciones = () => {
                       </td>
                       <td className="px-3 py-2 text-xs text-gray-900">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          funcion.sala?.nombre 
-                            ? 'bg-green-100 text-green-800' 
+                          funcion.sala?.nombre
+                            ? 'bg-green-100 text-green-800'
                             : 'bg-gray-100 text-gray-600'
                         }`}>
                           {funcion.sala?.nombre || 'Sin sala'}
@@ -1419,7 +1349,7 @@ const Funciones = () => {
                       <td className="px-3 py-2 text-xs">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                           getPlantillaNombre(funcion.plantilla_entradas) !== 'Sin plantilla'
-                            ? 'bg-blue-100 text-blue-800' 
+                            ? 'bg-blue-100 text-blue-800'
                             : 'bg-gray-100 text-gray-600'
                         }`}>
                           {getPlantillaNombre(funcion.plantilla_entradas)}
@@ -1428,7 +1358,7 @@ const Funciones = () => {
                       <td className="px-3 py-2 text-xs">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                           getPlantillaComisionesNombre(funcion.plantilla_comisiones) !== 'Sin plantilla'
-                            ? 'bg-purple-100 text-purple-800' 
+                            ? 'bg-purple-100 text-purple-800'
                             : 'bg-gray-100 text-gray-600'
                         }`}>
                           {getPlantillaComisionesNombre(funcion.plantilla_comisiones)}
@@ -1437,7 +1367,7 @@ const Funciones = () => {
                       <td className="px-3 py-2 text-xs">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                           getPlantillaProductoNombre(funcion.plantilla_producto) !== 'Sin plantilla'
-                            ? 'bg-orange-100 text-orange-800' 
+                            ? 'bg-orange-100 text-orange-800'
                             : 'bg-gray-100 text-gray-600'
                         }`}>
                           {getPlantillaProductoNombre(funcion.plantilla_producto)}
@@ -1477,21 +1407,21 @@ const Funciones = () => {
                       </td>
                       <td className="px-3 py-2 text-xs">
                         <div className="flex items-center gap-1 justify-center">
-                          <button 
+                          <button
                             onClick={() => handleEdit(funcion)}
                             className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors"
                             title="Editar"
                           >
                             ✏️
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDelete(funcion.id)}
                             className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-medium transition-colors"
                             title="Eliminar"
                           >
                             🗑️
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDuplicate(funcion.id)}
                             className="px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-xs font-medium transition-colors"
                             title="Duplicar"
@@ -1543,7 +1473,7 @@ const Funciones = () => {
             </svg>
           </button>
         </div>
-        
+
         <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -1576,8 +1506,8 @@ const Funciones = () => {
                     onChange={(e) => {
                       const fechaCelebracion = e.target.value;
                       const aperturaPuertas = calcularAperturaPuertas(fechaCelebracion);
-                      setNuevaFuncion({ 
-                        ...nuevaFuncion, 
+                      setNuevaFuncion({
+                        ...nuevaFuncion,
                         fechaCelebracion,
                         aperturaPuertas
                       });
@@ -1717,7 +1647,7 @@ const Funciones = () => {
               {nuevaFuncion.streamingMode && (
                 <div className="border-t pt-4">
                   <h4 className="text-lg font-medium text-gray-900 mb-4">Opciones de streaming</h4>
-                  
+
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2">
                       <input
@@ -1839,13 +1769,13 @@ const Funciones = () => {
               {/* Configuraciones */}
               <div className="border-t pt-4">
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Configuraciones</h4>
-                
+
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
                   <p className="text-sm text-blue-800">
                     <strong>Nota:</strong> La sala se selecciona automáticamente desde el buscador de recinto/sala/evento en la parte superior.
                   </p>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de tickets</label>
@@ -1933,7 +1863,7 @@ const Funciones = () => {
               {/* Opciones */}
               <div className="border-t pt-4">
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Opciones</h4>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
@@ -2022,7 +1952,7 @@ const Funciones = () => {
               {/* Canales y periodos de venta */}
               <div className="border-t pt-4">
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Canales y periodos de venta</h4>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <input
@@ -2201,7 +2131,7 @@ const Funciones = () => {
               {/* Fechas de cancelación */}
               <div className="border-t pt-4">
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Fechas de cancelación</h4>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <input
@@ -2231,7 +2161,7 @@ const Funciones = () => {
               {/* Bloqueo de impresión de tickets */}
               <div className="border-t pt-4">
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Bloqueo de impresión de tickets</h4>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <input
@@ -2244,7 +2174,7 @@ const Funciones = () => {
                       Restringir la impresión antes de la fecha de celebración
                     </label>
                   </div>
-                  
+
                   {nuevaFuncion.ticketPrintingReleaseDateSelected && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -2287,7 +2217,7 @@ const Funciones = () => {
               {/* Campos personalizados */}
               <div className="border-t pt-4">
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Campos personalizados</h4>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Personalizado 1</label>

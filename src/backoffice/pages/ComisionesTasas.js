@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Modal, 
-  Form, 
-  Input, 
+import {
+  Card,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
   InputNumber,
-  message, 
+  message,
   Space,
   Typography,
   Divider,
@@ -17,7 +17,7 @@ import {
   Tooltip,
   Popconfirm
 } from 'antd';
-import { 
+import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -52,7 +52,7 @@ const ComisionesTasas = () => {
   const loadComisiones = async () => {
     try {
       setLoading(true);
-      
+
       // Cargar comisiones desde la base de datos
       const { data: comisionesData, error } = await supabase
         .from('comisiones_tasas')
@@ -60,7 +60,6 @@ const ComisionesTasas = () => {
         .order('created_at', { ascending: false });
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
-        console.warn('Error loading comisiones:', error);
       }
 
       // Si no hay datos en la BD, usar los tipos predefinidos
@@ -93,9 +92,9 @@ const ComisionesTasas = () => {
 
         if (error) throw error;
 
-        setComisiones(prev => 
-          prev.map(comision => 
-            comision.id === editingComision.id 
+        setComisiones(prev =>
+          prev.map(comision =>
+            comision.id === editingComision.id
               ? { ...comision, ...values }
               : comision
           )
@@ -208,9 +207,9 @@ const ComisionesTasas = () => {
       render: (_, record) => (
         <Space>
           <Tooltip title="Editar">
-            <Button 
-              type="text" 
-              icon={<EditOutlined />} 
+            <Button
+              type="text"
+              icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
             />
           </Tooltip>
@@ -221,9 +220,9 @@ const ComisionesTasas = () => {
             cancelText="No"
           >
             <Tooltip title="Eliminar">
-              <Button 
-                type="text" 
-                danger 
+              <Button
+                type="text"
+                danger
                 icon={<DeleteOutlined />}
               />
             </Tooltip>
@@ -249,8 +248,8 @@ const ComisionesTasas = () => {
               <InfoCircleOutlined className="text-blue-500" />
               <Text strong>Información Importante</Text>
             </div>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<PlusOutlined />}
               onClick={() => {
                 setEditingComision(null);
@@ -263,7 +262,7 @@ const ComisionesTasas = () => {
           </div>
           <div className="mt-2 p-3 bg-blue-50 rounded-lg">
             <Text type="secondary">
-              Las comisiones configuradas aquí se aplicarán automáticamente al calcular los precios finales. 
+              Las comisiones configuradas aquí se aplicarán automáticamente al calcular los precios finales.
               Los valores se pueden configurar como porcentaje del monto total o como una tasa fija.
             </Text>
           </div>
@@ -278,7 +277,7 @@ const ComisionesTasas = () => {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} de ${total} comisiones`
           }}
         />
@@ -323,10 +322,10 @@ const ComisionesTasas = () => {
                   value={form.getFieldValue('tipo') === 'porcentaje' ? 'Porcentaje' : 'Fijo'}
                 />
               </Form.Item>
-              <Button 
+              <Button
                 onClick={() => {
                   const currentTipo = form.getFieldValue('tipo');
-                  form.setFieldsValue({ 
+                  form.setFieldsValue({
                     tipo: currentTipo === 'porcentaje' ? 'fijo' : 'porcentaje',
                     valor: 0
                   });

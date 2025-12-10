@@ -174,7 +174,6 @@ const resolveSessionId = (explicitSessionId = null) => {
       null
     );
   } catch (err) {
-    console.warn('Could not resolve seat session id:', err);
     return null;
   }
 };
@@ -246,17 +245,16 @@ const finalizeSeatLocks = async (method, paymentData, transactionStatus, options
       sessionId: resolveSessionId(options.sessionId || paymentData.sessionId),
     });
   } catch (error) {
-    console.warn('Could not finalize seat locks:', error);
     return { updated: 0 };
   }
 };
 
 const createTransactionAndSyncSeats = async (method, paymentData, options = {}) => {
   const payload = buildTransactionPayload(method, paymentData, options);
-  
+
   // Crear contexto de rollback
   const rollbackContext = transactionRollbackService.createRollbackContext(
-    paymentData, 
+    paymentData,
     resolveSessionId(options.sessionId || paymentData.sessionId)
   );
 
@@ -268,7 +266,6 @@ const createTransactionAndSyncSeats = async (method, paymentData, options = {}) 
       transaction = await createSupabaseTransaction(payload);
     } catch (primaryError) {
       if (isPermissionOrRlsError(primaryError)) {
-        console.warn('⚠️ [PAYMENT_PROCESSOR] Primary transaction failed due to permissions. Retrying via API fallback.');
         try {
           transaction = await createTransactionViaApi(payload);
         } catch (apiError) {
@@ -289,13 +286,11 @@ const createTransactionAndSyncSeats = async (method, paymentData, options = {}) 
 
   // Función de rollback
   const executeRollback = async (transactionResult, context) => {
-    console.log('🔄 [PAYMENT_PROCESSOR] Ejecutando rollback de transacción');
-    
     // Liberar asientos si la transacción falló
     if (paymentData.items && Array.isArray(paymentData.items)) {
       await transactionRollbackService.rollbackSeatLocks(paymentData.items, context);
     }
-    
+
     // Revertir transacción de pago si existe
     if (transactionResult?.id) {
       await transactionRollbackService.rollbackPaymentTransaction(transactionResult.id, context);

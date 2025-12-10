@@ -14,12 +14,12 @@ if (typeof document !== 'undefined' && document.getElementById('root')) {
 
 const Plano = () => {
   const hasInitialized = useRef(false);
-  
+
   if (!hasInitialized.current) {
     logger.log('🎯 [PLANO] Componente Plano iniciando...');
     hasInitialized.current = true;
   }
-  
+
   const { recinto, setRecinto, sala, setSala, recintos, setRecintos } = useRecintoSala();
   const [zonas, setZonas] = useState([]);
   const [zonaSearch, setZonaSearch] = useState('');
@@ -40,9 +40,9 @@ const Plano = () => {
   const hasCleanedChannels = useRef(false);
   useEffect(() => {
     if (hasCleanedChannels.current) return;
-    
+
     logger.log('[PLANO] Limpiando suscripciones de tiempo real...');
-    
+
     // Remover todos los canales activos
     const channels = supabase.getChannels();
     channels.forEach(channel => {
@@ -53,7 +53,7 @@ const Plano = () => {
         logger.warn('[PLANO] Error al desuscribir canal:', error);
       }
     });
-    
+
     hasCleanedChannels.current = true;
 
     return () => {
@@ -74,7 +74,7 @@ const Plano = () => {
   const hasLoadedRecintos = useRef(false);
   useEffect(() => {
     if (hasLoadedRecintos.current || recintos.length > 0) return;
-    
+
     const loadRecintos = async () => {
       hasLoadedRecintos.current = true;
       try {
@@ -101,7 +101,7 @@ const Plano = () => {
     try {
       logger.log('[PLANO] Cargando zonas para sala:', salaId, retryCount > 0 ? `(intento ${retryCount + 1})` : '');
       const zonasData = await fetchZonasPorSala(salaId);
-      
+
       // Verificar que zonasData sea un array válido
       if (Array.isArray(zonasData)) {
         setZonas(zonasData);
@@ -113,7 +113,7 @@ const Plano = () => {
     } catch (error) {
       logger.error('[PLANO] Error al cargar zonas:', error);
       setZonas([]);
-      
+
       // Retry logic for zones loading
       if (retryCount < 2) {
         logger.log('[PLANO] Reintentando carga de zonas en 1 segundo...');
@@ -126,7 +126,7 @@ const Plano = () => {
 
   useEffect(() => {
     logger.log('🎯 [PLANO] useEffect sala cambiada:', sala);
-    
+
     if (sala?.id) {
       logger.log('🎯 [PLANO] Cargando datos para sala:', sala.id);
       loadZonas(sala.id);
@@ -140,11 +140,11 @@ const Plano = () => {
 
   const loadMapaPreview = async (salaId) => {
     if (!salaId) return;
-    
+
     setLoadingMapa(true);
     try {
       const mapaData = await fetchMapa(salaId);
-      
+
       // Verificar que mapaData sea válido
       if (mapaData && typeof mapaData === 'object') {
         setMapaPreview(mapaData);
@@ -187,7 +187,7 @@ const Plano = () => {
       alert('Debe seleccionar un recinto primero.');
       return;
     }
-    
+
     if (!sala) {
       alert('Debe seleccionar una sala primero.');
       return;
@@ -244,9 +244,6 @@ const Plano = () => {
       }
     }
   };
-
-  console.log('🎯 [PLANO] Renderizando componente...');
-  
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -260,7 +257,6 @@ const Plano = () => {
               value={recinto?.id || ''}
               onChange={(e) => {
                 const r = recintos.find(r => String(r.id) === e.target.value);
-                console.log('[PLANO] Recinto seleccionado:', r);
                 setRecinto(r);
                 setSala(null);
               }}
@@ -279,7 +275,6 @@ const Plano = () => {
               value={sala?.id || ''}
               onChange={(e) => {
                 const s = recinto?.salas?.find(s => String(s.id) === e.target.value);
-                console.log('[PLANO] Sala seleccionada:', s);
                 setSala(s);
               }}
               disabled={!recinto}
@@ -343,14 +338,14 @@ const Plano = () => {
               <div className="text-center p-6 border border-dashed border-gray-300 rounded">
                 <p className="mb-4 text-gray-600">No hay zonas creadas para esta sala.</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button 
-                    onClick={() => setModalIsOpen(true)} 
+                  <button
+                    onClick={() => setModalIsOpen(true)}
                     className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     disabled={!canCreateZona()}
                   >
                     Crear Primera Zona
                   </button>
-                  <button 
+                  <button
                     onClick={handleCrearMapa}
                     disabled={!sala?.id}
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200"
@@ -367,8 +362,8 @@ const Plano = () => {
                   <div key={zona.id || index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                        <div 
-                          className="w-4 h-4 rounded-full flex-shrink-0" 
+                        <div
+                          className="w-4 h-4 rounded-full flex-shrink-0"
                           style={{ backgroundColor: zona.color }}
                         ></div>
                         <span className="font-medium text-sm sm:text-base">{zona.nombre}</span>
@@ -431,7 +426,7 @@ const Plano = () => {
                             <strong>Estado:</strong> {mapaPreview.estado}
                           </span>
                           <span>
-                            <strong>Última actualización:</strong> 
+                            <strong>Última actualización:</strong>
                             {mapaPreview.updated_at ? (
                               <span>{new Date(mapaPreview.updated_at).toLocaleString('es-ES')}</span>
                             ) : (
@@ -440,15 +435,15 @@ const Plano = () => {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-3">
-                        <button 
+                        <button
                           onClick={handleCrearMapa}
                           className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                         >
                           ✏️ Editar Mapa
                         </button>
-                        <button 
+                        <button
                           className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                         >
                           📊 Ver Estadísticas
@@ -464,7 +459,7 @@ const Plano = () => {
                         Crea un mapa para visualizar la distribución de asientos y mesas.
                       </p>
                       <div className="mt-3">
-                        <button 
+                        <button
                           onClick={handleCrearMapa}
                           disabled={!sala?.id}
                           className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"

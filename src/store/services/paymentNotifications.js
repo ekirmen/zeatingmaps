@@ -23,10 +23,6 @@ const handleNotificationError = (context, error) => {
   if (!error) return;
 
   if (isNotificationsTableMissing(error)) {
-    console.warn(
-      `[Notifications] ${context}: tabla "notifications" no disponible en Supabase. Se omite el guardado de la notificación.`,
-      error
-    );
   } else {
     console.error(`[Notifications] ${context}:`, error);
   }
@@ -65,14 +61,12 @@ export const sendPushNotification = async (userId, notification) => {
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError) {
-      console.warn('[Notifications] Error obteniendo usuario autenticado:', authError);
       return null;
     }
 
     const authenticatedUserId = authData?.user?.id ?? null;
 
     if (!authenticatedUserId) {
-      console.warn('[Notifications] Error enviando notificación push: usuario autenticado no disponible.');
       return null;
     }
 
@@ -125,7 +119,6 @@ export const sendPaymentConfirmationEmail = async (transaction) => {
     // - Pay.js: cuando se procesa un pago
     // - updatePaymentTransactionStatus: cuando el status cambia a 'completed'
     // - PaymentModal: cuando se crea un pago desde el backoffice
-    console.log('📧 [NOTIFICATIONS] Email de confirmación será enviado automáticamente para transaction:', transaction.id);
   } catch (error) {
     console.error('Error sending payment confirmation email:', error);
   }
@@ -137,8 +130,6 @@ export const sendPaymentConfirmationEmail = async (transaction) => {
 export const sendPaymentConfirmationSMS = async (phoneNumber, transaction) => {
   try {
     // Implementar envío de SMS
-    console.log('Payment confirmation SMS sent to:', phoneNumber);
-    
     // Ejemplo con Twilio
     // await twilio.messages.create({
     //   body: `Tu pago de $${transaction.amount} ha sido confirmado. ID: ${transaction.id}`,

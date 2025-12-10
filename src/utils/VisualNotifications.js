@@ -3,30 +3,30 @@ import { notification } from 'antd';
 // ===== SISTEMA DE NOTIFICACIONES VISUALES =====
 const VisualNotifications = {
   types: {
-    seatSelected: { 
-      type: 'success', 
-      message: 'Asiento seleccionado', 
+    seatSelected: {
+      type: 'success',
+      message: 'Asiento seleccionado',
       icon: '✅',
       color: '#52c41a',
       duration: 2000
     },
-    seatReserved: { 
-      type: 'warning', 
-      message: 'Asiento reservado temporalmente', 
+    seatReserved: {
+      type: 'warning',
+      message: 'Asiento reservado temporalmente',
       icon: '⏰',
       color: '#faad14',
       duration: 5000
     },
-    purchaseComplete: { 
-      type: 'success', 
-      message: 'Compra realizada exitosamente', 
+    purchaseComplete: {
+      type: 'success',
+      message: 'Compra realizada exitosamente',
       icon: '🎉',
       color: '#52c41a',
       duration: 3000
     },
-    error: { 
-      type: 'error', 
-      message: 'Error en la transacción', 
+    error: {
+      type: 'error',
+      message: 'Error en la transacción',
       icon: '❌',
       color: '#ff4d4f',
       duration: 4000
@@ -78,7 +78,6 @@ const VisualNotifications = {
   show: (type, customMessage = null, customDescription = null) => {
     const notificationConfig = VisualNotifications.types[type];
     if (!notificationConfig) {
-      console.warn(`Tipo de notificación no encontrado: ${type}`);
       return;
     }
 

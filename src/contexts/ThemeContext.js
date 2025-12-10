@@ -35,7 +35,7 @@ export const ThemeProvider = ({ children }) => {
     Object.entries(theme).forEach(([key, value]) => {
       // Aplicar variables CSS del tema
       document.documentElement.style.setProperty(`--${key}`, value);
-      
+
       // Mapear colores del webstudio a variables del store
       if (key === 'primary' || key === 'btnPrimary') {
         document.documentElement.style.setProperty('--store-primary', value);
@@ -70,7 +70,7 @@ export const ThemeProvider = ({ children }) => {
     // Solo ejecutar si no hay tema guardado y hay un tenant
     const hasLocalTheme = localStorage.getItem('themeColors');
     if (hasLocalTheme || !currentTenant?.id) return;
-    
+
     // Usar setTimeout para no bloquear el render inicial
     const timer = setTimeout(async () => {
       try {
@@ -79,10 +79,9 @@ export const ThemeProvider = ({ children }) => {
           setTheme(prev => ({ ...prev, ...remote }));
         }
       } catch (e) {
-        console.warn('[ThemeContext] Error loading remote theme:', e);
       }
     }, 2000); // Esperar 2 segundos para no interferir con la carga inicial
-    
+
     return () => clearTimeout(timer);
   }, [currentTenant?.id]);
 
@@ -92,12 +91,11 @@ export const ThemeProvider = ({ children }) => {
 
   const getEventTheme = useCallback(async (eventId) => {
     if (!currentTenant?.id || !eventId) return theme;
-    
+
     try {
       const eventTheme = await EventThemeService.getEventThemeOrDefault(eventId, currentTenant.id, theme);
       return eventTheme;
     } catch (error) {
-      console.warn('[ThemeContext] Error getting event theme:', error);
       return theme;
     }
   }, [currentTenant?.id, theme]);

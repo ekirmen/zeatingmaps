@@ -125,7 +125,7 @@ const fetchById = async (tableName, id, options = {}) => {
       .select(options.select || '*')
       .eq('id', id)
       .eq('tenant_id', tenantId);
-  
+
     const { data, error } = await query.single();
     handleError(error, `Error fetching ${tableName} by id`);
   return data;
@@ -178,7 +178,7 @@ const updateRecord = async (tableName, id, data, options = {}) => {
       .eq('tenant_id', tenantId) // Solo actualizar registros del tenant actual
       .select(options.select || '*')
     .single();
-  
+
     handleError(error, `Error updating ${tableName}`);
     return result;
   } catch (error) {
@@ -221,7 +221,7 @@ export const fetchZonasPorSala = async (salaId) => {
 
 export const createZona = async (data) => {
   const client = supabaseAdmin || supabase;
-  
+
   // Si no se proporciona tenant_id, intentar obtenerlo de la sala o usar el helper
   if (!data.tenant_id) {
     if (data.sala_id) {
@@ -231,7 +231,7 @@ export const createZona = async (data) => {
         .select('recintos!inner(tenant_id)')
         .eq('id', data.sala_id)
         .single();
-      
+
         if (!salaError && salaData?.recintos?.tenant_id) {
         data.tenant_id = salaData.recintos.tenant_id;
       }
@@ -239,13 +239,13 @@ export const createZona = async (data) => {
         logger.warn('[createZona] No se pudo obtener tenant_id de la sala');
     }
   }
-  
+
     // Si aún no hay tenant_id, usar el helper
     if (!data.tenant_id) {
       data.tenant_id = await getTenantId();
     }
   }
-  
+
   const { data: result, error } = await client.from('zonas').insert(data).single();
   handleError(error, 'Error creating zona');
   return result;
@@ -254,19 +254,19 @@ export const createZona = async (data) => {
 export const updateZona = async (id, data) => {
   const client = supabaseAdmin || supabase;
   const tenantId = await getTenantId();
-  
+
   // Asegurar tenant_id en los datos
   if (!data.tenant_id) {
     data.tenant_id = tenantId;
   }
-  
+
   const { data: result, error } = await client
         .from('zonas')
     .update(data)
         .eq('id', id)
     .eq('tenant_id', tenantId)
         .single();
-      
+
   handleError(error, 'Error updating zona');
   return result;
 };
@@ -337,11 +337,11 @@ export const fetchEventoById = async (id) => {
 export const createEvento = async (data) => {
   try {
     const client = supabaseAdmin || supabase;
-    
+
     // Crear el evento
     const { data: result, error } = await client.from('eventos').insert(data).single();
     handleError(error);
-    
+
     // Crear automáticamente la página CMS para el evento
     if (result) {
       logger.log('🔧 [createEvento] Evento creado, creando página CMS...');
@@ -352,7 +352,7 @@ export const createEvento = async (data) => {
         logger.warn('⚠️ [createEvento] No se pudo crear la página CMS para evento:', result.nombre);
       }
     }
-    
+
     return result;
   } catch (error) {
     logger.error('❌ [createEvento] Error creando evento:', error);
@@ -409,9 +409,9 @@ export const fetchMapa = async (salaId, funcionId = null) => {
       .select('*')
       .eq('sala_id', salaId)
       .maybeSingle();
-    
+
     logger.log('🔍 [fetchMapa] Resultado búsqueda mapa:', { mapa: mapa ? 'encontrado' : 'no encontrado', error: mapaError });
-    
+
     if (mapaError) {
       logger.error('❌ [fetchMapa] Error al buscar mapa:', mapaError);
       logger.error('❌ [fetchMapa] Error details:', {
@@ -422,43 +422,43 @@ export const fetchMapa = async (salaId, funcionId = null) => {
       });
       throw mapaError;
     }
-    
+
     if (!mapa) {
       logger.warn('⚠️ [fetchMapa] No se encontró mapa para sala:', salaId);
       return null;
     }
-    
+
     logger.log('✅ [fetchMapa] Mapa encontrado:', { id: mapa.id, sala_id: mapa.sala_id });
-    
+
     // Cargar las zonas de la sala
     logger.log('🔍 [fetchMapa] Buscando zonas para sala:', salaId);
     const { data: zonas, error: zonasError } = await supabase
       .from('zonas')
       .select('*')
       .eq('sala_id', salaId);
-    
+
     logger.log('🔍 [fetchMapa] Resultado búsqueda zonas:', { zonas: zonas?.length || 0, error: zonasError });
-    
+
     if (zonasError) {
       logger.warn('⚠️ [fetchMapa] Error al cargar zonas, continuando sin zonas:', zonasError);
     }
-    
+
     // Cargar asientos reservados/vendidos si se proporciona funcionId
     let reservedSeats = {};
     if (funcionId) {
       logger.log('🔍 [fetchMapa] Cargando asientos reservados para función:', funcionId);
       reservedSeats = await loadReservedSeats(funcionId);
     }
-    
+
     // Aplicar estados de asientos reservados al mapa
     const mapaConEstados = applySeatStates(mapa, reservedSeats);
-    
+
     // Retornar mapa con zonas incluidas y estados de asientos
     const resultado = {
       ...mapaConEstados,
       zonas: zonas || []
     };
-    
+
     logger.log('✅ [fetchMapa] Retornando resultado final');
     return resultado;
   } catch (error) {
@@ -471,7 +471,7 @@ export const fetchMapa = async (salaId, funcionId = null) => {
 const loadReservedSeats = async (funcionId) => {
   try {
     logger.log('🔍 [loadReservedSeats] Cargando asientos reservados para función:', funcionId);
-    
+
     // Buscar en la tabla payment_transactions (tabla principal)
     const { data: payments, error: paymentsError } = await supabase
       .from('payment_transactions')
@@ -479,14 +479,14 @@ const loadReservedSeats = async (funcionId) => {
       .eq('funcion_id', funcionId)
       .in('status', ['reservado', 'pagado', 'pending', 'completed', 'vendido', 'reserved'])
       .order('created_at', { ascending: false });
-    
+
     if (paymentsError) {
       logger.error('❌ [loadReservedSeats] Error cargando payments:', paymentsError);
       return {};
     }
-    
+
     logger.log('🔍 [loadReservedSeats] Payments encontrados:', payments?.length || 0);
-    
+
     // Buscar en seat_locks para asientos bloqueados
     const { data: locks, error: locksError } = await supabase
       .from('seat_locks')
@@ -495,16 +495,16 @@ const loadReservedSeats = async (funcionId) => {
       .eq('status', 'locked')
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false });
-    
+
     if (locksError) {
       logger.warn('⚠️ [loadReservedSeats] Error cargando locks:', locksError);
     }
-    
+
     logger.log('🔍 [loadReservedSeats] Locks encontrados:', locks?.length || 0);
-    
+
     // Crear mapa de asientos reservados
     const reservedSeats = {};
-    
+
     // Procesar payments
     if (payments) {
       payments.forEach(payment => {
@@ -517,7 +517,7 @@ const loadReservedSeats = async (funcionId) => {
               } else if (payment.status === 'reservado' || payment.status === 'pending' || payment.status === 'reserved') {
                 estado = 'reservado';
               }
-              
+
               reservedSeats[seat.id] = {
                 estado: estado,
                 paymentId: payment.id,
@@ -531,7 +531,7 @@ const loadReservedSeats = async (funcionId) => {
         }
       });
     }
-    
+
     // Procesar locks
     if (locks) {
       locks.forEach(lock => {
@@ -548,10 +548,10 @@ const loadReservedSeats = async (funcionId) => {
         }
       });
     }
-    
+
     logger.log('✅ [loadReservedSeats] Total asientos con estado cargados:', Object.keys(reservedSeats).length);
     return reservedSeats;
-    
+
   } catch (error) {
     logger.error('❌ [loadReservedSeats] Error general:', error);
     return {};
@@ -563,17 +563,17 @@ const ensureAllSeatsAvailable = (mapa) => {
   if (!mapa || !mapa.contenido) {
     return mapa;
   }
-  
+
   try {
     const contenido = Array.isArray(mapa.contenido) ? mapa.contenido : JSON.parse(mapa.contenido);
-    
+
     const contenidoConEstados = contenido.map(elemento => {
       if (elemento.sillas && Array.isArray(elemento.sillas)) {
         const sillasConEstado = elemento.sillas.map(silla => ({
           ...silla,
           estado: 'disponible' // Forzar estado disponible
         }));
-        
+
         return {
           ...elemento,
           sillas: sillasConEstado
@@ -581,12 +581,12 @@ const ensureAllSeatsAvailable = (mapa) => {
       }
       return elemento;
     });
-    
+
     return {
       ...mapa,
       contenido: contenidoConEstados
     };
-    
+
   } catch (error) {
     logger.error('❌ [ensureAllSeatsAvailable] Error:', error);
     return mapa;
@@ -599,12 +599,12 @@ const applySeatStates = (mapa, reservedSeats) => {
     // Si no hay asientos reservados, asegurar que todos estén disponibles
     return ensureAllSeatsAvailable(mapa);
   }
-  
+
   logger.log('🔍 [applySeatStates] Aplicando estados a mapa con', Object.keys(reservedSeats).length, 'asientos reservados');
-  
+
   try {
     const contenido = Array.isArray(mapa.contenido) ? mapa.contenido : JSON.parse(mapa.contenido);
-    
+
     // Recorrer el contenido del mapa y aplicar estados
     const contenidoConEstados = contenido.map(elemento => {
       if (elemento.sillas && Array.isArray(elemento.sillas)) {
@@ -624,7 +624,7 @@ const applySeatStates = (mapa, reservedSeats) => {
             estado: 'disponible'
           };
         });
-        
+
         return {
           ...elemento,
           sillas: sillasConEstado
@@ -632,12 +632,12 @@ const applySeatStates = (mapa, reservedSeats) => {
       }
       return elemento;
     });
-    
+
     return {
       ...mapa,
       contenido: contenidoConEstados
     };
-    
+
   } catch (error) {
     logger.error('❌ [applySeatStates] Error aplicando estados:', error);
     return mapa;
@@ -649,9 +649,9 @@ export const saveMapa = async (salaId, data) => {
     const resp = await fetch(`/api/mapas/${salaId}/save`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         contenido: data.contenido || [],
-        tenant_id: data.tenant_id 
+        tenant_id: data.tenant_id
       })
     });
     if (!resp.ok) {
@@ -663,10 +663,10 @@ export const saveMapa = async (salaId, data) => {
   const client = supabaseAdmin;
   const { error } = await client
     .from('mapas')
-    .upsert({ 
-      sala_id: salaId, 
+    .upsert({
+      sala_id: salaId,
       contenido: data.contenido || [],
-      tenant_id: data.tenant_id 
+      tenant_id: data.tenant_id
     }, { onConflict: 'sala_id' });
   handleError(error);
 };
@@ -700,13 +700,13 @@ export const syncSeatsForSala = async (salaId, options = {}) => {
   if (!funciones || funciones.length === 0) return;
 
   const seatDefs = [];
-  
+
   // Si el contenido es un array, procesarlo directamente
   // Si es un objeto, buscar la propiedad 'elementos'
-  const elementos = Array.isArray(mapa.contenido) 
-    ? mapa.contenido 
+  const elementos = Array.isArray(mapa.contenido)
+    ? mapa.contenido
     : mapa.contenido.elementos || [];
-  
+
   if (Array.isArray(elementos)) {
     elementos.forEach(el => {
       if (el.type === 'mesa') {
@@ -913,7 +913,7 @@ export const saveCmsPage = async (identifier, widgets) => {
       logger.log(`✅ [saveCmsPage] Actualizando página existente: ${existingPage.slug} (ID: ${existingPage.id})`);
       const updateData = { widgets };
       if (hasUpdatedAt) updateData.updated_at = now;
-      
+
       result = await supabase
         .from('cms_pages')
         .update(updateData)
@@ -1034,17 +1034,17 @@ const normalizeSeatObject = (seat) => {
 const parseSeatsArray = (rawSeats) => {
   try {
     let seats = rawSeats;
-    
+
     // Si es null o undefined, retornar array vacío
     if (seats == null) return [];
-    
+
     // Si ya es un array, validar y retornar
     if (Array.isArray(seats)) {
       return seats
         .map(normalizeSeatObject)
         .filter(seat => seat && typeof seat === 'object');
     }
-    
+
     // Si es string, intentar parsear
     if (typeof seats === 'string') {
       // Limpiar el string antes de parsear
@@ -1052,7 +1052,7 @@ const parseSeatsArray = (rawSeats) => {
       if (cleanString === '' || cleanString === 'null' || cleanString === 'undefined') {
         return [];
       }
-      
+
       try {
         const parsed = JSON.parse(cleanString);
         // Si el resultado es un array, retornarlo
@@ -1071,13 +1071,13 @@ const parseSeatsArray = (rawSeats) => {
         return [];
       }
     }
-    
+
     // Si es un objeto individual, envolverlo en array
     if (seats && typeof seats === 'object' && !Array.isArray(seats)) {
       const normalizedSeat = normalizeSeatObject(seats);
       return normalizedSeat ? [normalizedSeat] : [];
     }
-    
+
     return [];
   } catch (e) {
     logger.error('Error parsing seats data:', e);
@@ -1123,7 +1123,7 @@ export const createPayment = async (data) => {
 
   // Asegurar que seats se almacene como JSON válido
   const seatsForDB = parseSeatsArray(data.seats);
-  
+
   // Validar que los asientos tengan la estructura correcta
   const validatedSeats = seatsForDB.map(seat => {
     if (!seat.id && !seat._id && !seat.seat_id) {
@@ -1148,7 +1148,7 @@ export const createPayment = async (data) => {
   const { tenantId, ...restData } = data || {};
   const computedTotal = Number(restData.amount) || Number(restData.monto) || calculateTotalAmount(validatedSeats);
   const normalizedTenantId = restData.tenant_id || tenantId || '9dbdb86f-8424-484c-bb76-0d9fa27573c8';
-  
+
   // Normalizar campo user: debe ser UUID, no objeto
   let normalizedUserId = restData.user_id || restData.userId || restData.usuario_id;
   if (restData.user && typeof restData.user === 'object' && restData.user.id) {
@@ -1168,7 +1168,7 @@ export const createPayment = async (data) => {
     user_id: normalizedUserId, // Asegurar que user_id también esté establecido
     created_at: new Date().toISOString()
   };
-  
+
   // Eliminar campos duplicados si existen
   if (enrichedData.userId) {
     delete enrichedData.userId;
@@ -1224,25 +1224,23 @@ export const fetchPayments = async () => {
 // Función para limpiar locks expirados
 export const cleanupExpiredLocks = async () => {
   const client = supabaseAdmin || supabase;
-  
+
   try {
     logger.log('🧹 [cleanupExpiredLocks] Limpiando locks expirados...');
-    
+
     const { data, error } = await client
       .from('seat_locks')
       .delete()
       .lt('expires_at', new Date().toISOString())
       .eq('status', 'locked')
       .select();
-    
+
     if (error) {
       console.error('❌ [cleanupExpiredLocks] Error limpiando locks:', error);
       return { data: null, error };
     }
-    
-    console.log('✅ [cleanupExpiredLocks] Locks expirados eliminados:', data?.length || 0);
     return { data, error: null };
-    
+
   } catch (error) {
     console.error('❌ [cleanupExpiredLocks] Error general:', error);
     return { data: null, error };
@@ -1252,13 +1250,11 @@ export const cleanupExpiredLocks = async () => {
 // Función para crear un lock de asiento
 export const createSeatLock = async (seatId, funcionId, userId = null, expiresInMinutes = 15) => {
   const client = supabaseAdmin || supabase;
-  
+
   try {
-    console.log('🔒 [createSeatLock] Creando lock para asiento:', seatId, 'Función:', funcionId);
-    
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + expiresInMinutes);
-    
+
     const lockData = {
       seat_id: seatId,
       funcion_id: funcionId,
@@ -1268,21 +1264,19 @@ export const createSeatLock = async (seatId, funcionId, userId = null, expiresIn
       lock_type: 'seat',
       tenant_id: '9dbdb86f-8424-484c-bb76-0d9fa27573c8' // Tenant por defecto
     };
-    
+
     const { data, error } = await client
       .from('seat_locks')
       .insert(lockData)
       .select()
       .single();
-    
+
     if (error) {
       console.error('❌ [createSeatLock] Error creando lock:', error);
       return { data: null, error };
     }
-    
-    console.log('✅ [createSeatLock] Lock creado:', data.id);
     return { data, error: null };
-    
+
   } catch (error) {
     console.error('❌ [createSeatLock] Error general:', error);
     return { data: null, error };
@@ -1292,10 +1286,8 @@ export const createSeatLock = async (seatId, funcionId, userId = null, expiresIn
 // Función para liberar un lock de asiento
 export const releaseSeatLock = async (seatId, funcionId) => {
   const client = supabaseAdmin || supabase;
-  
+
   try {
-    console.log('🔓 [releaseSeatLock] Liberando lock para asiento:', seatId, 'Función:', funcionId);
-    
     const { data, error } = await client
       .from('seat_locks')
       .delete()
@@ -1303,15 +1295,13 @@ export const releaseSeatLock = async (seatId, funcionId) => {
       .eq('funcion_id', funcionId)
       .eq('status', 'locked')
       .select();
-    
+
     if (error) {
       console.error('❌ [releaseSeatLock] Error liberando lock:', error);
       return { data: null, error };
     }
-    
-    console.log('✅ [releaseSeatLock] Lock liberado:', data?.length || 0);
     return { data, error: null };
-    
+
   } catch (error) {
     console.error('❌ [releaseSeatLock] Error general:', error);
     return { data: null, error };
@@ -1320,14 +1310,10 @@ export const releaseSeatLock = async (seatId, funcionId) => {
 
 export const fetchPaymentByLocator = async (locator) => {
   const client = supabaseAdmin || supabase;
-  
-  console.log('🔍 [fetchPaymentByLocator] Buscando pago por localizador:', locator);
-  
   if (!locator) {
-    console.warn('🔍 [fetchPaymentByLocator] Localizador no proporcionado');
     return { data: null, error: null };
   }
-  
+
   try {
     const baseSelect = `
       *,
@@ -1373,7 +1359,7 @@ export const fetchPaymentByLocator = async (locator) => {
       console.error('🔍 [fetchPaymentByLocator] Error:', error);
       return { data: null, error };
     }
-    
+
     if (data) {
       // Procesar los seats para incluir información adicional
       const seats = parseSeatsArray(data.seats);
@@ -1383,11 +1369,9 @@ export const fetchPaymentByLocator = async (locator) => {
         totalAmount: seats.reduce((sum, seat) => sum + (seat.price || 0), 0),
         seats: seats
       };
-      
-      console.log('🔍 [fetchPaymentByLocator] Pago encontrado:', processedPayment.id);
       return { data: processedPayment, error: null };
     }
-    
+
     return { data: null, error: null };
   } catch (error) {
     console.error('🔍 [fetchPaymentByLocator] Error inesperado:', error);
@@ -1397,64 +1381,54 @@ export const fetchPaymentByLocator = async (locator) => {
 
 export const fetchPaymentBySeat = async (funcionId, seatId) => {
   const client = supabaseAdmin || supabase;
-  
-  console.log('🔍 [fetchPaymentBySeat] Buscando asiento:', { funcionId, seatId });
-  
   if (!funcionId || !seatId) {
-    console.warn('🔍 [fetchPaymentBySeat] Parámetros inválidos:', { funcionId, seatId });
     return null;
   }
-  
+
   try {
     // Buscar pagos que contengan el asiento específico usando múltiples estrategias
     let query = client
       .from('payment_transactions')
       .select('*, seats, funcion_id, event:eventos(*), user:profiles!user_id(*)')
       .eq('funcion_id', funcionId);
-    
+
     // Aplicar filtro contains sobre el array de seats asegurando un JSON válido
     const seatFilterValue = JSON.stringify([{ id: seatId }]);
 
     const { data, error } = await query
       .filter('seats', 'cs', seatFilterValue)
       .or(`seats.cs.[{"_id":"${seatId}"}],seats.cs.[{"id":"${seatId}"}]`);
-    
-    console.log('🔍 [fetchPaymentBySeat] Resultado:', { data, error });
-    
     if (error) {
       console.error('🔍 [fetchPaymentBySeat] Error:', error);
       // Si hay error con contains, continuar con búsqueda manual
     }
-    
+
     // Si no se encuentra con contains o hay error, intentar con una búsqueda más amplia
     if (!data || data.length === 0 || error) {
-      console.log('🔍 [fetchPaymentBySeat] No se encontró con contains o hubo error, intentando búsqueda manual...');
-      
       // Obtener todos los pagos para esta función y buscar manualmente
       const { data: allPayments, error: allError } = await client
         .from('payment_transactions')
         .select('*, seats, funcion_id, event:eventos(*), user:profiles!user_id(*)')
         .eq('funcion_id', funcionId);
-      
+
       if (allError) {
         console.error('🔍 [fetchPaymentBySeat] Error obteniendo todos los pagos:', allError);
         return null;
       }
-      
+
       // Buscar manualmente en los seats de cada pago
       for (const payment of allPayments || []) {
         const paymentSeats = parseSeatsArray(payment.seats);
-        const foundSeat = paymentSeats.find(seat => 
+        const foundSeat = paymentSeats.find(seat =>
           seat.id === seatId || seat._id === seatId
         );
-        
+
         if (foundSeat) {
-          console.log('🔍 [fetchPaymentBySeat] Asiento encontrado manualmente en pago:', payment.id);
           return payment;
         }
       }
     }
-    
+
     // Retornar el primer pago encontrado
     return data && data.length > 0 ? data[0] : null;
   } catch (error) {
@@ -1466,14 +1440,10 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
 // Nueva función para buscar pagos por email de usuario
 export const fetchPaymentsByUserEmail = async (email) => {
   const client = supabaseAdmin || supabase;
-  
-  console.log('🔍 [fetchPaymentsByUserEmail] Buscando pagos por email:', email);
-  
   if (!email) {
-    console.warn('🔍 [fetchPaymentsByUserEmail] Email no proporcionado');
     return { data: [], error: null };
   }
-  
+
   try {
     // Primero buscar el usuario por email
     const userResult = await client
@@ -1486,7 +1456,6 @@ export const fetchPaymentsByUserEmail = async (email) => {
     let userError = userResult.error;
 
     if (userError && userError.code === '42703') {
-      console.warn('🔍 [fetchPaymentsByUserEmail] Error en profiles, aplicando fallback');
       const fallbackUser = await client
         .from('profiles')
         .select('id, login, telefono')
@@ -1505,7 +1474,6 @@ export const fetchPaymentsByUserEmail = async (email) => {
     }
 
     if (!user) {
-      console.log('🔍 [fetchPaymentsByUserEmail] Usuario no encontrado');
       return { data: [], error: null };
     }
 
@@ -1533,7 +1501,6 @@ export const fetchPaymentsByUserEmail = async (email) => {
       .order('created_at', { ascending: false });
 
     if (paymentsError && paymentsError.code === '42703') {
-      console.warn('🔍 [fetchPaymentsByUserEmail] Error en payments.user, aplicando fallback');
       const fallbackPayments = await client
         .from('payment_transactions')
         .select(paymentsFallbackSelect)
@@ -1568,10 +1535,8 @@ export const fetchPaymentsByUserEmail = async (email) => {
         seats: seats
       };
     });
-    
-    console.log('🔍 [fetchPaymentsByUserEmail] Pagos encontrados:', processedPayments.length);
     return { data: processedPayments, error: null, user };
-    
+
   } catch (error) {
     console.error('🔍 [fetchPaymentsByUserEmail] Error inesperado:', error);
     return { data: [], error };
@@ -1591,8 +1556,6 @@ export const fetchCanalesVenta = async () => {
 // Función para obtener todas las páginas CMS desde la base de datos
 export const fetchAllCmsPages = async () => {
   try {
-    console.log('🔍 [fetchAllCmsPages] Obteniendo todas las páginas CMS...');
-    
     const { data, error } = await supabase
       .from('cms_pages')
       .select('*')
@@ -1602,8 +1565,6 @@ export const fetchAllCmsPages = async () => {
       console.error('❌ [fetchAllCmsPages] Error:', error);
       throw error;
     }
-
-    console.log(`✅ [fetchAllCmsPages] ${data?.length || 0} páginas encontradas`);
     return data || [];
   } catch (error) {
     console.error('❌ [fetchAllCmsPages] Error inesperado:', error);
@@ -1614,8 +1575,6 @@ export const fetchAllCmsPages = async () => {
 // Función para crear una página CMS automáticamente cuando se crea un evento
 export const createCmsPageForEvent = async (eventData) => {
   try {
-    console.log('🔧 [createCmsPageForEvent] Creando página CMS para evento:', eventData.nombre);
-    
     // Generar slug a partir del nombre del evento
     const slug = eventData.nombre
       .toLowerCase()
@@ -1623,24 +1582,23 @@ export const createCmsPageForEvent = async (eventData) => {
       .replace(/\s+/g, '-') // Reemplazar espacios con guiones
       .replace(/-+/g, '-') // Remover guiones múltiples
       .trim();
-    
+
     // Verificar si ya existe una página con ese slug
     const { data: existingPage, error: checkError } = await supabase
       .from('cms_pages')
       .select('id')
       .eq('slug', slug)
       .maybeSingle();
-    
+
     if (checkError) {
       console.error('❌ [createCmsPageForEvent] Error verificando slug existente:', checkError);
       return null;
     }
-    
+
     if (existingPage) {
-      console.log('ℹ️ [createCmsPageForEvent] Ya existe una página con slug:', slug);
       return existingPage;
     }
-    
+
     // Crear la página CMS para el evento
     const { data: newPage, error: insertError } = await supabase
       .from('cms_pages')
@@ -1673,15 +1631,13 @@ export const createCmsPageForEvent = async (eventData) => {
       }])
       .select()
       .single();
-    
+
     if (insertError) {
       console.error('❌ [createCmsPageForEvent] Error creando página CMS:', insertError);
       return null;
     }
-    
-    console.log('✅ [createCmsPageForEvent] Página CMS creada exitosamente:', newPage.id);
     return newPage;
-    
+
   } catch (error) {
     console.error('❌ [createCmsPageForEvent] Error inesperado:', error);
     return null;
@@ -1691,20 +1647,16 @@ export const createCmsPageForEvent = async (eventData) => {
 // Función para obtener todas las páginas CMS de un tenant específico
 export const fetchCmsPagesByTenant = async (tenantId) => {
   try {
-    console.log('🔍 [fetchCmsPagesByTenant] Obteniendo páginas CMS para tenant:', tenantId);
-    
     const { data, error } = await supabase
       .from('cms_pages')
       .select('*')
       .eq('tenant_id', tenantId)
       .order('nombre');
-    
+
     if (error) {
       console.error('❌ [fetchCmsPagesByTenant] Error:', error);
       throw error;
     }
-    
-    console.log(`✅ [fetchCmsPagesByTenant] ${data?.length || 0} páginas encontradas`);
     return data || [];
   } catch (error) {
     console.error('❌ [fetchCmsPagesByTenant] Error inesperado:', error);

@@ -17,16 +17,12 @@ export const CanalVentaProvider = ({ children }) => {
 
         // Obtener la URL actual
         const urlActual = window.location.href;
-        console.log('🔍 [CanalVentaContext] Detectando canal para URL:', urlActual);
-
         // Intentar obtener el canal por URL
         const canal = await getCanalVentaByUrl(urlActual);
-        
+
         if (canal) {
-          console.log('🔍 [CanalVentaContext] Canal detectado:', canal);
           setCanalActual(canal);
         } else {
-          console.log('🔍 [CanalVentaContext] No se detectó canal para URL:', urlActual);
           setCanalActual(null);
         }
       } catch (err) {
@@ -47,7 +43,7 @@ export const CanalVentaProvider = ({ children }) => {
 
     // Agregar listener para cambios de URL
     window.addEventListener('popstate', handleUrlChange);
-    
+
     // Para aplicaciones SPA, también escuchar cambios de ruta
     if (window.history && window.history.pushState) {
       const originalPushState = window.history.pushState;
@@ -64,13 +60,11 @@ export const CanalVentaProvider = ({ children }) => {
 
   // Función para establecer manualmente el canal
   const establecerCanal = (canal) => {
-    console.log('🔍 [CanalVentaContext] Canal establecido manualmente:', canal);
     setCanalActual(canal);
   };
 
   // Función para limpiar el canal
   const limpiarCanal = () => {
-    console.log('🔍 [CanalVentaContext] Canal limpiado');
     setCanalActual(null);
   };
 

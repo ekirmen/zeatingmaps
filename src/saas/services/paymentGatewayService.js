@@ -28,24 +28,24 @@ class PaymentGatewayService {
   async getGatewayConfig(gatewayName, tenantId = null) {
     try {
       const currentTenantId = tenantId || this.getCurrentTenantId();
-      
+
       // Buscar en payment_methods usando method_id
       let query = supabase
         .from('payment_methods')
         .select('*')
         .eq('method_id', gatewayName);
-      
+
       // Si hay tenant_id, filtrar por él, sino buscar globales (tenant_id null)
       if (currentTenantId && currentTenantId !== 'global') {
         query = query.eq('tenant_id', currentTenantId);
       } else {
         query = query.is('tenant_id', null);
       }
-      
+
       const { data, error } = await query.single();
 
       if (error && error.code !== 'PGRST116') throw error;
-      
+
       // Mapear a formato compatible con el componente (mantener compatibilidad)
       if (data) {
         return {
@@ -58,7 +58,7 @@ class PaymentGatewayService {
           updated_at: data.updated_at
         };
       }
-      
+
       return null;
     } catch (error) {
       console.error(`Error getting ${gatewayName} config:`, error);
@@ -70,38 +70,38 @@ class PaymentGatewayService {
   async saveGatewayConfig(gatewayName, config, tenantId = null) {
     try {
       const currentTenantId = tenantId || this.getCurrentTenantId();
-      
+
       // Mapear nombres de métodos de pago
       const methodNameMap = {
         'stripe': 'Stripe',
         'paypal': 'PayPal',
         'mercadopago': 'MercadoPago'
       };
-      
+
       const methodTypeMap = {
         'stripe': 'stripe',
         'paypal': 'paypal',
         'mercadopago': 'mercadopago'
       };
-      
+
       // Buscar si ya existe para preservar campos adicionales
       let query = supabase
         .from('payment_methods')
         .select('*')
         .eq('method_id', gatewayName);
-      
+
       if (currentTenantId && currentTenantId !== 'global') {
         query = query.eq('tenant_id', currentTenantId);
       } else {
         query = query.is('tenant_id', null);
       }
-      
+
       const { data: existingMethod, error: checkError } = await query.maybeSingle();
-      
+
       if (checkError && checkError.code !== 'PGRST116') {
         throw checkError;
       }
-      
+
       // Preparar datos para payment_methods
       const methodData = {
         method_id: gatewayName,
@@ -112,7 +112,7 @@ class PaymentGatewayService {
         tenant_id: currentTenantId && currentTenantId !== 'global' ? currentTenantId : null,
         updated_at: new Date().toISOString()
       };
-      
+
       // Preservar campos adicionales si el método ya existe
       if (existingMethod) {
         methodData.processing_time = existingMethod.processing_time || 'Instantáneo';
@@ -144,7 +144,7 @@ class PaymentGatewayService {
           .eq('id', existingMethod.id)
           .select()
           .single();
-        
+
         if (error) throw error;
         result = data;
       } else {
@@ -154,11 +154,11 @@ class PaymentGatewayService {
           .insert([methodData])
           .select()
           .single();
-        
+
         if (error) throw error;
         result = data;
       }
-      
+
       // Mapear respuesta a formato compatible con el componente
       return {
         id: result.id,
@@ -179,7 +179,7 @@ class PaymentGatewayService {
   async configureStripe(config, tenantId = null) {
     try {
       const currentTenantId = tenantId || this.getCurrentTenantId();
-      
+
       const stripeConfig = {
         secret_key: config.secret_key,
         publishable_key: config.publishable_key,
@@ -200,7 +200,7 @@ class PaymentGatewayService {
   async configurePayPal(config, tenantId = null) {
     try {
       const currentTenantId = tenantId || this.getCurrentTenantId();
-      
+
       const paypalConfig = {
         client_id: config.client_id,
         client_secret: config.client_secret,
@@ -221,7 +221,7 @@ class PaymentGatewayService {
   async configureMercadoPago(config, tenantId = null) {
     try {
       const currentTenantId = tenantId || this.getCurrentTenantId();
-      
+
       const mercadopagoConfig = {
         access_token: config.access_token,
         public_key: config.public_key,
@@ -247,10 +247,10 @@ class PaymentGatewayService {
       }
 
       // El config ya viene parseado desde getGatewayConfig
-      const stripeConfig = typeof config.config === 'string' 
-        ? JSON.parse(config.config) 
+      const stripeConfig = typeof config.config === 'string'
+        ? JSON.parse(config.config)
         : config.config;
-      
+
       // Simular procesamiento de pago con Stripe
       const paymentResult = {
         success: Math.random() > 0.1, // 90% éxito simulado
@@ -290,10 +290,10 @@ class PaymentGatewayService {
       }
 
       // El config ya viene parseado desde getGatewayConfig
-      const paypalConfig = typeof config.config === 'string' 
-        ? JSON.parse(config.config) 
+      const paypalConfig = typeof config.config === 'string'
+        ? JSON.parse(config.config)
         : config.config;
-      
+
       // Simular procesamiento de pago con PayPal
       const paymentResult = {
         success: Math.random() > 0.1, // 90% éxito simulado
@@ -334,10 +334,10 @@ class PaymentGatewayService {
       }
 
       // El config ya viene parseado desde getGatewayConfig
-      const mercadopagoConfig = typeof config.config === 'string' 
-        ? JSON.parse(config.config) 
+      const mercadopagoConfig = typeof config.config === 'string'
+        ? JSON.parse(config.config)
         : config.config;
-      
+
       // Simular procesamiento de pago con MercadoPago
       const paymentResult = {
         success: Math.random() > 0.1, // 90% éxito simulado
@@ -403,11 +403,11 @@ class PaymentGatewayService {
     try {
       // Si no se especifica tenantId, usar el tenant actual del contexto
       const currentTenantId = tenantId || this.getCurrentTenantId();
-      
+
       let query = supabase
         .from('payment_methods')
         .select('*');
-      
+
       // Filtrar por tenant_id si existe
       if (currentTenantId && currentTenantId !== 'global') {
         query = query.eq('tenant_id', currentTenantId);
@@ -427,8 +427,8 @@ class PaymentGatewayService {
             id: method.id,
             gateway_name: method.method_id,
             tenant_id: method.tenant_id,
-            config: typeof method.config === 'string' 
-              ? JSON.parse(method.config) 
+            config: typeof method.config === 'string'
+              ? JSON.parse(method.config)
               : method.config,
             is_active: method.enabled,
             created_at: method.created_at,
@@ -454,9 +454,8 @@ class PaymentGatewayService {
         return tenant.id;
       }
     } catch (error) {
-      console.warn('No se pudo obtener tenant actual:', error);
     }
-    
+
     // Fallback: usar 'global' si no hay tenant específico
     return 'global';
   }
@@ -468,10 +467,10 @@ class PaymentGatewayService {
       if (!config) return { valid: false, error: 'Configuración no encontrada' };
 
       // El config viene como string desde getGatewayConfig, parsearlo
-      const gatewayConfig = typeof config.config === 'string' 
-        ? JSON.parse(config.config) 
+      const gatewayConfig = typeof config.config === 'string'
+        ? JSON.parse(config.config)
         : config.config;
-      
+
       // Verificar campos requeridos según la pasarela
       switch (gatewayName) {
         case 'stripe':

@@ -25,7 +25,7 @@ import { supabase } from '../../supabaseClient';
 
 const Pay = () => {
   // Debug log removed for production performance
-  
+
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentTenant } = useTenant();
@@ -82,28 +82,28 @@ const Pay = () => {
 
   useEffect(() => {
     // Debug log removed for production performance
-    
+
     const loadGateways = async () => {
       try {
         setLoadingMethods(true);
         logger.log('🛒 [PAY] Cargando métodos de pago...');
-        
+
         // Obtener el ID del evento del primer item del carrito
         const eventId = cartItems?.[0]?.eventId || null;
         logger.log('🎫 [PAY] Event ID del carrito:', eventId);
-        
+
         const methods = await getActivePaymentMethods(null, eventId);
         logger.log('📋 [PAY] Métodos obtenidos de la BD:', methods);
-        
+
         const validMethods = methods.filter(method => {
           const validation = validatePaymentMethodConfig(method);
           logger.log(`🔍 [PAY] Validando ${method.method_id}:`, validation);
           return validation.valid;
         });
-        
+
         logger.log('✅ [PAY] Métodos válidos después del filtro:', validMethods);
         setAvailableMethods(validMethods);
-        
+
         // Por ahora, no calculamos comisiones específicas
         // Esto se puede implementar más tarde usando la tabla comisiones_tasas
       } catch (error) {
@@ -130,11 +130,9 @@ const Pay = () => {
 
     // Only load data if user is authenticated
     if (user) {
-      console.log('✅ [PAY] Usuario autenticado, cargando métodos de pago...');
       loadGateways();
       loadFacebookPixel();
     } else {
-      console.log('❌ [PAY] Usuario NO autenticado, no se cargan métodos de pago');
     }
   }, [cartItems, total, user]);
 
@@ -208,7 +206,6 @@ const Pay = () => {
     try {
       return typeof field === 'string' ? JSON.parse(field) : field;
     } catch (error) {
-      console.warn('[PAY] Error parseando campo JSON:', error);
       return null;
     }
   };
@@ -229,7 +226,6 @@ const Pay = () => {
       const stored = localStorage.getItem(key);
       return stored ? JSON.parse(stored) : null;
     } catch (error) {
-      console.warn('[PAY] No se pudo leer buyer info almacenada:', error);
       return null;
     }
   };
@@ -272,7 +268,6 @@ const Pay = () => {
           .single();
 
         if (error || !data) {
-          console.warn('[PAY] No se pudo obtener configuración de datos del comprador:', error);
           setBuyerInfoCompleted(true);
           return;
         }
@@ -301,7 +296,6 @@ const Pay = () => {
         setBuyerInfoCompleted(!needsInfo);
         setBuyerModalVisible(needsInfo);
       } catch (configError) {
-        console.warn('[PAY] Error cargando configuración de comprador:', configError);
         setBuyerInfoCompleted(true);
       } finally {
         setBuyerConfigLoading(false);
@@ -317,7 +311,6 @@ const Pay = () => {
     try {
       localStorage.setItem(key, JSON.stringify({ ...dataToSave, __completed: true, savedAt: new Date().toISOString() }));
     } catch (error) {
-      console.warn('[PAY] No se pudo guardar buyer info:', error);
     }
   };
 
@@ -416,15 +409,15 @@ const Pay = () => {
           // Verificar si el asiento está bloqueado por otro usuario
           const isLockedByOther = lockedSeats.some(lock =>
             lock.seat_id === seatId &&
-            lock.funcion_id === funcionId && 
+            lock.funcion_id === funcionId &&
             lock.session_id !== localStorage.getItem('anonSessionId')
           );
-          
+
           if (isLockedByOther) {
             unavailableSeats.push(item.nombre || seatId);
             continue;
           }
-          
+
           // Verificar disponibilidad usando el servicio atómico como respaldo
           // Pasar el session_id para que solo verifique locks de otros usuarios
           const currentSessionId = localStorage.getItem('anonSessionId');
@@ -450,14 +443,14 @@ const Pay = () => {
     // Declarar variables fuera del try para que estén disponibles en el catch
     let paymentData = null;
     let resolvedTenantId = null;
-    
+
     try {
       setProcessingPayment(true);
-      
+
       // Generar locator simple de 8 caracteres (números y letras)
       const { generateSimpleLocator } = await import('../../utils/generateLocator');
       const locator = generateSimpleLocator();
-      
+
       let seatSessionId = null;
       if (typeof window !== 'undefined') {
         try {
@@ -466,7 +459,6 @@ const Pay = () => {
             window.sessionStorage?.getItem('anonSessionId') ||
             null;
         } catch (sessionError) {
-          console.warn('No se pudo obtener la sesión de asientos:', sessionError);
         }
       }
 
@@ -483,34 +475,24 @@ const Pay = () => {
 
       // Obtener evento_id desde múltiples fuentes
       let eventoId = cartItems?.[0]?.eventId || cartItems?.[0]?.eventoId || null;
-      
+
       // Si no hay evento_id en el carrito pero sí hay funcion_id, obtenerlo desde la función
       if (!eventoId && functionId) {
         try {
-          console.log('🎫 [PAY] Obteniendo evento_id desde función:', functionId);
           const { supabase } = await import('../../supabaseClient');
           const { data: funcionData, error: funcionError } = await supabase
             .from('funciones')
             .select('evento_id')
             .eq('id', functionId)
             .single();
-          
+
           if (!funcionError && funcionData) {
             eventoId = funcionData.evento_id || null;
-            console.log('✅ [PAY] Evento_id obtenido desde función:', eventoId);
           } else {
-            console.warn('⚠️ [PAY] No se pudo obtener evento_id desde función:', funcionError);
             if (funcionError) {
-              console.warn('⚠️ [PAY] Detalles del error:', {
-                message: funcionError.message,
-                code: funcionError.code,
-                details: funcionError.details,
-                hint: funcionError.hint
-              });
             }
           }
         } catch (error) {
-          console.warn('⚠️ [PAY] Error al obtener evento_id desde función:', error);
         }
       }
 
@@ -519,19 +501,10 @@ const Pay = () => {
       if (pagosPlazosActivos?.activo && cuotasSeleccionadas > 0 && cuotasCalculadas.length > 0) {
         // Si se seleccionaron cuotas específicas (1, 2, 3), usar el monto de esas cuotas
         montoAPagar = cuotasCalculadas.slice(0, cuotasSeleccionadas).reduce((sum, c) => sum + c.monto, 0);
-        console.log('💰 [PAY] Pagando cuotas parciales:', {
-          cuotasSeleccionadas,
-          montoAPagar,
-          totalOriginal: total,
-          cuotasCalculadas: cuotasCalculadas.slice(0, cuotasSeleccionadas)
         });
       } else if (pagosPlazosActivos?.activo && cuotasSeleccionadas === 0) {
         // Si se seleccionó 0 (todas las cuotas), pagar el total completo
         montoAPagar = total;
-        console.log('💰 [PAY] Pagando todas las cuotas:', {
-          montoAPagar,
-          totalCuotas: pagosPlazosActivos.cantidadCuotas
-        });
       }
 
       // Preparar metadata para pagos a plazos
@@ -539,7 +512,7 @@ const Pay = () => {
       if (pagosPlazosActivos?.activo && cuotasCalculadas.length > 0) {
         // Si cuotasSeleccionadas es 0, significa que se pagaron TODAS las cuotas
         const cuotasPagadas = cuotasSeleccionadas === 0 ? pagosPlazosActivos.cantidadCuotas : cuotasSeleccionadas;
-        
+
         metadata.pagos_plazos = {
           cantidad_cuotas_total: pagosPlazosActivos.cantidadCuotas,
           cuotas_pagadas: cuotasPagadas,
@@ -549,8 +522,6 @@ const Pay = () => {
           monto_pendiente: total - montoAPagar,
           dias_entre_pagos: pagosPlazosActivos.diasEntrePagos
         };
-
-        console.log('💰 [PAY] Metadata de pagos a plazos:', metadata.pagos_plazos);
       }
 
       const buyerInfoForPayment = (() => {
@@ -594,7 +565,6 @@ const Pay = () => {
 
       // Encriptar datos sensibles de pago antes de enviarlos
       const encryptedPaymentData = await encryptPaymentData(paymentData).catch(err => {
-        console.warn('[PAY] Error encriptando datos de pago, continuando sin encriptar:', err);
         return paymentData; // Continuar sin encriptar si falla
       });
 
@@ -609,19 +579,11 @@ const Pay = () => {
       }).catch(err => console.error('Error logging payment initiation:', err));
 
       const result = await processPaymentMethod(selectedGateway, encryptedPaymentData);
-      console.log('🔍 Payment result:', result);
-      console.log('🔍 Result success:', result.success);
-      console.log('🔍 Result requiresRedirect:', result.requiresRedirect);
-      console.log('🔍 Result requiresAction:', result.requiresAction);
-      console.log('🔍 Result requiresManualConfirmation:', result.requiresManualConfirmation);
-
       if (result.success) {
-        console.log('✅ Payment successful, redirecting...');
-        
         // Determinar el status real de la transacción
         const transactionStatus = result.status || 'completed';
         const isReservation = transactionStatus === 'reservado' || transactionStatus === 'reserved' || transactionStatus === 'pending';
-        
+
         // Registrar pago exitoso en auditoría
         auditService.logPayment('completed', {
           ...paymentData,
@@ -634,7 +596,7 @@ const Pay = () => {
           resourceId: result.transactionId,
           severity: 'info'
         }).catch(err => console.error('Error logging payment success:', err));
-        
+
         // Enviar notificación de éxito
         await createPaymentSuccessNotification({
           id: result.transactionId,
@@ -667,11 +629,9 @@ const Pay = () => {
               transactionId: result.transactionId,
               amount: montoAPagar,
             });
-            
+
             if (emailResult.success) {
-              console.log('✅ [PAY] Correo enviado exitosamente');
             } else {
-              console.warn('⚠️ [PAY] Error enviando correo:', emailResult.error);
             }
           } catch (emailError) {
             console.error('❌ [PAY] Error enviando correo:', emailError);
@@ -681,7 +641,7 @@ const Pay = () => {
 
         // Limpiar carrito (sin intentar desbloquear asientos ya vendidos)
         clearCart(true);
-        
+
         // Redirigir según el tipo de pago
         if (result.requiresRedirect) {
           window.location.href = result.approvalUrl;
@@ -692,12 +652,9 @@ const Pay = () => {
           // Para transferencias, mostrar información
           navigate('/store/payment-manual', { state: { result } });
         } else {
-          console.log('🔄 Redirecting to payment success page...');
           navigate('/store/payment-success', { state: { result, locator: result.locator } });
         }
       } else {
-        console.log('❌ Payment failed or success is false:', result);
-        
         // Registrar pago fallido en auditoría
         auditService.logPayment('failed', {
           ...paymentData,
@@ -709,12 +666,12 @@ const Pay = () => {
           tenantId: resolvedTenantId,
           severity: 'error'
         }).catch(err => console.error('Error logging payment failure:', err));
-        
+
         message.error(result.error || 'Error al procesar el pago. Por favor, inténtalo de nuevo.');
       }
     } catch (error) {
       console.error('Error processing payment:', error);
-      
+
       // Registrar error de pago en auditoría solo si tenemos los datos necesarios
       if (paymentData || resolvedTenantId) {
         auditService.logPayment('error', {
@@ -728,10 +685,10 @@ const Pay = () => {
           severity: 'error'
         }).catch(err => console.error('Error logging payment error:', err));
       }
-      
+
       // Usar el hook de manejo de errores
       const errorResult = handleError(error, 'payment', { clearCart });
-      
+
       // Limpiar carrito si es necesario
       if (errorResult.shouldClearCart) {
         clearCart();
@@ -864,7 +821,7 @@ const Pay = () => {
                 {/* Métodos de Pago */}
                 <div className="store-space-y-4 md:store-space-y-6">
                   <h2 className="store-text-lg md:store-text-xl store-font-semibold">Métodos de Pago</h2>
-                  
+
                   {loadingMethods ? (
                     <div className="store-text-center py-8">
                       <div className="store-loading"></div>
@@ -881,7 +838,7 @@ const Pay = () => {
                     <div className="store-space-y-4">
                       {availableMethods.map((method) => {
                         const isSelected = selectedGateway?.method_id === method.method_id;
-                        
+
                         return (
                           <div
                             key={method.method_id}
@@ -926,7 +883,7 @@ const Pay = () => {
                           </div>
                         ))}
                       </div>
-                      
+
                       {cartItems.map((item, index) => (
                         <div key={index} className="flex flex-col sm:flex-row sm:justify-between store-text-xs md:store-text-sm gap-1">
                           <span className="break-words">{item.nombreEvento}</span>

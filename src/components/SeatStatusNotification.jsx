@@ -22,7 +22,6 @@ const SeatStatusNotification = () => {
     // Obtener configuración de notificaciones
     const enableNotifications = localStorage.getItem('seat_notifications') !== 'false';
     if (!enableNotifications) {
-      console.log('🔕 [SeatStatusNotification] Notificaciones deshabilitadas');
       return;
     }
 
@@ -51,13 +50,11 @@ const SeatStatusNotification = () => {
 
   const handleExtendTime = () => {
     // Aquí podrías implementar la lógica para extender el tiempo
-    console.log('⏰ [SeatStatusNotification] Extendiendo tiempo de asientos...');
     setShowExpiringWarning(false);
   };
 
   const handleProceedToPayment = () => {
     // Navegar al carrito o proceso de pago
-    console.log('💳 [SeatStatusNotification] Procediendo al pago...');
     setShowExpiringWarning(false);
   };
 
@@ -72,9 +69,9 @@ const SeatStatusNotification = () => {
                 <ExclamationCircleOutlined className="text-orange-500 mr-2" />
                 <span className="font-semibold">¡Atención! Tus asientos están por expirar</span>
               </div>
-              <Button 
-                type="link" 
-                size="small" 
+              <Button
+                type="link"
+                size="small"
                 onClick={() => setShowExpiringWarning(false)}
               >
                 ✕
@@ -84,18 +81,18 @@ const SeatStatusNotification = () => {
           description={
             <div className="mt-2">
               <p>
-                Tienes {expiringSeats.length} asiento(s) que expirarán en breve. 
+                Tienes {expiringSeats.length} asiento(s) que expirarán en breve.
                 Para mantenerlos, completa tu compra o extiende el tiempo.
               </p>
               <div className="mt-3 space-x-2">
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   size="small"
                   onClick={handleProceedToPayment}
                 >
                   💳 Completar Compra
                 </Button>
-                <Button 
+                <Button
                   size="small"
                   onClick={handleExtendTime}
                 >

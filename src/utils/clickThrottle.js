@@ -28,7 +28,6 @@ class ClickThrottle {
 
     // Verificar si se excedió el máximo de clicks en la ventana de tiempo
     if (this.clickHistory.length >= this.maxClicks) {
-      console.warn(`[CLICK_THROTTLE] Rate limit excedido: ${this.clickHistory.length} clicks en ${this.windowMs}ms`);
       return false;
     }
 
@@ -36,7 +35,6 @@ class ClickThrottle {
     if (this.blockedSeats.has(seatId)) {
       const lastClick = this.pendingClicks.get(seatId);
       if (lastClick && now - lastClick < this.delay) {
-        console.warn(`[CLICK_THROTTLE] Click bloqueado para asiento ${seatId}: demasiado rápido`);
         return false;
       }
       // Desbloquear si ya pasó el delay
@@ -46,7 +44,6 @@ class ClickThrottle {
     // Verificar delay mínimo desde el último click en este asiento
     const lastClickTime = this.pendingClicks.get(seatId);
     if (lastClickTime && now - lastClickTime < this.delay) {
-      console.warn(`[CLICK_THROTTLE] Click bloqueado para asiento ${seatId}: delay mínimo no cumplido`);
       return false;
     }
 

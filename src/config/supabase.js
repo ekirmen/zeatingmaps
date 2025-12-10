@@ -107,7 +107,6 @@ let _adminInstance = null;
 export const getSupabaseClient = () => {
   // Solo crear la instancia si no existe
   if (!_clientInstance) {
-    console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente');
     _clientInstance = createOptimizedClient(supabaseUrl, supabaseAnonKey);
   }
   return _clientInstance;
@@ -117,18 +116,15 @@ export const getSupabaseClient = () => {
 export const getSupabaseAdminClient = () => {
   // Evitar crear la instancia en el navegador
   if (typeof window !== 'undefined') {
-    console.warn('[SUPABASE CONFIG] Cliente admin no disponible en el navegador');
     return null;
   }
 
   if (!serviceRoleKey) {
-    console.warn('[SUPABASE CONFIG] Service role key no encontrada');
     return null;
   }
 
   // Solo crear la instancia si no existe
   if (!_adminInstance) {
-    console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente admin');
     _adminInstance = createOptimizedClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,

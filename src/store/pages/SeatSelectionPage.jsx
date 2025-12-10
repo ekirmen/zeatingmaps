@@ -21,7 +21,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   const [error, setError] = useState(null);
   const [isRedirecting, setIsRedirecting] = useState(autoRedirectToEventMap);
   const [redirectFailed, setRedirectFailed] = useState(!autoRedirectToEventMap);
-  
+
   // Cache para zona/mesa/precio por asiento (evitar recalcular en cada click)
   const seatDataCache = React.useRef(new Map());
 
@@ -29,7 +29,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   const cartItems = useCartStore((state) => state.items);
   const timeLeft = useCartStore((state) => state.timeLeft);
   const { isMobile } = useResponsive();
-  
+
   const {
     subscribeToFunction,
     unsubscribe,
@@ -41,25 +41,25 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     areAllSeatsInTableLockedByMe
   } = useSeatLockStore();
   const lockedSeats = useSeatLockStore((state) => state.lockedSeats);
-  
+
   // Filtrar items del carrito que pertenecen a esta función (memoizado)
-  const funcionCartItems = useMemo(() => 
-    cartItems.filter(item => 
+  const funcionCartItems = useMemo(() =>
+    cartItems.filter(item =>
       String(item.functionId || item.funcionId) === String(funcionId)
     ), [cartItems, funcionId]
   );
-  
+
   // Limpiar cache cuando cambia el mapa o plantilla
   useEffect(() => {
     seatDataCache.current.clear();
   }, [mapa, plantillaPrecios]);
-  
+
   // Memoizar selectedSeats para evitar re-renders innecesarios
-  const selectedSeats = useMemo(() => 
+  const selectedSeats = useMemo(() =>
     cartItems.map(item => item.sillaId || item.id || item._id),
     [cartItems]
   );
-  
+
 
   const ensureSessionId = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -71,7 +71,6 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           window.localStorage.setItem('anonSessionId', newSessionId);
         }
       } catch (sessionError) {
-        console.warn('[SeatSelectionPage] No se pudo inicializar session_id:', sessionError);
       }
     }
   }, []);
@@ -103,28 +102,16 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           throw new Error('Función inválida');
         }
 
+        // Optimizar: hacer una sola query con join
         const { data: funcionData, error: funcionError } = await supabase
           .from('funciones')
-          .select('evento_id')
+          .select('evento_id, eventos!inner(slug)')
           .eq('id', funcionNumeric)
           .maybeSingle();
 
         if (funcionError) throw funcionError;
 
-        const eventoId = funcionData?.evento_id;
-        if (!eventoId) {
-          throw new Error('La función no tiene un evento asociado');
-        }
-
-        const { data: eventoData, error: eventoError } = await supabase
-          .from('eventos')
-          .select('slug')
-          .eq('id', eventoId)
-          .maybeSingle();
-
-        if (eventoError) throw eventoError;
-
-        const eventSlug = eventoData?.slug;
+        const eventSlug = funcionData?.eventos?.slug;
         if (!eventSlug) {
           throw new Error('El evento no tiene un slug configurado');
         }
@@ -167,13 +154,12 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         setMapLoadProgress(10);
 
         const funcionNumeric = parseInt(funcionId, 10);
-        
+
         // Precargar módulos críticos en paralelo con la carga del mapa
         const preloadModules = Promise.all([
           import('../../services/seatPaymentChecker'),
           import('../../components/seatLockStore')
         ]).catch(err => {
-          console.warn('Error precargando módulos:', err);
         });
 
         setMapLoadProgress(15);
@@ -197,22 +183,21 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         // Cargar mapa y plantilla en paralelo con cache
         setMapLoadStage('cargandoMapa');
         setMapLoadProgress(40);
-        
+
         // Intentar cargar mapa desde cache primero
         const mapaCacheKey = `mapa_${funcion.sala_id}`;
         const cachedMapa = sessionStorage.getItem(mapaCacheKey);
         let mapaData = null;
-        
+
         if (cachedMapa) {
           try {
             mapaData = JSON.parse(cachedMapa);
             setMapa(mapaData);
             setMapLoadProgress(60);
           } catch (e) {
-            console.warn('Error parsing cached mapa:', e);
           }
         }
-        
+
         // Cargar mapa y plantilla en paralelo
         const mapaQuery = supabase
           .from('mapas')
@@ -255,19 +240,19 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         setMapLoadStage('cargandoPrecios');
         const { data: plantillaData } = plantillaResult;
         setPlantillaPrecios(plantillaData || null);
-        
+
         setMapLoadProgress(95);
         setMapLoadStage('finalizando');
-        
+
         // Mostrar 100% inmediatamente
         setMapLoadProgress(100);
-        
+
         // Ocultar loading rápidamente después de mostrar 100%
         setTimeout(() => {
           setLoading(false);
         }, 100);
       } catch (err) {
-        console.error('Error cargando mapa:', err);
+        // Error silencioso - ya se muestra en la UI
         setError(err.message);
         setMapLoadProgress(0);
         setLoading(false);
@@ -281,24 +266,24 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   const getSeatData = useCallback((seat) => {
     const seatId = seat._id || seat.id || seat.sillaId;
     if (!seatId) return null;
-    
+
     // Verificar cache primero
     if (seatDataCache.current.has(seatId)) {
       return seatDataCache.current.get(seatId);
     }
-    
+
     // Obtener zona del asiento (simplificado para móvil)
     const zona = mapa?.zonas?.find(z => z.asientos?.some(a => a._id === seatId)) ||
                  mapa?.contenido?.find(el => el.sillas?.some(a => a._id === seatId) && (el.zona || el.zonaId)) ||
                  seat.zona || {};
-    
+
     const zonaId = zona?.id || zona?.zonaId || seat.zonaId;
     const nombreZona = zona?.nombre || seat.nombreZona || seat.zona?.nombre || 'Zona';
-    
+
     // Obtener mesa del asiento
     const mesa = seat.mesa || seat.mesaId || seat.tableId || null;
     const nombreMesa = seat.nombreMesa || seat.mesa?.nombre || (mesa ? `Mesa ${mesa}` : null);
-    
+
     // Obtener precio de la plantilla (cachear resultado)
     let precio = seat.precio || 0;
     if (plantillaPrecios && plantillaPrecios.detalles) {
@@ -306,25 +291,24 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         const detalles = typeof plantillaPrecios.detalles === 'string'
           ? JSON.parse(plantillaPrecios.detalles)
           : plantillaPrecios.detalles;
-        
+
         const precioZona = detalles.find(d =>
           d.zona_id === zonaId ||
           d.zonaId === zonaId ||
           d.zona_nombre === nombreZona ||
           d.zonaNombre === nombreZona
         );
-        
+
         if (precioZona) {
           precio = precioZona.precio || precio;
         }
       } catch (e) {
         // Silenciar error en móvil para mejor performance
         if (!isMobile) {
-          console.warn('[SeatSelectionPage] Error parsing detalles:', e);
         }
       }
     }
-    
+
     const seatData = {
       zonaId,
       nombreZona,
@@ -332,10 +316,10 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       nombreMesa,
       precio
     };
-    
+
     // Guardar en cache
     seatDataCache.current.set(seatId, seatData);
-    
+
     return seatData;
   }, [mapa, plantillaPrecios, isMobile]);
 
@@ -352,14 +336,14 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       });
       return;
     }
-    
+
     // Preparar asiento con todos los datos
     const seatWithData = {
       ...seat,
       funcionId,
       ...seatData
     };
-    
+
     // En móvil, no esperar respuesta completa (optimistic update)
     if (isMobile) {
       toggleSeat(seatWithData).catch(err => {
@@ -375,24 +359,59 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   const [mapLoadStage, setMapLoadStage] = useState('cargandoDatos');
 
   if (isRedirecting || loading) {
+    // Mostrar skeleton inmediatamente para mejorar FCP y LCP
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Spin size="large" className="mb-4" />
-          <p className="text-gray-600">
-            {isRedirecting ? 'Redirigiendo...' : 'Cargando mapa...'}
-          </p>
-          {loading && mapLoadProgress > 0 && (
-            <div className="mt-4 w-64">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${mapLoadProgress}%` }}
-                />
-              </div>
-              <p className="text-sm text-gray-500 mt-2">{mapLoadProgress}%</p>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        padding: '20px'
+      }}>
+        {/* Skeleton del header - se muestra inmediatamente */}
+        <div style={{
+          height: '60px',
+          backgroundColor: '#f0f0f0',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          animation: 'pulse 1.5s ease-in-out infinite'
+        }} />
+        
+        {/* Skeleton del mapa - placeholder grande para LCP */}
+        <div style={{
+          flex: 1,
+          backgroundColor: '#f5f5f5',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '500px',
+          animation: 'pulse 1.5s ease-in-out infinite'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: '16px', color: '#666' }}>
+              {isRedirecting ? 'Redirigiendo...' : (mapLoadStage === 'cargandoMapa' ? 'Cargando mapa...' : mapLoadStage === 'cargandoPrecios' ? 'Cargando precios...' : 'Cargando...')}
             </div>
-          )}
+            {loading && mapLoadProgress > 0 && (
+              <div style={{ marginTop: '8px', width: '200px', margin: '8px auto 0' }}>
+                <div style={{
+                  width: '100%',
+                  height: '4px',
+                  backgroundColor: '#f0f0f0',
+                  borderRadius: '2px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    width: `${mapLoadProgress}%`,
+                    height: '100%',
+                    backgroundColor: '#1890ff',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+                <div style={{ marginTop: '4px', fontSize: '12px', color: '#999' }}>{mapLoadProgress}%</div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -412,7 +431,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   }
 
   return (
-    <div className="seat-selection-page store-container" style={{ 
+    <div className="seat-selection-page store-container" style={{
       padding: isMobile ? '12px' : '24px',
       paddingBottom: isMobile ? '24px' : '24px',
       display: 'flex',
@@ -424,7 +443,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       boxSizing: 'border-box'
     }}>
       {/* Mapa de asientos */}
-      <div className="store-card" style={{ 
+      <div className="store-card" style={{
         marginBottom: isMobile ? '24px' : '0',
         flex: isMobile ? '0 0 auto' : '1 1 60%',
         display: 'flex',
@@ -443,7 +462,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
             </h2>
           </div>
         </div>
-        <div className="store-card-body" style={{ 
+        <div className="store-card-body" style={{
           padding: isMobile ? '12px' : '24px',
           flex: '1 1 auto',
           overflow: 'hidden',
@@ -486,7 +505,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       </div>
 
       {/* Carrito - Siempre visible, debajo del mapa en mobile */}
-      <div 
+      <div
         className="store-card"
         style={{
           position: 'relative',

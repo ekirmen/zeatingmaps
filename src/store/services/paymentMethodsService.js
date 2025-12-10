@@ -9,27 +9,10 @@ import { resolveTenantId } from '../../utils/tenantUtils';
 export const getActivePaymentMethods = async (tenantId = null, eventId = null) => {
   try {
     const currentTenantId = tenantId || resolveTenantId();
-    
-    console.log('🔍 [PAYMENT_METHODS] Obteniendo métodos de pago activos...');
-    console.log('🏢 [PAYMENT_METHODS] Tenant ID:', currentTenantId);
-    console.log('🎫 [PAYMENT_METHODS] Event ID:', eventId);
-    
     if (!currentTenantId) {
-      console.warn('⚠️ [PAYMENT_METHODS] No se pudo determinar el tenant_id actual');
       return [];
     }
-
-    console.log('🔍 [PAYMENT_METHODS] Ejecutando consulta Supabase...');
-    console.log('🔍 [PAYMENT_METHODS] Query params:', {
-      table: 'payment_methods',
-      enabled: true,
-      tenant_id: currentTenantId,
-      tenant_id_type: typeof currentTenantId,
-      event_id: eventId
-    });
-
     // Usar consulta directa (las políticas RLS ya están arregladas)
-    console.log('🔍 [PAYMENT_METHODS] Usando consulta directa...');
     const { data, error } = await supabase
       .from('payment_methods')
       .select('*')
@@ -37,9 +20,6 @@ export const getActivePaymentMethods = async (tenantId = null, eventId = null) =
       .eq('tenant_id', currentTenantId)
       .order('is_recommended', { ascending: false })
       .order('name');
-
-    console.log('🔍 [PAYMENT_METHODS] Respuesta de Supabase:', { data, error });
-
     if (error) {
       console.error('❌ [PAYMENT_METHODS] Error en la consulta:', error);
       throw error;
@@ -57,26 +37,19 @@ export const getActivePaymentMethods = async (tenantId = null, eventId = null) =
           .single();
 
         if (!eventoError && eventoData?.otrasOpciones) {
-          const otrasOpciones = typeof eventoData.otrasOpciones === 'string' 
-            ? JSON.parse(eventoData.otrasOpciones) 
+          const otrasOpciones = typeof eventoData.otrasOpciones === 'string'
+            ? JSON.parse(eventoData.otrasOpciones)
             : eventoData.otrasOpciones;
 
           // Si hay métodos permitidos configurados, filtrar por ellos
           if (otrasOpciones?.metodosPagoPermitidos && Array.isArray(otrasOpciones.metodosPagoPermitidos) && otrasOpciones.metodosPagoPermitidos.length > 0) {
-            console.log('🔍 [PAYMENT_METHODS] Filtrando por métodos permitidos del evento:', otrasOpciones.metodosPagoPermitidos);
             methods = methods.filter(method => otrasOpciones.metodosPagoPermitidos.includes(method.method_id));
-            console.log('📊 [PAYMENT_METHODS] Métodos después del filtro del evento:', methods.length);
           }
         }
       } catch (eventoError) {
-        console.warn('⚠️ [PAYMENT_METHODS] Error obteniendo configuración del evento:', eventoError);
         // Continuar sin filtrar si hay error
       }
     }
-
-    console.log('📊 [PAYMENT_METHODS] Métodos encontrados:', methods.length);
-    console.log('📋 [PAYMENT_METHODS] Datos:', methods);
-    
     return methods;
   } catch (error) {
     console.error('❌ [PAYMENT_METHODS] Error fetching active payment methods:', error);
@@ -90,9 +63,8 @@ export const getActivePaymentMethods = async (tenantId = null, eventId = null) =
 export const getAllPaymentMethods = async (tenantId = null) => {
   try {
     const currentTenantId = tenantId || resolveTenantId();
-    
+
     if (!currentTenantId) {
-      console.warn('No se pudo determinar el tenant_id actual');
       return [];
     }
 
@@ -117,9 +89,8 @@ export const getAllPaymentMethods = async (tenantId = null) => {
 export const getPaymentMethodConfig = async (methodId, tenantId = null) => {
   try {
     const currentTenantId = tenantId || resolveTenantId();
-    
+
     if (!currentTenantId) {
-      console.warn('No se pudo determinar el tenant_id actual');
       return null;
     }
 
@@ -142,8 +113,6 @@ export const getPaymentMethodConfig = async (methodId, tenantId = null) => {
  * Valida la configuración de un método de pago
  */
 export const validatePaymentMethodConfig = (method) => {
-  console.log('🔍 [VALIDATION] Validando método:', method.method_id, method.config);
-  
   const validations = {
     stripe: ['publishable_key', 'secret_key'],
     paypal: ['client_id', 'client_secret'],
@@ -179,12 +148,10 @@ export const validatePaymentMethodConfig = (method) => {
   const result = {
     valid: missingFields.length === 0,
     missingFields,
-    message: missingFields.length > 0 
+    message: missingFields.length > 0
       ? `Campos faltantes: ${missingFields.join(', ')}`
       : 'Configuración válida'
   };
-
-  console.log('✅ [VALIDATION] Resultado:', result);
   return result;
 };
 
@@ -207,14 +174,14 @@ export const getAvailablePaymentMethodIds = async () => {
 export const updatePaymentMethodConfig = async (methodId, config, tenantId = null) => {
   try {
     const currentTenantId = tenantId || resolveTenantId();
-    
+
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
     }
 
     const { data, error } = await supabase
       .from('payment_methods')
-      .update({ 
+      .update({
         config: config,
         updated_at: new Date().toISOString()
       })
@@ -237,14 +204,14 @@ export const updatePaymentMethodConfig = async (methodId, config, tenantId = nul
 export const togglePaymentMethod = async (methodId, enabled, tenantId = null) => {
   try {
     const currentTenantId = tenantId || resolveTenantId();
-    
+
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
     }
 
     const { data, error } = await supabase
       .from('payment_methods')
-      .update({ 
+      .update({
         enabled: enabled,
         updated_at: new Date().toISOString()
       })
@@ -267,7 +234,7 @@ export const togglePaymentMethod = async (methodId, enabled, tenantId = null) =>
 export const createPaymentMethod = async (methodData, tenantId = null) => {
   try {
     const currentTenantId = tenantId || resolveTenantId();
-    
+
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
     }
@@ -297,7 +264,7 @@ export const createPaymentMethod = async (methodData, tenantId = null) => {
 export const deletePaymentMethod = async (methodId, tenantId = null) => {
   try {
     const currentTenantId = tenantId || resolveTenantId();
-    
+
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
     }

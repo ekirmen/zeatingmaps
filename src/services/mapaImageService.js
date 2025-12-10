@@ -10,14 +10,10 @@ class MapaImageService {
    */
   async restoreImagesForEditing(mapaId, elementos) {
     try {
-      console.log('🖼️ [MAPA_IMAGE_SERVICE] Restaurando imágenes para edición:', { mapaId, elementosCount: elementos.length });
-      
       const elementosRestaurados = await Promise.all(
         elementos.map(async (elemento) => {
           // Si el elemento tiene imageDataRef, restaurar la imagen comprimida para vista previa
           if (elemento.imageDataRef && elemento.type === 'background') {
-            console.log('🖼️ [MAPA_IMAGE_SERVICE] Restaurando imagen para elemento:', elemento._id);
-            
             try {
               // Obtener imagen comprimida para vista previa
               const { data: imagenComprimida, error } = await supabase
@@ -32,12 +28,10 @@ class MapaImageService {
               }
 
               if (imagenComprimida) {
-                console.log('✅ [MAPA_IMAGE_SERVICE] Imagen restaurada para elemento:', elemento._id);
-                
                 // Crear objeto de imagen para Konva
                 const img = new window.Image();
                 img.src = imagenComprimida;
-                
+
                 // Retornar elemento con imageData restaurado
                 return {
                   ...elemento,
@@ -50,12 +44,10 @@ class MapaImageService {
               console.error('❌ [MAPA_IMAGE_SERVICE] Error procesando imagen:', error);
             }
           }
-          
+
           return elemento;
         })
       );
-
-      console.log('✅ [MAPA_IMAGE_SERVICE] Imágenes restauradas exitosamente');
       return elementosRestaurados;
     } catch (error) {
       console.error('❌ [MAPA_IMAGE_SERVICE] Error restaurando imágenes:', error);
@@ -71,8 +63,6 @@ class MapaImageService {
    */
   async optimizeMapAfterEditing(mapaId, elementos) {
     try {
-      console.log('🖼️ [MAPA_IMAGE_SERVICE] Optimizando mapa después de edición:', { mapaId, elementosCount: elementos.length });
-      
       const { data, error } = await supabase
         .rpc('optimize_mapa_after_editing', {
           mapa_id_param: mapaId,
@@ -83,8 +73,6 @@ class MapaImageService {
         console.error('❌ [MAPA_IMAGE_SERVICE] Error optimizando mapa:', error);
         return false;
       }
-
-      console.log('✅ [MAPA_IMAGE_SERVICE] Mapa optimizado exitosamente');
       return true;
     } catch (error) {
       console.error('❌ [MAPA_IMAGE_SERVICE] Error optimizando mapa:', error);
@@ -102,7 +90,7 @@ class MapaImageService {
   async getMapImage(mapaId, elementoId, original = false) {
     try {
       const functionName = original ? 'get_mapa_imagen_original' : 'get_mapa_imagen_compressed';
-      
+
       const { data, error } = await supabase
         .rpc(functionName, {
           mapa_id_param: mapaId,
@@ -127,7 +115,7 @@ class MapaImageService {
    * @returns {boolean} - True si tiene elementos con imageDataRef
    */
   hasOptimizedImages(elementos) {
-    return elementos.some(elemento => 
+    return elementos.some(elemento =>
       elemento.type === 'background' && elemento.imageDataRef
     );
   }
@@ -140,19 +128,17 @@ class MapaImageService {
    */
   async loadBackgroundImages(mapaId, elementos) {
     try {
-      console.log('🖼️ [MAPA_IMAGE_SERVICE] Cargando imágenes de fondo:', { mapaId, elementosCount: elementos.length });
-      
       const elementosConImagenes = await Promise.all(
         elementos.map(async (elemento) => {
           if (elemento.imageDataRef && elemento.type === 'background') {
             try {
               // Obtener imagen comprimida para vista previa
               const imagenComprimida = await this.getMapImage(mapaId, elemento.imageDataRef, false);
-              
+
               if (imagenComprimida) {
                 const img = new window.Image();
                 img.src = imagenComprimida;
-                
+
                 return {
                   ...elemento,
                   image: img,
@@ -163,12 +149,10 @@ class MapaImageService {
               console.error('❌ [MAPA_IMAGE_SERVICE] Error cargando imagen de fondo:', error);
             }
           }
-          
+
           return elemento;
         })
       );
-
-      console.log('✅ [MAPA_IMAGE_SERVICE] Imágenes de fondo cargadas');
       return elementosConImagenes;
     } catch (error) {
       console.error('❌ [MAPA_IMAGE_SERVICE] Error cargando imágenes de fondo:', error);

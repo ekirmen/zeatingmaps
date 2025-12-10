@@ -101,7 +101,6 @@ export const getUserPurchasesWithSeats = async (userId) => {
             .eq('locator', transaction.locator);
 
           if (seatsError) {
-            console.warn('Error getting seats for transaction:', seatsError);
           }
 
           // Obtener datos del evento para verificar si wallet está habilitado
@@ -118,17 +117,15 @@ export const getUserPurchasesWithSeats = async (userId) => {
                 eventData = event;
               }
             } catch (eventErr) {
-              console.warn('Error getting event data for transaction:', eventErr);
             }
           }
 
-          return { 
-            ...transaction, 
+          return {
+            ...transaction,
             seats: seats || [],
             event: eventData
           };
         } catch (error) {
-          console.warn('Error processing seats for transaction:', error);
           return { ...transaction, seats: [], event: null };
         }
       })

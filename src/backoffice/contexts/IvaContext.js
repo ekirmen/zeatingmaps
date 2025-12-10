@@ -11,18 +11,17 @@ export const IvaProvider = ({ children }) => {
   useEffect(() => {
     const fetchIvas = async () => {
       if (!currentTenant?.id) {
-        console.warn('No hay tenant disponible para cargar IVAs');
         setIvas([]);
         return;
       }
 
       // Si es main-domain, no filtrar por tenant_id
       let query = supabase.from('ivas').select('*');
-      
+
       if (currentTenant.id !== 'main-domain') {
         query = query.eq('tenant_id', currentTenant.id);
       }
-      
+
       const { data, error } = await query.order('nombre', { ascending: true });
 
       if (error) {

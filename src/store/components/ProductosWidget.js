@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Image, Typography, Space, InputNumber, Input, Select, Tag, Badge, Tooltip, Alert } from 'antd';
-import { 
-  ShoppingCartOutlined, 
-  PlusOutlined, 
-  MinusOutlined, 
-  SearchOutlined, 
+import {
+  ShoppingCartOutlined,
+  PlusOutlined,
+  MinusOutlined,
+  SearchOutlined,
   FilterOutlined,
   FireOutlined
 } from '@ant-design/icons';
@@ -32,7 +32,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
   const loadProductos = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Cargar productos asociados al evento
       const { data: productosEvento, error: errorEvento } = await supabase
         .from('productos_eventos')
@@ -44,7 +44,6 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
         .eq('activo', true);
 
       if (errorEvento) {
-        console.warn('Error loading productos evento:', errorEvento);
         return;
       }
 
@@ -55,7 +54,6 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
         .eq('activo', true);
 
       if (errorGenerales) {
-        console.warn('Error loading productos generales:', errorGenerales);
         return;
       }
 
@@ -73,18 +71,18 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
       })) || [];
 
       const productosCombinados = [...productosEventoData, ...productosGeneralesData];
-      
+
       // Eliminar duplicados y establecer cantidades iniciales
-      const productosUnicos = productosCombinados.filter((producto, index, self) => 
+      const productosUnicos = productosCombinados.filter((producto, index, self) =>
         index === self.findIndex(p => p.id === producto.id)
       );
 
       setProductos(productosUnicos);
-      
+
       // Extraer categorías únicas
       const categoriasUnicas = [...new Set(productosUnicos.map(p => p.categoria).filter(Boolean))];
       setCategories(categoriasUnicas);
-      
+
       // Inicializar cantidades
       const initialQuantities = {};
       productosUnicos.forEach(producto => {
@@ -182,9 +180,9 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
         precio_total: precio * cantidad,
         tipo: 'producto'
       };
-      
+
       addProduct(productoParaAgregar);
-      
+
       // Resetear cantidad
       setQuantities(prev => ({
         ...prev,
@@ -246,12 +244,12 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
   }
 
   return (
-    <Card 
+    <Card
       title={
         <div className="flex items-center justify-between">
           <span>Productos Disponibles</span>
-          <Button 
-            type="text" 
+          <Button
+            type="text"
             icon={<FilterOutlined />}
             onClick={() => setShowFilters(!showFilters)}
             size="small"
@@ -259,7 +257,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
             Filtros
           </Button>
         </div>
-      } 
+      }
       className="mb-4"
     >
       {/* Filtros y búsqueda */}
@@ -271,7 +269,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
           prefix={<SearchOutlined />}
           allowClear
         />
-        
+
         {showFilters && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <Select
@@ -285,7 +283,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
                 <Option key={cat} value={cat}>{cat}</Option>
               ))}
             </Select>
-            
+
             <Select
               value={priceFilter}
               onChange={setPriceFilter}
@@ -328,10 +326,10 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
           const stockStatus = getStockStatus(producto);
           const cartQuantity = getCartQuantity(producto.id);
           const inCart = isProductInCart(producto.id);
-          
+
           return (
-            <Card 
-              key={producto.id} 
+            <Card
+              key={producto.id}
               size="small"
               hoverable
               className={`h-full transition-all duration-200 ${inCart ? 'ring-2 ring-blue-500' : ''}`}
@@ -344,7 +342,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
                     style={{ objectFit: 'cover' }}
                     fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+pmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN" />
                 ) : (
-                  <div 
+                  <div
                     className="bg-gray-200 flex items-center justify-center"
                     style={{ height: 150 }}
                   >
@@ -371,13 +369,13 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
                     </Tooltip>
                   )}
                 </div>
-                
+
                 {producto.descripcion && (
                   <Text type="secondary" className="block mb-2 text-xs">
                     {producto.descripcion.slice(0, 80)}...
                   </Text>
                 )}
-                
+
                 <div className="flex justify-between items-center mb-2">
                   <Text strong className="text-lg text-green-600">
                     ${parseFloat(precio).toFixed(2)}
@@ -396,7 +394,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
                     icon={<FireOutlined />}
                   />
                 )}
-                
+
                 <div className="flex items-center justify-between">
                   <Space>
                     <Button
@@ -420,7 +418,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
                       disabled={cantidad >= stockDisponible}
                     />
                   </Space>
-                  
+
                   <Button
                     type="primary"
                     size="small"
@@ -440,4 +438,4 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
   );
 };
 
-export default ProductosWidget; 
+export default ProductosWidget;

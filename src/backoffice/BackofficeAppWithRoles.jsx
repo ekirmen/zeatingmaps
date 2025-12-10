@@ -1,15 +1,24 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { RoleProvider } from './components/RoleBasedAccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import BackofficeLayoutWithRoles from './BackofficeLayoutWithRoles';
 import AuthGuard from './components/AuthGuard';
 
-// Importar todas las páginas
+// Lazy load de páginas grandes para reducir bundle inicial
+const CrearMapaPage = lazy(() => import('./pages/CrearMapaPage'));
+const Boleteria = lazy(() => import('./pages/Boleteria'));
+const WebStudio = lazy(() => import('./pages/WebStudio'));
+const Funciones = lazy(() => import('./pages/Funciones'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Evento = lazy(() => import('./pages/Evento'));
+const SaasDashboard = lazy(() => import('./pages/SaasDashboard'));
+const ApiExplorer = lazy(() => import('../saas/pages/ApiExplorer'));
+
+// Importar páginas pequeñas directamente (no afectan mucho el bundle)
 import Dashboard from './pages/Dashboard';
 import Recinto from './pages/Recinto';
 import Plano from './pages/Plano';
-import CrearMapaPage from './pages/CrearMapaPage';
 import Usuarios from './pages/Usuarios';
 import PaymentAnalytics from './pages/PaymentAnalytics';
 import Entrada from './pages/Entrada';
@@ -18,17 +27,13 @@ import PlantillasProductos from './pages/PlantillasProductos';
 import ComisionesTasas from './pages/ComisionesTasas';
 import Paquetes from './pages/Paquetes';
 import PaymentGateways from './pages/PaymentGateways';
-import Evento from './pages/Evento';
 import PlantillaPrecios from './pages/PlantillaPrecios';
-import Funciones from './pages/Funciones';
 import Cupos from './pages/Cupos';
 import PlantillasCupos from './pages/PlantillasCupos';
 import Abonos from './pages/Abonos';
 import Afiliados from './pages/Afiliados';
 import CreateIva from './pages/CreateIva';
-import Boleteria from './pages/Boleteria';
 import SalesTransactions from './pages/SalesTransactions';
-import Reports from './pages/Reports';
 import CRM from './pages/CRM';
 import Tags from './pages/Tags';
 import SystemSettings from './pages/SystemSettings';
@@ -38,15 +43,12 @@ import TenantEmailConfigPanel from './components/TenantEmailConfigPanel';
 import AuditLogs from './pages/AuditLogs';
 import RefundManagement from './pages/RefundManagement';
 import EmailCampaigns from './pages/EmailCampaigns';
-import SaasDashboard from './pages/SaasDashboard';
 import SaasSettings from './pages/SaasSettings';
 import BillingDashboard from '../saas/components/BillingDashboard';
 import PaymentGatewayConfig from '../saas/components/PaymentGatewayConfig';
 import RoleManagement from '../saas/components/RoleManagement';
-import ApiExplorer from '../saas/pages/ApiExplorer';
 import SaasUserManagement from './pages/SaasUserManagementSimple';
 import TenantDetail from './pages/TenantDetail';
-import WebStudio from './pages/WebStudio';
 
 const BackofficeAppWithRoles = () => {
   return (
@@ -85,7 +87,9 @@ const BackofficeAppWithRoles = () => {
             path="crear-mapa/:salaId?" 
             element={
               <ProtectedRoute permission="recintos">
-                <CrearMapaPage />
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando editor de mapas...</div>}>
+                  <CrearMapaPage />
+                </Suspense>
               </ProtectedRoute>
             } 
           />
@@ -175,7 +179,9 @@ const BackofficeAppWithRoles = () => {
             path="eventos" 
             element={
               <ProtectedRoute permission="eventos">
-                <Evento />
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <Evento />
+                </Suspense>
               </ProtectedRoute>
             } 
           />
@@ -191,7 +197,9 @@ const BackofficeAppWithRoles = () => {
             path="funciones" 
             element={
               <ProtectedRoute permission="funciones">
-                <Funciones />
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <Funciones />
+                </Suspense>
               </ProtectedRoute>
             } 
           />
@@ -215,7 +223,9 @@ const BackofficeAppWithRoles = () => {
             path="filas-virtuales" 
             element={
               <ProtectedRoute permission="funciones">
-                <Funciones />
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <Funciones />
+                </Suspense>
               </ProtectedRoute>
             } 
           />
@@ -265,7 +275,9 @@ const BackofficeAppWithRoles = () => {
             path="boleteria"
             element={
               <ProtectedRoute permission="boleteria">
-                <Boleteria />
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando boletería...</div>}>
+                  <Boleteria />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -281,7 +293,9 @@ const BackofficeAppWithRoles = () => {
             path="reportes" 
             element={
               <ProtectedRoute permission="reportes">
-                <Reports />
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <Reports />
+                </Suspense>
               </ProtectedRoute>
             } 
           />
@@ -379,7 +393,9 @@ const BackofficeAppWithRoles = () => {
             path="webstudio" 
             element={
               <ProtectedRoute permission="personalizacion">
-                <WebStudio />
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando WebStudio...</div>}>
+                  <WebStudio />
+                </Suspense>
               </ProtectedRoute>
             } 
           />
@@ -389,7 +405,9 @@ const BackofficeAppWithRoles = () => {
             path="saas" 
             element={
               <ProtectedRoute permission="saas">
-                <SaasDashboard />
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <SaasDashboard />
+                </Suspense>
               </ProtectedRoute>
             } 
           />
@@ -437,7 +455,9 @@ const BackofficeAppWithRoles = () => {
             path="saas/api-explorer" 
             element={
               <ProtectedRoute permission="saas_api_explorer">
-                <ApiExplorer />
+                <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando API Explorer...</div>}>
+                  <ApiExplorer />
+                </Suspense>
               </ProtectedRoute>
             } 
           />

@@ -18,8 +18,6 @@ export const setupGlobalErrorHandling = () => {
 
     // Si es un error de inicialización, intentar recuperar
     if (event.message.includes('Cannot access') || event.message.includes('before initialization')) {
-      console.warn('⚠️ [ERROR_HANDLER] Error de inicialización detectado, intentando recuperar...');
-      
       // Limpiar caché y reintentar
       setTimeout(() => {
         try {
@@ -42,16 +40,9 @@ export const setupGlobalErrorHandling = () => {
   // Capturar errores de recursos
   window.addEventListener('error', (event) => {
     if (event.target && event.target.tagName) {
-      console.warn('⚠️ [ERROR_HANDLER] Error de recurso:', {
-        tagName: event.target.tagName,
-        src: event.target.src,
-        href: event.target.href,
-        timestamp: new Date().toISOString()
-      });
+      // Error de recurso capturado
     }
   }, true);
-
-  console.log('✅ [ERROR_HANDLER] Sistema de manejo de errores configurado');
 };
 
 // Función para verificar si hay problemas de inicialización
@@ -83,11 +74,8 @@ export const checkInitializationIssues = () => {
   }
 
   if (issues.length > 0) {
-    console.warn('⚠️ [ERROR_HANDLER] Problemas de inicialización detectados:', issues);
     return issues;
   }
-
-  console.log('✅ [ERROR_HANDLER] No se detectaron problemas de inicialización');
   return [];
 };
 
@@ -97,7 +85,6 @@ export const cleanupInitializationIssues = () => {
     // Limpiar instancias duplicadas de Supabase
     if (window.__supabaseClient) {
       delete window.__supabaseClient;
-      console.log('🧹 [ERROR_HANDLER] Instancia duplicada de Supabase limpiada');
     }
 
     // Limpiar contextos duplicados
@@ -109,7 +96,6 @@ export const cleanupInitializationIssues = () => {
           const props = Object.getOwnPropertyNames(window.__contexts[name]);
           const duplicates = props.filter((prop, index) => props.indexOf(prop) !== index);
           if (duplicates.length > 0) {
-            console.warn(`⚠️ [ERROR_HANDLER] Contexto ${name} tiene propiedades duplicadas:`, duplicates);
           }
         }
       });
@@ -120,11 +106,8 @@ export const cleanupInitializationIssues = () => {
     globalVars.forEach(varName => {
       if (typeof window[varName] !== 'undefined') {
         delete window[varName];
-        console.log(`🧹 [ERROR_HANDLER] Variable problemática ${varName} limpiada del scope global`);
       }
     });
-
-    console.log('✅ [ERROR_HANDLER] Limpieza de problemas de inicialización completada');
   } catch (error) {
     console.error('❌ [ERROR_HANDLER] Error durante la limpieza:', error);
   }
@@ -133,22 +116,18 @@ export const cleanupInitializationIssues = () => {
 // Función para recuperar de errores de inicialización
 export const recoverFromInitializationError = async () => {
   try {
-    console.log('🔄 [ERROR_HANDLER] Intentando recuperar de error de inicialización...');
-    
     // Limpiar problemas detectados
     cleanupInitializationIssues();
-    
+
     // Esperar un poco antes de reintentar
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Verificar si los problemas persisten
     const remainingIssues = checkInitializationIssues();
-    
+
     if (remainingIssues.length === 0) {
-      console.log('✅ [ERROR_HANDLER] Recuperación exitosa');
       return true;
     } else {
-      console.warn('⚠️ [ERROR_HANDLER] Problemas persisten después de la recuperación:', remainingIssues);
       return false;
     }
   } catch (error) {
@@ -160,13 +139,11 @@ export const recoverFromInitializationError = async () => {
 // Función para configurar el sistema de manejo de errores
 export const setupErrorHandling = () => {
   setupGlobalErrorHandling();
-  
+
   // Verificar problemas de inicialización periódicamente
   const checkInterval = setInterval(() => {
     const issues = checkInitializationIssues();
     if (issues.length > 0) {
-      console.warn('⚠️ [ERROR_HANDLER] Problemas detectados durante la ejecución:', issues);
-      
       // Intentar recuperar automáticamente
       recoverFromInitializationError().then(success => {
         if (!success) {

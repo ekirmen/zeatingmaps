@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Spin, Alert, Button, Input, Select, Tag, Badge, Statistic, Empty } from 'antd';
-import { 
-  CalendarOutlined, 
-  EnvironmentOutlined, 
+import {
+  CalendarOutlined,
+  EnvironmentOutlined,
   SearchOutlined,
   FilterOutlined,
   EyeOutlined,
@@ -30,7 +30,7 @@ const ModernStorePage = () => {
   const { currentTenant } = useTenant();
   const { isTenantAdmin } = useAuth();
   const { isMobile, isTablet } = useResponsive();
-  
+
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,14 +48,14 @@ const ModernStorePage = () => {
 
       try {
         setLoading(true);
-        
+
         // Intentar cargar desde cache primero
         const cacheKey = `events_${currentTenant.id}_${statusFilter}_${sortBy}`;
         const cachedEvents = sessionStorage.getItem(cacheKey);
         const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
         const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp, 10) : Infinity;
         const CACHE_TTL = 30000; // 30 segundos de cache
-        
+
         // Si hay cache válido (menos de 30 segundos), usarlo
         if (cachedEvents && cacheAge < CACHE_TTL) {
           try {
@@ -66,10 +66,9 @@ const ModernStorePage = () => {
             fetchEventsFromAPI();
             return;
           } catch (e) {
-            console.warn('Error parsing cached events:', e);
           }
         }
-        
+
         // Cargar desde API
         await fetchEventsFromAPI();
       } catch (err) {
@@ -113,10 +112,10 @@ const ModernStorePage = () => {
         const { data, error: fetchError } = await query;
 
         if (fetchError) throw fetchError;
-        
+
         const eventsData = data || [];
         setEvents(eventsData);
-        
+
         // Guardar en cache
         const cacheKey = `events_${currentTenant.id}_${statusFilter}_${sortBy}`;
         sessionStorage.setItem(cacheKey, JSON.stringify(eventsData));
@@ -182,16 +181,15 @@ const ModernStorePage = () => {
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     if (!event || (!event.slug && !event.id)) {
-      console.warn('[ModernStorePage] Evento sin slug ni ID:', event);
       return;
     }
-    
-    const eventPath = event.slug 
+
+    const eventPath = event.slug
       ? `/store/eventos/${event.slug}`
       : `/store/event/${event.id}`;
-    
+
     navigate(eventPath);
   };
 
@@ -278,14 +276,14 @@ const ModernStorePage = () => {
                 prefix={<SearchOutlined />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ 
+                style={{
                   width: '100%'
                 }}
                 onPressEnter={() => {
                   // Search is handled by the filter effect
                 }}
               />
-              
+
               <Select
                 placeholder="Estado"
                 size={isMobile ? 'middle' : 'large'}
@@ -298,7 +296,7 @@ const ModernStorePage = () => {
                 <Option value="pronto">Pronto</Option>
                 <Option value="agotado">Agotado</Option>
               </Select>
-              
+
               <Select
                 placeholder="Ordenar"
                 size={isMobile ? 'middle' : 'large'}
@@ -310,7 +308,7 @@ const ModernStorePage = () => {
                 <Option value="nombre">Nombre</Option>
                 <Option value="creado">Recientes</Option>
               </Select>
-              
+
               {!isMobile && (
                 <div style={{ textAlign: 'right' }}>
                   <Statistic
@@ -322,7 +320,7 @@ const ModernStorePage = () => {
                 </div>
               )}
             </div>
-            
+
             {isMobile && (
               <div style={{ marginTop: 'var(--store-space-4)', textAlign: 'center' }}>
                 <Statistic
@@ -357,7 +355,7 @@ const ModernStorePage = () => {
               const eventStatus = getEventStatus(event);
               const modoVenta = getModoVenta(event);
               const tags = getEventTags(event);
-              
+
               return (
                 <div
                   key={event.id}
@@ -391,7 +389,7 @@ const ModernStorePage = () => {
                       }}
                       showDebug={false}
                     />
-                    
+
                     {/* Badges overlay */}
                     <div style={{
                       position: 'absolute',
@@ -402,8 +400,8 @@ const ModernStorePage = () => {
                       gap: 'var(--store-space-2)',
                       zIndex: 10
                     }}>
-                      <Badge 
-                        status={eventStatus.status} 
+                      <Badge
+                        status={eventStatus.status}
                         text={eventStatus.text}
                         style={{
                           backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -415,7 +413,7 @@ const ModernStorePage = () => {
                           boxShadow: 'var(--store-shadow-sm)'
                         }}
                       />
-                      <Tag 
+                      <Tag
                         color={modoVenta.color}
                         style={{
                           fontSize: 'var(--store-font-size-xs)',
@@ -426,7 +424,7 @@ const ModernStorePage = () => {
                         {modoVenta.text}
                       </Tag>
                     </div>
-                    
+
                     {event.oculto && (
                       <div style={{
                         position: 'absolute',
@@ -446,7 +444,7 @@ const ModernStorePage = () => {
                     <h3 className="store-event-card-title">
                       {event.nombre}
                     </h3>
-                    
+
                     {/* Descripción */}
                     {event.descripcion && (
                       <p className="store-event-card-description">
@@ -462,14 +460,14 @@ const ModernStorePage = () => {
                           <span>{formatDateString(event.created_at)}</span>
                         </div>
                       )}
-                      
+
                       {event.recintos?.nombre && (
                         <div className="store-event-card-meta-item">
                           <EnvironmentOutlined style={{ color: 'var(--store-success)' }} />
                           <span>{event.recintos.nombre}</span>
                         </div>
                       )}
-                      
+
                       {event.sector && (
                         <div className="store-event-card-meta-item">
                           <TeamOutlined style={{ color: 'var(--store-secondary)' }} />

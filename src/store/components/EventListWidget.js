@@ -12,13 +12,12 @@ function EventListWidget({ events, loading = false }) {
     if (eventSlug) {
       navigate(`/store/eventos/${eventSlug}`);
     } else {
-      console.warn('Falta el slug del evento.');
     }
   };
 
   const getEventImages = (event) => {
     if (!event.imagenes) return {};
-    
+
     try {
       if (typeof event.imagenes === 'string') {
         return JSON.parse(event.imagenes);
@@ -33,10 +32,9 @@ function EventListWidget({ events, loading = false }) {
   // Función para obtener URL de imagen con fallback
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-    
+
     try {
       const resolvedUrl = resolveImageUrl(imagePath, 'eventos');
-      console.log('🖼️ [EVENT_LIST] Resolved URL:', resolvedUrl);
       return resolvedUrl;
     } catch (error) {
       console.error('Error resolving image URL:', error);
@@ -46,7 +44,7 @@ function EventListWidget({ events, loading = false }) {
 
   const formatEventDate = (dateString) => {
     if (!dateString) return 'Fecha no disponible';
-    
+
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('es-ES', {
@@ -75,7 +73,7 @@ function EventListWidget({ events, loading = false }) {
       const rawImage = images.obraImagen || images.portada || images.banner;
       const eventName = event.name || event.nombre || 'E';
       const displayImageUrl = rawImage ? getImageUrl(rawImage) : null;
-      
+
       return {
         id: event.id || event._id,
         nombre: event.name || event.nombre || 'Evento sin nombre',
@@ -127,10 +125,9 @@ function EventListWidget({ events, loading = false }) {
           const rawImage = images.obraImagen || images.portada || images.banner;
           const eventName = event.name || event.nombre || 'E';
           const displayImageUrl = rawImage ? getImageUrl(rawImage) : `https://placehold.co/400x300/E0F2F7/000?text=${typeof eventName === 'string' ? eventName.charAt(0) : 'E'}`;
-          
+
           // Debug info para desarrollo
           if (process.env.NODE_ENV === 'development') {
-            console.log('🖼️ [EVENT_CARD] Event:', event.nombre, 'Images:', images, 'Raw:', rawImage, 'URL:', displayImageUrl);
           }
 
           return (
@@ -147,13 +144,13 @@ function EventListWidget({ events, loading = false }) {
                   className="store-event-card-image"
                   showDebug={false}
                 />
-                
+
                 {/* Event Status Badge */}
                 {event.estadoVenta && (
                   <div className="absolute top-3 right-3">
                     <span className={`store-badge ${
-                      event.estadoVenta === 'a-la-venta' 
-                        ? 'store-badge-success' 
+                      event.estadoVenta === 'a-la-venta'
+                        ? 'store-badge-success'
                         : event.estadoVenta === 'agotado'
                         ? 'store-badge-error'
                         : 'store-badge-warning'
@@ -169,7 +166,7 @@ function EventListWidget({ events, loading = false }) {
                 <h3 className="store-event-card-title">
                   {event.name || event.nombre}
                 </h3>
-                
+
                 {/* Event Date */}
                 <div className="store-event-card-meta">
                   <div className="store-event-card-meta-item">
@@ -194,10 +191,10 @@ function EventListWidget({ events, loading = false }) {
                 {/* Event Description Preview */}
                 {event.descripcionHTML && (
                   <div className="store-event-card-description">
-                    <div 
-                      dangerouslySetInnerHTML={{ 
-                        __html: event.descripcionHTML.replace(/<[^>]*>/g, '').substring(0, 120) + '...' 
-                      }} 
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: event.descripcionHTML.replace(/<[^>]*>/g, '').substring(0, 120) + '...'
+                      }}
                     />
                   </div>
                 )}

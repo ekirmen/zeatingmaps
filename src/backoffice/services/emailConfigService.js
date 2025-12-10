@@ -93,11 +93,9 @@ export class EmailConfigService {
     try {
       // Aquí implementarías la lógica de envío real
       // Por ahora simulamos el envío
-      console.log('Enviando correo de prueba con configuración:', smtpConfig);
-      
       // Simular delay de envío
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       return {
         success: true,
         message: 'Correo de prueba enviado correctamente'

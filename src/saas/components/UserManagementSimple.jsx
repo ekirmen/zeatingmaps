@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Typography, Space, Tag, Select, Input, Modal, Form, message, Row, Col, Statistic, Drawer, Badge, Avatar, Tooltip } from 'antd';
-import { 
-  UserOutlined, 
-  TeamOutlined, 
-  EditOutlined, 
+import {
+  UserOutlined,
+  TeamOutlined,
+  EditOutlined,
   PlusOutlined,
   SearchOutlined,
   EyeOutlined,
@@ -43,7 +43,7 @@ const UserManagementSimple = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      
+
       // Obtener usuarios directamente desde profiles con tenant_id
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -76,7 +76,6 @@ const UserManagementSimple = () => {
         .in('user_id', userIds);
 
       if (tenantError) {
-        console.warn('user_tenant_info table not found, using default values');
       }
 
       // Transformar los datos
@@ -111,13 +110,13 @@ const UserManagementSimple = () => {
       }
 
       if (filters.status !== 'all') {
-        filteredUsers = filteredUsers.filter(user => 
+        filteredUsers = filteredUsers.filter(user =>
           filters.status === 'active' ? (user.is_active || user.activo) : (!user.is_active && !user.activo)
         );
       }
 
       if (filters.search) {
-        filteredUsers = filteredUsers.filter(user => 
+        filteredUsers = filteredUsers.filter(user =>
           user.users?.email?.toLowerCase().includes(filters.search.toLowerCase()) ||
           user.users?.user_metadata?.full_name?.toLowerCase().includes(filters.search.toLowerCase()) ||
           user.tenants?.company_name?.toLowerCase().includes(filters.search.toLowerCase())
@@ -125,8 +124,8 @@ const UserManagementSimple = () => {
       }
 
       if (filters.role !== 'all') {
-        filteredUsers = filteredUsers.filter(user => 
-          user.tenant_roles?.some(tr => 
+        filteredUsers = filteredUsers.filter(user =>
+          user.tenant_roles?.some(tr =>
             tr.is_active && tr.custom_roles?.id === filters.role
           )
         );
@@ -212,7 +211,7 @@ const UserManagementSimple = () => {
   const handleSaveUser = async () => {
     try {
       const values = await form.validateFields();
-      
+
       // Actualizar información en profiles
       const { error: profileError } = await supabase
         .from('profiles')
@@ -237,7 +236,6 @@ const UserManagementSimple = () => {
         .eq('user_id', selectedUser.user_id);
 
       if (tenantError) {
-        console.warn('user_tenant_info table not found or error updating:', tenantError);
       }
 
       message.success('Usuario actualizado exitosamente');
@@ -338,8 +336,8 @@ const UserManagementSimple = () => {
           )}
           {/* Mostrar roles de tenant_user_roles si existen */}
           {record.tenant_roles?.filter(tr => tr.is_active).map(role => (
-            <Tag 
-              key={role.id} 
+            <Tag
+              key={role.id}
               color={getRoleColor(role.custom_roles?.name)}
               closable
               onClose={() => handleRemoveRole(record.user_id, record.tenant_id, role.custom_roles?.id)}

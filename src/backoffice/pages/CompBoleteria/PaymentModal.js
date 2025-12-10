@@ -350,7 +350,6 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       try {
         parsedPayments = typeof paymentsData === 'string' ? JSON.parse(paymentsData) : [];
       } catch (error) {
-        console.warn('No se pudieron parsear los pagos existentes:', error);
         parsedPayments = [];
       }
     }
@@ -439,7 +438,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   // Función para asignar tags del evento al comprador
   const assignEventTagsToUser = async (userId, eventTags) => {
     if (!eventTags || eventTags.length === 0) return;
-    
+
     try {
       // Obtener el perfil actual del usuario
       const { data: currentProfile, error: fetchError } = await supabase
@@ -450,7 +449,6 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
       if (fetchError) {
         if (fetchError.code === '42703') {
-          console.warn('Tags column missing in profiles table, skipping tag assignment');
           return;
         }
         if (fetchError.code !== 'PGRST116') {
@@ -462,7 +460,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       // Combinar tags existentes con los nuevos tags del evento
       const existingTags = currentProfile?.tags || [];
       const newTags = Array.isArray(eventTags) ? eventTags : [eventTags];
-      
+
       // Filtrar tags duplicados
       const uniqueTags = [...new Set([...existingTags, ...newTags])];
 
@@ -477,12 +475,10 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
       if (updateError) {
         if (updateError.code === '42703') {
-          console.warn('Tags column missing in profiles table, skipping tag update');
         } else {
           console.error('Error updating user tags:', updateError);
         }
       } else {
-        console.log(`Tags del evento asignados al usuario ${userId}:`, newTags);
       }
     } catch (error) {
       console.error('Error assigning event tags to user:', error);
@@ -711,16 +707,16 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const columns = [
     { title: 'SC', dataIndex: 'sc', key: 'sc' },
     { title: 'Forma de pago', dataIndex: 'formaPago', key: 'formaPago' },
-    { 
-      title: 'Importe', 
+    {
+      title: 'Importe',
       key: 'actions',
       render: (_, record) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           ${record.importe.toFixed(2)}
-          <Button 
-            type="text" 
-            danger 
-            icon={<AiOutlineDelete />} 
+          <Button
+            type="text"
+            danger
+            icon={<AiOutlineDelete />}
             onClick={() => handleDeleteEntry(record.sc)}
           />
         </div>
@@ -825,10 +821,6 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         });
 
         if (!resolvedTenantId) {
-          console.warn('⚠️ No se pudo determinar tenant_id para la transacción de pago', {
-            eventId,
-            funcionId: selectedFuncion?.id || selectedFuncion?._id || null,
-          });
         }
 
         const primaryMethod = (paymentEntries[0]?.formaPago || selectedPaymentMethod || 'manual');
@@ -874,9 +866,6 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           gateway_name: hasCasheaPayment ? 'Cashea' : 'manual',
           ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
         };
-
-        console.log('Payment data:', paymentData);
-
         // Actualizar seat_locks con el locator final y estado correcto antes de crear el pago
         if (paymentData.locator) {
           try {
@@ -932,22 +921,19 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               }
 
               // Si el pago existe pero no está completado, actualizarlo
-              console.log('Updating existing payment:', existingPayment.paymentId);
               return updatePayment(existingPayment.paymentId, paymentData);
             } catch (error) {
               console.error('Error validando pago existente:', error);
               throw error;
             }
           } else {
-            console.log('Creating new payment');
-            
             // Add reservation deadline if applicable (solo para pagos nuevos)
             if (reservationType === '2') {
               paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
             } else if (reservationType === '3' && selectedDate) {
               paymentData.reservationDeadline = selectedDate.toDate();
             }
-            
+
             return createPayment(paymentData);
           }
         });
@@ -962,10 +948,6 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         });
 
         if (!tenantIdForTransactions) {
-          console.warn('⚠️ No se pudo determinar tenant_id para las transacciones manuales', {
-            eventId: selectedEvent?.id || null,
-            funcionId: selectedFuncion?.id || selectedFuncion?._id || null,
-          });
         }
         if (results && results.length > 0 && results[0]) {
           const locator = results[0].locator || effectiveLocator;
@@ -1006,21 +988,19 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
               return await createPaymentTransaction(transactionData);
             });
-            
+
             const transactions = await Promise.all(paymentTransactionPromises);
-            console.log('✅ Payment transactions created successfully');
-            
             // Determinar el status final del pago (completed si todos están completados, sino reservado/pending)
             const finalStatus = hasCasheaPaymentOverall || diferencia > 0 || paymentStatus === 'reserved'
               ? 'reservado'
               : 'completed';
-            
+
             // Enviar correo automáticamente según el status
             if (locator && userId) {
               try {
                 // Importar dinámicamente para evitar problemas de ciclo
                 const { sendPaymentEmailByStatus } = await import('../../../store/services/paymentEmailService');
-                
+
                 const emailResult = await sendPaymentEmailByStatus({
                   locator,
                   user_id: userId,
@@ -1028,11 +1008,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   transactionId: transactions[0]?.id,
                   amount: total,
                 });
-                
+
                 if (emailResult.success) {
-                  console.log('✅ [PAYMENT_MODAL] Correo enviado exitosamente');
                 } else {
-                  console.warn('⚠️ [PAYMENT_MODAL] Error enviando correo:', emailResult.error);
                 }
               } catch (emailError) {
                 console.error('❌ [PAYMENT_MODAL] Error enviando correo:', emailError);
@@ -1060,10 +1038,10 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         onCancel();
     } catch (error) {
       console.error('Payment error:', error);
-      
+
       // Mensajes de error más amigables
       let errorMessage = 'Error al procesar el pago';
-      
+
       if (error.message?.includes('duplicate key value violates unique constraint')) {
         errorMessage = '❌ Error: Uno o más asientos ya están vendidos. Por favor, selecciona otros asientos.';
       } else if (error.message?.includes('ya está vendido')) {
@@ -1077,7 +1055,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       message.error(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -1106,10 +1084,10 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           <div>
             {/* Información de la taquilla */}
             {user && (
-              <div style={{ 
-                marginBottom: '15px', 
-                padding: '10px', 
-                background: '#e6f7ff', 
+              <div style={{
+                marginBottom: '15px',
+                padding: '10px',
+                background: '#e6f7ff',
                 borderRadius: '4px',
                 border: '1px solid #91d5ff'
               }}>
@@ -1118,12 +1096,12 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                 </Text>
               </div>
             )}
-            
-            <div style={{ 
-              marginBottom: '20px', 
-              padding: '15px', 
-              background: '#f5f5f5', 
-              borderRadius: '4px' 
+
+            <div style={{
+              marginBottom: '20px',
+              padding: '15px',
+              background: '#f5f5f5',
+              borderRadius: '4px'
             }}>
               {selectedAffiliate && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -1180,7 +1158,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               <TabPane tab="Efectivo" key="1">
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                    <Input 
+                    <Input
                       placeholder="Entregado"
                       value={entregado}
                       onChange={(e) => handleCashInput(e.target.value)}
@@ -1191,7 +1169,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
                   <div style={{ marginTop: '20px' }}>
                     <h4>Fecha límite de reserva</h4>
-                    <Radio.Group 
+                    <Radio.Group
                       onChange={(e) => setReservationType(e.target.value)}
                       value={reservationType}
                     >
@@ -1201,7 +1179,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                     </Radio.Group>
 
                     {reservationType === '3' && (
-                      <DatePicker 
+                      <DatePicker
                         showTime
                         style={{ marginTop: '10px', width: '100%' }}
                         onChange={handleDateChange}

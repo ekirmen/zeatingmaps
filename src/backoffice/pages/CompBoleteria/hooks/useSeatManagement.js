@@ -9,14 +9,14 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
   const [abonoSeats, setAbonoSeats] = useState([]);
   const [animatingSeats, setAnimatingSeats] = useState([]);
   const unlockSeatRef = useRef(useSeatLockStore.getState().unlockSeat);
-  
-  const { 
-    lockSeat, 
-    unlockSeat, 
-    isSeatLocked, 
-    isSeatLockedByMe, 
-    subscribeToFunction, 
-    unsubscribe 
+
+  const {
+    lockSeat,
+    unlockSeat,
+    isSeatLocked,
+    isSeatLockedByMe,
+    subscribeToFunction,
+    unsubscribe
   } = useSeatLockStore();
 
   useEffect(() => {
@@ -40,13 +40,11 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
   // Suscribirse a eventos en tiempo real para la función seleccionada
   useEffect(() => {
     if (selectedEvent?.id && subscribeToFunction) {
-      console.log('🔔 [useSeatManagement] Suscribiéndose a función:', selectedEvent.id);
       subscribeToFunction(selectedEvent.id);
     }
 
     return () => {
       if (unsubscribe) {
-        console.log('🔔 [useSeatManagement] Desuscribiéndose de función:', selectedEvent?.id);
         unsubscribe();
       }
     };
@@ -88,4 +86,4 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
     handleSeatAnimation,
     handleAnimationComplete
   };
-}; 
+};

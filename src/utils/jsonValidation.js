@@ -14,39 +14,35 @@ export const validateAndCleanJsonField = (value, fieldName, defaultValue = {}) =
   try {
     // Si es null o undefined, retornar valor por defecto
     if (!value) {
-      console.log(`🔄 Campo ${fieldName} vacío, inicializando...`);
       return defaultValue;
     }
 
     // Si es string, intentar parsearlo
     if (typeof value === 'string') {
       const parsed = JSON.parse(value);
-      
+
       // Verificar si el JSON parseado tiene propiedades numeradas (indicador de corrupción)
       const hasNumericKeys = Object.keys(parsed).some(key => !isNaN(parseInt(key)));
-      
+
       if (hasNumericKeys) {
-        console.warn(`⚠️ Campo ${fieldName} corrupto detectado, limpiando...`, value);
         return defaultValue;
       }
-      
+
       return parsed;
     }
 
     // Si es objeto, verificar que no tenga propiedades numeradas
     if (typeof value === 'object') {
       const hasNumericKeys = Object.keys(value).some(key => !isNaN(parseInt(key)));
-      
+
       if (hasNumericKeys) {
-        console.warn(`⚠️ Campo ${fieldName} corrupto detectado, limpiando...`, value);
         return defaultValue;
       }
-      
+
       return value;
     }
 
     // Si no es ninguno de los tipos esperados, retornar valor por defecto
-    console.warn(`⚠️ Tipo de campo ${fieldName} no válido, limpiando...`, typeof value);
     return defaultValue;
   } catch (error) {
     console.error(`❌ Error validando campo ${fieldName}, limpiando...`, error);
@@ -63,7 +59,7 @@ export const cleanEventoJsonFields = (evento) => {
   if (!evento) return evento;
 
   const eventoLimpio = { ...evento };
-  
+
   const jsonFieldsToClean = [
     { field: 'imagenes', defaultValue: {} },
     { field: 'datosComprador', defaultValue: {} },
@@ -78,7 +74,6 @@ export const cleanEventoJsonFields = (evento) => {
       const cleanValue = validateAndCleanJsonField(eventoLimpio[field], field, defaultValue);
       eventoLimpio[field] = cleanValue;
       if (cleanValue !== evento[field]) {
-        console.log(`🔄 Campo ${field} corrupto detectado y limpiado en evento ${evento.id}:`, cleanValue);
       }
     }
   });
@@ -93,7 +88,7 @@ export const cleanEventoJsonFields = (evento) => {
  */
 export const cleanEventosArray = (eventos) => {
   if (!Array.isArray(eventos)) return [];
-  
+
   return eventos.map(evento => cleanEventoJsonFields(evento));
 };
 
@@ -105,16 +100,16 @@ export const cleanEventosArray = (eventos) => {
 export const isJsonFieldValid = (value) => {
   try {
     if (!value) return true;
-    
+
     if (typeof value === 'string') {
       const parsed = JSON.parse(value);
       return !Object.keys(parsed).some(key => !isNaN(parseInt(key)));
     }
-    
+
     if (typeof value === 'object') {
       return !Object.keys(value).some(key => !isNaN(parseInt(key)));
     }
-    
+
     return true;
   } catch (error) {
     return false;

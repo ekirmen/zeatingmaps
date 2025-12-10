@@ -122,10 +122,10 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
 
   const toggleFavorite = (methodId) => {
     const isFavorite = favoriteMethods.includes(methodId);
-    const newFavorites = isFavorite 
+    const newFavorites = isFavorite
       ? favoriteMethods.filter(id => id !== methodId)
       : [...favoriteMethods, methodId];
-    
+
     setFavoriteMethods(newFavorites);
     localStorage.setItem('favoritePaymentMethods', JSON.stringify(newFavorites));
   };
@@ -135,18 +135,18 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
     if (!method.available) {
       return { status: 'error', message: 'No disponible' };
     }
-    
+
     // Verificar si es método móvil y el usuario está en móvil
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
+
     if (method.id === 'apple_pay' && !isMobile) {
       return { status: 'warning', message: 'Requiere dispositivo iOS' };
     }
-    
+
     if (method.id === 'google_pay' && !isMobile) {
       return { status: 'warning', message: 'Requiere dispositivo Android' };
     }
-    
+
     return { status: 'success', message: 'Disponible' };
   };
 
@@ -156,11 +156,10 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
         <h3 className="text-lg font-semibold">Métodos de Pago Disponibles</h3>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <span>Ordenar por:</span>
-          <select 
+          <select
             className="border border-gray-300 rounded px-2 py-1 text-sm"
             onChange={(e) => {
               // Implementar ordenamiento
-              console.log('Ordenar por:', e.target.value);
             }}
           >
             <option value="recommended">Recomendados</option>
@@ -170,7 +169,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
           </select>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {paymentMethods
           .filter(method => metodosDisponibles.includes(method.id))
@@ -188,7 +187,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
             const isSelected = selected === method.id;
             const isFavorite = favoriteMethods.includes(method.id);
             const availability = getAvailabilityStatus(method);
-            
+
             return (
               <div
                 key={method.id}
@@ -245,11 +244,11 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
                       <ExclamationCircleOutlined style={{ color: '#ff4d4f', fontSize: '14px' }} />
                     )}
                   </div>
-                  
+
                   <div className="text-sm text-gray-500 mb-2">
                     {method.description}
                   </div>
-                  
+
                   <div className="flex items-center gap-3 text-xs text-gray-400">
                     <div className="flex items-center gap-1">
                       <ClockCircleOutlined />
@@ -260,11 +259,11 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
                       <span>{method.fee}</span>
                     </div>
                   </div>
-                  
+
                   {availability.status !== 'success' && (
                     <div className="mt-1">
-                      <Badge 
-                        status={availability.status} 
+                      <Badge
+                        status={availability.status}
                         text={availability.message}
                         style={{ fontSize: '11px' }}
                       />
@@ -286,7 +285,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
             );
           })}
       </div>
-      
+
       {metodosDisponibles.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           <DollarOutlined className="text-4xl mb-2" />

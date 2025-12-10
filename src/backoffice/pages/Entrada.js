@@ -67,7 +67,7 @@ const Entrada = () => {
       setTickets([]);
       return;
     }
-    
+
     try {
       // 🎫 CARGAR ENTRADAS CON INFORMACIÓN RELACIONADA
       const { data, error } = await supabase
@@ -97,13 +97,12 @@ const Entrada = () => {
             nombre: t.ivas.nombre
           } : null,
           // Estadísticas calculadas
-          precio_con_iva: t.precio_base ? 
-            (t.precio_base * (1 + (t.ivas?.porcentaje || 0) / 100)).toFixed(2) : 
+          precio_con_iva: t.precio_base ?
+            (t.precio_base * (1 + (t.ivas?.porcentaje || 0) / 100)).toFixed(2) :
             null
         }));
-        
+
         setTickets(mapped);
-        console.log('🎫 Entradas cargadas con información relacionada:', mapped.length);
       }
     } catch (error) {
       console.error('Error loading tickets:', error);
@@ -138,16 +137,15 @@ const Entrada = () => {
       activo_boleteria: datos.activoBoleteria || false,
       activo_store: datos.activoStore || false,
     };
-  
+
     const { error } = await supabase
       .from("entradas")
       .insert([ datosAInsertar ]);  // insert espera un array
-  
+
     if (error) {
       console.error("Error al guardar datos:", error.message);
       alert("Error al guardar: " + error.message);
     } else {
-      console.log("Datos guardados exitosamente");
       setShowPopup(false);
       loadTickets();
     }
@@ -218,7 +216,6 @@ const Entrada = () => {
       console.error("Error al actualizar datos:", error.message);
       alert("Error al actualizar: " + error.message);
     } else {
-      console.log("Datos actualizados exitosamente");
       setShowEditPopup(false);
       loadTickets();
     }
@@ -235,7 +232,6 @@ const Entrada = () => {
         console.error("Error al eliminar:", error.message);
         alert("Error al eliminar: " + error.message);
       } else {
-        console.log("Entrada eliminada exitosamente");
         loadTickets();
       }
     }
@@ -270,8 +266,8 @@ const Entrada = () => {
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4">
           <div className="flex items-center gap-4">
             <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Recinto:</label>
-            <select 
-              value={formData.recinto} 
+            <select
+              value={formData.recinto}
               onChange={(e) => setFormData({ ...formData, recinto: e.target.value })}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -299,7 +295,7 @@ const Entrada = () => {
                 </div>
               </div>
             </div>
-            
+
             {tickets.length > 0 && (
               <div className="p-3">
                 <div className="space-y-2">

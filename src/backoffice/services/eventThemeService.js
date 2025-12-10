@@ -4,7 +4,7 @@ import { supabase } from '../../supabaseClient';
  * Servicio para manejar configuraciones de tema por evento
  */
 export class EventThemeService {
-  
+
   /**
    * Obtener configuración de tema para un evento específico
    * @param {string} eventId - ID del evento
@@ -15,7 +15,6 @@ export class EventThemeService {
     try {
       // Si eventId no es un UUID válido, no hacer la consulta
       if (!eventId || typeof eventId !== 'string' || !eventId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        console.warn('[EventThemeService] EventId is not a valid UUID:', eventId);
         return null;
       }
 
@@ -133,8 +132,8 @@ export class EventThemeService {
     try {
       // Usar SQL raw para manejar eventos sin fecha_evento
       const { data, error } = await supabase
-        .rpc('get_available_events_with_fallback', { 
-          tenant_id_param: tenantId 
+        .rpc('get_available_events_with_fallback', {
+          tenant_id_param: tenantId
         });
 
       if (error) {
@@ -170,7 +169,7 @@ export class EventThemeService {
   static async getEventThemeOrDefault(eventId, tenantId, globalTheme) {
     try {
       const eventTheme = await this.getEventThemeSettings(eventId, tenantId);
-      
+
       if (eventTheme && eventTheme.theme_config) {
         // Retornar la configuración del tema desde el campo JSONB
         return eventTheme.theme_config;

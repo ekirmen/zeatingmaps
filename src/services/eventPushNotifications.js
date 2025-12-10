@@ -26,7 +26,6 @@ export const sendEventActivatedNotification = async (evento) => {
     }
 
     if (!subscribers || subscribers.length === 0) {
-      console.log('[EventPush] No hay suscriptores activos');
       return { sent: 0, recipients: 0 };
     }
 
@@ -54,8 +53,6 @@ export const sendEventActivatedNotification = async (evento) => {
         console.error(`[EventPush] Error enviando notificación a usuario ${userId}:`, error);
       }
     }
-
-    console.log(`[EventPush] Notificaciones enviadas: ${sentCount} de ${uniqueUserIds.length}`);
     return { sent: sentCount, recipients: uniqueUserIds.length };
   } catch (error) {
     console.error('[EventPush] Error en sendEventActivatedNotification:', error);
@@ -82,7 +79,6 @@ export const sendFunctionCreatedNotification = async (funcion) => {
       try {
         canales = JSON.parse(canales);
       } catch (e) {
-        console.warn('[EventPush] Error parseando canales JSON:', e);
         canales = {};
       }
     }
@@ -100,12 +96,10 @@ export const sendFunctionCreatedNotification = async (funcion) => {
     else if (Array.isArray(canales)) {
       if (canales.length === 0 || canales.includes('internet') || canales.includes('todos')) {
         shouldNotify = true;
-        console.log('[EventPush] Función tiene canal internet en array de canales');
       }
     }
 
     if (!shouldNotify) {
-      console.log('[EventPush] Función no está en canal internet, no se enviará notificación');
       return { sent: 0, recipients: 0, skipped: true };
     }
 
@@ -125,11 +119,9 @@ export const sendFunctionCreatedNotification = async (funcion) => {
         }
       }
     } catch (error) {
-      console.warn('[EventPush] Error obteniendo evento:', error);
     }
 
     if (!evento) {
-      console.warn('[EventPush] No se pudo obtener el evento asociado a la función');
       // Continuar de todas formas, usar datos de la función
     }
 
@@ -145,12 +137,11 @@ export const sendFunctionCreatedNotification = async (funcion) => {
     }
 
     if (!subscribers || subscribers.length === 0) {
-      console.log('[EventPush] No hay suscriptores activos');
       return { sent: 0, recipients: 0 };
     }
 
     const uniqueUserIds = [...new Set(subscribers.map(s => s.user_id))];
-    const funcionDate = funcion.fechaCelebracion 
+    const funcionDate = funcion.fechaCelebracion
       ? new Date(funcion.fechaCelebracion).toLocaleDateString('es-ES', {
           weekday: 'long',
           year: 'numeric',
@@ -180,7 +171,7 @@ export const sendFunctionCreatedNotification = async (funcion) => {
             eventName: eventoNombre,
             funcionDate: funcion.fechaCelebracion,
             type: 'function_created',
-            url: eventoSlug 
+            url: eventoSlug
               ? `/store/eventos/${eventoSlug}/map?funcion=${funcion.id}`
               : `/store/seat-selection/${funcion.id}`
           },
@@ -191,8 +182,6 @@ export const sendFunctionCreatedNotification = async (funcion) => {
         console.error(`[EventPush] Error enviando notificación a usuario ${userId}:`, error);
       }
     }
-
-    console.log(`[EventPush] Notificaciones de función creada enviadas: ${sentCount} de ${uniqueUserIds.length}`);
     return { sent: sentCount, recipients: uniqueUserIds.length };
   } catch (error) {
     console.error('[EventPush] Error en sendFunctionCreatedNotification:', error);
@@ -206,7 +195,6 @@ export const sendFunctionCreatedNotification = async (funcion) => {
 export const subscribeToPushNotifications = async (userId) => {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('[EventPush] Push notifications no soportadas en este navegador');
       return null;
     }
 
@@ -216,7 +204,6 @@ export const subscribeToPushNotifications = async (userId) => {
     // Solicitar permiso
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
-      console.warn('[EventPush] Permiso de notificaciones denegado');
       return null;
     }
 
@@ -243,8 +230,6 @@ export const subscribeToPushNotifications = async (userId) => {
       .single();
 
     if (error) throw error;
-
-    console.log('[EventPush] Usuario suscrito a notificaciones push');
     return data;
   } catch (error) {
     console.error('[EventPush] Error suscribiendo a notificaciones push:', error);
@@ -263,8 +248,6 @@ export const unsubscribeFromPushNotifications = async (userId) => {
       .eq('user_id', userId);
 
     if (error) throw error;
-
-    console.log('[EventPush] Usuario desuscrito de notificaciones push');
     return true;
   } catch (error) {
     console.error('[EventPush] Error desuscribiendo de notificaciones push:', error);

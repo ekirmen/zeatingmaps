@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Input, 
-  Table, 
-  Modal, 
-  Form, 
-  message, 
-  Select, 
+import {
+  Card,
+  Button,
+  Input,
+  Table,
+  Modal,
+  Form,
+  message,
+  Select,
   InputNumber,
   Upload,
   Image,
@@ -15,10 +15,10 @@ import {
   Tag,
   Tooltip
 } from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   SearchOutlined,
   UploadOutlined,
   EyeOutlined
@@ -48,10 +48,10 @@ const Productos = () => {
           .from('eventos')
           .select('id, nombre, recinto_id, created_at')
           .eq('activo', true);
-        
+
         // Aplicar filtro de tenant
         query = addTenantFilter(query);
-        
+
         const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) {
@@ -73,14 +73,14 @@ const Productos = () => {
               .order('fecha_celebracion', { ascending: true })
               .limit(1)
               .maybeSingle();
-            
+
             return {
               ...evento,
               fecha_celebracion: funcionData?.fecha_celebracion || null
             };
           })
         );
-        
+
         setEventos(eventosWithFecha);
       } catch (error) {
         console.error('Error cargando eventos:', error);
@@ -113,18 +113,18 @@ const Productos = () => {
         .eq('evento_id', eventoSeleccionado)
         .eq('activo', true)
         .order('nombre', { ascending: true });
-      
+
       plantillasQuery = addTenantFilter(plantillasQuery);
-      
+
       // Productos generales (si la tabla existe, con manejo de errores)
       let productosQuery = supabase
         .from('productos')
         .select('*')
         .eq('activo', true)
         .order('nombre', { ascending: true });
-      
+
       productosQuery = addTenantFilter(productosQuery);
-      
+
       // Productos específicos del evento (si la tabla existe, con manejo de errores)
       // Nota: La tabla productos_eventos puede no existir, por eso usamos manejo de errores
       let productosEventosQuery = supabase
@@ -136,9 +136,9 @@ const Productos = () => {
         .eq('evento_id', eventoSeleccionado)
         .eq('activo', true)
         .order('created_at', { ascending: false });
-      
+
       productosEventosQuery = addTenantFilter(productosEventosQuery);
-      
+
       // También consultar productos directamente que tengan evento_id
       let productosConEventoQuery = supabase
         .from('productos')
@@ -146,9 +146,9 @@ const Productos = () => {
         .eq('evento_id', eventoSeleccionado)
         .eq('activo', true)
         .order('created_at', { ascending: false });
-      
+
       productosConEventoQuery = addTenantFilter(productosConEventoQuery);
-      
+
       // Ejecutar consultas con manejo de errores individual
       const [plantillasResult, productosResult, productosEventosResult, productosConEventoResult] = await Promise.allSettled([
         plantillasQuery,
@@ -158,10 +158,10 @@ const Productos = () => {
       ]);
 
       // Procesar resultados
-      const plantillasData = plantillasResult.status === 'fulfilled' 
-        ? plantillasResult.value 
+      const plantillasData = plantillasResult.status === 'fulfilled'
+        ? plantillasResult.value
         : { data: null, error: plantillasResult.reason };
-      
+
       // Helper para detectar si un error debe ser ignorado silenciosamente
       const shouldIgnoreError = (error) => {
         if (!error) return false;
@@ -179,19 +179,19 @@ const Productos = () => {
           errorHint.includes('api key')
         );
       };
-      
+
       const productosData = productosResult.status === 'fulfilled'
         ? productosResult.value
         : shouldIgnoreError(productosResult.reason)
           ? { data: [], error: null } // Ignorar errores de autenticación o tabla no existente
           : { data: null, error: productosResult.reason };
-      
+
       const productosEventosData = productosEventosResult.status === 'fulfilled'
         ? productosEventosResult.value
         : shouldIgnoreError(productosEventosResult.reason)
           ? { data: [], error: null } // Ignorar errores de autenticación o tabla no existente
           : { data: null, error: productosEventosResult.reason };
-      
+
       const productosConEventoData = productosConEventoResult.status === 'fulfilled'
         ? productosConEventoResult.value
         : shouldIgnoreError(productosConEventoResult.reason)
@@ -209,7 +209,6 @@ const Productos = () => {
           tipo: 'plantilla'
         }));
         allProductos = [...allProductos, ...plantillasWithSource];
-        console.log('✅ Plantillas de productos cargadas:', plantillasWithSource.length);
       } else if (plantillasData.error) {
         console.error('❌ Error cargando plantillas_productos:', plantillasData.error);
       }
@@ -226,13 +225,12 @@ const Productos = () => {
           precio: p.precio || 0 // La tabla productos tiene 'precio', no 'precio_base'
         }));
         allProductos = [...allProductos, ...productosWithSource];
-        console.log('✅ Productos generales cargados:', productosWithSource.length);
       } else if (productosData.error) {
         // Detectar errores de autenticación o tabla no existente
         const error = productosData.error;
         const errorMessage = error.message?.toLowerCase() || '';
         const errorHint = error.hint?.toLowerCase() || '';
-        const isAuthError = 
+        const isAuthError =
           error.code === 'PGRST116' || // Tabla no existe
           error.status === 401 ||
           error.status === 403 ||
@@ -241,10 +239,9 @@ const Productos = () => {
           errorMessage.includes('permission denied') ||
           errorHint.includes('no `apikey`') ||
           errorHint.includes('api key');
-        
+
         // Solo mostrar advertencia si no es un error de autenticación o tabla no existente
         if (!isAuthError) {
-          console.warn('⚠️ Error cargando productos:', error);
         }
         // Ignorar silenciosamente errores de autenticación o tabla no existente
       }
@@ -268,7 +265,7 @@ const Productos = () => {
         const error = productosEventosData.error;
         const errorMessage = error.message?.toLowerCase() || '';
         const errorHint = error.hint?.toLowerCase() || '';
-        const isIgnorableError = 
+        const isIgnorableError =
           error.code === 'PGRST116' || // Tabla no existe
           error.code === 'PGRST200' || // Relación no encontrada (tabla productos_eventos no existe o no tiene relación)
           error.status === 401 ||
@@ -281,10 +278,9 @@ const Productos = () => {
           errorHint.includes('no `apikey`') ||
           errorHint.includes('api key') ||
           errorHint.includes('perhaps you meant');
-        
+
         // Solo mostrar advertencia si no es un error que debemos ignorar
         if (!isIgnorableError) {
-          console.warn('⚠️ Error cargando productos_eventos:', error);
         } else {
           // Log silencioso para debugging (solo en desarrollo)
           if (process.env.NODE_ENV === 'development') {
@@ -293,7 +289,7 @@ const Productos = () => {
         }
         // Ignorar silenciosamente errores esperados
       }
-      
+
       // Agregar productos que tengan evento_id directamente (desde tabla productos)
       if (productosConEventoData.data && !productosConEventoData.error) {
         const productosConEventoWithSource = productosConEventoData.data.map(p => ({
@@ -303,13 +299,12 @@ const Productos = () => {
           precio: p.precio || 0 // La tabla productos tiene 'precio', no 'precio_base'
         }));
         allProductos = [...allProductos, ...productosConEventoWithSource];
-        console.log('✅ Productos con evento_id cargados:', productosConEventoWithSource.length);
       } else if (productosConEventoData.error) {
         // Detectar errores de autenticación
         const error = productosConEventoData.error;
         const errorMessage = error.message?.toLowerCase() || '';
         const errorHint = error.hint?.toLowerCase() || '';
-        const isAuthError = 
+        const isAuthError =
           error.status === 401 ||
           error.status === 403 ||
           errorMessage.includes('no api key found') ||
@@ -317,16 +312,13 @@ const Productos = () => {
           errorMessage.includes('permission denied') ||
           errorHint.includes('no `apikey`') ||
           errorHint.includes('api key');
-        
+
         // Solo mostrar advertencia si no es un error de autenticación
         if (!isAuthError) {
-          console.warn('⚠️ Error cargando productos con evento_id:', error);
         }
       }
 
       setProductos(allProductos);
-      console.log('🛍️ Total de productos cargados:', allProductos.length);
-
     } catch (error) {
       console.error('Error cargando productos:', error);
       message.error('Error al cargar productos');
@@ -347,7 +339,7 @@ const Productos = () => {
 
   const handleEditProduct = (producto) => {
     setEditingProducto(producto);
-    
+
     // Limpiar imagen_url si es un objeto JSON string
     let imagenUrl = producto.imagen_url;
     if (imagenUrl && typeof imagenUrl === 'string' && imagenUrl.startsWith('{')) {
@@ -362,10 +354,9 @@ const Productos = () => {
         // Si no se puede extraer, mantener el valor original (puede ser una URL válida)
       } catch (e) {
         // Si no se puede parsear, asumir que es una URL válida o null
-        console.warn('No se pudo parsear imagen_url al editar:', e);
       }
     }
-    
+
     form.setFieldsValue({
       nombre: producto.nombre,
       descripcion: producto.descripcion,
@@ -382,7 +373,7 @@ const Productos = () => {
         .from('plantillas_productos')
         .update({ activo: false })
         .eq('id', producto.id);
-      
+
       deleteQuery = addTenantFilter(deleteQuery);
       const { error } = await deleteQuery;
 
@@ -399,10 +390,10 @@ const Productos = () => {
     try {
       // Excluir precio_base ya que se asigna desde la plantilla de precios
       const { precio_base, ...valuesWithoutPrice } = values;
-      
+
       // Limpiar imagen_url: asegurar que siempre sea una URL string, no un objeto JSON
       let imagenUrl = valuesWithoutPrice.imagen_url;
-      
+
       // Si imagenUrl existe, procesarlo para extraer solo la URL
       if (imagenUrl) {
         // Caso 1: Es un string que parece JSON (empieza con '{')
@@ -465,7 +456,7 @@ const Productos = () => {
         // Si imagenUrl es null, undefined, o vacío, establecer como null
         imagenUrl = null;
       }
-      
+
       const productoData = {
         ...valuesWithoutPrice,
         imagen_url: imagenUrl, // Usar la URL limpia
@@ -479,7 +470,7 @@ const Productos = () => {
           .from('plantillas_productos')
           .update(productoData)
           .eq('id', editingProducto.id);
-        
+
         updateQuery = addTenantFilter(updateQuery);
         const { error } = await updateQuery;
 
@@ -488,7 +479,7 @@ const Productos = () => {
       } else {
         // Crear nuevo producto - agregar tenant_id
         const productoDataWithTenant = addTenantToInsert(productoData);
-        
+
         const { error } = await supabase
           .from('plantillas_productos')
           .insert([productoDataWithTenant]);
@@ -805,4 +796,4 @@ const Productos = () => {
   );
 };
 
-export default Productos; 
+export default Productos;

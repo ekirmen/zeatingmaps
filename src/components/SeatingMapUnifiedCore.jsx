@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useMemo, useState, useEffect, memo } from 'react';
 import { Stage, Image } from 'react-konva';
-import { Button, Space } from 'antd';
+import { Button, Space, Spin } from 'antd';
 import { ZoomInOutlined, ZoomOutOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useSeatLockStore } from './seatLockStore';
 import { useCartStore } from '../store/cartStore';
@@ -8,7 +8,6 @@ import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
 import seatPaymentChecker from '../services/seatPaymentChecker';
 import SeatStatusLegend from './SeatStatusLegend';
-import SeatLockDebug from './SeatLockDebug';
 import SeatLayer from './SeatLayer';
 import TableLayer from './TableLayer';
 import BackgroundLayer from './BackgroundLayer';
@@ -50,21 +49,21 @@ const preloadBackgroundImage = (url, onProgress) => {
     if (onProgress) onProgress(100);
     return Promise.resolve(backgroundImageCache.get(url));
   }
-  
+
   return new Promise((resolve, reject) => {
     // Si es una data URL, cargar directamente
     if (url.startsWith('data:')) {
       const image = new window.Image();
       image.crossOrigin = undefined;
-      image.loading = 'eager';
-      image.decoding = 'sync';
-      
+      image.loading = 'lazy';
+      image.decoding = 'async';
+
       image.onload = () => {
         backgroundImageCache.set(url, image);
         if (onProgress) onProgress(100);
         resolve(image);
       };
-      
+
       image.onerror = reject;
       image.src = url;
       return;
@@ -74,10 +73,10 @@ const preloadBackgroundImage = (url, onProgress) => {
     fetch(url)
       .then(response => {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
+
         const contentLength = response.headers.get('content-length');
         const total = contentLength ? parseInt(contentLength, 10) : 0;
-        
+
         if (!response.body) {
           throw new Error('ReadableStream not supported');
         }
@@ -92,31 +91,31 @@ const preloadBackgroundImage = (url, onProgress) => {
               // Crear blob y cargar imagen
               const blob = new Blob(chunks);
               const blobUrl = URL.createObjectURL(blob);
-              
+
               const image = new window.Image();
               image.crossOrigin = 'anonymous';
-              image.loading = 'eager';
-              image.decoding = 'sync';
-              
+              image.loading = 'lazy';
+              image.decoding = 'async';
+
               image.onload = () => {
                 backgroundImageCache.set(url, image);
                 URL.revokeObjectURL(blobUrl);
                 if (onProgress) onProgress(100);
                 resolve(image);
               };
-              
+
               image.onerror = (err) => {
                 URL.revokeObjectURL(blobUrl);
                 reject(err);
               };
-              
+
               image.src = blobUrl;
               return;
             }
 
             chunks.push(value);
             receivedLength += value.length;
-            
+
             // Reportar progreso
             if (total > 0 && onProgress) {
               const progress = Math.round((receivedLength / total) * 100);
@@ -125,7 +124,7 @@ const preloadBackgroundImage = (url, onProgress) => {
               // Si no conocemos el tamaño total, estimar progreso
               onProgress(Math.min(50, (receivedLength / 100000) * 50));
             }
-            
+
             readChunk();
           }).catch(reject);
         };
@@ -134,20 +133,19 @@ const preloadBackgroundImage = (url, onProgress) => {
       })
       .catch(error => {
         // Fallback a método tradicional si fetch falla
-        console.warn('Fetch falló, usando método tradicional:', error);
         const image = new window.Image();
         image.crossOrigin = url.startsWith('data:') ? undefined : 'anonymous';
-        image.loading = 'eager';
-        image.decoding = 'sync';
-        
+        image.loading = 'lazy';
+        image.decoding = 'async';
+
         if (onProgress) onProgress(50); // Progreso estimado
-        
+
         image.onload = () => {
           backgroundImageCache.set(url, image);
           if (onProgress) onProgress(100);
           resolve(image);
         };
-        
+
         image.onerror = reject;
         image.src = url;
       });
@@ -171,7 +169,7 @@ const BackgroundImage = React.memo(({ config, onLoadProgress }) => {
     if (url && !/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
       url = resolveImageUrl(url, 'productos') || url;
     }
-    
+
     // Optimizar a WebP si está disponible
     return getWebPUrl(url);
   }, [config.imageUrl, config.url, config.src, config.image?.url, config.image?.publicUrl, config.imageData, config.image?.data]);
@@ -193,7 +191,7 @@ const BackgroundImage = React.memo(({ config, onLoadProgress }) => {
       setBgImg(null);
       return;
     }
-    
+
     // Si ya está en cache y completamente cargada, usar inmediatamente
     if (backgroundImageCache.has(rawUrl)) {
       const cachedImage = backgroundImageCache.get(rawUrl);
@@ -203,32 +201,43 @@ const BackgroundImage = React.memo(({ config, onLoadProgress }) => {
         return;
       }
     }
-    
-    // Usar la función de precarga con progreso
+
+    // Usar requestIdleCallback para no bloquear el render inicial
     let cancelled = false;
-    
-    preloadBackgroundImage(rawUrl, (progress) => {
-      if (!cancelled && onLoadProgress) {
-        onLoadProgress(progress);
-      }
-    })
-    .then((image) => {
-      if (!cancelled && image) {
-        setBgImg(image);
-      }
-    })
-    .catch((error) => {
-      if (!cancelled) {
-        logger.error('Error cargando imagen de fondo:', error);
-        setBgImg(null);
-      }
-    });
-    
+    const loadImage = () => {
+      if (cancelled) return;
+      
+      preloadBackgroundImage(rawUrl, (progress) => {
+        if (!cancelled && onLoadProgress) {
+          onLoadProgress(progress);
+        }
+      })
+      .then((image) => {
+        if (!cancelled && image) {
+          setBgImg(image);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          logger.error('Error cargando imagen de fondo:', error);
+          setBgImg(null);
+        }
+      });
+    };
+
+    // Deferir carga de imágenes de fondo para no bloquear FCP
+    if (typeof window !== 'undefined' && window.requestIdleCallback) {
+      window.requestIdleCallback(loadImage, { timeout: 1000 });
+    } else {
+      // Fallback: usar setTimeout para no bloquear
+      setTimeout(loadImage, 100);
+    }
+
     return () => {
       cancelled = true;
     };
   }, [rawUrl, onLoadProgress]);
-  
+
   const imageProps = useMemo(() => ({
     x: config.position?.x || config.posicion?.x || 0,
     y: config.position?.y || config.posicion?.y || 0,
@@ -239,7 +248,7 @@ const BackgroundImage = React.memo(({ config, onLoadProgress }) => {
   }), [config.position?.x, config.posicion?.x, config.position?.y, config.posicion?.y, config.scale, config.opacity]);
 
   if (!bgImg) return null;
-  
+
   return (
     <Image image={bgImg} {...imageProps} />
   );
@@ -281,7 +290,7 @@ const SeatingMapUnified = ({
   // Validar y normalizar funcionId
   const normalizedFuncionId = useMemo(() => {
     logger.log('🔍 [SEATING_MAP] Normalizando funcionId:', { funcionId, type: typeof funcionId });
-    
+
     if (typeof funcionId === 'number') {
       logger.log('✅ [SEATING_MAP] funcionId es número:', funcionId);
       return funcionId;
@@ -313,7 +322,7 @@ const SeatingMapUnified = ({
   // Estado para controles de zoom (optimizado: actualizar directamente en el Stage)
   const stageRef = useRef(null);
   const [forceRefresh, setForceRefresh] = useState(0);
-  
+
   // Funciones para controles de zoom (actualizar directamente en el Stage para mejor performance)
   const handleZoomIn = useCallback(() => {
     const stage = stageRef.current;
@@ -351,7 +360,7 @@ const SeatingMapUnified = ({
   // Obtener funciones de suscripción del store
   const subscribeToFunction = useSeatLockStore(state => state.subscribeToFunction);
   const unsubscribe = useSeatLockStore(state => state.unsubscribe);
-  
+
   // Convertir Map a objeto para que React detecte cambios
   // seatStatesVersion cambia cada vez que se actualiza seatStates, forzando re-render
   const seatStates = useMemo(() => {
@@ -364,13 +373,13 @@ const SeatingMapUnified = ({
     });
     return obj;
   }, [seatStatesMapRaw, seatStatesVersion]);
-  
+
   // Usar directamente el Map del store en lugar de crear uno nuevo
   const seatStatesMapForColor = useMemo(
     () => seatStatesMapRaw instanceof Map ? seatStatesMapRaw : new Map(),
     [seatStatesMapRaw]
   );
-  
+
   // Hook de colores (memoizado por funcionId)
   const { getSeatColor, getBorderColor } = useSeatColors(normalizedFuncionId);
 
@@ -384,7 +393,7 @@ const SeatingMapUnified = ({
         logger.log('🔔 [SEATING_MAP] Desuscribiéndose de función anterior:', prevFuncionId.current);
         unsubscribe();
       }
-      
+
       logger.log('🔔 [SEATING_MAP] Suscribiéndose a función:', normalizedFuncionId);
       subscribeToFunction(normalizedFuncionId);
       prevFuncionId.current = normalizedFuncionId;
@@ -404,10 +413,10 @@ const SeatingMapUnified = ({
     const handleCartCleared = (event) => {
       logger.log('🧹 [SEATING_MAP] Carrito limpiado, forzando actualización de estado visual');
       logger.log('🧹 [SEATING_MAP] Asientos limpiados:', event.detail?.clearedSeats);
-      
+
       // Forzar una actualización inmediata del estado de los asientos
       setForceRefresh(prev => prev + 1);
-      
+
       // También disparar un evento para otros componentes que puedan necesitarlo
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('forceSeatStateRefresh', {
@@ -429,7 +438,7 @@ const SeatingMapUnified = ({
     window.addEventListener('cartCleared', handleCartCleared);
     window.addEventListener('forceSeatStateRefresh', handleForceRefresh);
     window.addEventListener('seatRemovedFromCart', handleSeatRemovedFromCart);
-    
+
     return () => {
       window.removeEventListener('cartCleared', handleCartCleared);
       window.removeEventListener('forceSeatStateRefresh', handleForceRefresh);
@@ -452,13 +461,13 @@ const SeatingMapUnified = ({
       .filter(Boolean)
       .map(id => id.toString());
   }, [foundSeats]);
-  
+
   const selectedSeatIds = useMemo(() => {
     // Obtener asientos seleccionados desde diferentes fuentes
     let propSeatIds = [];
     let cartSeatIds = [];
     let lockSeatIds = [];
-    
+
     // 1. Asientos de las props (común para ambos modos)
     if (selectedSeats) {
       if (selectedSeats instanceof Set) {
@@ -474,23 +483,23 @@ const SeatingMapUnified = ({
         }
       }
     }
-    
+
     // 2. Asientos del carrito (solo modo store)
     if (!modoVenta) {
       cartSeatIds = (cartItems || []).map(item => (item.sillaId || item.id || item._id)?.toString()).filter(Boolean);
     }
-    
+
     // 3. Asientos bloqueados/seleccionados en la base de datos (común para ambos modos)
     const tempLocks = Array.isArray(lockedSeatsState) ? lockedSeatsState : [];
     const permanentLocks = Array.isArray(lockedSeats) ? lockedSeats : [];
     const allLocks = [...tempLocks, ...permanentLocks];
-    
+
     // Filtrar solo los locks que están en estado 'seleccionado' (no 'locked', 'vendido', etc.)
     lockSeatIds = allLocks
       .filter(lock => lock && lock.status === 'seleccionado' && lock.seat_id)
       .map(lock => lock.seat_id.toString())
       .filter(Boolean);
-    
+
     // 4. Asientos encontrados por búsqueda (resaltado)
     const searchSeatIds = foundSeatIds;
 
@@ -506,49 +515,46 @@ const SeatingMapUnified = ({
   const allLockedSeats = useMemo(() => {
     const tempLocks = Array.isArray(lockedSeatsState) ? lockedSeatsState : [];
     const permanentLocks = Array.isArray(lockedSeats) ? lockedSeats : [];
-    
-    // console.log('🎫 [SEATING_MAP] Temp locks:', tempLocks.length);
-    // console.log('🎫 [SEATING_MAP] Permanent locks:', permanentLocks.length);
-    // console.log('🎫 [SEATING_MAP] Permanent locks data:', permanentLocks);
-    
+
+    //
+    //
+    //
+
     // Crear un mapa para evitar duplicados
     const lockMap = new Map();
-    
+
     // Agregar locks temporales primero (tienen prioridad)
     tempLocks.forEach(lock => {
       if (lock && lock.seat_id) {
         lockMap.set(lock.seat_id, lock);
       }
     });
-    
+
     // Agregar locks permanentes si no existen temporales
     permanentLocks.forEach(lock => {
       if (lock && lock.seat_id && !lockMap.has(lock.seat_id)) {
         lockMap.set(lock.seat_id, lock);
       }
     });
-    
+
     const result = Array.from(lockMap.values());
-    // console.log('🎫 [SEATING_MAP] Combined locks:', result.length);
+    //
     return result;
   }, [lockedSeatsState, lockedSeats, forceRefresh]);
 
-  // Controlar visibilidad del panel de depuración de locks (oculto por defecto)
-  const shouldShowSeatLockDebug =
-    typeof window !== 'undefined' && window.__SHOW_SEAT_LOCK_DEBUG === true;
-  
+
   // Usar hook de sincronización para obtener asientos con estado real
   // SOLO usar el mapa original para evitar re-renders innecesarios
   // El storeMapa se usa solo para actualizaciones de estado de asientos individuales
   const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, normalizedFuncionId);
-  
+
   // Combinar asientos del mapa original con estados actualizados del store
   const memoizedSeats = useMemo(() => {
     if (!syncedSeats) return syncedSeats;
-    
+
     // Actualizar estados de asientos con la información del store
     return syncedSeats.map(seat => {
-      const updatedState = seatStates?.[seat._id] || 
+      const updatedState = seatStates?.[seat._id] ||
         (seatStatesMapForColor instanceof Map ? seatStatesMapForColor.get(seat._id) : null);
       if (updatedState && updatedState !== seat.estado) {
         return { ...seat, estado: updatedState };
@@ -586,7 +592,7 @@ const SeatingMapUnified = ({
   // Callback para recibir progreso de carga de imágenes individuales
   const handleImageLoadProgress = useCallback((imageIndex, progress, totalImages) => {
     imageProgressMap.current.set(imageIndex, progress);
-    
+
     // Calcular progreso total inmediatamente
     let totalProgress = 0;
     let loadedCount = 0;
@@ -596,11 +602,11 @@ const SeatingMapUnified = ({
         loadedCount++;
       }
     });
-    
+
     const averageProgress = totalImages > 0 ? totalProgress / totalImages : 0;
     const finalProgress = Math.min(Math.max(averageProgress, 0), 100);
     setImageLoadProgress(finalProgress);
-    
+
     // Actualizar etapa basada en el progreso
     if (finalProgress < 30) {
       setImageLoadStage('cargandoImagen');
@@ -650,7 +656,7 @@ const SeatingMapUnified = ({
         }
       });
 
-      // Las imágenes se cargarán individualmente a través de BackgroundImage
+      // Las imágenes se cargarán individualmente a través de BackgroundImage (deferidas)
       // El callback handleImageLoadProgress actualizará el progreso
     };
 
@@ -693,26 +699,26 @@ const SeatingMapUnified = ({
       if (!modoVenta) {
         const currentSessionId = localStorage.getItem('anonSessionId');
         const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, normalizedFuncionId, currentSessionId);
-        
+
         if (paymentCheck.isPaid) {
           if (onSeatError) {
             onSeatError('Este asiento ya ha sido comprado y no puede ser seleccionado');
           }
           return;
         }
-        
+
         if (seat.estado === 'vendido' || seat.estado === 'reservado' || seat.estado === 'locked') {
           if (onSeatError) {
-            const errorMessage = seat.estado === 'vendido' 
-              ? 'Este asiento ya está vendido.' 
-              : seat.estado === 'reservado' 
-              ? 'Este asiento está reservado.' 
+            const errorMessage = seat.estado === 'vendido'
+              ? 'Este asiento ya está vendido.'
+              : seat.estado === 'reservado'
+              ? 'Este asiento está reservado.'
               : 'Este asiento no está disponible.';
             onSeatError(errorMessage);
           }
           return;
         }
-        
+
         if (onSeatToggle) {
           onSeatToggle({ ...seat, funcionId: normalizedFuncionId });
         }
@@ -722,13 +728,13 @@ const SeatingMapUnified = ({
 
       const storeState = seatStates?.[seat._id];
       const isSelectedByOtherInStore = storeState === 'seleccionado_por_otro';
-      
+
       const isLockedByOther = allLockedSeats && Array.isArray(allLockedSeats) && allLockedSeats.some(lock => {
         const lockSeatId = lock.seat_id || lock.seatId;
         const currentSessionId = localStorage.getItem('anonSessionId');
         return lockSeatId === seat._id && lock.session_id !== currentSessionId && lock.status === 'seleccionado';
       });
-      
+
       if (isSelectedByOtherInStore || isLockedByOther || seat.estado === 'seleccionado_por_otro') {
         logger.warn('❌ [SEATING_MAP] Asiento seleccionado por otro usuario, no se puede interactuar');
         if (onSeatError) {
@@ -781,13 +787,13 @@ const SeatingMapUnified = ({
       const touch2 = touches[1];
       const distance = getDistance(touch1, touch2);
       const center = getCenter(touch1, touch2);
-      
+
       const stageBox = stage.container().getBoundingClientRect();
       const centerPoint = {
         x: center.x - stageBox.left,
         y: center.y - stageBox.top
       };
-      
+
       touchStateRef.current = {
         lastDistance: distance,
         lastCenter: centerPoint,
@@ -807,36 +813,36 @@ const SeatingMapUnified = ({
       const touch2 = touches[1];
       const distance = getDistance(touch1, touch2);
       const center = getCenter(touch1, touch2);
-      
+
       const stageBox = stage.container().getBoundingClientRect();
       const centerPoint = {
         x: center.x - stageBox.left,
         y: center.y - stageBox.top
       };
-      
+
       const { lastDistance, lastCenter } = touchStateRef.current;
-      
+
       if (lastDistance > 0 && lastCenter) {
         const scaleChange = distance / lastDistance;
         const oldScale = stage.scaleX();
         const newScale = Math.max(0.3, Math.min(3, oldScale * scaleChange));
-        
+
         const pointer = {
           x: (centerPoint.x - stage.x()) / oldScale,
           y: (centerPoint.y - stage.y()) / oldScale
         };
-        
+
         stage.scale({ x: newScale, y: newScale });
-        
+
         const newPos = {
           x: centerPoint.x - pointer.x * newScale,
           y: centerPoint.y - pointer.y * newScale
         };
-        
+
         stage.position(newPos);
         stage.batchDraw();
       }
-      
+
       touchStateRef.current.lastDistance = distance;
       touchStateRef.current.lastCenter = centerPoint;
     }
@@ -855,15 +861,15 @@ const SeatingMapUnified = ({
 
   const handleWheelInternal = useCallback((e) => {
     e.evt.preventDefault();
-    
+
     const stage = stageRef.current;
     if (!stage) return;
 
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
-    
+
     if (!pointer) return;
-    
+
     const mousePointTo = {
       x: (pointer.x - stage.x()) / oldScale,
       y: (pointer.y - stage.y()) / oldScale,
@@ -871,14 +877,14 @@ const SeatingMapUnified = ({
 
     const newScale = e.evt.deltaY > 0 ? oldScale * 0.9 : oldScale * 1.1;
     const clampedScale = Math.max(0.3, Math.min(3, newScale));
-    
+
     stage.scale({ x: clampedScale, y: clampedScale });
-    
+
     const newPos = {
       x: pointer.x - mousePointTo.x * clampedScale,
       y: pointer.y - mousePointTo.y * clampedScale,
     };
-    
+
     stage.position(newPos);
     stage.batchDraw();
   }, []);
@@ -889,15 +895,15 @@ const SeatingMapUnified = ({
   );
 
   const allSeats = memoizedSeats;
-  
+
   const validatedZonas = useMemo(() => {
     if (zonas && zonas.length > 0) {
       return zonas;
     }
-    
+
     if (allSeats.length > 0) {
       const zonasMap = new Map();
-      
+
       allSeats.forEach(seat => {
         const zonaId = seat.zonaId || seat.zona?.id || 'zona_principal';
         if (!zonasMap.has(zonaId)) {
@@ -910,13 +916,13 @@ const SeatingMapUnified = ({
         }
         zonasMap.get(zonaId).asientos.push(seat);
       });
-      
+
       return Array.from(zonasMap.values());
     }
-    
+
     return [];
   }, [zonas, allSeats]);
-  
+
   const rawMapElements = useMemo(() => {
     if (!mapa?.contenido) {
       return [];
@@ -992,7 +998,7 @@ const SeatingMapUnified = ({
   const maxDimensions = useMemo(() => {
     let maxX = 800;
     let maxY = 600;
-    
+
     if (validatedSeats.length > 0) {
       maxX = Math.max(...validatedSeats.map((s) => (s.x || 0) + (s.ancho || 30)), 800);
       maxY = Math.max(...validatedSeats.map((s) => (s.y || 0) + (s.alto || 30)), 600);
@@ -1000,7 +1006,7 @@ const SeatingMapUnified = ({
       maxX = Math.max(...validatedMesas.map((m) => (m.posicion?.x || 0) + (m.width || 100)), 800);
       maxY = Math.max(...validatedMesas.map((m) => (m.posicion?.y || 0) + (m.height || 80)), 600);
     }
-    
+
     return { maxX, maxY };
   }, [validatedSeats, validatedMesas]);
 
@@ -1008,7 +1014,7 @@ const SeatingMapUnified = ({
     const isMobile = isMobileDevice();
     const containerWidth = typeof window !== 'undefined' ? window.innerWidth : 800;
     const containerHeight = typeof window !== 'undefined' ? window.innerHeight : 600;
-    
+
     if (isMobile) {
       const optimized = getOptimizedStageSize(
         Math.min(maxDimensions.maxX + 50, containerWidth - 20),
@@ -1016,22 +1022,39 @@ const SeatingMapUnified = ({
       );
       return optimized;
     }
-    
+
     return {
       width: maxDimensions.maxX + 50,
       height: maxDimensions.maxY + 50
     };
   }, [maxDimensions]);
-  
+
   const canvasConfig = useMemo(() => getCanvasConfig(), []);
 
   if (!mapa) {
     return <div>No map data available</div>;
   }
-  
-     if (seatsLoading) {
-     return <div className="text-center p-4">Sincronizando asientos...</div>;
-   }
+
+  // Mostrar skeleton mientras se cargan los asientos para mejorar FCP
+  if (seatsLoading) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '400px',
+        backgroundColor: '#f5f5f5',
+        borderRadius: '8px'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <Spin size="large" />
+          <div style={{ marginTop: '16px', color: '#666' }}>Sincronizando asientos...</div>
+        </div>
+      </div>
+    );
+  }
 
    if (seatsError) {
      logger.error('[SYNC] Error en sincronización:', seatsError);
@@ -1062,8 +1085,7 @@ const SeatingMapUnified = ({
           showDetails={true}
         />
       )}
-      
-      {shouldShowSeatLockDebug && <SeatLockDebug funcionId={normalizedFuncionId} />}
+
 
       <div style={{
         position: 'absolute',
@@ -1088,14 +1110,14 @@ const SeatingMapUnified = ({
             size="small"
             title="Zoom In"
           />
-          <Button 
-            icon={<ZoomOutOutlined />} 
+          <Button
+            icon={<ZoomOutOutlined />}
             onClick={handleZoomOut}
             size="small"
             title="Zoom Out"
           />
-          <Button 
-            icon={<ReloadOutlined />} 
+          <Button
+            icon={<ReloadOutlined />}
             onClick={handleResetZoom}
             size="small"
             title="Reset Zoom"
@@ -1113,7 +1135,7 @@ const SeatingMapUnified = ({
         <Stage
           width={stageDimensions.width}
           height={stageDimensions.height}
-          style={{ 
+          style={{
             border: '1px solid #ccc',
             maxWidth: '100%',
             margin: '0 auto',
@@ -1130,7 +1152,7 @@ const SeatingMapUnified = ({
           hitGraphEnabled={canvasConfig.hitGraphEnabled}
           listening={canvasConfig.listening}
         >
-          <BackgroundLayer 
+          <BackgroundLayer
             backgroundElements={backgroundElements}
             onImageLoadProgress={handleImageLoadProgress}
           />

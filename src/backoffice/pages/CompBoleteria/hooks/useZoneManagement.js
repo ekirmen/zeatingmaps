@@ -6,30 +6,23 @@ export const useZoneManagement = (selectedPlantilla, getPrecioConDescuento) => {
   const [zoneQuantities, setZoneQuantities] = useState({});
 
   const detallesPlantilla = useMemo(() => {
-    console.log('useZoneManagement - selectedPlantilla:', selectedPlantilla);
-    
     if (!selectedPlantilla?.detalles) {
-      console.log('useZoneManagement - No hay detalles en la plantilla');
       return [];
     }
-    
+
     if (Array.isArray(selectedPlantilla.detalles)) {
-      console.log('useZoneManagement - Detalles ya es array:', selectedPlantilla.detalles);
       return selectedPlantilla.detalles;
     }
-    
+
     try {
       if (typeof selectedPlantilla.detalles === 'string') {
         const parsed = JSON.parse(selectedPlantilla.detalles);
-        console.log('useZoneManagement - Detalles parseados de string:', parsed);
         return Array.isArray(parsed) ? parsed : [];
       }
-      
+
       const result = Array.isArray(selectedPlantilla.detalles)
         ? selectedPlantilla.detalles
         : Object.values(selectedPlantilla.detalles);
-      
-      console.log('useZoneManagement - Detalles procesados:', result);
       return result;
     } catch (error) {
       console.error('useZoneManagement - Error procesando detalles:', error);
@@ -71,4 +64,4 @@ export const useZoneManagement = (selectedPlantilla, getPrecioConDescuento) => {
     handleClearZoneSelection,
     handleQuantityChange
   };
-}; 
+};

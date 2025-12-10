@@ -35,7 +35,6 @@ const persistTenantContext = (payload) => {
     window.localStorage.setItem(STORAGE_KEY, serialized);
     updateWindowContext(JSON.parse(serialized));
   } catch (storageError) {
-    console.warn('No fue posible persistir el contexto del tenant:', storageError);
     updateWindowContext(payload);
   }
 };
@@ -48,7 +47,6 @@ const clearCachedTenantContext = () => {
   try {
     window.localStorage.removeItem(STORAGE_KEY);
   } catch (storageError) {
-    console.warn('No fue posible limpiar el contexto del tenant:', storageError);
   }
 
   if (window.__TENANT_CONTEXT__) {
@@ -84,7 +82,6 @@ const readCachedTenantContext = (hostname) => {
     updateWindowContext(parsed);
     return parsed;
   } catch (error) {
-    console.warn('No fue posible leer el contexto del tenant cacheado:', error);
     return null;
   }
 };

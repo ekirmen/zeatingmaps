@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Switch, 
-  Button, 
-  Modal, 
-  Form, 
-  Input, 
-  message, 
+import {
+  Card,
+  Switch,
+  Button,
+  Modal,
+  Form,
+  Input,
+  message,
   Space,
   Typography,
   Divider,
@@ -23,10 +23,10 @@ import {
   Timeline,
   Popconfirm
 } from 'antd';
-import { 
-  CreditCardOutlined, 
-  BankOutlined, 
-  MobileOutlined, 
+import {
+  CreditCardOutlined,
+  BankOutlined,
+  MobileOutlined,
   DollarOutlined,
   SettingOutlined,
   EyeOutlined,
@@ -68,7 +68,7 @@ const PaymentMethodsConfig = () => {
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [importExportModalVisible, setImportExportModalVisible] = useState(false);
   const [favoriteMethods, setFavoriteMethods] = useState([]);
-  
+
   // Mapeo de method_id a type
   const getMethodType = (methodId) => {
     const typeMap = {
@@ -257,25 +257,25 @@ const PaymentMethodsConfig = () => {
       if (!encryptedData || encryptedData === '{}' || encryptedData === '') {
         return {};
       }
-      
+
       // Si ya es un objeto JSON válido, retornarlo directamente
       if (typeof encryptedData === 'object') {
         return encryptedData;
       }
-      
+
       // Si es una cadena que parece JSON válido, parsearla directamente
       if (typeof encryptedData === 'string' && encryptedData.startsWith('{')) {
         return JSON.parse(encryptedData);
       }
-      
+
       // Intentar desencriptar
       const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
       const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
-      
+
       if (!decryptedString) {
         return {};
       }
-      
+
       return JSON.parse(decryptedString);
     } catch (error) {
       console.error('Error decrypting data:', error);
@@ -287,13 +287,13 @@ const PaymentMethodsConfig = () => {
   const validateApiKey = async (method, config) => {
     try {
       setTestingConnection(prev => ({ ...prev, [method]: true }));
-      
+
       // Simular validación de API key (en producción sería una llamada real)
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Simular resultado de validación
       const isValid = Math.random() > 0.3; // 70% de éxito simulado
-      
+
       setConnectionStatus(prev => ({
         ...prev,
         [method]: {
@@ -302,7 +302,7 @@ const PaymentMethodsConfig = () => {
           lastTested: new Date().toISOString()
         }
       }));
-      
+
       setTestingConnection(prev => ({ ...prev, [method]: false }));
       return isValid;
     } catch (error) {
@@ -347,28 +347,27 @@ const PaymentMethodsConfig = () => {
   const loadPaymentMethods = async () => {
     try {
       setLoading(true);
-      
+
       // Obtener tenant_id
       const tenantId = currentTenant?.id || resolveTenantId();
-      
+
       // Cargar métodos de pago desde la base de datos, filtrando por tenant_id si existe
       let query = supabase
         .from('payment_methods')
         .select('*');
-      
+
       // Si hay tenant_id, filtrar por él (priorizar métodos específicos del tenant)
       // Si no hay tenant_id, cargar todos para ver qué hay
       if (tenantId) {
         query = query.eq('tenant_id', tenantId);
       }
-      
+
       query = query.order('is_recommended', { ascending: false })
         .order('name');
 
       const { data: methods, error } = await query;
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
-        console.warn('Error loading payment methods:', error);
       }
 
       // Si no hay datos en la BD o no hay tenant_id, usar los métodos por defecto
@@ -378,7 +377,7 @@ const PaymentMethodsConfig = () => {
         // Si hay tenant_id, usar solo los métodos del tenant
         // Si no hay tenant_id, agrupar por method_id y priorizar los que tienen tenant_id
         let filteredMethods = methods;
-        
+
         if (!tenantId) {
           // Si no hay tenant_id, agrupar por method_id y tomar el primero (que debería ser el más reciente)
           const methodMap = new Map();
@@ -405,7 +404,7 @@ const PaymentMethodsConfig = () => {
           });
           filteredMethods = Array.from(methodMap.values());
         }
-        
+
         // Combinar con los métodos disponibles
         const combinedMethods = availableMethods.map(method => {
           // Buscar el método guardado, priorizando los que tienen tenant_id
@@ -479,8 +478,8 @@ const PaymentMethodsConfig = () => {
       }
 
       // Actualizar estado local
-      setPaymentMethods(prev => 
-        prev.map(m => 
+      setPaymentMethods(prev =>
+        prev.map(m =>
           m.id === methodId ? { ...m, enabled } : m
         )
       );
@@ -543,10 +542,10 @@ const PaymentMethodsConfig = () => {
     } catch (error) {
       console.error('Error updating payment method:', error);
       message.error('Error al actualizar el método de pago');
-      
+
       // Revertir cambio local
-      setPaymentMethods(prev => 
-        prev.map(method => 
+      setPaymentMethods(prev =>
+        prev.map(method =>
           method.id === methodId ? { ...method, enabled: !enabled } : method
         )
       );
@@ -555,7 +554,7 @@ const PaymentMethodsConfig = () => {
 
   const openConfigModal = async (method) => {
     setSelectedMethod(method);
-    
+
     // Cargar configuración existente
     const { data: config, error } = await supabase
       .from('payment_methods')
@@ -564,7 +563,6 @@ const PaymentMethodsConfig = () => {
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      console.warn('Error loading config:', error);
     }
 
     // Llenar el formulario con la configuración existente
@@ -575,10 +573,10 @@ const PaymentMethodsConfig = () => {
   const handleSaveConfig = async (values) => {
     try {
       // Validar API keys antes de guardar
-      const hasApiKey = selectedMethod.configs.some(config => 
+      const hasApiKey = selectedMethod.configs.some(config =>
         config.secret && values[config.key]
       );
-      
+
       if (hasApiKey) {
         const isValid = await validateApiKey(selectedMethod.id, values);
         if (!isValid) {
@@ -650,11 +648,11 @@ const PaymentMethodsConfig = () => {
       message.success('Configuración guardada correctamente');
       setConfigModalVisible(false);
       configForm.resetFields();
-      
+
       // Actualizar estado local
-      setPaymentMethods(prev => 
-        prev.map(method => 
-          method.id === selectedMethod.id 
+      setPaymentMethods(prev =>
+        prev.map(method =>
+          method.id === selectedMethod.id
             ? { ...method, config: values }
             : method
         )
@@ -676,7 +674,7 @@ const PaymentMethodsConfig = () => {
   const handleBulkAction = async (action) => {
     try {
       setBulkActionLoading(true);
-      
+
       // Obtener tenant_id
       const tenantId = currentTenant?.id || resolveTenantId();
       if (!tenantId) {
@@ -733,7 +731,7 @@ const PaymentMethodsConfig = () => {
       if (error) throw error;
 
       // Actualizar estado local
-      setPaymentMethods(prev => 
+      setPaymentMethods(prev =>
         prev.map(method => ({ ...method, enabled: action === 'enable' }))
       );
 
@@ -749,13 +747,13 @@ const PaymentMethodsConfig = () => {
   // Función para toggle favorito
   const toggleFavorite = (methodId) => {
     const isFavorite = favoriteMethods.includes(methodId);
-    const newFavorites = isFavorite 
+    const newFavorites = isFavorite
       ? favoriteMethods.filter(id => id !== methodId)
       : [...favoriteMethods, methodId];
-    
+
     setFavoriteMethods(newFavorites);
     localStorage.setItem('favoritePaymentMethods', JSON.stringify(newFavorites));
-    
+
     message.success(`Método ${isFavorite ? 'removido de' : 'agregado a'} favoritos`);
   };
 
@@ -766,17 +764,17 @@ const PaymentMethodsConfig = () => {
       enabled: method.enabled,
       config: method.config
     }));
-    
+
     const dataStr = JSON.stringify(config, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
+
     const exportFileDefaultName = `payment-methods-config-${new Date().toISOString().split('T')[0]}.json`;
-    
+
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
-    
+
     message.success('Configuración exportada correctamente');
   };
 
@@ -786,12 +784,12 @@ const PaymentMethodsConfig = () => {
     reader.onload = async (e) => {
       try {
         const config = JSON.parse(e.target.result);
-        
+
         // Validar estructura
         if (!Array.isArray(config)) {
           throw new Error('Formato de archivo inválido');
         }
-        
+
         // Obtener tenant_id
         const tenantId = currentTenant?.id || resolveTenantId();
         if (!tenantId) {
@@ -802,7 +800,7 @@ const PaymentMethodsConfig = () => {
         for (const methodConfig of config) {
           // Buscar el método en availableMethods para obtener datos completos
           const availableMethod = availableMethods.find(m => m.id === methodConfig.id);
-          
+
           // Verificar si el método ya existe en la BD
           const { data: existingMethod } = await supabase
             .from('payment_methods')
@@ -842,7 +840,7 @@ const PaymentMethodsConfig = () => {
               onConflict: 'method_id,tenant_id'
             });
         }
-        
+
         // Recargar métodos
         await loadPaymentMethods();
         message.success('Configuración importada correctamente');
@@ -858,7 +856,7 @@ const PaymentMethodsConfig = () => {
   const getStatusBadge = (method) => {
     const hasConfig = Object.keys(method.config || {}).length > 0;
     const isConfigured = hasConfig && method.config[method.configs?.[0]?.key];
-    
+
     if (isConfigured) {
       return <Badge status="success" text="Configurado" />;
     } else if (hasConfig) {
@@ -883,7 +881,7 @@ const PaymentMethodsConfig = () => {
   };
 
   return (
-    <Card 
+    <Card
       title={
         <Space>
           <SettingOutlined />
@@ -1040,13 +1038,13 @@ const PaymentMethodsConfig = () => {
                   {getConnectionIcon(method.id)}
                 </div>
               </div>
-              
+
               <div className="mt-2">
                 {getStatusBadge(method)}
                 {connectionStatus[method.id] && (
                   <div className="mt-1">
-                    <Text 
-                      type={connectionStatus[method.id].status === 'success' ? 'success' : 'danger'} 
+                    <Text
+                      type={connectionStatus[method.id].status === 'success' ? 'success' : 'danger'}
                       className="text-xs"
                     >
                       {connectionStatus[method.id].message}
@@ -1155,8 +1153,8 @@ const PaymentMethodsConfig = () => {
             <Button onClick={() => setConfigModalVisible(false)}>
               Cancelar
             </Button>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               htmlType="submit"
               icon={<CheckOutlined />}
             >
@@ -1215,8 +1213,8 @@ const PaymentMethodsConfig = () => {
             <p className="text-sm text-gray-600 mb-3">
               Descarga un archivo JSON con toda la configuración actual de métodos de pago.
             </p>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<DownloadOutlined />}
               onClick={exportConfig}
               block
@@ -1224,7 +1222,7 @@ const PaymentMethodsConfig = () => {
               Exportar Configuración
             </Button>
           </Card>
-          
+
           <Card title="Importar Configuración" size="small">
             <p className="text-sm text-gray-600 mb-3">
               Sube un archivo JSON para restaurar una configuración anterior.

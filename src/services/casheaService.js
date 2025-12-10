@@ -21,7 +21,6 @@ const parseConfig = (rawConfig) => {
     try {
       return JSON.parse(rawConfig);
     } catch (error) {
-      console.warn('[CasheaService] Could not parse config string:', error);
       return {};
     }
   }
@@ -94,7 +93,6 @@ export const getCasheaConfig = async (tenantId) => {
     .single();
 
   if (error) {
-    console.warn('[CasheaService] Error fetching configuration:', error);
     return null;
   }
 

@@ -35,7 +35,6 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleTicketSearch = async (locator) => {
     setSearchLoading(true);
     try {
-        console.log('[Boleteria] Searching ticket for locator:', locator);
         const { data: payment, error } = await supabase
           .from('payment_transactions')
           .select(`*,
@@ -58,12 +57,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       }
 
       if (!payment) {
-        console.warn(`[Boleteria] No ticket found for locator ${locator}`);
         throw new Error('Ticket no encontrado');
       }
-
-      console.log('[Boleteria] Ticket search result:', payment);
-
       // Parse seats if stored as JSON string
       let seats = [];
       if (Array.isArray(payment.seats)) {
@@ -127,11 +122,11 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
   const loadTicketIntoPOS = async () => {
     if (!ticketData) return;
-    
+
     if (ticketData.user) {
       setSelectedClient(ticketData.user);
     }
-    
+
     if (ticketData.seats && setCarrito) {
       const seatsToCart = ticketData.seats.map((seat) => ({
         _id: seat._id || seat.id || seat.sillaId,
@@ -145,7 +140,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         funcionId: ticketData.funcion?.id || ticketData.funcion,
         funcionFecha: ticketData.funcion?.fecha_celebracion
       }));
-      
+
       setCarrito(seatsToCart);
     }
 
@@ -164,7 +159,6 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
   const handleDownloadTicket = async (locator) => {
     try {
-      console.log('Attempting to download ticket for locator:', locator);
       await downloadTicket(locator);
       message.success('Ticket descargado correctamente');
     } catch (error) {
@@ -636,7 +630,6 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           form={configForm}
           layout="vertical"
           onFinish={(values) => {
-            console.log('Configuración guardada:', values);
             message.success('Configuración guardada exitosamente');
             setIsConfigModalVisible(false);
           }}

@@ -680,7 +680,9 @@ const PlantillasCupos = () => {
                     <div className="space-y-4">
                       {zonas.filter(z => z.numerada).map(zona => (
                         <Card key={zona.id} size="small" title={zona.nombre}>
+                          <label htmlFor={`cupo-select-${zona.id}`} className="sr-only">Seleccionar cupo para {zona.nombre}</label>
                           <Select
+                            id={`cupo-select-${zona.id}`}
                             placeholder="Selecciona un cupo para asignar butacas"
                             style={{ width: '100%', marginBottom: 16 }}
                             onChange={(cupoId) => {
@@ -688,6 +690,7 @@ const PlantillasCupos = () => {
                               // Aquí se abriría el mapa para seleccionar butacas
                               message.info('Funcionalidad de selección de butacas en el mapa próximamente');
                             }}
+                            aria-label={`Seleccionar cupo para asignar butacas en ${zona.nombre}`}
                           >
                             {form.getFieldValue('cupos')?.map(cupoId => (
                               <Option key={cupoId} value={cupoId}>

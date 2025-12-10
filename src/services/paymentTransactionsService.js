@@ -35,7 +35,6 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
       .single();
 
     if (fetchError) {
-      console.warn('⚠️ [UPDATE_STATUS] Error obteniendo transacción actual:', fetchError);
     }
 
     const { data, error } = await supabase
@@ -54,9 +53,9 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
     // Si el status cambió a 'completed' y antes no lo estaba, enviar correo de pago completo
     const previousStatus = currentTransaction?.status;
     const newStatus = status;
-    const statusChangedToCompleted = (previousStatus !== 'completed' && previousStatus !== 'pagado') && 
+    const statusChangedToCompleted = (previousStatus !== 'completed' && previousStatus !== 'pagado') &&
                                      (newStatus === 'completed' || newStatus === 'pagado');
-    
+
     if (statusChangedToCompleted && data.locator && data.user_id) {
       try {
         // Importar dinámicamente para evitar problemas de ciclo
@@ -69,11 +68,9 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
           transactionId: data.id,
           amount: data.amount,
         });
-        
+
         if (emailResult.success) {
-          console.log('✅ [UPDATE_STATUS] Correo de pago completo enviado exitosamente');
         } else {
-          console.warn('⚠️ [UPDATE_STATUS] Error enviando correo de pago completo:', emailResult.error);
         }
       } catch (emailError) {
         console.error('❌ [UPDATE_STATUS] Error enviando correo de pago completo:', emailError);

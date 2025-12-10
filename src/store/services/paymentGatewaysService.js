@@ -28,10 +28,7 @@ const resolvePaymentTable = async (client = supabase) => {
         paymentTableCache.set(client, tableName);
         return tableName;
       }
-
-      console.warn(`[PaymentGatewayService] Tabla ${tableName} no disponible, probando fallback`, error);
     } catch (err) {
-      console.warn(`[PaymentGatewayService] Error resolviendo tabla ${tableName}:`, err);
     }
   }
 
@@ -45,7 +42,6 @@ const parseJsonSafe = (rawValue) => {
   try {
     return JSON.parse(rawValue);
   } catch (error) {
-    console.warn('[PaymentGatewayService] No se pudo parsear JSON:', error);
     return rawValue;
   }
 };
@@ -136,8 +132,6 @@ const sanitizeUuid = (rawValue, { fieldName, required = false } = {}) => {
   if (required) {
     throw new Error(`${fieldName} debe ser un UUID válido. Valor recibido: ${rawValue}`);
   }
-
-  console.warn(`[PaymentTransaction] ${fieldName} inválido, omitiendo valor:`, rawValue);
   return null;
 };
 
@@ -280,9 +274,6 @@ export const calculatePriceWithFees = async (
     if (supportedCurrencies.length > 0 && !supportedCurrencies.includes(normalizedCurrency)) {
       if (allowCurrencyFallback) {
         resolvedCurrency = supportedCurrencies[0];
-        console.warn(
-          `[PaymentGatewayService] Moneda ${normalizedCurrency} no soportada, usando ${resolvedCurrency} como fallback`
-        );
       } else {
         throw new Error(
           `La pasarela no soporta la moneda ${normalizedCurrency}. Monedas permitidas: ${supportedCurrencies.join(', ')}`
@@ -329,7 +320,7 @@ export const getAllActiveGatewayFees = async () => {
         fees
       };
     });
-    
+
     return await Promise.all(feesPromises);
   } catch (error) {
     console.error('Error fetching all gateway fees:', error);
@@ -363,7 +354,7 @@ export const validateGatewayConfig = (gateway) => {
   return {
     valid: missingFields.length === 0,
     missingFields,
-    message: missingFields.length > 0 
+    message: missingFields.length > 0
       ? `Campos faltantes: ${missingFields.join(', ')}`
       : 'Configuración válida'
   };
@@ -456,33 +447,33 @@ export const getPaymentGatewayByType = async (type) => {
  */
 export const validatePaymentData = (paymentData) => {
   const errors = [];
-  
+
   if (!paymentData.orderId) {
     errors.push('orderId es requerido');
   }
-  
+
   if (!paymentData.amount || paymentData.amount <= 0) {
     errors.push('amount debe ser mayor a 0');
   }
-  
+
   if (!paymentData.tenantId) {
     errors.push('tenantId es requerido');
   }
-  
+
   if (!paymentData.locator) {
     errors.push('locator es requerido');
   }
-  
+
   // Validar que seats sea un array válido si se proporciona
   if (paymentData.seats && !Array.isArray(paymentData.seats)) {
     errors.push('seats debe ser un array');
   }
-  
+
   // Validar que user sea un objeto válido si se proporciona
   if (paymentData.user && typeof paymentData.user !== 'object') {
     errors.push('user debe ser un objeto');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors
@@ -498,7 +489,7 @@ export const createPaymentWithValidation = async (paymentData) => {
   if (!validation.isValid) {
     throw new Error(`Datos de pago inválidos: ${validation.errors.join(', ')}`);
   }
-  
+
   // Crear transacción
   return await createPaymentTransaction(paymentData);
 };
@@ -514,15 +505,6 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
   }
 
   try {
-    console.log('[PaymentTransaction] Iniciando creación:', {
-      orderId: transactionData.orderId,
-      amount: transactionData.amount,
-      userId: transactionData.userId,
-      user: transactionData.user,
-      eventoId: transactionData.eventoId,
-      funcionId: transactionData.funcionId
-    });
-
     // Validar datos requeridos
     if (!transactionData.orderId) {
       throw new Error('orderId es requerido');
@@ -554,7 +536,6 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
           gatewayName = gateway.name || gateway.method_id || gatewayName;
         }
       } catch (gatewayError) {
-        console.warn('Could not fetch gateway name:', gatewayError);
       }
     }
 
@@ -563,7 +544,6 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
       try {
         return JSON.parse(rawValue);
       } catch (parseError) {
-        console.warn('[PaymentTransaction] No se pudo parsear JSON de usuario:', parseError);
         return null;
       }
     };
@@ -715,22 +695,12 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
           const isPermissionError =
             error.code === '42501' || // permission denied
             (typeof error.message === 'string' && error.message.toLowerCase().includes('permission denied'));
-
-          console.warn('[PaymentTransaction] No se pudo verificar el usuario, manteniendo user_id para que la BD valide:', {
-            message: error.message,
-            code: error.code,
-            details: error.details,
-            hint: error.hint,
-            isPermissionError,
-          });
-
           // Si falló por permisos u otra razón inesperada, asumimos que la BD podrá validar el FK
           return { exists: true, verified: false };
         }
 
         return { exists: Boolean(data?.id), verified: true };
       } catch (verificationError) {
-        console.warn('[PaymentTransaction] Error inesperado verificando usuario, manteniendo user_id:', verificationError);
         return { exists: true, verified: false };
       }
     };
@@ -738,7 +708,6 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
     const { exists: userExists, verified: userVerified } = await ensureUserExists(userId);
     if (userVerified && !userExists) {
       if (userId) {
-        console.warn('[PaymentTransaction] user_id no encontrado en profiles, removiendo para evitar FK violation');
       }
       userId = null;
       if (normalizedUser && typeof normalizedUser === 'object') {
@@ -822,7 +791,6 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
     // Si no hay evento_id pero sí hay funcion_id, obtenerlo desde la función
     if (!eventoId && funcionId) {
       try {
-        console.log('[PaymentTransaction] Obteniendo evento_id desde función:', funcionId);
         const { data: funcionData, error: funcionError } = await client
           .from('funciones')
           .select('evento_id')
@@ -834,20 +802,11 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
             fieldName: 'evento_id',
             required: false,
           });
-          console.log('[PaymentTransaction] Evento_id obtenido desde función:', eventoId);
         } else {
-          console.warn('[PaymentTransaction] No se pudo obtener evento_id desde función:', funcionError);
           if (funcionError) {
-            console.warn('[PaymentTransaction] Detalles del error:', {
-              message: funcionError.message,
-              code: funcionError.code,
-              details: funcionError.details,
-              hint: funcionError.hint
-            });
           }
         }
       } catch (error) {
-        console.warn('[PaymentTransaction] Error al obtener evento_id desde función:', error);
       }
     }
 
@@ -877,7 +836,6 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
             const seatId = typeof seatIdRaw === 'number' ? seatIdRaw.toString() : seatIdRaw?.toString().trim();
 
             if (!seatId) {
-              console.warn('[PaymentTransaction] Ignorando asiento sin identificador válido:', s);
               return null;
             }
 
@@ -943,9 +901,6 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
       payment_gateway_id: paymentGatewayId,
       payments: computedPayments,
     };
-
-    console.log('[PaymentTransaction] Datos a insertar:', insertData);
-
     const { data, error } = await client
       .from('payment_transactions')
       .insert(insertData)
@@ -962,9 +917,6 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
       enhancedError.details = error.details;
       throw enhancedError;
     }
-
-    console.log('[PaymentTransaction] Transacción creada exitosamente:', data);
-
     return {
       ...data,
       user: normalizedUser,
@@ -1075,7 +1027,6 @@ export const updatePaymentTransactionStatus = async (
       .single();
 
     if (fetchError) {
-      console.warn('⚠️ [UPDATE_STATUS] Error obteniendo transacción actual:', fetchError);
     }
 
     const updateData = { status, updated_at: new Date().toISOString() };
@@ -1097,7 +1048,7 @@ export const updatePaymentTransactionStatus = async (
     const newStatus = status;
     const statusChangedToCompleted = (previousStatus !== 'completed' && previousStatus !== 'pagado') &&
                                      (newStatus === 'completed' || newStatus === 'pagado');
-    
+
     if (statusChangedToCompleted && data.locator && data.user_id) {
       try {
         // Importar dinámicamente para evitar problemas de ciclo
@@ -1110,11 +1061,9 @@ export const updatePaymentTransactionStatus = async (
           transactionId: data.id,
           amount: data.amount,
         });
-        
+
         if (emailResult.success) {
-          console.log('✅ [UPDATE_STATUS] Correo de pago completo enviado exitosamente');
         } else {
-          console.warn('⚠️ [UPDATE_STATUS] Error enviando correo de pago completo:', emailResult.error);
         }
       } catch (emailError) {
         console.error('❌ [UPDATE_STATUS] Error enviando correo de pago completo:', emailError);
@@ -1191,4 +1140,4 @@ export const getPaymentTransactionsByOrder = async (orderId) => {
     console.error('Error loading payment transactions:', error);
     return [];
   }
-}; 
+};

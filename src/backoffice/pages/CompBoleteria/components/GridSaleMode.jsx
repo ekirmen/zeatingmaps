@@ -7,12 +7,12 @@ import { fetchZonasPorSala } from '../../../services/apibackoffice';
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-const GridSaleMode = ({ 
-  evento, 
-  funcion, 
-  onAddToCart, 
-  onRemoveFromCart, 
-  cartItems = [], 
+const GridSaleMode = ({
+  evento,
+  funcion,
+  onAddToCart,
+  onRemoveFromCart,
+  cartItems = [],
   loading = false,
   selectedClient,
   onClientSelect
@@ -25,18 +25,10 @@ const GridSaleMode = ({
 
   // Cargar zonas y precios del evento
   useEffect(() => {
-    console.log('🔄 [GridSaleMode] useEffect triggered:', { 
-      eventoId: evento?.id, 
-      funcionId: funcion?.id,
-      evento: evento,
-      funcion: funcion
-    });
-    
     if (!evento?.id) {
-      console.log('❌ [GridSaleMode] Missing evento data, skipping load');
       return;
     }
-    
+
     // En modo Grid, no necesitamos función específica
     console.log('✅ [GridSaleMode] Loading zonas for evento (modo grid)');
     loadZonasAndPrecios();
@@ -46,14 +38,8 @@ const GridSaleMode = ({
     try {
       setLoadingZonas(true);
       setError(null);
-
-      console.log('🔍 [GridSaleMode] Cargando zonas para evento:', evento);
-      console.log('🔍 [GridSaleMode] Sala del evento:', evento.sala);
-
       // Cargar zonas del evento usando la función estándar
       const zonasData = await fetchZonasPorSala(evento.sala);
-      console.log('🏷️ [GridSaleMode] Zonas cargadas:', zonasData);
-
       setZonas(zonasData || []);
 
       // Cargar plantillas (precios) del evento
@@ -82,7 +68,6 @@ const GridSaleMode = ({
             }
           });
         } catch (parseError) {
-          console.warn('Error parseando detalles de plantilla:', parseError);
         }
       });
 
@@ -135,7 +120,7 @@ const GridSaleMode = ({
     };
 
     onAddToCart(item);
-    
+
     // Limpiar cantidad después de agregar
     setCantidades(prev => ({
       ...prev,
@@ -247,7 +232,7 @@ const GridSaleMode = ({
         const zona = zonas.find(z => z.id === zonaId);
         const cantidad = cantidades[zonaId] || 0;
         const precio = precios[zonaId];
-        
+
         return (
           <Space>
             <Button
@@ -322,8 +307,8 @@ const GridSaleMode = ({
               <UserOutlined />
               <Text strong>Cliente: {selectedClient.nombre || selectedClient.email}</Text>
             </div>
-            <Button 
-              size="small" 
+            <Button
+              size="small"
               onClick={onClientSelect}
             >
               Cambiar

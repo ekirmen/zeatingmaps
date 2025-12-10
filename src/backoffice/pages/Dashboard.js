@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Statistic, 
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
   Progress,
-  Table, 
-  Button, 
+  Table,
+  Button,
   Typography,
   Avatar,
   List,
@@ -18,10 +18,10 @@ import {
   ConfigProvider
 } from 'antd';
 import locale from 'antd/locale/es_ES';
-import { 
-  DollarOutlined, 
-  UserOutlined, 
-  FileTextOutlined, 
+import {
+  DollarOutlined,
+  UserOutlined,
+  FileTextOutlined,
   ShoppingCartOutlined,
   BellOutlined,
   CalendarOutlined,
@@ -55,15 +55,15 @@ const Dashboard = () => {
 
   useEffect(() => {
     // Definir las funciones dentro del useEffect para evitar problemas de dependencias
-    
+
 
     const subscribeToRealtimeUpdates = () => {
       try {
         // Suscribirse a actualizaciones en tiempo real
         const subscription = supabase
           .channel('dashboard-updates')
-          .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'payment_transactions' }, 
+          .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'payment_transactions' },
             () => {
               // Recargar datos cuando hay cambios
               loadDashboardData();
@@ -83,10 +83,10 @@ const Dashboard = () => {
 
     // Ejecutar carga inicial
     loadDashboardData();
-    
+
     // Suscribirse a actualizaciones en tiempo real
     const cleanup = subscribeToRealtimeUpdates();
-    
+
     // Retornar función de limpieza
     return () => {
       if (cleanup) {
@@ -98,7 +98,7 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Cargar estadísticas principales
       await Promise.all([
         loadRevenueStats(),
@@ -125,7 +125,6 @@ const Dashboard = () => {
         .eq('status', 'completed');
 
       if (error) {
-        console.warn('Error loading revenue stats:', error);
         setStats(prev => ({
           ...prev,
           totalRevenue: 0,
@@ -206,7 +205,7 @@ const Dashboard = () => {
 
       // Obtener usuarios activos (últimas 24 horas) desde auth.users o user_sessions si existe
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      
+
       // Intentar obtener usuarios activos desde user_sessions o last_login
       let activeUsersCount = 0;
       try {
@@ -261,7 +260,6 @@ const Dashboard = () => {
         .limit(5);
 
       if (error) {
-        console.warn('Error loading recent transactions:', error);
         setRecentTransactions([]);
         return;
       }
@@ -300,14 +298,13 @@ const Dashboard = () => {
 
       if (error) {
         // Si falla, intentar consulta directa a eventos
-        console.warn('Error con vista eventos_con_funciones_activas, usando eventos directamente:', error);
         const { data: eventosData, error: eventosError } = await supabase
           .from('eventos')
           .select('*')
           .eq('activo', true)
           .order('created_at', { ascending: false })
           .limit(5);
-        
+
         if (eventosError) throw eventosError;
         setUpcomingEvents(eventosData || []);
         return;
@@ -356,12 +353,10 @@ const Dashboard = () => {
     // Verificar si ya existe un canal con el mismo topic
     const existingChannels = supabase.getChannels();
     const existingChannel = existingChannels.find(ch => ch.topic === 'dashboard_updates');
-    
+
     if (existingChannel) {
-      console.log('[DASHBOARD] Canal ya existe, reutilizando');
       return () => {
         // No desuscribirse si el canal es compartido
-        console.log('[DASHBOARD] No desuscribiendo canal compartido');
       };
     }
 
@@ -380,15 +375,12 @@ const Dashboard = () => {
         }
       )
       .subscribe((status) => {
-        console.log('[DASHBOARD] Estado de suscripción:', status);
       });
 
     return () => {
       try {
         subscription.unsubscribe();
-        console.log('[DASHBOARD] Canal desuscrito exitosamente');
       } catch (error) {
-        console.warn('[DASHBOARD] Error al desuscribir canal:', error);
       }
     };
   };
@@ -421,15 +413,15 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="dashboard-container" style={{ 
-      padding: '16px', 
-      backgroundColor: '#f9fafb', 
-      minHeight: '100vh' 
+    <div className="dashboard-container" style={{
+      padding: '16px',
+      backgroundColor: '#f9fafb',
+      minHeight: '100vh'
     }}>
       {/* Header */}
       <div style={{ marginBottom: '16px' }}>
-        <Title level={2} style={{ 
-          fontSize: '24px', 
+        <Title level={2} style={{
+          fontSize: '24px',
           marginBottom: '4px',
           color: '#1f2937'
         }}>
@@ -451,9 +443,9 @@ const Dashboard = () => {
               valueStyle={{ color: '#3f8600', fontSize: '20px' }}
               prefix={<DollarOutlined />}
             />
-            <Progress 
-              percent={Math.min(100, stats.totalRevenue > 0 ? (stats.todaySales / stats.totalRevenue) * 100 : 0)} 
-              size="small" 
+            <Progress
+              percent={Math.min(100, stats.totalRevenue > 0 ? (stats.todaySales / stats.totalRevenue) * 100 : 0)}
+              size="small"
               showInfo={false}
               style={{ marginTop: '8px' }}
             />
@@ -471,9 +463,9 @@ const Dashboard = () => {
               valueStyle={{ color: '#1890ff', fontSize: '20px' }}
               prefix={<FileTextOutlined />}
             />
-            <Progress 
-              percent={Math.min(100, stats.totalTickets > 0 ? (stats.soldTickets / stats.totalTickets) * 100 : 0)} 
-              size="small" 
+            <Progress
+              percent={Math.min(100, stats.totalTickets > 0 ? (stats.soldTickets / stats.totalTickets) * 100 : 0)}
+              size="small"
               showInfo={false}
               style={{ marginTop: '8px' }}
             />
@@ -515,15 +507,15 @@ const Dashboard = () => {
       {/* Acciones Rápidas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24}>
-          <Card 
+          <Card
             title="Acciones Rápidas"
             style={{ borderRadius: '8px' }}
           >
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Button 
-                  type="primary" 
-                  size="large" 
+                <Button
+                  type="primary"
+                  size="large"
                   block
                   icon={<ShoppingCartOutlined />}
                   onClick={() => navigate('/backoffice/boleteria')}
@@ -545,9 +537,9 @@ const Dashboard = () => {
                 </Button>
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Button 
-                  type="default" 
-                  size="large" 
+                <Button
+                  type="default"
+                  size="large"
                   block
                   icon={<FileTextOutlined />}
                   onClick={() => navigate('/backoffice/reportes')}
@@ -564,8 +556,8 @@ const Dashboard = () => {
       {/* Gráficos y Análisis */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} lg={16}>
-          <Card 
-            title="Ventas por Período" 
+          <Card
+            title="Ventas por Período"
             extra={<Button type="link" size="small">Ver Detalles</Button>}
             style={{ borderRadius: '8px' }}
           >
@@ -602,7 +594,7 @@ const Dashboard = () => {
         </Col>
 
         <Col xs={24} lg={8}>
-          <Card 
+          <Card
             title="Alertas del Sistema"
             style={{ borderRadius: '8px' }}
           >
@@ -685,8 +677,8 @@ const Dashboard = () => {
                 <List.Item>
                   <List.Item.Meta
                     avatar={
-                      <Avatar 
-                        src={event.imagen_url} 
+                      <Avatar
+                        src={event.imagen_url}
                         icon={<CalendarOutlined />}
                       />
                     }
@@ -725,16 +717,16 @@ const Dashboard = () => {
               <Calendar
                 fullscreen={false}
                 headerRender={({ value, type, onChange, onTypeChange }) => {
-                  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                                      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
                   // Ant Design v5 usa dayjs
                   const currentMonth = monthNames[value.month()];
                   const currentYear = value.year();
-                  
+
                   return (
                     <div className="flex justify-between items-center mb-4 flex-wrap gap-2 px-2">
-                      <Button 
-                        size="small" 
+                      <Button
+                        size="small"
                         onClick={() => {
                           onChange(value.subtract(1, 'month'));
                         }}
@@ -744,8 +736,8 @@ const Dashboard = () => {
                       <Text strong style={{ fontSize: '14px', fontWeight: 600 }}>
                         {currentMonth} {currentYear}
                       </Text>
-                      <Button 
-                        size="small" 
+                      <Button
+                        size="small"
                         onClick={() => {
                           onChange(value.add(1, 'month'));
                         }}
@@ -769,8 +761,8 @@ const Dashboard = () => {
                     <div className="h-full py-1">
                       {eventsOnDate.map((event, index) => (
                         <div key={index} className="text-xs mb-1">
-                          <Badge 
-                            color="blue" 
+                          <Badge
+                            color="blue"
                             text={event.nombre}
                             className="text-xs"
                           />

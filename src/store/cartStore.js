@@ -30,7 +30,6 @@ const readMinutesFromStorage = (key, fallback) => {
 
     return clampMinutes(parsed, fallback);
   } catch (error) {
-    console.warn('[CART_TIMER] No se pudo leer configuración de minutos para', key, error);
     return fallback;
   }
 };
@@ -79,12 +78,12 @@ export const useCartStore = create(
           set({ timeLeft });
           if (timeLeft <= 0) {
             clearExpirationTimer();
-            set({ 
-              items: [], 
+            set({
+              items: [],
               products: [],
-              cartExpiration: null, 
-              timeLeft: 0, 
-              functionId: null 
+              cartExpiration: null,
+              timeLeft: 0,
+              functionId: null
             });
             toast.error('Tu reserva ha expirado');
           }
@@ -97,10 +96,10 @@ export const useCartStore = create(
         functionId: null,
         cartExpiration: null,
         timeLeft: 0,
-        
+
         // Product items (new functionality)
         products: [],
-        
+
         // Saved carts functionality
         savedCarts: [],
         savedCartsLoading: false,
@@ -112,17 +111,17 @@ export const useCartStore = create(
             console.error('❌ [CART_TOGGLE] No se pudo obtener seatId del objeto:', seat);
             return;
           }
-          
+
           // Procesando asiento
 
           const { items } = get();
           // Items actuales en carrito
           // Buscando seatId
-          
+
           const exists = items.some(
             (item) => (item.sillaId || item.id || item._id) === seatId
           );
-          
+
           // ¿Asiento ya existe en carrito?
 
           const { useSeatLockStore } = await import('../components/seatLockStore');
@@ -133,9 +132,9 @@ export const useCartStore = create(
             toast.error('No pudimos validar tu sesión. Intenta recargar.');
             return;
           }
-          
+
           // functionId extraído
-          
+
           // Validar que functionId no sea null
           if (!functionId) {
             console.error('❌ [CART_TOGGLE] functionId es null, no se puede proceder:', { seatId, seat });
@@ -145,8 +144,6 @@ export const useCartStore = create(
 
           if (exists) {
             // DESELECCIÓN: Actualización optimista (actualizar UI primero)
-            console.log('🔄 [CART_TOGGLE] Deseleccionando asiento:', seatId);
-            
             // ACTUALIZACIÓN OPTIMISTA: Quitar del carrito inmediatamente
             const filtered = items.filter(
               (item) => (item.sillaId || item.id || item._id) !== seatId
@@ -159,7 +156,7 @@ export const useCartStore = create(
               newState.functionId = null;
             }
             set(newState);
-            
+
             // Operaciones en background (no bloquear UI)
             Promise.all([
               // Desbloquear en BD primero (más rápido que verificar pago)
@@ -178,17 +175,16 @@ export const useCartStore = create(
                     const seatPaymentChecker = await import('../services/seatPaymentChecker');
                     // Timeout de 1.5 segundos para verificación rápida
                     const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(
-                      seatId, 
-                      functionId, 
+                      seatId,
+                      functionId,
                       currentSessionId,
                       { timeout: 1500, useCache: true }
                     );
-                    
+
                     if (paymentCheck.isPaid) {
                       // Si está pagado, volver a agregarlo al carrito
                       const itemToRestore = items.find(item => (item.sillaId || item.id || item._id) === seatId);
                       if (itemToRestore) {
-                        console.log('🚫 [CART_TOGGLE] Asiento pagado detectado, revirtiendo eliminación');
                         set({ items: [...filtered, itemToRestore] });
                         toast.error('Este asiento ya ha sido comprado y no puede ser deseleccionado');
                       }
@@ -203,71 +199,61 @@ export const useCartStore = create(
                 }
               })()
             ]).catch(err => {
-              console.warn('Error en operaciones background:', err);
             });
-            
+
             toast.success('Asiento eliminado del carrito');
           } else {
             // SELECCIÓN: Verificar estado antes de bloquear
-            console.log('✅ [CART_TOGGLE] Seleccionando asiento:', seatId);
-            
             // Verificar si está bloqueado por otro usuario (no por mí)
             const currentSessionId = localStorage.getItem('anonSessionId');
             const isLockedByOther = await useSeatLockStore.getState().isSeatLocked(seatId, functionId);
             const isLockedByMe = await useSeatLockStore.getState().isSeatLockedByMe(seatId, functionId, currentSessionId);
-            
+
             if (isLockedByOther && !isLockedByMe) {
               console.error('❌ [CART_TOGGLE] Asiento bloqueado por otro usuario:', seatId);
               toast.error('Este asiento está siendo seleccionado por otro usuario');
               return;
             }
-            
+
             // Si ya está bloqueado por mí, verificar si ya está en el carrito
             if (isLockedByMe) {
-              console.log('✅ [CART_TOGGLE] Asiento ya bloqueado por el mismo usuario:', seatId);
-              
               // Verificar si ya está en el carrito
-              const alreadyInCart = items.some(item => 
+              const alreadyInCart = items.some(item =>
                 (item._id || item.id || item.sillaId) === seatId
               );
-              
+
               if (alreadyInCart) {
-                console.log('ℹ️ [CART_TOGGLE] Este asiento ya está en tu carrito');
                 return;
               } else {
                 // Asiento bloqueado pero no en carrito, agregando
                 // Continuar con la lógica de agregar al carrito
               }
             }
-            
+
             // Solo bloquear si no está ya bloqueado (esperar respuesta del servidor)
             if (!isLockedByMe) {
-              console.log('✅ [CART_TOGGLE] Asiento disponible, procediendo a seleccionar');
-              
               // Verificar si el asiento ya fue pagado
               if (functionId) {
                 const seatPaymentChecker = await import('../services/seatPaymentChecker');
                 const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
-                
+
                 if (paymentCheck.isPaid) {
-                  console.log('🚫 [CART_TOGGLE] Asiento ya pagado:', seatId);
                   toast.error('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
                   return;
                 }
               }
-              
+
               // Bloquear en BD (esperar respuesta del servidor)
               const lockResult = await useSeatLockStore.getState().lockSeat(seatId, 'seleccionado', functionId);
-              
+
               if (!lockResult) {
                 console.error('❌ [CART_TOGGLE] Error bloqueando asiento:', seatId);
                 toast.error('Error al seleccionar el asiento');
                 return;
               }
             } else {
-              console.log('✅ [CART_TOGGLE] Asiento ya bloqueado, procediendo a agregar al carrito');
             }
-            
+
             // Preparar asiento para el carrito
             const seatPrecio = toNumberOrZero(seat.precio);
 
@@ -285,21 +271,21 @@ export const useCartStore = create(
               funcionId: functionId,
               ...seat // Incluir cualquier otra propiedad del asiento
             };
-            
+
             // Agregar al carrito DESPUÉS de confirmar el bloqueo
             const updated = [...items, seatForCart];
             const newState = {
               items: updated,
               functionId: functionId,
             };
-            
+
             if (items.length === 0 && get().products.length === 0) {
               const newExpiration = Date.now() + getLockExpirationMs();
               newState.cartExpiration = newExpiration;
               newState.timeLeft = Math.floor(getLockExpirationMs() / 1000);
               startExpirationTimer();
             }
-            
+
             // Actualizar carrito después de confirmar bloqueo
             set(newState);
             toast.success('Asiento añadido al carrito');
@@ -310,11 +296,11 @@ export const useCartStore = create(
         addProduct: (product) => {
           const { products } = get();
           const existingProduct = products.find(p => p.id === product.id);
-          
+
           if (existingProduct) {
             // Update quantity if product already exists
-            const updatedProducts = products.map(p => 
-              p.id === product.id 
+            const updatedProducts = products.map(p =>
+              p.id === product.id
                 ? { ...p, cantidad: p.cantidad + product.cantidad }
                 : p
             );
@@ -325,7 +311,7 @@ export const useCartStore = create(
             set({ products: [...products, product] });
             toast.success(`${product.cantidad} ${product.nombre} agregado al carrito`);
           }
-          
+
           // Start timer if this is the first item
           if (get().items.length === 0 && products.length === 0) {
             startExpirationTimer();
@@ -341,7 +327,7 @@ export const useCartStore = create(
             toast.success('Producto eliminado del carrito');
           } else {
             // Update quantity
-            const updated = products.map(p => 
+            const updated = products.map(p =>
               p.id === productId ? { ...p, cantidad: newQuantity, precio_total: p.precio * newQuantity } : p
             );
             set({ products: updated });
@@ -378,7 +364,6 @@ export const useCartStore = create(
               const { useSeatLockStore } = await import('../components/seatLockStore');
               await useSeatLockStore.getState().restoreCurrentSession();
             } catch (err) {
-              console.warn('[CART] No se pudo restaurar bloqueos de sesión:', err);
             }
             startExpirationTimer();
           } else {
@@ -387,7 +372,7 @@ export const useCartStore = create(
             for (const s of items) {
               const seatId = s._id || s.id || s.sillaId;
               const functionId = s.functionId || s.funcionId || get().functionId;
-              
+
               // Solo desbloquear si tenemos un seatId válido
               if (seatId && functionId) {
                 await useSeatLockStore
@@ -407,11 +392,11 @@ export const useCartStore = create(
 
         removeFromCart: async (seatId) => {
           const { items, functionId } = get();
-          
+
           // ACTUALIZACIÓN OPTIMISTA: Quitar del carrito inmediatamente (UI primero)
           const itemToRemove = items.find(item => (item.sillaId || item.id || item._id) === seatId);
           const filtered = items.filter(item => (item.sillaId || item.id || item._id) !== seatId);
-          
+
           const newState = { items: filtered };
           if (filtered.length === 0 && get().products.length === 0) {
             clearExpirationTimer();
@@ -420,16 +405,16 @@ export const useCartStore = create(
             newState.functionId = null;
           }
           set(newState);
-          
+
           // Disparar evento inmediatamente para actualizar UI
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('seatRemovedFromCart', {
               detail: { seatId, functionId }
             }));
           }
-          
+
           toast.success('Asiento eliminado del carrito');
-          
+
           // Operaciones en background (no bloquear UI)
           // 1. Desbloquear en BD (sin verificar primero - más rápido)
           Promise.all([
@@ -438,7 +423,6 @@ export const useCartStore = create(
               try {
                 const { useSeatLockStore } = await import('../components/seatLockStore');
                 await useSeatLockStore.getState().unlockSeat(seatId, functionId);
-                console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
               } catch (err) {
                 console.warn('Error desbloqueando asiento (continuando):', err);
                 // Si falla, al menos marcar como disponible localmente
@@ -446,7 +430,6 @@ export const useCartStore = create(
                   const { useSeatLockStore } = await import('../components/seatLockStore');
                   useSeatLockStore.getState().updateSeatState(seatId, 'disponible');
                 } catch (err2) {
-                  console.warn('Error marcando asiento como disponible:', err2);
                 }
               }
             })(),
@@ -458,15 +441,14 @@ export const useCartStore = create(
                   const seatPaymentChecker = await import('../services/seatPaymentChecker');
                   // Timeout de 1.5 segundos para verificación rápida
                   const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(
-                    seatId, 
-                    functionId, 
+                    seatId,
+                    functionId,
                     currentSessionId,
                     { timeout: 1500, useCache: true }
                   );
-                  
+
                   if (paymentCheck.isPaid) {
                     // Si está pagado, volver a agregarlo al carrito
-                    console.log('🚫 [CART] Asiento pagado detectado, revirtiendo eliminación');
                     set({ items: [...filtered, itemToRemove] });
                     toast.error('Este asiento ya ha sido comprado y no puede ser eliminado del carrito');
                     return;
@@ -480,21 +462,18 @@ export const useCartStore = create(
               }
             })()
           ]).catch(err => {
-            console.warn('Error en operaciones background:', err);
           });
         },
 
         clearCart: async (skipUnlock = false) => {
           const { items } = get();
-          console.log('🧹 [CART_STORE] Limpiando carrito, items actuales:', items.length);
-          
           // Solo intentar desbloquear si no se especifica skipUnlock
           if (!skipUnlock) {
             const { useSeatLockStore } = await import('../components/seatLockStore');
             for (const s of items) {
               const seatId = s._id || s.id || s.sillaId;
               const functionId = s.functionId || s.funcionId || get().functionId;
-              
+
               // Solo desbloquear si tenemos un seatId válido
               if (seatId && functionId) {
                 try {
@@ -508,17 +487,17 @@ export const useCartStore = create(
               }
             }
           }
-          
+
           // Limpiar el estado del carrito inmediatamente para actualizar la UI
-          set({ 
-            items: [], 
+          set({
+            items: [],
             products: [],
-            functionId: null, 
-            cartExpiration: null, 
-            timeLeft: 0 
+            functionId: null,
+            cartExpiration: null,
+            timeLeft: 0
           });
           clearExpirationTimer();
-          
+
           // Solo disparar el evento cartCleared si realmente se está limpiando todo el carrito
           // (no cuando se deselecciona un asiento individual)
           if (items.length > 0) {
@@ -526,12 +505,12 @@ export const useCartStore = create(
             // Usar requestAnimationFrame para asegurar que el estado se haya actualizado
             requestAnimationFrame(() => {
               // Disparar un evento personalizado para notificar que el carrito se limpió
-              window.dispatchEvent(new CustomEvent('cartCleared', { 
-                detail: { clearedSeats: items } 
+              window.dispatchEvent(new CustomEvent('cartCleared', {
+                detail: { clearedSeats: items }
               }));
             });
           }
-          
+
           toast.success('Carrito limpiado');
         },
 
@@ -670,5 +649,4 @@ export const useCartStore = create(
 // Exponer el store globalmente para debugging
 if (typeof window !== 'undefined') {
   window.useCartStore = useCartStore;
-  console.log('🔧 [CART_STORE] Store expuesto globalmente para debugging');
 }

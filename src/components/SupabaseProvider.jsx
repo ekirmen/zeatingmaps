@@ -22,9 +22,6 @@ export const SupabaseProvider = ({ children }) => {
       try {
         setIsLoading(true);
         setError(null);
-
-        console.log('[SUPABASE PROVIDER] Inicializando Supabase...');
-
         // Obtener clientes
         const client = getSupabaseClient();
         // El cliente admin solo está disponible en entorno servidor
@@ -36,8 +33,6 @@ export const SupabaseProvider = ({ children }) => {
 
         setSupabase(client);
         setSupabaseAdmin(adminClient);
-
-        console.log('[SUPABASE PROVIDER] Supabase inicializado correctamente');
       } catch (err) {
         console.error('[SUPABASE PROVIDER] Error al inicializar Supabase:', err);
         setError(err.message);
@@ -74,8 +69,8 @@ export const SupabaseProvider = ({ children }) => {
         <div className="text-center">
           <div className="text-red-600 text-xl mb-4">Error de inicialización</div>
           <p className="text-gray-600">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Recargar página
@@ -90,4 +85,4 @@ export const SupabaseProvider = ({ children }) => {
       {children}
     </SupabaseContext.Provider>
   );
-}; 
+};

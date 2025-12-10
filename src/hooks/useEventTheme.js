@@ -23,7 +23,6 @@ export const useEventTheme = (eventId) => {
         const eventColors = await getEventTheme(eventId);
         setEventTheme(eventColors);
       } catch (error) {
-        console.warn('[useEventTheme] Error loading event theme:', error);
         setEventTheme(theme);
       } finally {
         setLoading(false);

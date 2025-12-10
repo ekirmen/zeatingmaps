@@ -7,14 +7,13 @@ import useSelectedSeatsStore from '../../stores/useSelectedSeatsStore';
 export const useClientManagement = (setCarrito) => {
   // Usar el store unificado para selectedClient
   const { selectedClient, setSelectedClient } = useSelectedSeatsStore();
-  
+
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [clientError, setClientError] = useState(null);
   const [paymentResults, setPaymentResults] = useState([]);
 
   const handleClientSearch = async (searchTerm) => {
-    console.log('🔍 [useClientManagement] Buscando clientes con término:', searchTerm);
     setSearchLoading(true);
     try {
       // Usar directamente la tabla profiles
@@ -27,9 +26,6 @@ export const useClientManagement = (setCarrito) => {
         console.error('Search error:', error);
         throw error;
       }
-      
-      console.log('✅ [useClientManagement] Resultados encontrados:', data?.length || 0);
-      
       return (data || []).map((p) => ({
         id: p.id,
         login: p.login,

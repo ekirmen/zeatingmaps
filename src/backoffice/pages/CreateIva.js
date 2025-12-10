@@ -16,7 +16,6 @@ const CreateIva = () => {
 
   const fetchIvas = async () => {
     if (!currentTenant?.id) {
-      console.warn('No hay tenant disponible');
       setIvas([]);
       return;
     }
@@ -26,7 +25,7 @@ const CreateIva = () => {
       .select('*')
       .eq('tenant_id', currentTenant.id)
       .order('nombre', { ascending: true });
-      
+
     if (error) {
       console.error('Error al cargar IVAs:', error.message);
       setIvas([]);
@@ -37,14 +36,14 @@ const CreateIva = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!currentTenant?.id) {
       alert('No hay tenant configurado');
       return;
     }
 
-    const payload = { 
-      nombre, 
+    const payload = {
+      nombre,
       porcentaje: parseFloat(porcentaje),
       tenant_id: currentTenant.id
     };
@@ -54,7 +53,7 @@ const CreateIva = () => {
         .from('ivas')
         .update(payload)
         .eq('id', editingId);
-        
+
       if (error) {
         alert('Error al actualizar: ' + error.message);
         return;
@@ -64,7 +63,7 @@ const CreateIva = () => {
       const { error } = await supabase
         .from('ivas')
         .insert([payload]);
-        
+
       if (error) {
         alert('Error al crear: ' + error.message);
         return;

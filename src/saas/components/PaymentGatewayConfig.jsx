@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Input, Button, Select, Switch, message, Alert, Space, Typography, Row, Col, Tabs, Badge, Table, Spin } from 'antd';
-import { 
-  CreditCardOutlined, 
-  CheckCircleOutlined, 
+import {
+  CreditCardOutlined,
+  CheckCircleOutlined,
   DollarOutlined,
   SecurityScanOutlined,
   ReloadOutlined,
@@ -38,7 +38,6 @@ const PaymentGatewayConfig = () => {
         setCurrentTenant(tenant);
       }
     } catch (error) {
-      console.warn('No se pudo cargar tenant actual:', error);
     }
   };
 
@@ -46,15 +45,15 @@ const PaymentGatewayConfig = () => {
     try {
       const configs = await paymentGatewayService.getAllGatewayConfigs();
       setGatewayConfigs(configs);
-      
+
       // Cargar valores iniciales del formulario si hay configuración existente
       if (configs[activeTab]) {
         const configData = configs[activeTab];
         // El config puede venir como objeto o como string parseado
-        const config = typeof configData.config === 'object' 
-          ? configData.config 
+        const config = typeof configData.config === 'object'
+          ? configData.config
           : (typeof configData.config === 'string' ? JSON.parse(configData.config) : {});
-        
+
         form.setFieldsValue({
           ...config,
           is_active: configData.is_active
@@ -81,7 +80,7 @@ const PaymentGatewayConfig = () => {
   const handleSaveConfig = async (values) => {
     try {
       setLoading(true);
-      
+
       switch (activeTab) {
         case 'stripe':
           await paymentGatewayService.configureStripe(values);
@@ -106,14 +105,14 @@ const PaymentGatewayConfig = () => {
   const handleTestConnection = async () => {
     try {
       setTestingConnection(prev => ({ ...prev, [activeTab]: true }));
-      
+
       const formValues = form.getFieldsValue();
       const tenant_id = 'current-tenant'; // En un caso real, obtener del contexto de usuario
-      
-      const endpoint = activeTab === 'stripe' 
-        ? '/api/test-stripe-connection' 
+
+      const endpoint = activeTab === 'stripe'
+        ? '/api/test-stripe-connection'
         : '/api/test-paypal-connection';
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -124,9 +123,9 @@ const PaymentGatewayConfig = () => {
           tenant_id
         })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         message.success(`✅ Conexión exitosa con ${activeTab.toUpperCase()}: ${result.message}`);
       } else {
@@ -142,7 +141,7 @@ const PaymentGatewayConfig = () => {
   const handleTestGateway = async () => {
     try {
       setTesting(true);
-      
+
       const testPayment = {
         gateway: activeTab,
         amount: 10.00,
@@ -151,7 +150,7 @@ const PaymentGatewayConfig = () => {
       };
 
       const result = await paymentGatewayService.processPayment(testPayment);
-      
+
       if (result.success) {
         message.success(`Pago de prueba exitoso con ${activeTab.toUpperCase()}`);
       } else {
@@ -233,7 +232,7 @@ const PaymentGatewayConfig = () => {
         </Col>
         <Col span={24}>
           <Space>
-            <Button 
+            <Button
               type="default"
               icon={<ReloadOutlined />}
               onClick={handleTestConnection}
@@ -305,7 +304,7 @@ const PaymentGatewayConfig = () => {
         </Col>
         <Col span={24}>
           <Space>
-            <Button 
+            <Button
               type="default"
               icon={<ReloadOutlined />}
               onClick={handleTestConnection}
@@ -345,10 +344,10 @@ const PaymentGatewayConfig = () => {
         render: (status) => {
           const statusConfig = getGatewayStatus(status);
           return (
-            <Badge 
-              status={statusConfig.color} 
-              text={statusConfig.status === 'active' ? 'Activo' : 
-                    statusConfig.status === 'inactive' ? 'Inactivo' : 'No Configurado'} 
+            <Badge
+              status={statusConfig.color}
+              text={statusConfig.status === 'active' ? 'Activo' :
+                    statusConfig.status === 'inactive' ? 'Inactivo' : 'No Configurado'}
             />
           );
         },
@@ -413,15 +412,15 @@ const PaymentGatewayConfig = () => {
           </Text>
           {currentTenant && (
             <div style={{ marginTop: '8px' }}>
-              <Badge 
-                status="processing" 
+              <Badge
+                status="processing"
                 text={
                   <Space>
                     <UserOutlined />
                     <Text strong>Configuración para:</Text>
                     <Text code>{currentTenant.nombre || currentTenant.name || 'Tenant Actual'}</Text>
                   </Space>
-                } 
+                }
               />
             </div>
           )}
@@ -439,18 +438,18 @@ const PaymentGatewayConfig = () => {
       )}
 
       <Card>
-        <Tabs 
-          activeKey={activeTab} 
+        <Tabs
+          activeKey={activeTab}
           onChange={(key) => {
             setActiveTab(key);
             // Cargar valores del formulario cuando cambia la pestaña
             if (gatewayConfigs[key]) {
               const configData = gatewayConfigs[key];
               // El config puede venir como objeto o como string parseado
-              const config = typeof configData.config === 'object' 
-                ? configData.config 
+              const config = typeof configData.config === 'object'
+                ? configData.config
                 : (typeof configData.config === 'string' ? JSON.parse(configData.config) : {});
-              
+
               form.setFieldsValue({
                 ...config,
                 is_active: configData.is_active
@@ -460,17 +459,17 @@ const PaymentGatewayConfig = () => {
             }
           }}
         >
-          <TabPane 
+          <TabPane
             tab={
               <Space>
                 <span style={{ fontSize: '16px' }}>💳</span>
                 <span>Stripe</span>
-                <Badge 
-                  status={getGatewayStatus('stripe').color} 
-                  text={getGatewayStatus('stripe').status === 'active' ? 'Activo' : 'Inactivo'} 
+                <Badge
+                  status={getGatewayStatus('stripe').color}
+                  text={getGatewayStatus('stripe').status === 'active' ? 'Activo' : 'Inactivo'}
                 />
               </Space>
-            } 
+            }
             key="stripe"
           >
             <Alert
@@ -483,17 +482,17 @@ const PaymentGatewayConfig = () => {
             {renderStripeConfig()}
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <Space>
                 <span style={{ fontSize: '16px' }}>🅿️</span>
                 <span>PayPal</span>
-                <Badge 
-                  status={getGatewayStatus('paypal').color} 
-                  text={getGatewayStatus('paypal').status === 'active' ? 'Activo' : 'Inactivo'} 
+                <Badge
+                  status={getGatewayStatus('paypal').color}
+                  text={getGatewayStatus('paypal').status === 'active' ? 'Activo' : 'Inactivo'}
                 />
               </Space>
-            } 
+            }
             key="paypal"
           >
             <Alert
@@ -508,13 +507,13 @@ const PaymentGatewayConfig = () => {
 
           {/* Tab MercadoPago eliminado */}
 
-          <TabPane 
+          <TabPane
             tab={
               <Space>
                 <DollarOutlined />
                 <span>Estadísticas</span>
               </Space>
-            } 
+            }
             key="stats"
           >
             <Title level={4}>Estadísticas de Pagos por Pasarela</Title>
@@ -524,25 +523,25 @@ const PaymentGatewayConfig = () => {
 
         <div style={{ marginTop: '24px', textAlign: 'right' }}>
           <Space>
-            <Button 
-              icon={<ReloadOutlined />} 
+            <Button
+              icon={<ReloadOutlined />}
               onClick={handleTestConnection}
               loading={testingConnection[activeTab]}
               disabled={activeTab === 'stats'}
             >
               Probar Conexión
             </Button>
-            <Button 
-              icon={<SecurityScanOutlined />} 
+            <Button
+              icon={<SecurityScanOutlined />}
               onClick={handleTestGateway}
               loading={testing}
               disabled={activeTab === 'stats'}
             >
               Probar Pago
             </Button>
-            <Button 
-              type="primary" 
-              icon={<CheckCircleOutlined />} 
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
               onClick={() => form.submit()}
               loading={loading}
               disabled={activeTab === 'stats'}

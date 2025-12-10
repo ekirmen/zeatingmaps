@@ -12,16 +12,16 @@ const reportWebVitals = (onPerfEntry) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
     // Largest Contentful Paint (LCP)
     onLCP(onPerfEntry);
-    
+
     // Cumulative Layout Shift (CLS)
     onCLS(onPerfEntry);
-    
+
     // First Contentful Paint (FCP)
     onFCP(onPerfEntry);
-    
+
     // Time to First Byte (TTFB)
     onTTFB(onPerfEntry);
-    
+
     // Interaction to Next Paint (INP) - reemplaza a FID (First Input Delay)
     onINP(onPerfEntry);
   }
@@ -41,12 +41,11 @@ const sendToAnalytics = (metric) => {
       delta: metric.delta,
     });
   }
-  
+
   // También enviar a Supabase si se necesita
   // Esto se puede implementar más adelante si es necesario
   if (process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_ENABLE_WEB_VITALS === 'true') {
     // Implementar envío a Supabase
-    console.log('[Web Vitals]', metric);
   }
 };
 

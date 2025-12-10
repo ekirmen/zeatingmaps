@@ -8,7 +8,6 @@ export async function getTenantThemeSettings(tenantId) {
     .eq('tenant_id', tenantId)
     .maybeSingle();
   if (error) {
-    console.warn('[themeSettings] get error', error);
     return null;
   }
   return data?.theme || null;

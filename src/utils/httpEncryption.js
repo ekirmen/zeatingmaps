@@ -14,7 +14,7 @@ import { encryptSensitiveData, decryptSensitiveData } from './encryption';
 export const encryptDataForTransit = async (data, sensitiveFields = []) => {
   try {
     const encrypted = { ...data };
-    
+
     // Campos sensibles por defecto
     const defaultSensitiveFields = [
       'password',
@@ -33,11 +33,11 @@ export const encryptDataForTransit = async (data, sensitiveFields = []) => {
       'creditCard',
       'bankAccount'
     ];
-    
-    const fieldsToEncrypt = sensitiveFields.length > 0 
-      ? sensitiveFields 
+
+    const fieldsToEncrypt = sensitiveFields.length > 0
+      ? sensitiveFields
       : defaultSensitiveFields;
-    
+
     // Encriptar campos sensibles
     for (const field of fieldsToEncrypt) {
       if (encrypted[field] !== undefined && encrypted[field] !== null) {
@@ -45,12 +45,11 @@ export const encryptDataForTransit = async (data, sensitiveFields = []) => {
           encrypted[field] = await encryptSensitiveData(encrypted[field]);
           encrypted[`${field}_encrypted`] = true;
         } catch (error) {
-          console.warn(`[HTTP_ENCRYPTION] Error encriptando campo ${field}:`, error);
           // Continuar sin encriptar este campo
         }
       }
     }
-    
+
     return encrypted;
   } catch (error) {
     console.error('[HTTP_ENCRYPTION] Error encriptando datos:', error);
@@ -67,7 +66,7 @@ export const encryptDataForTransit = async (data, sensitiveFields = []) => {
 export const decryptDataFromTransit = async (data, sensitiveFields = []) => {
   try {
     const decrypted = { ...data };
-    
+
     // Campos sensibles por defecto
     const defaultSensitiveFields = [
       'password',
@@ -86,11 +85,11 @@ export const decryptDataFromTransit = async (data, sensitiveFields = []) => {
       'creditCard',
       'bankAccount'
     ];
-    
-    const fieldsToDecrypt = sensitiveFields.length > 0 
-      ? sensitiveFields 
+
+    const fieldsToDecrypt = sensitiveFields.length > 0
+      ? sensitiveFields
       : defaultSensitiveFields;
-    
+
     // Desencriptar campos sensibles
     for (const field of fieldsToDecrypt) {
       if (decrypted[`${field}_encrypted`] && decrypted[field]) {
@@ -98,12 +97,11 @@ export const decryptDataFromTransit = async (data, sensitiveFields = []) => {
           decrypted[field] = await decryptSensitiveData(decrypted[field]);
           delete decrypted[`${field}_encrypted`];
         } catch (error) {
-          console.warn(`[HTTP_ENCRYPTION] Error desencriptando campo ${field}:`, error);
           // Continuar sin desencriptar este campo
         }
       }
     }
-    
+
     return decrypted;
   } catch (error) {
     console.error('[HTTP_ENCRYPTION] Error desencriptando datos:', error);
@@ -120,13 +118,13 @@ export const createEncryptedFetch = (originalFetch = fetch) => {
     if (options.method && ['POST', 'PUT', 'PATCH'].includes(options.method.toUpperCase())) {
       if (options.body) {
         try {
-          const bodyData = typeof options.body === 'string' 
-            ? JSON.parse(options.body) 
+          const bodyData = typeof options.body === 'string'
+            ? JSON.parse(options.body)
             : options.body;
-          
+
           // Encriptar datos sensibles
           const encryptedBody = await encryptDataForTransit(bodyData);
-          
+
           // Actualizar opciones
           options.body = JSON.stringify(encryptedBody);
           options.headers = {
@@ -135,14 +133,13 @@ export const createEncryptedFetch = (originalFetch = fetch) => {
             'X-Encrypted': 'true'
           };
         } catch (error) {
-          console.warn('[HTTP_ENCRYPTION] Error procesando body, enviando sin encriptar:', error);
         }
       }
     }
-    
+
     // Hacer la petición
     const response = await originalFetch(url, options);
-    
+
     // Desencriptar respuesta si está encriptada
     if (response.headers.get('X-Encrypted') === 'true') {
       try {
@@ -154,10 +151,9 @@ export const createEncryptedFetch = (originalFetch = fetch) => {
           headers: response.headers
         });
       } catch (error) {
-        console.warn('[HTTP_ENCRYPTION] Error desencriptando respuesta:', error);
       }
     }
-    
+
     return response;
   };
 };

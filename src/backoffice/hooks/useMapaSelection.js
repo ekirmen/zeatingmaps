@@ -19,9 +19,9 @@ export const useMapaSelection = (
   // Función para seleccionar un elemento
   const selectElement = (element) => {
     if (!element) return;
-    
+
     setSelectedElement(element);
-    
+
     // Si ya está seleccionado, deseleccionarlo
     if (selectedIds.includes(element._id)) {
       setSelectedIds(prev => prev.filter(id => id !== element._id));
@@ -36,20 +36,18 @@ export const useMapaSelection = (
     // Encontrar la mesa
     const mesa = elements.find(el => el._id === mesaId);
     if (!mesa || mesa.type !== 'mesa') return;
-    
+
     // Encontrar todas las sillas asociadas a esta mesa
-    const sillasAsociadas = elements.filter(el => 
+    const sillasAsociadas = elements.filter(el =>
       el.type === 'silla' && el.parentId === mesaId
     );
-    
+
     // Crear array con la mesa y todas sus sillas
     const grupoCompleto = [mesa, ...sillasAsociadas];
-    
+
     // Seleccionar todo el grupo
     setSelectedIds(grupoCompleto.map(el => el._id));
     setSelectedElement(mesa); // Mantener la mesa como elemento principal seleccionado
-    
-    console.log(`[selectGroup] Seleccionado grupo completo: mesa + ${sillasAsociadas.length} sillas`);
   };
 
   // Evento mousedown para iniciar selección o gestionar selección individual/multi
@@ -81,7 +79,6 @@ export const useMapaSelection = (
             selectElement(clickedElement);
           }
         } else {
-          console.warn('Elemento clickeado no encontrado en estado');
           setSelectedIds([]);
           setSelectedElement(null);
         }

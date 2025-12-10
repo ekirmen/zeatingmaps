@@ -31,7 +31,7 @@ const TicketDownloadButton = ({ seat, locator, isPaid }) => {
 
     const handleDownload = async () => {
         if (!locator || !isPaid) return;
-        
+
         setDownloading(true);
         try {
             const response = await fetch(`/api/payments/${locator}/download?mode=full`, {
@@ -40,7 +40,7 @@ const TicketDownloadButton = ({ seat, locator, isPaid }) => {
                     'Accept': 'application/pdf'
                 }
             });
-            
+
             if (response.ok) {
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
@@ -59,12 +59,12 @@ const TicketDownloadButton = ({ seat, locator, isPaid }) => {
             }
         } catch (error) {
             // Manejar errores correctamente, asegurándose de que el mensaje sea un string
-            const errorMessage = error instanceof Error 
-                ? error.message 
-                : typeof error === 'string' 
-                    ? error 
+            const errorMessage = error instanceof Error
+                ? error.message
+                : typeof error === 'string'
+                    ? error
                     : error?.message || 'Error desconocido al descargar el ticket';
-            
+
             console.error('❌ [DOWNLOAD] Error descargando ticket:', error);
             console.error('❌ [DOWNLOAD] Error message:', errorMessage);
             message.error(`Error al descargar ticket: ${errorMessage}`);
@@ -95,7 +95,7 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
 
     const handleBulkDownload = async () => {
         if (!locator || paidSeats.length === 0) return;
-        
+
         setDownloading(true);
         try {
             const response = await fetch(`/api/payments/${locator}/download?mode=bulk`, {
@@ -104,7 +104,7 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
                     'Accept': 'application/pdf'
                 }
             });
-            
+
             if (response.ok) {
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
@@ -126,12 +126,12 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
             }
         } catch (error) {
             // Manejar errores correctamente, asegurándose de que el mensaje sea un string
-            const errorMessage = error instanceof Error 
-                ? error.message 
-                : typeof error === 'string' 
-                    ? error 
+            const errorMessage = error instanceof Error
+                ? error.message
+                : typeof error === 'string'
+                    ? error
                     : error?.message || 'Error desconocido al descargar los tickets';
-            
+
             console.error('❌ [DOWNLOAD] Error descargando tickets (bulk):', error);
             console.error('❌ [DOWNLOAD] Error message:', errorMessage);
             const errorMsg = `Error al descargar tickets: ${errorMessage}`;
@@ -172,28 +172,23 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
         removeProduct,
         timeLeft
     } = cartStore;
-    
+
     // Usar props si están disponibles, sino usar el store
     const items = propsItems || storeItems;
     const removeFromCart = propsRemoveFromCart || storeRemoveFromCart;
-    
+
     // Si hay selectedFunctionId, filtrar items de esa función
-    const filteredItems = selectedFunctionId 
+    const filteredItems = selectedFunctionId
       ? items.filter(item => {
           const itemFunctionId = item.functionId || item.funcionId;
           const matches = String(itemFunctionId) === String(selectedFunctionId);
           // Debug: log si hay items que no coinciden
           if (!matches && itemFunctionId) {
-            console.log('🔍 [CART] Item no coincide con función:', {
-              itemFunctionId,
-              selectedFunctionId,
-              item: item.sillaId || item.id || item._id
-            });
           }
           return matches;
         })
       : items;
-    
+
     // State to track paid seats
     const [paidSeatsSet, setPaidSeatsSet] = useState(new Set());
 
@@ -203,11 +198,10 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
     const [pendingCheckout, setPendingCheckout] = useState(false);
 
     const itemCount = (filteredItems && Array.isArray(filteredItems) ? filteredItems.length : 0) + (products && Array.isArray(products) ? products.length : 0);
-    
+
     // Debug: verificar itemCount y hideCheckoutButton
     useEffect(() => {
       if (itemCount > 0) {
-        console.log('🛒 [CART] Item count:', itemCount, 'hideCheckoutButton:', hideCheckoutButton, 'filteredItems:', filteredItems.length, 'total items:', items.length);
       }
     }, [itemCount, hideCheckoutButton, filteredItems.length, items.length]);
 
@@ -219,7 +213,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
     // Calculate totals
     const subtotal = (filteredItems && Array.isArray(filteredItems) ? filteredItems.reduce((sum, item) => sum + (item.precio || 0), 0) : 0) +
                     (products && Array.isArray(products) ? products.reduce((sum, product) => sum + (product.price || 0), 0) : 0);
-    
+
     // Formatear tiempo restante
     const formatTime = (seconds) => {
       if (!seconds || seconds <= 0) return '00:00';
@@ -227,7 +221,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
       const remainingSeconds = seconds % 60;
       return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
-    
+
     // Obtener color del temporizador
     const getTimerColor = () => {
       if (!timeLeft || timeLeft <= 0) return '#999';
@@ -248,7 +242,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
             message.warning('El carrito está vacío');
             return;
         }
-        
+
         // Ejecutar validaciones y navegación de forma no bloqueante
         // Esto previene que el UI se congele en mobile
         const executeCheckout = () => {
@@ -267,11 +261,11 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                     message.error('Hay asientos duplicados en el carrito. Por favor, verifica.');
                     return;
                 }
-                
+
                 // Check if user is authenticated
                 if (!user) {
                     setPendingCheckout(true);
-                    
+
                     // Para iOS Safari: usar función global directamente (más confiable que eventos)
                     if (typeof window !== 'undefined' && typeof window.openAccountModal === 'function') {
                         // Llamar directamente - la función ya maneja la asincronía internamente
@@ -281,12 +275,12 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                         });
                     } else {
                         // Fallback: usar eventos personalizados si la función global no está disponible
-                        const eventDetail = { 
-                            mode: 'login', 
-                            source: 'cart', 
-                            redirectTo: '/store/payment' 
+                        const eventDetail = {
+                            mode: 'login',
+                            source: 'cart',
+                            redirectTo: '/store/payment'
                         };
-                        
+
                         // Crear evento con bubbles y composed para mejor compatibilidad
                         const customEvent = new CustomEvent('store:open-account-modal', {
                             detail: eventDetail,
@@ -294,10 +288,10 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             cancelable: true,
                             composed: true
                         });
-                        
+
                         // Dispatch inmediato en window (para navegadores normales)
                         window.dispatchEvent(customEvent);
-                        
+
                         // También dispatch en document después de requestAnimationFrame (para iOS)
                         requestAnimationFrame(() => {
                             document.dispatchEvent(new CustomEvent('store:open-account-modal', {
@@ -308,10 +302,10 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             }));
                         });
                     }
-                    
+
                     return;
                 }
-                
+
                 // Navigate de forma asíncrona para no bloquear el UI thread
                 setTimeout(() => {
                     navigate('/store/payment');
@@ -321,7 +315,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 message.error('Error al procesar el checkout. Por favor, intenta nuevamente.');
             }
         };
-        
+
         // En mobile, usar requestIdleCallback si está disponible para mejor UX
         if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
             requestIdleCallback(executeCheckout, { timeout: 100 });
@@ -346,15 +340,15 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 setPaidSeatsSet(new Set());
                 return;
             }
-            
+
             const currentSessionId = localStorage.getItem('anonSessionId');
-            
+
             // Agrupar asientos por función para verificación batch
             const seatsByFunction = new Map();
             filteredItems.forEach(item => {
                 const seatId = item.sillaId || item._id || item.id;
                 const functionId = item.functionId || item.funcionId;
-                
+
                 if (seatId && functionId) {
                     if (!seatsByFunction.has(functionId)) {
                         seatsByFunction.set(functionId, []);
@@ -362,12 +356,12 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                     seatsByFunction.get(functionId).push(seatId);
                 }
             });
-            
+
             // Verificar todos los asientos en batch por función
             const paidSeatsSet = new Set();
             try {
                 const seatPaymentChecker = await import('../services/seatPaymentChecker');
-                
+
                 // Verificar todas las funciones en paralelo
                 const verificationPromises = Array.from(seatsByFunction.entries()).map(
                     async ([functionId, seatIds]) => {
@@ -378,7 +372,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                 currentSessionId,
                                 { useCache: true, timeout: 5000 }
                             );
-                            
+
                             // Agregar asientos pagados al Set
                             batchResults.forEach((result, seatId) => {
                                 if (result.isPaid) {
@@ -390,15 +384,15 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                         }
                     }
                 );
-                
+
                 await Promise.all(verificationPromises);
             } catch (error) {
                 console.error('Error checking paid seats:', error);
             }
-            
+
             setPaidSeatsSet(paidSeatsSet);
         };
-        
+
         checkPaidSeats();
     }, [filteredItems]);
 
@@ -422,14 +416,14 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
             {/* Facebook Pixel */}
             <FacebookPixel />
 
-            <div className="store-card-header" style={{ 
+            <div className="store-card-header" style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
               borderBottom: '1px solid var(--store-gray-200)',
               paddingBottom: '16px'
             }}>
-              <div style={{ 
+              <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -465,7 +459,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 </div>
               )}
             </div>
-            
+
             <div className="store-card-body" style={{ flex: '1 1 auto', overflow: 'auto' }}>
                 {/* Quick Actions */}
                 {itemCount > 0 && (
@@ -507,7 +501,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                             />
                                         </div>
                                     </div>
-                                
+
                                     {locatorSeats.map((seat) => (
                                         <div key={seat.id} className="store-cart-item">
                                             <div className="store-cart-item-header">
@@ -527,7 +521,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                                     locator={currentLocator}
                                                     isPaid={seat.isPaid}
                                                 />
-                                                <button 
+                                                <button
                                                     disabled={seat.isPaid}
                                                     className={`store-button store-button-sm flex-1 sm:flex-none ${seat.isPaid ? 'store-button-ghost' : 'store-button-secondary'}`}
                                                 >
@@ -541,7 +535,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                             </div>
                                         </div>
                                     ))}
-                                
+
                                     {/* Payment Status Summary */}
                                     <div className="store-alert store-alert-info">
                                         <div className="flex justify-between items-center store-text-sm">
@@ -550,7 +544,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                         </div>
                                         {unpaidSeats.length > 0 && (
                                             <div className="store-alert store-alert-warning mt-3">
-                                                ⚠️ Hay {unpaidSeats.length} asientos pendientes de pago. 
+                                                ⚠️ Hay {unpaidSeats.length} asientos pendientes de pago.
                                                 Los tickets solo se pueden descargar cuando estén completamente pagados.
                                             </div>
                                         )}
@@ -568,14 +562,14 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                 {(filteredItems && Array.isArray(filteredItems) ? filteredItems.map((item) => {
                                     const seatId = item.sillaId || item._id || item.id;
                                     const isPaid = paidSeatsSet.has(seatId);
-                                    
+
                                     return (
-                                        <Card 
-                                            key={item.sillaId} 
-                                            size="small" 
+                                        <Card
+                                            key={item.sillaId}
+                                            size="small"
                                             className="mb-2"
                                             actions={[
-                                                <Button 
+                                                <Button
                                                     type="text"
                                                     icon={<DeleteOutlined />}
                                                     onClick={() => removeFromCart(seatId)}
@@ -624,12 +618,12 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                     Productos ({(products && Array.isArray(products) ? products.length : 0)})
                                 </Title>
                                 {(products && Array.isArray(products) ? products.map((product) => (
-                                    <Card 
-                                        key={product.id} 
-                                        size="small" 
+                                    <Card
+                                        key={product.id}
+                                        size="small"
                                         className="mb-2"
                                         actions={[
-                                            <Button 
+                                            <Button
                                                 type="text"
                                                 icon={<DeleteOutlined />}
                                                 onClick={() => removeProduct(product.id)}
@@ -680,10 +674,10 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Botón de pago - Siempre visible si hay items */}
                     {itemCount > 0 && (
-                        <button 
+                        <button
                             onClick={handleCheckout}
                             className="store-button store-button-primary store-button-lg store-button-block"
                             style={{
@@ -695,10 +689,10 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             Proceder al Pago
                         </button>
                     )}
-                    
+
                     {/* Botón de descarga de tickets pagados */}
                     {currentLocator && paidSeats.length > 0 && (
-                        <button 
+                        <button
                             onClick={() => {
                                 const downloadBtn = document.querySelector('[data-bulk-download]');
                                 if (downloadBtn) downloadBtn.click();

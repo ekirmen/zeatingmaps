@@ -8,20 +8,18 @@ const { Text, Title } = Typography;
 
 // Nota: No usamos flags globales por ID de evento en este proyecto.
 
-const DynamicPriceSelector = ({ 
-  selectedFuncion, 
+const DynamicPriceSelector = ({
+  selectedFuncion,
   selectedPlantilla,
-  onPriceSelect, 
-  selectedPriceId 
+  onPriceSelect,
+  selectedPriceId
 }) => {
   const [priceOptions, setPriceOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const loadPriceOptions = useCallback(async () => {
-    console.log('loadPriceOptions called with:', { selectedFuncion });
     if (!selectedFuncion) {
-      console.log('Missing selectedFuncion, returning early');
       return;
     }
 
@@ -32,7 +30,6 @@ const DynamicPriceSelector = ({
       let funcion = selectedFuncion;
 
       if (!plantilla) {
-        console.log('Fetching funcion with ID:', selectedFuncion.id);
         const { data: funcionData, error: funcionError } = await supabase
           .from('funciones')
           .select('*, plantilla(*)')
@@ -60,12 +57,7 @@ const DynamicPriceSelector = ({
         message.error('La función no tiene plantilla de precios asignada');
         return;
       }
-
-      console.log('Función cargada:', funcion);
-      console.log('Plantilla asignada:', plantilla);
-
       // Cargar las entradas disponibles para este evento (para resolver nombres)
-      console.log('Fetching entradas...');
       const { data: entradas, error: entradasError } = await supabase
         .from('entradas')
         .select('*')
@@ -80,7 +72,6 @@ const DynamicPriceSelector = ({
       // Cargar las zonas del mapa (filtrar por la sala de la función) para resolver nombres de zona
       // Resolver salaId de forma robusta
       const salaId = funcion.sala?.id || funcion.sala_id || funcion.sala;
-      console.log('Fetching zonas for sala:', salaId);
       const { data: zonas, error: zonasError } = await supabase
         .from('zonas')
         .select('*')
@@ -97,32 +88,18 @@ const DynamicPriceSelector = ({
       let plantillaDetalles = [];
       if (plantilla && plantilla.detalles) {
         try {
-          plantillaDetalles = typeof plantilla.detalles === 'string' 
-            ? JSON.parse(plantilla.detalles) 
+          plantillaDetalles = typeof plantilla.detalles === 'string'
+            ? JSON.parse(plantilla.detalles)
             : plantilla.detalles;
         } catch (parseError) {
           console.error('Error parsing plantilla detalles:', parseError);
           plantillaDetalles = [];
         }
       }
-
-      console.log('Plantilla cargada:', plantilla);
-      console.log('Detalles de plantilla:', plantillaDetalles);
-      console.log('Entradas disponibles:', entradas);
-      console.log('Zonas disponibles:', zonas);
-      console.log('Función sala:', funcion.sala);
-      console.log('Función sala tipo:', typeof funcion.sala);
-      
       // Log detallado de los detalles de la plantilla
       if (plantillaDetalles.length > 0) {
         console.log('Detalles de plantilla (primeros 3):', plantillaDetalles.slice(0, 3));
         plantillaDetalles.forEach((detalle, index) => {
-          console.log(`Detalle ${index}:`, {
-            zonaId: detalle.zonaId,
-            productoId: detalle.productoId,
-            precio: detalle.precio,
-            tipo: typeof detalle.zonaId
-          });
         });
       }
 
@@ -154,8 +131,6 @@ const DynamicPriceSelector = ({
           descripcion: entrada.descripcion || ''
         });
       }
-
-      console.log('Opciones de precio generadas:', options);
       setPriceOptions(options);
     } catch (error) {
       console.error('Error loading price options:', error);
@@ -166,7 +141,6 @@ const DynamicPriceSelector = ({
   }, [selectedFuncion]);
 
   useEffect(() => {
-    console.log('DynamicPriceSelector useEffect triggered:', { selectedFuncion });
     if (selectedFuncion) {
       loadPriceOptions();
     }
@@ -181,15 +155,15 @@ const DynamicPriceSelector = ({
   // Generar botones dinámicos basados en zonas
   const generateZonaButtons = () => {
     if (!priceOptions.length) return [];
-    
+
     // Obtener zonas únicas de la base de datos
     const uniqueZonas = [...new Set(priceOptions.map(opt => opt.zona.nombre))];
-    
+
     const buttons = [];
-    
+
     // Botón "Todas"
     buttons.push(
-      <Button 
+      <Button
         key="all"
         type={selectedCategory === 'all' ? 'primary' : 'default'}
         onClick={() => setSelectedCategory('all')}
@@ -201,9 +175,9 @@ const DynamicPriceSelector = ({
     // Botones por cada zona única
     uniqueZonas.forEach(zonaNombre => {
       const count = priceOptions.filter(opt => opt.zona.nombre === zonaNombre).length;
-      
+
       buttons.push(
-        <Button 
+        <Button
           key={zonaNombre}
           type={selectedCategory === zonaNombre ? 'primary' : 'default'}
           onClick={() => setSelectedCategory(zonaNombre)}
@@ -217,8 +191,8 @@ const DynamicPriceSelector = ({
   };
 
   // Filtrar opciones por zona seleccionada
-  const filteredOptions = selectedCategory === 'all' 
-    ? priceOptions 
+  const filteredOptions = selectedCategory === 'all'
+    ? priceOptions
     : priceOptions.filter(option => option.zona.nombre === selectedCategory);
 
   // Agrupar opciones por zona para mostrar en un cuadro
@@ -313,4 +287,4 @@ const DynamicPriceSelector = ({
   );
 };
 
-export default DynamicPriceSelector; 
+export default DynamicPriceSelector;

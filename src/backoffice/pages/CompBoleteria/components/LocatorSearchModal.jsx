@@ -23,8 +23,6 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
     setSearchResult(null);
 
     try {
-      console.log('[LocatorSearch] Searching for locator:', value);
-      
       // Search in payment_transactions table (FIXED: removed user relation)
       const { data: payment, error: paymentError } = await supabase
         .from('payment_transactions')
@@ -50,8 +48,6 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
       if (!payment) {
         throw new Error('No se encontró el localizador');
       }
-
-      console.log('[LocatorSearch] Payment found:', payment);
       setSearchResult(payment);
       message.success('Localizador encontrado');
 
@@ -248,8 +244,8 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                       🎯 Haz click en cualquier asiento para cargar TODA la transacción completa
                     </div>
                     {parseSeats(searchResult.seats || searchResult.gateway_response).map((seat, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className="flex justify-between items-center py-2 px-2 rounded hover:bg-blue-50 cursor-pointer transition-colors border border-transparent hover:border-blue-200"
                         onClick={() => {
                           // 🎯 CARGAR TODA LA TRANSACCIÓN COMPLETA al hacer click en cualquier asiento
@@ -265,7 +261,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                             transactionId: searchResult.id,
                             status: searchResult.status
                           }));
-                          
+
                           // Disparar evento para cargar TODA la transacción
                           window.dispatchEvent(new CustomEvent('loadSeatToCart', {
                             detail: {
@@ -275,7 +271,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                               clickedSeat: seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`
                             }
                           }));
-                          
+
                           message.success(`🎫 Transacción completa cargada: ${seatsData.length} asientos desde ${searchResult.locator}`);
                         }}
                       >
@@ -288,8 +284,8 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                       </div>
                     ))}
                     <div className="mt-2">
-                      <Button 
-                        type="primary" 
+                      <Button
+                        type="primary"
                         size="small"
                         onClick={() => {
                           // Cargar todos los asientos en el carrito
@@ -305,7 +301,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                             transactionId: searchResult.id,
                             status: searchResult.status
                           }));
-                          
+
                           // Disparar evento para cargar todos los asientos
                           window.dispatchEvent(new CustomEvent('loadSeatToCart', {
                             detail: {
@@ -314,7 +310,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                               action: 'addAllSeats'
                             }
                           }));
-                          
+
                           message.success(`${seatsData.length} asientos cargados en el carrito`);
                         }}
                       >
@@ -394,7 +390,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                       // Enviar al carrito para completar venta
                       if (searchResult.funcion) {
                         let eventData = searchResult.event;
-                        
+
                         // Si no hay evento pero hay evento_id en la función, buscarlo
                         if (!eventData && searchResult.funcion.evento_id) {
                           try {
@@ -403,7 +399,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                               .select('*')
                               .eq('id', searchResult.funcion.evento_id)
                               .single();
-                            
+
                             if (error) {
                               console.error('Error fetching event:', error);
                             } else {
@@ -413,17 +409,17 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                             console.error('Error fetching event:', e);
                           }
                         }
-                        
+
                         // Crear asientos desde gateway_response o seat_locks
                         const seats = [];
-                        
+
                         // Primero intentar desde gateway_response
                         if (searchResult.gateway_response) {
                           try {
-                            const responseData = typeof searchResult.gateway_response === 'string' 
-                              ? JSON.parse(searchResult.gateway_response) 
+                            const responseData = typeof searchResult.gateway_response === 'string'
+                              ? JSON.parse(searchResult.gateway_response)
                               : searchResult.gateway_response;
-                            
+
                             if (responseData.seats && Array.isArray(responseData.seats)) {
                               seats.push(...responseData.seats);
                             } else if (responseData.seat && responseData.seat.name) {
@@ -433,20 +429,14 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                             console.error('Error parsing gateway_response:', e);
                           }
                         }
-                        
+
                         // Si no hay asientos en gateway_response, buscar en seat_locks por locator
                         if (seats.length === 0 && searchResult.locator) {
-                          console.log('🔍 Buscando asientos en seat_locks por locator...');
-                          console.log('🔍 locator:', searchResult.locator);
-                          
                           try {
                             const { data: seatLocks, error } = await supabase
                               .from('seat_locks')
                               .select('*')
                               .eq('locator', searchResult.locator);
-                            
-                            console.log('🔍 Query seat_locks result:', { seatLocks, error });
-                            
                             if (error) {
                               console.error('Error fetching seat_locks:', error);
                             } else if (seatLocks && seatLocks.length > 0) {
@@ -459,36 +449,35 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                                   .select('sala_id')
                                   .eq('id', searchResult.funcion_id)
                                   .single();
-                                
+
                                 if (!funcionError && funcion) {
                                   const { data: zonas, error: zonasError } = await supabase
                                     .from('zonas')
                                     .select('*')
                                     .eq('sala_id', funcion.sala_id);
-                                
+
                                   if (!zonasError && zonas) {
                                     zonasInfo = zonas.reduce((acc, zona) => {
                                       acc[zona.id] = zona;
                                       return acc;
                                     }, {});
-                                    console.log('✅ Zonas encontradas:', zonasInfo);
                                   }
                                 }
                               } catch (e) {
                                 console.error('Error fetching zonas:', e);
                               }
-                              
+
                               // Convertir seat_locks a formato de asientos con información completa
                               const seatLocksAsSeats = seatLocks.map(lock => {
                                 // Extraer información del seat_id
                                 const seatIdParts = lock.seat_id.split('_');
                                 const seatNumber = seatIdParts[seatIdParts.length - 1];
-                                
+
                                 // Usar información de zona guardada en seat_locks si está disponible
                                 let zonaNombre = lock.zona_nombre || 'ORO';
                                 let zonaId = lock.zona_id || 'ORO';
                                 let precioAsignado = lock.precio || 10.00;
-                                
+
                                 // Si no hay información de zona guardada, buscar en las zonas disponibles
                                 if (!lock.zona_nombre || !lock.zona_id) {
                                   // Buscar en las zonas disponibles para encontrar la correcta
@@ -500,7 +489,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                                     }
                                   }
                                 }
-                                
+
                                 return {
                                   id: lock.seat_id,
                                   _id: lock.seat_id,
@@ -521,18 +510,15 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                                   zonaNombre: zonaNombre
                                 };
                               });
-                              
+
                               seats.push(...seatLocksAsSeats);
-                              console.log('✅ Asientos encontrados en seat_locks por locator:', seatLocksAsSeats.length);
-                              console.log('✅ Asientos convertidos:', seatLocksAsSeats);
                             } else {
-                              console.log('⚠️ No se encontraron seat_locks para este locator');
                             }
                           } catch (e) {
                             console.error('Error loading seat_locks:', e);
                           }
                         }
-                        
+
                         // Crear objeto de transacción para el carrito
                         const transactionData = {
                           id: searchResult.id,
@@ -548,12 +534,12 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                           payment_method: searchResult.payment_method,
                           gateway_name: searchResult.gateway_name
                         };
-                        
+
                         // Emitir evento personalizado para cargar en el carrito
                         window.dispatchEvent(new CustomEvent('loadPendingTransaction', {
                           detail: transactionData
                         }));
-                        
+
                         message.success('Transacción cargada en el carrito para completar venta');
                         onCancel();
                       } else {
@@ -571,37 +557,37 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                         // Actualizar estado en payment_transactions
                         const { error: updateError } = await supabase
                           .from('payment_transactions')
-                          .update({ 
+                          .update({
                             status: 'cancelled',
                             updated_at: new Date().toISOString()
                           })
                           .eq('id', searchResult.id);
-                        
+
                         if (updateError) {
                           console.error('Error actualizando payment_transactions:', updateError);
                           message.error('Error al anular la transacción');
                           return;
                         }
-                        
+
                         // Actualizar estado en seat_locks
                         const { error: locksError } = await supabase
                           .from('seat_locks')
-                          .update({ 
+                          .update({
                             status: 'anulado',
                             updated_at: new Date().toISOString()
                           })
                           .eq('locator', searchResult.locator);
-                        
+
                         if (locksError) {
                           console.error('Error actualizando seat_locks:', locksError);
                           message.warning('Transacción anulada pero puede haber problemas con los asientos');
                         } else {
                           message.success('Transacción pendiente y asientos anulados correctamente');
                         }
-                        
+
                         // Recargar la búsqueda para mostrar el nuevo estado
                         onSearch(searchResult.locator);
-                        
+
                       } catch (error) {
                         console.error('Error anulando transacción:', error);
                         message.error('Error al anular la transacción');
@@ -612,7 +598,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                   </Button>
                 </>
               )}
-              
+
               {searchResult.status === 'completed' && (
                 <>
                   <Button
@@ -634,7 +620,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                   </Button>
                 </>
               )}
-              
+
               {searchResult.status === 'failed' && (
                 <>
                   <Button
@@ -654,37 +640,37 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                         // Actualizar estado en payment_transactions
                         const { error: updateError } = await supabase
                           .from('payment_transactions')
-                          .update({ 
+                          .update({
                             status: 'cancelled',
                             updated_at: new Date().toISOString()
                           })
                           .eq('id', searchResult.id);
-                        
+
                         if (updateError) {
                           console.error('Error actualizando payment_transactions:', updateError);
                           message.error('Error al anular la transacción');
                           return;
                         }
-                        
+
                         // Actualizar estado en seat_locks
                         const { error: locksError } = await supabase
                           .from('seat_locks')
-                          .update({ 
+                          .update({
                             status: 'anulado',
                             updated_at: new Date().toISOString()
                           })
                           .eq('locator', searchResult.locator);
-                        
+
                         if (locksError) {
                           console.error('Error actualizando seat_locks:', locksError);
                           message.warning('Transacción anulada pero puede haber problemas con los asientos');
                         } else {
                           message.success('Transacción y asientos anulados correctamente');
                         }
-                        
+
                         // Recargar la búsqueda para mostrar el nuevo estado
                         onSearch(searchResult.locator);
-                        
+
                       } catch (error) {
                         console.error('Error anulando transacción:', error);
                         message.error('Error al anular la transacción');
@@ -695,7 +681,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                   </Button>
                 </>
               )}
-              
+
               {/* Acciones generales */}
               <Button
                 onClick={() => {
@@ -705,7 +691,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
               >
                 Imprimir
               </Button>
-              
+
               <Button
                 onClick={() => {
                   // Copiar localizador

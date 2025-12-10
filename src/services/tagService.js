@@ -5,7 +5,6 @@ export const fetchTags = async () => {
     // Obtener el usuario autenticado
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.warn('Usuario no autenticado, retornando tags vacíos');
       return [];
     }
 
@@ -17,12 +16,8 @@ export const fetchTags = async () => {
       .single();
 
     if (profileError || !profile?.tenant_id) {
-      console.warn('Usuario sin tenant_id válido, retornando tags vacíos');
       return [];
     }
-
-    console.log('🔍 [tagService] Obteniendo tags para tenant:', profile.tenant_id);
-
     const { data, error } = await supabase
       .from('tags')
       .select('*')
@@ -33,8 +28,6 @@ export const fetchTags = async () => {
       console.error('Error fetching tags:', error);
       throw new Error('Error fetching tags: ' + error.message);
     }
-
-    console.log('🔍 [tagService] Tags obtenidos:', data);
     return data || [];
   } catch (error) {
     console.error('Error in fetchTags:', error);
@@ -60,9 +53,6 @@ export const createTag = async (tagData) => {
     if (profileError || !profile?.tenant_id) {
       throw new Error('Usuario sin tenant_id válido');
     }
-
-    console.log('🔍 [tagService] Creando tag para tenant:', profile.tenant_id);
-
     // Asegurar que el tag tenga el tenant_id
     const tagWithTenant = {
       ...tagData,
@@ -79,8 +69,6 @@ export const createTag = async (tagData) => {
       console.error('Error creating tag:', error);
       throw new Error('Error creating tag: ' + error.message);
     }
-
-    console.log('🔍 [tagService] Tag creado exitosamente:', data);
     return data;
   } catch (error) {
     console.error('Error in createTag:', error);
@@ -106,9 +94,6 @@ export const updateTag = async (id, updatedData) => {
     if (profileError || !profile?.tenant_id) {
       throw new Error('Usuario sin tenant_id válido');
     }
-
-    console.log('🔍 [tagService] Actualizando tag para tenant:', profile.tenant_id);
-
     // Asegurar que el tag tenga el tenant_id
     const tagWithTenant = {
       ...updatedData,
@@ -127,8 +112,6 @@ export const updateTag = async (id, updatedData) => {
       console.error('Error updating tag:', error);
       throw new Error('Error updating tag: ' + error.message);
     }
-
-    console.log('🔍 [tagService] Tag actualizado exitosamente:', data);
     return data;
   } catch (error) {
     console.error('Error in updateTag:', error);
@@ -154,9 +137,6 @@ export const deleteTag = async (id) => {
     if (profileError || !profile?.tenant_id) {
       throw new Error('Usuario sin tenant_id válido');
     }
-
-    console.log('🔍 [tagService] Eliminando tag para tenant:', profile.tenant_id);
-
     const { error } = await supabase
       .from('tags')
       .delete()
@@ -167,8 +147,6 @@ export const deleteTag = async (id) => {
       console.error('Error deleting tag:', error);
       throw new Error('Error deleting tag: ' + error.message);
     }
-
-    console.log('🔍 [tagService] Tag eliminado exitosamente');
     return { success: true };
   } catch (error) {
     console.error('Error in deleteTag:', error);

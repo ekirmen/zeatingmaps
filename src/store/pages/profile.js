@@ -1,21 +1,21 @@
 // src/store/pages/Profile.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Card, Avatar, Descriptions, Button, message, Tabs, 
+import {
+  Card, Avatar, Descriptions, Button, message, Tabs,
   List, Tag, Space, Row, Col, Statistic,
   Timeline, Empty, Spin, Alert, Input, Modal
 } from 'antd';
-import { 
-  UserOutlined, ShoppingOutlined, CalendarOutlined, 
+import {
+  UserOutlined, ShoppingOutlined, CalendarOutlined,
   CreditCardOutlined, HeartOutlined, SettingOutlined,
   EditOutlined, SaveOutlined, CloseOutlined,
   FileTextOutlined, ClockCircleOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  getUserProfile, 
+import {
+  getUserProfile,
   getUserPurchasesWithSeats,
-  getUserReservations, 
+  getUserReservations,
   getUserFavorites,
   getUserActivityHistory,
   updateUserProfile,
@@ -107,13 +107,13 @@ const Profile = () => {
         email: editForm.name,
         phone: editForm.phone
       });
-      
+
       setProfile(prev => ({
         ...prev,
         name: editForm.name,
         phone: editForm.phone
       }));
-      
+
       setEditing(false);
       message.success('Perfil actualizado correctamente');
     } catch (error) {
@@ -200,9 +200,9 @@ const Profile = () => {
       <Card style={{ marginBottom: '16px' }} className="profile-header-card">
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={8} md={6} style={{ textAlign: 'center' }}>
-            <Avatar 
+            <Avatar
               size={{ xs: 64, sm: 80, md: 100 }}
-              src={profile?.avatar} 
+              src={profile?.avatar}
               icon={<UserOutlined />}
               style={{ border: '3px solid #1890ff' }}
             />
@@ -233,17 +233,17 @@ const Profile = () => {
                 <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   {editing ? (
                     <>
-                      <Button 
-                        type="primary" 
-                        icon={<SaveOutlined />} 
+                      <Button
+                        type="primary"
+                        icon={<SaveOutlined />}
                         onClick={handleSave}
                         block
                         size="large"
                       >
                         Guardar
                       </Button>
-                      <Button 
-                        icon={<CloseOutlined />} 
+                      <Button
+                        icon={<CloseOutlined />}
                         onClick={() => setEditing(false)}
                         block
                         size="large"
@@ -253,16 +253,16 @@ const Profile = () => {
                     </>
                   ) : (
                     <>
-                      <Button 
-                        icon={<EditOutlined />} 
+                      <Button
+                        icon={<EditOutlined />}
                         onClick={() => setEditing(true)}
                         block
                         size="large"
                       >
                         Editar Perfil
                       </Button>
-                      <Button 
-                        danger 
+                      <Button
+                        danger
                         onClick={handleLogout}
                         block
                         size="large"
@@ -330,23 +330,23 @@ const Profile = () => {
       <Card>
         <Tabs defaultActiveKey="profile" size="large">
           {/* Tab: Información Personal */}
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <UserOutlined />
                 Información Personal
               </span>
-            } 
+            }
             key="profile"
           >
-            <Descriptions 
-              bordered 
-              column={{ xs: 1, sm: 1, md: 2 }} 
+            <Descriptions
+              bordered
+              column={{ xs: 1, sm: 1, md: 2 }}
               size="large"
             >
               <Descriptions.Item label="Nombre" span={2}>
                 {editing ? (
-                  <Input 
+                  <Input
                     value={editForm.name}
                     onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
                   />
@@ -359,7 +359,7 @@ const Profile = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Teléfono">
                 {editing ? (
-                  <Input 
+                  <Input
                     value={editForm.phone}
                     onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
                   />
@@ -383,13 +383,13 @@ const Profile = () => {
           </TabPane>
 
           {/* Tab: Mis Compras */}
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <ShoppingOutlined />
                 Mis Entradas ({purchases.length})
               </span>
-            } 
+            }
             key="purchases"
           >
             {purchases.length > 0 ? (
@@ -407,26 +407,25 @@ const Profile = () => {
                         : purchase.event.datosBoleto;
                       return datosBoleto?.habilitarWallet || false;
                     } catch (e) {
-                      console.warn('Error parsing datosBoleto:', e);
                       return false;
                     }
                   };
-                  
+
                   const walletEnabled = getWalletEnabled();
 
                   return (
                     <List.Item
                       actions={[
                         <Space key="actions" direction="vertical" size="small" style={{ width: '100%' }}>
-                          <Button 
-                            size="small" 
+                          <Button
+                            size="small"
                             href={`/store/payment-success/${purchase.locator}`}
                             block
                           >
                             Ver Detalles
                           </Button>
-                          <Button 
-                            size="small" 
+                          <Button
+                            size="small"
                             disabled={purchase.status !== 'completed' && purchase.status !== 'pagado'}
                             title={purchase.status !== 'completed' && purchase.status !== 'pagado' ? 'Solo disponible para pagos completados' : 'Descargar tickets individuales'}
                             onClick={() => {
@@ -440,8 +439,8 @@ const Profile = () => {
                             Descargar Tickets
                           </Button>
                           {(purchase.status === 'completed' || purchase.status === 'pagado') && walletEnabled && (
-                            <Button 
-                              size="small" 
+                            <Button
+                              size="small"
                               type="default"
                               onClick={async () => {
                                 try {
@@ -461,7 +460,7 @@ const Profile = () => {
                     >
                       <List.Item.Meta
                         avatar={
-                          <Avatar 
+                          <Avatar
                             size={64}
                             icon={<ShoppingOutlined />}
                           />
@@ -506,13 +505,13 @@ const Profile = () => {
           </TabPane>
 
           {/* Tab: Mis Reservas */}
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <CalendarOutlined />
                 Mis Reservas ({reservations.length})
               </span>
-            } 
+            }
             key="reservations"
           >
             {reservations.length > 0 ? (
@@ -527,7 +526,7 @@ const Profile = () => {
                   >
                     <List.Item.Meta
                       avatar={
-                        <Avatar 
+                        <Avatar
                           size={64}
                           src={reservation.events?.image_url}
                           icon={<CalendarOutlined />}
@@ -565,13 +564,13 @@ const Profile = () => {
           </TabPane>
 
           {/* Tab: Mis Favoritos */}
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <HeartOutlined />
                 Mis Favoritos ({favorites.length})
               </span>
-            } 
+            }
             key="favorites"
           >
             {favorites.length > 0 ? (
@@ -586,7 +585,7 @@ const Profile = () => {
                   >
                     <List.Item.Meta
                       avatar={
-                        <Avatar 
+                        <Avatar
                           size={64}
                           src={favorite.events?.image_url}
                           icon={<HeartOutlined />}
@@ -620,19 +619,19 @@ const Profile = () => {
           </TabPane>
 
           {/* Tab: Historial de Actividad */}
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <ClockCircleOutlined />
                 Historial de Actividad
               </span>
-            } 
+            }
             key="activity"
           >
             {activityHistory.length > 0 ? (
               <Timeline>
                 {activityHistory.map(activity => (
-                  <Timeline.Item 
+                  <Timeline.Item
                     key={activity.id}
                     color={activity.type === 'purchase' ? 'green' : 'blue'}
                   >
@@ -707,14 +706,14 @@ const Profile = () => {
                 {selectedPurchase.seats.length} {selectedPurchase.seats.length === 1 ? 'asiento' : 'asientos'}
               </div>
             </div>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px' }}>
               {selectedPurchase.seats.map((seat, seatIndex) => {
                 const seatId = seat.seat_id || seat.id || seat._id || `seat-${seatIndex}`;
                 const zonaNombre = seat.zona_nombre || seat.zonaNombre || seat.zona?.nombre || seat.zona || null;
                 const mesaId = seat.table_id || seat.mesa_id || seat.mesaId || seat.mesa?.id || seat.mesa || null;
                 const filaNombre = seat.fila_nombre || seat.filaNombre || seat.fila?.nombre || seat.fila || seat.row || null;
-                
+
                 return (
                   <Card
                     key={seatId || seatIndex}

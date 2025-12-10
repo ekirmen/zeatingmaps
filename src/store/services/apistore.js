@@ -26,23 +26,17 @@ async function hasColumn(tableName, columnName) {
  */
 export const getCmsPage = async (slug) => {
   try {
-    console.log('🔍 [getCmsPage] Intentando cargar página:', slug);
-    console.log('🔍 [getCmsPage] Usando tabla: cms_pages');
-    
     const { data, error } = await supabase
       .from('cms_pages') // Usar la tabla correcta según el schema
       .select('*') // Seleccionar todas las columnas para debug
       .eq('slug', slug) // Filter by the slug
       .single(); // Expect a single result
-
-    console.log('🔍 [getCmsPage] Resultado de la consulta:', { data, error });
-
     if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
       console.error('❌ [getCmsPage] Error fetching CMS page from Supabase:', error.message);
       console.error('❌ [getCmsPage] Error details:', { code: error.code, details: error.details, hint: error.hint });
       throw error;
     }
-    
+
     // Adaptar a la estructura real de cms_pages
     if (data) {
       // Crear un objeto widgets basado en los datos disponibles
@@ -65,17 +59,14 @@ export const getCmsPage = async (slug) => {
         // Incluir datos originales para debug
         original_data: data
       };
-      
-      console.log('🔍 [getCmsPage] Página encontrada, creando widgets sintéticos:', result);
       return result;
     }
-    
+
     // Si no hay datos, retornar estructura vacía
-    const emptyResult = { 
+    const emptyResult = {
       widgets: { content: [] },
-      original_data: null 
+      original_data: null
     };
-    console.log('🔍 [getCmsPage] No se encontró página, retornando estructura vacía:', emptyResult);
     return emptyResult;
   } catch (error) {
     console.error('❌ [getCmsPage] Unexpected error:', error);
@@ -92,8 +83,6 @@ export const getCmsPage = async (slug) => {
  */
 export const getFunciones = async (eventId) => {
   try {
-    console.log('[getFunciones DEBUG] Iniciando búsqueda de funciones para evento:', eventId);
-    
     // Primero obtener el evento para obtener su tenant_id
     const { data: eventoData, error: eventoError } = await supabase
       .from('eventos')
@@ -110,9 +99,6 @@ export const getFunciones = async (eventId) => {
       console.error('[getFunciones DEBUG] Evento no encontrado');
       return [];
     }
-
-    console.log('[getFunciones DEBUG] Evento encontrado, tenant_id:', eventoData.tenant_id);
-
     // Construir query base usando columnas nuevas (evento_id/sala_id)
     let { data, error } = await supabase
       .from('funciones')
@@ -140,19 +126,16 @@ export const getFunciones = async (eventId) => {
       console.error('[getFunciones DEBUG] Error fetching funciones:', error.message);
       throw error;
     }
-
-    console.log('[getFunciones DEBUG] Funciones encontradas:', data?.length || 0, 'funciones');
-
     // Obtener información de salas por separado para evitar conflictos de relaciones
     const salasIds = [...new Set((data || []).map(f => f.sala_id || f.sala).filter(Boolean))];
     let salasData = {};
-    
+
     if (salasIds.length > 0) {
       const { data: salas, error: salasError } = await supabase
         .from('salas')
         .select('id, nombre')
         .in('id', salasIds);
-      
+
       if (!salasError && salas) {
         salasData = salas.reduce((acc, sala) => {
           acc[sala.id] = sala;
@@ -178,8 +161,6 @@ export const getFunciones = async (eventId) => {
         }
       };
     });
-
-    console.log('[getFunciones DEBUG] Datos transformados:', transformedData);
     return transformedData;
   } catch (error) {
     console.error('[getFunciones DEBUG] Unexpected error in getFunciones:', error);
@@ -289,8 +270,6 @@ export const getFuncion = async (functionId) => {
 // fetchMapa: if options.minimal === true, return a compact metadata-only map row
 export const fetchMapa = async (salaIdOrMapId, by = 'sala', options = { minimal: false }) => {
   try {
-    console.log(`[fetchMapa] Intentando obtener mapa para ${by === 'id' ? 'map id' : 'sala_id'}:`, salaIdOrMapId);
-    
     // Verificar si el cliente Supabase está disponible
     if (!supabase) {
       console.error('[fetchMapa] Error: Cliente Supabase no disponible');
@@ -305,17 +284,13 @@ export const fetchMapa = async (salaIdOrMapId, by = 'sala', options = { minimal:
     }
 
     if (!session) {
-      console.warn('[fetchMapa] Usuario no autenticado, intentando acceso anónimo');
-      console.log('[fetchMapa] Nota: Las políticas RLS deben permitir acceso anónimo de lectura');
     } else {
-      console.log('[fetchMapa] Usuario autenticado:', session.user.id);
     }
 
     // Construir la consulta con mejor manejo de errores
     let query;
     try {
       query = supabase.from('mapas').select('*');
-      console.log('[fetchMapa] Query base construida correctamente');
     } catch (queryError) {
       console.error('[fetchMapa] Error al construir query base:', queryError);
       throw new Error(`Error al construir query: ${queryError.message}`);
@@ -334,15 +309,7 @@ export const fetchMapa = async (salaIdOrMapId, by = 'sala', options = { minimal:
         ? query.eq('id', salaIdOrMapId).single()
         : query.eq('sala_id', salaIdOrMapId).single();
     }
-    
-    console.log('[fetchMapa] Ejecutando query para:', by === 'id' ? 'ID de mapa' : 'ID de sala', salaIdOrMapId);
-    console.log('[fetchMapa] Tipo de query:', typeof finalQuery);
-    console.log('[fetchMapa] Query object:', finalQuery);
-    
     const { data, error, status } = await finalQuery;
-
-    console.log('[fetchMapa] Respuesta de Supabase:', { data, error, status });
-
     if (error) {
       console.error('[fetchMapa] Error de Supabase:', {
         message: error.message,
@@ -351,70 +318,56 @@ export const fetchMapa = async (salaIdOrMapId, by = 'sala', options = { minimal:
         hint: error.hint,
         status: status
       });
-      
+
       // Si es un error 406, puede ser un problema de RLS o permisos
       if (status === 406) {
-        console.warn('[fetchMapa] Error 406 - Posibles causas:');
-        console.warn('1. Políticas RLS bloqueando el acceso');
-        console.warn('2. Usuario no tiene permisos para esta tabla');
-        console.warn('3. La tabla no existe o no es accesible');
-        console.warn('4. Problema con el tenant_id o filtros de seguridad');
-        console.warn('5. Políticas RLS no permiten acceso anónimo');
-        
         // Intentar obtener más información sobre el error
         try {
-          console.log('[fetchMapa] Probando acceso básico a tabla mapas...');
           const { error: testError } = await supabase
             .from('mapas')
             .select('count')
             .limit(1);
-          
+
           if (testError) {
             console.error('[fetchMapa] Error al verificar acceso a tabla mapas:', testError);
             console.error('[fetchMapa] Código de error:', testError.code);
             console.error('[fetchMapa] Mensaje:', testError.message);
           } else {
-            console.log('[fetchMapa] Acceso básico a tabla mapas OK');
           }
         } catch (testErr) {
           console.error('[fetchMapa] Error en prueba de acceso:', testErr);
         }
-        
+
         // Intentar con una consulta más simple
         try {
-          console.log('[fetchMapa] Probando consulta simple sin filtros...');
           const { data: simpleData, error: simpleError } = await supabase
             .from('mapas')
             .select('id, sala_id')
             .limit(1);
-          
+
           if (simpleError) {
             console.error('[fetchMapa] Error en consulta simple:', simpleError);
           } else {
-            console.log('[fetchMapa] Consulta simple exitosa, datos:', simpleData);
           }
         } catch (simpleErr) {
           console.error('[fetchMapa] Error en consulta simple:', simpleErr);
         }
-        
+
         return null;
       }
-      
+
       // Para otros errores, verificar si es "no encontrado" o un error real
       if (error.code === 'PGRST116') {
         console.log('[fetchMapa] No se encontró mapa (PGRST116)');
         return null;
       }
-      
+
       throw error;
     }
 
     if (!data) {
-      console.log('[fetchMapa] No se encontraron datos');
       return null;
     }
-
-    console.log('[fetchMapa] Mapa encontrado exitosamente:', data);
     return data;
   } catch (error) {
     console.error('[fetchMapa] Error inesperado:', error);
@@ -606,8 +559,6 @@ export const fetchZonasBySala = async (salaId) => {
  */
 export const getAllCmsPages = async () => {
   try {
-    console.log('🔍 [getAllCmsPages] Obteniendo todas las páginas CMS...');
-    
     const { data, error } = await supabase
       .from('cms_pages')
       .select('*')
@@ -617,8 +568,6 @@ export const getAllCmsPages = async () => {
       console.error('❌ [getAllCmsPages] Error:', error);
       throw error;
     }
-
-    console.log(`✅ [getAllCmsPages] ${data?.length || 0} páginas encontradas`);
     return data || [];
   } catch (error) {
     console.error('❌ [getAllCmsPages] Error inesperado:', error);
@@ -632,8 +581,6 @@ export const getAllCmsPages = async () => {
  */
 export const getEventCmsPages = async () => {
   try {
-    console.log('🔍 [getEventCmsPages] Obteniendo páginas de eventos...');
-    
     const { data, error } = await supabase
       .from('cms_pages')
       .select('*')
@@ -644,8 +591,6 @@ export const getEventCmsPages = async () => {
       console.error('❌ [getEventCmsPages] Error:', error);
       throw error;
     }
-
-    console.log(`✅ [getEventCmsPages] ${data?.length || 0} páginas de eventos encontradas`);
     return data || [];
   } catch (error) {
     console.error('❌ [getEventCmsPages] Error inesperado:', error);

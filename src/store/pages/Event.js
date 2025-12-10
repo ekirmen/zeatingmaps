@@ -220,7 +220,7 @@ function EventPage() {
                 // Verificar si todos los asientos de la mesa están bloqueados por mí
                 const tableSeats = allSeats.filter(seat => seat.mesaId === tableId);
                 if (tableSeats.length === 0) return false;
-                
+
                 const results = await Promise.all(
                   tableSeats.map(async seat => await isSeatLockedByMe(seat._id, selectedFunctionId))
                 );
@@ -229,7 +229,6 @@ function EventPage() {
               onSeatToggle={handleSeatToggle}
               onTableToggle={(table) => {
                 // Manejar clic en mesa - por ahora solo mostrar info
-                console.log('Mesa clickeada:', table);
               }}
               onSeatInfo={() => {}}
               selectedSeats={cartItems.map(item => item.sillaId || item.id || item._id)}

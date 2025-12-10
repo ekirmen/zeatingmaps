@@ -9,7 +9,6 @@ const readFromLocalStorage = (key) => {
   try {
     return window.localStorage.getItem(key);
   } catch (error) {
-    console.warn('[tenantUtils] No se pudo leer de localStorage:', error);
     return null;
   }
 };
@@ -25,7 +24,6 @@ const writeToLocalStorage = (key, value) => {
       window.localStorage.removeItem(key);
     }
   } catch (error) {
-    console.warn('[tenantUtils] No se pudo escribir en localStorage:', error);
   }
 };
 
@@ -43,7 +41,6 @@ const readFromTenantContext = () => {
 
     return context.tenant?.id || null;
   } catch (error) {
-    console.warn('[tenantUtils] No se pudo leer del contexto global:', error);
     return null;
   }
 };

@@ -16,7 +16,7 @@ export const useMapData = (selectedFuncion) => {
   }, [selectedFuncion?.sala]);
 
   // Memoizar el ID de la función
-  const funcionId = useMemo(() => 
+  const funcionId = useMemo(() =>
     selectedFuncion?.id || selectedFuncion?._id,
     [selectedFuncion?.id, selectedFuncion?._id]
   );
@@ -24,28 +24,17 @@ export const useMapData = (selectedFuncion) => {
   // Memoizar la función de carga de datos
   const loadData = useCallback(async () => {
     if (!salaId) {
-      console.log('⚠️ No hay salaId disponible:', selectedFuncion);
       setMapa(null);
       setZonas([]);
       return;
     }
 
     try {
-      console.log('🔍 Cargando datos para salaId:', salaId, 'funcionId:', funcionId);
       const [m, zs, seats] = await Promise.all([
         fetchMapa(salaId),
         fetchZonasPorSala(salaId),
         funcionId ? fetchSeatsByFuncion(funcionId) : Promise.resolve([]),
       ]);
-
-      console.log('📊 Datos cargados:', {
-        mapa: m,
-        contenido: typeof m.contenido,
-        contenidoValue: m.contenido,
-        zonas: zs?.length || 0,
-        seats: seats?.length || 0
-      });
-
       const seatMap = seats.reduce((acc, s) => {
         acc[s.id || s._id] = { estado: s.estado, bloqueado: s.bloqueado };
         return acc;
@@ -53,24 +42,23 @@ export const useMapData = (selectedFuncion) => {
 
       // Convertir el formato de datos si es necesario
       let mapped;
-      
+
       // Si m.contenido es un string JSON, parsearlo
       let contenidoData = m.contenido;
       if (typeof m.contenido === 'string') {
         try {
           contenidoData = JSON.parse(m.contenido);
-          console.log('🔧 Parseando JSON del campo contenido:', contenidoData);
         } catch (err) {
           console.error('❌ Error parseando JSON del contenido:', err);
           contenidoData = m.contenido;
         }
       }
-      
+
       // Si es un objeto, buscar la propiedad 'elementos'
-      const elementos = Array.isArray(contenidoData) 
-        ? contenidoData 
+      const elementos = Array.isArray(contenidoData)
+        ? contenidoData
         : contenidoData.elementos || [];
-      
+
       if (elementos && Array.isArray(elementos)) {
         // Formato esperado por SeatingMap (array de contenido)
         mapped = {
@@ -83,7 +71,7 @@ export const useMapData = (selectedFuncion) => {
                 // Si no hay datos en seatMap, asumir que está disponible
                 return { ...s, estado: 'disponible' };
               }
-              
+
               // Mapear estados correctamente
               let estado = 'disponible';
               if (st.estado === 'vendido') {
@@ -93,14 +81,13 @@ export const useMapData = (selectedFuncion) => {
               } else if (st.estado === 'bloqueado' || st.status === 'locked') {
                 estado = 'bloqueado';
               }
-              
+
               return { ...s, estado };
             })
           }))
         };
       } else if (contenidoData && contenidoData.zonas) {
         // Convertir formato de zonas a formato de contenido
-        console.log('🔄 Convirtiendo formato de zonas a contenido');
         const contenido = contenidoData.zonas.map((zona, zonaIndex) => ({
           _id: `zona-${zona.id || zonaIndex}`,
           type: 'zona',
@@ -120,12 +107,12 @@ export const useMapData = (selectedFuncion) => {
             color: '#60a5fa' // Color por defecto para asientos disponibles
           }))
         }));
-        
+
         mapped = {
           ...m,
           contenido
         };
-        
+
         console.log('🎯 Mapa convertido:', {
           contenido: contenido.length,
           zonas: contenido.map(z => ({
@@ -158,4 +145,4 @@ export const useMapData = (selectedFuncion) => {
   }, [loadData]);
 
   return { mapa, setMapa, zonas, setZonas };
-}; 
+};

@@ -6,7 +6,6 @@ const _defer = (fn) => {
     try {
       fn();
     } catch (e) {
-      console.warn('[Analytics] deferred load failed', e);
     }
     removeListeners();
   };
@@ -98,6 +97,5 @@ export const trackEvent = (name, payload = {}) => {
       window.fbq('trackCustom', name, payload);
     }
   } catch (err) {
-    console.warn('[Analytics] Error al trackear evento', name, err);
   }
 };
