@@ -4,18 +4,6 @@ import { RoleProvider } from './components/RoleBasedAccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import BackofficeLayoutWithRoles from './BackofficeLayoutWithRoles';
 import AuthGuard from './components/AuthGuard';
-
-// Lazy load de páginas grandes para reducir bundle inicial
-const CrearMapaPage = lazy(() => import('./pages/CrearMapaPage'));
-const Boleteria = lazy(() => import('./pages/Boleteria'));
-const WebStudio = lazy(() => import('./pages/WebStudio'));
-const Funciones = lazy(() => import('./pages/Funciones'));
-const Reports = lazy(() => import('./pages/Reports'));
-const Evento = lazy(() => import('./pages/Evento'));
-const SaasDashboard = lazy(() => import('./pages/SaasDashboard'));
-const ApiExplorer = lazy(() => import('../saas/pages/ApiExplorer'));
-
-// Importar páginas pequeñas directamente (no afectan mucho el bundle)
 import Dashboard from './pages/Dashboard';
 import Recinto from './pages/Recinto';
 import Plano from './pages/Plano';
@@ -49,6 +37,16 @@ import PaymentGatewayConfig from '../saas/components/PaymentGatewayConfig';
 import RoleManagement from '../saas/components/RoleManagement';
 import SaasUserManagement from './pages/SaasUserManagementSimple';
 import TenantDetail from './pages/TenantDetail';
+
+// Lazy load de páginas grandes para reducir bundle inicial
+const CrearMapaPage = lazy(() => import('./pages/CrearMapaPage'));
+const Boleteria = lazy(() => import('./pages/Boleteria'));
+const WebStudio = lazy(() => import('./pages/WebStudio'));
+const Funciones = lazy(() => import('./pages/Funciones'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Evento = lazy(() => import('./pages/Evento'));
+const SaasDashboard = lazy(() => import('./pages/SaasDashboard'));
+const ApiExplorer = lazy(() => import('../saas/pages/ApiExplorer'));
 
 const BackofficeAppWithRoles = () => {
   return (

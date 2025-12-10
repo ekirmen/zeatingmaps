@@ -118,11 +118,6 @@ const MapShortRoute = () => {
           throw new Error('La función no tiene un evento asociado');
         }
 
-        if (eventoError) throw eventoError;
-        if (!eventoData) {
-          throw new Error('Evento no encontrado');
-        }
-
         // Si el evento no tiene slug, usar seat-selection como fallback
         if (!eventoData.slug) {
           navigate(`/store/seat-selection/${funcionId}`, { replace: true });

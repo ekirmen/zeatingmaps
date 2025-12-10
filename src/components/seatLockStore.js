@@ -1182,9 +1182,6 @@ export const useSeatLockStore = create((set, get) => ({
       const rawSessionId = await getSessionId();
       const sessionId = normalizeSessionId(rawSessionId);
 
-      // Log para debugging - verificar que cada navegador tiene su propio session_id
-      });
-
       if (!sessionId) {
         console.error('❌ [SEAT_LOCK] No se pudo obtener session_id válido');
         return false;

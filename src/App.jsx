@@ -4,10 +4,6 @@ import { ConfigProvider } from 'antd';
 import { useTenant } from './contexts/TenantContext';
 import TenantErrorBoundary from './components/TenantErrorBoundary';
 import MapShortRoute from './store/pages/MapShortRoute';
-
-// Lazy load de las apps principales para reducir el bundle inicial
-const StoreApp = lazy(() => import('./store/StoreApp'));
-const BackofficeAppWithRoles = lazy(() => import('./backoffice/BackofficeAppWithRoles'));
 import {
   getCurrentDomainConfig,
   shouldShowSaaS,
@@ -21,6 +17,10 @@ import VercelSpeedInsights from './components/VercelSpeedInsights';
 import LegalTerms from './store/pages/LegalTerms';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import './index.css';
+
+// Lazy load de las apps principales para reducir el bundle inicial
+const StoreApp = lazy(() => import('./store/StoreApp'));
+const BackofficeAppWithRoles = lazy(() => import('./backoffice/BackofficeAppWithRoles'));
 
 const logDev = (...args) => {
   if (process.env.NODE_ENV !== 'production') {

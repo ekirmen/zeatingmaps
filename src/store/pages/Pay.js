@@ -501,7 +501,6 @@ const Pay = () => {
       if (pagosPlazosActivos?.activo && cuotasSeleccionadas > 0 && cuotasCalculadas.length > 0) {
         // Si se seleccionaron cuotas específicas (1, 2, 3), usar el monto de esas cuotas
         montoAPagar = cuotasCalculadas.slice(0, cuotasSeleccionadas).reduce((sum, c) => sum + c.monto, 0);
-        });
       } else if (pagosPlazosActivos?.activo && cuotasSeleccionadas === 0) {
         // Si se seleccionó 0 (todas las cuotas), pagar el total completo
         montoAPagar = total;
