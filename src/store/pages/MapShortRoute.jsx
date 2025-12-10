@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
+import { useSearchParams, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Spin } from '../../utils/antdComponents';
 import { supabase } from '../../supabaseClient';
 
@@ -7,6 +7,7 @@ const MapShortRoute = () => {
   const { eventSlug } = useParams(); // Permitir slug opcional en la ruta (puede ser "r" para ruta corta)
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -149,9 +150,8 @@ const MapShortRoute = () => {
     };
 
     loadEventAndRedirect();
-  }, [navigate, searchParams, eventSlug]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Mostrar un spinner mientras se carga
+  }, [navigate, searchParams, eventSlug, location.pathname]); 
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">

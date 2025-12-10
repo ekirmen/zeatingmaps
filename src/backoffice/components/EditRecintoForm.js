@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import toast from 'react-hot-toast'; // Ya tienes esto importado
 import { geocodeAddress } from '../../utils/geocode';
 import buildAddress from '../../utils/address';
 import { supabase } from '../../supabaseClient';
@@ -65,7 +65,8 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
       }
     } catch (error) {
       console.error('Error al geocodificar:', error);
-      NotificationManager.warning('No se pudo obtener las coordenadas de la dirección');
+      // CORRECCIÓN: Usar toast en lugar de NotificationManager
+      toast.warning('No se pudo obtener las coordenadas de la dirección');
     }
   };
 
@@ -112,11 +113,13 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
         throw new Error(error.message);
       }
 
-      NotificationManager.success('Recinto actualizado con éxito');
+      // CORRECCIÓN: Usar toast en lugar de NotificationManager
+      toast.success('Recinto actualizado con éxito');
       onEditRecinto();
     } catch (error) {
       console.error('Error al actualizar:', error);
-      NotificationManager.error(`Error: ${error.message}`);
+      // CORRECCIÓN: Usar toast en lugar de NotificationManager
+      toast.error(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -230,25 +233,25 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Código Postal</label>
-                                 <input
-                   type="text"
-                   placeholder="Código postal"
-                   value={formData.codigoPostal}
-                   onChange={(e) => handleInputChange('codigoPostal', e.target.value)}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                 />
+                <input
+                  type="text"
+                  placeholder="Código postal"
+                  value={formData.codigoPostal}
+                  onChange={(e) => handleInputChange('codigoPostal', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Dirección Línea 1</label>
-                             <input
-                 type="text"
-                 placeholder="Calle, número, piso, etc."
-                 value={formData.direccionLinea1}
-                 onChange={(e) => handleInputChange('direccionLinea1', e.target.value)}
-                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-               />
+              <input
+                type="text"
+                placeholder="Calle, número, piso, etc."
+                value={formData.direccionLinea1}
+                onChange={(e) => handleInputChange('direccionLinea1', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
             </div>
 
             <div>
@@ -348,7 +351,6 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
           </button>
         </div>
       </form>
-
     </div>
   );
 };

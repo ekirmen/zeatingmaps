@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Modal, Drawer, Button, message } from '../../utils/antdComponents';
 import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
-
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import LazySeatingMap from '../../components/LazySeatingMap';
@@ -9,6 +8,7 @@ import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
 import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
+
 
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
@@ -1251,7 +1251,7 @@ const Boleteria = () => {
           {/* Mobile: BotÂ³n flotante para carrito */}
           {carrito && carrito.length > 0 && (
             <div className="md:hidden fixed bottom-4 right-4 z-50">
-              <AntButton
+              <Button
                 type="primary"
                 shape="circle"
                 size="large"
@@ -1259,7 +1259,7 @@ const Boleteria = () => {
                 className="shadow-lg"
               >
                 Ã°Å¸â€ºâ€™ {carrito.length}
-              </AntButton>
+              </Button>
             </div>
           )}
 

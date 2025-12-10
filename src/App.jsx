@@ -1,22 +1,9 @@
-// app.jsx OPTIMIZADO
+/* eslint-disable import/first */
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 // SOLO importar ConfigProvider de Ant Design (no todo antd)
 import ConfigProvider from 'antd/es/config-provider';
-
-// Lazy load de contexto
-const ThemeProvider = lazy(() => import('./contexts/ThemeContext'));
-const TenantErrorBoundary = lazy(() => import('./components/TenantErrorBoundary'));
-const MapShortRoute = lazy(() => import('./store/pages/MapShortRoute'));
-const VercelAnalytics = lazy(() => import('./components/VercelAnalytics'));
-const VercelSpeedInsights = lazy(() => import('./components/VercelSpeedInsights'));
-const LegalTerms = lazy(() => import('./store/pages/LegalTerms'));
-const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt'));
-
-// Lazy load de las apps principales para reducir el bundle inicial
-const StoreApp = lazy(() => import('./store/StoreApp'));
-const BackofficeAppWithRoles = lazy(() => import('./backoffice/BackofficeAppWithRoles'));
 
 // Importar funciones config directamente
 import {
@@ -31,6 +18,19 @@ import {
 import { useTenant } from './contexts/TenantContext';
 
 import './index.css';
+
+// Lazy load de contexto
+const ThemeProvider = lazy(() => import('./contexts/ThemeContext'));
+const TenantErrorBoundary = lazy(() => import('./components/TenantErrorBoundary'));
+const MapShortRoute = lazy(() => import('./store/pages/MapShortRoute'));
+const VercelAnalytics = lazy(() => import('./components/VercelAnalytics'));
+const VercelSpeedInsights = lazy(() => import('./components/VercelSpeedInsights'));
+const LegalTerms = lazy(() => import('./store/pages/LegalTerms'));
+const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt'));
+
+// Lazy load de las apps principales para reducir el bundle inicial
+const StoreApp = lazy(() => import('./store/StoreApp'));
+const BackofficeAppWithRoles = lazy(() => import('./backoffice/BackofficeAppWithRoles'));
 
 // Componente de carga optimizado
 const LoadingSpinner = () => (
