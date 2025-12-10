@@ -4,89 +4,33 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     
-    <!-- Resource Hints para mejor performance -->
-    <!-- Preconnect a dominios externos -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
-    
-    <!-- Preconnect a Supabase (ajustar según tu proyecto) -->
-    <link rel="preconnect" href="https://szmyqodwwdwjdodzebcp.supabase.co" crossorigin />
-    <link rel="dns-prefetch" href="https://szmyqodwwdwjdodzebcp.supabase.co" />
-    
-    <!-- Enhanced viewport for all browsers including iOS Safari -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+    <!-- Meta básicos -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <meta name="theme-color" content="#1890ff" />
     
-    <!-- iOS Safari specific -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="format-detection" content="telephone=no" />
+    <!-- Título correcto -->
+    <title>VEN Eventos - Sistema de Boletería</title>
     
-    <!-- IE compatibility -->
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    
-    <!-- Meta tags mejorados para SEO y performance -->
-    <meta
-      name="description"
-      content="Sistema profesional de boletería y venta de entradas para eventos - VEN Eventos"
-    />
-    <meta name="keywords" content="eventos, boletería, entradas, tickets, venta online" />
-    <meta name="author" content="VEN Eventos" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="VEN Eventos - Sistema de Boletería" />
-    <meta property="og:description" content="Sistema profesional de boletería y venta de entradas para eventos" />
-    
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="VEN Eventos - Sistema de Boletería" />
-    <meta name="twitter:description" content="Sistema profesional de boletería y venta de entradas para eventos" />
-    
-    <!-- Favicons y Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="%PUBLIC_URL%/logo512.png" />
-    
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
+    <!-- Manifest -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
-    <!-- Preload de recursos críticos para mejor FCP -->
-    <!-- Preload de CSS crítico -->
-    <!-- La referencia directa a main.css fue eliminada porque Create React App genera archivos versionados -->
-    <!-- El bundle insertará automáticamente los estilos correctos con hash durante la compilación -->
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- Preload de fuentes críticas -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
-    
-    <!-- Font Awesome con preload -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" /></noscript>
-    
-    <!-- Worker se carga dinámicamente cuando se necesita, no es necesario prefetch -->
-    
-    <!-- Critical CSS inline para FCP rápido -->
+    <!-- Critical CSS simplificado -->
     <style>
-      /* Critical CSS: estilos mínimos para evitar FOUC */
       body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       }
       
       #root {
         min-height: 100vh;
       }
       
-      /* Loading spinner básico */
-      .initial-loading {
+      /* Loading state - SERÁ REMOVIDO POR REACT */
+      #initial-loading {
         position: fixed;
         top: 0;
         left: 0;
@@ -95,54 +39,59 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: white;
         z-index: 9999;
+        font-size: 18px;
+        color: #333;
       }
     </style>
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!-- Fallback minimal para asegurar un primer pintado (FCP) durante auditorías
-         Se retirará cuando la app haya montado (ver `src/index.js`). -->
-    <div id="initial-paint" class="initial-loading" role="status" aria-live="polite">
-      Cargando…
-    </div>
+    
+    <!-- Debug script -->
     <script>
-      // Exponer una función que la app puede usar para retirar el fallback
-      window.__removeInitialPaint = function () {
-        try {
-          var el = document.getElementById('initial-paint');
-          if (el && el.parentNode) el.parentNode.removeChild(el);
-        } catch (e) {
-          // ignore
+      // Debug logging
+      console.log('Index.html cargado');
+      console.log('NODE_ENV:', process ? process.env.NODE_ENV : 'no disponible en cliente');
+      
+      // Exponer función para que React remueva el loader
+      window.__removeLoading = function() {
+        const loader = document.getElementById('initial-loading');
+        if (loader) {
+          console.log('Removiendo loader...');
+          loader.style.display = 'none';
+          loader.parentNode.removeChild(loader);
         }
       };
-      // Safety: también intentamos limpiar cuando se dispare DOMContentLoaded
-      document.addEventListener('DOMContentLoaded', function () {
-        if (window.__removeInitialPaint) window.__removeInitialPaint();
-      });
+      
+      // Si React no se monta en 10 segundos, mostrar error
+      setTimeout(() => {
+        const root = document.getElementById('root');
+        if (root && root.children.length === 0) {
+          console.error('React no se montó después de 10 segundos');
+          const loader = document.getElementById('initial-loading');
+          if (loader) {
+            loader.innerHTML = '<div style="text-align: center;"><h2>Error al cargar la aplicación</h2><p>Por favor, recarga la página.</p><button onclick="window.location.reload()">Recargar</button></div>';
+          }
+        }
+      }, 10000);
     </script>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
+  </head>
+  <body>
+    <noscript>
+      <div style="padding: 20px; text-align: center;">
+        <h1>JavaScript requerido</h1>
+        <p>Esta aplicación requiere JavaScript. Por favor, habilítalo en tu navegador.</p>
+      </div>
+    </noscript>
+    
+    <!-- Este div será reemplazado por React -->
+    <div id="root"></div>
+    
+    <!-- Loading inicial - React lo removerá -->
+    <div id="initial-loading">
+      <div style="text-align: center;">
+        <div style="margin-bottom: 20px;">Cargando aplicación...</div>
+        <div style="font-size: 14px; color: #666;">Si esto tarda mucho, verifica tu conexión</div>
+      </div>
+    </div>
   </body>
 </html>

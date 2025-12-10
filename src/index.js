@@ -4,26 +4,38 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import './styles/cross-browser.css';
 
-if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
-  try {
-    ['log', 'info', 'debug'].forEach((m) => {
-      console[m] = () => {};
-    });
-  } catch (e) {
+// Debug
+console.log('React iniciando...');
+
+// Remover el loading inicial
+try {
+  if (typeof window !== 'undefined' && window.__removeLoading) {
+    window.__removeLoading();
+  } else {
+    // Fallback
+    const loader = document.getElementById('initial-loading');
+    if (loader) {
+      loader.style.display = 'none';
+    }
   }
+} catch (e) {
+  console.error('Error removiendo loader:', e);
 }
+
+// Cargar Ant Design CSS condicionalmente
 if (typeof window !== 'undefined') {
-  const shouldLoadAntdReset = window.location.pathname.startsWith('/backoffice')
-    || window.location.pathname.startsWith('/admin')
-    || window.location.pathname.startsWith('/dashboard');
+  const shouldLoadAntdReset = window.location.pathname.startsWith('/backoffice') ||
+    window.location.pathname.startsWith('/admin') ||
+    window.location.pathname.startsWith('/dashboard');
 
   if (shouldLoadAntdReset) {
     import('antd/dist/reset.css').catch(() => {
+      console.warn('No se pudo cargar antd reset.css');
     });
-  } else {
-    window.loadAntdStyles = () => import('antd/dist/reset.css');
   }
 }
+
+// Importar App (ya está en tu código)
 import App from './App';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -34,81 +46,91 @@ import { HeaderProvider } from './contexts/HeaderContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import { registerServiceWorker } from './utils/pwaService';
-import { reportWebVitals, sendToAnalytics } from './utils/webVitals';
-import performanceMonitor from './utils/performanceMonitor';
 
-// Registrar Service Worker para PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    registerServiceWorker().catch((error) => {
-      console.error('Error registrando Service Worker:', error);
-    });
-  });
-}
+// Error Boundary
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
-if (typeof window !== 'undefined') {
-  import('./utils/indexedDBCache').then(({ default: indexedDBCache }) => {
-    // Inicializar caché
-    indexedDBCache.init().catch((error) => {
-    });
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
 
-    setInterval(() => {
-      indexedDBCache.cleanup().catch((error) => {
-      });
-    }, 24 * 60 * 60 * 1000); // 24 horas
+  componentDidCatch(error, errorInfo) {
+    console.error('React Error Boundary capturó:', error, errorInfo);
+  }
 
-    const lastCleanup = localStorage.getItem('lastIndexedDBCleanup');
-    const now = Date.now();
-    const oneDayAgo = now - (24 * 60 * 60 * 1000);
-
-    if (!lastCleanup || parseInt(lastCleanup, 10) < oneDayAgo) {
-      indexedDBCache.cleanup().then(() => {
-        localStorage.setItem('lastIndexedDBCleanup', now.toString());
-      }).catch((error) => {
-      });
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ 
+          padding: '40px', 
+          textAlign: 'center', 
+          fontFamily: 'Arial, sans-serif',
+          maxWidth: '600px',
+          margin: '0 auto'
+        }}>
+          <h1 style={{ color: '#d32f2f' }}>¡Ups! Algo salió mal</h1>
+          <p style={{ margin: '20px 0', color: '#555' }}>
+            {this.state.error?.toString() || 'Error desconocido'}
+          </p>
+          <div style={{ marginTop: '30px' }}>
+            <button 
+              onClick={() => window.location.reload()} 
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#1890ff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Recargar página
+            </button>
+          </div>
+        </div>
+      );
     }
-  });
-}
 
-if (process.env.NODE_ENV === 'production') {
-  
-  reportWebVitals(sendToAnalytics);
-
-  performanceMonitor.startMonitoring((metric) => {
-    if (process.env.NODE_ENV === 'development') {
-    }
-  });
-
-  if (process.env.NODE_ENV === 'development') {
-    window.performanceMonitor = performanceMonitor;
+    return this.props.children;
   }
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+// Crear root
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  console.error('No se encontró el elemento #root');
+  document.body.innerHTML = '<h1>Error: No se encontró el elemento raíz</h1>';
+} else {
+  const root = ReactDOM.createRoot(rootElement);
 
-root.render(
-  <I18nextProvider i18n={i18n}>
-    <Router>
-      <AuthProvider>
-        <TenantProvider>
-          <ThemeProvider>
-            <HeaderProvider>
-              <FooterProvider>
-                <App />
-                <SpeedInsights />
-              </FooterProvider>
-            </HeaderProvider>
-          </ThemeProvider>
-        </TenantProvider>
-      </AuthProvider>
-    </Router>
-  </I18nextProvider>
-);
+  // Renderizar con Error Boundary
+  root.render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <I18nextProvider i18n={i18n}>
+          <Router>
+            <AuthProvider>
+              <TenantProvider>
+                <ThemeProvider>
+                  <HeaderProvider>
+                    <FooterProvider>
+                      <App />
+                      <SpeedInsights />
+                    </FooterProvider>
+                  </HeaderProvider>
+                </ThemeProvider>
+              </TenantProvider>
+            </AuthProvider>
+          </Router>
+        </I18nextProvider>
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
 
-try {
-  if (typeof window !== 'undefined' && window.__removeInitialPaint) {
-    window.__removeInitialPaint();
-  }
-} catch (e) {
+  console.log('React montado correctamente');
 }
