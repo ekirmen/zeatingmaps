@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Importar optimizaciones móviles */
+@import './styles/mobile-optimizations.css';
+
+/* Animación pulse para skeletons - mejora percepción de carga */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+:root {
+  --headerBg: #ffffff;
+  --headerText: #000000;
+  --primary: #e94243;
+  --btnPrimaryText: #ffffff;
+}
+
+/* Custom styles */
+.editor-container .ql-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+.editor-container .ql-container {
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Restore default button background */
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--btnPrimaryText) !important;
+}
+
+.header-custom {
+  background-color: var(--headerBg);
+  color: var(--headerText);
+}
+
+.cashea-order-button {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.cashea-order-button:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  border-color: rgba(0, 0, 0, 0.8) !important;
+  color: #ffffff !important;
+}
+
+.cashea-order-button:disabled {
+  background-color: #dcdcdc !important;
+  border-color: #dcdcdc !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+}

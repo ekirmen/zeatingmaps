@@ -1,0 +1,152 @@
+{
+  "header.home": "Inicio",
+  "header.demo": "Demo",
+  "header.cart": "Carrito",
+  "header.profile": "Perfil",
+  "header.register": "Registrarse",
+  "header.account": "Cuenta",
+  "header.email": "Correo electrónico",
+  "header.phone": "Teléfono",
+  "header.login": "Iniciar Sesión",
+  "header.logout": "Cerrar Sesión",
+  "header.forgot": "Olvidé mi contraseña",
+  "header.signup": "Registrarse",
+  "login.success": "Inicio de sesión exitoso",
+  "register.success": "Usuario registrado exitosamente",
+  "login.email_sent": "Se envió un enlace a tu correo",
+  "login.account_not_found": "No encontramos una cuenta registrada con este correo.",
+  "login.invalid_password": "La contraseña ingresada es incorrecta.",
+  "login.email_not_confirmed": "Tu correo electrónico aún no ha sido confirmado. Revisa tu bandeja de entrada.",
+  "login.rate_limited": "Has realizado demasiados intentos. Inténtalo nuevamente en unos minutos.",
+  "login.account_disabled": "Tu cuenta ha sido bloqueada temporalmente. Contacta al equipo de soporte.",
+  "login.password_required": "Debes ingresar tu contraseña para continuar.",
+  "login.session_expired": "Tu sesión ha expirado. Inicia sesión nuevamente.",
+  "login.mfa_required": "Se requiere un segundo factor de autenticación para continuar.",
+  "login.network_error": "No pudimos conectarnos con el servidor. Verifica tu conexión e inténtalo otra vez.",
+  "login.generic_error": "No se pudo iniciar sesión. Verifica tus datos e inténtalo nuevamente.",
+  "logout.success": "Sesión cerrada correctamente",
+  "search.placeholder": "Buscar eventos",
+  "search.button": "Buscar",
+  "password.updated": "Contraseña actualizada",
+  "password.change": "Cambiar Contraseña",
+  "password.new": "Nueva contraseña",
+  "password.repeat": "Repetir contraseña",
+  "button.cancel": "Cancelar",
+  "button.save": "Guardar",
+  "button.apply": "Aplicar",
+  "button.continue": "Continuar",
+  "button.proceed_payment": "Proceder al Pago",
+  "button.reserve": "Reservar",
+  "button.download_ticket": "Descargar Entradas",
+  "button.back_home": "Volver al Inicio",
+  "payment.success": "¡Pago Exitoso!",
+  "reservation.success": "¡Reserva Exitosa!"
+  ,"errors.fields_required": "Todos los campos son obligatorios"
+  ,"errors.passwords_no_match": "Las contraseñas no coinciden"
+  ,"errors.password_min_length": "La contraseña debe tener al menos 6 caracteres"
+  ,"errors.register": "Error al registrar usuario"
+  ,"errors.invalid_register": "Respuesta de registro inválida"
+  ,"errors.enter_credentials": "Por favor ingrese correo y contraseña"
+  ,"errors.invalid_credentials": "Credenciales incorrectas"
+  ,"errors.login": "Error al iniciar sesión"
+  ,"errors.save_password": "Error al guardar contraseña"
+  ,"errors.auth": "Error de autenticación"
+  ,"errors.email_send": "Error al enviar correo"
+  ,"errors.request": "Error al procesar la solicitud"
+  ,"errors.reset_password": "Error al restablecer contraseña"
+  ,"forgot.placeholder": "Ingresa tu email"
+  ,"forgot.sent": "Correo enviado"
+  ,"faq.title": "Preguntas Frecuentes"
+  ,"faq.q1": "¿Cómo compro entradas?"
+  ,"faq.a1": "Selecciona el evento deseado, elige tus asientos y completa el proceso de pago."
+  ,"faq.q2": "¿Puedo obtener un reembolso?"
+  ,"faq.a2": "Dependerá de las políticas del evento. Contacta con soporte si tienes dudas."
+  ,"faq.q3": "¿Dónde encuentro mis tickets?"
+  ,"faq.a3": "Tras la compra podrás descargarlos desde tu perfil o desde el enlace enviado a tu correo."
+  ,"cart.title": "Carrito"
+  ,"cart.clear": "Vaciar carrito"
+  ,"cart.search_placeholder": "Buscar por localizador"
+  ,"cart.total": "Total"
+  ,"discount.placeholder": "Código de descuento"
+  ,"discount.apply": "Aplicar"
+  ,"functions": "Funciones"
+  ,"select_seats": "Seleccionar Asientos"
+  ,"profile.title": "Mi Perfil"
+  ,"profile.back": "Atrás"
+  ,"profile.change_password": "Cambiar Contraseña"
+  ,"profile.save_changes": "Guardar Cambios"
+  ,"profile.reservations": "Reservas"
+  ,"profile.payments": "Pagos"
+  ,"profile.no_reservations": "No hay reservas registradas"
+  ,"profile.no_payments": "No hay pagos registrados"
+  ,"profile.date": "Fecha"
+  ,"profile.locator": "Localizador"
+  ,"profile.event": "Evento"
+  ,"profile.status": "Estado"
+  ,"profile.total": "Total"
+  ,"profile.actions": "Acciones"
+  ,"profile.phone": "Teléfono"
+  ,"profile.company": "Empresa"
+  ,"profile.role": "Perfil"
+  ,"profile.current_password": "Contraseña Actual"
+  ,"profile.new_password": "Nueva Contraseña"
+  ,"profile.account_locator": "Localizador de Cuenta"
+  ,"installments.title": "Pago en Cuotas Disponible"
+  ,"installments.available": "Disponible"
+  ,"installments.info": "Puedes pagar este pedido en cuotas cómodas"
+  ,"installments.description": "Divide tu pago en {{count}} cuotas de ${{amount}} cada una"
+  ,"installments.full_payment": "Pago Completo"
+  ,"installments.full_payment_desc": "Paga todo ahora y evita cuotas futuras"
+  ,"installments.or": "O"
+  ,"installments.installment_number": "Cuota {{number}} de {{total}}"
+  ,"installments.last": "Última"
+  ,"installments.due_date": "Vence: {{date}}"
+  ,"installments.days_apart": "{{days}} días después de la cuota anterior"
+  ,"installments.summary": "Resumen de Pago"
+  ,"installments.paying": "Pagarás ahora:"
+  ,"installments.remaining": "Pendiente:"
+  ,"installments.remaining_installments": "Cuotas pendientes:"
+  ,"installments.period_info": "Período de Pagos a Plazos"
+  ,"installments.start_date": "Inicio: {{date}}"
+  ,"installments.end_date": "Fin: {{date}}"
+  ,"pwa.install.title": "Instalar App"
+  ,"pwa.install.description": "Instala nuestra app para una mejor experiencia. Recibe notificaciones de nuevos eventos y accede rápidamente desde tu pantalla de inicio."
+  ,"pwa.install.button": "Instalar"
+  ,"pwa.install.later": "Ahora no"
+  ,"pwa.offline.title": "Sin conexión a Internet"
+  ,"pwa.offline.message": "Parece que no tienes conexión a Internet. Por favor, verifica tu conexión e intenta nuevamente."
+  ,"pwa.offline.retry": "Reintentar"
+  ,"pwa.offline.connection_restored": "✓ Conexión restaurada. Recargando..."
+  ,"dashboard.active_users": "Usuarios Activos"
+  ,"dashboard.active_users_24h": "Usuarios Activos (24h)"
+  ,"dashboard.total_users": "Total: {{count}}"
+  ,"dashboard.new_users_week": "+{{count}} esta semana"
+  ,"dashboard.events": "Eventos"
+  ,"dashboard.sales": "Ventas"
+  ,"dashboard.revenue": "Ingresos"
+  ,"affiliates.title": "Gestión de Afiliados"
+  ,"affiliates.description": "Administra tus programas de referencia y comisiones."
+  ,"affiliates.total_affiliates": "Total Afiliados"
+  ,"affiliates.total_commissions": "Comisiones Acumuladas"
+  ,"affiliates.referred_sales": "Ventas Referidas"
+  ,"affiliates.add": "Añadir Afiliado"
+  ,"affiliates.edit": "Editar Afiliado"
+  ,"affiliates.delete": "Eliminar"
+  ,"affiliates.copy_link": "Copiar Link de Afiliado"
+  ,"affiliates.name": "Nombre del Afiliado"
+  ,"affiliates.code": "Código de Afiliado"
+  ,"affiliates.commission": "Porcentaje de Comisión"
+  ,"affiliates.email": "Email de Contacto"
+  ,"affiliates.notes": "Notas"
+  ,"affiliates.active": "Activo"
+  ,"affiliates.save": "Guardar Cambios"
+  ,"affiliates.add_button": "Añadir Afiliado"
+  ,"email_campaigns.title": "Comunicación Masiva"
+  ,"email_campaigns.description": "Envía correos masivos a tus clientes"
+  ,"seat.selected_by_me": "Seleccionado por ti"
+  ,"seat.selected_by_other": "Seleccionado por otro usuario"
+  ,"seat.available": "Disponible"
+  ,"seat.occupied": "Ocupado"
+  ,"seat.price": "Precio"
+  ,"seat.zone": "Zona"
+}

@@ -1,0 +1,152 @@
+{
+  "header.home": "Home",
+  "header.demo": "Demo",
+  "header.cart": "Cart",
+  "header.profile": "Profile",
+  "header.register": "Register",
+  "header.account": "Account",
+  "header.email": "Email",
+  "header.phone": "Phone",
+  "header.login": "Login",
+  "header.logout": "Logout",
+  "header.forgot": "Forgot Password",
+  "header.signup": "Sign Up",
+  "login.success": "Login successful",
+  "register.success": "User registered successfully",
+  "login.email_sent": "Check your email for the login link",
+  "login.account_not_found": "We couldn't find an account with that email address.",
+  "login.invalid_password": "The password you entered is incorrect.",
+  "login.email_not_confirmed": "Your email address hasn't been confirmed yet. Please check your inbox.",
+  "login.rate_limited": "Too many attempts. Please try again in a few minutes.",
+  "login.account_disabled": "Your account has been temporarily blocked. Contact support.",
+  "login.password_required": "You must enter your password to continue.",
+  "login.session_expired": "Your session has expired. Please log in again.",
+  "login.mfa_required": "A second authentication factor is required to continue.",
+  "login.network_error": "We couldn't reach the server. Check your connection and try again.",
+  "login.generic_error": "We couldn't sign you in. Please verify your details and try again.",
+  "logout.success": "Logged out successfully",
+  "search.placeholder": "Search events",
+  "search.button": "Search",
+  "password.updated": "Password updated",
+  "password.change": "Change Password",
+  "password.new": "New password",
+  "password.repeat": "Repeat password",
+  "button.cancel": "Cancel",
+  "button.save": "Save",
+  "button.apply": "Apply",
+  "button.continue": "Continue",
+  "button.proceed_payment": "Proceed to Payment",
+  "button.reserve": "Reserve",
+  "button.download_ticket": "Download Ticket",
+  "button.back_home": "Back to Home",
+  "payment.success": "Payment Successful",
+  "reservation.success": "Reservation Successful"
+  ,"errors.fields_required": "All fields are required"
+  ,"errors.passwords_no_match": "Passwords do not match"
+  ,"errors.password_min_length": "Password must be at least 6 characters"
+  ,"errors.register": "Registration error"
+  ,"errors.invalid_register": "Invalid registration response"
+  ,"errors.enter_credentials": "Please enter email and password"
+  ,"errors.invalid_credentials": "Invalid credentials"
+  ,"errors.login": "Login error"
+  ,"errors.save_password": "Error saving password"
+  ,"errors.auth": "Authentication error"
+  ,"errors.email_send": "Error sending email"
+  ,"errors.request": "Request error"
+  ,"errors.reset_password": "Error resetting password"
+  ,"forgot.placeholder": "Enter your email"
+  ,"forgot.sent": "Email sent"
+  ,"faq.title": "Frequently Asked Questions"
+  ,"faq.q1": "How do I buy tickets?"
+  ,"faq.a1": "Select the desired event, choose your seats and complete the payment process."
+  ,"faq.q2": "Can I get a refund?"
+  ,"faq.a2": "It depends on the event policies. Contact support if you have questions."
+  ,"faq.q3": "Where do I find my tickets?"
+  ,"faq.a3": "After purchase you can download them from your profile or the link sent to your email."
+  ,"cart.title": "Shopping Cart"
+  ,"cart.clear": "Clear cart"
+  ,"cart.search_placeholder": "Search by locator"
+  ,"cart.total": "Total"
+  ,"discount.placeholder": "Discount code"
+  ,"discount.apply": "Apply"
+  ,"functions": "Functions"
+  ,"select_seats": "Select Seats"
+  ,"profile.title": "My Profile"
+  ,"profile.back": "Back"
+  ,"profile.change_password": "Change Password"
+  ,"profile.save_changes": "Save Changes"
+  ,"profile.reservations": "Reservations"
+  ,"profile.payments": "Payments"
+  ,"profile.no_reservations": "No reservations found"
+  ,"profile.no_payments": "No payments found"
+  ,"profile.date": "Date"
+  ,"profile.locator": "Locator"
+  ,"profile.event": "Event"
+  ,"profile.status": "Status"
+  ,"profile.total": "Total"
+  ,"profile.actions": "Actions"
+  ,"profile.phone": "Phone"
+  ,"profile.company": "Company"
+  ,"profile.role": "Role"
+  ,"profile.current_password": "Current Password"
+  ,"profile.new_password": "New Password"
+  ,"profile.account_locator": "Account ID"
+  ,"installments.title": "Installment Payment Available"
+  ,"installments.available": "Available"
+  ,"installments.info": "You can pay this order in comfortable installments"
+  ,"installments.description": "Split your payment into {{count}} installments of ${{amount}} each"
+  ,"installments.full_payment": "Full Payment"
+  ,"installments.full_payment_desc": "Pay everything now and avoid future installments"
+  ,"installments.or": "Or"
+  ,"installments.installment_number": "Installment {{number}} of {{total}}"
+  ,"installments.last": "Last"
+  ,"installments.due_date": "Due: {{date}}"
+  ,"installments.days_apart": "{{days}} days after previous installment"
+  ,"installments.summary": "Payment Summary"
+  ,"installments.paying": "You will pay now:"
+  ,"installments.remaining": "Remaining:"
+  ,"installments.remaining_installments": "Remaining installments:"
+  ,"installments.period_info": "Installment Payment Period"
+  ,"installments.start_date": "Start: {{date}}"
+  ,"installments.end_date": "End: {{date}}"
+  ,"pwa.install.title": "Install App"
+  ,"pwa.install.description": "Install our app for a better experience. Receive notifications of new events and access quickly from your home screen."
+  ,"pwa.install.button": "Install"
+  ,"pwa.install.later": "Not now"
+  ,"pwa.offline.title": "No Internet Connection"
+  ,"pwa.offline.message": "It seems you don't have an Internet connection. Please check your connection and try again."
+  ,"pwa.offline.retry": "Retry"
+  ,"pwa.offline.connection_restored": "✓ Connection restored. Reloading..."
+  ,"dashboard.active_users": "Active Users"
+  ,"dashboard.active_users_24h": "Active Users (24h)"
+  ,"dashboard.total_users": "Total: {{count}}"
+  ,"dashboard.new_users_week": "+{{count}} this week"
+  ,"dashboard.events": "Events"
+  ,"dashboard.sales": "Sales"
+  ,"dashboard.revenue": "Revenue"
+  ,"affiliates.title": "Affiliate Management"
+  ,"affiliates.description": "Manage your referral programs and commissions."
+  ,"affiliates.total_affiliates": "Total Affiliates"
+  ,"affiliates.total_commissions": "Accumulated Commissions"
+  ,"affiliates.referred_sales": "Referred Sales"
+  ,"affiliates.add": "Add Affiliate"
+  ,"affiliates.edit": "Edit Affiliate"
+  ,"affiliates.delete": "Delete"
+  ,"affiliates.copy_link": "Copy Affiliate Link"
+  ,"affiliates.name": "Affiliate Name"
+  ,"affiliates.code": "Affiliate Code"
+  ,"affiliates.commission": "Commission Percentage"
+  ,"affiliates.email": "Contact Email"
+  ,"affiliates.notes": "Notes"
+  ,"affiliates.active": "Active"
+  ,"affiliates.save": "Save Changes"
+  ,"affiliates.add_button": "Add Affiliate"
+  ,"email_campaigns.title": "Mass Communication"
+  ,"email_campaigns.description": "Send mass emails to your customers"
+  ,"seat.selected_by_me": "Selected by you"
+  ,"seat.selected_by_other": "Selected by another user"
+  ,"seat.available": "Available"
+  ,"seat.occupied": "Occupied"
+  ,"seat.price": "Price"
+  ,"seat.zone": "Zone"
+}

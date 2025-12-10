@@ -1,0 +1,134 @@
+/* Profile Mobile Styles */
+.profile-container {
+  padding: 16px !important;
+}
+
+.profile-header-card {
+  margin-bottom: 16px;
+}
+
+.profile-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-header-main {
+  flex: 1;
+}
+
+.profile-name {
+  margin: 0 0 12px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.profile-icon {
+  color: #1890ff;
+  font-size: 16px;
+}
+
+.profile-actions {
+  width: 100%;
+}
+
+/* Mobile adjustments */
+@media (max-width: 576px) {
+  .profile-container {
+    padding: 12px !important;
+  }
+
+  .profile-name {
+    font-size: 20px;
+  }
+
+  .profile-detail-item {
+    font-size: 13px;
+  }
+
+  .ant-card {
+    border-radius: 8px;
+  }
+
+  .ant-descriptions-item-label {
+    font-weight: 600;
+    min-width: 100px;
+  }
+
+  .ant-list-item {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .ant-list-item-action {
+    margin-left: 0 !important;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  .ant-list-item-meta {
+    width: 100%;
+  }
+
+  .ant-tabs-tab {
+    padding: 8px 12px !important;
+    font-size: 14px;
+  }
+
+  .ant-statistic-title {
+    font-size: 13px;
+  }
+
+  .ant-statistic-content {
+    font-size: 20px;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 577px) and (max-width: 768px) {
+  .profile-container {
+    padding: 20px;
+  }
+
+  .profile-name {
+    font-size: 22px;
+  }
+}
+
+/* Desktop - keep header actions horizontal */
+@media (min-width: 769px) {
+  .profile-header-info {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .profile-actions {
+    width: auto;
+    min-width: 200px;
+  }
+
+  .profile-actions .ant-space {
+    flex-direction: row;
+  }
+
+  .profile-actions .ant-btn {
+    width: auto !important;
+  }
+}
+

@@ -1,0 +1,98 @@
+{
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "build",
+  "framework": "create-react-app",
+  "build": {
+    "env": {
+      "CI": "false",
+      "GENERATE_SOURCEMAP": "false",
+      "DISABLE_ESLINT_PLUGIN": "true",
+      "SKIP_PREFLIGHT_CHECK": "true",
+      "NODE_ENV": "production"
+    }
+  },
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "domains": [
+    "veneventos.com",
+    "www.veneventos.com",
+    "test.veneventos.com",
+    "demo.veneventos.com"
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/store/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/store/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
+      "source": "/store/logo192.png",
+      "destination": "/logo192.png"
+    },
+    {
+      "source": "/store/logo512.png",
+      "destination": "/logo512.png"
+    },
+    {
+      "source": "/store/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/payment-success/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/backoffice/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/backoffice/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
+      "source": "/backoffice/logo192.png",
+      "destination": "/logo192.png"
+    },
+    {
+      "source": "/backoffice/logo512.png",
+      "destination": "/logo512.png"
+    },
+    {
+      "source": "/backoffice/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}
