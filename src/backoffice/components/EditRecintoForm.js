@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NotificationManager } from 'react-notifications';
+import toast from 'react-hot-toast';
 import { geocodeAddress } from '../../utils/geocode';
 import buildAddress from '../../utils/address';
 import { supabase } from '../../supabaseClient';
