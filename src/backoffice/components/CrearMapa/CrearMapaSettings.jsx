@@ -224,7 +224,7 @@ const CrearMapaSettings = ({
     });
   };
 
-  // ===== RENDERIZADO =====
+
   return (
     <div className="max-w-6xl mx-auto">
       <Card>

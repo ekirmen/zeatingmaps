@@ -5,7 +5,7 @@ import { useRefParam } from '../../contexts/RefContext';
 const LinkWithRef = ({ to, ...props }) => {
   const { refParam } = useRefParam();
 
-  if (!refParam) {
+
     return <Link to={to} {...props} />;
   }
 

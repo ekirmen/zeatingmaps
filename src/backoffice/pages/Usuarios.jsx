@@ -102,12 +102,7 @@ const Usuarios = () => {
     }
   };
 
-  const loadRecintos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('recintos')
-        .select('id, nombre, direccion, ciudad')
-        .order('nombre');
+  
 
       if (error) throw error;
       setRecintos(data || []);
@@ -124,7 +119,7 @@ const Usuarios = () => {
         .select('recinto_id')
         .eq('user_id', userId);
 
-      if (error) throw error;
+
       return (data || []).map(item => String(item.recinto_id));
     } catch (error) {
       console.error('Error loading user recintos:', error);

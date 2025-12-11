@@ -45,7 +45,7 @@ const EditForm = ({
   };
 
   const handleFileChange = (e, fieldName) => {
-    const file = e.target.files[0];
+
     if (!file) return;
 
     setEventoData(prev => ({

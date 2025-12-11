@@ -17,7 +17,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 
       if (!connectivityResult.success) {
         console.error('Œ [TEST] Problema de conectividad detectado:', connectivityResult.error);
-        message.error('Problema de conectividad: ' + connectivityResult.error);
+
         return;
       }
       const response = await fetch(url);

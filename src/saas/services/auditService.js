@@ -8,7 +8,7 @@ class AuditService {
     this.flushTimer = null;
   }
 
-  isAuthError(error) {
+
     if (!error) return false;
 
     const message = (error.message || '').toLowerCase();

@@ -16,7 +16,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
   // Bºsqueda por localizador
   const handleLocatorSearch = async () => {
     if (!searchValue.trim()) {
-      message.warning('Por favor ingrese un localizador');
+
       return;
     }
 

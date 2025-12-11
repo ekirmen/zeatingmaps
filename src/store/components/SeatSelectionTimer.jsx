@@ -22,7 +22,7 @@ const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) =>
             // Tiempo agotado - limpiar asientos seleccionados
             onSeatsCleared();
             message.warning('Tiempo agotado. Los asientos han sido liberados.');
-            onTimeExpired && onTimeExpired();
+
             return 0;
           }
           return prev - 1;

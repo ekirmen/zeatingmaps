@@ -45,7 +45,7 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
     pregunta2: false
   });
 
-  useEffect(() => {
+
     if (!eventoData) return;
     setMostrarDatosComprador(eventoData.mostrarDatosComprador || false);
     setMostrarDatosBoleto(eventoData.mostrarDatosBoleto || false);

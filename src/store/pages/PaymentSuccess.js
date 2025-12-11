@@ -38,7 +38,7 @@ const PaymentSuccess = () => {
   );
   const groupedSeats = useMemo(() => groupSeatsBy(seatsWithIndex, groupingMode), [seatsWithIndex, groupingMode]);
 
-  const refreshLabel = useMemo(() => {
+
     if (!lastUpdated) return null;
     return new Intl.DateTimeFormat('es-ES', {
       hour: '2-digit',
@@ -163,8 +163,7 @@ const PaymentSuccess = () => {
     };
   }, [locator, user, paymentDetails?.status]);
 
-  const sendNotification = async (type) => {
-    const targetEmail = user?.email || paymentDetails?.email;
+  
     const targetPhone = user?.phone || user?.user_metadata?.phone || paymentDetails?.phone;
     const isReservationFlow = isReservation;
 

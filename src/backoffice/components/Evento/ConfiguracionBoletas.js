@@ -13,7 +13,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   // Update initial state with existing images
   const getPreview = (img, imageType) => {
     // Si es un objeto con publicUrl (de Supabase)
-    if (img && typeof img === 'object' && img.publicUrl) {
+
       return img.publicUrl;
     }
 
@@ -196,10 +196,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   };
 
   // Remove or comment out the handleSave function since we don't need it
-  // const handleSave = async () => {
-  //   for (const [type, file] of Object.entries(tempFiles)) {
-  //     if (file) {
-  //       const formData = new FormData();
+  // 
   //       formData.append('file', file);
   //       formData.append('type', type);
   //       await uploadImage(formData, type);

@@ -95,7 +95,7 @@ const SelectSeats = () => {
     };
 
     if (salaId) cargarDatos();
-    
+
     return () => {
       mounted = false;
     };

@@ -1,4 +1,4 @@
-﻿// Ant Design Components - Optimizado para Tree Shaking
+// Ant Design Components - Optimizado para Tree Shaking
 // Generado: 2025-12-10 05:47:01
 // Contiene 48 componentes
 
@@ -34,6 +34,7 @@ import Pagination from 'antd/es/pagination';
 import Popconfirm from 'antd/es/popconfirm';
 import Popover from 'antd/es/popover';
 import Progress from 'antd/es/progress';
+import Rate from 'antd/es/radio';
 import Radio from 'antd/es/radio';
 import Result from 'antd/es/result';
 import Row from 'antd/es/row';
@@ -89,6 +90,7 @@ export {
     Popover,
     Progress,
     Radio,
+    Rate,
     Result,
     Row,
     Select,

@@ -119,7 +119,7 @@ class AtomicSeatLockService {
 
             // Comparar session_ids normalizados
             if (currentSessionId === existingSessionId) {
-              // Es del mismo usuario, devolver éxito
+
               return {
                 success: true,
                 lockData: existingLock,

@@ -32,7 +32,7 @@ const VirtualizedSeatList = ({
           }
         });
         
-        resizeObserver.observe(seatRef.current);
+
         return () => resizeObserver.disconnect();
       }
     }, [index, setItemSize]);

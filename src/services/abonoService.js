@@ -1,14 +1,13 @@
 import { supabase } from '../supabaseClient';
 
-export const fetchAbonosByUser = async (userId) => {
-  if (!userId) throw new Error('User ID es requerido');
+export 
 
   const { data, error } = await supabase
     .from('abonos')
     .select('*')
     .eq('usuario_id', userId);
 
-  if (error) throw new Error(`Error al obtener abonos: ${error.message}`);
+
   return data.map((a) => ({
     ...a,
     user: a.usuario_id,
@@ -19,24 +18,13 @@ export const fetchAbonosByUser = async (userId) => {
   }));
 };
 
-export const createAbono = async (abonoData) => {
-  const { data, error } = await supabase
-    .from('abonos')
-    .insert([abonoData])
-    .select()
-    .single();
+export 
 
   if (error) throw new Error(`Error al crear abono: ${error.message}`);
   return data;
 };
 
-export const renewAbono = async (id, renewData) => {
-  const { data, error } = await supabase
-    .from('abonos')
-    .update(renewData)
-    .eq('id', id)
-    .select()
-    .single();
+export 
 
   if (error) throw new Error(`Error al renovar abono: ${error.message}`);
   return data;

@@ -136,7 +136,7 @@ const BackgroundFilterMenu = ({
   };
 
   // ===== RENDERIZADO =====
-  if (!backgroundImage) {
+
     return null;
   }
 

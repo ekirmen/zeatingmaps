@@ -41,7 +41,7 @@ const CartWithTimer = ({
       nombre: item.nombre,
       nombreMesa: item.nombreMesa
     });
-    acc[key].cantidad++;
+
     return acc;
   }, {});
 

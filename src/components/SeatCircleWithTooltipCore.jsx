@@ -1,7 +1,7 @@
 import React from 'react';
 import { Circle, Label, Tag, Text } from 'react-konva';
 
-export default function SeatCircleWithTooltip({ x = 0, y = 0, radius = 10, fill = 'lightblue', tooltip }) {
+
   return (
     <React.Fragment>
       <Circle x={x} y={y} radius={radius} fill={fill} stroke="black" strokeWidth={1} />

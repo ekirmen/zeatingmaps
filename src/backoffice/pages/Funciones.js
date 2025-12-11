@@ -96,7 +96,7 @@ const PLATAFORMAS_STREAMING = [
 ];
 
 // Número de plazos de pago
-const NUM_PLAZOS = [2, 3, 4, 5, 6, 7, 8, 10, 12];
+
 
 const Funciones = () => {
   const { currentTenant } = useTenant();
@@ -117,7 +117,7 @@ const Funciones = () => {
       try {
         const { session, error } = await checkAndRefreshAuth();
         if (error || !session?.user) {
-          console.error('❌ No hay sesión activa');
+
           return;
         }
         // Probar lectura
@@ -151,7 +151,7 @@ const Funciones = () => {
         const tableNames = ['funciones', 'function', 'sessions', 'eventos_sessions'];
 
         for (const tableName of tableNames) {
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from(tableName)
             .select('*')
             .limit(1);
@@ -208,7 +208,7 @@ const Funciones = () => {
   const [plantillasProductos, setPlantillasProductos] = useState([]);
   const [plantillasPaquetes, setPlantillasPaquetes] = useState([]);
   const [loadingPlantillasPaquetes, setLoadingPlantillasPaquetes] = useState(false);
-  const [loadingPlantillasProductos, setLoadingPlantillasProductos] = useState(false);
+  const [setLoadingPlantillasProductos] = useState(false);
   const [funciones, setFunciones] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingFuncion, setEditingFuncion] = useState(null);
@@ -959,7 +959,7 @@ const Funciones = () => {
       }
 
       if (editingFuncion) {
-        const { data: updatedData, error } = await supabase
+        const { data: error } = await supabase
           .from('funciones')
           .update(funcionData)
           .eq('id', editingFuncion.id)

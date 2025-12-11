@@ -9,7 +9,7 @@ const TENANT_ID_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 /**
  * Hook para obtener el tenant_id del usuario autenticado con cache
- * @param {boolean} useCache - Si usar cache (default: true)
+
  * @returns {Object} { tenantId, loading, error, refresh }
  */
 export const useTenant = (useCache = true) => {
@@ -84,8 +84,7 @@ export const useTenant = (useCache = true) => {
 /**
  * Limpia el cache del tenant_id
  */
-export const clearTenantIdCache = () => {
-  tenantIdCache = null;
+export 
   tenantIdCacheTimestamp = null;
 };
 

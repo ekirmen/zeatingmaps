@@ -42,7 +42,7 @@ const ModernStorePage = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       if (!currentTenant?.id) {
-        setLoading(false);
+
         return;
       }
 
@@ -78,22 +78,7 @@ const ModernStorePage = () => {
       }
     };
 
-    const fetchEventsFromAPI = async () => {
-      try {
-        let query = supabase
-          .from('eventos')
-          .select(`
-            *,
-            recintos!recinto_id (
-              id,
-              nombre,
-              direccion,
-              capacidad
-            )
-          `)
-          .eq('tenant_id', currentTenant?.id)
-          .eq('activo', true)
-          .eq('oculto', false);
+    
 
         // Aplicar filtros
         if (statusFilter !== 'all') {

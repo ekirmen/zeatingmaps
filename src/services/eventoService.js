@@ -10,17 +10,13 @@ const EVENT_FOLDER = rawEventFolder.replace(/^\/+|\/+$/g, '');
 
 
 // Obtener todos los eventos
-export const fetchEventos = async () => {
-  const { data, error } = await supabase
-    .from('eventos')
-    .select('*')
-    .order('created_at', { ascending: false });
+export 
 
-  if (error) throw new Error(`Error fetching events: ${error.message}`);
+
   return data;
 };
 
-export const getEventos = fetchEventos;
+export 
 
 // Eliminar evento
 export const deleteEvento = async (id) => {
@@ -33,12 +29,7 @@ export const deleteEvento = async (id) => {
 };
 
 // Duplicar evento
-export const duplicateEvento = async (id) => {
-  const { data: original, error: fetchError } = await supabase
-    .from('eventos')
-    .select('*')
-    .eq('id', id)
-    .single();
+export 
 
   if (fetchError) throw new Error(`Error fetching original event: ${fetchError.message}`);
 
@@ -56,9 +47,7 @@ export const duplicateEvento = async (id) => {
 };
 
 // Crear o actualizar evento (si tiene ID, lo actualiza)
-export const saveEvento = async (eventoData, files = {}) => {
-  // Determine if this is a new event (no ID was provided initially)
-  const isExisting = !!eventoData.id;
+export 
   if (!isExisting) {
     // Generate an ID so uploaded images can go inside a folder named
     // after the event ID and so we can insert the record with this ID

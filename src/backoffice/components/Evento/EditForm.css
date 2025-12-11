@@ -1,0 +1,377 @@
+/* EditForm.css - Estilos para formularios de edición */
+
+/* Contenedor principal */
+.edit-form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Header del formulario */
+  .edit-form-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e8e8e8;
+  }
+  
+  .edit-form-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f1f1f;
+    margin: 0;
+  }
+  
+  .edit-form-subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-top: 8px;
+  }
+  
+  /* Grupos de campos */
+  .form-group {
+    margin-bottom: 24px;
+  }
+  
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Labels */
+  .form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f1f1f;
+    margin-bottom: 8px;
+  }
+  
+  .form-label.required::after {
+    content: " *";
+    color: #ff4d4f;
+  }
+  
+  /* Campos de entrada */
+  .form-input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.5715;
+    color: #1f1f1f;
+    background-color: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    transition: all 0.3s;
+  }
+  
+  .form-input:focus {
+    outline: none;
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+  
+  .form-input.error {
+    border-color: #ff4d4f;
+  }
+  
+  .form-input.error:focus {
+    box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+  }
+  
+  .form-input:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+  }
+  
+  /* Textarea */
+  .form-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.5715;
+    color: #1f1f1f;
+    background-color: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    resize: vertical;
+    transition: all 0.3s;
+  }
+  
+  .form-textarea:focus {
+    outline: none;
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+  
+  /* Select */
+  .form-select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.5715;
+    color: #1f1f1f;
+    background-color: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    transition: all 0.3s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+  }
+  
+  .form-select:focus {
+    outline: none;
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+  
+  /* Checkbox y Radio */
+  .form-checkbox,
+  .form-radio {
+    margin-right: 8px;
+  }
+  
+  .form-checkbox-label,
+  .form-radio-label {
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    color: #1f1f1f;
+    cursor: pointer;
+  }
+  
+  /* Mensajes de error y ayuda */
+  .form-error {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #ff4d4f;
+  }
+  
+  .form-help {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #666;
+  }
+  
+  /* Layout en grid */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+  }
+  
+  /* Botones del formulario */
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e8e8e8;
+  }
+  
+  .form-button {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5715;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .form-button.primary {
+    background-color: #1890ff;
+    color: #fff;
+    border-color: #1890ff;
+  }
+  
+  .form-button.primary:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+  
+  .form-button.secondary {
+    background-color: #fff;
+    color: #1f1f1f;
+    border-color: #d9d9d9;
+  }
+  
+  .form-button.secondary:hover {
+    border-color: #1890ff;
+    color: #1890ff;
+  }
+  
+  .form-button.danger {
+    background-color: #ff4d4f;
+    color: #fff;
+    border-color: #ff4d4f;
+  }
+  
+  .form-button.danger:hover {
+    background-color: #ff7875;
+    border-color: #ff7875;
+  }
+  
+  .form-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  /* Estados de carga */
+  .form-loading {
+    position: relative;
+    opacity: 0.7;
+  }
+  
+  .form-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #1890ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Estilos para formularios compactos */
+  .edit-form-container.compact {
+    padding: 16px;
+    max-width: 600px;
+  }
+  
+  .edit-form-container.compact .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .edit-form-container.compact .form-actions {
+    margin-top: 24px;
+    padding-top: 16px;
+  }
+  
+  /* Estilos para formularios en línea */
+  .form-inline {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+  
+  .form-inline .form-group {
+    margin-bottom: 0;
+    flex: 1;
+  }
+  
+  /* Estilos para grupos de campos con iconos */
+  .form-group-with-icon {
+    position: relative;
+  }
+  
+  .form-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    pointer-events: none;
+  }
+  
+  .form-icon + .form-input,
+  .form-icon + .form-select {
+    padding-left: 40px;
+  }
+  
+  /* Estilos para validación */
+  .form-field-valid .form-input,
+  .form-field-valid .form-select,
+  .form-field-valid .form-textarea {
+    border-color: #52c41a;
+  }
+  
+  .form-field-invalid .form-input,
+  .form-field-invalid .form-select,
+  .form-field-invalid .form-textarea {
+    border-color: #ff4d4f;
+  }
+  
+  /* Estilos para campos readonly */
+  .form-input[readonly],
+  .form-select[readonly],
+  .form-textarea[readonly] {
+    background-color: #fafafa;
+    color: #666;
+    cursor: default;
+  }
+  
+  /* Estilos para campos con prefijo/sufijo */
+  .form-field-with-addon {
+    display: flex;
+  }
+  
+  .form-addon {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #666;
+    background-color: #fafafa;
+    border: 1px solid #d9d9d9;
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    white-space: nowrap;
+  }
+  
+  .form-addon + .form-input {
+    border-radius: 0 6px 6px 0;
+  }
+  
+  /* Media queries para responsive */
+  @media (max-width: 768px) {
+    .edit-form-container {
+      padding: 16px;
+      margin: 0 16px;
+    }
+    
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .form-inline {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .form-actions {
+      flex-direction: column;
+    }
+    
+    .form-button {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .edit-form-container {
+      padding: 12px;
+      margin: 0 8px;
+    }
+    
+    .edit-form-title {
+      font-size: 20px;
+    }
+  }

@@ -63,7 +63,7 @@ const VenueInfoWidget = ({ venueId, showEvents = true, maxEvents = 6 }) => {
     }
   }, [venueId, showEvents, maxEvents]);
 
-  const getEventImages = (event) => {
+
     if (!event.imagenes) return {};
     
     try {

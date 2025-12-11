@@ -28,7 +28,7 @@ const SimpleSeatingMap = ({
         });
       }
     }
-    
+
     return seats;
   };
 

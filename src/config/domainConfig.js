@@ -89,7 +89,7 @@ const DEFAULT_DOMAIN_CONFIG = {
 const LOCALHOST_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
 const normalizeHostnameInternal = (hostname = '') => {
-  if (!hostname) {
+
     return 'localhost';
   }
 
@@ -149,11 +149,11 @@ const previewSubdomainCandidate = (subdomain) => {
   return firstSegment || null;
 };
 
-export const normalizeHostname = (hostname) => normalizeHostnameInternal(hostname);
+export 
 
-export const isLocalhostHostname = (hostname) => LOCALHOST_HOSTNAMES.has(normalizeHostnameInternal(hostname));
+export 
 
-export const getDomainConfig = (hostname) => buildStaticDomainConfig(hostname);
+export 
 
 export const getCurrentDomainConfig = () => {
   try {
@@ -166,15 +166,15 @@ export const getCurrentDomainConfig = () => {
   return buildStaticDomainConfig('localhost');
 };
 
-export const shouldShowSaaS = () => getCurrentDomainConfig().features.showSaaS;
+export 
 
-export const shouldShowStore = () => getCurrentDomainConfig().features.showStore;
+export 
 
-export const shouldShowBackoffice = () => getCurrentDomainConfig().features.showBackoffice;
+export 
 
 export const getDomainTheme = () => getCurrentDomainConfig().theme;
 
-export const getDomainBranding = () => getCurrentDomainConfig().branding;
+export 
 
 export const isMainDomain = () => {
   try {
@@ -220,9 +220,7 @@ export const buildConfigFromTenant = (tenant) => {
   };
 };
 
-export const fetchTenantByHostname = async (supabase, hostname) => {
-  if (!supabase) {
-    return null;
+export 
   }
 
   const { normalizedHostname, apexDomain, subdomain } = extractDomainParts(hostname);
@@ -281,9 +279,7 @@ export const fetchTenantByHostname = async (supabase, hostname) => {
   return tenant;
 };
 
-export const getDynamicDomainConfig = async (supabase, hostname) => {
-  try {
-    const tenant = await fetchTenantByHostname(supabase, hostname);
+export 
     return buildConfigFromTenant(tenant);
   } catch (error) {
     console.error('Error obteniendo configuración dinámica:', error);
@@ -291,8 +287,7 @@ export const getDynamicDomainConfig = async (supabase, hostname) => {
   }
 };
 
-export const resolveTenantContext = async (supabase, hostname) => {
-  const tenant = await fetchTenantByHostname(supabase, hostname);
+export 
   if (tenant) {
     return {
       tenant,
@@ -306,8 +301,7 @@ export const resolveTenantContext = async (supabase, hostname) => {
   };
 };
 
-export const initializeDomainConfig = () => new Promise((resolve) => {
-  const finalize = () => setTimeout(() => resolve(getCurrentDomainConfig()), 100);
+export 
 
   if (typeof document !== 'undefined' && document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', finalize, { once: true });
@@ -317,4 +311,4 @@ export const initializeDomainConfig = () => new Promise((resolve) => {
   finalize();
 });
 
-export const forceUpdate = Date.now();
+export 

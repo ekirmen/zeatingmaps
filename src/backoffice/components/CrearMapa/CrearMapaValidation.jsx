@@ -67,7 +67,7 @@ const CrearMapaValidation = ({
             !mapa.contenido?.configuracion?.dimensions?.height) {
           errors.push('Las dimensiones del mapa son obligatorias');
         }
-        
+
         return { errors, warnings };
       }
     },

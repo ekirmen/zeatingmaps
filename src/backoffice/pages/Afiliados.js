@@ -73,7 +73,7 @@ const Afiliados = () => {
       const totalComisiones = ventas?.reduce((sum, v) => sum + (v.comision_afiliado || 0), 0) || 0;
       const mesActual = new Date().getMonth();
       const ventasMes = ventas?.filter(v => {
-        const fecha = new Date(v.created_at);
+
         return fecha.getMonth() === mesActual;
       }).length || 0;
 

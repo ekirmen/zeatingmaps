@@ -1,26 +1,6 @@
 import { message } from '../../../../utils/antdComponents';
 
-export const createSeatHandlers = ({
-  selectedFuncion,
-  carrito,
-  setCarrito,
-  selectedClient,
-  blockMode,
-  abonoMode,
-  zonas,
-  detallesPlantilla,
-  appliedDiscount,
-  funciones,
-  selectedFuncionEventId,
-  lockSeat,
-  unlockSeat,
-  isSeatLocked,
-  isSeatLockedByMe,
-  handleSeatAnimation,
-  abonoSeats
-}) => {
-  const handleSeatClick = async (seat, table) => {
-    const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
+export 
     const currentFuncIdNum = typeof currentFuncId === 'object'
       ? (currentFuncId?.id || currentFuncId?._id)
       : currentFuncId;
@@ -29,7 +9,7 @@ export const createSeatHandlers = ({
 
     // Cliente opcional - se puede seleccionar despu©s
     // if (!selectedClient) {
-    //   message.info('Seleccione un cliente antes de agregar asientos');
+
     //   return;
     // }
 

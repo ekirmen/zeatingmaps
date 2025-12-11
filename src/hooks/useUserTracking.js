@@ -8,7 +8,7 @@ export const useUserTracking = () => {
   const { user } = useAuth();
   
   /**
-   * Obtiene el identificador del usuario actual
+
    * @returns {string} Email del usuario o ID si no hay email
    */
   const getCurrentUser = () => {

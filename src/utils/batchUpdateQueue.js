@@ -28,7 +28,7 @@ class BatchUpdateQueue {
 
     // Si la cola está llena, procesar inmediatamente
     if (this.queue.size + this.priorityQueue.size >= this.maxBatchSize) {
-      this.flush();
+
       return;
     }
 

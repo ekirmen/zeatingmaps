@@ -1,32 +1,36 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+// src/contexts/RefContext.js
+import React, { createContext, useContext, useRef } from 'react';
 
 const RefContext = createContext();
 
 export const RefProvider = ({ children }) => {
-  const location = useLocation();
-  const [refParam, setRefParam] = useState(() => localStorage.getItem('refParam') || '');
+  const refs = useRef({});
+  
+  const registerRef = (name, ref) => {
+    refs.current[name] = ref;
+  };
+  
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const ref = params.get('ref');
-    if (ref) {
-      setRefParam(ref);
-      localStorage.setItem('refParam', ref);
-    }
-  }, [location.search]);
-
+    return refs.current[name];
+  };
+  
+  const value = {
+    registerRef,
+    getRef,
+    refs: refs.current
+  };
+  
   return (
-    <RefContext.Provider value={{ refParam }}>
+    <RefContext.Provider value={value}>
       {children}
     </RefContext.Provider>
   );
 };
 
-export const useRefParam = () => {
+export const useRefContext = () => {
   const context = useContext(RefContext);
   if (!context) {
-    throw new Error('useRefParam must be used within a RefProvider');
+    throw new Error('useRefContext debe usarse dentro de RefProvider');
   }
   return context;
 };

@@ -45,18 +45,7 @@ const SaasSettings = () => {
     }
   };
 
-  const loadSystemConfig = async () => {
-    try {
-      // En un sistema real, esto vendr­a de una tabla de configuraci³n
-      // Por ahora usamos valores por defecto
-      setSystemConfig({
-        defaultPlan: 'basic',
-        trialDays: 14,
-        maxSubdomainLength: 50,
-        enableSSL: true,
-        enableAnalytics: true,
-        enableBackups: true
-      });
+  
     } catch (error) {
       console.error('Error loading system config:', error);
     }
@@ -145,7 +134,7 @@ const SaasSettings = () => {
   };
 
   const getPlanColor = (plan) => {
-    switch (plan) {
+
       case 'enterprise': return 'purple';
       case 'pro': return 'blue';
       case 'basic': return 'green';

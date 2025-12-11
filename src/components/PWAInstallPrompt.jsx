@@ -17,7 +17,7 @@ const PWAInstallPrompt = () => {
   useEffect(() => {
     // Verificar si ya está instalada
     if (isPWAInstalled()) {
-      setIsInstalled(true);
+
       return;
     }
 

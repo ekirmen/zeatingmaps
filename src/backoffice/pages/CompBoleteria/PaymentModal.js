@@ -397,7 +397,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     }
   }, [user?.id]);
 
-  const existingPaymentId = safeCarrito?.[0]?.paymentId;
+  
   const existingLocator = safeCarrito?.[0]?.locator;
 
   useEffect(() => {

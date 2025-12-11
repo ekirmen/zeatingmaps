@@ -121,7 +121,7 @@ const RefundManagement = () => {
       cancelled: 'gray',
       pending_manual: 'blue',
       rejected: 'red'
-    };
+
     return colors[status] || 'default';
   };
 

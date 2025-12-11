@@ -1,7 +1,7 @@
 import { supabase } from '../supabaseClient';
 
 const encodeBase64 = (value) => {
-  if (typeof value !== 'string') {
+
     return '';
   }
 

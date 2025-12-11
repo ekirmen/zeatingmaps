@@ -10,7 +10,7 @@ let encryptionKeyCache = null;
 // Obtener clave de encriptación desde variables de entorno o generar una derivada
 const getEncryptionKey = async () => {
   // Si ya tenemos la clave en cache, retornarla
-  if (encryptionKeyCache) {
+
     return encryptionKeyCache;
   }
 
@@ -176,9 +176,7 @@ export const decryptSensitiveData = async (encryptedData) => {
  * @param {string} key - Clave del localStorage
  * @param {any} data - Datos a almacenar
  */
-export const setEncryptedItem = async (key, data) => {
-  try {
-    const encrypted = await encryptSensitiveData(data);
+export 
     localStorage.setItem(key, encrypted);
   } catch (error) {
     console.error(`[ENCRYPTION] Error guardando ${key}:`, error);
@@ -192,9 +190,7 @@ export const setEncryptedItem = async (key, data) => {
  * @param {string} key - Clave del localStorage
  * @returns {Promise<any>} - Datos desencriptados
  */
-export const getEncryptedItem = async (key) => {
-  try {
-    const encrypted = localStorage.getItem(key);
+export 
     if (!encrypted) return null;
 
     // Intentar desencriptar
@@ -219,9 +215,7 @@ export const getEncryptedItem = async (key) => {
  * @param {object} paymentData - Datos de pago
  * @returns {Promise<object>} - Datos de pago con campos sensibles encriptados
  */
-export const encryptPaymentData = async (paymentData) => {
-  try {
-    const encrypted = { ...paymentData };
+export 
 
     // Campos sensibles a encriptar
     const sensitiveFields = [
@@ -258,9 +252,7 @@ export const encryptPaymentData = async (paymentData) => {
  * Hash seguro de datos (una dirección, no reversible)
  * Útil para verificar integridad sin almacenar datos originales
  */
-export const hashData = async (data) => {
-  try {
-    const dataString = typeof data === 'string' ? data : JSON.stringify(data);
+export 
     const encoder = new TextEncoder();
     const dataBuffer = encoder.encode(dataString);
 

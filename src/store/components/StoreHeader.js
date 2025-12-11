@@ -43,7 +43,7 @@ const Header = ({ onLogin, onLogout }) => {
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+
     if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('token');
   });
@@ -63,7 +63,7 @@ const Header = ({ onLogin, onLogout }) => {
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
-    const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
+    
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       const current = data.session?.user;
@@ -396,7 +396,7 @@ const Header = ({ onLogin, onLogout }) => {
   };
 
   
-  const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
+  
   
   
   return (

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EmailTestPanel = () => {
+
   return (
     <div className="email-test-panel">
       <h3>Panel de Prueba de Emails</h3>

@@ -19,7 +19,7 @@ const DynamicPriceSelector = ({
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const loadPriceOptions = useCallback(async () => {
-    if (!selectedFuncion) {
+
       return;
     }
 

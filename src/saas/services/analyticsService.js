@@ -10,7 +10,7 @@ class AnalyticsService {
   async getSystemMetrics() {
     try {
       const cacheKey = 'system_metrics';
-      const cached = this.getCachedData(cacheKey);
+
       if (cached) return cached;
 
       const [

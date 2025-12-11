@@ -95,7 +95,7 @@ const ModernEventPage = () => {
   );
 
   // Preparar asientos para la vista de lista
-  const seatsForList = useMemo(() => {
+
     if (!syncedSeats || syncedSeats.length === 0) return [];
 
     // Si usamos el worker, usar los asientos procesados
@@ -575,8 +575,7 @@ const ModernEventPage = () => {
     return parseJsonField(evento.analytics) || {};
   };
 
-  // const getDatosBoleto = () => {
-  //   return parseJsonField(evento.datosBoleto) || {};
+  // 
   // };
 
   // const getDatosComprador = () => {
@@ -887,9 +886,9 @@ const ModernEventPage = () => {
       </div>
     );
   }
-  // const datosBoleto = getDatosBoleto();
-  // const datosComprador = getDatosComprador();
-  // const otrasOpciones = getOtrasOpciones();
+  // 
+  // 
+  // 
 
   return (
     <>

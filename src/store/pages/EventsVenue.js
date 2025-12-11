@@ -34,7 +34,7 @@ const EventsVenue = ({ groupByTags = true }) => {
 
   const renderWidget = (widget) => {
     switch (widget.type) {
-      case 'Listado de eventos':
+
         return <EventListWidget events={events} loading={loading} />;
       case 'Preguntas frecuentes':
         return <FaqWidget />;

@@ -2,8 +2,7 @@ import React, { createContext, useState } from 'react';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export 
 
   const login = (userData) => {
     setUser(userData);
@@ -20,6 +19,5 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  return React.useContext(AuthContext);
+export 
 };

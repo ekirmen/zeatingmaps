@@ -18,7 +18,7 @@ import {
 import {
   MailOutlined,
   SettingOutlined,
-  TestOutlined,
+  AuditOutlined,
   SaveOutlined,
   InfoCircleOutlined,
   SecurityScanOutlined
@@ -80,7 +80,7 @@ const EmailConfigPanel = () => {
       // Validar configuraci³n
       const validation = EmailConfigService.validateEmailConfig(values);
       if (!validation.isValid) {
-        message.error(`Errores de validaci³n: ${validation.errors.join(', ')}`);
+
         return;
       }
 
@@ -290,7 +290,7 @@ const EmailConfigPanel = () => {
           <div className="flex justify-end space-x-4">
             <Button
               type="default"
-              icon={<TestOutlined />}
+              icon={<AuditOutlined />}
               onClick={handleTest}
               loading={testing}
               size="large"

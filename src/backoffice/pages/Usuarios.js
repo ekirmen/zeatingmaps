@@ -40,7 +40,7 @@ const Usuarios = () => {
       if (error) {
         console.error('Error al cargar perfiles:', error.message);
         toast.error('Error al cargar usuarios');
-        setProfiles([]);
+
         return;
       }
 

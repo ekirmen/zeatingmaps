@@ -12,7 +12,7 @@ const { Title, Text } = Typography;
 
 const TenantErrorBoundary = ({ error, subdomain, onRetry }) => {
   // Si no hay error específico, mostrar la página de bienvenida del dominio
-  if (!error) {
+
     return <DomainWelcome />;
   }
 

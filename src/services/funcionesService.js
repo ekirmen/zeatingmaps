@@ -7,7 +7,7 @@ import { supabase } from '../config/supabase';
 export const funcionesService = {
   /**
    * Crear una nueva función
-   * @param {Object} funcionData - Datos de la función
+
    * @returns {Promise<Object>} Función creada
    */
   async crearFuncion(funcionData) {

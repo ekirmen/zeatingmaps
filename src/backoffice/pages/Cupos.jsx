@@ -77,9 +77,7 @@ const Cupos = () => {
     }
   };
 
-  const loadCanalesVenta = async () => {
-    try {
-      const canales = await fetchCanalesVenta();
+  
       setCanalesVenta(canales || []);
     } catch (error) {
       console.error('Error loading canales venta:', error);
@@ -155,7 +153,7 @@ const Cupos = () => {
   };
 
   const getCanalNombre = (canalId) => {
-    const canal = canalesVenta.find(c => c.id === canalId);
+
     return canal ? canal.nombre : `Canal ${canalId}`;
   };
 

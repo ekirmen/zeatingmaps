@@ -24,7 +24,7 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
       setPrinterStatus(status);
 
       if (!status.connected) {
-        message.error('Impresora no conectada. Por favor, conecta la impresora Boca primero.');
+
         return;
       }
 

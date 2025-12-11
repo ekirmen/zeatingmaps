@@ -7,7 +7,7 @@
  * Valida y limpia un campo JSON que puede estar corrupto
  * @param {any} value - El valor a validar
  * @param {string} fieldName - Nombre del campo para logging
- * @param {any} defaultValue - Valor por defecto si el campo está corrupto
+
  * @returns {any} - El valor limpio o el valor por defecto
  */
 export const validateAndCleanJsonField = (value, fieldName, defaultValue = {}) => {
@@ -86,8 +86,7 @@ export const cleanEventoJsonFields = (evento) => {
  * @param {Array} eventos - Array de eventos a limpiar
  * @returns {Array} - Array de eventos con campos JSON limpios
  */
-export const cleanEventosArray = (eventos) => {
-  if (!Array.isArray(eventos)) return [];
+export 
 
   return eventos.map(evento => cleanEventoJsonFields(evento));
 };
@@ -97,9 +96,7 @@ export const cleanEventosArray = (eventos) => {
  * @param {any} value - El valor a validar
  * @returns {boolean} - true si el campo es válido, false si está corrupto
  */
-export const isJsonFieldValid = (value) => {
-  try {
-    if (!value) return true;
+export 
 
     if (typeof value === 'string') {
       const parsed = JSON.parse(value);

@@ -35,7 +35,7 @@ const SavedCartsWidget = ({ visible, onClose }) => {
 
   const handleSaveCart = async () => {
     if (!cartName.trim()) {
-      message.error('Por favor ingresa un nombre para el carrito');
+
       return;
     }
 

@@ -253,7 +253,7 @@ const ApiExplorer = () => {
   };
 
   // Funci³n para formatear JSON
-  const formatJson = (obj) => {
+
     return JSON.stringify(obj, null, 2);
   };
 

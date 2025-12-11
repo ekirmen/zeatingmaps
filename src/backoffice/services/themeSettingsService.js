@@ -1,6 +1,6 @@
 import { supabase } from '../../supabaseClient';
 
-export async function getTenantThemeSettings(tenantId) {
+
   if (!tenantId) return null;
   const { data, error } = await supabase
     .from('tenant_theme_settings')

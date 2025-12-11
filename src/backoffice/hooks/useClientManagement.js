@@ -1,12 +1,10 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { message } from '../../utils/antdComponents';
 import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from '../../supabaseClient';
 import useSelectedSeatsStore from '../../stores/useSelectedSeatsStore';
 
-export const useClientManagement = (setCarrito) => {
-  // Usar el store unificado para selectedClient
-  const { selectedClient, setSelectedClient } = useSelectedSeatsStore();
+export 
 
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -25,7 +23,7 @@ export const useClientManagement = (setCarrito) => {
       if (error) {
         console.error('Search error:', error);
         throw error;
-      }
+
       return (data || []).map((p) => ({
         id: p.id,
         login: p.login,

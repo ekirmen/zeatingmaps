@@ -8,7 +8,7 @@ const TenantAccessGuard = ({ children, fallback, showAlert = true }) => {
   const navigate = useNavigate();
 
   // Si está cargando, mostrar loading
-  if (loading) {
+
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

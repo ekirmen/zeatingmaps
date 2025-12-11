@@ -54,7 +54,7 @@ const DashboardLogin = ({ onLogin }) => {
 
   const handleCancel = () => {
     // No permitir cerrar el modal si no hay sesi³n
-    if (!localStorage.getItem('token')) {
+
       return;
     }
     setIsModalVisible(false);

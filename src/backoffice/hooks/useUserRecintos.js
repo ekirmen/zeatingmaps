@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 
 /**
- * Hook para gestionar recintos asignados a un usuario
+
  * @returns {Object} Objeto con recintos asignados y funciones de gestión
  */
 export const useUserRecintos = (userId) => {

@@ -10,7 +10,7 @@ import { sendPushNotification } from '../store/services/paymentNotifications';
 export const sendEventActivatedNotification = async (evento) => {
   try {
     if (!evento) {
-      console.error('[EventPush] Evento no válido');
+
       return null;
     }
 

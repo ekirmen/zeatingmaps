@@ -15,7 +15,7 @@ export const useSeatWorker = (seats, options = {}) => {
 
   const processSeats = useCallback(async () => {
     if (!seats || seats.length === 0) {
-      setProcessedSeats([]);
+
       return;
     }
 

@@ -4,7 +4,7 @@ import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
 import downloadTicket from '../../../utils/downloadTicket';
 
 const formatCurrency = (value) => {
-  const numericValue = Number(value);
+
   return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '0.00';
 };
 

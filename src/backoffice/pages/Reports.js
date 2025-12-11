@@ -97,7 +97,7 @@ const Reports = () => {
   const normalizeStatus = (status) => {
     switch (status) {
       case 'pagado':
-      case 'completed':
+
         return 'completed';
       case 'pendiente':
       case 'pending':
@@ -321,8 +321,7 @@ const Reports = () => {
     message.success(`Reporte "${report.name}" cargado`);
   };
 
-  const handleSavedReportsMenuClick = ({ key }) => {
-    if (key === 'empty' || key === 'loading') return;
+  
     handleLoadSavedReport(key);
   };
 
@@ -350,8 +349,7 @@ const Reports = () => {
     return Promise.resolve();
   };
 
-  const openSaveReportModal = () => {
-    saveReportForm.resetFields();
+  
     saveReportForm.setFieldsValue({
       name: '',
       dateMode: 'fixed',
@@ -436,34 +434,7 @@ const Reports = () => {
     }
   };
 
-  const savedReportsMenuItems = savedReportsLoading
-    ? [
-        {
-          key: 'loading',
-          disabled: true,
-          label: (
-            <Space size="small">
-              <Spin size="small" />
-              <Text type="secondary">Cargando reportes...</Text>
-            </Space>
-          )
-        }
-      ]
-    : savedReports.length
-      ? savedReports.map(report => ({
-          key: report.id,
-          label: (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span>{report.name}</span>
-              <Button
-                type="link"
-                danger
-                size="small"
-                icon={<DeleteOutlined />}
-                loading={deletingReportId === report.id}
-                disabled={savedReportsLoading}
-                onClick={(event) => {
-                  event.preventDefault();
+  
                   event.stopPropagation();
                   handleDeleteSavedReport(report.id);
                 }}
@@ -481,16 +452,7 @@ const Reports = () => {
           }
         ];
 
-  const loadSalesReport = async () => {
-    try {
-      let query = supabase
-        .from('payment_transactions')
-        .select(`
-          *,
-          user:profiles!user_id(*),
-          event:eventos(*)
-        `)
-        .in('status', ['pagado', 'completed']);
+  
 
       if (filters.dateRange) {
         query = query
@@ -511,15 +473,7 @@ const Reports = () => {
     }
   };
 
-  const loadEventsReport = async () => {
-    try {
-      let query = supabase
-        .from('eventos')
-        .select(`
-          *,
-          funciones (*),
-          entradas (*)
-        `);
+  
 
       if (filters.dateRange) {
         query = query
@@ -540,12 +494,7 @@ const Reports = () => {
     }
   };
 
-  const loadUsersReport = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+  
 
       if (error) throw error;
 
@@ -558,15 +507,7 @@ const Reports = () => {
     }
   };
 
-  const loadPaymentsReport = async () => {
-    try {
-      let query = supabase
-        .from('payment_transactions')
-        .select(`
-          *,
-          user:profiles!user_id(*),
-          event:eventos(*)
-        `);
+  
 
       if (filters.status !== 'all') {
         const statusMap = {
@@ -598,12 +539,7 @@ const Reports = () => {
     }
   };
 
-  const loadProductsReport = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('productos')
-        .select('*')
-        .order('created_at', { ascending: false });
+  
 
       if (error) throw error;
 
@@ -616,12 +552,7 @@ const Reports = () => {
     }
   };
 
-  const loadPromocionesReport = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('promociones')
-        .select('*')
-        .order('created_at', { ascending: false });
+  
 
       if (error) throw error;
 
@@ -634,12 +565,7 @@ const Reports = () => {
     }
   };
 
-  const loadCarritosReport = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('saved_carts')
-        .select('*')
-        .order('created_at', { ascending: false });
+  
 
       if (error) throw error;
 
@@ -1321,7 +1247,7 @@ const Reports = () => {
   };
 
   const openReportEmailPreview = () => {
-    const content = generateReportEmailContent();
+    
     setReportEmailPreview({
       visible: true,
       subject: content.subject,
@@ -1344,10 +1270,7 @@ const Reports = () => {
       }
 
       const content = generateReportEmailContent();
-      const result = await TenantEmailConfigService.executeEmailTest(emailConfig, {
-        subject: content.subject,
-        html: content.html
-      });
+      
 
       message.success('Enviamos el resumen del reporte a tu bandeja de entrada.');
     } catch (error) {

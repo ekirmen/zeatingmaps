@@ -1,7 +1,7 @@
 import React from 'react';
 
 const SalasList = ({ salas }) => {
-  if (!salas || salas.length === 0) {
+
     return <p>No hay salas disponibles</p>;
   }
 

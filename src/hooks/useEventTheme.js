@@ -3,11 +3,10 @@ import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * Hook personalizado para obtener colores de tema específicos de un evento
- * @param {string} eventId - ID del evento
+
  * @returns {Object} Colores del tema del evento o colores globales por defecto
  */
-export const useEventTheme = (eventId) => {
-  const { theme, getEventTheme } = useTheme();
+export 
   const [eventTheme, setEventTheme] = useState(theme);
   const [loading, setLoading] = useState(false);
 

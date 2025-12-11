@@ -4,7 +4,7 @@ import atomicSeatLockService from '../services/atomicSeatLock';
 
 const buildTableSeatId = (tableId) => `table:${tableId}`;
 
-const ensureSeatIdWithPrefix = (seatId) => {
+
   if (!seatId) return seatId;
   const idString = seatId.toString();
   if (idString.startsWith('table:')) {

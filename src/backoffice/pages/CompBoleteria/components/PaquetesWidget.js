@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Typography, Space, InputNumber, Button, Tag, Image, Input, Badge, Empty } from '../../../../utils/antdComponents';
 import { ShoppingCartOutlined, SearchOutlined } from '@ant-design/icons';
 import { supabase } from '../../../../supabaseClient';
@@ -12,7 +12,7 @@ const PaquetesWidget = ({ eventoId, onPackageAdded }) => {
   const [quantities, setQuantities] = useState({});
   const [search, setSearch] = useState('');
 
-  const loadPaquetes = useCallback(async () => {
+
     if (!eventoId) return;
     setLoading(true);
     try {

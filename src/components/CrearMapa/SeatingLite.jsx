@@ -47,7 +47,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const newHistory = [...prev.slice(0, historyIndex + 1), newElements];
       if (newHistory.length > maxHistorySize) {
         newHistory.shift();
-      }
+
       return newHistory;
     });
     setHistoryIndex(prev => Math.min(prev + 1, maxHistorySize - 1));
@@ -515,8 +515,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     });
   }, [gridSize, snapToGrid, seatSpacing, saveToHistory]);
 
-  const handleDelete = useCallback(() => {
-    if (!selectedIds?.length) return;
+  
     setElements(prev => {
       const newElements = prev.filter(el => !selectedIds.includes(el._id));
       saveToHistory(newElements);
@@ -525,8 +524,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     setSelectedIds([]);
   }, [selectedIds, saveToHistory]);
 
-  const handleClear = useCallback(() => {
-    setElements([]);
+  
     setSelectedIds([]);
     saveToHistory([]);
   }, [saveToHistory]);

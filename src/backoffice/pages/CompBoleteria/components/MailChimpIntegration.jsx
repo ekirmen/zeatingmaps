@@ -27,13 +27,7 @@ const MailChimpIntegration = ({ eventId }) => {
     loadConfig();
   }, [eventId]);
 
-  const loadConfig = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('mailchimp_configs')
-        .select('*')
-        .eq('event_id', eventId)
-        .single();
+  
 
       if (data) {
         setConfig(data);
@@ -46,7 +40,7 @@ const MailChimpIntegration = ({ eventId }) => {
 
   const testConnection = async () => {
     if (!config.apiKey) {
-      message.error('Ingresa tu API Key de MailChimp');
+
       return;
     }
 
@@ -109,9 +103,7 @@ const MailChimpIntegration = ({ eventId }) => {
     }
   };
 
-  const subscribeCustomer = async (customerData) => {
-    if (!config.enabled || !config.apiKey || !config.listId) {
-      return;
+  
     }
 
     try {

@@ -2,6 +2,8 @@
  * Sistema centralizado de loading states para diferentes tipos de carga
  */
 
+import React, { useState } from 'react';
+
 export const LOADING_STATES = {
   IDLE: 'idle',
   LOADING: 'loading',
@@ -18,8 +20,6 @@ export const LOADING_STATES = {
   VALIDATING: 'validating',
   PROCESSING: 'processing',
 };
-
-import React, { useState } from 'react';
 
 /**
  * Hook para manejar estados de carga específicos

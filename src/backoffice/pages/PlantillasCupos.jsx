@@ -73,17 +73,9 @@ const PlantillasCupos = () => {
     }
   }, [salaSeleccionada]);
 
-  const loadRecintos = async () => {
-    // Los recintos ya vienen del contexto
-  };
+  
 
-  const loadSalas = async (recintoId) => {
-    try {
-      const { data, error } = await supabase
-        .from('salas')
-        .select('*')
-        .eq('recinto_id', recintoId)
-        .order('nombre');
+  
 
       if (error) throw error;
       setSalas(data || []);
@@ -93,13 +85,7 @@ const PlantillasCupos = () => {
     }
   };
 
-  const loadZonas = async (salaId) => {
-    try {
-      const { data, error } = await supabase
-        .from('zonas')
-        .select('*')
-        .eq('sala_id', salaId)
-        .order('nombre');
+  
 
       if (error) throw error;
       setZonas(data || []);
@@ -109,13 +95,7 @@ const PlantillasCupos = () => {
     }
   };
 
-  const loadCupos = async () => {
-    try {
-      let query = supabase
-        .from('cupos')
-        .select('*')
-        .eq('activo', true)
-        .order('nombre', { ascending: true });
+  
 
       query = addTenantFilter(query);
 
@@ -129,7 +109,7 @@ const PlantillasCupos = () => {
     }
   };
 
-  const loadPlantillas = async () => {
+
     if (!recintoSeleccionado || !salaSeleccionada) return;
 
     try {
@@ -254,8 +234,7 @@ const PlantillasCupos = () => {
     }
   };
 
-  const handleAsignarButacas = async (zonaId, cupoId, butacaIds) => {
-    if (!editingPlantilla) return;
+  
 
     try {
       // Eliminar asignaciones previas de estas butacas
@@ -293,8 +272,7 @@ const PlantillasCupos = () => {
     return cupo ? cupo.nombre : `Cupo ${cupoId}`;
   };
 
-  const getZonaNombre = (zonaId) => {
-    const zona = zonas.find(z => z.id === zonaId);
+  
     return zona ? zona.nombre : `Zona ${zonaId}`;
   };
 
@@ -398,13 +376,7 @@ const PlantillasCupos = () => {
     }
   ];
 
-  const loadAsignaciones = async (plantillaId) => {
-    try {
-      // Cargar asignaciones de zonas no numeradas
-      const { data: zonasNoNumeradas, error: error1 } = await supabase
-        .from('cupos_zonas_no_numeradas')
-        .select('*')
-        .eq('plantilla_cupos_id', plantillaId);
+  
 
       // Cargar asignaciones de butacas
       const { data: butacas, error: error2 } = await supabase

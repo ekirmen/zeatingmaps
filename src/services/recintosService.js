@@ -7,7 +7,7 @@ import { supabase } from '../config/supabase';
 export const recintosService = {
   /**
    * Crear un nuevo recinto
-   * @param {Object} recintoData - Datos del recinto
+
    * @returns {Promise<Object>} Recinto creado
    */
   async crearRecinto(recintoData) {

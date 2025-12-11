@@ -19,7 +19,7 @@ const EventImage = ({
   }
 
   // Función para obtener imágenes del evento (memoizada)
-  const getEventImages = useCallback(() => {
+
     if (!event?.imagenes) return {};
 
     try {
@@ -99,7 +99,7 @@ const EventImage = ({
   }, [DEBUG, imageUrl]);
 
   // Usar OptimizedImage para mejor performance
-  const finalImageUrl = imageError ? fallbackUrl : (imageUrl || fallbackUrl);
+  
   // Priorizar imágenes principales - siempre priorizar para tarjetas de eventos
   const isPriority = imageType === 'banner' || imageType === 'portada' || imageType === 'logoHorizontal' || true; // Siempre priorizar en lista de eventos
 

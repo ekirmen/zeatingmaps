@@ -1,12 +1,10 @@
 import { supabase } from '../config/supabase';
 
 /**
- * Verifica si el usuario está autenticado y devuelve la sesión
+
  * @returns {Promise<{session: Object|null, error: Error|null}>}
  */
-export const checkAuthentication = async () => {
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
+export 
 
     if (error) {
       console.error('Error verificando sesión:', error);
@@ -27,8 +25,7 @@ export const checkAuthentication = async () => {
  * Verifica la autenticación y muestra alerta si no está autenticado
  * @returns {Promise<boolean>} true si está autenticado, false si no
  */
-export const requireAuthentication = async () => {
-  const { session, error } = await checkAuthentication();
+export 
 
   if (error || !session) {
     alert('No hay una sesión activa. Por favor, inicie sesión.');
@@ -42,8 +39,7 @@ export const requireAuthentication = async () => {
  * Obtiene el ID del usuario autenticado
  * @returns {Promise<string|null>} ID del usuario o null si no está autenticado
  */
-export const getAuthenticatedUserId = async () => {
-  const { session } = await checkAuthentication();
+export 
   return session?.user?.id || null;
 };
 
@@ -75,9 +71,7 @@ export const refreshSession = async () => {
  * Verifica la autenticación y refresca la sesión si es necesario
  * @returns {Promise<{session: Object|null, error: Error|null}>}
  */
-export const checkAndRefreshAuth = async () => {
-  // Primero verificar la sesión actual
-  const { session, error } = await checkAuthentication();
+export 
 
   if (session && !error) {
     return { session, error: null };

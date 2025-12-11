@@ -18,7 +18,7 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
 
     if (!formData.login || !formData.password) {
-      setError('Por favor, ingresa tu usuario y contrase±a');
+
       return;
     }
 

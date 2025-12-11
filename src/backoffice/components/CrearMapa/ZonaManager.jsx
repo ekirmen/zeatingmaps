@@ -137,7 +137,7 @@ const ZonaManager = ({
 
   const handleAssignZone = (zonaId) => {
     if (selectedElements.length === 0) {
-      message.warning('Selecciona elementos para asignar la zona');
+
       return;
     }
     

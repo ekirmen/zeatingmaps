@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-const normalizeHex = (color) => {
+
   if (typeof color !== 'string') return null;
   const trimmed = color.trim();
   if (!trimmed.startsWith('#')) return null;
@@ -149,7 +149,7 @@ export const useSeatColors = (eventId = null) => {
     
     // Distinguir entre locked permanente y seleccionado temporal
     const isPermanentlyLocked = lockInfo && lockInfo.status === 'locked';
-    const isTemporarilySelected = lockInfo && lockInfo.status === 'seleccionado';
+    
     const isSelectedByOther = lockInfo && lockInfo.session_id !== currentSessionId && 
                              (lockInfo.status === 'seleccionado' || lockInfo.status === 'selected');
     

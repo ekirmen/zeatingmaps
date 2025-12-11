@@ -1,6 +1,6 @@
 // Configuración de la API para sistema.veneventos.com
 const getApiConfig = () => {
-  // Usar directamente sistema.veneventos.com
+
   return {
     baseUrl: 'https://sistema.veneventos.com',
     apiPath: '/api'
@@ -10,22 +10,18 @@ const getApiConfig = () => {
 export const apiConfig = getApiConfig();
 
 // Función para construir URLs de API
-export const buildApiUrl = (endpoint) => {
-  const { baseUrl, apiPath } = apiConfig;
+export 
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   return `${baseUrl}${apiPath}/${cleanEndpoint}`;
 };
 
 // Función para construir URLs relativas (para Vercel)
-export const buildRelativeApiUrl = (endpoint) => {
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+export 
   return `/api/${cleanEndpoint}`;
 };
 
 // Función para verificar la conectividad
-export const checkApiConnectivity = async () => {
-  try {
-    const testUrl = buildRelativeApiUrl('payments/TEST123/diagnostic');
+export 
     const response = await fetch(testUrl, {
       method: 'GET',
       mode: 'cors',
@@ -48,8 +44,7 @@ export const checkApiConnectivity = async () => {
 };
 
 // Función para diagnosticar problemas de configuración
-export const diagnoseApiIssues = () => {
-  const issues = [];
+export 
   
   if (!process.env.NODE_ENV) {
     issues.push('NODE_ENV no está definido');

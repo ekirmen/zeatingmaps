@@ -109,9 +109,7 @@ const EmailTemplateEditor = ({
     }
   }, [templateId, reportType]);
 
-  const loadTemplate = async () => {
-    try {
-      setLoading(true);
+  
       const { data, error } = await supabase
         .from('email_templates')
         .select('*')
@@ -185,7 +183,7 @@ const EmailTemplateEditor = ({
     }));
   };
 
-  const generatePreview = () => {
+
     return `
       <div style="
         max-width: ${designConfig.layout.maxWidth};

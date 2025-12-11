@@ -10,7 +10,7 @@ export async function getFunciones(eventId) {
       .single();
 
     if (eventoError) {
-      console.error('Error fetching evento tenant:', eventoError.message);
+
       return [];
     }
 

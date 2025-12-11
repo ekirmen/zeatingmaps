@@ -23,7 +23,7 @@ const SimpleSeatingMap = ({
 }) => {
   const [error, setError] = useState(null);
   const [zonePrices, setZonePrices] = useState({});
-  const channelRef = useRef(null);
+  
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
@@ -36,7 +36,7 @@ const SimpleSeatingMap = ({
   useEffect(() => {
     const computeDimensions = () => {
       if (!mapa || !mapa.contenido) {
-        setDimensions({ width: 800, height: 600 });
+
         return;
       }
 
@@ -586,7 +586,7 @@ const SimpleSeatingMap = ({
                   // Para mesas circulares, las coordenadas de las sillas son relativas al centro de la mesa
                   const mesaCenterX = (elemento.posicion?.x ?? elemento.x ?? 0);
                   const mesaCenterY = (elemento.posicion?.y ?? elemento.y ?? 0);
-                  const mesaRadius = elemento.radius ?? (elemento.width ?? 0) / 2;
+                  
 
                   // Calcular posici³n absoluta de la silla
                   const absoluteX = mesaCenterX + (sx || 0);

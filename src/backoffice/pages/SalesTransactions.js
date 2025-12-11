@@ -115,7 +115,7 @@ const SalesTransactions = () => {
         const fallbackResponse = await fallbackQuery;
 
         if (fallbackResponse.error) {
-          console.error('Œ [SalesTransactions] Error en fallback de funciones:', fallbackResponse.error);
+
           return fallbackResponse;
         }
 

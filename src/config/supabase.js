@@ -29,7 +29,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Función para crear cliente con configuración optimizada
 const createOptimizedClient = (url, key, options = {}) => {
   if (!url || !key) {
-    console.error('[SUPABASE CONFIG] Error: URL o clave no definidas');
+
     return null;
   }
 

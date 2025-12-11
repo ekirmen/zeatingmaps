@@ -39,7 +39,7 @@ class EmailService {
   // Obtener configuración activa (tenant o global)
   async getActiveConfig() {
     try {
-      const { TenantEmailConfigService } = await import('./tenantEmailConfigService');
+
       return await TenantEmailConfigService.getActiveEmailConfig(this.tenantId);
     } catch (error) {
       console.error('Error obteniendo configuración activa:', error);

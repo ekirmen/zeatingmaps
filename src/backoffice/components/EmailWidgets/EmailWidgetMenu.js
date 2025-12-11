@@ -68,7 +68,7 @@ const EmailWidgetMenu = ({ onSelectWidget }) => {
       'pie-email': 'Pie email',
       'pie-email-notificacion': 'Pie email notificación',
       'codigo-html': 'Código HTML'
-    };
+
     return widgetMap[widgetId] || widgetId;
   };
 

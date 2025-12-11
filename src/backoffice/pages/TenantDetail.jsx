@@ -139,7 +139,7 @@ const TenantDetail = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+
       case 'active': return 'green';
       case 'suspended': return 'orange';
       case 'cancelled': return 'red';

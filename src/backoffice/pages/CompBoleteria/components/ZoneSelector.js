@@ -7,7 +7,7 @@ const ZoneSelector = ({
   handleClearZoneSelection,
   zonePriceRanges,
   detallesPlantilla 
-}) => {
+
   if (zonas.length === 0) return null;
 
   // Agrupar detalles por zona y tipo de entrada

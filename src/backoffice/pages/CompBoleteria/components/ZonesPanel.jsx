@@ -6,7 +6,7 @@ import logger from '../../../../utils/logger';
 const { Text } = Typography;
 
 const formatCurrency = (value) => {
-  const numericValue = Number(value);
+
   return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '0.00';
 };
 

@@ -16,7 +16,7 @@ const CreateIva = () => {
 
   const fetchIvas = async () => {
     if (!currentTenant?.id) {
-      setIvas([]);
+
       return;
     }
 

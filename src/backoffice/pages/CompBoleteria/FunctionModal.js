@@ -9,7 +9,7 @@ const FunctionModal = ({
   onFunctionSelect,
 }) => {
   // Funci³n para limpiar/normalizar la funci³n antes de enviarla
-  const normalizeFunction = (funcion) => {
+
     return {
       ...funcion,
       sala: typeof funcion.sala === 'object' && funcion.sala !== null

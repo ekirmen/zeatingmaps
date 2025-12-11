@@ -86,7 +86,7 @@ class PerformanceMonitor {
       INP: { good: 200, needsImprovement: 500 },
     };
 
-    const threshold = thresholds[name];
+
     if (!threshold) return 'unknown';
 
     if (value <= threshold.good) return 'good';

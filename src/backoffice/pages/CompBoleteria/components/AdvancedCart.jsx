@@ -46,8 +46,7 @@ const AdvancedCart = ({
     setCarrito(newCarrito);
   };
 
-  const handleUpdateQuantity = (index, delta) => {
-    const newCarrito = [...carrito];
+  
     const item = newCarrito[index];
     
     if (delta > 0) {
@@ -62,7 +61,7 @@ const AdvancedCart = ({
     setCarrito(newCarrito);
   };
 
-  const getSeatStatusColor = (item) => {
+
     if (item.tipoPrecio === 'descuento') return 'green';
     if (item.tipoPrecio === 'promocion') return 'blue';
     return 'default';

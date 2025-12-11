@@ -4,7 +4,7 @@ import logger from '../utils/logger';
 /**
  * Hook para manejar operaciones asíncronas con estados de loading, error y data
  * @param {Function} asyncFunction - Función asíncrona a ejecutar
- * @param {Object} options - Opciones de configuración
+
  * @returns {Object} { data, loading, error, execute, reset }
  */
 export const useAsyncOperation = (asyncFunction, options = {}) => {

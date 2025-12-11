@@ -80,8 +80,7 @@ const TenantMessaging = () => {
     scrollToBottom();
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  
   };
 
   const loadConversations = async () => {

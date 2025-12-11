@@ -7,7 +7,7 @@ const VenueSelectors = ({
   salaSeleccionada,
   setSalaSeleccionada,
   rightContent
-}) => {
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
       <div className="flex items-start lg:items-center justify-between gap-6">

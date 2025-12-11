@@ -21,7 +21,7 @@ const Sidebar = ({ user, isOpen, onToggle }) => {
   }, [user]);
 
   // Si no hay usuario o no está activo, no mostrar sidebar
-  if (!user || !isUserActive(user)) {
+
     return null;
   }
 
@@ -96,20 +96,7 @@ const Sidebar = ({ user, isOpen, onToggle }) => {
 };
 
 // Componente de protección de ruta
-export const ProtectedRoute = ({ children, user, requiredPermission }) => {
-  if (!user || !isUserActive(user)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Acceso Denegado
-          </h2>
-          <p className="text-gray-600">
-            No tienes permisos para acceder a esta página.
-          </p>
-        </div>
-      </div>
-    );
+export 
   }
 
   if (requiredPermission && !hasPermission(user, requiredPermission)) {
@@ -131,9 +118,7 @@ export const ProtectedRoute = ({ children, user, requiredPermission }) => {
 };
 
 // Hook personalizado para verificar permisos
-export const usePermissions = (user) => {
-  const checkPermission = (permission) => {
-    return hasPermission(user, permission);
+export 
   };
 
   const checkMultiplePermissions = (permissions) => {

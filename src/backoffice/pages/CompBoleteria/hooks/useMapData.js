@@ -3,12 +3,11 @@ import { message } from '../../../../utils/antdComponents';
 import { fetchMapa, fetchZonasPorSala } from '../../../../services/supabaseServices';
 import { fetchSeatsByFuncion } from '../../../services/supabaseSeats';
 
-export const useMapData = (selectedFuncion) => {
-  const [mapa, setMapa] = useState(null);
+export 
   const [zonas, setZonas] = useState([]);
 
   // Memoizar el ID de la sala para evitar re-ejecuciones innecesarias
-  const salaId = useMemo(() => {
+
     if (!selectedFuncion?.sala) return null;
     return typeof selectedFuncion.sala === 'object' && selectedFuncion.sala !== null
       ? selectedFuncion.sala._id || selectedFuncion.sala.id || null

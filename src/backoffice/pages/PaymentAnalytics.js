@@ -33,7 +33,7 @@ const { Option } = Select;
 // Componente simple para gr¡ficos b¡sicos usando divs y CSS
 const SimpleBarChart = ({ data, dataKey, color = '#1890ff', height = 200 }) => {
   const maxValue = Math.max(...data.map(d => d[dataKey])) || 1;
-  
+
   return (
     <div style={{ height: `${height}px`, display: 'flex', alignItems: 'flex-end', gap: '8px', padding: '16px 0' }}>
       {data.map((item, index) => {
@@ -159,11 +159,7 @@ const PaymentAnalytics = () => {
     }
   };
 
-  const loadTransactionData = async () => {
-    try {
-      let query = supabase
-        .from('payment_transactions')
-        .select('*');
+  
 
       if (filters.dateRange) {
         query = query
@@ -188,12 +184,7 @@ const PaymentAnalytics = () => {
     }
   };
 
-  const loadGatewayStats = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('payment_transactions')
-        .select('*')
-        .eq('status', 'completed');
+  
 
       if (error) throw error;
 
@@ -219,14 +210,7 @@ const PaymentAnalytics = () => {
     }
   };
 
-  const loadDailySales = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('payment_transactions')
-        .select('amount, created_at, status')
-        .eq('status', 'completed')
-        .order('created_at', { ascending: true })
-        .limit(30);
+  
 
       if (error) throw error;
 
@@ -251,12 +235,7 @@ const PaymentAnalytics = () => {
     }
   };
 
-  const loadMonthlyTrends = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('payment_transactions')
-        .select('amount, created_at, status')
-        .eq('status', 'completed');
+  
 
       if (error) throw error;
 
@@ -280,13 +259,7 @@ const PaymentAnalytics = () => {
     }
   };
 
-  const loadTopEvents = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('payment_transactions')
-        .select('amount')
-        .eq('status', 'completed')
-        .limit(10);
+  
 
       if (error) throw error;
 
@@ -305,15 +278,7 @@ const PaymentAnalytics = () => {
     }
   };
 
-  const getGatewayColor = (type) => {
-    const colors = {
-      stripe: '#1890ff',
-      paypal: '#003087',
-      transfer: '#52c41a',
-      mobile_payment: '#722ed1',
-      zelle: '#fadb14',
-      reservation: '#fa8c16'
-    };
+  
     return colors[type] || '#666666';
   };
 

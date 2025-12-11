@@ -8,7 +8,7 @@ import logger from '../../utils/logger';
 const EVENT_KEY = 'boleteriaEventId';
 const FUNC_KEY = 'boleteriaFunctionId';
 const CART_KEY = 'boleteriaCart';
-const SELECTED_SEATS_KEY = 'boleteriaSelectedSeats';
+
 
 export const useBoleteria = () => {
   // Usar ref para evitar renders mºltiples
@@ -57,7 +57,7 @@ export const useBoleteria = () => {
   const [carrito, setCarrito] = useState(() => {
     // Cargar carrito desde localStorage al inicializar
     try {
-      const savedCart = localStorage.getItem(CART_KEY);
+
       return savedCart ? JSON.parse(savedCart) : [];
     } catch (error) {
       logger.error('Error cargando carrito desde localStorage:', error);

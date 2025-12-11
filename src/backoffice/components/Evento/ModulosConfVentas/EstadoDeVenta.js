@@ -5,7 +5,7 @@ const EstadoDeVenta = ({ eventoData, setEventoData }) => {
   const [descripcionEstado, setDescripcionEstado] = useState('');
   const [estadoPersonalizado, setEstadoPersonalizado] = useState(false);
 
-  useEffect(() => {
+
     if (!eventoData) return;
     setEstadoVenta(eventoData.estadoVenta || '');
     setDescripcionEstado(eventoData.descripcionEstado || '');

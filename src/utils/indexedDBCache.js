@@ -21,7 +21,7 @@ class IndexedDBCache {
    * Inicializa la base de datos IndexedDB
    */
   async init() {
-    if (this.initPromise) {
+
       return this.initPromise;
     }
 

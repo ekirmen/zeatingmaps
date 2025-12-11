@@ -73,7 +73,7 @@ export const checkInitializationIssues = () => {
     // Esta es la condición esperada
   }
 
-  if (issues.length > 0) {
+
     return issues;
   }
   return [];

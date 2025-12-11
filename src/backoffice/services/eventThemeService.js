@@ -8,7 +8,7 @@ export class EventThemeService {
   /**
    * Obtener configuración de tema para un evento específico
    * @param {string} eventId - ID del evento
-   * @param {string} tenantId - ID del tenant
+
    * @returns {Promise<Object|null>} Configuración del tema o null si no existe
    */
   static async getEventThemeSettings(eventId, tenantId) {

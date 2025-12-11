@@ -9,7 +9,7 @@ export const RecintoSalaProvider = ({ children }) => {
   const { currentTenant } = useTenant();
   const [recintos, setRecintos] = useState([]);
   const [recinto, setRecinto] = useState(() => {
-    const stored = localStorage.getItem('recinto');
+
     return stored ? JSON.parse(stored) : null;
   });
   const [salas, setSalas] = useState([]);

@@ -14,7 +14,7 @@ export class EmailConfigService {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // No hay configuración, retornar null
+
           return null;
         }
         throw error;

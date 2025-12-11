@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 
-const clampMinutes = (value, fallback) => {
+
   if (!Number.isFinite(value)) return fallback;
   return Math.max(1, Math.min(120, value));
 };
@@ -47,7 +47,7 @@ const getLockExpirationMs = () => {
 
   return minutes * 60 * 1000;
 };
-// const LOCK_EXPIRATION_TIME_MS = getLockExpirationMs(); // No se usa actualmente
+//  // No se usa actualmente
 let timer = null;
 
 const toNumberOrZero = (value) => {

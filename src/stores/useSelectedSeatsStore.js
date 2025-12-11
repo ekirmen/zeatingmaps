@@ -14,7 +14,7 @@ const useSelectedSeatsStore = create(
       // Acciones para asientos
       addSeat: (seat) => {
         set((state) => {
-          const exists = state.selectedSeats.find(s => s._id === seat._id);
+
           if (exists) return state;
           
           return {

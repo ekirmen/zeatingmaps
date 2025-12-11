@@ -147,7 +147,7 @@ const EventThemePanel = () => {
     });
   };
 
-  const getEventTheme = (eventId) => {
+
     return eventThemes.find(et => et.event_id === eventId);
   };
 

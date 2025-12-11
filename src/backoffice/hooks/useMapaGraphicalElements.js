@@ -1,23 +1,7 @@
 import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid'; // Assuming you use uuid for unique IDs
 
-export const useMapaGraphicalElements = (
-  elements,
-  setElements,
-  selectedZone,
-  numSillas = 4,
-  sillaShape = 'rect'
-) => {
-
-  // Function to add a generic element
-  const addElement = useCallback((type, initialProps) => {
-    const newElement = {
-      _id: uuidv4(),
-      type,
-      posicion: { x: 50, y: 50 }, // Default position
-      ...initialProps,
-      zonaId: selectedZone?.id || null, // Assign selected zone if any
-    };
+export 
     setElements(prevElements => [...prevElements, newElement]);
   }, [setElements, selectedZone]); // Dependencies for addElement
 

@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useSeatLockStore } from '../components/seatLockStore';
 
-export const useSeatCleanup = () => {
-  const cleanupRef = useRef(null);
+export 
   const { startAutoCleanup, stopAutoCleanup, cleanupCurrentSession, restoreCurrentSession } = useSeatLockStore();
 
   useEffect(() => {
@@ -10,7 +9,7 @@ export const useSeatCleanup = () => {
     const cleanupInterval = parseInt(localStorage.getItem('seat_cleanup_interval') || '5', 10);
     const enableAutoCleanup = localStorage.getItem('seat_auto_cleanup') !== 'false';
 
-    if (!enableAutoCleanup) {
+
       return;
     }
 

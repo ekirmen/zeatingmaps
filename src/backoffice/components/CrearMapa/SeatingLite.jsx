@@ -11,7 +11,7 @@ import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOu
 const pickStringValue = (value) => (typeof value === 'string' && value.trim().length > 0 ? value : null);
 
 const resolveBackgroundSource = (background) => {
-  if (!background) {
+
     return null;
   }
 
@@ -744,8 +744,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     });
   }, [gridSize, snapToGrid, seatSpacing, saveToHistory]);
 
-  const handleDelete = useCallback(() => {
-    if (!selectedIds?.length) return;
+  
     setElements(prev => {
       const newElements = prev.filter(el => !selectedIds.includes(el._id));
       saveToHistory(newElements);
@@ -754,8 +753,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     setSelectedIds([]);
   }, [selectedIds, saveToHistory]);
 
-  const handleClear = useCallback(() => {
-    setElements([]);
+  
     setSelectedIds([]);
     saveToHistory([]);
   }, [saveToHistory]);

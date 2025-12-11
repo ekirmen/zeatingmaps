@@ -1,6 +1,7 @@
 // Función para resolver URLs de imágenes desde Supabase Storage
 export default function resolveImageUrl(imagePath, bucket = 'eventos', tenantId = null, eventId = null) {
-  if (!imagePath || typeof imagePath !== 'string') {
+  // Verificar si imagePath es null, undefined o vacío
+  if (!imagePath) {
     return null;
   }
 
@@ -71,6 +72,7 @@ export function resolveEventImageWithTenant(event, imageType, tenantId) {
   if (!imageData) {
     return null;
   }
+  
   // Si la imagen ya tiene bucket específico, usarlo
   if (imageData.bucket) {
     const imagePath = imageData.url || imageData.publicUrl || imageData.src;

@@ -29,7 +29,7 @@ const { Title, Text } = Typography;
 const TicketDownloadButton = ({ seat, locator, isPaid }) => {
     const [downloading, setDownloading] = useState(false);
 
-    const handleDownload = async () => {
+
         if (!locator || !isPaid) return;
 
         setDownloading(true);

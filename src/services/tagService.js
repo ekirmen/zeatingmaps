@@ -4,7 +4,7 @@ export const fetchTags = async () => {
   try {
     // Obtener el usuario autenticado
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+
       return [];
     }
 

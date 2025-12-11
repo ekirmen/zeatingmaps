@@ -34,9 +34,7 @@ const NotificationCenter = () => {
     subscribeToNotifications();
   }, []);
 
-  const loadNotifications = async () => {
-    try {
-      setLoading(true);
+  
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
@@ -59,8 +57,7 @@ const NotificationCenter = () => {
     }
   };
 
-  const subscribeToNotifications = () => {
-    const { data: { user } } = supabase.auth.getUser();
+  
     
     if (user) {
       const subscription = supabase

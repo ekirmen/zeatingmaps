@@ -47,9 +47,7 @@ const BackgroundImageManager = ({
     }
   }, [modalVisible]);
 
-  const loadExistingImages = async () => {
-    try {
-      setLoadingImages(true);
+  
       
       // Listar im¡genes del bucket de productos en la carpeta mapas
       const { data, error } = await supabase.storage
@@ -93,7 +91,7 @@ const BackgroundImageManager = ({
       
       // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
-        message.error('Por favor selecciona solo archivos de imagen');
+
         return false;
       }
       

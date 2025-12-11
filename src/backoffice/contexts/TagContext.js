@@ -10,7 +10,7 @@ export const TagProvider = ({ children }) => {
   const hasLoaded = useRef(false);
 
   useEffect(() => {
-    // Solo cargar una vez
+
     if (hasLoaded.current) return;
     
     const loadTags = async () => {

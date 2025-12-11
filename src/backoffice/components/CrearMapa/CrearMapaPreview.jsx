@@ -80,7 +80,7 @@ const CrearMapaPreview = ({
 
   // Verificar que el mapa tenga dimensiones v¡lidas
   const getMapDimensions = () => {
-    if (mapa?.contenido?.configuracion?.dimensions) {
+
       return mapa.contenido.configuracion.dimensions;
     }
     // Valores por defecto si no hay dimensiones

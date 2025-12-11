@@ -1,83 +1,93 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
-const SOCIAL_KEYS = [
-  'facebook',
-  'twitter',
-  'instagram',
-  'spotify',
-  'youtube',
-  'tiktok',
-  'whatsapp',
-  'telegram'
-];
+// Crear el contexto
+const FooterContext = createContext();
 
-// Default footer data including socials configuration
-const defaultFooter = {
-  copyrightText: '',
-  socials: SOCIAL_KEYS.reduce((acc, key) => {
-    acc[key] = { active: false, url: '' };
-    return acc;
-  }, {})
-};
-
-const FooterContext = createContext({
-  footer: defaultFooter,
-  updateFooter: () => {}
-});
-
+// Provider Component
 export const FooterProvider = ({ children }) => {
-  const parseSaved = saved => {
-    try {
-      const parsed = JSON.parse(saved);
-      const result = { ...defaultFooter };
-      if (typeof parsed.copyrightText === 'string') {
-        result.copyrightText = parsed.copyrightText;
-      }
-      if (parsed.socials && typeof parsed.socials === 'object') {
-        SOCIAL_KEYS.forEach(key => {
-          const s = parsed.socials[key] || {};
-          result.socials[key] = {
-            active: !!s.active,
-            url: typeof s.url === 'string' ? s.url : ''
-          };
-        });
-      }
-      return result;
-    } catch {
-      return { ...defaultFooter };
-    }
-  };
+  const [footerVisible, setFooterVisible] = useState(true);
+  const [footerContent, setFooterContent] = useState(null);
+  const [footerHeight, setFooterHeight] = useState(0);
+  const [footerStyle, setFooterStyle] = useState({});
+  const [footerClassName, setFooterClassName] = useState('');
 
-  const [footer, setFooter] = useState(() => {
-    const saved = localStorage.getItem('footerSettings');
-    const parsed = saved ? parseSaved(saved) : defaultFooter;
-    return parsed;
-  });
+  // Mostrar/ocultar footer
+  const showFooter = useCallback(() => {
+    setFooterVisible(true);
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('footerSettings', JSON.stringify(footer));
-  }, [footer]);
+  const hideFooter = useCallback(() => {
+    setFooterVisible(false);
+  }, []);
 
-  const updateFooter = updates => {
-    setFooter(prev => {
-      const updated = {
-        ...prev,
-        ...updates,
-        socials: {
-          ...prev.socials,
-          ...(updates.socials || {})
-        }
-      };
-      localStorage.setItem('footerSettings', JSON.stringify(updated));
-      return updated;
-    });
+  // Establecer contenido personalizado
+  const setCustomFooter = useCallback((content) => {
+    setFooterContent(content);
+  }, []);
+
+  // Actualizar altura del footer
+  const updateFooterHeight = useCallback((height) => {
+    setFooterHeight(height);
+  }, []);
+
+  // Actualizar estilo del footer
+  const updateFooterStyle = useCallback((style) => {
+    setFooterStyle(prev => ({ ...prev, ...style }));
+  }, []);
+
+  // Actualizar clase CSS del footer
+  const updateFooterClassName = useCallback((className) => {
+    setFooterClassName(className);
+  }, []);
+
+  // Resetear a valores por defecto
+  const resetFooter = useCallback(() => {
+    setFooterVisible(true);
+    setFooterContent(null);
+    setFooterHeight(0);
+    setFooterStyle({});
+    setFooterClassName('');
+  }, []);
+
+  // Valores que estarán disponibles en el contexto
+  const value = {
+    // Estado
+    footerVisible,
+    footerContent,
+    footerHeight,
+    footerStyle,
+    footerClassName,
+    
+    // Métodos
+    showFooter,
+    hideFooter,
+    setCustomFooter,
+    updateFooterHeight,
+    updateFooterStyle,
+    updateFooterClassName,
+    resetFooter,
+    
+    // Helper methods
+    isFooterVisible: footerVisible,
+    hasCustomContent: !!footerContent
   };
 
   return (
-    <FooterContext.Provider value={{ footer, updateFooter }}>
+    <FooterContext.Provider value={value}>
       {children}
     </FooterContext.Provider>
   );
 };
 
-export const useFooter = () => useContext(FooterContext);
+// Hook personalizado para usar el contexto
+export const useFooter = () => {
+  const context = useContext(FooterContext);
+  
+  if (!context) {
+    throw new Error('useFooter debe ser usado dentro de un FooterProvider');
+  }
+  
+  return context;
+};
+
+export default FooterContext;

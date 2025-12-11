@@ -211,9 +211,7 @@ const SeatMapOnboarding = ({
     setCurrentStep(currentStep - 1);
   };
 
-  const handleComplete = () => {
-    // Marcar onboarding como completado
-    localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+  
     if (onComplete) {
       onComplete();
     }
@@ -228,7 +226,7 @@ const SeatMapOnboarding = ({
   };
 
   // Efecto para resaltar elementos según el paso actual
-  useEffect(() => {
+
     if (!visible) return;
     
     const step = steps[currentStep];
@@ -279,13 +277,11 @@ const SeatMapOnboarding = ({
 };
 
 // Función helper para verificar si el onboarding ya fue completado
-export const isOnboardingCompleted = () => {
-  return localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true';
+export 
 };
 
 // Función helper para resetear el onboarding (útil para testing)
-export const resetOnboarding = () => {
-  localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+export 
 };
 
 export default SeatMapOnboarding;

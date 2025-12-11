@@ -3,7 +3,7 @@ import { supabase } from '../../supabaseClient';
 /**
  * Normaliza un arreglo de asientos asegurando una estructura consistente
  */
-const normalizeSeats = (seats = []) => {
+
   if (!Array.isArray(seats)) return [];
 
   return seats

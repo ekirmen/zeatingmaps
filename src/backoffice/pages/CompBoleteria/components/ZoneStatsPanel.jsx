@@ -20,7 +20,7 @@ const ZoneStatsPanel = ({
 }) => {
   const getStatusColor = (status) => {
     switch (status) {
-      case 'disponible':
+
         return '#52c41a';
       case 'seleccionado':
         return '#ffd700';

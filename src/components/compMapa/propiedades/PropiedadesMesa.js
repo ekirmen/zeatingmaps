@@ -81,7 +81,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
 
   const getTotalSillas = () => {
     switch (mesa?.shape || mesa?.type) {
-      case 'rect':
+
         return Object.values(sillasConfig.rect).reduce((sum, val) => sum + (val || 0), 0);
       case 'circle':
         return sillasConfig.circle.cantidad || 0;

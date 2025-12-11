@@ -102,7 +102,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
   };
 
   // Limpiar timeout al desmontar el componente
-  useEffect(() => {
+
     return () => {
       if (temporaryExpandedTimeout) {
         clearTimeout(temporaryExpandedTimeout);

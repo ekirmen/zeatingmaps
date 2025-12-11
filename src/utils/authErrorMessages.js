@@ -108,9 +108,7 @@ const checkProfileExists = async (supabaseClient, email) => {
   }
 };
 
-const resolveAuthErrorInfo = async ({ error, email, supabaseClient } = {}) => {
-  if (!error) {
-    return { code: 'unknown', ...AUTH_ERROR_DETAILS.unknown };
+
   }
 
   const normalizedMessage = normalizeString(error.message);
@@ -170,8 +168,7 @@ const resolveAuthErrorInfo = async ({ error, email, supabaseClient } = {}) => {
   };
 };
 
-export const createAuthError = async ({ error, email, supabaseClient } = {}) => {
-  const info = await resolveAuthErrorInfo({ error, email, supabaseClient });
+export 
   const authError = new Error(info.message);
   authError.code = info.code;
   authError.i18nKey = info.i18nKey;
@@ -181,8 +178,7 @@ export const createAuthError = async ({ error, email, supabaseClient } = {}) => 
   return authError;
 };
 
-export const getAuthMessage = (error, translateFn, fallbackKey = 'login.generic_error') => {
-  const details = (error && AUTH_ERROR_DETAILS[error.code]) || null;
+export 
   const i18nKey = error?.i18nKey || details?.i18nKey || fallbackKey;
   const fallbackMessage = error?.message || details?.defaultMessage || AUTH_ERROR_DETAILS.unknown.defaultMessage;
 

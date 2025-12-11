@@ -6,12 +6,9 @@ import { supabase } from '../supabaseClient';
  * This helper uses the authenticated supabase client so it
  * respects row level security policies defined in the project.
  */
-export const fetchUsers = async () => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('login, email:login, telefono, tenant_id:empresa, role, permisos');
+export 
 
-  if (error) throw error;
+
   return data;
 };
 

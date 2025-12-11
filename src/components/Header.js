@@ -17,7 +17,7 @@ const Header = ({ onLogin, onLogout }) => {
     password: '',
     confirmPassword: ''
   });
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+
     if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('token');
   });

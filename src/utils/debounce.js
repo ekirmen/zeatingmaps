@@ -3,7 +3,7 @@
  * Evita ejecutar una función demasiado frecuentemente
  */
 export function debounce(func, wait) {
-  let timeout;
+
   return function executedFunction(...args) {
     const later = () => {
       clearTimeout(timeout);

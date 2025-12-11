@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSupabaseClient } from '../../config/supabase';
 
-const normalizeEventData = (event) => {
+
   if (!event) return null;
 
   let displayImageUrl = `https://placehold.co/80x80/E0F2F7/000?text=${event.nombre ? event.nombre.charAt(0) : 'E'}`;
@@ -24,8 +24,7 @@ const normalizeEventData = (event) => {
   };
 };
 
-export const useEventsList = () => {
-  const [events, setEvents] = useState([]);
+export 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 

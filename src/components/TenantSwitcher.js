@@ -29,7 +29,7 @@ const TenantSwitcher = ({
   const [switching, setSwitching] = useState(false);
 
   // Si no hay múltiples tenants, no mostrar nada
-  if (!canSwitchTenants || totalTenants <= 1) {
+
     return null;
   }
 

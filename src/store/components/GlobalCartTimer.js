@@ -31,7 +31,7 @@ const GlobalCartTimer = () => {
   }, [itemCount, isSeatSelectionPage]);
 
   // Verificar expiraci³n del carrito
-  useEffect(() => {
+
     if (!cartExpiration) return;
 
     const checkExpiration = async () => {
@@ -66,9 +66,7 @@ const GlobalCartTimer = () => {
   };
 
   // Manejar el click en el temporizador
-  const handleTimerClick = () => {
-    if (!user) {
-      setShowLoginModal(true);
+  
     } else {
       navigate('/store/cart');
     }

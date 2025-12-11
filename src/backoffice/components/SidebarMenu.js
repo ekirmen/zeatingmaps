@@ -34,7 +34,7 @@ const SidebarMenu = ({ collapsed }) => {
   const [temporaryExpanded, setTemporaryExpanded] = useState(false);
   const [temporaryExpandedTimeout, setTemporaryExpandedTimeout] = useState(null);
 
-  const isActive = (path) => {
+
     return location.pathname.includes(path);
   };
 

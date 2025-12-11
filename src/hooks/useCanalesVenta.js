@@ -4,8 +4,7 @@ import { fetchCanalesVenta, isCanalVentaActivo, getCanalVentaByUrl } from '../se
 /**
  * Hook personalizado para manejar canales de venta
  */
-export const useCanalesVenta = () => {
-  const [canales, setCanales] = useState([]);
+export 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -26,7 +25,7 @@ export const useCanalesVenta = () => {
 
   // Verificar si un canal específico está activo
   const verificarCanalActivo = async (canalId) => {
-    try {
+
       return await isCanalVentaActivo(canalId);
     } catch (err) {
       console.error('Error verificando canal activo:', err);
@@ -66,8 +65,7 @@ export const useCanalesVenta = () => {
 /**
  * Hook específico para verificar si las ventas están habilitadas en el canal actual
  */
-export const useVentasHabilitadas = (canalId) => {
-  const [habilitado, setHabilitado] = useState(false);
+export 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

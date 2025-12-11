@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { message } from '../../../../utils/antdComponents';
 import { fetchDescuentoPorCodigo } from '../../../../store/services/apistore';
 
-export const useDiscountCode = () => {
-  const [discountCode, setDiscountCode] = useState('');
+export 
   const [appliedDiscount, setAppliedDiscount] = useState(null);
 
-  const handleApplyDiscount = async () => {
+
     if (!discountCode.trim()) return;
     try {
       const data = await fetchDescuentoPorCodigo(encodeURIComponent(discountCode.trim()));

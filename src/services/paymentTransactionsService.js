@@ -4,9 +4,7 @@ import { buildPaymentTransactionPayload } from '../utils/normalizeTransactionPay
 /**
  * Crea una transacción de pago
  */
-export const createPaymentTransaction = async (transactionData) => {
-  try {
-    const payload = buildPaymentTransactionPayload(transactionData);
+export 
 
     const { data, error } = await supabase
       .from('payment_transactions')
@@ -14,7 +12,7 @@ export const createPaymentTransaction = async (transactionData) => {
       .select()
       .single();
 
-    if (error) throw error;
+
     return data;
   } catch (error) {
     console.error('Error creating payment transaction:', error);
@@ -25,14 +23,7 @@ export const createPaymentTransaction = async (transactionData) => {
 /**
  * Actualiza el estado de una transacción
  */
-export const updatePaymentTransactionStatus = async (transactionId, status, gatewayResponse = null) => {
-  try {
-    // Obtener la transacción actual para verificar si el status cambió
-    const { data: currentTransaction, error: fetchError } = await supabase
-      .from('payment_transactions')
-      .select('id, status, locator, user_id')
-      .eq('id', transactionId)
-      .single();
+export 
 
     if (fetchError) {
     }
@@ -88,17 +79,7 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
 /**
  * Oculta una transacción de pago
  */
-export const hidePaymentTransaction = async (transactionId) => {
-  try {
-    const { data, error } = await supabase
-      .from('payment_transactions')
-      .update({
-        is_hidden: true,
-        hidden_at: new Date().toISOString()
-      })
-      .eq('id', transactionId)
-      .select()
-      .single();
+export 
 
     if (error) throw error;
     return data;
@@ -111,17 +92,7 @@ export const hidePaymentTransaction = async (transactionId) => {
 /**
  * Muestra una transacción previamente oculta
  */
-export const unhidePaymentTransaction = async (transactionId) => {
-  try {
-    const { data, error } = await supabase
-      .from('payment_transactions')
-      .update({
-        is_hidden: false,
-        hidden_at: null
-      })
-      .eq('id', transactionId)
-      .select()
-      .single();
+export 
 
     if (error) throw error;
     return data;
@@ -134,12 +105,7 @@ export const unhidePaymentTransaction = async (transactionId) => {
 /**
  * Elimina una transacción de pago
  */
-export const deletePaymentTransaction = async (transactionId) => {
-  try {
-    const { error } = await supabase
-      .from('payment_transactions')
-      .delete()
-      .eq('id', transactionId);
+export 
 
     if (error) throw error;
     return true;
@@ -152,23 +118,7 @@ export const deletePaymentTransaction = async (transactionId) => {
 /**
  * Busca una transacción por localizador
  */
-export const getPaymentTransactionByLocator = async (locator) => {
-  try {
-    const { data, error } = await supabase
-      .from('payment_transactions')
-      .select(`
-        *,
-        event:eventos(*),
-        funcion:funciones(
-          id,
-          fecha_celebracion,
-          evento_id,
-          sala_id,
-          plantilla
-        )
-      `)
-      .eq('locator', locator)
-      .single();
+export 
 
     if (error) throw error;
     return data;
@@ -181,22 +131,7 @@ export const getPaymentTransactionByLocator = async (locator) => {
 /**
  * Obtiene todas las transacciones de un usuario
  */
-export const getPaymentTransactionsByUser = async (userId, tenantId = null) => {
-  try {
-    let query = supabase
-      .from('payment_transactions')
-      .select(`
-        *,
-        event:eventos(*),
-        funcion:funciones(
-          id,
-          fecha_celebracion,
-          evento_id,
-          sala_id
-        )
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+export 
 
     if (tenantId) {
       query = query.eq('tenant_id', tenantId);
@@ -215,11 +150,7 @@ export const getPaymentTransactionsByUser = async (userId, tenantId = null) => {
 /**
  * Obtiene estadísticas de transacciones
  */
-export const getPaymentTransactionStats = async (tenantId = null, dateRange = null) => {
-  try {
-    let query = supabase
-      .from('payment_transactions')
-      .select('status, amount, created_at');
+export 
 
     if (tenantId) {
       query = query.eq('tenant_id', tenantId);

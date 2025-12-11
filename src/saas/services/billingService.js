@@ -16,7 +16,7 @@ class BillingService {
 
       if (config?.stripe_secret_key) {
         // En un entorno real, usarías la SDK de Stripe
-        this.stripe = { secretKey: config.stripe_secret_key };
+
         return true;
       }
       return false;

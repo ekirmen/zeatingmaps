@@ -59,7 +59,7 @@ const CRM = () => {
       // ðŸŽ¯ CARGAR DATOS CRM ESPECIALIZADOS
       const fetchProfilesMap = async (userIds, selectFields = 'id, nombre, email:login') => {
         const uniqueIds = Array.from(new Set((userIds || []).filter(Boolean)));
-        if (!uniqueIds.length) {
+
           return new Map();
         }
 

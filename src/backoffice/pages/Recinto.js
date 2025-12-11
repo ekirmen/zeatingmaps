@@ -210,7 +210,7 @@ const Recinto = () => {
   const currentRecintos = filteredRecintos.slice(indexOfFirstRecinto, indexOfLastRecinto);
   const totalPages = Math.ceil(filteredRecintos.length / recordsPerPage);
 
-  if (loading) {
+
     return (
       <div className="dashboard-loading">
         <Spin size="large" />

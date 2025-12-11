@@ -20,7 +20,7 @@ const ImageUploader = ({
       
       // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
-        message.error('Por favor selecciona solo archivos de imagen');
+
         return;
       }
       

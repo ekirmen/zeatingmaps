@@ -427,7 +427,7 @@ const SaasDashboard = () => {
 
 
   const getStatusColor = (status) => {
-    switch (status) {
+
       case 'active': return 'green';
       case 'inactive': return 'red';
       case 'suspended': return 'orange';
@@ -1209,8 +1209,7 @@ const SaasDashboard = () => {
 };
 
 // Componentes de soporte
-const TenantEventsSupport = ({ tenant, onAction }) => {
-  const [events, setEvents] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   const loadEvents = useCallback(async () => {
@@ -1274,8 +1273,7 @@ const TenantEventsSupport = ({ tenant, onAction }) => {
   );
 };
 
-const TenantUsersSupport = ({ tenant, onAction }) => {
-  const [users, setUsers] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   const loadUsers = useCallback(async () => {
@@ -1331,8 +1329,7 @@ const TenantUsersSupport = ({ tenant, onAction }) => {
   );
 };
 
-const TenantProductsSupport = ({ tenant, onAction }) => {
-  const [products, setProducts] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   const loadProducts = useCallback(async () => {
@@ -1388,49 +1385,11 @@ const TenantProductsSupport = ({ tenant, onAction }) => {
   );
 };
 
-const TenantConfigSupport = ({ tenant, onAction }) => {
-  return (
-    <div>
-      <Alert
-        message="Configuraci³n del Tenant"
-        description="Aqu­ puedes modificar la configuraci³n general del cliente"
-        type="info"
-        showIcon
-        style={{ marginBottom: '16px' }}
-      />
 
-      <List>
-        <List.Item>
-          <List.Item.Meta
-            title="Cambiar Plan"
-            description="Actualizar el plan del cliente"
-          />
-          <Select defaultValue={tenant.plan_type} style={{ width: 120 }}>
-            <Option value="basic">B¡sico</Option>
-            <Option value="pro">Profesional</Option>
-            <Option value="enterprise">Empresarial</Option>
-          </Select>
-        </List.Item>
-
-        <List.Item>
-          <List.Item.Meta
-            title="Cambiar Estado"
-            description="Activar o suspender el tenant"
-          />
-          <Select defaultValue={tenant.status} style={{ width: 120 }}>
-            <Option value="active">Activo</Option>
-            <Option value="suspended">Suspendido</Option>
-            <Option value="inactive">Inactivo</Option>
-          </Select>
-        </List.Item>
-      </List>
-    </div>
-  );
 };
 
 // Componente para ver datos del cliente
-const ClientDataViewer = ({ tenant, dataType, onAction }) => {
-  const [data, setData] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {

@@ -21,7 +21,7 @@ const parseDetalles = (selectedPlantilla, selectedFuncion) => {
 
     try {
       const parsed = typeof rawDetalles === 'string' ? JSON.parse(rawDetalles) : rawDetalles;
-      if (Array.isArray(parsed)) {
+
         return parsed;
       }
     } catch (error) {

@@ -4,7 +4,7 @@ import { Skeleton, Card } from '../utils/antdComponents';
 /**
  * Skeleton Loader para el mapa de asientos
  */
-export const SeatMapSkeleton = () => {
+
   return (
     <div className="w-full h-full p-4">
       <Skeleton active paragraph={{ rows: 0 }} />

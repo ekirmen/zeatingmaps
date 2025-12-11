@@ -98,9 +98,7 @@ const SaasUserManagementSimple = () => {
     loadTenants();
   }, []);
 
-  const loadUsuarios = async () => {
-    try {
-      setLoading(true);
+  
       // Simular carga de usuarios
       setUsuarios([]);
     } catch (error) {
@@ -111,14 +109,7 @@ const SaasUserManagementSimple = () => {
     }
   };
 
-  const loadTenants = async () => {
-    try {
-      // Simular carga de tenants
-      const tenantOptions = [
-        { key: '1', title: 'Tenant 1', description: 'tenant1.com' },
-        { key: '2', title: 'Tenant 2', description: 'tenant2.com' },
-        { key: '3', title: 'Tenant 3', description: 'tenant3.com' }
-      ];
+  
       setTenants(tenantOptions);
     } catch (error) {
       console.error('Error loading tenants:', error);
@@ -158,7 +149,7 @@ const SaasUserManagementSimple = () => {
     }
   };
 
-  const getRoleInfo = (role) => {
+
     return saasRoles.find(r => r.value === role) || { 
       value: role, 
       label: role, 

@@ -116,7 +116,7 @@ const Dashboard = () => {
   );
 
   const getEventStatusColor = (status) => {
-    switch (status) {
+
       case 'active': return '#10b981';
       case 'draft': return '#f59e0b';
       case 'completed': return '#6b7280';

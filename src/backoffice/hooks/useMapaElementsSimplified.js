@@ -8,9 +8,7 @@ import { useMapaBackground } from './useMapaBackground';
 import { useMapaConnections } from './useMapaConnections';
 import { useMapaSeats } from './useMapaSeats';
 
-export const useMapaElementsSimplified = (elements, setElements, selectedIds, selectedZone, numSillas) => {
-  // Hooks especializados
-  const { scaleElement, scaleSystem } = useMapaScaling(elements, setElements);
+export 
   const { changeSeatState, seatStates } = useMapaSeatStates(elements, setElements);
   const { precisePositioning, snapToCustomGrid, snapToGrid } = useMapaPositioning(elements, setElements);
   const { setBackgroundImage, updateBackground, removeBackground, backgroundSystem } = useMapaBackground(elements, setElements);
@@ -34,7 +32,7 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
       fila: '',
       scale: 1.0
     };
-    setElements(prev => [...prev, nuevaMesa]);
+
     return nuevaMesa;
   };
 

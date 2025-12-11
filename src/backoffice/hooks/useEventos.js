@@ -2,13 +2,7 @@
 import { useCallback } from 'react';
 import { supabase } from '../../supabaseClient';
 
-export const useEventos = (navigate, setEventos, setEventosFiltrados) => {
-  const fetchEventos = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('eventos')
-        .select('*')
-        .order('fecha', { ascending: false });
+export 
 
       if (error) throw error;
       setEventos(data);
@@ -20,7 +14,7 @@ export const useEventos = (navigate, setEventos, setEventosFiltrados) => {
   }, [navigate, setEventos, setEventosFiltrados]);
 
   const handleDelete = useCallback(async (eventoId) => {
-    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este evento?');
+
     if (!confirmDelete) return;
 
     try {

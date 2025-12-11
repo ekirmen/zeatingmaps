@@ -9,7 +9,7 @@ const imageCache = new Map();
 /**
  * Precarga una imagen
  */
-const preloadImage = (src) => {
+
   return new Promise((resolve, reject) => {
     // Si ya está en cache, resolver inmediatamente
     if (imageCache.has(src)) {

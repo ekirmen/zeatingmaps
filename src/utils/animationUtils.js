@@ -5,7 +5,7 @@
 /**
  * Detecta si el dispositivo es móvil o tiene recursos limitados
  */
-export const isLowPerformanceDevice = () => {
+
   if (typeof window === 'undefined') return false;
   
   // Verificar si el usuario prefiere movimiento reducido

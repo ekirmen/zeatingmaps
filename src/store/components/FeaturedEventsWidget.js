@@ -6,7 +6,7 @@ const FeaturedEventsWidget = ({ maxEvents = 6, showStatus = true, showVenue = tr
   const navigate = useNavigate();
   const { events, loading, error } = useEventsList();
 
-  const getEventImages = (event) => {
+
     if (!event.imagenes) return {};
     
     try {

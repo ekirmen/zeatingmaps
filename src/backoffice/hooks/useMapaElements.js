@@ -1,21 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import { message } from '../../utils/antdComponents';
 
-export const useMapaElements = (elements, setElements, selectedIds, selectedZone, numSillas) => {
-
-  // ===== SISTEMA DE ESCALADO AVANZADO =====
-  const scaleSystem = {
-    min: 0.1,
-    max: 3.0,
-    step: 0.1,
-    default: 1.0
-  };
+export 
 
   // Función para escalar elementos proporcionalmente
   const scaleElement = (elementId, scaleFactor) => {
     setElements(prev => prev.map(el => {
       if (el._id === elementId) {
-        const newScale = Math.max(scaleSystem.min, Math.min(scaleSystem.max, scaleFactor));
+
         return {
           ...el,
           scale: newScale,
@@ -384,7 +376,7 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
   const limpiarSillasDuplicadas = () => {
     setElements(prev => {
       const sillas = prev.filter(el => el.type === 'silla');
-      const mesas = prev.filter(el => el.type === 'mesa');
+      
       // Agrupar sillas por mesa
       const sillasPorMesa = {};
       sillas.forEach(silla => {

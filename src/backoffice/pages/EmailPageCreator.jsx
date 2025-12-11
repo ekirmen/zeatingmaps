@@ -23,7 +23,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
   });
 
   useEffect(() => {
-    if (setSidebarCollapsed) setSidebarCollapsed(true);
+
     return () => setSidebarCollapsed && setSidebarCollapsed(false);
   }, [setSidebarCollapsed]);
 

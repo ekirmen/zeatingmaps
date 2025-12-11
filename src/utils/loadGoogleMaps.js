@@ -14,7 +14,7 @@ function buildUrl({ apiKey, libraries, language, region, v = 'weekly', callbackN
   if (region) params.set('region', region);
   if (v) params.set('v', v);
   // Use callback query param for JSONP-style load
-  params.set('callback', callbackName);
+
   return `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
 }
 

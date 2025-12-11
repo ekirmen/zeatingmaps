@@ -1,6 +1,6 @@
 import { supabase } from '../../supabaseClient';
 
-const isNotificationsTableMissing = (error) => {
+
   if (!error) return false;
 
   const status = error.status ?? error?.response?.status;
@@ -31,18 +31,7 @@ const handleNotificationError = (context, error) => {
 /**
  * Suscribirse a cambios de transacciones en tiempo real
  */
-export const subscribeToPaymentUpdates = (callback) => {
-  const subscription = supabase
-    .channel('payment_transactions')
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'payment_transactions'
-      },
-      (payload) => {
-        callback(payload);
+export 
       }
     )
     .subscribe();
@@ -144,16 +133,7 @@ export const sendPaymentConfirmationSMS = async (phoneNumber, transaction) => {
 /**
  * Crear notificación de pago exitoso
  */
-export const createPaymentSuccessNotification = async (transaction) => {
-  const notification = {
-    title: 'Pago Confirmado',
-    message: `Tu pago de $${transaction.amount} ha sido procesado exitosamente.`,
-    data: {
-      transactionId: transaction.id,
-      amount: transaction.amount,
-      gateway: transaction.gateway_id
-    }
-  };
+export 
 
   try {
     const targetUserId = transaction.user_id ?? transaction.user?.id ?? null;
@@ -183,16 +163,7 @@ export const createPaymentSuccessNotification = async (transaction) => {
 /**
  * Crear notificación de pago fallido
  */
-export const createPaymentFailureNotification = async (transaction) => {
-  const notification = {
-    title: 'Pago Fallido',
-    message: 'Hubo un problema procesando tu pago. Por favor, intenta nuevamente.',
-    data: {
-      transactionId: transaction.id,
-      amount: transaction.amount,
-      gateway: transaction.gateway_id
-    }
-  };
+export 
 
   try {
     await sendPushNotification(transaction.user_id, notification);
@@ -206,16 +177,7 @@ export const createPaymentFailureNotification = async (transaction) => {
 /**
  * Crear notificación de reembolso
  */
-export const createRefundNotification = async (refund) => {
-  const notification = {
-    title: 'Reembolso Procesado',
-    message: `Tu reembolso de $${refund.amount} ha sido procesado.`,
-    data: {
-      refundId: refund.id,
-      amount: refund.amount,
-      reason: refund.reason
-    }
-  };
+export 
 
   try {
     await sendPushNotification(refund.requested_by, notification);
@@ -229,13 +191,7 @@ export const createRefundNotification = async (refund) => {
 /**
  * Sistema de alertas para administradores
  */
-export const sendAdminAlert = async (alert) => {
-  try {
-    // Enviar alerta a administradores
-    const { data: admins, error } = await supabase
-      .from('users')
-      .select('id, email')
-      .eq('role', 'admin');
+export 
 
     if (error) throw error;
 
@@ -254,15 +210,7 @@ export const sendAdminAlert = async (alert) => {
 /**
  * Notificación de pago pendiente
  */
-export const createPendingPaymentNotification = async (transaction) => {
-  const notification = {
-    title: 'Pago Pendiente',
-    message: 'Tu pago está siendo procesado. Te notificaremos cuando se complete.',
-    data: {
-      transactionId: transaction.id,
-      amount: transaction.amount
-    }
-  };
+export 
 
   try {
     await sendPushNotification(transaction.user_id, notification);
@@ -276,15 +224,7 @@ export const createPendingPaymentNotification = async (transaction) => {
 /**
  * Notificación de reserva expirada
  */
-export const createReservationExpiredNotification = async (reservation) => {
-  const notification = {
-    title: 'Reserva Expirada',
-    message: 'Tu reserva ha expirado. Los asientos han sido liberados.',
-    data: {
-      reservationId: reservation.id,
-      event: reservation.event
-    }
-  };
+export 
 
   try {
     await sendPushNotification(reservation.user_id, notification);

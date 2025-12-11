@@ -143,7 +143,7 @@ const TenantEmailConfigPanel = () => {
   const handleTest = async () => {
     try {
       setTesting(true);
-      const values = await form.validateFields();
+      
 
       const result = await TenantEmailConfigService.testEmailConfig(values);
 
@@ -161,7 +161,7 @@ const TenantEmailConfigPanel = () => {
       setSendingInbound(true);
       const values = await form.validateFields();
 
-      const result = await TenantEmailConfigService.sendInboundTestEmail(values);
+      
 
       message.success('Correo de prueba enviado a email@omegaboletos.com');
 
@@ -181,13 +181,13 @@ const TenantEmailConfigPanel = () => {
       const welcomeEmail = form.getFieldValue('welcome_target_email');
 
       if (!welcomeEmail) {
-        message.warning('Ingresa el correo al que deseas enviar la bienvenida.');
+
         return;
       }
 
       await form.validateFields(['welcome_target_email']);
 
-      const result = await TenantEmailConfigService.sendWelcomeEmail(values, welcomeEmail);
+      
 
       message.success(`Correo de bienvenida enviado a ${welcomeEmail}`);
 

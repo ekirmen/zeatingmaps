@@ -22,7 +22,7 @@ const AuthGuard = ({ children }) => {
       const activeUser = sessionData?.session?.user;
 
       if (activeUser) {
-        setIsAuthenticated(true);
+
         return;
       }
 

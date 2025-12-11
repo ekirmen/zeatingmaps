@@ -39,7 +39,7 @@ const MapShortRoute = () => {
           const funcionId = parseInt(funcion, 10);
           if (Number.isFinite(funcionId) && funcionId > 0) {
             // Redirigir inmediatamente sin hacer queries adicionales
-            navigate(`/store/eventos/${eventSlug}/map?funcion=${funcionId}`, { replace: true });
+
             return;
           }
         }

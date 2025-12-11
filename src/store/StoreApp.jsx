@@ -1,5 +1,5 @@
 /* eslint-disable import/first */
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { RefProvider } from '../contexts/RefContext';
 import { TenantProvider } from '../contexts/TenantContext';
@@ -11,8 +11,44 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTenant } from '../contexts/TenantContext';
 import { useCartStore } from './cartStore';
 import ProtectedRoute from './components/ProtectedRoute';
-import { loadGtm, loadMetaPixel, trackEvent } from './utils/analytics';
 import './styles/store-design.css';
+
+// DEBUG: Verificar importación de analytics
+console.log('🔍 [STOREAPP] Starting import...');
+
+// Definir funciones de analytics (se llenarán más tarde)
+let loadGtm = null;
+let loadMetaPixel = null;
+let trackEvent = null;
+
+// Intentar cargar analytics dinámicamente
+try {
+  import('./utils/analytics').then(module => {
+    console.log('✅ [STOREAPP] Dynamic import successful:', module);
+    loadGtm = module.loadGtm || ((gtmId) => console.log('📊 loadGtm:', gtmId));
+    loadMetaPixel = module.loadMetaPixel || ((pixelId) => console.log('📊 loadMetaPixel:', pixelId));
+    trackEvent = module.trackEvent || ((name, payload) => console.log('📊 trackEvent:', name, payload));
+  }).catch(error => {
+    console.error('❌ [STOREAPP] Dynamic import failed:', error);
+    // Función de respaldo
+    loadGtm = (gtmId) => console.log('🔄 [FALLBACK] loadGtm:', gtmId);
+    loadMetaPixel = (pixelId) => console.log('🔄 [FALLBACK] loadMetaPixel:', pixelId);
+    trackEvent = (name, payload) => console.log('🔄 [FALLBACK] trackEvent:', name, payload);
+  });
+} catch (error) {
+  console.error('❌ [STOREAPP] Import error:', error);
+}
+
+// Las funciones estarán disponibles más tarde, pero para usar inmediatamente:
+if (!loadGtm) {
+  loadGtm = (gtmId) => console.log('⚠️ [TEMPORARY] loadGtm:', gtmId);
+}
+if (!loadMetaPixel) {
+  loadMetaPixel = (pixelId) => console.log('⚠️ [TEMPORARY] loadMetaPixel:', pixelId);
+}
+if (!trackEvent) {
+  trackEvent = (name, payload) => console.log('⚠️ [TEMPORARY] trackEvent:', name, payload);
+}
 
 // Lazy load con prefetch
 const lazyImport = (path) => React.lazy(() => import(`${path}` /* webpackPrefetch: true */));
@@ -24,7 +60,7 @@ const Pages = {
   BuyEvent: lazyImport('./pages/BuyEvent'),
   CartPage: lazyImport('./pages/Cart'),
   Pay: lazyImport('./pages/Pay'),
-  Profile: lazyImport('./pages/profile.js'),
+  Profile: lazyImport('./pages/profile'),
   ModernEventPage: lazyImport('./pages/ModernEventPage'),
   EventMapPage: lazyImport('./pages/EventMapPage'),
   ModernStorePage: lazyImport('./pages/ModernStorePage'),
@@ -50,12 +86,12 @@ const StoreApp = () => {
   const { user, updateProfile } = useAuth();
   const restoreTimer = useCartStore((s) => s.restoreTimer);
   const { currentTenant, domainConfig } = useTenant();
-  const previousPath = React.useRef(location.pathname);
+  const previousPath = useRef(location.pathname);
   const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
 
-  React.useEffect(() => restoreTimer(), [restoreTimer]);
+  useEffect(() => restoreTimer(), [restoreTimer]);
 
-  React.useEffect(() => {
+
     if (DEBUG) return;
     const analyticsConfig = currentTenant?.analytics || domainConfig?.analytics;
     if (!analyticsConfig?.enabled) return;
@@ -66,7 +102,7 @@ const StoreApp = () => {
     if (gtmId) loadGtm(gtmId);
   }, [currentTenant?.analytics, domainConfig?.analytics, DEBUG]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const prev = previousPath.current;
     const curr = location.pathname;
     if (prev !== curr) {

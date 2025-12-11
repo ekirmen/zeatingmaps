@@ -3,11 +3,7 @@ import { supabase } from '../supabaseClient';
 /**
  * Bloquea un asiento
  */
-export const lockSeat = async (seatData) => {
-  try {
-    // Generar locator si no se proporciona
-    const generateLocator = () => {
-      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
       return Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
     };
 
@@ -40,13 +36,7 @@ export const lockSeat = async (seatData) => {
 /**
  * Libera un asiento
  */
-export const unlockSeat = async (seatId, funcionId) => {
-  try {
-    const { error } = await supabase
-      .from('seat_locks')
-      .delete()
-      .eq('seat_id', seatId)
-      .eq('funcion_id', funcionId);
+export 
 
     if (error) throw error;
     return true;
@@ -59,12 +49,7 @@ export const unlockSeat = async (seatId, funcionId) => {
 /**
  * Obtiene asientos bloqueados por localizador
  */
-export const getSeatLocksByLocator = async (locator) => {
-  try {
-    const { data, error } = await supabase
-      .from('seat_locks')
-      .select('*')
-      .eq('locator', locator);
+export 
 
     if (error) throw error;
     return data || [];
@@ -77,12 +62,7 @@ export const getSeatLocksByLocator = async (locator) => {
 /**
  * Obtiene asientos bloqueados por usuario
  */
-export const getSeatLocksByUser = async (userId, funcionId = null) => {
-  try {
-    let query = supabase
-      .from('seat_locks')
-      .select('*')
-      .eq('user_id', userId);
+export 
 
     if (funcionId) {
       query = query.eq('funcion_id', funcionId);
@@ -101,12 +81,7 @@ export const getSeatLocksByUser = async (userId, funcionId = null) => {
 /**
  * Actualiza asientos con localizador
  */
-export const updateSeatsWithLocator = async (seatIds, locator, userId, zoneInfo = null) => {
-  try {
-    const updateData = { 
-      locator: locator,
-      user_id: userId
-    };
+export 
     
     if (zoneInfo) {
       updateData.zona_id = zoneInfo.zona_id || 'ORO';
@@ -130,12 +105,7 @@ export const updateSeatsWithLocator = async (seatIds, locator, userId, zoneInfo 
 /**
  * Limpia bloqueos expirados
  */
-export const cleanupExpiredLocks = async () => {
-  try {
-    const { error } = await supabase
-      .from('seat_locks')
-      .delete()
-      .lt('expires_at', new Date().toISOString());
+export 
 
     if (error) throw error;
     return true;

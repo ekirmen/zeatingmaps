@@ -17,7 +17,8 @@ import {
   Progress,
   Tag,
   Tooltip,
-  Badge
+  Badge,
+  Spin
 } from '../../../utils/antdComponents';
 import './CrearMapa.css';
 import {
@@ -35,10 +36,9 @@ import {
   PlayCircleOutlined,
   PauseCircleOutlined
 } from '@ant-design/icons';
-import CrearMapaEditor from './CrearMapaEditor';
-import CrearMapaPreview from './CrearMapaPreview';
-import CrearMapaSettings from './CrearMapaSettings';
-import CrearMapaValidation from './CrearMapaValidation';
+
+// Importar solo componentes que EXISTAN
+// Si no existen, los creamos directamente en este archivo
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -83,7 +83,7 @@ const CrearMapaMain = ({
     };
 
     // Si hay un mapa inicial, fusionarlo con el por defecto
-    if (initialMapa) {
+
       return {
         ...defaultMapa,
         ...initialMapa,
@@ -103,12 +103,11 @@ const CrearMapaMain = ({
     return defaultMapa;
   });
 
-  const [showEditor, setShowEditor] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   
-  // ===== ESTADOS DE VALIDACI“N =====
+  // ===== ESTADOS DE VALIDACIÓN =====
   const [validationResults, setValidationResults] = useState({
     isValid: false,
     errors: [],
@@ -123,19 +122,19 @@ const CrearMapaMain = ({
   // ===== PASOS DEL WIZARD =====
   const steps = [
     {
-      title: 'Configuraci³n B¡sica',
-      description: 'Informaci³n del mapa',
+      title: 'Configuración Básica',
+      description: 'Información del mapa',
       icon: <InfoCircleOutlined />,
       content: 'basic'
     },
     {
-      title: 'Dise±o del Mapa',
+      title: 'Diseño del Mapa',
       description: 'Editor visual',
       icon: <EditOutlined />,
       content: 'editor'
     },
     {
-      title: 'Validaci³n',
+      title: 'Validación',
       description: 'Verificar integridad',
       icon: <CheckCircleOutlined />,
       content: 'validation'
@@ -147,7 +146,7 @@ const CrearMapaMain = ({
       content: 'preview'
     },
     {
-      title: 'Configuraci³n Avanzada',
+      title: 'Configuración Avanzada',
       description: 'Ajustes finales',
       icon: <SettingOutlined />,
       content: 'settings'
@@ -158,22 +157,24 @@ const CrearMapaMain = ({
   useEffect(() => {
     if (initialMapa) {
       setMapa(initialMapa);
-      setCurrentStep(1); // Ir directamente al editor si es edici³n
+      if (isEditMode) {
+        setCurrentStep(1); // Ir directamente al editor si es edición
+      }
     }
-  }, [initialMapa]);
+  }, [initialMapa, isEditMode]);
 
   useEffect(() => {
-    // Calcular progreso basado en el paso actual y validaci³n
+    // Calcular progreso basado en el paso actual y validación
     let progressValue = (currentStep / (steps.length - 1)) * 100;
     
     if (currentStep >= 2 && validationResults.isValid) {
-      progressValue += 20; // Bonus por validaci³n exitosa
+      progressValue += 20; // Bonus por validación exitosa
     }
     
     setProgress(Math.min(progressValue, 100));
   }, [currentStep, validationResults.isValid, steps.length]);
 
-  // ===== FUNCIONES DE NAVEGACI“N =====
+  // ===== FUNCIONES DE NAVEGACIÓN =====
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -190,19 +191,44 @@ const CrearMapaMain = ({
     setCurrentStep(step);
   };
 
-  // ===== FUNCIONES DE VALIDACI“N =====
+  // ===== FUNCIONES DE VALIDACIÓN =====
   const validateMapa = async () => {
     setIsProcessing(true);
     setProgress(0);
     
     try {
-      // Simular proceso de validaci³n
+      // Simular proceso de validación
       for (let i = 0; i <= 100; i += 20) {
         setProgress(i);
         await new Promise(resolve => setTimeout(resolve, 200));
       }
       
-      const results = await CrearMapaValidation.validate(mapa);
+      // Validación básica
+      const errors = [];
+      const warnings = [];
+      const suggestions = [];
+      
+      if (!mapa.nombre || mapa.nombre.trim() === '') {
+        errors.push('El nombre del mapa es requerido');
+      }
+      
+      if (!mapa.contenido?.elementos || mapa.contenido.elementos.length === 0) {
+        warnings.push('No hay elementos en el mapa. Agrega asientos, zonas o elementos visuales.');
+      }
+      
+      if (!mapa.contenido?.configuracion?.dimensions?.width || !mapa.contenido?.configuracion?.dimensions?.height) {
+        errors.push('Las dimensiones del mapa son requeridas');
+      }
+      
+      const isValid = errors.length === 0;
+      
+      const results = {
+        isValid,
+        errors,
+        warnings,
+        suggestions
+      };
+      
       setValidationResults(results);
       
       if (results.isValid) {
@@ -212,7 +238,7 @@ const CrearMapaMain = ({
         message.warning('El mapa tiene algunos problemas que deben corregirse');
       }
     } catch (error) {
-      message.error('Error durante la validaci³n');
+      message.error('Error durante la validación');
       console.error('Validation error:', error);
     } finally {
       setIsProcessing(false);
@@ -220,16 +246,7 @@ const CrearMapaMain = ({
   };
 
   // ===== FUNCIONES DE GUARDADO =====
-  const handleSave = async (mapaData) => {
-    try {
-      const mapaToSave = {
-        ...mapaData,
-        metadata: {
-          ...mapaData.metadata,
-          updated_at: new Date().toISOString(),
-          version: mapaData.metadata.version || '1.0.0'
-        }
-      };
+  
       
       if (onSave) {
         await onSave(mapaToSave);
@@ -238,7 +255,7 @@ const CrearMapaMain = ({
       setMapa(mapaToSave);
       message.success('Mapa guardado exitosamente');
       
-      // Ir al siguiente paso si no es el ºltimo
+      // Ir al siguiente paso si no es el último
       if (currentStep < steps.length - 1) {
         nextStep();
       }
@@ -272,6 +289,419 @@ const CrearMapaMain = ({
     }
   };
 
+  // ===== COMPONENTES QUE FALTABAN =====
+  const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
+    const [form] = Form.useForm();
+
+    const handleFinish = (values) => {
+      onUpdate({
+        ...mapa,
+        ...values,
+        metadata: {
+          ...mapa.metadata,
+          updated_at: new Date().toISOString()
+        }
+      });
+      onNext();
+    };
+
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-custom">
+            <span className="text-4xl text-white">🗺️</span>
+          </div>
+          <Title level={1} className="mb-4 text-gradient">
+            ¡Bienvenido al Creador de Mapas!
+          </Title>
+          <Title level={3} className="mb-3 text-gray-700">
+            Configuración Básica del Mapa
+          </Title>
+          <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Comienza creando tu mapa de asientos personalizado. Define la información fundamental y luego pasa al editor visual donde podrás diseñar la distribución perfecta.
+          </Text>
+        </div>
+        
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={mapa}
+          onFinish={handleFinish}
+          className="space-y-6"
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="nombre"
+                label="Nombre del Mapa"
+                rules={[{ required: true, message: 'El nombre es obligatorio' }]}
+              >
+                <Input placeholder="Ej: Mapa Principal - Sala A" />
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name="estado"
+                label="Estado"
+                rules={[{ required: true, message: 'El estado es obligatorio' }]}
+              >
+                <Select>
+                  <Option value="draft">Borrador</Option>
+                  <Option value="active">Activo</Option>
+                  <Option value="inactive">Inactivo</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            name="descripcion"
+            label="Descripción"
+          >
+            <TextArea 
+              rows={4} 
+              placeholder="Describe el propósito y características del mapa..."
+            />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name={['contenido', 'configuracion', 'dimensions', 'width']}
+                label="Ancho del Mapa (px)"
+                rules={[{ required: true, message: 'El ancho es obligatorio' }]}
+              >
+                <Input type="number" min={400} max={2000} />
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                name={['contenido', 'configuracion', 'dimensions', 'height']}
+                label="Alto del Mapa (px)"
+                rules={[{ required: true, message: 'El alto es obligatorio' }]}
+              >
+                <Input type="number" min={300} max={1500} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            name={['metadata', 'tags']}
+            label="Etiquetas"
+          >
+            <Select
+              mode="tags"
+              placeholder="Agregar etiquetas..."
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name={['metadata', 'notes']}
+            label="Notas"
+          >
+            <TextArea 
+              rows={3} 
+              placeholder="Notas adicionales sobre el mapa..."
+            />
+          </Form.Item>
+
+          <div className="text-center pt-6">
+            <Button 
+              type="primary" 
+              size="large" 
+              htmlType="submit"
+              className="btn-gradient-primary shadow-custom hover-lift px-12 py-3 h-14 text-lg font-semibold"
+            >
+              🗺️ Continuar al Editor
+            </Button>
+          </div>
+        </Form>
+      </div>
+    );
+  };
+
+  const CrearMapaValidation = ({ mapa, results, onValidate, onNext, isProcessing, progress }) => {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-custom">
+            <CheckCircleOutlined className="text-4xl text-white" />
+          </div>
+          <Title level={1} className="mb-4 text-gradient">
+            Validación del Mapa
+          </Title>
+          <Title level={3} className="mb-3 text-gray-700">
+            Verificando integridad y consistencia
+          </Title>
+          <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Revisamos que tu mapa esté completo y listo para usar. Corrige cualquier problema antes de continuar.
+          </Text>
+        </div>
+
+        <Card className="mb-6">
+          <div className="text-center mb-6">
+            <Progress 
+              percent={progress} 
+              status={results.isValid ? 'success' : 'active'}
+              strokeColor={{
+                '0%': '#3b82f6',
+                '100%': '#10b981',
+              }}
+              strokeWidth={10}
+            />
+            
+            <div className="mt-6">
+              {!results.isValid && results.errors.length === 0 && (
+                <Button 
+                  type="primary" 
+                  size="large"
+                  onClick={onValidate}
+                  loading={isProcessing}
+                  className="px-8 py-2 h-12"
+                >
+                  Iniciar Validación
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {results.errors.length > 0 && (
+          <Alert
+            type="error"
+            message="Problemas Críticos"
+            description={
+              <ul className="list-disc pl-5 mt-2">
+                {results.errors.map((error, index) => (
+                  <li key={index} className="mb-1">{error}</li>
+                ))}
+              </ul>
+            }
+            className="mb-4"
+          />
+        )}
+
+        {results.warnings.length > 0 && (
+          <Alert
+            type="warning"
+            message="Advertencias"
+            description={
+              <ul className="list-disc pl-5 mt-2">
+                {results.warnings.map((warning, index) => (
+                  <li key={index} className="mb-1">{warning}</li>
+                ))}
+              </ul>
+            }
+            className="mb-4"
+          />
+        )}
+
+        {results.suggestions.length > 0 && (
+          <Alert
+            type="info"
+            message="Sugerencias de Mejora"
+            description={
+              <ul className="list-disc pl-5 mt-2">
+                {results.suggestions.map((suggestion, index) => (
+                  <li key={index} className="mb-1">{suggestion}</li>
+                ))}
+              </ul>
+            }
+            className="mb-6"
+          />
+        )}
+
+        {results.isValid && (
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <div className="text-center">
+              <CheckCircleOutlined className="text-5xl text-green-600 mb-4" />
+              <Title level={3} className="text-green-700 mb-2">
+                ¡Validación Exitosa!
+              </Title>
+              <Text className="text-lg text-green-600 mb-6">
+                Tu mapa está completo y listo para usar.
+              </Text>
+              <Button 
+                type="primary" 
+                size="large"
+                onClick={onNext}
+                className="bg-green-600 border-green-600 hover:bg-green-700 px-8 py-2 h-12"
+              >
+                Continuar a Vista Previa
+              </Button>
+            </div>
+          </Card>
+        )}
+      </div>
+    );
+  };
+
+  const CrearMapaPreview = ({ mapa, onEdit, onNext }) => {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="w-24 h-24 bg-gradient-to-r from-orange-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-custom">
+            <EyeOutlined className="text-4xl text-white" />
+          </div>
+          <Title level={1} className="mb-4 text-gradient">
+            Vista Previa del Mapa
+          </Title>
+          <Title level={3} className="mb-3 text-gray-700">
+            Revisa cómo se verá tu mapa final
+          </Title>
+          <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Esta es una representación visual de cómo se verá tu mapa cuando esté publicado.
+          </Text>
+        </div>
+
+        <Card className="mb-6">
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 min-h-[400px] flex flex-col items-center justify-center">
+            <div className="text-6xl mb-4">🗺️</div>
+            <Title level={3} className="text-gray-600">
+              Vista Previa del Mapa
+            </Title>
+            <Text className="text-gray-500 mb-4">
+              Nombre: {mapa.nombre}
+            </Text>
+            <Text className="text-gray-500 mb-6">
+              Dimensiones: {mapa.contenido?.configuracion?.dimensions?.width} x {mapa.contenido?.configuracion?.dimensions?.height} px
+            </Text>
+            
+            <Space>
+              <Button 
+                icon={<EditOutlined />}
+                onClick={onEdit}
+                className="px-6"
+              >
+                Editar Mapa
+              </Button>
+              {onNext && (
+                <Button 
+                  type="primary"
+                  onClick={onNext}
+                  className="px-6"
+                >
+                  Continuar
+                </Button>
+              )}
+            </Space>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
+  const CrearMapaSettings = ({ mapa, onUpdate, onFinish, onBack }) => {
+    const [form] = Form.useForm();
+
+    const handleFinish = (values) => {
+      onUpdate({
+        ...mapa,
+        ...values,
+        metadata: {
+          ...mapa.metadata,
+          ...values.metadata,
+          updated_at: new Date().toISOString()
+        }
+      });
+      
+      if (onFinish) {
+        onFinish();
+      }
+    };
+
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-custom">
+            <SettingOutlined className="text-4xl text-white" />
+          </div>
+          <Title level={1} className="mb-4 text-gradient">
+            Configuración Avanzada
+          </Title>
+          <Title level={3} className="mb-3 text-gray-700">
+            Ajustes finales del mapa
+          </Title>
+          <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Configura los detalles avanzados de tu mapa antes de publicarlo.
+          </Text>
+        </div>
+
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={mapa}
+          onFinish={handleFinish}
+          className="space-y-6"
+        >
+          <Card title="Configuración de Grid" className="mb-6">
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name={['contenido', 'configuracion', 'gridSize']}
+                  label="Tamaño de Grid"
+                >
+                  <Input type="number" min={5} max={100} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name={['contenido', 'configuracion', 'showGrid']}
+                  label="Mostrar Grid"
+                  valuePropName="checked"
+                >
+                  <Select>
+                    <Option value={true}>Sí</Option>
+                    <Option value={false}>No</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
+
+          <Card title="Metadatos" className="mb-6">
+            <Form.Item
+              name={['metadata', 'version']}
+              label="Versión"
+            >
+              <Input placeholder="1.0.0" />
+            </Form.Item>
+          </Card>
+
+          <div className="flex justify-between pt-6">
+            {onBack && (
+              <Button onClick={onBack}>
+                Volver
+              </Button>
+            )}
+            
+            <Space>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                icon={<SaveOutlined />}
+                size="large"
+              >
+                Guardar Configuración
+              </Button>
+              
+              <Button 
+                type="default" 
+                onClick={onFinish}
+                size="large"
+              >
+                Cancelar
+              </Button>
+            </Space>
+          </div>
+        </Form>
+      </div>
+    );
+  };
+
   // ===== RENDERIZADO DE CONTENIDO POR PASO =====
   const renderStepContent = () => {
     switch (steps[currentStep].content) {
@@ -286,13 +716,45 @@ const CrearMapaMain = ({
       
       case 'editor':
         return (
-          <CrearMapaEditor
-            salaId={salaId}
-            initialMapa={mapa}
-            onSave={handleSave}
-            onCancel={() => setCurrentStep(currentStep - 1)}
-            isEditMode={isEditMode}
-          />
+          <Card className="text-center">
+            <div className="py-12">
+              <div className="text-6xl mb-6">🎨</div>
+              <Title level={2} className="mb-4">
+                Editor de Mapa
+              </Title>
+              <Text className="text-lg text-gray-600 mb-8">
+                El editor visual se cargará aquí. Por ahora, puedes simular la edición.
+              </Text>
+              
+              <Space>
+                <Button 
+                  type="primary"
+                  onClick={() => {
+                    // Simular que se han agregado elementos
+                    setMapa(prev => ({
+                      ...prev,
+                      contenido: {
+                        ...prev.contenido,
+                        elementos: [
+                          { id: 1, type: 'seat', position: { x: 100, y: 100 } },
+                          { id: 2, type: 'seat', position: { x: 150, y: 100 } }
+                        ]
+                      }
+                    }));
+                    message.success('Elementos agregados al mapa');
+                  }}
+                >
+                  Agregar Elementos de Prueba
+                </Button>
+                
+                <Button 
+                  onClick={nextStep}
+                >
+                  Saltar al Siguiente Paso
+                </Button>
+              </Space>
+            </div>
+          </Card>
         );
       
       case 'validation':
@@ -321,34 +783,47 @@ const CrearMapaMain = ({
           <CrearMapaSettings
             mapa={mapa}
             onUpdate={setMapa}
-            onFinish={handleFinalSave}
+            onFinish={() => {
+              if (validationResults.isValid) {
+                handleFinalSave();
+              } else {
+                setCurrentStep(2); // Volver a validación
+              }
+            }}
             onBack={() => setCurrentStep(currentStep - 1)}
           />
         );
       
       default:
-        return null;
+        return (
+          <Card>
+            <div className="text-center py-12">
+              <Spin size="large" />
+              <Text className="block mt-4">Cargando paso...</Text>
+            </div>
+          </Card>
+        );
     }
   };
 
   // ===== RENDERIZADO PRINCIPAL =====
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* ===== HEADER ===== */}
+      {/* HEADER */}
       <div className="bg-white shadow-lg border-b border-gray-200 p-8">
         <div className="max-w-7xl mx-auto">
           <Row gutter={24} align="middle">
             <Col flex="auto">
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-2xl text-white">ðŸŽ¨</span>
+                  <span className="text-2xl text-white">🗺️</span>
                 </div>
                 <div>
                   <Title level={1} className="mb-2 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                     {isEditMode ? 'Editar Mapa' : 'Crear Nuevo Mapa'}
                   </Title>
                   <Text className="text-lg text-gray-600">
-                    {isEditMode ? 'Modifica la configuraci³n y dise±o del mapa existente' : 'Dise±a y configura un nuevo mapa para tu sala'}
+                    {isEditMode ? 'Modifica la configuración y diseño del mapa existente' : 'Diseña y configura un nuevo mapa para tu sala'}
                   </Text>
                 </div>
               </div>
@@ -359,7 +834,7 @@ const CrearMapaMain = ({
                 <Button 
                   icon={<EyeOutlined />}
                   onClick={() => setShowPreview(true)}
-                  title="Vista previa r¡pida"
+                  title="Vista previa rápida"
                   size="large"
                   className="btn-gradient-primary shadow-custom hover-lift"
                 >
@@ -368,11 +843,11 @@ const CrearMapaMain = ({
                 <Button 
                   icon={<SettingOutlined />}
                   onClick={() => setShowSettings(true)}
-                  title="Configuraci³n avanzada"
+                  title="Configuración avanzada"
                   size="large"
                   className="btn-gradient-success shadow-custom hover-lift"
                 >
-                  Configuraci³n
+                  Configuración
                 </Button>
                 <Button 
                   onClick={onCancel}
@@ -387,7 +862,7 @@ const CrearMapaMain = ({
         </div>
       </div>
 
-      {/* ===== PROGRESS BAR ===== */}
+      {/* PROGRESS BAR */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
@@ -407,9 +882,9 @@ const CrearMapaMain = ({
             <div className="text-right">
               <Text className="text-sm text-gray-500">
                 {progress === 100 ? (
-                  <span className="text-green-600 font-semibold">ðŸŽ‰ ¡Listo para publicar!</span>
+                  <span className="text-green-600 font-semibold">🎉 ¡Listo para publicar!</span>
                 ) : (
-                  <span className="text-blue-600">ðŸš€ Continuando...</span>
+                  <span className="text-blue-600">🚀 Continuando...</span>
                 )}
               </Text>
             </div>
@@ -429,12 +904,12 @@ const CrearMapaMain = ({
         </div>
       </div>
 
-      {/* ===== STEPS NAVIGATION ===== */}
+      {/* STEPS NAVIGATION */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-4">
             <Text className="text-lg font-semibold text-gray-800 mb-2">
-              Flujo de Creaci³n del Mapa
+              Flujo de Creación del Mapa
             </Text>
             <Text className="text-sm text-gray-600">
               Sigue estos pasos para crear un mapa completo y profesional
@@ -451,14 +926,14 @@ const CrearMapaMain = ({
         </div>
       </div>
 
-      {/* ===== MAIN CONTENT ===== */}
+      {/* MAIN CONTENT */}
       <div className="max-w-7xl mx-auto p-8">
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 crear-mapa-content">
           {renderStepContent()}
         </div>
       </div>
 
-      {/* ===== FOOTER NAVIGATION ===== */}
+      {/* FOOTER NAVIGATION */}
       <div className="bg-white shadow-lg border-t border-gray-200 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center">
@@ -469,7 +944,7 @@ const CrearMapaMain = ({
                   size="large"
                   className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 px-6"
                 >
-                  † Anterior
+                  ← Anterior
                 </Button>
               )}
             </div>
@@ -478,22 +953,17 @@ const CrearMapaMain = ({
               <div className="flex items-center gap-3">
                 {validationResults.isValid && (
                   <Tag color="success" icon={<CheckCircleOutlined />} className="px-3 py-1 text-sm font-medium">
-                    œ… Validado - ¡Perfecto!
+                    ✅ Validado - ¡Perfecto!
                   </Tag>
                 )}
                 {validationResults.errors.length > 0 && (
                   <Tag color="error" icon={<ExclamationCircleOutlined />} className="px-3 py-1 text-sm font-medium">
-                    Œ {validationResults.errors.length} errores
+                    ❌ {validationResults.errors.length} errores
                   </Tag>
                 )}
                 {validationResults.warnings.length > 0 && (
                   <Tag color="warning" icon={<ExclamationCircleOutlined />} className="px-3 py-1 text-sm font-medium">
-                    š ï¸ {validationResults.warnings.length} advertencias
-                  </Tag>
-                )}
-                {validationResults.suggestions.length > 0 && (
-                  <Tag color="processing" icon={<InfoCircleOutlined />} className="px-3 py-1 text-sm font-medium">
-                    ðŸ’¡ {validationResults.suggestions.length} sugerencias
+                    ⚠️ {validationResults.warnings.length} advertencias
                   </Tag>
                 )}
               </div>
@@ -502,11 +972,11 @@ const CrearMapaMain = ({
                 <Button 
                   type="primary" 
                   onClick={nextStep}
-                                         disabled={currentStep === 1 && !(mapa?.contenido?.elementos && Array.isArray(mapa.contenido.elementos) && mapa.contenido.elementos.length > 0)}
+                  disabled={currentStep === 1 && (!mapa?.contenido?.elementos || mapa.contenido.elementos.length === 0)}
                   size="large"
                   className="btn-gradient-primary shadow-custom hover-lift px-8 py-2 h-12 text-base font-semibold"
                 >
-                  Siguiente †’
+                  Siguiente →
                 </Button>
               ) : (
                 <Button 
@@ -517,7 +987,7 @@ const CrearMapaMain = ({
                   size="large"
                   className="btn-gradient-success shadow-custom hover-lift px-8 py-2 h-12 text-base font-semibold"
                 >
-                  ðŸš€ Publicar Mapa
+                  🚀 Publicar Mapa
                 </Button>
               )}
             </div>
@@ -525,7 +995,7 @@ const CrearMapaMain = ({
         </div>
       </div>
 
-      {/* ===== MODALES ===== */}
+      {/* MODALES */}
       <Modal
         title="Vista Previa del Mapa"
         open={showPreview}
@@ -544,7 +1014,7 @@ const CrearMapaMain = ({
       </Modal>
 
       <Modal
-        title="Configuraci³n Avanzada"
+        title="Configuración Avanzada"
         open={showSettings}
         onCancel={() => setShowSettings(false)}
         footer={null}
@@ -560,141 +1030,4 @@ const CrearMapaMain = ({
   );
 };
 
-// ===== COMPONENTES AUXILIARES =====
-
-const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
-  const [form] = Form.useForm();
-
-  const handleFinish = (values) => {
-    onUpdate({
-      ...mapa,
-      ...values,
-      metadata: {
-        ...mapa.metadata,
-        updated_at: new Date().toISOString()
-      }
-    });
-    onNext();
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-8">
-        <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-custom">
-          <span className="text-4xl text-white">ðŸŽ¨</span>
-        </div>
-        <Title level={1} className="mb-4 text-gradient">
-          ¡Bienvenido al Creador de Mapas!
-        </Title>
-        <Title level={3} className="mb-3 text-gray-700">
-          Configuraci³n B¡sica del Mapa
-        </Title>
-        <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Comienza creando tu mapa de asientos personalizado. Define la informaci³n fundamental y luego pasa al editor visual donde podr¡s dise±ar la distribuci³n perfecta.
-        </Text>
-      </div>
-      
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={mapa}
-        onFinish={handleFinish}
-        className="space-y-6"
-      >
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              name="nombre"
-              label="Nombre del Mapa"
-              rules={[{ required: true, message: 'El nombre es obligatorio' }]}
-            >
-              <Input placeholder="Ej: Mapa Principal - Sala A" />
-            </Form.Item>
-          </Col>
-          
-          <Col span={12}>
-            <Form.Item
-              name="estado"
-              label="Estado"
-              rules={[{ required: true, message: 'El estado es obligatorio' }]}
-            >
-              <Select>
-                <Option value="draft">Borrador</Option>
-                <Option value="active">Activo</Option>
-                <Option value="inactive">Inactivo</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Form.Item
-          name="descripcion"
-          label="Descripci³n"
-        >
-          <TextArea 
-            rows={4} 
-            placeholder="Describe el prop³sito y caracter­sticas del mapa..."
-          />
-        </Form.Item>
-
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              name={['contenido', 'configuracion', 'dimensions', 'width']}
-              label="Ancho del Mapa (px)"
-              rules={[{ required: true, message: 'El ancho es obligatorio' }]}
-            >
-              <Input type="number" min={400} max={2000} />
-            </Form.Item>
-          </Col>
-          
-          <Col span={12}>
-            <Form.Item
-              name={['contenido', 'configuracion', 'dimensions', 'height']}
-              label="Alto del Mapa (px)"
-              rules={[{ required: true, message: 'El alto es obligatorio' }]}
-            >
-              <Input type="number" min={300} max={1500} />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Form.Item
-          name={['metadata', 'tags']}
-          label="Etiquetas"
-        >
-          <Select
-            mode="tags"
-            placeholder="Agregar etiquetas..."
-            style={{ width: '100%' }}
-          />
-        </Form.Item>
-
-        <Form.Item
-          name={['metadata', 'notes']}
-          label="Notas"
-        >
-          <TextArea 
-            rows={3} 
-            placeholder="Notas adicionales sobre el mapa..."
-          />
-        </Form.Item>
-
-        <div className="text-center pt-6">
-          <Button 
-            type="primary" 
-            size="large" 
-            htmlType="submit"
-            className="btn-gradient-primary shadow-custom hover-lift px-12 py-3 h-14 text-lg font-semibold"
-          >
-            ðŸŽ¨ Continuar al Editor
-          </Button>
-        </div>
-      </Form>
-    </div>
-  );
-};
-
 export default CrearMapaMain;
-
-

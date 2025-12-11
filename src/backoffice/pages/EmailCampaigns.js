@@ -23,7 +23,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
-    if (setSidebarCollapsed) setSidebarCollapsed(true);
+
     return () => setSidebarCollapsed && setSidebarCollapsed(false);
   }, [setSidebarCollapsed]);
 

@@ -7,12 +7,11 @@ export const useSupabaseContext = () => {
   const context = useContext(SupabaseContext);
   if (!context) {
     throw new Error('useSupabaseContext debe usarse dentro de SupabaseProvider');
-  }
+
   return context;
 };
 
-export const SupabaseProvider = ({ children }) => {
-  const [supabase, setSupabase] = useState(null);
+export 
   const [supabaseAdmin, setSupabaseAdmin] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);

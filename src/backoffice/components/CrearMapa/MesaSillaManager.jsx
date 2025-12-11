@@ -30,7 +30,7 @@ const MesaSillaManager = ({
 
   const getSillaConfigForType = (type) => {
     switch (type) {
-      case 'rect':
+
         return (
           <div className="space-y-4">
             <Title level={5}>Sillas por lado</Title>

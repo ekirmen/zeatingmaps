@@ -132,7 +132,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
 
   const getAvailabilityStatus = (method) => {
     // Simular verificaci³n de disponibilidad
-    if (!method.available) {
+
       return { status: 'error', message: 'No disponible' };
     }
 

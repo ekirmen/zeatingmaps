@@ -89,7 +89,7 @@ const EventosPage = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+
       case 'active': return 'green';
       case 'draft': return 'orange';
       case 'completed': return 'default';

@@ -1,12 +1,7 @@
 // Hook para manejar posicionamiento y coordenadas precisas
 import { message } from '../../utils/antdComponents';
 
-export const useMapaPositioning = (elements, setElements) => {
-  const precisePositioning = {
-    round: (value) => parseFloat(value.toFixed(2)),
-    snapToGrid: (value, gridSize = 5) => Math.round(value / gridSize) * gridSize,
-    validate: (x, y) => {
-      const maxCoord = 10000;
+
       return Math.abs(x) <= maxCoord && Math.abs(y) <= maxCoord;
     }
   };

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Table, Card, Space, Button, Input, Select, Typography } from '../../utils/antdComponents';
 import { SearchOutlined, ReloadOutlined, PlusOutlined } from '@ant-design/icons';
 
@@ -21,7 +21,7 @@ const DataTable = ({
   showRefresh = true,
   extra,
   ...tableProps
-}) => {
+
   return (
     <Card
       title={title}

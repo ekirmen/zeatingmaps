@@ -1,23 +1,13 @@
 import { useEffect, useCallback, useRef } from 'react';
 
-export const useMapaSelection = (
-  elements,
-  selectedIds,
-  setSelectedIds,
-  setSelectedElement,
-  selectionRect,
-  setSelectionRect,
-  deleteSelectedElements
-) => {
-  // Ref para siempre tener el último estado de elementos, evitando closure stale
-  const elementsRef = useRef(elements);
+export 
 
   useEffect(() => {
     elementsRef.current = elements;
   }, [elements]);
 
   // Función para seleccionar un elemento
-  const selectElement = (element) => {
+
     if (!element) return;
 
     setSelectedElement(element);

@@ -149,12 +149,7 @@ export const API_ENDPOINTS = {
 };
 
 // Función helper para hacer requests
-export const apiRequest = async (endpoint, options = {}) => {
-  const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  };
+export 
 
   const config = {
     ...defaultOptions,
@@ -181,14 +176,10 @@ export const apiRequest = async (endpoint, options = {}) => {
 };
 
 // Función para obtener headers de autenticación
-export const getAuthHeaders = (token) => ({
-  'Authorization': `Bearer ${token}`,
-  'Content-Type': 'application/json'
-});
+export 
 
 // Función para manejar errores de API
-export const handleApiError = (error) => {
-  console.error('API Error:', error);
+export 
   
   if (error.message.includes('401')) {
     // Token expirado o no válido

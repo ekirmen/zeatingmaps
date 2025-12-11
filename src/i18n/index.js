@@ -13,7 +13,7 @@ i18n
     lng: (() => {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
-        const qLang = params.get('lang') || params.get('language');
+
         if (qLang) return qLang.toLowerCase().startsWith('en') ? 'en' : 'es';
         const navLang = navigator.language || navigator.userLanguage || 'es';
         return navLang.toLowerCase().startsWith('en') ? 'en' : 'es';

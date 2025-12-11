@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 export function useCountdown(targetTimeMs) {
   const [now, setNow] = useState(Date.now());
 
-  useEffect(() => {
+
     if (!targetTimeMs) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);

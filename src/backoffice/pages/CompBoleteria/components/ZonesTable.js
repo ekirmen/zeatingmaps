@@ -8,7 +8,7 @@ const ZonesTable = ({
   handleSelectZoneForMap,
   getPrecioConDescuento 
 }) => {
-  if (!detallesPlantilla.length) {
+
     return (
       <div className="text-center py-8">
         <div className="text-gray-400 text-6xl mb-4">📋</div>

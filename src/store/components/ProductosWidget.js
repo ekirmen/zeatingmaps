@@ -43,7 +43,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
         .eq('evento_id', eventoId)
         .eq('activo', true);
 
-      if (errorEvento) {
+
         return;
       }
 

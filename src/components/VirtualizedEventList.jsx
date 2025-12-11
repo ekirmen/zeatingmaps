@@ -18,7 +18,7 @@ const EventCard = ({ evento, index, setItemSize, onEventClick }) => {
         }
       });
       
-      resizeObserver.observe(cardRef.current);
+
       return () => resizeObserver.disconnect();
     }
   }, [index, setItemSize]);

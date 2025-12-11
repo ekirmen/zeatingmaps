@@ -57,7 +57,7 @@ const Productos = () => {
         if (error) {
           console.error('Error cargando eventos:', error);
           message.error('Error al cargar eventos');
-          setEventos([]);
+
           return;
         }
 

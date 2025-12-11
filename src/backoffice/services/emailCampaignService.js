@@ -31,7 +31,7 @@ export const emailCampaignService = {
         // Información de plantilla
         template_name: campaign.templates?.nombre || 'Sin plantilla',
         template_type: campaign.templates?.tipo || 'personalizada'
-      }));
+
       return processedCampaigns;
 
     } catch (error) {

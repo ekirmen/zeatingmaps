@@ -14,8 +14,8 @@ import { useTenant } from '../../hooks/useTenant';
 // No necesitamos arrays estáticos
 
 // Eliminar menú de componentes - solo mantener páginas y correos
-const headerComponents = [];
-const footerComponents = [];
+
+
 
 // Correos electrónicos reales (sin correos de prueba)
 const emailTemplates = [
@@ -244,7 +244,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
   // Cargar páginas desde la base de datos al montar el componente
   useEffect(() => {
-    const loadCmsPages = async () => {
+
       if (!tenantId) return;
 
       setLoadingPages(true);
@@ -655,8 +655,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     setEditingValue('');
   };
 
-  const handleContextMenu = (e, item, type) => {
-    e.preventDefault();
+  
     setContextMenu({
       show: true,
       x: e.clientX,

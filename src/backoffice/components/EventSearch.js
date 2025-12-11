@@ -37,7 +37,7 @@ const EventSearch = () => {
   const searchEvents = async (term) => {
     if (!term || term.length < 2) {
       setEvents([]);
-      setFunctions([]);
+
       return;
     }
 

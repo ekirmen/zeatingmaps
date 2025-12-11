@@ -9,7 +9,7 @@ const TENANT_STORAGE_KEY = 'zeatingmaps::tenant-context:v1';
 // Función helper para obtener el tenant actual del contexto
 const getCurrentTenantId = () => {
   try {
-    if (typeof window === 'undefined') {
+
       return null;
     }
 
@@ -55,29 +55,7 @@ const getCurrentTenantId = () => {
 };
 
 // Función para obtener todos los tenants del usuario
-export const getUserTenants = async (userId) => {
-  try {
-    const { data, error } = await supabase
-      .from('user_tenants')
-      .select(`
-        tenant_id,
-        role,
-        permissions,
-        is_active,
-        is_primary,
-        tenants (
-          id,
-          company_name,
-          subdomain,
-          domain,
-          logo_url,
-          primary_color
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .order('is_primary', { ascending: false })
-      .order('created_at', { ascending: true });
+export 
 
     if (error) throw error;
     return data || [];
@@ -88,12 +66,7 @@ export const getUserTenants = async (userId) => {
 };
 
 // Función para cambiar el tenant activo del usuario
-export const switchUserTenant = async (userId, newTenantId) => {
-  try {
-    const { data, error } = await supabase.rpc('switch_user_tenant', {
-      user_uuid: userId,
-      new_tenant_id: newTenantId
-    });
+export 
 
     if (error) throw error;
 
@@ -111,14 +84,7 @@ export const switchUserTenant = async (userId, newTenantId) => {
 };
 
 // Función para agregar un usuario a un tenant
-export const addUserToTenant = async (userId, tenantId, role = 'usuario', permissions = {}) => {
-  try {
-    const { data, error } = await supabase.rpc('add_user_to_tenant', {
-      user_uuid: userId,
-      tenant_uuid: tenantId,
-      user_role: role,
-      user_permissions: permissions
-    });
+export 
 
     if (error) throw error;
     return data;
@@ -129,8 +95,7 @@ export const addUserToTenant = async (userId, tenantId, role = 'usuario', permis
 };
 
 // Registro (sign up) con creación de perfil
-export const registerUser = async ({ email, password, phone }) => {
-  let user = null;
+export 
   let session = null;
 
   if (password) {
@@ -213,9 +178,7 @@ export const registerUser = async ({ email, password, phone }) => {
 };
 
 // Inicio de sesión (sign in)
-export const loginUser = async ({ email, password }) => {
-  if (!password) {
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: getStoreBaseUrl() } });
+export 
     if (error) {
       throw await createAuthError({ error, email, supabaseClient: supabase });
     }
@@ -267,9 +230,7 @@ export const loginUser = async ({ email, password }) => {
 };
 
 // Función para verificar el acceso del usuario al tenant actual
-export const verifyTenantAccess = async (userId) => {
-  try {
-    const currentTenantId = getCurrentTenantId();
+export 
     if (!currentTenantId) {
       return { hasAccess: false, reason: 'No se pudo determinar la empresa' };
     }
@@ -306,16 +267,14 @@ export const verifyTenantAccess = async (userId) => {
 };
 
 // Cierre de sesión
-export const logoutUser = async () => {
-  const { error } = await supabase.auth.signOut();
+export 
   if (error) {
     throw new Error(error.message);
   }
 };
 
 // Obtener usuario actual
-export const getCurrentUser = async () => {
-  const { data, error } = await supabase.auth.getUser();
+export 
   if (error) throw new Error(error.message);
   return data.user;
 };

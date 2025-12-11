@@ -10,7 +10,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
 
   // Función para extraer asientos del mapa (sin useCallback para evitar dependencias circulares)
   const extractSeatsFromMapa = (mapa) => {
-    if (!mapa?.contenido) {
+
       return [];
     }
 

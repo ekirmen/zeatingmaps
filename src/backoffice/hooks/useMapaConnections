@@ -1,0 +1,380 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '../../supabaseClient';
+import logger from '../../utils/logger';
+
+/**
+ * Hook para manejar conexiones en tiempo real para mapas de asientos
+ * @param {string} funcionId - ID de la función
+ * @param {string} mapaId - ID del mapa (opcional)
+ * @param {object} options - Opciones de configuración
+ */
+const useMapaConnections = (funcionId, mapaId = null, options = {}) => {
+  const {
+    enableRealtime = true,
+    autoSubscribe = true,
+    onSeatUpdate = null,
+    onLockUpdate = null,
+    onError = null
+  } = options;
+
+  const [connections, setConnections] = useState({
+    isConnected: false,
+    lastUpdate: null,
+    activeSubscriptions: 0,
+    error: null
+  });
+
+  const [seatData, setSeatData] = useState([]);
+  const [lockData, setLockData] = useState([]);
+  const subscriptions = useRef([]);
+  const isMounted = useRef(true);
+
+  // Limpiar suscripciones
+  const cleanupSubscriptions = useCallback(() => {
+    if (subscriptions.current.length > 0) {
+      logger.log('🔄 [useMapaConnections] Limpiando suscripciones:', subscriptions.current.length);
+      
+      subscriptions.current.forEach(channel => {
+        if (channel && typeof channel.unsubscribe === 'function') {
+          channel.unsubscribe();
+        }
+      });
+      
+      subscriptions.current = [];
+    }
+  }, []);
+
+  // Conectar a cambios de asientos
+  const subscribeToSeats = useCallback(async () => {
+    if (!funcionId || !enableRealtime) return;
+
+    try {
+      logger.log('🔗 [useMapaConnections] Suscribiéndose a cambios de asientos para función:', funcionId);
+
+      // Canal para cambios en payment_transactions (asientos vendidos/reservados)
+      const paymentChannel = supabase
+        .channel(`payment-transactions-${funcionId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'payment_transactions',
+            filter: `funcion_id=eq.${funcionId}`
+          },
+          (payload) => {
+            if (!isMounted.current) return;
+            
+            logger.log('🔄 [useMapaConnections] Cambio en payment_transactions:', payload);
+            
+            // Actualizar estado de asientos
+            if (payload.new && payload.new.seats) {
+              const seats = Array.isArray(payload.new.seats) 
+                ? payload.new.seats 
+                : (() => {
+                    try {
+                      return JSON.parse(payload.new.seats);
+                    } catch {
+                      return [];
+                    }
+                  })();
+              
+              setSeatData(prev => {
+                // Filtrar asientos de esta transacción
+                const filtered = prev.filter(seat => 
+                  !seats.some(newSeat => newSeat._id === seat._id || newSeat.id === seat.id)
+                );
+                
+                // Agregar nuevos asientos con estado
+                const newSeatsWithStatus = seats.map(seat => ({
+                  ...seat,
+                  _id: seat._id || seat.id,
+                  status: payload.new.status || 'unknown',
+                  locator: payload.new.locator,
+                  updated_at: payload.commit_timestamp || new Date().toISOString()
+                }));
+                
+                return [...filtered, ...newSeatsWithStatus];
+              });
+            }
+
+            // Llamar callback si existe
+            if (onSeatUpdate) {
+              onSeatUpdate(payload);
+            }
+          }
+        )
+        .subscribe((status) => {
+          logger.log(`📡 [useMapaConnections] Estado suscripción payment: ${status}`);
+        });
+
+      subscriptions.current.push(paymentChannel);
+
+    } catch (error) {
+      logger.error('❌ [useMapaConnections] Error suscribiéndose a asientos:', error);
+      if (onError) onError(error);
+    }
+  }, [funcionId, enableRealtime, onSeatUpdate, onError]);
+
+  // Conectar a cambios de bloqueos
+  const subscribeToLocks = useCallback(async () => {
+    if (!funcionId || !enableRealtime) return;
+
+    try {
+      logger.log('🔗 [useMapaConnections] Suscribiéndose a bloqueos para función:', funcionId);
+
+      // Canal para cambios en seat_locks
+      const lockChannel = supabase
+        .channel(`seat-locks-${funcionId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'seat_locks',
+            filter: `funcion_id=eq.${funcionId}`
+          },
+          (payload) => {
+            if (!isMounted.current) return;
+            
+            logger.log('🔒 [useMapaConnections] Cambio en bloqueos:', payload);
+            
+            setLockData(prev => {
+              const newLocks = [...prev];
+              
+              if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                // Agregar o actualizar bloqueo
+                const existingIndex = newLocks.findIndex(lock => 
+                  lock.seat_id === payload.new.seat_id && 
+                  lock.funcion_id === payload.new.funcion_id
+                );
+                
+                const lockData = {
+                  ...payload.new,
+                  updated_at: payload.commit_timestamp || new Date().toISOString(),
+                  event_type: payload.eventType
+                };
+                
+                if (existingIndex >= 0) {
+                  newLocks[existingIndex] = lockData;
+                } else {
+                  newLocks.push(lockData);
+                }
+              } else if (payload.eventType === 'DELETE') {
+                // Eliminar bloqueo
+                return newLocks.filter(lock => 
+                  !(lock.seat_id === payload.old.seat_id && lock.funcion_id === payload.old.funcion_id)
+                );
+              }
+              
+              return newLocks;
+            });
+
+            // Llamar callback si existe
+            if (onLockUpdate) {
+              onLockUpdate(payload);
+            }
+          }
+        )
+        .subscribe((status) => {
+          logger.log(`📡 [useMapaConnections] Estado suscripción locks: ${status}`);
+        });
+
+      subscriptions.current.push(lockChannel);
+
+    } catch (error) {
+      logger.error('❌ [useMapaConnections] Error suscribiéndose a bloqueos:', error);
+      if (onError) onError(error);
+    }
+  }, [funcionId, enableRealtime, onLockUpdate, onError]);
+
+  // Cargar datos iniciales
+  const loadInitialData = useCallback(async () => {
+    if (!funcionId) return;
+
+    try {
+      logger.log('📥 [useMapaConnections] Cargando datos iniciales para función:', funcionId);
+
+      // Cargar asientos vendidos/reservados
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('payment_transactions')
+        .select('id, seats, status, locator, created_at')
+        .eq('funcion_id', funcionId)
+        .in('status', ['completed', 'pagado', 'reservado', 'pending']);
+
+      if (paymentsError) throw paymentsError;
+
+      // Procesar asientos
+      const allSeats = (paymentsData || []).flatMap(payment => {
+        const seats = Array.isArray(payment.seats) 
+          ? payment.seats 
+          : (() => {
+              try {
+                return JSON.parse(payment.seats);
+              } catch {
+                return [];
+              }
+            })();
+        
+        return seats.map(seat => ({
+          ...seat,
+          _id: seat._id || seat.id,
+          status: payment.status,
+          locator: payment.locator,
+          transaction_date: payment.created_at
+        }));
+      });
+
+      setSeatData(allSeats);
+
+      // Cargar bloqueos activos
+      const { data: locksData, error: locksError } = await supabase
+        .from('seat_locks')
+        .select('*')
+        .eq('funcion_id', funcionId)
+        .eq('is_active', true);
+
+      if (locksError) throw locksError;
+
+      setLockData(locksData || []);
+
+      // Actualizar estado de conexión
+      setConnections(prev => ({
+        ...prev,
+        isConnected: true,
+        lastUpdate: new Date().toISOString(),
+        error: null
+      }));
+
+    } catch (error) {
+      logger.error('❌ [useMapaConnections] Error cargando datos iniciales:', error);
+      
+      setConnections(prev => ({
+        ...prev,
+        error: error.message
+      }));
+      
+      if (onError) onError(error);
+    }
+  }, [funcionId, onError]);
+
+  // Inicializar suscripciones
+  useEffect(() => {
+    if (!funcionId || !autoSubscribe) return;
+
+    isMounted.current = true;
+
+    const initialize = async () => {
+      await loadInitialData();
+      
+      if (enableRealtime) {
+        await subscribeToSeats();
+        await subscribeToLocks();
+      }
+    };
+
+    initialize();
+
+    return () => {
+      isMounted.current = false;
+      cleanupSubscriptions();
+    };
+  }, [funcionId, enableRealtime, autoSubscribe, loadInitialData, subscribeToSeats, subscribeToLocks, cleanupSubscriptions]);
+
+  // Funciones para manejar conexiones manualmente
+  const connect = useCallback(async () => {
+    try {
+      setConnections(prev => ({ ...prev, error: null }));
+      
+      await loadInitialData();
+      
+      if (enableRealtime) {
+        await subscribeToSeats();
+        await subscribeToLocks();
+      }
+
+      setConnections(prev => ({
+        ...prev,
+        isConnected: true,
+        activeSubscriptions: subscriptions.current.length,
+        lastUpdate: new Date().toISOString()
+      }));
+
+    } catch (error) {
+      setConnections(prev => ({
+        ...prev,
+        error: error.message,
+        isConnected: false
+      }));
+    }
+  }, [loadInitialData, subscribeToSeats, subscribeToLocks, enableRealtime]);
+
+  const disconnect = useCallback(() => {
+    cleanupSubscriptions();
+    
+    setConnections(prev => ({
+      ...prev,
+      isConnected: false,
+      activeSubscriptions: 0
+    }));
+  }, [cleanupSubscriptions]);
+
+  // Obtener estado de un asiento específico
+  const getSeatStatus = useCallback((seatId) => {
+    // Buscar en asientos vendidos/reservados
+    const purchasedSeat = seatData.find(seat => 
+      (seat._id === seatId || seat.id === seatId) && 
+      ['completed', 'pagado', 'reservado'].includes(seat.status)
+    );
+    
+    if (purchasedSeat) {
+      return {
+        status: purchasedSeat.status === 'pagado' ? 'vendido' : 'reservado',
+        locator: purchasedSeat.locator,
+        date: purchasedSeat.transaction_date
+      };
+    }
+
+    // Buscar en bloqueos activos
+    const activeLock = lockData.find(lock => 
+      lock.seat_id === seatId && 
+      lock.is_active === true
+    );
+    
+    if (activeLock) {
+      return {
+        status: 'bloqueado',
+        lock_type: activeLock.lock_type,
+        session_id: activeLock.session_id,
+        created_at: activeLock.created_at
+      };
+    }
+
+    return { status: 'disponible' };
+  }, [seatData, lockData]);
+
+  // Verificar si un asiento está disponible
+  const isSeatAvailable = useCallback((seatId) => {
+    const status = getSeatStatus(seatId);
+    return status.status === 'disponible';
+  }, [getSeatStatus]);
+
+  return {
+    // Estado
+    connections,
+    seatData,
+    lockData,
+    
+    // Métodos
+    connect,
+    disconnect,
+    getSeatStatus,
+    isSeatAvailable,
+    
+    // Utilitarios
+    refresh: loadInitialData,
+    cleanup: cleanupSubscriptions
+  };
+};
+
+export default useMapaConnections;

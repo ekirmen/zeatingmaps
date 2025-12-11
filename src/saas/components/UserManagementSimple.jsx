@@ -80,7 +80,7 @@ const UserManagementSimple = () => {
 
       // Transformar los datos
       const transformedUsers = profiles?.map(profile => {
-        const tenantInfo = userTenantInfo?.find(uti => uti.user_id === profile.id);
+
         return {
           user_id: profile.id,
           users: {
@@ -140,12 +140,7 @@ const UserManagementSimple = () => {
     }
   };
 
-  const loadTenants = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('tenants')
-        .select('id, company_name, subdomain, contact_email')
-        .order('company_name');
+  
 
       if (error) throw error;
       setTenants(data || []);
@@ -154,12 +149,7 @@ const UserManagementSimple = () => {
     }
   };
 
-  const loadRoles = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('custom_roles')
-        .select('id, name, description, level')
-        .order('level', { ascending: false });
+  
 
       if (error) throw error;
       setRoles(data || []);
@@ -168,12 +158,7 @@ const UserManagementSimple = () => {
     }
   };
 
-  const loadStats = async () => {
-    try {
-      // Obtener estad­sticas desde profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, tenant_id, is_active, activo');
+  
 
       if (profilesError) throw profilesError;
 

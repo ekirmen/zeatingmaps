@@ -11,7 +11,7 @@ const MapLoadingProgress = ({
   stage = 'inicializando',
   showDetails = true 
 }) => {
-  if (!loading && progress >= 100) {
+
     return null;
   }
 

@@ -22,7 +22,7 @@ import {
   EyeOutlined,
   EyeInvisibleOutlined
 } from '@ant-design/icons';
-import VisualNotifications from '../../utils/VisualNotifications';
+import VisualNotifications from '../../../utils/VisualNotifications';
 
 const { Text, Title } = Typography;
 
@@ -52,7 +52,7 @@ const RealTimeValidation = {
     try {
       const savedSettings = localStorage.getItem('validationSettings');
       if (savedSettings) {
-        const parsedSettings = JSON.parse(savedSettings);
+
         return { ...RealTimeValidation.defaultRules, ...parsedSettings };
       }
     } catch (error) {

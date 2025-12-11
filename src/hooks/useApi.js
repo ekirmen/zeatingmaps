@@ -11,7 +11,7 @@ export const useApi = () => {
       setLoading(true);
       setError(null);
 
-      const response = await apiRequest(endpoint, options);
+
       return response;
 
     } catch (err) {

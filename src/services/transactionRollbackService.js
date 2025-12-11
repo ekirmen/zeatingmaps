@@ -16,7 +16,7 @@ class TransactionRollbackService {
 
     try {
       // Ejecutar la transacción principal
-      transactionResult = await transactionFunction();
+
       return {
         success: true,
         data: transactionResult,

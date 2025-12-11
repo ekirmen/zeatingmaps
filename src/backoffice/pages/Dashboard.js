@@ -71,7 +71,7 @@ const Dashboard = () => {
           )
           .subscribe();
 
-        // Retornar funci³n de limpieza
+
         return () => {
           subscription.unsubscribe();
         };
@@ -116,13 +116,7 @@ const Dashboard = () => {
     }
   };
 
-  const loadRevenueStats = async () => {
-    try {
-      // Estad­sticas de ingresos
-      const { data: transactions, error } = await supabase
-        .from('payment_transactions')
-        .select('amount, status, created_at')
-        .eq('status', 'completed');
+  
 
       if (error) {
         setStats(prev => ({
@@ -170,12 +164,7 @@ const Dashboard = () => {
     }
   };
 
-  const loadTicketStats = async () => {
-    try {
-      // Estad­sticas de tickets
-      const { data: tickets, error } = await supabase
-        .from('entradas')
-        .select('*');
+  
 
       if (error) throw error;
 
@@ -194,12 +183,7 @@ const Dashboard = () => {
     }
   };
 
-  const loadUserStats = async () => {
-    try {
-      // Estad­sticas de usuarios - incluyendo usuarios activos (ºltimas 24h)
-      const { data: users, error: usersError } = await supabase
-        .from('profiles')
-        .select('id, created_at, last_seen, is_active');
+  
 
       if (usersError) throw usersError;
 
@@ -251,13 +235,7 @@ const Dashboard = () => {
     }
   };
 
-  const loadRecentTransactions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('payment_transactions')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
+  
 
       if (error) {
         setRecentTransactions([]);
@@ -271,13 +249,7 @@ const Dashboard = () => {
     }
   };
 
-  const loadRecentEvents = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('eventos_con_funciones_activas')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
+  
 
       if (error) throw error;
       setRecentEvents(data || []);
@@ -286,15 +258,7 @@ const Dashboard = () => {
     }
   };
 
-  const loadUpcomingEvents = async () => {
-    try {
-      // La vista eventos_con_funciones_activas puede no tener fecha_evento
-      // Intentar usar created_at o hacer una consulta alternativa
-      const { data, error } = await supabase
-        .from('eventos_con_funciones_activas')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
+  
 
       if (error) {
         // Si falla, intentar consulta directa a eventos
@@ -317,41 +281,14 @@ const Dashboard = () => {
     }
   };
 
-  const loadSystemAlerts = async () => {
-    try {
-      // Simular alertas del sistema
-      const alerts = [
-        {
-          id: 1,
-          type: 'warning',
-          title: 'Pagos pendientes',
-          message: 'Hay 3 transacciones pendientes de confirmaci³n',
-          time: 'Hace 2 horas'
-        },
-        {
-          id: 2,
-          type: 'info',
-          title: 'Nuevo evento creado',
-          message: 'Se ha creado el evento "Concierto de Rock"',
-          time: 'Hace 4 horas'
-        },
-        {
-          id: 3,
-          type: 'success',
-          title: 'Venta exitosa',
-          message: 'Se han vendido 15 tickets para "Teatro Cl¡sico"',
-          time: 'Hace 6 horas'
-        }
-      ];
+  
       setSystemAlerts(alerts);
     } catch (error) {
       console.error('Error loading system alerts:', error);
     }
   };
 
-  const subscribeToRealtimeUpdates = () => {
-    // Verificar si ya existe un canal con el mismo topic
-    const existingChannels = supabase.getChannels();
+  
     const existingChannel = existingChannels.find(ch => ch.topic === 'dashboard_updates');
 
     if (existingChannel) {

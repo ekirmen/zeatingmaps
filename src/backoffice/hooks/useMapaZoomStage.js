@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export const useMapaZoomStage = (zoom, setZoom) => {
-  const stageRef = useRef(null);
+export 
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -12,7 +11,7 @@ export const useMapaZoomStage = (zoom, setZoom) => {
       });
     };
     updateSize();
-    window.addEventListener('resize', updateSize);
+
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 

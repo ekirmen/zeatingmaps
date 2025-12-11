@@ -81,7 +81,7 @@ const normalizePermissions = (permisos) => {
       if (Object.prototype.hasOwnProperty.call(basePermissions, permission)) {
         basePermissions[permission] = true;
       }
-    });
+
     return basePermissions;
   }
 
@@ -167,12 +167,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
 
 
 
-  const loadVenues = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('recintos')
-        .select('id, nombre')
-        .order('nombre');
+  
 
       if (error) throw error;
       setVenues(data || []);

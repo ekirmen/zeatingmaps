@@ -38,9 +38,7 @@ const InteractiveTutorials = () => {
     loadUserProgress();
   }, []);
 
-  const loadTutorials = async () => {
-    try {
-      setLoading(true);
+  
       const { data, error } = await supabase
         .from('interactive_tutorials')
         .select('*')
@@ -56,9 +54,7 @@ const InteractiveTutorials = () => {
     }
   };
 
-  const loadUserProgress = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
+
       if (!user) return;
 
       const { data, error } = await supabase
@@ -114,9 +110,7 @@ const InteractiveTutorials = () => {
     }
   };
 
-  const completeTutorial = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
+  
       if (!user) return;
 
       await supabase
@@ -151,9 +145,7 @@ const InteractiveTutorials = () => {
     }
   };
 
-  const saveProgress = async (completedSteps, currentStepIndex) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
+  
       if (!user) return;
 
       await supabase
@@ -189,7 +181,7 @@ const InteractiveTutorials = () => {
   const renderTutorialCard = (tutorial) => {
     const progress = getProgressPercentage(tutorial.id);
     const status = getTutorialStatus(tutorial.id);
-    const progressData = userProgress[tutorial.id];
+    
 
     return (
       <Card

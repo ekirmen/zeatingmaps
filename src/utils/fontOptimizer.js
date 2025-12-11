@@ -8,7 +8,7 @@
 /**
  * Crea un link de preload para una fuente
  */
-export const preloadFont = (fontUrl, fontFormat = 'woff2', crossorigin = 'anonymous') => {
+
   if (typeof document === 'undefined') return;
   
   // Verificar si ya existe el preload
@@ -109,9 +109,7 @@ export const waitForFont = async (fontFamily, timeout = 3000) => {
  * CSS para font-display: swap
  * Úsalo en tu CSS global o en componentes críticos
  */
-export const fontDisplaySwapCSS = `
-  @font-face {
-    font-family: 'YourFont';
+export 
     src: url('your-font.woff2') format('woff2');
     font-display: swap; /* Evita FOIT */
   }

@@ -13,7 +13,7 @@ export const useAuth = () => {
     try {
       const supabase = getSupabaseClient();
       if (!supabase) {
-        console.error('[useAuth] Cliente de Supabase no disponible');
+
         return null;
       }
 

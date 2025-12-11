@@ -1,14 +1,13 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useTenant } from '../contexts/TenantContext';
 
-export const useTenantFilter = () => {
-  const { user } = useAuth();
+export 
   const { currentTenant } = useTenant();
 
   // Obtener tenant_id para filtrado
   const getTenantId = () => {
     // Si es SaaS admin (sin tenant específico)
-    if (!currentTenant && user?.user_metadata?.role === 'saas_admin') {
+
       return null; // Puede ver todos los datos
     }
     

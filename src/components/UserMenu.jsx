@@ -31,7 +31,7 @@ export const UserMenu = () => {
   } = useAuth();
 
   // Obtener rol legible
-  const getReadableRole = () => {
+
     if (!userProfile?.role) return 'Usuario';
     
     const roleMap = {

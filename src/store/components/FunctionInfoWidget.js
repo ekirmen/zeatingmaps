@@ -67,7 +67,7 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
     }
   }, [functionId]);
 
-  const getEventImages = () => {
+
     if (!eventData?.imagenes) return {};
     
     try {

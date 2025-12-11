@@ -8,7 +8,7 @@
  */
 export const trackEvent = (name, properties = {}) => {
   // Solo ejecutar en producción
-  if (process.env.NODE_ENV !== 'production') {
+
     return;
   }
 
@@ -37,14 +37,7 @@ export const trackEvent = (name, properties = {}) => {
  * @param {boolean} success - Si la descarga fue exitosa
  * @param {string} error - Error si falló
  */
-export const trackTicketDownload = (locator, method, success, error = null) => {
-  trackEvent('ticket_download', {
-    locator,
-    method,
-    success,
-    error,
-    timestamp: new Date().toISOString()
-  });
+export 
 };
 
 /**
@@ -53,13 +46,7 @@ export const trackTicketDownload = (locator, method, success, error = null) => {
  * @param {number} status - Status code del error
  * @param {string} error - Mensaje de error
  */
-export const trackApiError = (endpoint, status, error) => {
-  trackEvent('api_error', {
-    endpoint,
-    status,
-    error,
-    timestamp: new Date().toISOString()
-  });
+export 
 };
 
 /**
@@ -68,13 +55,7 @@ export const trackApiError = (endpoint, status, error) => {
  * @param {string} action - Acción realizada
  * @param {object} metadata - Metadatos adicionales
  */
-export const trackBackofficeUsage = (feature, action, metadata = {}) => {
-  trackEvent('backoffice_usage', {
-    feature,
-    action,
-    ...metadata,
-    timestamp: new Date().toISOString()
-  });
+export 
 };
 
 /**
@@ -84,14 +65,7 @@ export const trackBackofficeUsage = (feature, action, metadata = {}) => {
  * @param {number} seatCount - Cantidad de asientos seleccionados
  * @param {string} zone - Zona seleccionada
  */
-export const trackSeatSelection = (eventId, functionId, seatCount, zone) => {
-  trackEvent('seat_selection', {
-    eventId,
-    functionId,
-    seatCount,
-    zone,
-    timestamp: new Date().toISOString()
-  });
+export 
 };
 
 /**
@@ -101,12 +75,5 @@ export const trackSeatSelection = (eventId, functionId, seatCount, zone) => {
  * @param {number} seatCount - Cantidad de asientos
  * @param {string} paymentMethod - Método de pago
  */
-export const trackPurchaseCompletion = (eventId, total, seatCount, paymentMethod) => {
-  trackEvent('purchase_completion', {
-    eventId,
-    total,
-    seatCount,
-    paymentMethod,
-    timestamp: new Date().toISOString()
-  });
+export 
 };

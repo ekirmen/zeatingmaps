@@ -14,7 +14,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 
   const handleSearch = async (value) => {
     if (!value || value.trim() === '') {
-      message.warning('Por favor ingresa un localizador v¡lido');
+
       return;
     }
 

@@ -27,7 +27,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const cartItems = useCartStore((state) => state.items);
-  const timeLeft = useCartStore((state) => state.timeLeft);
+  
   const { isMobile } = useResponsive();
 
   const {
@@ -61,7 +61,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   );
 
 
-  const ensureSessionId = useCallback(() => {
+
     if (typeof window === 'undefined') return;
     const storedSessionId = window.localStorage.getItem('anonSessionId');
     if (!storedSessionId) {

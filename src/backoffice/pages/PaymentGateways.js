@@ -1,10 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { Typography } from '../../utils/antdComponents';
 import PaymentMethodsConfig from '../components/PaymentMethodsConfig';
 
 const { Title, Text } = Typography;
 
-const PaymentGateways = () => {
+
   return (
     <div className="p-6">
       <div className="mb-6">

@@ -6,7 +6,7 @@ const { Title, Text } = Typography;
 // Lazy load del componente SimpleSeatingMap para evitar problemas de hoisting
 const SimpleSeatingMapLazy = React.lazy(() => import('./components/SimpleSeatingMap'));
 
-const LazySimpleSeatingMap = (props) => {
+
   return (
     <Suspense 
       fallback={

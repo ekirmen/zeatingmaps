@@ -6,7 +6,7 @@ import { Layer, Text, Line, Circle, Rect } from 'react-konva';
  * Memoizado para evitar re-renders innecesarios
  */
 const MapElementsLayer = memo(({ mapa }) => {
-  const renderedElements = useMemo(() => {
+
     if (!mapa?.contenido) return null;
 
     const elementos = Array.isArray(mapa.contenido)

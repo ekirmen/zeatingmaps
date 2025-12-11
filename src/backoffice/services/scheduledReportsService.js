@@ -21,7 +21,7 @@ class ScheduledReportsService {
         .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+
       return { data, error: null };
     } catch (error) {
       console.error('Error fetching scheduled reports:', error);

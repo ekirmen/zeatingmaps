@@ -3,7 +3,7 @@ const FALLBACK_TENANT_BY_HOST = {
 };
 
 const readFromLocalStorage = (key) => {
-  if (typeof window === 'undefined' || !window.localStorage) {
+
     return null;
   }
   try {
@@ -77,8 +77,7 @@ export const resolveTenantId = (preferredId = null) => {
   return null;
 };
 
-export const persistTenantId = (tenantId) => {
-  writeToLocalStorage('currentTenantId', tenantId || null);
+export 
 };
 
 export default resolveTenantId;

@@ -1,6 +1,6 @@
 let cachedSessionId = null;
 
-const getCartSessionId = () => {
+
   if (cachedSessionId) return cachedSessionId;
   try {
     // Try to get from localStorage first for persistence across sessions

@@ -27,7 +27,7 @@ import { supabase } from '../../supabaseClient';
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
-const clampValue = (value, fallback, min = 1, max = 120) => {
+
   if (!Number.isFinite(value)) return fallback;
   return Math.min(max, Math.max(min, value));
 };

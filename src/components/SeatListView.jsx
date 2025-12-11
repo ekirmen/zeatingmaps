@@ -26,7 +26,7 @@ const SeatListView = ({
   // Convertir sortBy a formato del worker
   const workerSortBy = useMemo(() => {
     switch (sortBy) {
-      case 'precio':
+
         return 'precio-asc';
       case 'precio-desc':
         return 'precio-desc';

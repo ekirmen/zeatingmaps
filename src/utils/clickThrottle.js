@@ -15,7 +15,7 @@ class ClickThrottle {
 
   /**
    * Verifica si un click en un asiento está permitido
-   * @param {string} seatId - ID del asiento
+
    * @returns {boolean} - true si el click está permitido, false si debe ser bloqueado
    */
   canClick(seatId) {

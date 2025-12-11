@@ -7,7 +7,7 @@ const MAX_TAGS = 3;
 
 const DatosBasicos = ({ eventoData, setEventoData }) => {
   // Función para normalizar el campo tags
-  const normalizeTags = (tags) => {
+
     if (!tags) return [];
     if (Array.isArray(tags)) return tags;
     if (typeof tags === 'string') {

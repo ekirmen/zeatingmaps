@@ -85,16 +85,7 @@ const SecurityMonitoring = () => {
     }
   };
 
-  const loadSecurityAlerts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('security_alerts')
-        .select(`
-          *,
-          tenants:tenant_id(name)
-        `)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+  
 
       if (error) throw error;
       setSecurityAlerts(data || []);
@@ -115,7 +106,7 @@ const SecurityMonitoring = () => {
       'file_upload_attack': 'Ataque de carga de archivos',
       'sql_injection_attempt': 'Intento de inyecci³n SQL',
       'xss_attempt': 'Intento de XSS'
-    };
+
     return labels[eventType] || eventType;
   };
 

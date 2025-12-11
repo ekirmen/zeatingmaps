@@ -1,7 +1,7 @@
 // src/components/RecintoList.js
 import React from 'react';
 
-const RecintoList = ({ recintos, onEdit, onAddSala }) => {
+
   return (
     <div>
       {recintos.map((recinto) => (

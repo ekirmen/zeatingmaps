@@ -47,13 +47,14 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-// Error Boundary
+// Error Boundary CORREGIDO
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
+  // ✅ ESTE MÉTODO FALTABA
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }

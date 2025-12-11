@@ -24,13 +24,13 @@ const ClientModals = ({
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
-      message.warning('Por favor ingresa un t©rmino de bºsqueda');
+
       return;
     }
 
     try {
       if (handleUnifiedSearch && typeof handleUnifiedSearch === 'function') {
-        const result = await handleUnifiedSearch(searchTerm);
+        
       } else {
         // Fallback to direct search if handleUnifiedSearch is not provided
         const { data, error } = await supabase

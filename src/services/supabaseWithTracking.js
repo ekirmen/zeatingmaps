@@ -11,7 +11,7 @@ class SupabaseWithTracking {
   }
 
   /**
-   * Obtiene el usuario actual de forma asíncrona
+
    * @returns {Promise<string>} Email del usuario o ID
    */
   async getCurrentUser() {
@@ -30,7 +30,7 @@ class SupabaseWithTracking {
    * @returns {Object} Datos con tracking agregado
    */
   async addInsertTracking(data) {
-    const currentUser = await this.getCurrentUser();
+    
     const now = new Date().toISOString();
 
     return {
@@ -48,7 +48,7 @@ class SupabaseWithTracking {
    * @returns {Object} Datos con tracking agregado
    */
   async addUpdateTracking(data) {
-    const currentUser = await this.getCurrentUser();
+    
     const now = new Date().toISOString();
 
     return {

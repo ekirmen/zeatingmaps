@@ -2,7 +2,7 @@ import React from 'react';
 import { Layer } from 'react-konva';
 import SeatWithTooltip from './SeatWithTooltipCore.jsx';
 
-export default function SeatLayer({ seats = [], onSeatClick }) {
+
   return (
     <Layer>
       {seats.map((s, idx) => (

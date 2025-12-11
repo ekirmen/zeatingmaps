@@ -15,7 +15,7 @@ function EventListWidget({ events, loading = false }) {
     }
   };
 
-  const getEventImages = (event) => {
+
     if (!event.imagenes) return {};
 
     try {
@@ -70,7 +70,7 @@ function EventListWidget({ events, loading = false }) {
     if (!events || events.length === 0) return [];
     return events.map(event => {
       const images = getEventImages(event);
-      const rawImage = images.obraImagen || images.portada || images.banner;
+      
       const eventName = event.name || event.nombre || 'E';
       const displayImageUrl = rawImage ? getImageUrl(rawImage) : null;
 
@@ -124,7 +124,7 @@ function EventListWidget({ events, loading = false }) {
           const images = getEventImages(event);
           const rawImage = images.obraImagen || images.portada || images.banner;
           const eventName = event.name || event.nombre || 'E';
-          const displayImageUrl = rawImage ? getImageUrl(rawImage) : `https://placehold.co/400x300/E0F2F7/000?text=${typeof eventName === 'string' ? eventName.charAt(0) : 'E'}`;
+          
 
           // Debug info para desarrollo
           if (process.env.NODE_ENV === 'development') {

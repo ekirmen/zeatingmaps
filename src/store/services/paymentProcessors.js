@@ -39,12 +39,7 @@ class StripeProcessor extends PaymentProcessor {
 
       // Aquí iría la integración real con Stripe
       // const stripe = require('stripe')(this.config.secret_key);
-      // const paymentIntent = await stripe.paymentIntents.create({
-      //   amount: paymentData.amount * 100, // Stripe usa centavos
-      //   currency: paymentData.currency || 'usd',
-      //   payment_method_types: ['card'],
-      //   metadata: { orderId: paymentData.orderId }
-      // });
+      // 
 
       // Simulación de respuesta de Stripe
       const mockStripeResponse = {

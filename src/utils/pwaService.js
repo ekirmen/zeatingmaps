@@ -5,7 +5,7 @@
 // Registrar Service Worker
 export const registerServiceWorker = async () => {
   // Verificar si el service worker está deshabilitado
-  if (typeof window !== 'undefined' && localStorage.getItem('sw-disabled') === 'true') {
+
     return null;
   }
 

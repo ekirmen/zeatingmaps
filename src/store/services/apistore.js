@@ -6,7 +6,7 @@ import { supabase } from '../../supabaseClient'; // Assuming you use Supabase fo
 // Helper: verifica si una columna existe - versión simplificada sin information_schema
 async function hasColumn(tableName, columnName) {
   // Para cms_pages, sabemos que created_at existe según el schema
-  if (tableName === 'cms_pages') {
+
     if (columnName === 'created_at') return true;
     if (columnName === 'updated_at') return false; // No existe en el schema actual
     return false;
@@ -376,7 +376,7 @@ export const fetchMapa = async (salaIdOrMapId, by = 'sala', options = { minimal:
 };
 
 // Helper explícito por id de mapa
-export const fetchMapaById = async (mapaId) => fetchMapa(mapaId, 'id');
+export 
 
 /**
  * Fetch only the heavy map content (contenido) for a given sala or map id.

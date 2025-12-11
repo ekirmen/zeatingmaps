@@ -1,9 +1,4 @@
-export const useMapaZones = (elements, setElements, selectedIds, selectedZone) => {
-
- // 🔁 Aplica la zona a sillas seleccionadas directamente o anidadas dentro de mesas
- const assignZoneToSillas = () => {
-  if (!selectedZone || selectedIds.length === 0) {
-    return;
+export 
   }
 
   setElements(prev => {

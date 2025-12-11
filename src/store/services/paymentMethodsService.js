@@ -6,10 +6,8 @@ import { resolveTenantId } from '../../utils/tenantUtils';
  * @param {string} tenantId - ID del tenant (opcional)
  * @param {string} eventId - ID del evento para filtrar métodos permitidos (opcional)
  */
-export const getActivePaymentMethods = async (tenantId = null, eventId = null) => {
-  try {
-    const currentTenantId = tenantId || resolveTenantId();
-    if (!currentTenantId) {
+export 
+
       return [];
     }
     // Usar consulta directa (las políticas RLS ya están arregladas)
@@ -60,9 +58,7 @@ export const getActivePaymentMethods = async (tenantId = null, eventId = null) =
 /**
  * Obtiene todos los métodos de pago (activos e inactivos) para el tenant actual
  */
-export const getAllPaymentMethods = async (tenantId = null) => {
-  try {
-    const currentTenantId = tenantId || resolveTenantId();
+export 
 
     if (!currentTenantId) {
       return [];
@@ -86,9 +82,7 @@ export const getAllPaymentMethods = async (tenantId = null) => {
 /**
  * Obtiene la configuración de un método de pago específico
  */
-export const getPaymentMethodConfig = async (methodId, tenantId = null) => {
-  try {
-    const currentTenantId = tenantId || resolveTenantId();
+export 
 
     if (!currentTenantId) {
       return null;
@@ -112,18 +106,7 @@ export const getPaymentMethodConfig = async (methodId, tenantId = null) => {
 /**
  * Valida la configuración de un método de pago
  */
-export const validatePaymentMethodConfig = (method) => {
-  const validations = {
-    stripe: ['publishable_key', 'secret_key'],
-    paypal: ['client_id', 'client_secret'],
-    apple_pay: ['merchant_id'],
-    google_pay: ['merchant_id'],
-    transferencia: ['bank_name', 'account_number'],
-    pago_movil: ['provider', 'api_key'],
-    efectivo_tienda: ['store_address'],
-    efectivo: [], // No requiere configuración adicional
-    cashea: ['api_base_url', 'merchant_id']
-  };
+export 
 
   const requiredFields = validations[method.method_id] || [];
   const missingFields = [];
@@ -158,9 +141,7 @@ export const validatePaymentMethodConfig = (method) => {
 /**
  * Obtiene los IDs de métodos de pago disponibles para el tenant actual
  */
-export const getAvailablePaymentMethodIds = async () => {
-  try {
-    const methods = await getActivePaymentMethods();
+export 
     return methods.map(method => method.method_id);
   } catch (error) {
     console.error('Error fetching available payment method IDs:', error);
@@ -171,9 +152,7 @@ export const getAvailablePaymentMethodIds = async () => {
 /**
  * Actualiza la configuración de un método de pago
  */
-export const updatePaymentMethodConfig = async (methodId, config, tenantId = null) => {
-  try {
-    const currentTenantId = tenantId || resolveTenantId();
+export 
 
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
@@ -201,9 +180,7 @@ export const updatePaymentMethodConfig = async (methodId, config, tenantId = nul
 /**
  * Habilita o deshabilita un método de pago
  */
-export const togglePaymentMethod = async (methodId, enabled, tenantId = null) => {
-  try {
-    const currentTenantId = tenantId || resolveTenantId();
+export 
 
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
@@ -231,9 +208,7 @@ export const togglePaymentMethod = async (methodId, enabled, tenantId = null) =>
 /**
  * Crea un nuevo método de pago
  */
-export const createPaymentMethod = async (methodData, tenantId = null) => {
-  try {
-    const currentTenantId = tenantId || resolveTenantId();
+export 
 
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
@@ -261,9 +236,7 @@ export const createPaymentMethod = async (methodData, tenantId = null) => {
 /**
  * Elimina un método de pago
  */
-export const deletePaymentMethod = async (methodId, tenantId = null) => {
-  try {
-    const currentTenantId = tenantId || resolveTenantId();
+export 
 
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');

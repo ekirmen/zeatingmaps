@@ -182,7 +182,7 @@ const SupportTicketSystem = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+
       case 'open': return 'red';
       case 'in_progress': return 'orange';
       case 'resolved': return 'green';

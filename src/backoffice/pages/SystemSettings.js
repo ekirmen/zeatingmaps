@@ -64,9 +64,7 @@ const SystemSettings = () => {
     loadBackupHistory();
   }, []);
 
-  const loadSettings = async () => {
-    try {
-      setLoading(true);
+  
       
       // Cargar configuraciones desde Supabase
       const { data, error } = await supabase
@@ -86,35 +84,7 @@ const SystemSettings = () => {
     }
   };
 
-  const loadBackupHistory = async () => {
-    try {
-      // Simular historial de backups
-      const history = [
-        {
-          id: 1,
-          date: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          type: 'automated',
-          status: 'completed',
-          size: '2.5 MB',
-          duration: '45s'
-        },
-        {
-          id: 2,
-          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-          type: 'manual',
-          status: 'completed',
-          size: '2.3 MB',
-          duration: '42s'
-        },
-        {
-          id: 3,
-          date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          type: 'automated',
-          status: 'failed',
-          size: '0 MB',
-          duration: '0s'
-        }
-      ];
+  
       setBackupHistory(history);
     } catch (error) {
       console.error('Error loading backup history:', error);
@@ -201,7 +171,7 @@ const SystemSettings = () => {
       completed: 'green',
       failed: 'red',
       in_progress: 'orange'
-    };
+
     return colors[status] || 'blue';
   };
 

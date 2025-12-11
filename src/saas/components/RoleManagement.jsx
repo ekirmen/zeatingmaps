@@ -88,7 +88,7 @@ const RoleManagement = () => {
     loadUsersByRole(role.id);
   };
 
-  const getRoleLevelColor = (level) => {
+
     if (level >= 80) return 'red';
     if (level >= 60) return 'orange';
     if (level >= 40) return 'blue';

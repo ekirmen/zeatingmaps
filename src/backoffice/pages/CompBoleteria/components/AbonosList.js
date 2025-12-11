@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AbonosList = ({ abonos = [] }) => {
+
   if (abonos.length === 0) return null;
 
   return (

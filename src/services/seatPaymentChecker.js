@@ -6,7 +6,7 @@ import { isUuid } from '../utils/isUuid';
  * Verifica tanto en seat_locks como en payment_transactions
  * Incluye verificación batch para múltiples asientos
  */
-const SEAT_IDENTIFIER_KEYS = ['id', 'seat_id', '_id', 'sillaId'];
+
 
 class SeatPaymentChecker {
   constructor() {
@@ -27,7 +27,7 @@ class SeatPaymentChecker {
     this.rpcDisabledReason = envDisablesRpc ? 'disabled_by_env' : null;
   }
 
-  disableRpc(reason) {
+
     if (!this.rpcAvailable) return;
 
     this.rpcAvailable = false;

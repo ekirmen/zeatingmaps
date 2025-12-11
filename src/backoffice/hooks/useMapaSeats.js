@@ -1,10 +1,7 @@
 // Hook para manejar creación y gestión de asientos
 import { v4 as uuidv4 } from 'uuid';
 
-export const useMapaSeats = (elements, setElements, selectedZone, numSillas) => {
-  const precisePositioning = {
-    round: (value) => parseFloat(value.toFixed(2)),
-  };
+export 
 
   const crearSilla = ({ mesaId, x, y, numero, sillaShape, zonaId }) => {
     const TAMAÑO_SILLA = 20;
@@ -12,7 +9,7 @@ export const useMapaSeats = (elements, setElements, selectedZone, numSillas) => 
       x: precisePositioning.round(x),
       y: precisePositioning.round(y)
     };
-    
+
     return {
       _id: `silla_${uuidv4()}`,
       type: 'silla',

@@ -11,7 +11,7 @@ export class BocaPrinterService {
   async detectPrinters() {
     try {
       if (navigator.usb) {
-        const devices = await navigator.usb.getDevices();
+
         return devices.filter(device => 
           device.vendorId === 0x0483 || // Boca Systems
           device.manufacturerName?.includes('Boca') ||
@@ -310,9 +310,7 @@ export const BOCA_PREMIUM_TEMPLATE = {
 };
 
 // Función para aplicar plantilla
-export const applyBocaTemplate = async (templateName = 'default') => {
-  try {
-    let template;
+export 
     
     switch (templateName) {
       case 'small':
@@ -335,10 +333,7 @@ export const applyBocaTemplate = async (templateName = 'default') => {
 };
 
 // Guardar configuración de formato
-export const saveFormatConfig = async (config) => {
-  try {
-    // Obtener el tenant actual
-    const { data: { user } } = await supabase.auth.getUser();
+export 
     let tenant_id = null;
     
     if (user) {
@@ -373,10 +368,7 @@ export const saveFormatConfig = async (config) => {
 };
 
 // Obtener configuración de formato
-export const getFormatConfig = async () => {
-  try {
-    // Obtener el tenant actual
-    const { data: { user } } = await supabase.auth.getUser();
+export 
     let tenant_id = null;
     
     if (user) {
@@ -411,4 +403,4 @@ export const getFormatConfig = async () => {
 };
 
 // Instancia global del servicio
-export const bocaPrinterService = new BocaPrinterService(); 
+export  

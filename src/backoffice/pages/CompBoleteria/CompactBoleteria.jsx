@@ -54,7 +54,7 @@ const CompactBoleteria = ({
 
   // Calcular estad­sticas de asientos
   const calculateSeatStats = useCallback(() => {
-    if (!mapa?.contenido) {
+
       return;
     }
 
@@ -199,9 +199,7 @@ const CompactBoleteria = ({
   };
 
   // Funci³n para manejar clic en asiento
-  const handleSeatClick = (seat) => {
-    if (onSeatClick) {
-      onSeatClick(seat);
+  
     }
   };
 

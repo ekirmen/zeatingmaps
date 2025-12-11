@@ -5,7 +5,7 @@ const DiscountCodeInput = ({
   setDiscountCode, 
   handleApplyDiscount, 
   appliedDiscount 
-}) => {
+
   return (
     <div className="flex gap-2 items-center">
       <input

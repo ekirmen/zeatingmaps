@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 
-export const useGridSale = () => {
-  const [loading, setLoading] = useState(false);
+export 
   const [error, setError] = useState(null);
 
   // Validar venta antes de procesar

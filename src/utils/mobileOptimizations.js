@@ -5,8 +5,7 @@
 /**
  * Detecta si el dispositivo es mobile
  */
-export const isMobileDevice = () => {
-  if (typeof window === 'undefined') return false;
+export 
   
   // Detectar por User-Agent
   const userAgent = navigator.userAgent || navigator.vendor || window.opera;
@@ -17,15 +16,14 @@ export const isMobileDevice = () => {
   
   // Detectar por touch support
   const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  
+
   return mobileRegex.test(userAgent) || (isSmallScreen && hasTouch);
 };
 
 /**
  * Obtiene configuración de throttling optimizada para mobile
  */
-export const getThrottleConfig = () => {
-  const isMobile = isMobileDevice();
+export 
   
   return {
     delay: isMobile ? 500 : 300, // Mayor delay en mobile para evitar clicks accidentales
@@ -37,8 +35,7 @@ export const getThrottleConfig = () => {
 /**
  * Obtiene configuración de canvas optimizada para mobile
  */
-export const getCanvasConfig = () => {
-  const isMobile = isMobileDevice();
+export 
   
   return {
     pixelRatio: isMobile ? 1 : window.devicePixelRatio || 1, // Reducir pixel ratio en mobile
@@ -52,8 +49,7 @@ export const getCanvasConfig = () => {
 /**
  * Optimiza el tamaño del Stage para mobile
  */
-export const getOptimizedStageSize = (containerWidth, containerHeight) => {
-  const isMobile = isMobileDevice();
+export 
   
   if (isMobile) {
     // En mobile, limitar el tamaño máximo del canvas
@@ -68,8 +64,7 @@ export const getOptimizedStageSize = (containerWidth, containerHeight) => {
 /**
  * Debounce optimizado para mobile (mayor delay)
  */
-export const mobileDebounce = (func, delay) => {
-  const isMobile = isMobileDevice();
+export 
   const optimizedDelay = isMobile ? delay * 1.5 : delay;
   
   let timeoutId;
@@ -82,8 +77,7 @@ export const mobileDebounce = (func, delay) => {
 /**
  * Throttle optimizado para mobile (mayor delay)
  */
-export const mobileThrottle = (func, delay) => {
-  const isMobile = isMobileDevice();
+export 
   const optimizedDelay = isMobile ? delay * 1.5 : delay;
   
   let lastCall = 0;
@@ -99,9 +93,7 @@ export const mobileThrottle = (func, delay) => {
 /**
  * Ejecuta una función de forma no bloqueante (usando requestIdleCallback o setTimeout)
  */
-export const runNonBlocking = (func, timeout = 100) => {
-  if (typeof window === 'undefined') {
-    func();
+export 
     return;
   }
   
@@ -115,8 +107,7 @@ export const runNonBlocking = (func, timeout = 100) => {
 /**
  * Optimiza imágenes para mobile (reducir calidad/tamaño)
  */
-export const getOptimizedImageUrl = (url, options = {}) => {
-  const isMobile = isMobileDevice();
+export 
   
   if (!url || !isMobile) {
     return url;
@@ -134,8 +125,7 @@ export const getOptimizedImageUrl = (url, options = {}) => {
 /**
  * Reduce la calidad de renderizado en mobile
  */
-export const getRenderQuality = () => {
-  const isMobile = isMobileDevice();
+export 
   return isMobile ? 'low' : 'high';
 };
 

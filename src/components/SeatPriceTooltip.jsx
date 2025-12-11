@@ -11,7 +11,7 @@ export const SeatPriceTooltip = ({
   children,
   showDetails = true 
 }) => {
-  if (!seat || !seat.precio) {
+
     return children;
   }
 
@@ -85,9 +85,7 @@ export const SeatPriceTooltip = ({
 /**
  * Hook para obtener precio desglosado de un asiento
  */
-export const useSeatPrice = (seat, funcionId) => {
-  const precio = React.useMemo(() => {
-    if (!seat || !seat.precio) return null;
+export 
     return typeof seat.precio === 'number' ? seat.precio : parseFloat(seat.precio) || 0;
   }, [seat?.precio]);
 

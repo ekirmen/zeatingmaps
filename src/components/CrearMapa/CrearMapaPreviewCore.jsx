@@ -83,7 +83,7 @@ const CrearMapaPreviewCore = ({
     const imageUrl = mapa?.contenido?.configuracion?.background?.image;
 
     if (!imageUrl) {
-      setBackgroundImageElement(null);
+
       return;
     }
 

@@ -13,7 +13,7 @@ const PopupEditarEntrada = ({ tiposDeProducto, ivas, formData, onClose, onSave, 
 
   const handleSubmit = () => {
     if (!formData.nombreEntrada) {
-      alert("Debes ingresar un nombre para la entrada.");
+
       return;
     }
     if (!formData.ivaSeleccionado) {

@@ -11,7 +11,7 @@ export class ImageService {
         .eq('is_active', true)
         .order('orden', { ascending: true });
 
-      if (error) throw error;
+
       return data || [];
     } catch (error) {
       console.error('Error obteniendo imágenes del evento:', error);

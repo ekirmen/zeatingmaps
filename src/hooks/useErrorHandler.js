@@ -4,13 +4,7 @@ import { useCallback } from 'react';
 /**
  * Hook para manejo consistente de errores en toda la aplicación
  */
-export const useErrorHandler = () => {
-  
-  /**
-   * Maneja errores de selección de asientos
-   */
-  const handleSeatError = useCallback((error, context = {}) => {
-    console.error('🚨 [SEAT_ERROR]', error, context);
+export 
     
     let errorMessage = 'Error al seleccionar el asiento';
     let shouldClearCart = false;
@@ -35,7 +29,7 @@ export const useErrorHandler = () => {
     if (shouldClearCart && context.clearCart) {
       context.clearCart();
     }
-    
+
     return {
       handled: true,
       message: errorMessage,

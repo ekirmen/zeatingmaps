@@ -18,7 +18,7 @@ const EventsList = ({
   const resolveBestImage = (evento) => {
     const tryTypes = ['banner', 'obraImagen', 'portada', 'logoHorizontal', 'logoCuadrado'];
     for (const t of tryTypes) {
-      const url = resolveEventImageWithTenant(evento, t, currentTenant?.id);
+
       if (url) return url;
     }
     return null;

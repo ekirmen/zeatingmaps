@@ -10,39 +10,25 @@ import {
   Switch, 
   Slider, 
   InputNumber, 
-  ColorPicker, 
-  Upload, 
   Divider,
   Row,
   Col,
   Tabs,
   Collapse,
   Alert,
-  Tag,
-  Tooltip,
   message,
   Modal,
   List,
-  Descriptions,
   Statistic
 } from '../../utils/antdComponents';
 import {
   SettingOutlined,
   SaveOutlined,
   UndoOutlined,
-  RedoOutlined,
-  EyeOutlined,
   DownloadOutlined,
-  UploadOutlined,
-  DeleteOutlined,
-  CopyOutlined,
   InfoCircleOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
   PictureOutlined,
   AppstoreOutlined,
-  PaletteOutlined,
   DashboardOutlined,
   SafetyOutlined,
   DatabaseOutlined,
@@ -224,7 +210,7 @@ const CrearMapaSettings = ({
     });
   };
 
-  // ===== RENDERIZADO =====
+
   return (
     <div className="max-w-6xl mx-auto">
       <Card>

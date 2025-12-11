@@ -15,7 +15,7 @@ const stripInvisibleCharacters = (value) =>
   typeof value === 'string' ? value.replace(/[\u200B-\u200D\uFEFF]/g, '') : value;
 
 const resolvePaymentTable = async (client = supabase) => {
-  if (paymentTableCache.has(client)) {
+
     return paymentTableCache.get(client);
   }
 
@@ -100,9 +100,7 @@ const setCachedFeeProfile = (gatewayId, profile) => {
   feeCache.set(gatewayId, { profile, timestamp: Date.now() });
 };
 
-export const invalidateGatewayFeeCache = (gatewayId = null) => {
-  if (gatewayId) {
-    feeCache.delete(gatewayId);
+export 
     return;
   }
   feeCache.clear();
@@ -138,9 +136,7 @@ const sanitizeUuid = (rawValue, { fieldName, required = false } = {}) => {
 /**
  * Obtiene todas las pasarelas de pago activas
  */
-export const getActivePaymentGateways = async () => {
-  try {
-    const paymentTable = await resolvePaymentTable();
+export 
     const { data, error } = await supabase
       .from(paymentTable)
       .select('*')
@@ -159,9 +155,7 @@ export const getActivePaymentGateways = async () => {
 /**
  * Obtiene todas las pasarelas de pago (activas e inactivas)
  */
-export const getAllPaymentGateways = async () => {
-  try {
-    const paymentTable = await resolvePaymentTable();
+export 
     const { data, error } = await supabase
       .from(paymentTable)
       .select('*')
@@ -179,9 +173,7 @@ export const getAllPaymentGateways = async () => {
 /**
  * Obtiene la configuración de una pasarela específica
  */
-export const getGatewayConfig = async (gatewayId) => {
-  try {
-    const paymentTable = await resolvePaymentTable();
+export 
     const { data, error } = await supabase
       .from(paymentTable)
       .select('id, config, fee_structure, supported_currencies')
@@ -251,12 +243,7 @@ const getGatewayFeeProfile = async (gatewayId, { forceRefresh = false } = {}) =>
 /**
  * Calcula el precio con comisiones de una pasarela
  */
-export const calculatePriceWithFees = async (
-  basePrice,
-  gatewayId,
-  { currency = 'USD', forceRefresh = false, allowCurrencyFallback = false } = {}
-) => {
-  const normalizedPrice = Number(basePrice);
+export 
 
   if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
     throw new Error('basePrice debe ser un número válido y no negativo');
@@ -310,9 +297,7 @@ export const calculatePriceWithFees = async (
 /**
  * Obtiene las tasas de todas las pasarelas activas
  */
-export const getAllActiveGatewayFees = async () => {
-  try {
-    const gateways = await getActivePaymentGateways();
+export 
     const feesPromises = gateways.map(async (gateway) => {
       const fees = await getGatewayFees(gateway.id);
       return {
@@ -331,15 +316,7 @@ export const getAllActiveGatewayFees = async () => {
 /**
  * Valida la configuración de una pasarela
  */
-export const validateGatewayConfig = (gateway) => {
-  const validations = {
-    stripe: ['publishable_key', 'secret_key'],
-    paypal: ['client_id', 'client_secret', 'mode'],
-    transfer: ['bank_name', 'account_number', 'account_holder'],
-    mobile_payment: ['phone_number', 'provider', 'account_name'],
-    zelle: ['email', 'account_name'],
-    reservation: ['reservation_time', 'max_reservation_amount']
-  };
+export 
 
   const requiredFields = validations[gateway.type] || [];
   const missingFields = [];
@@ -363,9 +340,7 @@ export const validateGatewayConfig = (gateway) => {
 /**
  * Crea una nueva pasarela de pago
  */
-export const createPaymentGateway = async (gatewayData) => {
-  try {
-    const paymentTable = await resolvePaymentTable();
+export 
     const { data, error } = await supabase
       .from(paymentTable)
       .insert([gatewayData])
@@ -383,9 +358,7 @@ export const createPaymentGateway = async (gatewayData) => {
 /**
  * Actualiza una pasarela de pago existente
  */
-export const updatePaymentGateway = async (gatewayId, updates) => {
-  try {
-    const paymentTable = await resolvePaymentTable();
+export 
     const { data, error } = await supabase
       .from(paymentTable)
       .update(updates)
@@ -404,9 +377,7 @@ export const updatePaymentGateway = async (gatewayId, updates) => {
 /**
  * Elimina una pasarela de pago
  */
-export const deletePaymentGateway = async (gatewayId) => {
-  try {
-    const paymentTable = await resolvePaymentTable();
+export 
     const { error } = await supabase
       .from(paymentTable)
       .delete()
@@ -423,9 +394,7 @@ export const deletePaymentGateway = async (gatewayId) => {
 /**
  * Obtiene una pasarela específica por tipo
  */
-export const getPaymentGatewayByType = async (type) => {
-  try {
-    const paymentTable = await resolvePaymentTable();
+export 
     const { data, error } = await supabase
       .from(paymentTable)
       .select('*')
@@ -445,8 +414,7 @@ export const getPaymentGatewayByType = async (type) => {
 /**
  * Valida los datos de pago antes de crear la transacción
  */
-export const validatePaymentData = (paymentData) => {
-  const errors = [];
+export 
 
   if (!paymentData.orderId) {
     errors.push('orderId es requerido');
@@ -483,9 +451,7 @@ export const validatePaymentData = (paymentData) => {
 /**
  * Crea una transacción de pago con validación
  */
-export const createPaymentWithValidation = async (paymentData) => {
-  // Validar datos
-  const validation = validatePaymentData(paymentData);
+export 
   if (!validation.isValid) {
     throw new Error(`Datos de pago inválidos: ${validation.errors.join(', ')}`);
   }
@@ -692,9 +658,7 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
         }
 
         if (error) {
-          const isPermissionError =
-            error.code === '42501' || // permission denied
-            (typeof error.message === 'string' && error.message.toLowerCase().includes('permission denied'));
+          
           // Si falló por permisos u otra razón inesperada, asumimos que la BD podrá validar el FK
           return { exists: true, verified: false };
         }
@@ -1082,15 +1046,7 @@ export const updatePaymentTransactionStatus = async (
   }
 };
 
-export const processGatewayNotification = async ({
-  transactionId = null,
-  locator = null,
-  status,
-  gatewayResponse = null,
-  seatStatusHint = null,
-} = {}) => {
-  if (!transactionId && !locator) {
-    throw new Error('transactionId o locator son requeridos para procesar la notificación');
+export 
   }
 
   let transaction = null;
@@ -1126,13 +1082,7 @@ export const processGatewayNotification = async ({
 /**
  * Obtiene las transacciones de un pedido
  */
-export const getPaymentTransactionsByOrder = async (orderId) => {
-  try {
-    const { data, error } = await supabase
-      .from('payment_transactions')
-      .select('*')
-      .eq('order_id', orderId)
-      .order('created_at', { ascending: false });
+export 
 
     if (error) throw error;
     return data || [];

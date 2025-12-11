@@ -7,7 +7,7 @@ import { supabase } from '../config/supabase';
 export const eventosService = {
   /**
    * Crear un nuevo evento
-   * @param {Object} eventoData - Datos del evento
+
    * @returns {Promise<Object>} Evento creado
    */
   async crearEvento(eventoData) {

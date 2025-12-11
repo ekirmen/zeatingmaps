@@ -1,7 +1,7 @@
 // Configuración de la API que funciona en desarrollo y producción
 const getApiConfig = () => {
   // En desarrollo, usar localhost
-  if (process.env.NODE_ENV === 'development') {
+
     return {
       baseUrl: 'http://localhost:3000',
       apiPath: '/api'
@@ -27,15 +27,13 @@ const getApiConfig = () => {
 export const apiConfig = getApiConfig();
 
 // Función para construir URLs de API
-export const buildApiUrl = (endpoint) => {
-  const { baseUrl, apiPath } = apiConfig;
+export 
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   return `${baseUrl}${apiPath}/${cleanEndpoint}`;
 };
 
 // Función para construir URLs relativas (para Vercel)
-export const buildRelativeApiUrl = (endpoint) => {
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+export 
   return `/api/${cleanEndpoint}`;
 };
 

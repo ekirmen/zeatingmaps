@@ -1,7 +1,7 @@
 import { supabase } from '../../supabaseClient';
 
 export class TenantEmailConfigService {
-  static isMissingTenantEmailTable(error) {
+
     if (!error) return false;
 
     const normalizedMessage = (error.message || '').toLowerCase();

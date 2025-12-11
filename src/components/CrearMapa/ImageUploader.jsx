@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Upload, message, Image, Space, Typography } from '../../utils/antdComponents';
+import { Button, Upload, message, Image, Typography } from '../../utils/antdComponents';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -20,7 +20,7 @@ const ImageUploader = ({
       
       // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
-        message.error('Por favor selecciona solo archivos de imagen');
+
         return;
       }
       

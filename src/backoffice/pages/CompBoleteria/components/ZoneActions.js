@@ -1,19 +1,7 @@
 import { message } from '../../../../utils/antdComponents';
 
-export const createZoneActions = ({
-  selectedFuncion,
-  carrito,
-  setCarrito,
-  selectedClient,
-  zoneQuantities,
-  setZoneQuantities,
-  appliedDiscount,
-  getPrecioConDescuento,
-  detallesPlantilla
-}) => {
-  const handleAddZoneToCart = (detalle) => {
-    const zonaId = detalle.zonaId || (typeof detalle.zona === 'object' ? detalle.zona._id : detalle.zona);
-    const qty = parseInt(zoneQuantities[zonaId], 10);
+export 
+
     if (!qty || qty <= 0) return;
 
     // Cliente opcional - se puede seleccionar despu©s

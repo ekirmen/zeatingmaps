@@ -95,7 +95,7 @@ const AuditLogs = () => {
       
       // Formatear logs para la tabla
       const formattedLogs = auditLogs.map(log => {
-        const details = log.details ? (typeof log.details === 'string' ? JSON.parse(log.details) : log.details) : {};
+
         return {
           id: log.id,
           timestamp: new Date(log.created_at),
@@ -149,8 +149,7 @@ const AuditLogs = () => {
   };
 
   // Funci³n helper para obtener descripci³n de acci³n
-  const getActionDescription = (log) => {
-    const action = log.action || '';
+  
     const details = log.details ? (typeof log.details === 'string' ? JSON.parse(log.details) : log.details) : {};
     
     if (action.startsWith('payment_')) {
@@ -230,7 +229,7 @@ const AuditLogs = () => {
     return colors[severity] || 'default';
   };
   
-  const getLevelColor = getSeverityColor; // Alias para compatibilidad
+   // Alias para compatibilidad
 
   const getActionIcon = (action) => {
     const icons = {

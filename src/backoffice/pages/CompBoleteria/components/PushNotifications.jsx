@@ -25,13 +25,7 @@ const PushNotifications = ({ eventId }) => {
     loadNotifications();
   }, [eventId]);
 
-  const loadConfig = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('push_notifications_config')
-        .select('*')
-        .eq('event_id', eventId)
-        .single();
+  
 
       if (data) {
         setConfig(data);
@@ -85,7 +79,7 @@ const PushNotifications = ({ eventId }) => {
 
   const sendNotification = async () => {
     if (!config.title || !config.message) {
-      message.error('Completa el t­tulo y mensaje');
+
       return;
     }
 

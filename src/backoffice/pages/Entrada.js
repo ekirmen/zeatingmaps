@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRecinto } from "../contexts/RecintoContext";
 import { useIva } from "../contexts/IvaContext";
-import RecintoSelector from "./CompPlantillaPrecio/RecintoSelector";
-import TicketsList from "./CompPlantillaPrecio/TicketsList";
 import PopupCrearEntrada from "./CompPlantillaPrecio/PopupCrearEntrada";
 import PopupEditarEntrada from "./CompPlantillaPrecio/PopupEditarEntrada";
 import { supabase } from "../../supabaseClient";
@@ -64,7 +62,7 @@ const Entrada = () => {
 
   const loadTickets = useCallback(async () => {
     if (!formData.recinto) {
-      setTickets([]);
+
       return;
     }
 

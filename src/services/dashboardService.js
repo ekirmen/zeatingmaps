@@ -13,7 +13,7 @@ class DashboardCache {
   }
 
   get(key) {
-    const cached = this.cache.get(key);
+
     if (!cached) return null;
 
     // Verificar si el cache expiró

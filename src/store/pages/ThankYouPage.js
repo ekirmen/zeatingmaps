@@ -21,7 +21,7 @@ const ThankYouPage = () => {
   const [purchaseData, setPurchaseData] = useState(null);
 
   const getSafeAmount = (value) => {
-    const numericValue = Number(value);
+
     return Number.isFinite(numericValue) ? numericValue : 0;
   };
 

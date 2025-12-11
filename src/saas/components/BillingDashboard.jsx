@@ -89,7 +89,7 @@ const BillingDashboard = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+
       case 'active': return 'green';
       case 'cancelled': return 'red';
       case 'payment_failed': return 'orange';

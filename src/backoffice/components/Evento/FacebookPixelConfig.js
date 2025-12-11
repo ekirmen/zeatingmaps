@@ -17,8 +17,7 @@ import {
   EyeOutlined,
   ShoppingCartOutlined,
   CreditCardOutlined,
-  CheckCircleOutlined,
-  InfoCircleOutlined
+  CheckCircleOutlined
 } from '@ant-design/icons';
 import { upsertFacebookPixel, getFacebookPixelByEvent } from '../../../store/services/facebookPixelService';
 
@@ -68,28 +67,6 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
       loadFacebookPixel();
     }
   }, [eventoData?.id]);
-    try {
-      setLoading(true);
-      const pixel = await getFacebookPixelByEvent(eventoData.id);
-      if (pixel) {
-        setFacebookPixel({
-          pixel_id: pixel.pixel_id || '',
-          pixel_script: pixel.pixel_script || '',
-          is_active: pixel.is_active || false,
-          tracking_pages: pixel.tracking_pages || {
-            event_page: true,
-            cart_page: true,
-            payment_page: true,
-            thank_you_page: true
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error loading Facebook pixel:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSavePixel = async () => {
     try {
@@ -104,12 +81,12 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
           tracking_pages: facebookPixel.tracking_pages
         });
         
-        // Mostrar mensaje de ©xito
-        alert('P­xel de Facebook guardado correctamente');
+        // Mostrar mensaje de éxito
+        alert('Pixel de Facebook guardado correctamente');
       }
     } catch (error) {
       console.error('Error saving Facebook pixel:', error);
-      alert('Error al guardar el p­xel de Facebook');
+      alert('Error al guardar el pixel de Facebook');
     } finally {
       setLoading(false);
     }
@@ -121,14 +98,14 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
         title={
           <Space>
             <FacebookOutlined />
-            <span>Configuraci³n del P­xel de Facebook</span>
+            <span>Configuración del Pixel de Facebook</span>
           </Space>
         }
         className="mb-4"
       >
         <Alert
-          message="Informaci³n del P­xel de Facebook"
-          description="Configura el p­xel de Facebook para trackear conversiones espec­ficas de este evento. Esto te permitir¡ medir el ROI de tus campa±as publicitarias."
+          message="Información del Pixel de Facebook"
+          description="Configura el pixel de Facebook para trackear conversiones específicas de este evento. Esto te permitirá medir el ROI de tus campañas publicitarias."
           type="info"
           showIcon
           className="mb-4"
@@ -137,11 +114,11 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="ID del P­xel de Facebook"
+              label="ID del Pixel de Facebook"
               help="Ejemplo: 123456789012345"
             >
               <Input
-                placeholder="Ingresa el ID de tu p­xel de Facebook"
+                placeholder="Ingresa el ID de tu pixel de Facebook"
                 value={facebookPixel.pixel_id}
                 onChange={(e) => setFacebookPixel(prev => ({
                   ...prev,
@@ -152,8 +129,8 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
-              label="P­xel Activo"
-              help="Activa o desactiva el tracking del p­xel"
+              label="Pixel Activo"
+              help="Activa o desactiva el tracking del pixel"
             >
               <Switch
                 checked={facebookPixel.is_active}
@@ -168,26 +145,34 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
 
         <Form.Item
           label="Script Personalizado (Opcional)"
-          help="Si tienes un script personalizado de Facebook, puedes agregarlo aqu­"
+          help="Si tienes un script personalizado de Facebook, puedes agregarlo aquí"
         >
           <TextArea
             rows={8}
             placeholder={`<!-- Facebook Pixel Code -->
 <script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
+!function(f,b,e,v,n,t,s) {
+  if(f.fbq)return;
+  n=f.fbq=function() {
+    n.callMethod ? n.callMethod.apply(n,arguments) : n.queue.push(arguments)
+  };
+  if(!f._fbq)f._fbq=n;
+  n.push=n;
+  n.loaded=true;
+  n.version='2.0';
+  n.queue=[];
+  t=b.createElement(e);
+  t.async=true;
+  t.src=v;
+  s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s);
+}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', 'TU_PIXEL_ID');
 fbq('track', 'PageView');
 </script>
 <noscript>
-<img height='1' width='1' style='display:none'
-src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
+  <img height='1' width='1' style='display:none'
+  src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
 </noscript>
 <!-- End Facebook Pixel Code -->`}
             value={facebookPixel.pixel_script}
@@ -200,9 +185,9 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
 
         <Divider />
 
-        <Title level={5}>P¡ginas de Tracking</Title>
+        <Title level={5}>Páginas de Tracking</Title>
         <Text type="secondary" className="mb-4 block">
-          Selecciona en qu© p¡ginas quieres que se active el p­xel de Facebook
+          Selecciona en qué páginas quieres que se active el pixel de Facebook
         </Text>
 
         <Row gutter={[16, 16]}>
@@ -221,7 +206,7 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
                 />
                 <Space className="ml-2">
                   <EyeOutlined />
-                  <Text strong>P¡gina del Evento</Text>
+                  <Text strong>Página del Evento</Text>
                 </Space>
               </div>
               <Text type="secondary" className="ml-6">
@@ -245,7 +230,7 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
                 />
                 <Space className="ml-2">
                   <ShoppingCartOutlined />
-                  <Text strong>P¡gina del Carrito</Text>
+                  <Text strong>Página del Carrito</Text>
                 </Space>
               </div>
               <Text type="secondary" className="ml-6">
@@ -269,7 +254,7 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
                 />
                 <Space className="ml-2">
                   <CreditCardOutlined />
-                  <Text strong>P¡gina de Pago</Text>
+                  <Text strong>Página de Pago</Text>
                 </Space>
               </div>
               <Text type="secondary" className="ml-6">
@@ -293,7 +278,7 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
                 />
                 <Space className="ml-2">
                   <CheckCircleOutlined />
-                  <Text strong>P¡gina de Gracias</Text>
+                  <Text strong>Página de Gracias</Text>
                 </Space>
               </div>
               <Text type="secondary" className="ml-6">
@@ -304,8 +289,8 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
         </Row>
 
         <Alert
-          message="Informaci³n Importante"
-          description="El p­xel de Facebook se cargar¡ autom¡ticamente en las p¡ginas seleccionadas. Asegºrate de cumplir con las pol­ticas de privacidad de Facebook y obtener el consentimiento de los usuarios."
+          message="Información Importante"
+          description="El pixel de Facebook se cargará automáticamente en las páginas seleccionadas. Asegúrate de cumplir con las políticas de privacidad de Facebook y obtener el consentimiento de los usuarios."
           type="warning"
           showIcon
           className="mt-4"
@@ -318,7 +303,7 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
             loading={loading}
             icon={<FacebookOutlined />}
           >
-            Guardar Configuraci³n del P­xel
+            Guardar Configuración del Pixel
           </Button>
         </div>
       </Card>
@@ -341,5 +326,4 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
   );
 };
 
-export default FacebookPixelConfig; 
-
+export default FacebookPixelConfig;

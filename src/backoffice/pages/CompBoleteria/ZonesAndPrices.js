@@ -33,30 +33,30 @@ const ZonesAndPrices = ({
   const mapa = null;
   const setMapa = () => {};
   const zonas = [];
-  const setZonas = () => {};
+  
   const discountCode = '';
   const setDiscountCode = () => {};
   const appliedDiscount = null;
   const handleApplyDiscount = () => {};
-  const getPrecioConDescuento = (precio) => precio;
+  
   const blockMode = false;
   const setBlockMode = () => {};
   const tempBlocks = [];
   const setTempBlocks = () => {};
   const abonoSeats = [];
   const animatingSeats = [];
-  const lockSeat = () => {};
-  const unlockSeat = () => {};
-  const isSeatLocked = () => false;
+  
+  
+  
   const isSeatLockedByMe = () => false;
-  const handleSeatAnimation = () => {};
+  
   const handleAnimationComplete = () => {};
   const selectedZonaId = null;
   const setSelectedZonaId = () => {};
   const detallesPlantilla = null;
   const zonePriceRanges = [];
   const handleClearZoneSelection = () => {};
-  const saveState = () => {};
+  
   const restoreState = () => null;
   const clearState = () => {};
   
@@ -86,7 +86,7 @@ const ZonesAndPrices = ({
 
   // Callbacks
   const onSeatsUpdated = useCallback((ids, estado) => {
-    setMapa((prev) => {
+
       if (!prev) return prev;
       const blocked = estado === 'bloqueado';
       

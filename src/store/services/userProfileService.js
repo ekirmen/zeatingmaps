@@ -2,14 +2,7 @@
 import { supabase } from '../../supabaseClient';
 
 // Obtener perfil completo del usuario
-export const getUserProfile = async (userId) => {
-  try {
-    // Paso 1: perfil básico sin joins
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+export 
 
     if (profileError) throw profileError;
 
@@ -63,13 +56,7 @@ export const getUserProfile = async (userId) => {
 };
 
 // Obtener compras del usuario (desde payment_transactions)
-export const getUserPurchases = async (userId) => {
-  try {
-    const { data, error } = await supabase
-      .from('payment_transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+export 
 
     if (error) throw error;
     return data || [];
@@ -80,13 +67,7 @@ export const getUserPurchases = async (userId) => {
 };
 
 // Obtener compras con asientos del usuario
-export const getUserPurchasesWithSeats = async (userId) => {
-  try {
-    const { data: transactions, error } = await supabase
-      .from('payment_transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+export 
 
     if (error) throw error;
 
@@ -139,14 +120,7 @@ export const getUserPurchasesWithSeats = async (userId) => {
 };
 
 // Obtener reservas del usuario
-export const getUserReservations = async (userId) => {
-  // intentar con 'reservations' y fallback a 'reservas'
-  const tryFetch = async (table) => supabase
-    .from(table)
-    .select('*')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false });
+export 
 
   try {
     let { data, error } = await tryFetch('reservations');
@@ -162,13 +136,7 @@ export const getUserReservations = async (userId) => {
 };
 
 // Obtener eventos favoritos del usuario
-export const getUserFavorites = async (userId) => {
-  try {
-    const { data, error } = await supabase
-      .from('user_favorites')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+export 
 
     if (error) throw error;
     return data || [];
@@ -179,14 +147,7 @@ export const getUserFavorites = async (userId) => {
 };
 
 // Obtener historial de actividades del usuario
-export const getUserActivityHistory = async (userId) => {
-  try {
-    const { data, error } = await supabase
-      .from('user_activity_log')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(20);
+export 
 
     if (error) throw error;
     return data || [];
@@ -197,18 +158,7 @@ export const getUserActivityHistory = async (userId) => {
 };
 
 // Actualizar perfil del usuario
-export const updateUserProfile = async (userId, profileData) => {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({
-        login: profileData.email,
-        telefono: profileData.phone,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId)
-      .select()
-      .maybeSingle();
+export 
 
     if (error) throw error;
     if (!data) {
@@ -222,9 +172,7 @@ export const updateUserProfile = async (userId, profileData) => {
 };
 
 // Obtener estadísticas del usuario
-export const getUserStats = async (userId) => {
-  try {
-    let purchases = [];
+export 
     let reservations = [];
     let favorites = [];
 

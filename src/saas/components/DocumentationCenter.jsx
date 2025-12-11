@@ -47,9 +47,7 @@ const DocumentationCenter = () => {
     loadTutorials();
   }, []);
 
-  const loadDocumentation = async () => {
-    try {
-      setLoading(true);
+  
       const { data, error } = await supabase
         .from('documentation')
         .select('*')
@@ -65,13 +63,7 @@ const DocumentationCenter = () => {
     }
   };
 
-  const loadTutorials = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('interactive_tutorials')
-        .select('*')
-        .eq('is_published', true)
-        .order('category, order_index');
+  
 
       if (error) throw error;
       setTutorials(data || []);
@@ -83,7 +75,7 @@ const DocumentationCenter = () => {
   const filteredDocs = documentation.filter(doc => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || doc.category === selectedCategory;
+
     return matchesSearch && matchesCategory;
   });
 

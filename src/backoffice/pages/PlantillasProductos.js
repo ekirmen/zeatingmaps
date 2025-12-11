@@ -48,15 +48,10 @@ const PlantillasProductos = () => {
     loadRecintos();
   }, []);
 
-  const loadRecintos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('recintos')
-        .select('*')
-        .order('nombre');
+  
 
       if (error) {
-        setRecintos([]);
+
         return;
       }
 

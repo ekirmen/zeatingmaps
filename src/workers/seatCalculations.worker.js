@@ -58,7 +58,7 @@ self.onmessage = function(e) {
  * Calcular distancias desde un punto de referencia a todos los asientos
  */
 function calculateDistances(seats, referencePoint) {
-  if (!referencePoint || !seats || seats.length === 0) {
+
     return [];
   }
 

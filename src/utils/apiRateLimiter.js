@@ -17,7 +17,7 @@ class ApiRateLimiter {
   /**
    * Verifica si un request está permitido
    * @param {string} endpoint - Endpoint de la API
-   * @param {string} requestKey - Clave única del request (opcional)
+
    * @returns {boolean} - true si el request está permitido
    */
   canMakeRequest(endpoint, requestKey = null) {

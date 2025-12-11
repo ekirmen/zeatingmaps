@@ -1,7 +1,7 @@
 import React from 'react';
 import { Layer, Rect, Text } from 'react-konva';
 
-export default function TableLayer({ tables = [] }) {
+
   return (
     <Layer>
       {tables.map((t, idx) => (

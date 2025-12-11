@@ -7,7 +7,7 @@ export const fetchCanalesVenta = async () => {
   try {
     // Obtener el usuario autenticado
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+
       return [];
     }
 
@@ -42,9 +42,7 @@ export const fetchCanalesVenta = async () => {
 /**
  * Verifica si un canal de venta específico está activo para el tenant
  */
-export const isCanalVentaActivo = async (canalId) => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
+export 
     if (!user) return false;
 
     const { data: profile, error: profileError } = await supabase
@@ -74,9 +72,7 @@ export const isCanalVentaActivo = async (canalId) => {
 /**
  * Obtiene canales de venta por URL (para validar desde qué sitio se accede)
  */
-export const getCanalVentaByUrl = async (url) => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
+export 
     if (!user) return null;
 
     const { data: profile, error: profileError } = await supabase

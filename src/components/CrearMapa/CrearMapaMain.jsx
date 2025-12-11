@@ -83,7 +83,7 @@ const CrearMapaMain = ({
     };
 
     // Si hay un mapa inicial, fusionarlo con el por defecto
-    if (initialMapa) {
+
       return {
         ...defaultMapa,
         ...initialMapa,
@@ -562,8 +562,7 @@ const CrearMapaMain = ({
 
 // ===== COMPONENTES AUXILIARES =====
 
-const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
-  const [form] = Form.useForm();
+
 
   const handleFinish = (values) => {
     onUpdate({

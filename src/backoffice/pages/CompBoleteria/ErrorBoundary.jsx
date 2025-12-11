@@ -17,7 +17,7 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-    // Actualizar el estado para que el siguiente render muestre la UI de fallback
+
     return {
       hasError: true,
       error: error,

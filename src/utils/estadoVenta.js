@@ -31,7 +31,7 @@ export const ESTADO_VENTA = {
   }
 };
 
-export function getEstadoVentaInfo(estado) {
+
   return ESTADO_VENTA[estado] || ESTADO_VENTA['a-la-venta'];
 }
 

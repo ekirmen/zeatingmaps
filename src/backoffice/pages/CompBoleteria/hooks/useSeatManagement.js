@@ -3,8 +3,7 @@ import { message } from '../../../../utils/antdComponents';
 import { useSeatLockStore } from '../../../../components/seatLockStore';
 import { fetchAbonoAvailableSeats } from '../../../../services/supabaseServices';
 
-export const useSeatManagement = (selectedEvent, abonoMode) => {
-  const [blockMode, setBlockMode] = useState(false);
+export 
   const [tempBlocks, setTempBlocks] = useState([]);
   const [abonoSeats, setAbonoSeats] = useState([]);
   const [animatingSeats, setAnimatingSeats] = useState([]);

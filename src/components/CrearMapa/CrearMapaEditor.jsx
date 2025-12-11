@@ -1,65 +1,35 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Stage, Layer, Circle, Rect, Text as KonvaText, Line, Image, Group, RegularPolygon, Star } from 'react-konva';
 import {
   Button,
-  Card,
   Space,
   Input,
-  Select,
   Slider,
   Switch,
   message,
-  Tooltip,
   Divider,
   Row,
   Col,
   Typography,
-  Badge,
-  Popconfirm,
   Modal,
-  Form,
   InputNumber,
-  ColorPicker,
-  Upload,
-  Progress
 } from '../../utils/antdComponents';
 import {
-  PlusOutlined,
   DeleteOutlined,
   CopyOutlined,
-  ScissorOutlined,
-  ClearOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
   ReloadOutlined,
-  PictureOutlined,
   LinkOutlined,
-  SettingOutlined,
   SaveOutlined,
   UndoOutlined,
-  RedoOutlined,
   EyeOutlined,
-  EyeInvisibleOutlined,
   AppstoreOutlined,
-  AlignLeftOutlined,
-  AlignCenterOutlined,
-  AlignRightOutlined,
-  VerticalAlignTopOutlined,
-  VerticalAlignMiddleOutlined,
-  VerticalAlignBottomOutlined,
-  FullscreenOutlined,
-  CompressOutlined,
-  DownloadOutlined,
   UploadOutlined,
-  InfoCircleOutlined,
-  QuestionCircleOutlined,
   AimOutlined
 } from '@ant-design/icons';
 import { useMapaElements } from '../../backoffice/hooks/useMapaElements';
-import { useMapaState } from '../../backoffice/hooks/useMapaState';
-import { useMapaSelection } from '../../backoffice/hooks/useMapaSelection';
 import { useMapaZoomStage } from '../../backoffice/hooks/useMapaZoomStage';
-import { useMapaGraphicalElements } from '../../backoffice/hooks/useMapaGraphicalElements';
 import { supabase } from '../../supabaseClient';
 import { fetchZonasPorSala } from '../../backoffice/services/apibackoffice';
 import mapaImageService from '../../services/mapaImageService';
@@ -67,8 +37,6 @@ import Grid from '../compMapa/Grid';
 import MenuMapa from '../compMapa/MenuMapa';
 import AdvancedEditPopup from '../compMapa/AdvancedEditPopup';
 import EditPopup from '../compMapa/EditPopup';
-import FilaPopup from '../compMapa/FilaPopup';
-import IconSelector from '../compMapa/IconSelector';
 import PropiedadesMesa from '../compMapa/propiedades/PropiedadesMesa';
 import PropiedadesSilla from '../compMapa/propiedades/PropiedadesSilla';
 import ZonaManager from './ZonaManager';
@@ -77,10 +45,7 @@ import MesaTypeMenu from './MesaTypeMenu';
 import BackgroundFilterMenu from './BackgroundFilterMenu';
 import BackgroundImageManager from './BackgroundImageManager';
 
-
-const { Option } = Select;
 const { Text, Title } = Typography;
-const { TextArea } = Input;
 
 const CrearMapaEditor = ({
   salaId,
@@ -111,7 +76,7 @@ const CrearMapaEditor = ({
 
   const [elements, setElements] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [selectedZone, setSelectedZone] = useState(null);
+  const [selectedZone] = useState(null);
   const [activeMode, setActiveMode] = useState('select');
   const [isCreatingSection, setIsCreatingSection] = useState(false);
   const [sectionPoints, setSectionPoints] = useState([]);
@@ -121,18 +86,15 @@ const CrearMapaEditor = ({
   // ===== ESTADOS AVANZADOS =====
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
   const [showPropertiesPanel, setShowPropertiesPanel] = useState(false);
-  const [showZonesPanel, setShowZonesPanel] = useState(false);
-  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
-  const [showPreviewMode, setShowPreviewMode] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [gridSize, setGridSize] = useState(20);
 
   // ===== ESTADOS DE ESCALADO Y ZOOM =====
-  const [scale, setScale] = useState(0.8); // Zoom inicial m¡s peque±o para ver m¡s contenido
+  const [scale, setScale] = useState(0.8);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [minScale, setMinScale] = useState(0.1);
-  const [maxScale, setMaxScale] = useState(5); // Zoom m¡ximo m¡s alto para m¡s detalle
+  const [minScale] = useState(0.1);
+  const [maxScale] = useState(5);
 
   // ===== ESTADOS DE HISTORIAL =====
   const [history, setHistory] = useState([]);
@@ -148,13 +110,13 @@ const CrearMapaEditor = ({
   const [backgroundPosition, setBackgroundPosition] = useState({ x: 0, y: 0 });
 
   // ===== ESTADOS DE CONEXIONES =====
-  const [showConnections, setShowConnections] = useState(true);
+  const [showConnections] = useState(true);
   const [connectionStyle, setConnectionStyle] = useState('solid');
   const [connectionThreshold, setConnectionThreshold] = useState(50);
 
   // ===== ESTADOS DE ESTADOS DE ASIENTOS =====
   const [selectedSeatState, setSelectedSeatState] = useState('available');
-  const [seatStates, setSeatStates] = useState({
+  const [seatStates] = useState({
     available: { fill: '#00d6a4', stroke: '#a8aebc', opacity: 1 },
     selected: { fill: '#008e6d', stroke: '#696f7d', opacity: 1 },
     occupied: { fill: '#ff6b6b', stroke: '#d63031', opacity: 0.8 },
@@ -166,7 +128,7 @@ const CrearMapaEditor = ({
   const [zonas, setZonas] = useState([]);
   const [showZonaManager, setShowZonaManager] = useState(false);
 
-  // ===== ESTADOS DE MENš CONTEXTUAL =====
+  // ===== ESTADOS DE MENÚ CONTEXTUAL =====
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
@@ -176,9 +138,8 @@ const CrearMapaEditor = ({
 
   // ===== ESTADOS DE PROGRESO =====
   const [currentStep, setCurrentStep] = useState(1);
-  const [totalSteps] = useState(5);
 
-  // ===== FUNCI“N PARA CALCULAR PROGRESO =====
+  // ===== FUNCIÓN PARA CALCULAR PROGRESO =====
   const calculateProgress = useCallback(() => {
     let progress = 0;
     let step = 1;
@@ -242,17 +203,13 @@ const CrearMapaEditor = ({
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
   const containerRef = useRef(null);
-  const fileInputRef = useRef(null);
 
   // ===== HOOKS PERSONALIZADOS =====
   const {
     addMesa,
-    addSillasToMesa,
     updateElementProperty,
     updateElementSize,
     deleteSelectedElements,
-    limpiarSillasDuplicadas,
-    snapToGrid: snapToGridFunction,
     assignZoneToSelected,
     scaleElement,
     scaleSystem,
@@ -269,10 +226,43 @@ const CrearMapaEditor = ({
     zoomIn,
     zoomOut,
     resetZoom,
-    fitToScreen,
-    panToCenter,
-    zoomToFit
+    fitToScreen
   } = useMapaZoomStage(stageRef, scale, setScale, position, setPosition);
+
+  // ===== FUNCIONES DE HISTORIAL =====
+  const addToHistory = useCallback((newElements, action) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({
+      elements: JSON.parse(JSON.stringify(newElements)),
+      action,
+      timestamp: Date.now()
+    });
+
+    if (newHistory.length > maxHistorySize) {
+      newHistory.shift();
+    }
+
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex, maxHistorySize]);
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setElements(JSON.parse(JSON.stringify(history[newIndex].elements)));
+      message.success(`Deshecho: ${history[newIndex].action}`);
+    }
+  }, [historyIndex, history]);
+
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setElements(JSON.parse(JSON.stringify(history[newIndex].elements)));
+      message.success(`Rehecho: ${history[newIndex].action}`);
+    }
+  }, [historyIndex, history]);
 
   // ===== EFECTOS =====
   useEffect(() => {
@@ -284,67 +274,70 @@ const CrearMapaEditor = ({
         try {
           contenidoParseado = JSON.parse(mapa.contenido);
         } catch (error) {
-          console.error('Œ [CREAR_MAPA_EDITOR] Error parseando contenido:', error);
+          console.error('❌ [CREAR_MAPA_EDITOR] Error parseando contenido:', error);
           return;
         }
       } else {
         contenidoParseado = mapa.contenido;
       }
+      
       if (contenidoParseado?.elementos) {
-        // Verificar si el mapa tiene im¡genes optimizadas
+        // Verificar si el mapa tiene imágenes optimizadas
         const tieneImagenesOptimizadas = mapaImageService.hasOptimizedImages(contenidoParseado.elementos);
         if (tieneImagenesOptimizadas) {
-          // Restaurar im¡genes para edici³n
+          // Restaurar imágenes para edición
           mapaImageService.restoreImagesForEditing(mapa.id, contenidoParseado.elementos)
             .then((elementosRestaurados) => {
               setElements(elementosRestaurados);
-              addToHistory(elementosRestaurados, 'Carga inicial con im¡genes restauradas');
+              addToHistory(elementosRestaurados, 'Carga inicial con imágenes restauradas');
             })
             .catch((error) => {
-              console.error('Œ [CREAR_MAPA_EDITOR] Error restaurando im¡genes:', error);
-              // Fallback: cargar elementos sin restaurar im¡genes
+              console.error('❌ [CREAR_MAPA_EDITOR] Error restaurando imágenes:', error);
+              // Fallback: cargar elementos sin restaurar imágenes
               setElements(contenidoParseado.elementos);
               addToHistory(contenidoParseado.elementos, 'Carga inicial (fallback)');
             });
         } else {
-          // Mapa sin im¡genes optimizadas, cargar normalmente
+          // Mapa sin imágenes optimizadas, cargar normalmente
           setElements(contenidoParseado.elementos);
           addToHistory(contenidoParseado.elementos, 'Carga inicial');
         }
       } else {
+        console.log('⚠️ [CREAR_MAPA_EDITOR] No hay elementos en el contenido');
       }
 
       if (Array.isArray(contenidoParseado?.zonas)) {
         setZonas(contenidoParseado.zonas);
       }
     } else {
+      console.log('⚠️ [CREAR_MAPA_EDITOR] No hay contenido en el mapa');
     }
   }, [mapa]);
 
-     useEffect(() => {
-     if (mapa.contenido?.configuracion) {
-       setShowGrid(mapa.contenido.configuracion.showGrid);
-       setSnapToGrid(mapa.contenido.configuracion.snapToGrid);
-       setGridSize(mapa.contenido.configuracion.gridSize);
+  useEffect(() => {
+    if (mapa.contenido?.configuracion) {
+      setShowGrid(mapa.contenido.configuracion.showGrid);
+      setSnapToGrid(mapa.contenido.configuracion.snapToGrid);
+      setGridSize(mapa.contenido.configuracion.gridSize);
 
-       // Restaurar configuraci³n de imagen de fondo
-       if (mapa.contenido.configuracion.background) {
-         const bg = mapa.contenido.configuracion.background;
-         if (bg.position) {
-           setBackgroundPosition(bg.position);
-         }
-         if (bg.scale) {
-           setBackgroundScale(bg.scale);
-         }
-         if (bg.opacity) {
-           setBackgroundOpacity(bg.opacity);
-         }
-         if (bg.showInWeb !== undefined) {
-           setShowBackgroundInWeb(bg.showInWeb);
-         }
-       }
-     }
-   }, [mapa]);
+      // Restaurar configuración de imagen de fondo
+      if (mapa.contenido.configuracion.background) {
+        const bg = mapa.contenido.configuracion.background;
+        if (bg.position) {
+          setBackgroundPosition(bg.position);
+        }
+        if (bg.scale) {
+          setBackgroundScale(bg.scale);
+        }
+        if (bg.opacity) {
+          setBackgroundOpacity(bg.opacity);
+        }
+        if (bg.showInWeb !== undefined) {
+          setShowBackgroundInWeb(bg.showInWeb);
+        }
+      }
+    }
+  }, [mapa]);
 
   useEffect(() => {
     if (!backgroundImage) {
@@ -419,42 +412,7 @@ const CrearMapaEditor = ({
     }
   }, [clipboard, elements, addToHistory]);
 
-  // ===== FUNCIONES DE HISTORIAL =====csdcsdc
-  const addToHistory = useCallback((newElements, action) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({
-      elements: JSON.parse(JSON.stringify(newElements)),
-      action,
-      timestamp: Date.now()
-    });
-
-    if (newHistory.length > maxHistorySize) {
-      newHistory.shift();
-    }
-
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex, maxHistorySize]);
-
-  const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      const newIndex = historyIndex - 1;
-      setHistoryIndex(newIndex);
-      setElements(JSON.parse(JSON.stringify(history[newIndex].elements)));
-      message.success(`Deshecho: ${history[newIndex].action}`);
-    }
-  }, [historyIndex, history]);
-
-  const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const newIndex = historyIndex + 1;
-      setHistoryIndex(newIndex);
-      setElements(JSON.parse(JSON.stringify(history[newIndex].elements)));
-      message.success(`Rehecho: ${history[newIndex].action}`);
-    }
-  }, [historyIndex, history]);
-
-  // ===== FUNCIONES DE MANIPULACI“N =====
+  // ===== FUNCIONES DE MANIPULACIÓN =====
   const handleElementClick = useCallback((elementId) => {
     setSelectedIds(prev => {
       if (prev.includes(elementId)) {
@@ -483,12 +441,12 @@ const CrearMapaEditor = ({
   const handleElementRotation = useCallback((elementId, newRotation) => {
     updateElementProperty(elementId, 'rotation', newRotation);
 
-    // Si es una mesa, rotar tambi©n las sillas asociadas
+    // Si es una mesa, rotar también las sillas asociadas
     const element = elements.find(el => el._id === elementId);
     if (element && element.type === 'mesa') {
       const sillasAsociadas = elements.filter(el => el.mesaId === elementId);
       sillasAsociadas.forEach(silla => {
-        // Calcular nueva posici³n de la silla rotada
+        // Calcular nueva posición de la silla rotada
         const mesaCenter = {
           x: element.posicion.x + (element.width || 120) / 2,
           y: element.posicion.y + (element.height || 80) / 2
@@ -519,7 +477,7 @@ const CrearMapaEditor = ({
   }, [addMesa, elements, addToHistory]);
 
   const handleAddSillasToMesa = useCallback((mesaId, sillasConfig) => {
-    // Implementar l³gica para agregar sillas segºn el tipo de mesa
+    // Implementar lógica para agregar sillas según el tipo de mesa
     const mesa = elements.find(el => el._id === mesaId);
     if (!mesa) return;
 
@@ -535,7 +493,7 @@ const CrearMapaEditor = ({
         for (let i = 0; i < top; i++) {
           const x = mesa.posicion.x + (mesa.width / top) * i + (mesa.width / top) / 2;
           const y = mesa.posicion.y - 25;
-          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
+          const isCircle = i % 2 === 0;
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
             type: 'silla',
@@ -556,7 +514,7 @@ const CrearMapaEditor = ({
         for (let i = 0; i < right; i++) {
           const x = mesa.posicion.x + mesa.width + 25;
           const y = mesa.posicion.y + (mesa.height / right) * i + (mesa.height / right) / 2;
-          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
+          const isCircle = i % 2 === 0;
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
             type: 'silla',
@@ -577,7 +535,7 @@ const CrearMapaEditor = ({
         for (let i = 0; i < bottom; i++) {
           const x = mesa.posicion.x + (mesa.width / bottom) * i + (mesa.width / bottom) / 2;
           const y = mesa.posicion.y + mesa.height + 25;
-          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
+          const isCircle = i % 2 === 0;
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
             type: 'silla',
@@ -598,7 +556,7 @@ const CrearMapaEditor = ({
         for (let i = 0; i < left; i++) {
           const x = mesa.posicion.x - 25;
           const y = mesa.posicion.y + (mesa.height / left) * i + (mesa.height / left) / 2;
-          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
+          const isCircle = i % 2 === 0;
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
             type: 'silla',
@@ -617,17 +575,17 @@ const CrearMapaEditor = ({
         break;
 
       case 'circle':
-        // Sillas en c­rculo alrededor de la mesa
+        // Sillas en círculo alrededor de la mesa
         const { cantidad, radio } = sillasConfig.circle;
         const mesaCenterX = mesa.posicion.x + (mesa.radius || 60);
         const mesaCenterY = mesa.posicion.y + (mesa.radius || 60);
-        const sillaRadio = radio + 25; // Radio de la mesa + distancia para sillas
+        const sillaRadio = radio + 25;
 
         for (let i = 0; i < cantidad; i++) {
           const angle = (i * 2 * Math.PI) / cantidad;
           const x = mesaCenterX + Math.cos(angle) * sillaRadio;
           const y = mesaCenterY + Math.sin(angle) * sillaRadio;
-          const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
+          const isCircle = i % 2 === 0;
 
           nuevasSillas.push({
             _id: `silla_${Date.now()}_${sillaId++}`,
@@ -647,7 +605,7 @@ const CrearMapaEditor = ({
         break;
 
       case 'hexagon':
-        // Sillas en los 6 lados del hex¡gono
+        // Sillas en los 6 lados del hexágono
         const { lados } = sillasConfig.hexagon;
         const hexCenterX = mesa.posicion.x + (mesa.width || 100) / 2;
         const hexCenterY = mesa.posicion.y + (mesa.height || 100) / 2;
@@ -660,7 +618,7 @@ const CrearMapaEditor = ({
               const angle = baseAngle + (i - (cantidad - 1) / 2) * 0.3;
               const x = hexCenterX + Math.cos(angle) * hexRadio;
               const y = hexCenterY + Math.sin(angle) * hexRadio;
-              const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
+              const isCircle = i % 2 === 0;
 
               nuevasSillas.push({
                 _id: `silla_${Date.now()}_${sillaId++}`,
@@ -695,7 +653,7 @@ const CrearMapaEditor = ({
               const angle = baseAngle + (i - (cantidad - 1) / 2) * 0.2;
               const x = starCenterX + Math.cos(angle) * starRadio;
               const y = starCenterY + Math.sin(angle) * starRadio;
-              const isCircle = i % 2 === 0; // Alternar entre c­rculo y cuadrado
+              const isCircle = i % 2 === 0;
 
               nuevasSillas.push({
                 _id: `silla_${Date.now()}_${sillaId++}`,
@@ -723,7 +681,7 @@ const CrearMapaEditor = ({
     // Agregar las nuevas sillas al mapa
     setElements(prev => [...prev, ...nuevasSillas]);
 
-    // Actualizar la mesa con la configuraci³n de sillas
+    // Actualizar la mesa con la configuración de sillas
     updateElementProperty(mesaId, 'sillasConfig', sillasConfig);
 
     addToHistory([...elements, ...nuevasSillas], `Agregar ${nuevasSillas.length} sillas a mesa ${mesa.shape || mesa.type}`);
@@ -776,8 +734,8 @@ const CrearMapaEditor = ({
 
   const handleSnapToGrid = useCallback(() => {
     snapToCustomGrid(gridSize);
-    addToHistory(elements, `Ajustar a cuadr­cula de ${gridSize}px`);
-    message.success(`Elementos ajustados a cuadr­cula de ${gridSize}px`);
+    addToHistory(elements, `Ajustar a cuadrícula de ${gridSize}px`);
+    message.success(`Elementos ajustados a cuadrícula de ${gridSize}px`);
   }, [snapToCustomGrid, gridSize, elements, addToHistory]);
 
   const handleAddTexto = useCallback(() => {
@@ -807,8 +765,8 @@ const CrearMapaEditor = ({
     };
 
     setElements(prev => [...prev, nuevaArea]);
-    addToHistory([...elements, nuevaArea], 'Agregar ¡rea destacada');
-    message.success('rea agregada');
+    addToHistory([...elements, nuevaArea], 'Agregar área destacada');
+    message.success('Área agregada');
   }, [addToHistory, elements]);
 
   const scaleSelectedElements = useCallback((scaleFactor) => {
@@ -905,8 +863,8 @@ const CrearMapaEditor = ({
     };
 
     setElements(prev => [...prev, nuevaConexion]);
-    addToHistory([...elements, nuevaConexion], 'Crear conexi³n manual');
-    message.success('Conexi³n creada');
+    addToHistory([...elements, nuevaConexion], 'Crear conexión manual');
+    message.success('Conexión creada');
   }, [addToHistory, connectionStyle, elements, selectedIds]);
 
   const removeConnections = useCallback(() => {
@@ -941,14 +899,14 @@ const CrearMapaEditor = ({
       };
 
       setElements(prev => [...prev, nuevaSeccion]);
-      addToHistory([...elements, nuevaSeccion], 'Crear secci³n personalizada');
+      addToHistory([...elements, nuevaSeccion], 'Crear sección personalizada');
     } else {
       handleAddArea();
     }
 
     setIsCreatingSection(false);
     setSectionPoints([]);
-    message.success('Secci³n agregada al mapa');
+    message.success('Sección agregada al mapa');
   }, [addToHistory, elements, handleAddArea, sectionPoints]);
 
   const handleBackgroundUpload = useCallback(async (file) => {
@@ -959,7 +917,7 @@ const CrearMapaEditor = ({
         return false;
       }
 
-      // Validar tama±o (10MB m¡ximo para mapas)
+      // Validar tamaño (10MB máximo para mapas)
       if (file.size > 10 * 1024 * 1024) {
         message.error('La imagen debe pesar 10MB o menos');
         return false;
@@ -990,7 +948,7 @@ const CrearMapaEditor = ({
         showInWeb: showBackgroundInWeb
       });
       message.success('Imagen de fondo subida y cargada correctamente');
-      return false; // Prevenir upload autom¡tico
+      return false;
     } catch (error) {
       console.error('Error uploading background image:', error);
       message.error('Error al subir la imagen de fondo');
@@ -1013,7 +971,7 @@ const CrearMapaEditor = ({
       // Validar que elements sea un array
       if (!Array.isArray(elements)) {
         console.error('Elements no es un array:', elements);
-        throw new Error('Error interno: los elementos del mapa no son v¡lidos');
+        throw new Error('Error interno: los elementos del mapa no son válidos');
       }
 
       const mapaToSave = {
@@ -1037,13 +995,14 @@ const CrearMapaEditor = ({
          },
          estado: 'active'
        };
+       
       if (onSave) {
         await onSave(mapaToSave);
       }
 
-      // Optimizar el mapa despu©s de guardarlo si tiene im¡genes
+      // Optimizar el mapa después de guardarlo si tiene imágenes
       if (mapaImageService.hasOptimizedImages(elements) || elements.some(el => el.type === 'background' && el.imageData)) {
-        console.log('ðŸ–¼ï¸ [CREAR_MAPA_EDITOR] Elementos con imageData:', elements.filter(el => el.type === 'background' && el.imageData).length);
+        console.log('🖼️ [CREAR_MAPA_EDITOR] Elementos con imageData:', elements.filter(el => el.type === 'background' && el.imageData).length);
 
         try {
           const optimizado = await mapaImageService.optimizeMapAfterEditing(mapa.id, elements);
@@ -1058,12 +1017,11 @@ const CrearMapaEditor = ({
             if (!reloadError && mapaActualizado) {
               setMapa(mapaActualizado);
             } else {
-              console.error('Œ [CREAR_MAPA_EDITOR] Error recargando mapa:', reloadError);
+              console.error('❌ [CREAR_MAPA_EDITOR] Error recargando mapa:', reloadError);
             }
           }
         } catch (error) {
-          console.error('Œ [CREAR_MAPA_EDITOR] Error optimizando mapa:', error);
-          // No mostrar error al usuario, solo log
+          console.error('❌ [CREAR_MAPA_EDITOR] Error optimizando mapa:', error);
         }
       }
 
@@ -1072,7 +1030,11 @@ const CrearMapaEditor = ({
       message.error('Error al guardar el mapa: ' + error.message);
       console.error('Error saving mapa:', error);
     }
-  }, [mapa, elements, gridSize, showGrid, snapToGrid, backgroundImage, backgroundScale, backgroundOpacity, showBackgroundInWeb, zonas, onSave]);
+  }, [
+    mapa, elements, gridSize, showGrid, snapToGrid, backgroundImage, 
+    backgroundScale, backgroundOpacity, showBackgroundInWeb, backgroundPosition,
+    zonas, onSave
+  ]);
 
   // ===== MANEJADOR DE TECLAS =====
   useEffect(() => {
@@ -1157,17 +1119,15 @@ const CrearMapaEditor = ({
 
   const handleDoubleClick = useCallback((e) => {
     if (e.target === e.target.getStage()) {
-      // Doble clic en el stage para centrar la vista
       setPosition({ x: 0, y: 0 });
       setScale(0.8);
     }
   }, []);
 
-  // ===== FUNCIONES DE MENš CONTEXTUAL =====
+  // ===== FUNCIONES DE MENÚ CONTEXTUAL =====
   const handleContextMenu = useCallback((e) => {
     e.evt.preventDefault();
     const stage = e.target.getStage();
-    const pointer = stage.getPointerPosition();
 
     setContextMenuPosition({
       x: e.evt.clientX,
@@ -1203,7 +1163,7 @@ const CrearMapaEditor = ({
         if (selectedIds.length === 1) {
           handleAddSillasToMesa(selectedIds[0], { rect: { top: 2, right: 2, bottom: 2, left: 2 } });
         } else {
-          message.warning('Selecciona una mesa para agregar sillas autom¡ticamente');
+          message.warning('Selecciona una mesa para agregar sillas automáticamente');
         }
         break;
       case 'add-texto':
@@ -1230,7 +1190,6 @@ const CrearMapaEditor = ({
   const handleZonasChange = useCallback((newZonas) => {
     setZonas(newZonas);
 
-    // Sincronizar zonas en el contenido del mapa para que otros m³dulos las vean
     setMapa(prev => ({
       ...prev,
       contenido: {
@@ -1258,7 +1217,6 @@ const CrearMapaEditor = ({
 
     const elementosActualizados = elements.map(el => {
       if (elementIds.includes(el._id)) {
-        // Si es una mesa, asignar zona y cambiar color de relleno
         if (el.type === 'mesa') {
           return {
             ...el,
@@ -1267,10 +1225,9 @@ const CrearMapaEditor = ({
               nombre: zona.nombre,
               color: zona.color
             },
-            fill: zona.color // Cambiar el color de relleno de la mesa
+            fill: zona.color
           };
         }
-        // Si es una silla, asignar zona y cambiar color de relleno
         if (el.type === 'silla') {
           return {
             ...el,
@@ -1279,10 +1236,9 @@ const CrearMapaEditor = ({
               nombre: zona.nombre,
               color: zona.color
             },
-            fill: zona.color // Cambiar el color de relleno de la silla
+            fill: zona.color
           };
         }
-        // Para otros elementos
         return {
           ...el,
           zona: {
@@ -1297,7 +1253,6 @@ const CrearMapaEditor = ({
 
     setElements(elementosActualizados);
 
-    // Si se asign³ zona a una mesa, tambi©n asignar a sus sillas asociadas
     elementIds.forEach(elementId => {
       const element = elements.find(el => el._id === elementId);
       if (element && element.type === 'mesa') {
@@ -1310,7 +1265,7 @@ const CrearMapaEditor = ({
               nombre: zona.nombre,
               color: zona.color
             },
-            fill: zona.color // Cambiar el color de relleno de las sillas
+            fill: zona.color
           }));
 
           setElements(prev => prev.map(el =>
@@ -1343,13 +1298,12 @@ const CrearMapaEditor = ({
       draggable: activeMode === 'select',
       onClick: () => handleElementClick(element._id),
       onDragEnd: (e) => handleElementDrag(element._id, { x: e.target.x(), y: e.target.y() }),
-             onTransformEnd: (e) => {
+      onTransformEnd: (e) => {
          const node = e.target;
          handleElementResize(element._id, {
            width: node.width() * node.scaleX(),
            height: node.height() * node.scaleY()
          });
-         // Manejar rotaci³n
          if (node.rotation() !== (element.rotation || 0)) {
            handleElementRotation(element._id, node.rotation());
          }
@@ -1357,7 +1311,6 @@ const CrearMapaEditor = ({
          node.scaleY(1);
        },
       onMouseEnter: (e) => {
-        // Mostrar tooltip
         const tooltipRect = e.target.parent.findOne('Rect[fill="rgba(0,0,0,0.8)"]');
         const tooltipText = e.target.parent.findOne('KonvaText[fill="white"]');
         if (tooltipRect && tooltipText) {
@@ -1367,7 +1320,6 @@ const CrearMapaEditor = ({
         }
       },
       onMouseLeave: (e) => {
-        // Ocultar tooltip
         const tooltipRect = e.target.parent.findOne('Rect[fill="rgba(0,0,0,0.8)"]');
         const tooltipText = e.target.parent.findOne('KonvaText[fill="white"]');
         if (tooltipRect && tooltipText) {
@@ -1429,7 +1381,6 @@ const CrearMapaEditor = ({
               />
             )}
 
-            {/* Nombre de la mesa */}
             <KonvaText
               text={element.nombre || 'Mesa'}
               fontSize={14}
@@ -1439,7 +1390,6 @@ const CrearMapaEditor = ({
               y={element.shape === 'circle' ? -mesaRadius - 20 : -mesaHeight / 2 - 20}
             />
 
-            {/* Tooltip nativo de Konva */}
             <Rect
               x={-5}
               y={-25}
@@ -1464,7 +1414,7 @@ const CrearMapaEditor = ({
           </Group>
         );
 
-            case 'silla':
+      case 'silla':
         return (
           <Group key={element._id} {...baseProps}>
             {element.shape === 'circle' ? (
@@ -1496,7 +1446,6 @@ const CrearMapaEditor = ({
                 y={element.height ? element.height / 2 - 5 : 7}
               />
             )}
-            {/* Tooltip nativo de Konva */}
             <Rect
               x={-5}
               y={-25}
@@ -1595,416 +1544,409 @@ const CrearMapaEditor = ({
       default:
         return null;
     }
-  }, [selectedIds, activeMode, handleElementClick, handleElementDrag, handleElementResize, seatStates, elements, backgroundImageElement, backgroundPosition, backgroundScale, backgroundOpacity]);
+  }, [
+    selectedIds, activeMode, handleElementClick, handleElementDrag, handleElementResize, 
+    handleElementRotation, seatStates, elements, backgroundImageElement, backgroundPosition, 
+    backgroundScale, backgroundOpacity
+  ]);
 
   // ===== RENDERIZADO PRINCIPAL =====
   return (
-         <div className="h-screen flex flex-col bg-gray-800">
-
-
+    <div className="h-screen flex flex-col bg-gray-800">
       {/* ===== CONTENIDO PRINCIPAL ===== */}
       <div className="flex-1 flex overflow-hidden">
-                 {/* ===== PANEL IZQUIERDO - MENš ===== */}
-         <div className="w-72 bg-white border-r border-gray-200 overflow-y-auto">
-           {/* Flujo de Creaci³n del Mapa */}
-                       <div className="p-3 border-b border-gray-200">
-              <Title level={5} className="mb-2">Flujo de Creaci³n del Mapa</Title>
-              <Text type="secondary" className="text-xs mb-3 block">
-                Sigue estos pasos para crear un mapa completo y profesional
-              </Text>
-              <div className="space-y-2">
-                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                    getProgressText().currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}>1</div>
-                  <span>Seleccionar Sala</span>
-                  <span className="text-gray-400">Configurar sala base</span>
-                </div>
-                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                    getProgressText().currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}>2</div>
-                  <span>Crear Zonas</span>
-                  <span className="text-gray-400">Definir ¡reas del mapa</span>
-                </div>
-                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                    getProgressText().currentStep >= 3 ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}>3</div>
-                  <span>Agregar Elementos</span>
-                  <span className="text-gray-400">Mesas y sillas</span>
-                </div>
-                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 4 ? 'text-blue-600' : 'text-gray-400'}`}>
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                    getProgressText().currentStep >= 4 ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}>4</div>
-                  <span>Configurar Sillas</span>
-                  <span className="text-gray-400">Asignar a mesas</span>
-                </div>
-                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 5 ? 'text-green-600' : 'text-gray-400'}`}>
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                    getProgressText().currentStep >= 5 ? 'bg-green-500' : 'bg-gray-300'
-                  }`}>5</div>
-                  <span>Finalizar Mapa</span>
-                  <span className="text-gray-400">Guardar y activar</span>
-                </div>
+        {/* ===== PANEL IZQUIERDO - MENÚ ===== */}
+        <div className="w-72 bg-white border-r border-gray-200 overflow-y-auto">
+          {/* Flujo de Creación del Mapa */}
+          <div className="p-3 border-b border-gray-200">
+            <Title level={5} className="mb-2">Flujo de Creación del Mapa</Title>
+            <Text type="secondary" className="text-xs mb-3 block">
+              Sigue estos pasos para crear un mapa completo y profesional
+            </Text>
+            <div className="space-y-2">
+              <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                  getProgressText().currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-300'
+                }`}>1</div>
+                <span>Seleccionar Sala</span>
+                <span className="text-gray-400">Configurar sala base</span>
+              </div>
+              <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                  getProgressText().currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'
+                }`}>2</div>
+                <span>Crear Zonas</span>
+                <span className="text-gray-400">Definir áreas del mapa</span>
+              </div>
+              <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                  getProgressText().currentStep >= 3 ? 'bg-blue-500' : 'bg-gray-300'
+                }`}>3</div>
+                <span>Agregar Elementos</span>
+                <span className="text-gray-400">Mesas y sillas</span>
+              </div>
+              <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 4 ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                  getProgressText().currentStep >= 4 ? 'bg-blue-500' : 'bg-gray-300'
+                }`}>4</div>
+                <span>Configurar Sillas</span>
+                <span className="text-gray-400">Asignar a mesas</span>
+              </div>
+              <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 5 ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                  getProgressText().currentStep >= 5 ? 'bg-green-500' : 'bg-gray-300'
+                }`}>5</div>
+                <span>Finalizar Mapa</span>
+                <span className="text-gray-400">Guardar y activar</span>
               </div>
             </div>
+          </div>
 
-            {/* Botones de Acci³n Principal */}
+          {/* Botones de Acción Principal */}
+          <div className="p-3 border-b border-gray-200">
+            <div className="space-y-2">
+              <Button
+                icon={<SaveOutlined />}
+                type="primary"
+                onClick={handleSave}
+                block
+                size="small"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                💾 Guardar Mapa
+              </Button>
+              <Button
+                onClick={onCancel}
+                block
+                size="small"
+                className="border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+              >
+                ❌ Cancelar
+              </Button>
+            </div>
+
+            <div className="flex gap-1 mt-2">
+              <Button
+                onClick={undo}
+                disabled={historyIndex <= 0}
+                icon={<UndoOutlined />}
+                size="small"
+                title="Ctrl+Z"
+                className="flex-1"
+              >
+                Deshacer
+              </Button>
+              <Button
+                onClick={redo}
+                disabled={historyIndex >= history.length - 1}
+                icon={<UndoOutlined style={{ transform: 'scaleX(-1)' }} />}
+                size="small"
+                title="Ctrl+Y"
+                className="flex-1"
+              >
+                Rehacer
+              </Button>
+            </div>
+
+            <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-800">
+              <div className="font-medium mb-1">ℹ️ Atajos de teclado:</div>
+              <div>- <kbd className="bg-white px-1 rounded">Ctrl+C</kbd> Copiar</div>
+              <div>- <kbd className="bg-white px-1 rounded">Ctrl+V</kbd> Pegar</div>
+              <div>- <kbd className="bg-white px-1 rounded">Ctrl+Z</kbd> Deshacer</div>
+              <div>- <kbd className="bg-white px-1 rounded">Ctrl+Y</kbd> Rehacer</div>
+              <div>- <kbd className="bg-white px-1 rounded">Rueda</kbd> Zoom</div>
+              <div>- <kbd className="bg-white px-1 rounded">Doble clic</kbd> Centrar vista</div>
+            </div>
+          </div>
+
+          {/* Controles de Imagen de Fondo */}
+          {backgroundImage && (
             <div className="p-3 border-b border-gray-200">
-              <div className="space-y-2">
-                <Button
-                  icon={<SaveOutlined />}
-                  type="primary"
-                  onClick={handleSave}
-                  block
-                  size="small"
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  ðŸ’¾ Guardar Mapa
-                </Button>
-                <Button
-                  onClick={onCancel}
-                  block
-                  size="small"
-                  className="border-gray-300 hover:border-gray-400 hover:bg-gray-50"
-                >
-                  Œ Cancelar
-                </Button>
-              </div>
-
-                           {/* Botones de Deshacer/Rehacer */}
-             <div className="flex gap-1 mt-2">
-               <Button
-                 onClick={undo}
-                 disabled={historyIndex <= 0}
-                 icon={<UndoOutlined />}
-                 size="small"
-                 title="Ctrl+Z"
-                 className="flex-1"
-               >
-                 Deshacer
-               </Button>
-               <Button
-                 onClick={redo}
-                 disabled={historyIndex >= history.length - 1}
-                 icon={<UndoOutlined style={{ transform: 'scaleX(-1)' }} />}
-                 size="small"
-                 title="Ctrl+Y"
-                 className="flex-1"
-               >
-                 Rehacer
-               </Button>
-             </div>
-
-             {/* Instrucciones de uso */}
-             <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-800">
-               <div className="font-medium mb-1">ðŸ’¡ Atajos de teclado:</div>
-               <div>-¢ <kbd className="bg-white px-1 rounded">Ctrl+C</kbd> Copiar</div>
-               <div>-¢ <kbd className="bg-white px-1 rounded">Ctrl+V</kbd> Pegar</div>
-               <div>-¢ <kbd className="bg-white px-1 rounded">Ctrl+Z</kbd> Deshacer</div>
-               <div>-¢ <kbd className="bg-white px-1 rounded">Ctrl+Y</kbd> Rehacer</div>
-               <div>-¢ <kbd className="bg-white px-1 rounded">Rueda</kbd> Zoom</div>
-               <div>-¢ <kbd className="bg-white px-1 rounded">Doble clic</kbd> Centrar vista</div>
-             </div>
-            </div>
-
-                                   {/* Controles de Imagen de Fondo */}
-            {backgroundImage && (
-              <div className="p-3 border-b border-gray-200">
-                <Title level={5} className="mb-3">ðŸŽ¨ Imagen de Fondo</Title>
-                <div className="space-y-3">
-                  {/* Posici³n X */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">Posici³n X</span>
-                      <span className="text-xs font-mono text-gray-500">{backgroundPosition.x}px</span>
-                    </div>
-                    <Slider
-                      min={-500}
-                      max={500}
-                      value={backgroundPosition.x}
-                      onChange={(value) => setBackgroundPosition(prev => ({ ...prev, x: value }))}
-                      size="small"
-                      tooltip={{ formatter: (value) => `${value}px` }}
-                    />
+              <Title level={5} className="mb-3">🎨 Imagen de Fondo</Title>
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600">Posición X</span>
+                    <span className="text-xs font-mono text-gray-500">{backgroundPosition.x}px</span>
                   </div>
-
-                  {/* Posici³n Y */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">Posici³n Y</span>
-                      <span className="text-xs font-mono text-gray-500">{backgroundPosition.y}px</span>
-                    </div>
-                    <Slider
-                      min={-500}
-                      max={500}
-                      value={backgroundPosition.y}
-                      onChange={(value) => setBackgroundPosition(prev => ({ ...prev, y: value }))}
-                      size="small"
-                      tooltip={{ formatter: (value) => `${value}px` }}
-                    />
-                  </div>
-
-                  {/* Escala */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">Escala</span>
-                      <span className="text-xs font-mono text-gray-500">{Math.round(backgroundScale * 100)}%</span>
-                    </div>
-                    <Slider
-                      min={10}
-                      max={200}
-                      value={backgroundScale * 100}
-                      onChange={(value) => setBackgroundScale(value / 100)}
-                      size="small"
-                      tooltip={{ formatter: (value) => `${value}%` }}
-                    />
-                  </div>
-
-                  {/* Opacidad */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">Opacidad</span>
-                      <span className="text-xs font-mono text-gray-500">{Math.round(backgroundOpacity * 100)}%</span>
-                    </div>
-                    <Slider
-                      min={10}
-                      max={100}
-                      value={backgroundOpacity * 100}
-                      onChange={(value) => setBackgroundOpacity(value / 100)}
-                      size="small"
-                      tooltip={{ formatter: (value) => `${value}%` }}
-                    />
-                  </div>
-
-                  {/* Bot³n para centrar imagen */}
-                  <Button
+                  <Slider
+                    min={-500}
+                    max={500}
+                    value={backgroundPosition.x}
+                    onChange={(value) => setBackgroundPosition(prev => ({ ...prev, x: value }))}
                     size="small"
-                    onClick={() => setBackgroundPosition({ x: 0, y: 0 })}
-                    className="w-full text-xs"
-                    icon={<ReloadOutlined />}
-                  >
-                    Centrar Imagen
-                  </Button>
+                    tooltip={{ formatter: (value) => `${value}px` }}
+                  />
                 </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600">Posición Y</span>
+                    <span className="text-xs font-mono text-gray-500">{backgroundPosition.y}px</span>
+                  </div>
+                  <Slider
+                    min={-500}
+                    max={500}
+                    value={backgroundPosition.y}
+                    onChange={(value) => setBackgroundPosition(prev => ({ ...prev, y: value }))}
+                    size="small"
+                    tooltip={{ formatter: (value) => `${value}px` }}
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600">Escala</span>
+                    <span className="text-xs font-mono text-gray-500">{Math.round(backgroundScale * 100)}%</span>
+                  </div>
+                  <Slider
+                    min={10}
+                    max={200}
+                    value={backgroundScale * 100}
+                    onChange={(value) => setBackgroundScale(value / 100)}
+                    size="small"
+                    tooltip={{ formatter: (value) => `${value}%` }}
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600">Opacidad</span>
+                    <span className="text-xs font-mono text-gray-500">{Math.round(backgroundOpacity * 100)}%</span>
+                  </div>
+                  <Slider
+                    min={10}
+                    max={100}
+                    value={backgroundOpacity * 100}
+                    onChange={(value) => setBackgroundOpacity(value / 100)}
+                    size="small"
+                    tooltip={{ formatter: (value) => `${value}%` }}
+                  />
+                </div>
+
+                <Button
+                  size="small"
+                  onClick={() => setBackgroundPosition({ x: 0, y: 0 })}
+                  className="w-full text-xs"
+                  icon={<ReloadOutlined />}
+                >
+                  Centrar Imagen
+                </Button>
               </div>
-            )}
+            </div>
+          )}
 
-            <MenuMapa
-               selectedElement={elements.find(el => selectedIds.includes(el._id))}
-               activeMode={activeMode}
-               sectionPoints={sectionPoints}
-               isCreatingSection={isCreatingSection}
-               zones={zonas}
-               selectedZone={selectedZone}
-              numSillas={numSillas}
-              sillaShape={sillaShape}
-              selectedScale={scale}
-              showScaleControls={showAdvancedControls}
-              scaleSystem={scaleSystem}
-              selectedSeatState={selectedSeatState}
-              seatStates={seatStates}
-              showConnections={showConnections}
-              connectionStyle={connectionStyle}
-              connectionThreshold={connectionThreshold}
-              changeConnectionThreshold={setConnectionThreshold}
-              backgroundImage={backgroundImage}
-              backgroundScale={backgroundScale}
-              backgroundOpacity={backgroundOpacity}
-              showBackgroundInWeb={showBackgroundInWeb}
-              updateElementProperty={updateElementProperty}
-              updateElementSize={updateElementSize}
-              duplicarElementos={handleDuplicateSelected}
-              crearSeccion={handleCrearSeccion}
-              limpiarSeleccion={() => setSelectedIds([])}
-              assignZoneToSelected={assignZoneToSelected}
-              scaleElement={scaleElement}
-              scaleSelectedElements={scaleSelectedElements}
-              changeSeatState={changeSeatState}
-              changeSelectedSeatsState={changeSelectedSeatsState}
-              changeMesaSeatsState={changeMesaSeatsState}
-              setSelectedSeatState={setSelectedSeatState}
-              autoConnectSeats={autoConnectSeats}
-              createManualConnection={createManualConnection}
-              removeConnections={removeConnections}
-              changeConnectionStyle={setConnectionStyle}
-              precisePositioning={precisePositioning}
-              snapToCustomGrid={handleSnapToGrid}
-              setBackgroundImage={setBackgroundImageFunction}
-              updateBackground={updateBackground}
-              removeBackground={handleRemoveBackground}
-              addMesa={handleAddMesa}
-              addSillasToMesa={handleAddSillasToMesa}
-              snapToGrid={handleSnapToGrid}
-              setActiveMode={setActiveMode}
-              setNumSillas={setNumSillas}
-              setSillaShape={setSillaShape}
-            />
-         </div>
+          <MenuMapa
+            selectedElement={elements.find(el => selectedIds.includes(el._id))}
+            activeMode={activeMode}
+            sectionPoints={sectionPoints}
+            isCreatingSection={isCreatingSection}
+            zones={zonas}
+            selectedZone={selectedZone}
+            numSillas={numSillas}
+            sillaShape={sillaShape}
+            selectedScale={scale}
+            showScaleControls={showAdvancedControls}
+            scaleSystem={scaleSystem}
+            selectedSeatState={selectedSeatState}
+            seatStates={seatStates}
+            showConnections={showConnections}
+            connectionStyle={connectionStyle}
+            connectionThreshold={connectionThreshold}
+            changeConnectionThreshold={setConnectionThreshold}
+            backgroundImage={backgroundImage}
+            backgroundScale={backgroundScale}
+            backgroundOpacity={backgroundOpacity}
+            showBackgroundInWeb={showBackgroundInWeb}
+            updateElementProperty={updateElementProperty}
+            updateElementSize={updateElementSize}
+            duplicarElementos={handleDuplicateSelected}
+            crearSeccion={handleCrearSeccion}
+            limpiarSeleccion={() => setSelectedIds([])}
+            assignZoneToSelected={assignZoneToSelected}
+            scaleElement={scaleElement}
+            scaleSelectedElements={scaleSelectedElements}
+            changeSeatState={changeSeatState}
+            changeSelectedSeatsState={changeSelectedSeatsState}
+            changeMesaSeatsState={changeMesaSeatsState}
+            setSelectedSeatState={setSelectedSeatState}
+            autoConnectSeats={autoConnectSeats}
+            createManualConnection={createManualConnection}
+            removeConnections={removeConnections}
+            changeConnectionStyle={setConnectionStyle}
+            precisePositioning={precisePositioning}
+            snapToCustomGrid={handleSnapToGrid}
+            setBackgroundImage={setBackgroundImageFunction}
+            updateBackground={updateBackground}
+            removeBackground={handleRemoveBackground}
+            addMesa={handleAddMesa}
+            addSillasToMesa={handleAddSillasToMesa}
+            snapToGrid={handleSnapToGrid}
+            setActiveMode={setActiveMode}
+            setNumSillas={setNumSillas}
+            setSillaShape={setSillaShape}
+          />
+        </div>
 
-        {/* ===== REA DE TRABAJO CENTRAL ===== */}
+        {/* ===== ÁREA DE TRABAJO CENTRAL ===== */}
         <div className="flex-1 flex flex-col">
-                     {/* ===== BARRA DE HERRAMIENTAS DEL MAPA ===== */}
-           <div className="bg-white border-b border-gray-200 p-1">
-             <Row gutter={8} align="middle">
-               <Col>
-                 <Space size="small">
-                   <MesaTypeMenu
-                     onAddMesa={handleAddMesa}
-                   />
-                                       <Button
-                      icon={<CopyOutlined />}
-                      onClick={handleCopy}
-                      disabled={selectedIds.length === 0}
-                      title="Copiar seleccionados (Ctrl+C)"
-                      size="small"
-                    >
-                      Copiar
-                    </Button>
+          {/* ===== BARRA DE HERRAMIENTAS DEL MAPA ===== */}
+          <div className="bg-white border-b border-gray-200 p-1">
+            <Row gutter={8} align="middle">
+              <Col>
+                <Space size="small">
+                  <MesaTypeMenu
+                    onAddMesa={handleAddMesa}
+                  />
+                  <Button
+                    icon={<CopyOutlined />}
+                    onClick={handleCopy}
+                    disabled={selectedIds.length === 0}
+                    title="Copiar seleccionados (Ctrl+C)"
+                    size="small"
+                  >
+                    Copiar
+                  </Button>
 
-                    <Button
-                      icon={<UploadOutlined />}
-                      onClick={handlePaste}
-                      disabled={clipboard.length === 0}
-                      title="Pegar elementos (Ctrl+V)"
-                      size="small"
-                    >
-                      Pegar
-                    </Button>
+                  <Button
+                    icon={<UploadOutlined />}
+                    onClick={handlePaste}
+                    disabled={clipboard.length === 0}
+                    title="Pegar elementos (Ctrl+V)"
+                    size="small"
+                  >
+                    Pegar
+                  </Button>
 
-                    <Button
-                      icon={<CopyOutlined />}
-                      onClick={handleDuplicateSelected}
-                      disabled={selectedIds.length === 0}
-                      title="Duplicar seleccionados"
-                      size="small"
-                    >
-                      Duplicar
-                    </Button>
-                   <Button
-                     icon={<DeleteOutlined />}
-                     onClick={handleDeleteSelected}
-                     disabled={selectedIds.length === 0}
-                     danger
-                     title="Eliminar seleccionados"
-                     size="small"
-                   >
-                     Eliminar
-                   </Button>
-                   <Divider type="vertical" />
-                   <Button
-                     icon={<ReloadOutlined />}
-                     onClick={handleSnapToGrid}
-                     title="Ajustar a cuadr­cula"
-                     size="small"
-                   >
-                     Cuadr­cula
-                   </Button>
-                   <Button
-                     icon={<LinkOutlined />}
-                     onClick={() => autoConnectSeats(selectedIds[0])}
-                     disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
-                     title="Conectar asientos autom¡ticamente"
-                     size="small"
-                   >
-                     Conectar
-                   </Button>
-                                       <Button
-                      icon={<AppstoreOutlined />}
-                      onClick={() => setShowZonaManager(true)}
-                      title="Gestionar zonas"
-                      size="small"
-                    >
-                      Zonas
-                    </Button>
+                  <Button
+                    icon={<CopyOutlined />}
+                    onClick={handleDuplicateSelected}
+                    disabled={selectedIds.length === 0}
+                    title="Duplicar seleccionados"
+                    size="small"
+                  >
+                    Duplicar
+                  </Button>
+                  <Button
+                    icon={<DeleteOutlined />}
+                    onClick={handleDeleteSelected}
+                    disabled={selectedIds.length === 0}
+                    danger
+                    title="Eliminar seleccionados"
+                    size="small"
+                  >
+                    Eliminar
+                  </Button>
+                  <Divider type="vertical" />
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleSnapToGrid}
+                    title="Ajustar a cuadrícula"
+                    size="small"
+                  >
+                    Cuadrícula
+                  </Button>
+                  <Button
+                    icon={<LinkOutlined />}
+                    onClick={() => autoConnectSeats(selectedIds[0])}
+                    disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
+                    title="Conectar asientos automáticamente"
+                    size="small"
+                  >
+                    Conectar
+                  </Button>
+                  <Button
+                    icon={<AppstoreOutlined />}
+                    onClick={() => setShowZonaManager(true)}
+                    title="Gestionar zonas"
+                    size="small"
+                  >
+                    Zonas
+                  </Button>
 
-                    <Divider type="vertical" />
+                  <Divider type="vertical" />
 
-                    <Button
-                      icon={<ReloadOutlined />}
-                      onClick={() => {
-                        setPosition({ x: 0, y: 0 });
-                        setScale(0.8);
-                      }}
-                      title="Centrar vista"
-                      size="small"
-                    >
-                      Centrar
-                    </Button>
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={() => {
+                      setPosition({ x: 0, y: 0 });
+                      setScale(0.8);
+                    }}
+                    title="Centrar vista"
+                    size="small"
+                  >
+                    Centrar
+                  </Button>
 
-                    <Button
-                      icon={activeMode === 'pan' ? <EyeOutlined /> : <AimOutlined />}
-                      onClick={() => setActiveMode(activeMode === 'pan' ? 'select' : 'pan')}
-                      title={activeMode === 'pan' ? 'Modo Selecci³n' : 'Modo Pan'}
-                      size="small"
-                      type={activeMode === 'pan' ? 'primary' : 'default'}
-                    >
-                      {activeMode === 'pan' ? 'Selecci³n' : 'Pan'}
-                    </Button>
+                  <Button
+                    icon={activeMode === 'pan' ? <EyeOutlined /> : <AimOutlined />}
+                    onClick={() => setActiveMode(activeMode === 'pan' ? 'select' : 'pan')}
+                    title={activeMode === 'pan' ? 'Modo Selección' : 'Modo Pan'}
+                    size="small"
+                    type={activeMode === 'pan' ? 'primary' : 'default'}
+                  >
+                    {activeMode === 'pan' ? 'Selección' : 'Pan'}
+                  </Button>
+                </Space>
+              </Col>
 
-                 </Space>
-               </Col>
+              <Col flex="auto">
+                <Space className="float-right" size="small">
+                  <Text className="text-sm text-gray-600">
+                    Modo: {activeMode === 'pan' ? '🖱️ Pan' : '👆 Selección'}
+                  </Text>
+                  <Text className="text-sm text-gray-600">
+                    Zoom: {Math.round(scale * 100)}%
+                  </Text>
+                  <Button
+                    icon={<ZoomOutOutlined />}
+                    size="small"
+                    onClick={zoomOut}
+                    title="Zoom out"
+                  />
+                  <Button
+                    icon={<ZoomInOutlined />}
+                    size="small"
+                    onClick={zoomIn}
+                    title="Zoom in"
+                  />
+                  <Button
+                    icon={<ReloadOutlined />}
+                    size="small"
+                    onClick={resetZoom}
+                    title="Reset zoom"
+                  />
+                </Space>
+              </Col>
+            </Row>
+          </div>
 
-               <Col flex="auto">
-                                   <Space className="float-right" size="small">
-                    <Text className="text-sm text-gray-600">
-                      Modo: {activeMode === 'pan' ? 'ðŸ–±ï¸ Pan' : 'ðŸ‘† Selecci³n'}
-                    </Text>
-                    <Text className="text-sm text-gray-600">
-                      Zoom: {Math.round(scale * 100)}%
-                    </Text>
-                   <Button
-                     icon={<ZoomOutOutlined />}
-                     size="small"
-                     onClick={zoomOut}
-                     title="Zoom out"
-                   />
-                   <Button
-                     icon={<ZoomInOutlined />}
-                     size="small"
-                     onClick={zoomIn}
-                     title="Zoom in"
-                   />
-                   <Button
-                     icon={<ReloadOutlined />}
-                     size="small"
-                     onClick={resetZoom}
-                     title="Reset zoom"
-                   />
-                 </Space>
-               </Col>
-             </Row>
-           </div>
+          {/* ===== CANVAS DEL MAPA ===== */}
+          <div className="flex-1 canvas-container" ref={containerRef}>
+            <Stage
+              ref={stageRef}
+              width={Math.max(2000, containerRef.current?.clientWidth || 2000)}
+              height={Math.max(1400, containerRef.current?.clientHeight || 1400)}
+              scaleX={scale}
+              scaleY={scale}
+              x={position.x}
+              y={position.y}
+              onWheel={handleWheel}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onClick={handleStageClick}
+              onDoubleClick={handleDoubleClick}
+              onContextMenu={handleContextMenu}
+              draggable={activeMode === 'pan'}
+            >
+              <Layer>
+                <Rect
+                  width={2000}
+                  height={1400}
+                  fill="#ffffff"
+                />
 
-                     {/* ===== CANVAS DEL MAPA ===== */}
-           <div className="flex-1 canvas-container" ref={containerRef}>
-             <Stage
-               ref={stageRef}
-               width={Math.max(2000, containerRef.current?.clientWidth || 2000)}
-               height={Math.max(1400, containerRef.current?.clientHeight || 1400)}
-               scaleX={scale}
-               scaleY={scale}
-               x={position.x}
-               y={position.y}
-                               onWheel={handleWheel}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onClick={handleStageClick}
-                onDoubleClick={handleDoubleClick}
-                onContextMenu={handleContextMenu}
-                draggable={activeMode === 'pan'}
-             >
-               <Layer>
-                 {/* Fondo */}
-                 <Rect
-                   width={2000}
-                   height={1400}
-                   fill="#ffffff"
-                 />
-
-                {/* Cuadr­cula */}
+                {/* Cuadrícula */}
                 {showGrid && (
                   <Grid
                     width={2000}
@@ -2026,11 +1968,11 @@ const CrearMapaEditor = ({
                   />
                 )}
 
-                 {/* Elementos del mapa */}
-                 {elements.map(renderElement)}
-               </Layer>
-             </Stage>
-           </div>
+                {/* Elementos del mapa */}
+                {elements.map(renderElement)}
+              </Layer>
+            </Stage>
+          </div>
         </div>
 
         {/* ===== PANEL DERECHO - PROPIEDADES ===== */}
@@ -2038,44 +1980,44 @@ const CrearMapaEditor = ({
           <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
             <div className="p-4">
               <Title level={5}>Propiedades</Title>
-                             {selectedIds.length === 1 ? (
-                 <ElementProperties
-                   element={elements.find(el => el._id === selectedIds[0])}
-                   onUpdate={(updates) => {
-                     Object.entries(updates).forEach(([key, value]) => {
-                       updateElementProperty(selectedIds[0], key, value);
-                     });
-                   }}
-                   onAddSillas={handleAddSillasToMesa}
-                   onRemoveSillas={handleRemoveSillasFromMesa}
-                   onDuplicate={() => {
-                     const element = elements.find(el => el._id === selectedIds[0]);
-                     if (element) {
-                       const duplicatedElement = {
-                         ...element,
-                         _id: `duplicate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                         posicion: {
-                           x: element.posicion.x + 50,
-                           y: element.posicion.y + 50
-                         }
-                       };
-                       setElements(prev => [...prev, duplicatedElement]);
-                       addToHistory([...elements, duplicatedElement], `Duplicar ${element.type}`);
-                       message.success('Elemento duplicado');
-                     }
-                   }}
-                   onDelete={() => {
-                     const element = elements.find(el => el._id === selectedIds[0]);
-                     if (element) {
-                       const newElements = elements.filter(el => el._id !== selectedIds[0]);
-                       setElements(newElements);
-                       addToHistory(newElements, `Eliminar ${element.type}`);
-                       setSelectedIds([]);
-                       message.success('Elemento eliminado');
-                     }
-                   }}
-                 />
-               ) : (
+              {selectedIds.length === 1 ? (
+                <ElementProperties
+                  element={elements.find(el => el._id === selectedIds[0])}
+                  onUpdate={(updates) => {
+                    Object.entries(updates).forEach(([key, value]) => {
+                      updateElementProperty(selectedIds[0], key, value);
+                    });
+                  }}
+                  onAddSillas={handleAddSillasToMesa}
+                  onRemoveSillas={handleRemoveSillasFromMesa}
+                  onDuplicate={() => {
+                    const element = elements.find(el => el._id === selectedIds[0]);
+                    if (element) {
+                      const duplicatedElement = {
+                        ...element,
+                        _id: `duplicate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        posicion: {
+                          x: element.posicion.x + 50,
+                          y: element.posicion.y + 50
+                        }
+                      };
+                      setElements(prev => [...prev, duplicatedElement]);
+                      addToHistory([...elements, duplicatedElement], `Duplicar ${element.type}`);
+                      message.success('Elemento duplicado');
+                    }
+                  }}
+                  onDelete={() => {
+                    const element = elements.find(el => el._id === selectedIds[0]);
+                    if (element) {
+                      const newElements = elements.filter(el => el._id !== selectedIds[0]);
+                      setElements(newElements);
+                      addToHistory(newElements, `Eliminar ${element.type}`);
+                      setSelectedIds([]);
+                      message.success('Elemento eliminado');
+                    }
+                  }}
+                />
+              ) : (
                 <div className="text-gray-600">
                   {selectedIds.length} elementos seleccionados
                 </div>
@@ -2085,73 +2027,71 @@ const CrearMapaEditor = ({
         )}
       </div>
 
-             {/* ===== MODALES Y POPUPS ===== */}
-       <Modal
-         title="Configuraci³n Avanzada"
-         open={showAdvancedControls}
-         onCancel={() => setShowAdvancedControls(false)}
-         footer={null}
-         width={800}
-       >
-          <AdvancedConfiguration
-            gridSize={gridSize}
-            setGridSize={setGridSize}
-            showGrid={showGrid}
-            setShowGrid={setShowGrid}
-            snapToGrid={snapToGrid}
-            setSnapToGrid={setSnapToGrid}
-            backgroundImage={backgroundImage}
-            backgroundScale={backgroundScale}
-            backgroundOpacity={backgroundOpacity}
-            showBackgroundInWeb={showBackgroundInWeb}
-            onBackgroundUpload={handleBackgroundUpload}
-            onBackgroundUpdate={(updates) => updateBackground(updates)}
-            onBackgroundRemove={handleRemoveBackground}
-          />
-       </Modal>
+      {/* ===== MODALES Y POPUPS ===== */}
+      <Modal
+        title="Configuración Avanzada"
+        open={showAdvancedControls}
+        onCancel={() => setShowAdvancedControls(false)}
+        footer={null}
+        width={800}
+      >
+        <AdvancedConfiguration
+          gridSize={gridSize}
+          setGridSize={setGridSize}
+          showGrid={showGrid}
+          setShowGrid={setShowGrid}
+          snapToGrid={snapToGrid}
+          setSnapToGrid={setSnapToGrid}
+          backgroundImage={backgroundImage}
+          backgroundScale={backgroundScale}
+          backgroundOpacity={backgroundOpacity}
+          showBackgroundInWeb={showBackgroundInWeb}
+          onBackgroundUpload={handleBackgroundUpload}
+          onBackgroundUpdate={(updates) => updateBackground(updates)}
+          onBackgroundRemove={handleRemoveBackground}
+        />
+      </Modal>
 
-               {/* ===== GESTOR DE ZONAS ===== */}
-        <Modal
-          title="Gesti³n de Zonas"
-          open={showZonaManager}
-          onCancel={() => setShowZonaManager(false)}
-          footer={null}
-          width={800}
-        >
-          <ZonaManager
-            zonas={zonas}
-            onZonasChange={handleZonasChange}
-            selectedElements={selectedIds}
-            onAssignZone={handleAssignZone}
-            salaId={salaId}
-          />
-        </Modal>
+      {/* ===== GESTOR DE ZONAS ===== */}
+      <Modal
+        title="Gestión de Zonas"
+        open={showZonaManager}
+        onCancel={() => setShowZonaManager(false)}
+        footer={null}
+        width={800}
+      >
+        <ZonaManager
+          zonas={zonas}
+          onZonasChange={handleZonasChange}
+          selectedElements={selectedIds}
+          onAssignZone={handleAssignZone}
+          salaId={salaId}
+        />
+      </Modal>
 
-       {/* ===== FILTROS DE IMAGEN DE FONDO ===== */}
-       <BackgroundFilterMenu
-         backgroundImage={backgroundImage}
-         filters={backgroundFilters}
-         onFiltersChange={handleBackgroundFiltersChange}
-         onResetFilters={handleBackgroundFiltersReset}
-         visible={showBackgroundFilters}
-         onClose={() => setShowBackgroundFilters(false)}
-       />
+      {/* ===== FILTROS DE IMAGEN DE FONDO ===== */}
+      <BackgroundFilterMenu
+        backgroundImage={backgroundImage}
+        filters={backgroundFilters}
+        onFiltersChange={handleBackgroundFiltersChange}
+        onResetFilters={handleBackgroundFiltersReset}
+        visible={showBackgroundFilters}
+        onClose={() => setShowBackgroundFilters(false)}
+      />
 
-       {/* ===== MENš CONTEXTUAL ===== */}
-       <ContextMenu
-         visible={contextMenuVisible}
-         position={contextMenuPosition}
-         onClose={() => setContextMenuVisible(false)}
-         onAction={handleContextMenuAction}
-         selectedElements={selectedIds}
-         canPan={true}
-         canZoom={true}
-         canEdit={true}
-       />
+      {/* ===== MENÚ CONTEXTUAL ===== */}
+      <ContextMenu
+        visible={contextMenuVisible}
+        position={contextMenuPosition}
+        onClose={() => setContextMenuVisible(false)}
+        onAction={handleContextMenuAction}
+        selectedElements={selectedIds}
+        canPan={true}
+        canZoom={true}
+        canEdit={true}
+      />
 
-
-
-      {/* ===== POPUPS DE EDICI“N ===== */}
+      {/* ===== POPUPS DE EDICIÓN ===== */}
       {selectedIds.length === 1 && (
         <>
           <EditPopup
@@ -2212,7 +2152,7 @@ const ElementProperties = ({ element, onUpdate, onAddSillas, onRemoveSillas, onD
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Posici³n X
+              Posición X
             </label>
             <InputNumber
               value={element.posicion?.x || 0}
@@ -2222,7 +2162,7 @@ const ElementProperties = ({ element, onUpdate, onAddSillas, onRemoveSillas, onD
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Posici³n Y
+              Posición Y
             </label>
             <InputNumber
               value={element.posicion?.y || 0}
@@ -2252,13 +2192,13 @@ const AdvancedConfiguration = ({
 }) => {
   return (
     <div className="space-y-6">
-      {/* Configuraci³n de Cuadr­cula */}
+      {/* Configuración de Cuadrícula */}
       <div>
-        <Title level={5}>Cuadr­cula</Title>
+        <Title level={5}>Cuadrícula</Title>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tama±o de cuadr­cula: {gridSize}px
+              Tamaño de cuadrícula: {gridSize}px
             </label>
             <Slider
               min={5}
@@ -2273,26 +2213,25 @@ const AdvancedConfiguration = ({
               checked={showGrid}
               onChange={setShowGrid}
             />
-            <span>Mostrar cuadr­cula</span>
+            <span>Mostrar cuadrícula</span>
           </div>
           <div className="flex items-center space-x-4">
             <Switch
               checked={snapToGrid}
               onChange={setSnapToGrid}
             />
-            <span>Ajustar a cuadr­cula</span>
+            <span>Ajustar a cuadrícula</span>
           </div>
         </div>
       </div>
 
-      {/* Configuraci³n de Fondo */}
+      {/* Configuración de Fondo */}
       <div>
         <Title level={5}>Imagen de Fondo</Title>
         <div className="space-y-4">
           <BackgroundImageManager
             onImageSelect={(imageUrl) => {
               onBackgroundUpload({ name: 'background.jpg', type: 'image/jpeg' });
-              // Simular el archivo para mantener compatibilidad
               const fakeFile = new File([''], 'background.jpg', { type: 'image/jpeg' });
               fakeFile.url = imageUrl;
               onBackgroundUpload(fakeFile);
@@ -2345,5 +2284,3 @@ const AdvancedConfiguration = ({
 };
 
 export default CrearMapaEditor;
-
-

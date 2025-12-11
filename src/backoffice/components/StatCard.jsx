@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Card, Typography, Space } from '../../utils/antdComponents';
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
@@ -14,7 +14,7 @@ const StatCard = ({
   subtitle,
   loading = false 
 }) => {
-  const getTrendIcon = () => {
+
     if (trend === 'up') return <ArrowUpOutlined style={{ color: '#10b981' }} />;
     if (trend === 'down') return <ArrowDownOutlined style={{ color: '#ef4444' }} />;
     return null;

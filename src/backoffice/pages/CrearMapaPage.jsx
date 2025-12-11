@@ -25,7 +25,7 @@ const CrearMapaPage = () => {
 
   // Establecer isMounted inmediatamente
   useEffect(() => {
-    setIsMounted(true);
+
     return () => {
       setIsMounted(false);
     };
@@ -328,9 +328,7 @@ const CrearMapaPage = () => {
   };
 
   // Cargar informaci³n de la sala
-  const loadSalaInfo = async () => {
-    try {
-      setLoading(true);
+  
 
       // Obtener informaci³n de la sala
       const { data: salaData, error: salaError } = await supabase
@@ -431,14 +429,7 @@ const CrearMapaPage = () => {
     }
   };
 
-  const testDatabaseAccess = async () => {
-    try {
-      // Test 1: Check if we can access the mapas table
-      try {
-        const { data: mapasTest, error: mapasError } = await supabase
-          .from('mapas')
-          .select('id')
-          .limit(1);
+  
 
         if (mapasError) {
           if (mapasError.code === 'PGRST116') {
@@ -450,7 +441,7 @@ const CrearMapaPage = () => {
 
       // Test 2: Check tenant context
       try {
-        const tenantData = addTenantToInsert({});
+        
       } catch (tenantError) {
       }
 

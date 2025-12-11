@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EditPopup = ({ element, zoom = 1, onNameChange, onSizeChange, onDelete, onClose }) => {
+
   if (!element) return null;
 
   const posX = element.posicion?.x || 0;

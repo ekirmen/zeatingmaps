@@ -27,16 +27,12 @@ const backgroundImageCache = new Map();
 let progressCallbacks = new Set();
 
 // Registrar callback de progreso
-export const registerProgressCallback = (callback) => {
-  progressCallbacks.add(callback);
+
   return () => progressCallbacks.delete(callback);
 };
 
 // Reportar progreso
-const reportProgress = (stage, progress) => {
-  progressCallbacks.forEach(callback => {
-    try {
-      callback(stage, progress);
+
     } catch (err) {
       console.error('Error en callback de progreso:', err);
     }
@@ -350,7 +346,7 @@ const SeatingMapUnified = ({
     stage.batchDraw();
   }, []);
 
-  // const channel = useSeatLockStore(state => state.channel); // Removido por no usarse
+  //  // Removido por no usarse
   const setMapa = useSeatLockStore(state => state.setMapa);
   // Obtener el Map directamente del store y el contador de versión
   // Separar los selectores para evitar crear objetos nuevos en cada render

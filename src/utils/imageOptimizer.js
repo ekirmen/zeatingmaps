@@ -8,7 +8,7 @@
 /**
  * Detecta si el navegador soporta WebP
  */
-export const supportsWebP = () => {
+
   if (typeof window === 'undefined') return false;
   
   const canvas = document.createElement('canvas');

@@ -33,7 +33,7 @@ const CompactSeatingMap = ({
   const syncedSeats = useMapaSeatsSync(mapa);
 
   // Load map image
-  useEffect(() => {
+
     if (!mapa?.imagen_fondo) return setImageLoaded(true);
     const img = new window.Image();
     img.crossOrigin = 'anonymous';

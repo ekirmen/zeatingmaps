@@ -10,7 +10,7 @@ export const useRole = () => {
   const context = useContext(RoleContext);
   if (!context) {
     throw new Error('useRole must be used within a RoleProvider');
-  }
+
   return context;
 };
 
@@ -138,88 +138,7 @@ export const RoleProvider = ({ children }) => {
   };
 
   // Definir permisos por rol
-  const getRolePermissions = (role) => {
-    const permissions = {
-      // Dashboard principal
-      dashboard: false,
-
-      // Administraci³n
-      usuarios: false,
-      recintos: false,
-      plano: false,
-      liquidaciones: false,
-
-      // Programaci³n
-      entradas: false,
-      productos: false,
-      plantillas_productos: false,
-      donaciones: false,
-      comisiones: false,
-      seguros: false,
-      envio: false,
-      eventos: false,
-      plantillas_precios: false,
-      funciones: false,
-      cupos: false,
-      plantillas_cupos: false,
-      filas_virtuales: false,
-      paquetes: false,
-      multipase: false,
-      abonos: false,
-      afiliados: false,
-      iva: false,
-
-      // Ventas
-      boleteria: false,
-      reportes: false,
-      crm: false,
-      tags: false,
-
-      // Configuraci³n
-      settings: false,
-      seat_settings: false,
-      printer_settings: false,
-      email_config: false,
-      audit_logs: false,
-      refund_management: false,
-      payment_analytics: false,
-      payment_gateways: false,
-
-      // SaaS - Nuevos roles del sistema
-      saas: false,
-      saas_settings: false,
-      saas_billing: false,
-      saas_payment_gateways: false,
-      saas_roles: false,
-      saas_api_explorer: false,
-
-      // Permisos SaaS granulares
-      tenant_read: false,
-      tenant_write: false,
-      tenant_delete: false,
-      billing_read: false,
-      billing_write: false,
-      support_read: false,
-      support_write: false,
-      analytics_read: false,
-      notifications_read: false,
-      notifications_write: false,
-
-      // Funciones especiales
-      crear_usuarios: false,
-      editar_usuarios: false,
-      eliminar_usuarios: false,
-      ver_reportes: false,
-      crear_reportes: false,
-      exportar_datos: false,
-      configurar_sistema: false,
-      acceder_saas: false,
-
-      // Gesti³n de tenants
-      gestionar_tenants: false,
-      asignar_tenants: false,
-      ver_todos_tenants: false
-    };
+  
 
     switch (role) {
       // ROLES DEL SISTEMA SAAS
@@ -518,16 +437,7 @@ export const RoleProvider = ({ children }) => {
   const isAdmin = () => userRole === 'admin' || userRole === 'gerente';
 
   // Funci³n para cargar tenants asignados
-  const loadAssignedTenants = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_tenant_assignments')
-        .select(`
-          tenant_id,
-          tenants:tenant_id(id, name, domain, status)
-        `)
-        .eq('user_id', userId)
-        .eq('is_active', true);
+  
 
       if (error) throw error;
 
@@ -586,8 +496,7 @@ export const RoleProvider = ({ children }) => {
 };
 
 // Componente para proteger rutas
-export const ProtectedRoute = ({ children, permission, fallback = null }) => {
-  const { hasPermission, loading } = useRole();
+export 
 
   if (loading) {
     return <div>Cargando...</div>;
@@ -601,8 +510,7 @@ export const ProtectedRoute = ({ children, permission, fallback = null }) => {
 };
 
 // Componente para mostrar contenido condicionalmente
-export const ConditionalRender = ({ permission, children, fallback = null }) => {
-  const { hasPermission } = useRole();
+export 
   return hasPermission(permission) ? children : fallback;
 };
 

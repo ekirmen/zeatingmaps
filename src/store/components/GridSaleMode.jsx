@@ -15,7 +15,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
   const [error, setError] = useState(null);
 
   // Cargar zonas y precios del evento
-  useEffect(() => {
+
     if (!evento?.id || !funcion?.id) return;
     
     loadZonasAndPrecios();

@@ -6,7 +6,7 @@ export const geocodeAddress = async (address) => {
       );
       const googleData = await googleRes.json();
       if (googleData.results && googleData.results.length) {
-        const loc = googleData.results[0].geometry.location;
+
         return { lat: loc.lat, lon: loc.lng };
       }
     }

@@ -22,7 +22,7 @@ export async function sendReservationEmail(locator, userId, transactionData = {}
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('[EMAIL_SERVICE] Error enviando correo de reserva:', errorData);
+
       return { success: false, error: errorData.error || 'Error al enviar correo' };
     }
 

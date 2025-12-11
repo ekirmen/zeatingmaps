@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserTenants, switchUserTenant, addUserToTenant } from '../store/services/authService';
 
-export const useMultiTenant = () => {
-  const { user } = useAuth();
+export 
   const [userTenants, setUserTenants] = useState([]);
   const [activeTenant, setActiveTenant] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,7 +13,7 @@ export const useMultiTenant = () => {
     if (!user) {
       setUserTenants([]);
       setActiveTenant(null);
-      setLoading(false);
+
       return;
     }
 

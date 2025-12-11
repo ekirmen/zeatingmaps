@@ -1,6 +1,6 @@
 import React from "react";
 
-const SalaSelector = ({ salas, salaSeleccionada, onChange }) => {
+
   return (
     <div className="sala-selector">
       <select value={salaSeleccionada} onChange={e => onChange(e.target.value)}>

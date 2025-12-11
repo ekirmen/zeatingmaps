@@ -46,7 +46,7 @@ const ValidationWidget = ({
       setValidationResults(prev => ({
         ...prev,
         seats: { isValid: true, errors: [], warnings: [], totalPrice: 0 }
-      }));
+
       return;
     }
 

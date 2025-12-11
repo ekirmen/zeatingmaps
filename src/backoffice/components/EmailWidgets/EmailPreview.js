@@ -7,7 +7,7 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
 
   const renderWidget = (widget) => {
     switch (widget.type) {
-      case 'Título':
+
         return (
           <div className="email-widget-title" style={{ 
             fontSize: '24px', 

@@ -27,7 +27,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
   const [showFilters, setShowFilters] = useState(false);
 
   // Fetch productos from Supabase
-  const fetchProductos = useCallback(async () => {
+
     if (!eventoId) return;
     
     setLoading(true);

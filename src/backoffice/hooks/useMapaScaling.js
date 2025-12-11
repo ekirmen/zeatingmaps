@@ -1,16 +1,10 @@
 // Hook para manejar escalado de elementos del mapa
-export const useMapaScaling = (elements, setElements) => {
-  const scaleSystem = {
-    min: 0.1,
-    max: 3.0,
-    step: 0.1,
-    default: 1.0
-  };
+export 
 
   const scaleElement = (elementId, scaleFactor) => {
     setElements(prev => prev.map(el => {
       if (el._id === elementId) {
-        const newScale = Math.max(scaleSystem.min, Math.min(scaleSystem.max, scaleFactor));
+
         return {
           ...el,
           scale: newScale,

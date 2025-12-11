@@ -9,7 +9,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 const generateUUID = () =>
   'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+
     return v.toString(16);
   });
 
@@ -602,12 +602,7 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
   }
 }
 
-const createPaymentMethodProcessor = (method) => {
-  // Normalizar method_id para manejar variaciones (espacios, guiones, etc.)
-  const normalizedMethodId = (method.method_id || '').toLowerCase()
-    .replace(/\s+/g, '_')  // Reemplazar espacios con guiones bajos
-    .replace(/-/g, '_')     // Reemplazar guiones con guiones bajos
-    .trim();
+
 
   const processors = {
     stripe: StripeMethodProcessor,
@@ -638,9 +633,7 @@ const createPaymentMethodProcessor = (method) => {
   return new ProcessorClass(method);
 };
 
-export const processPaymentMethod = async (method, paymentData) => {
-  try {
-    const processor = createPaymentMethodProcessor(method);
+export 
     const validation = await processor.validatePayment(paymentData);
 
     if (!validation.valid) {

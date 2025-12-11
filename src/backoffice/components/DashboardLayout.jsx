@@ -83,7 +83,7 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
   };
 
   const getSelectedKey = () => {
-    const path = location.pathname;
+
     if (path.startsWith('/backoffice/eventos')) return '/backoffice/eventos';
     if (path.startsWith('/backoffice/usuarios')) return '/backoffice/usuarios';
     if (path.startsWith('/backoffice/productos')) return '/backoffice/productos';

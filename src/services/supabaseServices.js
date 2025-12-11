@@ -10,7 +10,7 @@ const logger = (typeof window !== 'undefined' && window.logger)
 // ✅ fetchMapa SIN usar relaciones automáticas
 export const fetchMapa = async (salaId) => {
   if (!salaId) {
-    logger.log('❌ [fetchMapa] No se proporcionó salaId');
+
     return null;
   }
 
@@ -48,25 +48,17 @@ export const fetchMapa = async (salaId) => {
   }
 };
 
-export const fetchZonasPorSala = async (salaId) => {
-  const { data, error } = await supabase.from('zonas').select('*').eq('sala_id', salaId);
+export 
   if (error) throw error;
   return data;
 };
 
-export const fetchAbonoAvailableSeats = async (eventId) => {
-  const { data, error } = await supabase
-    .from('abonos')
-    .select('seat_id')
-    .eq('package_type', 'evento')
-            .eq('evento', eventId)
-    .eq('status', 'activo');
+export 
   if (error) throw error;
   return data.map(a => a.seat_id);
 };
 
-export const fetchEntradasPorRecinto = async (recintoId) => {
-  const { data, error } = await supabase.from('entradas').select('*').eq('recinto', recintoId);
+export 
   if (error) throw error;
   return data;
 };
@@ -80,8 +72,7 @@ export const fetchPlantillaPorFuncion = async (funcionId) => {
   return data?.[0] ?? null;
 };
 
-export const fetchAffiliates = async () => {
-  const { data, error } = await supabase.from('affiliateusers').select('*, users:profiles(login)');
+export 
   if (error) throw error;
   return data.map(a => ({ ...a, user: a.users }));
 };

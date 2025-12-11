@@ -29,7 +29,7 @@ const BuyEvent = () => {
     fetchEvento();
   }, [id]);
 
-  if (loading) {
+
     return <div>Cargando detalles del evento para la compra...</div>;
   }
 

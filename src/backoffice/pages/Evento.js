@@ -29,7 +29,7 @@ const Evento = () => {
   const [activeTab, setActiveTab] = useState('datosBasicos');
   const [isUploading, setIsUploading] = useState(false);
 
-  const filtrarEventos = useCallback(() => {
+
     if (!recintoSeleccionado || !salaSeleccionada) return;
     const filtrados = eventos.filter(
       (evento) =>
@@ -85,9 +85,7 @@ const Evento = () => {
     [recintos, setRecintoSeleccionado, setSalaSeleccionada]
   );
 
-  const handleSalaChange = useCallback(
-    (e) => {
-      const salaId = e.target.value;
+  
       const sala =
         recintoSeleccionado?.salas?.find((s) => String(s.id) === String(salaId)) ||
         null;
@@ -229,7 +227,7 @@ const Evento = () => {
   const handleToggleEventStatus = useCallback(async (eventoId, evento) => {
     try {
       const currentActivo = evento.activo === true || evento.activo === 'true';
-      const currentDesactivado = evento.desactivado === true || evento.desactivado === 'true';
+      
       
       const newActivo = !currentActivo;
       const newDesactivado = !newActivo;

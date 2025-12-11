@@ -25,7 +25,7 @@ export const PageWrapper = ({
   loadingMessage = 'Cargando...'
 }) => {
   // Estado de carga
-  if (loading) {
+
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -84,8 +84,7 @@ export const PageWrapper = ({
 /**
  * Hook para usar PageWrapper con estados comunes
  */
-export const usePageState = () => {
-  const [loading, setLoading] = React.useState(false);
+export 
   const [error, setError] = React.useState(null);
 
   const executeWithState = React.useCallback(async (asyncFunction) => {

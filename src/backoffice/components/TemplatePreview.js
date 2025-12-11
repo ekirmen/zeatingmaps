@@ -5,7 +5,7 @@ import { PrinterOutlined } from '@ant-design/icons';
 const { Title } = Typography;
 
 const TemplatePreview = ({ template, ticketData }) => {
-  const generatePreviewText = () => {
+
     if (!template || !ticketData) return '';
 
     let preview = '';

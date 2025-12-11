@@ -81,8 +81,7 @@ const SaaSMessaging = () => {
     scrollToBottom();
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  
   };
 
   const loadConversations = async () => {
@@ -125,11 +124,7 @@ const SaaSMessaging = () => {
     }
   };
 
-  const loadStats = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('tenant_conversations')
-        .select('status, priority, assigned_to');
+  
 
       if (error) throw error;
 
@@ -212,12 +207,7 @@ const SaaSMessaging = () => {
     }
   };
 
-  const updateConversationStatus = async (conversationId, status) => {
-    try {
-      const { error } = await supabase
-        .from('tenant_conversations')
-        .update({ status })
-        .eq('id', conversationId);
+  
 
       if (error) throw error;
 

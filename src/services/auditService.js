@@ -15,7 +15,7 @@ class AuditService {
     this.initializeSession();
   }
 
-  isAuthError(error) {
+
     if (!error) return false;
 
     const message = (error.message || '').toLowerCase();

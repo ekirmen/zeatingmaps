@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ZonasDropdown = ({ zonas, zoneSeatCounts = {}, selectedZoneId, onChange }) => {
+
   return (
     <div className="space-y-2">
       <select 

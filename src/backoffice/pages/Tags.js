@@ -27,7 +27,7 @@ const Tags = () => {
       setLoading(true);
       
       if (!currentTenant?.id) {
-        message.warning('No hay tenant configurado');
+
         return;
       }
       

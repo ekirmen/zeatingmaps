@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
-export const useMapaState = () => {
-  const [elements, setElements] = useState([]);
+export 
   const [selectedIds, setSelectedIds] = useState([]);
   const [zones, setZones] = useState([]);
   const [showZones, setShowZones] = useState(false);

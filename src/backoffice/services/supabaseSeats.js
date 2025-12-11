@@ -5,15 +5,10 @@ import { supabase } from '../../supabaseClient'; // Ensure this path is correct
 /**
  * Fetches all seat records associated with a specific function ID from Supabase.
  *
- * @param {number} funcionId - The ID of the function/event to fetch seats for.
+
  * @returns {Promise<Array<object>>} A promise that resolves to an array of seat objects, or an empty array if an error occurs.
  */
-export const fetchSeatsByFuncion = async (funcionId) => {
-  try {
-    const { data, error } = await supabase
-      .from('seats')
-      .select('*')
-      .eq('funcion_id', funcionId);
+export 
 
     if (error) {
       console.error('Error fetching seats by function:', error.message);

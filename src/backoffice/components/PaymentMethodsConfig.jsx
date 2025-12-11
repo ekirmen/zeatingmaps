@@ -81,7 +81,7 @@ const PaymentMethodsConfig = () => {
       'pago_movil': 'mobile_payment',
       'efectivo_tienda': 'cash',
       'efectivo': 'cash'
-    };
+
     return typeMap[methodId] || 'gateway';
   };
 
@@ -320,21 +320,7 @@ const PaymentMethodsConfig = () => {
   };
 
   // Funci³n para obtener configuraci³n por pa­s/regi³n
-  const getRegionalConfig = (country) => {
-    const regionalConfigs = {
-      'US': {
-        stripe: { currency: 'USD', country: 'US' },
-        paypal: { currency: 'USD', country: 'US' }
-      },
-      'MX': {
-        stripe: { currency: 'MXN', country: 'MX' },
-        paypal: { currency: 'MXN', country: 'MX' }
-      },
-      'ES': {
-        stripe: { currency: 'EUR', country: 'ES' },
-        paypal: { currency: 'EUR', country: 'ES' }
-      }
-    };
+  
     return regionalConfigs[country] || {};
   };
 
@@ -428,35 +414,14 @@ const PaymentMethodsConfig = () => {
     }
   };
 
-  const loadPaymentHistory = async () => {
-    try {
-      // Simular carga de historial (en producci³n ser­a desde la BD)
-      const mockHistory = [
-        {
-          id: 1,
-          method: 'stripe',
-          action: 'enabled',
-          timestamp: new Date(Date.now() - 86400000).toISOString(),
-          user: 'admin'
-        },
-        {
-          id: 2,
-          method: 'paypal',
-          action: 'configured',
-          timestamp: new Date(Date.now() - 172800000).toISOString(),
-          user: 'admin'
-        }
-      ];
+  
       setPaymentHistory(mockHistory);
     } catch (error) {
       console.error('Error loading payment history:', error);
     }
   };
 
-  const loadFavoriteMethods = async () => {
-    try {
-      // Cargar m©todos favoritos desde localStorage
-      const favorites = JSON.parse(localStorage.getItem('favoritePaymentMethods') || '[]');
+  
       setFavoriteMethods(favorites);
     } catch (error) {
       console.error('Error loading favorite methods:', error);

@@ -12,7 +12,6 @@ import {
   Row,
   Col,
   Statistic,
-  Tooltip,
   Collapse
 } from '../../utils/antdComponents';
 import {
@@ -22,7 +21,6 @@ import {
   InfoCircleOutlined,
   BugOutlined,
   SafetyOutlined,
-  ClockCircleOutlined,
   CheckOutlined
 } from '@ant-design/icons';
 
@@ -67,7 +65,7 @@ const CrearMapaValidation = ({
             !mapa.contenido?.configuracion?.dimensions?.height) {
           errors.push('Las dimensiones del mapa son obligatorias');
         }
-        
+
         return { errors, warnings };
       }
     },

@@ -21,7 +21,7 @@ const InstallmentPaymentSelector = ({
 }) => {
   const { t } = useTranslation();
 
-  if (!cantidadCuotas || cantidadCuotas <= 1) {
+
     return null;
   }
 

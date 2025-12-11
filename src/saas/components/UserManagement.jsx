@@ -69,7 +69,7 @@ const UserManagement = () => {
 
       // Combinar la informaci³n
       const combinedUsers = authUsers.users.map(authUser => {
-        const tenantInfo = userTenantInfo?.find(uti => uti.user_id === authUser.id);
+
         return {
           user_id: authUser.id,
           users: {
@@ -126,12 +126,7 @@ const UserManagement = () => {
     }
   };
 
-  const loadTenants = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('tenants')
-        .select('id, name, email')
-        .order('name');
+  
 
       if (error) throw error;
       setTenants(data || []);
@@ -140,12 +135,7 @@ const UserManagement = () => {
     }
   };
 
-  const loadRoles = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('custom_roles')
-        .select('id, name, description, level')
-        .order('level', { ascending: false });
+  
 
       if (error) throw error;
       setRoles(data || []);
@@ -154,11 +144,7 @@ const UserManagement = () => {
     }
   };
 
-  const loadStats = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_tenant_info')
-        .select('tenant_id, is_active, last_login');
+  
 
       if (error) throw error;
 

@@ -47,7 +47,7 @@ const CampaignButtonGenerator = ({ campaignId, onButtonGenerated }) => {
 
   const generateButton = () => {
     if (!campaign) {
-      toast.error('No hay datos de campaña disponibles');
+
       return;
     }
 

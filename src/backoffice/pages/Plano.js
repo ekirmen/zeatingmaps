@@ -38,7 +38,7 @@ const Plano = () => {
 
   // Limpiar todas las suscripciones de tiempo real al montar el componente (optimizado)
   const hasCleanedChannels = useRef(false);
-  useEffect(() => {
+
     if (hasCleanedChannels.current) return;
 
     logger.log('[PLANO] Limpiando suscripciones de tiempo real...');
@@ -138,8 +138,7 @@ const Plano = () => {
     }
   }, [sala]);
 
-  const loadMapaPreview = async (salaId) => {
-    if (!salaId) return;
+  
 
     setLoadingMapa(true);
     try {

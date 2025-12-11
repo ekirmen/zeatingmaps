@@ -1,110 +1,148 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '../supabaseClient';
-import { useTenant } from './TenantContext';
-import { getTenantThemeSettings } from '../backoffice/services/themeSettingsService';
-import { EventThemeService } from '../backoffice/services/eventThemeService';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const defaultColors = {
-  headerBg: '#ffffff',
-  headerText: '#000000',
-  primary: '#e94243',
-  btnPrimaryText: '#ffffff',
-  // Seat status colors (configurable in WebColors)
-  seatAvailable: '#4CAF50',
-  seatSelectedMe: '#ffd700',
-  seatSelectedOther: '#2196F3',
-  seatBlocked: '#f56565',
-  seatSold: '#2d3748',
-  seatReserved: '#805ad5',
-  seatCancelled: '#e53e3e'
-};
+// Crear el contexto
+const ThemeContext = createContext();
 
-const ThemeContext = createContext({
-  theme: defaultColors,
-  updateTheme: () => {}
-});
-
+// Provider Component
 export const ThemeProvider = ({ children }) => {
-  const { currentTenant } = useTenant() || {};
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('themeColors');
-    return saved ? { ...defaultColors, ...JSON.parse(saved) } : defaultColors;
-  });
+  // Estado para el tema actual
+  const [theme, setTheme] = useState('light');
+  const [primaryColor, setPrimaryColor] = useState('#1890ff');
+  const [secondaryColor, setSecondaryColor] = useState('#52c41a');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Cargar tema guardado al iniciar
   useEffect(() => {
-    Object.entries(theme).forEach(([key, value]) => {
-      // Aplicar variables CSS del tema
-      document.documentElement.style.setProperty(`--${key}`, value);
+    const savedTheme = localStorage.getItem('theme');
+    const savedPrimaryColor = localStorage.getItem('primaryColor');
+    const savedSecondaryColor = localStorage.getItem('secondaryColor');
+    const savedDarkMode = localStorage.getItem('darkMode');
 
-      // Mapear colores del webstudio a variables del store
-      if (key === 'primary' || key === 'btnPrimary') {
-        document.documentElement.style.setProperty('--store-primary', value);
-        // Calcular variaciones del color primario
-        const hoverColor = value; // Usar el mismo color o calcular uno más oscuro
-        const activeColor = value; // Usar el mismo color o calcular uno más oscuro
-        document.documentElement.style.setProperty('--store-primary-hover', hoverColor);
-        document.documentElement.style.setProperty('--store-primary-active', activeColor);
-      }
-      if (key === 'headerBg') {
-        document.documentElement.style.setProperty('--store-header-bg', value);
-      }
-      if (key === 'headerText' || key === 'headerTextColor') {
-        document.documentElement.style.setProperty('--store-header-text', value);
-        document.documentElement.style.setProperty('--store-text-inverse', value);
-      }
-      if (key === 'bodyBg') {
-        document.documentElement.style.setProperty('--store-bg-secondary', value);
-      }
-      if (key === 'contBody') {
-        document.documentElement.style.setProperty('--store-bg-primary', value);
-      }
-      if (key === 'bodyFont' || key === 'textoTitulo') {
-        document.documentElement.style.setProperty('--store-text-primary', value);
-      }
-    });
-    localStorage.setItem('themeColors', JSON.stringify(theme));
-  }, [theme]);
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+    if (savedPrimaryColor) {
+      setPrimaryColor(savedPrimaryColor);
+    }
+    if (savedSecondaryColor) {
+      setSecondaryColor(savedSecondaryColor);
+    }
+    if (savedDarkMode) {
+      setIsDarkMode(savedDarkMode === 'true');
+    }
 
-  // Cargar tema del tenant desde Supabase solo una vez al inicio, sin interferir con realtime
+    // Verificar preferencia del sistema
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (!savedTheme && prefersDark) {
+      setTheme('dark');
+      setIsDarkMode(true);
+    }
+  }, []);
+
+  // Aplicar tema al documento
   useEffect(() => {
-    // Solo ejecutar si no hay tema guardado y hay un tenant
-    const hasLocalTheme = localStorage.getItem('themeColors');
-    if (hasLocalTheme || !currentTenant?.id) return;
+    // Guardar en localStorage
+    localStorage.setItem('theme', theme);
+    localStorage.setItem('primaryColor', primaryColor);
+    localStorage.setItem('secondaryColor', secondaryColor);
+    localStorage.setItem('darkMode', isDarkMode);
 
-    // Usar setTimeout para no bloquear el render inicial
-    const timer = setTimeout(async () => {
-      try {
-        const remote = await getTenantThemeSettings(currentTenant.id);
-        if (remote && typeof remote === 'object') {
-          setTheme(prev => ({ ...prev, ...remote }));
-        }
-      } catch (e) {
-      }
-    }, 2000); // Esperar 2 segundos para no interferir con la carga inicial
+    // Aplicar clases CSS al documento
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.classList.toggle('dark-mode', isDarkMode);
+    
+    // Aplicar variables CSS personalizadas
+    document.documentElement.style.setProperty('--primary-color', primaryColor);
+    document.documentElement.style.setProperty('--secondary-color', secondaryColor);
+    
+    // Para compatibilidad con Ant Design
+    if (isDarkMode) {
+      document.body.classList.add('ant-dark');
+      document.body.classList.remove('ant-light');
+    } else {
+      document.body.classList.add('ant-light');
+      document.body.classList.remove('ant-dark');
+    }
+  }, [theme, primaryColor, secondaryColor, isDarkMode]);
 
-    return () => clearTimeout(timer);
-  }, [currentTenant?.id]);
-
-  const updateTheme = updates => {
-    setTheme(prev => ({ ...prev, ...updates }));
+  // Cambiar entre temas claro/oscuro
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    setIsDarkMode(newTheme === 'dark');
   };
 
-  const getEventTheme = useCallback(async (eventId) => {
-    if (!currentTenant?.id || !eventId) return theme;
+  // Establecer tema específico
+  const setThemeMode = (mode) => {
+    setTheme(mode);
+    setIsDarkMode(mode === 'dark');
+  };
 
-    try {
-      const eventTheme = await EventThemeService.getEventThemeOrDefault(eventId, currentTenant.id, theme);
-      return eventTheme;
-    } catch (error) {
-      return theme;
+  // Actualizar colores principales
+  const updateColors = ({ primary, secondary }) => {
+    if (primary) {
+      setPrimaryColor(primary);
     }
-  }, [currentTenant?.id, theme]);
+    if (secondary) {
+      setSecondaryColor(secondary);
+    }
+  };
+
+  // Restablecer a valores por defecto
+  const resetTheme = () => {
+    setTheme('light');
+    setPrimaryColor('#1890ff');
+    setSecondaryColor('#52c41a');
+    setIsDarkMode(false);
+  };
+
+  // Valores que estarán disponibles en el contexto
+  const value = {
+    // Estado
+    theme,
+    primaryColor,
+    secondaryColor,
+    isDarkMode,
+    
+    // Métodos
+    toggleTheme,
+    setThemeMode,
+    updateColors,
+    resetTheme,
+    
+    // Helper methods
+    isDark: theme === 'dark',
+    isLight: theme === 'light',
+    
+    // Para Ant Design
+    antdTheme: {
+      token: {
+        colorPrimary: primaryColor,
+        colorSuccess: secondaryColor,
+        colorInfo: primaryColor,
+        colorWarning: '#faad14',
+        colorError: '#ff4d4f',
+      },
+      algorithm: isDarkMode ? 'darkAlgorithm' : 'defaultAlgorithm',
+    }
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, updateTheme, getEventTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
 };
 
-export const useTheme = () => useContext(ThemeContext);
+// Hook personalizado para usar el contexto
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  
+  if (!context) {
+    throw new Error('useTheme debe ser usado dentro de un ThemeProvider');
+  }
+  
+  return context;
+};
+
+export default ThemeContext;

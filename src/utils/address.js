@@ -2,7 +2,7 @@ const normalizeAddressField = (value) => value ?? '';
 
 const getAddressValue = (data = {}, keys = []) => {
   for (const key of keys) {
-    if (data[key] !== undefined && data[key] !== null && String(data[key]).trim() !== '') {
+
       return data[key];
     }
   }

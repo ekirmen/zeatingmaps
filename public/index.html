@@ -50,7 +50,7 @@
     <script>
       // Debug logging
       console.log('Index.html cargado');
-      console.log('NODE_ENV:', process ? process.env.NODE_ENV : 'no disponible en cliente');
+      console.log('NODE_ENV:', window.location.hostname.includes('localhost') ? 'development' : 'production');
       
       // Exponer función para que React remueva el loader
       window.__removeLoading = function() {

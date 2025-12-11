@@ -113,7 +113,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
     }
   };
 
-  const renderFieldEditor = (field) => {
+
     if (!field) return null;
 
     return (

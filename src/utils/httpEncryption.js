@@ -8,7 +8,7 @@ import { encryptSensitiveData, decryptSensitiveData } from './encryption';
 /**
  * Encriptar datos sensibles antes de enviarlos por HTTP
  * @param {object} data - Datos a enviar
- * @param {string[]} sensitiveFields - Campos sensibles a encriptar
+
  * @returns {Promise<object>} - Datos con campos sensibles encriptados
  */
 export const encryptDataForTransit = async (data, sensitiveFields = []) => {
@@ -112,15 +112,7 @@ export const decryptDataFromTransit = async (data, sensitiveFields = []) => {
 /**
  * Interceptor para fetch que encripta automáticamente datos sensibles
  */
-export const createEncryptedFetch = (originalFetch = fetch) => {
-  return async (url, options = {}) => {
-    // Solo encriptar en POST, PUT, PATCH
-    if (options.method && ['POST', 'PUT', 'PATCH'].includes(options.method.toUpperCase())) {
-      if (options.body) {
-        try {
-          const bodyData = typeof options.body === 'string'
-            ? JSON.parse(options.body)
-            : options.body;
+export 
 
           // Encriptar datos sensibles
           const encryptedBody = await encryptDataForTransit(bodyData);

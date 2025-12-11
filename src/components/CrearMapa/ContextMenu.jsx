@@ -24,7 +24,7 @@ const ContextMenu = ({
   canPan = true,
   canZoom = true,
   canEdit = true
-}) => {
+
   if (!visible) return null;
 
   const handleAction = (action) => {

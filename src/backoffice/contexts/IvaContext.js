@@ -11,7 +11,7 @@ export const IvaProvider = ({ children }) => {
   useEffect(() => {
     const fetchIvas = async () => {
       if (!currentTenant?.id) {
-        setIvas([]);
+
         return;
       }
 

@@ -64,7 +64,7 @@ const SiteMap = ({ onClose }) => {
   const renderTreeItem = (item, level = 0) => {
     const paddingLeft = level * 20;
     
-    if (item.type === 'folder') {
+
       return (
         <div key={item.name} style={{ paddingLeft }}>
           <div className="flex items-center gap-2 py-1 hover:bg-gray-100 rounded">

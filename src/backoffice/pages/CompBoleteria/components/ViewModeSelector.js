@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ViewModeSelector = ({ showSeatingMap, viewMode, setViewMode }) => {
+
   if (!showSeatingMap) return null;
 
   return (

@@ -14,7 +14,7 @@ class SeatWorkerService {
    * Inicializar el Web Worker
    */
   initWorker() {
-    if (typeof Worker === 'undefined') {
+
       return;
     }
 

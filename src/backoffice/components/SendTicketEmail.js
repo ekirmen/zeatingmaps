@@ -44,9 +44,7 @@ const SendTicketEmail = ({
     }
   }, [visible]);
 
-  const checkEmailConfig = async () => {
-    try {
-      setEmailConfigStatus('checking');
+  
       const hasConfig = await TicketEmailService.hasEmailConfig();
       setHasEmailConfig(hasConfig);
       setEmailConfigStatus(hasConfig ? 'configured' : 'not-configured');
@@ -105,24 +103,7 @@ const SendTicketEmail = ({
     await Promise.all(promises);
   };
 
-  const sendMultipleTickets = async (email, customMessage) => {
-    const ticketsData = {
-      eventName: eventData.nombre,
-      eventDate: eventData.fecha,
-      eventTime: eventData.hora,
-      venueName: eventData.recinto?.nombre || 'Sin especificar',
-      venueAddress: eventData.recinto?.direccion || 'Sin especificar',
-      totalPrice: tickets.reduce((sum, ticket) => sum + (ticket.precio || 0), 0),
-      companyName: eventData.empresa?.nombre || 'Tu Empresa',
-      supportEmail: eventData.empresa?.email || 'soporte@tuempresa.com',
-      customMessage,
-      tickets: tickets.map(ticket => ({
-        ticketNumber: ticket.numero || ticket.id,
-        seatInfo: ticket.asiento || ticket.fila,
-        zoneName: ticket.zona?.nombre || 'General',
-        price: ticket.precio || '0'
-      }))
-    };
+  
 
     await TicketEmailService.sendMultipleTicketsEmail(ticketsData, email);
   };

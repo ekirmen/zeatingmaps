@@ -6,7 +6,7 @@ import logger from '../utils/logger';
 /**
  * Hook para realizar queries a Supabase con filtrado automático por tenant_id
  * @param {string} tableName - Nombre de la tabla
- * @param {Object} options - Opciones de configuración
+
  * @returns {Object} { data, loading, error, refetch }
  */
 export const useSupabaseQuery = (tableName, options = {}) => {

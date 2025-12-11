@@ -40,7 +40,7 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
 
   const handleSubmit = () => {
     if (!formData.nombreEntrada) {
-      alert("Debes ingresar un nombre para la entrada.");
+
       return;
     }
     if (!formData.recinto) {

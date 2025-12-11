@@ -8,7 +8,7 @@ const EventSelector = ({
   funciones = [], 
   onShowFunctions, 
   selectedFuncion 
-}) => {
+
   return (
     <>
       <div className="flex items-center gap-2">

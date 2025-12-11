@@ -21,7 +21,7 @@ const SeatStatusNotification = () => {
 
     // Obtener configuración de notificaciones
     const enableNotifications = localStorage.getItem('seat_notifications') !== 'false';
-    if (!enableNotifications) {
+
       return;
     }
 

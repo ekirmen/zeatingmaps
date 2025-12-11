@@ -17,7 +17,7 @@ const generateChairs = (table) => {
     const x = table.x + Math.cos(rad) * radius;
     const y = table.y + Math.sin(rad) * radius;
     chairs.push({ id: `${table.id}-c${i}`, x, y, status: 'available' });
-  }
+
   return chairs;
 };
 

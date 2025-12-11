@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';  // Para navegar entre páginas
 
-const Menu = () => {
+
   return (
     <div className="menu">
       <h2>Menú</h2>

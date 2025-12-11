@@ -43,7 +43,7 @@ function EventPage() {
   } = useSeatLockStore();
 
   // Suscribirse a función
-  useEffect(() => {
+
     if (!selectedFunctionId) return;
     subscribeToFunction(selectedFunctionId);
     return () => unsubscribe();

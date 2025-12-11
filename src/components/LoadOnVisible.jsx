@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, Suspense } from 'react';
 
 // LoadOnVisible: dynamically loads a component when the placeholder becomes visible
-// Props:
+
 // - loader: () => import('./MyComponent')  (a function that returns the import promise)
 // - fallback: ReactNode shown while loading
 // - rootMargin: IntersectionObserver rootMargin

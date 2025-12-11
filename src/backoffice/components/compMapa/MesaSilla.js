@@ -76,20 +76,7 @@ export const Mesa = ({
   );
 };
 
-export const Silla = ({
-  silla,
-  isSelected,
-  onClick,
-  onDragEnd,
-  getSeatColor,
-  getZonaColor,
-  getBorderColor,
-  showZones,
-  selectedZone,
-  showConnections,
-  connectionStyle,
-}) => {
-  const { id, x, y, width = 20, height = 20, numero, fila, zonaId, estado = 'available', shape = 'circle' } = silla;
+export 
 
   // Colores basados en el estado del asiento
   const seatColors = {

@@ -168,7 +168,7 @@ export const ROLE_PERMISSIONS = {
 /**
  * Verifica si un usuario tiene un permiso específico
  * @param {Object} user - Objeto usuario con role y permissions
- * @param {string} permission - Permiso a verificar
+
  * @returns {boolean}
  */
 export const hasPermission = (user, permission) => {

@@ -6,13 +6,7 @@ import logger from '../utils/logger';
 const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
 
 // 🖼️ NUEVA FUNCIONALIDAD: Conectar con tablas galeria e imagenes
-export const fetchImagenesFromDB = async (tenantId = null) => {
-  try {
-    // Cargar desde tabla galeria
-    let galeriaQuery = supabase
-      .from('galeria')
-      .select('*')
-      .order('created_at', { ascending: false });
+export 
 
     if (tenantId) {
       galeriaQuery = galeriaQuery.eq('tenant_id', tenantId);
@@ -46,7 +40,7 @@ export const fetchImagenesFromDB = async (tenantId = null) => {
       ...(imagenesData || []).map(img => ({ ...img, source: 'imagenes' }))
     ];
 
-    logger.log('🖼️ Imágenes cargadas desde base de datos:', allImages.length);
+
     return allImages;
 
   } catch (error) {
@@ -56,10 +50,7 @@ export const fetchImagenesFromDB = async (tenantId = null) => {
 };
 
 // 🖼️ FUNCIONALIDAD ORIGINAL (mantener compatibilidad)
-export const fetchImagenes = async (token) => {
-  const authHeader = token && !token.startsWith('Bearer ')
-    ? `Bearer ${token}`
-    : token;
+export 
   const res = await fetch(`${API_BASE_URL_WITH_API}/galeria`, {
     headers: { Authorization: authHeader }
   });
@@ -67,8 +58,7 @@ export const fetchImagenes = async (token) => {
   return res.json();
 };
 
-export const uploadImagen = async (file, token, categoria = 'productos') => {
-  const formData = new FormData();
+export 
   formData.append('image', file);
   formData.append('categoria', categoria);
   
@@ -84,10 +74,7 @@ export const uploadImagen = async (file, token, categoria = 'productos') => {
   return res.json();
 };
 
-export const deleteImagen = async (filename, token) => {
-  const authHeader = token && !token.startsWith('Bearer ')
-    ? `Bearer ${token}`
-    : token;
+export 
   const res = await fetch(`${API_BASE_URL_WITH_API}/galeria/${filename}`, {
     method: 'DELETE',
     headers: { Authorization: authHeader }

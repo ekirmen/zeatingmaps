@@ -88,7 +88,7 @@ const PlantillaPrecios = () => {
   }, [recinto]);
 
   /* -------------------------- CARGAR ZONAS --------------------------- */
-  useEffect(() => {
+
     if (!sala) return;
     const fetchZonas = async () => {
       const { data, error } = await supabase.from('zonas').select('*').eq('sala_id', sala.id);
@@ -116,12 +116,7 @@ const PlantillaPrecios = () => {
         
         
         if (data && data.length > 0) {
-          const mapped = data.map(e => ({
-            id: e.id,
-            nombre: e.nombre_entrada,
-            tipo: e.tipo_producto,
-            tenant_id: e.tenant_id
-          }));
+          
           // Si se usa en otro lugar, podríamos setearlo; por ahora mantenemos data original
         }
         setEntradas(data || []);
@@ -664,7 +659,7 @@ const PlantillaPrecios = () => {
                 // Calcular el estado considerando la JERARQUÍA de prioridades
                 let canalesDisponibles = 0;
                 let canalesSeleccionados = 0;
-                let totalCanales = canalesVenta.length;
+                
                 
                 // Contar canales activos en el sistema
                 const canalesActivosEnSistema = canalesVenta.filter(c => c.activo === true);

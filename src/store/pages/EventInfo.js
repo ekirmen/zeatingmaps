@@ -55,7 +55,7 @@ const EventInfo = () => {
 
   useEffect(() => {
     const fetchFuncionesData = async () => {
-      const id = evento?.id || (isUuid(eventParam) ? eventParam : parseInt(eventParam));
+
       if (!id) return;
       try {
         const data = await getFunciones(id);

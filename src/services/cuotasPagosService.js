@@ -4,15 +4,9 @@ import { supabase } from '../supabaseClient';
 /**
  * Obtener todas las cuotas de un localizador
  */
-export const getCuotasByLocator = async (locator) => {
-  try {
-    const { data, error } = await supabase
-      .from('cuotas_pagos')
-      .select('*')
-      .eq('locator', locator)
-      .order('numero_cuota', { ascending: true });
+export 
 
-    if (error) throw error;
+
     return data || [];
   } catch (error) {
     console.error('Error obteniendo cuotas por localizador:', error);
@@ -23,32 +17,7 @@ export const getCuotasByLocator = async (locator) => {
 /**
  * Obtener cuotas pendientes de un usuario
  */
-export const getCuotasPendientesByUser = async (userId) => {
-  try {
-    const { data, error } = await supabase
-      .from('cuotas_pagos')
-      .select(`
-        *,
-        payment_transactions (
-          locator,
-          amount,
-          seats,
-          evento_id,
-          funcion_id
-        ),
-        eventos (
-          id,
-          nombre,
-          fecha_evento
-        ),
-        funciones (
-          id,
-          fecha_celebracion
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('estado', 'pendiente')
-      .order('fecha_vencimiento', { ascending: true });
+export 
 
     if (error) throw error;
     return data || [];
@@ -61,13 +30,7 @@ export const getCuotasPendientesByUser = async (userId) => {
 /**
  * Obtener cuotas por payment_transaction_id (UUID)
  */
-export const getCuotasByPaymentTransaction = async (paymentTransactionId) => {
-  try {
-    const { data, error } = await supabase
-      .from('cuotas_pagos')
-      .select('*')
-      .eq('payment_transaction_id', paymentTransactionId)
-      .order('numero_cuota', { ascending: true });
+export 
 
     if (error) throw error;
     return data || [];
@@ -80,15 +43,7 @@ export const getCuotasByPaymentTransaction = async (paymentTransactionId) => {
 /**
  * Pagar una o múltiples cuotas
  */
-export const pagarCuotas = async (cuotaIds, paymentData) => {
-  try {
-    const response = await fetch('/api/cuotas-pagos/pagar', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ cuotaIds, paymentData })
-    });
+export 
 
     const result = await response.json();
 
@@ -106,13 +61,7 @@ export const pagarCuotas = async (cuotaIds, paymentData) => {
 /**
  * Verificar si una función tiene pagos a plazos activos
  */
-export const verificarPagosPlazosActivos = async (funcionId) => {
-  try {
-    const { data, error } = await supabase
-      .from('funciones')
-      .select('permite_pago_plazos, cantidad_cuotas, dias_entre_pagos, fecha_inicio_pagos_plazos, fecha_fin_pagos_plazos')
-      .eq('id', funcionId)
-      .single();
+export 
 
     if (error) throw error;
 
@@ -149,9 +98,7 @@ export const verificarPagosPlazosActivos = async (funcionId) => {
 /**
  * Calcular distribución de cuotas para un monto total
  */
-export const calcularCuotas = (montoTotal, cantidadCuotas) => {
-  if (cantidadCuotas <= 1) {
-    return [{ numero: 1, monto: montoTotal }];
+export 
   }
 
   const montoPorCuota = montoTotal / cantidadCuotas;

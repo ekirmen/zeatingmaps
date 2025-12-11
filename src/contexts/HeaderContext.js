@@ -1,34 +1,43 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useHeader } from '../contexts/HeaderContext';
 
-const defaultHeader = {
-  logoUrl: '',
-  companyName: 'TuEmpresa'
-};
 
-const HeaderContext = createContext({
-  header: defaultHeader,
-  updateHeader: () => {}
-});
-
-export const HeaderProvider = ({ children }) => {
-  const [header, setHeader] = useState(() => {
-    const saved = localStorage.getItem('headerSettings');
-    return saved ? { ...defaultHeader, ...JSON.parse(saved) } : defaultHeader;
-  });
 
   useEffect(() => {
-    localStorage.setItem('headerSettings', JSON.stringify(header));
-  }, [header]);
+    // Configurar el header cuando se monta el componente
+    configureHeader({
+      title: 'Mi Página',
+      subtitle: 'Subtítulo de la página',
+      backButton: true,
+      backUrl: '/dashboard',
+      actions: [
+        {
+          label: 'Guardar',
+          onClick: () => console.log('Guardar'),
+          className: 'btn-primary'
+        },
+        {
+          label: 'Cancelar',
+          onClick: () => console.log('Cancelar'),
+          className: 'btn-secondary'
+        }
+      ]
+    });
 
-  const updateHeader = updates => {
-    setHeader(prev => ({ ...prev, ...updates }));
-  };
+
+    return () => {
+      configureHeader({
+        title: '',
+        subtitle: '',
+        backButton: false,
+        actions: []
+      });
+    };
+  }, [configureHeader]);
 
   return (
-    <HeaderContext.Provider value={{ header, updateHeader }}>
-      {children}
-    </HeaderContext.Provider>
+    <div>
+      {/* Contenido de la página */}
+    </div>
   );
 };
-
-export const useHeader = () => useContext(HeaderContext);

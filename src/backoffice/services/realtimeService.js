@@ -12,7 +12,7 @@ class RealtimeService {
 
   // Suscribirse a cambios de una sala específica
   async subscribeToSala(salaId, onUpdate) {
-    if (this.subscriptions.has(salaId)) {
+
       return;
     }
     try {
@@ -99,7 +99,7 @@ class RealtimeService {
         return;
       }
 
-      const result = await response.json();
+      
 
       if (result.success && result.data) {
         const lastUpdate = this.lastUpdateTimes.get(salaId);
@@ -157,7 +157,7 @@ class RealtimeService {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const result = await response.json();
+      
     } catch (error) {
       console.error(`[RealtimeService] Error al notificar cambio para sala ${salaId}:`, error);
     }

@@ -5,7 +5,7 @@ class MapaImageService {
   /**
    * Restaura las imágenes completas de un mapa para edición
    * @param {number} mapaId - ID del mapa
-   * @param {Array} elementos - Array de elementos del mapa
+
    * @returns {Promise<Array>} - Elementos con imágenes restauradas
    */
   async restoreImagesForEditing(mapaId, elementos) {

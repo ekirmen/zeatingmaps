@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { RecintoContext } from '../context/RecintoContext';
-import { useIva } from '../context/IvaContext';  // Asegúrate de que la ruta sea correcta
+import { RecintoContext } from '../contexts/RecintoContext';
+import { useIva } from '../contexts/IvaContext';  // Asegúrate de que la ruta sea correcta
 
 const EntradaForm = ({ onClose, onSave }) => {
   const { recintos } = useContext(RecintoContext);

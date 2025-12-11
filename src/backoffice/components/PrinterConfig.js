@@ -58,9 +58,7 @@ const PrinterConfig = () => {
     loadFormatConfig();
   }, []);
 
-  const loadFormatConfig = async () => {
-    try {
-      const config = await getFormatConfig();
+  
       setFormatConfig(config);
     } catch (error) {
       console.error('Error loading format config:', error);

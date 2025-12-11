@@ -4,8 +4,7 @@ import { supabase, supabaseAdmin } from '../../supabaseClient';
  * Retrieve a user by email from the profiles table.
  * Simplified version that goes directly to the profiles table.
  */
-export const getUserByEmail = async (email) => {
-  const client = supabaseAdmin || supabase;
+export 
 
   // Go directly to profiles table
   const { data, error } = await client
@@ -14,7 +13,7 @@ export const getUserByEmail = async (email) => {
     .eq('login', email)
     .maybeSingle();
 
-  if (error || !data) {
+
     return { data: null, error: error || new Error('User not found') };
   }
 

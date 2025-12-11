@@ -7,11 +7,9 @@ import {
   ColorPicker, 
   Switch, 
   Space, 
-  Tag, 
   List, 
   Popconfirm,
   message,
-  Divider,
   Typography,
   Row,
   Col,
@@ -22,10 +20,7 @@ import { createZona, updateZona, deleteZona } from '../../backoffice/services/ap
 import {
   PlusOutlined,
   EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CheckOutlined,
-  CloseOutlined
+  DeleteOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -75,7 +70,6 @@ const ZonaManager = ({
 
   const handleSubmit = async (values) => {
     try {
-      let nuevaZona;
       
       if (editingZona) {
         // Editar zona existente
@@ -137,7 +131,7 @@ const ZonaManager = ({
 
   const handleAssignZone = (zonaId) => {
     if (selectedElements.length === 0) {
-      message.warning('Selecciona elementos para asignar la zona');
+
       return;
     }
     

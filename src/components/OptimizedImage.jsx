@@ -30,15 +30,15 @@ const OptimizedImage = ({
   const observerRef = useRef(null);
 
   // Generar srcSet automáticamente si no se proporciona
-  const generatedSrcSet = useMemo(() => {
+
     if (srcSet) return srcSet;
     if (!src || typeof src !== 'string') return undefined;
     
     // Si la URL contiene parámetros de Supabase, generar srcSet con diferentes tamaños
     if (src.includes('supabase.co')) {
       const baseUrl = src.split('?')[0];
-      const params = new URLSearchParams(src.split('?')[1] || '');
-      const widthParam = params.get('width') || '800';
+      
+      
       
       // Generar diferentes tamaños
       const sizes = [400, 800, 1200, 1600];

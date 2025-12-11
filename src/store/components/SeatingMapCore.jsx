@@ -1,7 +1,7 @@
 import React from 'react';
 import { Stage, Layer, Rect, Circle, Text } from 'react-konva';
 
-const SeatingMapCore = ({ mapa, zonas = [], onClickSilla }) => {
+
   if (!mapa) return null;
 
   const getZonaNombre = (idOrObj) => {

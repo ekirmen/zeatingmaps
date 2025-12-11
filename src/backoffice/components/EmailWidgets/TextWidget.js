@@ -14,7 +14,7 @@ const TextWidget = ({ config = {}, onConfigChange, type = 'text' }) => {
 
   const getTitle = () => {
     switch (type) {
-      case 'titulo':
+
         return 'Título';
       case 'subtitulo':
         return 'Subtítulo';

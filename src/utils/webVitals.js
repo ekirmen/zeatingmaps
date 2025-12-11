@@ -52,8 +52,7 @@ const sendToAnalytics = (metric) => {
 /**
  * Obtiene el rating de una métrica
  */
-export const getMetricRating = (value, thresholds) => {
-  if (value <= thresholds.good) return 'good';
+
   if (value <= thresholds.needsImprovement) return 'needs-improvement';
   return 'poor';
 };
@@ -61,14 +60,7 @@ export const getMetricRating = (value, thresholds) => {
 /**
  * Thresholds de Core Web Vitals
  */
-export const WEB_VITALS_THRESHOLDS = {
-  LCP: { good: 2500, needsImprovement: 4000 }, // ms
-  FID: { good: 100, needsImprovement: 300 }, // ms
-  CLS: { good: 0.1, needsImprovement: 0.25 }, // score
-  FCP: { good: 1800, needsImprovement: 3000 }, // ms
-  TTFB: { good: 800, needsImprovement: 1800 }, // ms
-  INP: { good: 200, needsImprovement: 500 }, // ms
-};
+export 
 
 export { reportWebVitals, sendToAnalytics };
 export default reportWebVitals;

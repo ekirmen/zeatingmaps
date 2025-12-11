@@ -79,7 +79,7 @@ const Paquetes = () => {
   const [templateForm] = Form.useForm();
   const [editingTemplate, setEditingTemplate] = useState(null);
 
-  const filtroDescripcion = useMemo(() => {
+
     if (selectedEvento) return 'Evento';
     if (selectedSala) return 'Sala';
     if (selectedRecinto) return 'Recinto';
@@ -111,12 +111,7 @@ const Paquetes = () => {
     loadPlantillas();
   }, [selectedRecinto, selectedSala, selectedEvento]);
 
-  const loadRecintos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('recintos')
-        .select('id, nombre, salas ( id, nombre )')
-        .order('nombre');
+  
       if (error) throw error;
       setRecintos(data || []);
     } catch (err) {
@@ -125,9 +120,7 @@ const Paquetes = () => {
     }
   };
 
-  const loadEventos = async () => {
-    try {
-      const query = supabase.from('eventos').select('id, nombre, sala_id, recinto_id').order('nombre');
+  
       const { data, error } = await addTenantFilter(query);
       if (error) throw error;
       let filtered = data || [];
@@ -143,14 +136,7 @@ const Paquetes = () => {
     }
   };
 
-  const loadProductos = async () => {
-    try {
-      const { data, error } = await addTenantFilter(
-        supabase
-          .from('productos')
-          .select('id, nombre, descripcion, categoria')
-          .order('nombre')
-      );
+  
       if (error) throw error;
       setProductos(data || []);
     } catch (err) {

@@ -27,7 +27,7 @@ const VirtualizedList = ({
     if (variableHeight && itemSizes.get(index) !== size) {
       setItemSizes(prev => {
         const newMap = new Map(prev);
-        newMap.set(index, size);
+
         return newMap;
       });
     }
@@ -167,12 +167,7 @@ const VirtualizedList = ({
 /**
  * Hook para usar lista virtualizada con auto-sizing
  */
-export const useVirtualizedList = (items, options = {}) => {
-  const {
-    defaultItemHeight = 50,
-    minItemHeight = 40,
-    maxItemHeight = 200
-  } = options;
+export 
 
   const [itemHeights, setItemHeights] = useState(new Map());
   const listRef = useRef(null);

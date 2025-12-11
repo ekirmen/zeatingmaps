@@ -18,7 +18,7 @@ const WishlistButton = ({ event, size = 'default' }) => {
 
   const checkWishlistStatus = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+
       if (!user || !event) return;
 
       const { data, error } = await supabase
