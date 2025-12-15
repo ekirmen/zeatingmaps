@@ -6,9 +6,15 @@ import { supabase } from '../supabaseClient';
  * This helper uses the authenticated supabase client so it
  * respects row level security policies defined in the project.
  */
-export 
+
+const AutoWrapped_m2rqwa = (props) => {
+  export 
 
 
-  return data;
+    return data;
+  };
+
+
 };
 
+export default AutoWrapped_m2rqwa;
