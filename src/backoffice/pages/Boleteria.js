@@ -9,7 +9,6 @@ import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
 import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
 
-
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
 import { supabase } from '../../supabaseClient';
@@ -30,17 +29,20 @@ const Boleteria = () => {
     setCarrito,
     handleEventSelect,
     handleFunctionSelect,
-    setSelectedEvent
+    setSelectedEvent,
   } = useBoleteria();
 
   // Debug: Log del estado actual (solo en desarrollo, memoizado para evitar renders)
-  const debugState = useMemo(() => ({
-    selectedEvent: selectedEvent?.id,
-    selectedFuncion: selectedFuncion?.id,
-    eventosCount: eventos?.length,
-    funcionesCount: funciones?.length
-  }), [selectedEvent?.id, selectedFuncion?.id, eventos?.length, funciones?.length]);
-  
+  const debugState = useMemo(
+    () => ({
+      selectedEvent: selectedEvent?.id,
+      selectedFuncion: selectedFuncion?.id,
+      eventosCount: eventos?.length,
+      funcionesCount: funciones?.length,
+    }),
+    [selectedEvent?.id, selectedFuncion?.id, eventos?.length, funciones?.length]
+  );
+
   useEffect(() => {
     logger.log('Ã°Å¸Å½Â« [Boleteria] Estado actual:', debugState);
   }, [debugState]);
@@ -60,8 +62,8 @@ const Boleteria = () => {
     handleAddClient,
     handleUnifiedSearch,
     clearSearchResults,
-    handleLocatorSearch
-  } = useClientManagement((seats) => {
+    handleLocatorSearch,
+  } = useClientManagement(seats => {
     setCarrito(seats);
     setFoundSeats(seats);
   });
@@ -79,15 +81,22 @@ const Boleteria = () => {
   const subscriptionFuncionId = useRef(null);
   useEffect(() => {
     const currentFuncionId = selectedFuncion?.id;
-    
+
     // Solo suscribirse si cambiÂ³ la funciÂ³n
-    if (currentFuncionId && currentFuncionId !== subscriptionFuncionId.current && subscribeToFunction) {
+    if (
+      currentFuncionId &&
+      currentFuncionId !== subscriptionFuncionId.current &&
+      subscribeToFunction
+    ) {
       // Desuscribirse de la funciÂ³n anterior si existe
       if (subscriptionFuncionId.current && unsubscribe) {
-        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de funciÂ³n anterior:', subscriptionFuncionId.current);
+        logger.log(
+          'Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de funciÂ³n anterior:',
+          subscriptionFuncionId.current
+        );
         unsubscribe();
       }
-      
+
       logger.log('Ã°Å¸â€â€ [Boleteria] SuscribiÂ©ndose a funciÂ³n:', currentFuncionId);
       subscribeToFunction(currentFuncionId);
       subscriptionFuncionId.current = currentFuncionId;
@@ -95,7 +104,10 @@ const Boleteria = () => {
 
     return () => {
       if (unsubscribe && subscriptionFuncionId.current) {
-        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de funciÂ³n:', subscriptionFuncionId.current);
+        logger.log(
+          'Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de funciÂ³n:',
+          subscriptionFuncionId.current
+        );
         unsubscribe();
         subscriptionFuncionId.current = null;
       }
@@ -110,7 +122,7 @@ const Boleteria = () => {
   const [seatPayment, setSeatPayment] = useState(null);
   const [isSeatModalVisible, setIsSeatModalVisible] = useState(false);
   const [permanentLocks, setPermanentLocks] = useState([]);
-  
+
   // Estados para gestiÂ³n de precios y entradas
   const [entradas, setEntradas] = useState([]);
   const [selectedEntradaId, setSelectedEntradaId] = useState(null);
@@ -123,22 +135,23 @@ const Boleteria = () => {
   // useEffect para cargar entradas y opciones de precio (optimizado - solo cuando cambian funcion o evento)
   const prevFuncionId = useRef(null);
   const prevEventId = useRef(null);
-  
+
   useEffect(() => {
     const currentFuncionId = selectedFuncion?.id;
     const currentEventId = selectedEvent?.id;
-    
+
     // Solo cargar si cambiÂ³ la funciÂ³n o el evento
     if (!selectedFuncion || !selectedEvent) return;
-    if (currentFuncionId === prevFuncionId.current && currentEventId === prevEventId.current) return;
-    
+    if (currentFuncionId === prevFuncionId.current && currentEventId === prevEventId.current)
+      return;
+
     prevFuncionId.current = currentFuncionId;
     prevEventId.current = currentEventId;
-    
+
     const loadEntradasAndPrices = async () => {
       try {
         logger.log('Ã°Å¸Å½Â« [Boleteria] Cargando entradas y precios...');
-        
+
         // Cargar entradas del recinto
         const recintoId = selectedEvent.recinto || selectedEvent.recinto_id;
         if (!recintoId) {
@@ -161,9 +174,10 @@ const Boleteria = () => {
 
         // Procesar plantilla de precios
         if (selectedFuncion.plantilla?.detalles) {
-          const detalles = typeof selectedFuncion.plantilla.detalles === 'string'
-            ? JSON.parse(selectedFuncion.plantilla.detalles)
-            : selectedFuncion.plantilla.detalles;
+          const detalles =
+            typeof selectedFuncion.plantilla.detalles === 'string'
+              ? JSON.parse(selectedFuncion.plantilla.detalles)
+              : selectedFuncion.plantilla.detalles;
 
           // Agrupar precios por entradaId
           const pricesGrouped = {};
@@ -176,24 +190,32 @@ const Boleteria = () => {
                 entradaId,
                 precios: [],
                 minPrecio: Infinity,
-                maxPrecio: -Infinity
+                maxPrecio: -Infinity,
               };
             }
 
             pricesGrouped[entradaId].precios.push(detalle);
-            pricesGrouped[entradaId].minPrecio = Math.min(pricesGrouped[entradaId].minPrecio, detalle.precio || 0);
-            pricesGrouped[entradaId].maxPrecio = Math.max(pricesGrouped[entradaId].maxPrecio, detalle.precio || 0);
+            pricesGrouped[entradaId].minPrecio = Math.min(
+              pricesGrouped[entradaId].minPrecio,
+              detalle.precio || 0
+            );
+            pricesGrouped[entradaId].maxPrecio = Math.max(
+              pricesGrouped[entradaId].maxPrecio,
+              detalle.precio || 0
+            );
           });
 
           // Combinar con informaciÂ³n de entradas
           const priceOptionsArray = Object.values(pricesGrouped).map(group => {
             const entrada = entradasData?.find(e => e.id === group.entradaId);
-            const safeMinPrecio = Number.isFinite(group.minPrecio) && group.minPrecio !== Infinity
-              ? group.minPrecio
-              : Number(group.precios?.[0]?.precio ?? 0);
-            const safeMaxPrecio = Number.isFinite(group.maxPrecio) && group.maxPrecio !== -Infinity
-              ? group.maxPrecio
-              : safeMinPrecio;
+            const safeMinPrecio =
+              Number.isFinite(group.minPrecio) && group.minPrecio !== Infinity
+                ? group.minPrecio
+                : Number(group.precios?.[0]?.precio ?? 0);
+            const safeMaxPrecio =
+              Number.isFinite(group.maxPrecio) && group.maxPrecio !== -Infinity
+                ? group.maxPrecio
+                : safeMinPrecio;
 
             return {
               ...group,
@@ -201,7 +223,7 @@ const Boleteria = () => {
               maxPrecio: safeMaxPrecio,
               nombre: entrada?.nombre_entrada || 'Sin nombre',
               tipo: entrada?.tipo_producto || 'General',
-              entrada: entrada
+              entrada: entrada,
             };
           });
 
@@ -229,7 +251,9 @@ const Boleteria = () => {
       const funcionId = selectedFuncion.id;
       const { data, error } = await supabase
         .from('payment_transactions')
-        .select(`id, locator, status, amount, currency, user:profiles!user_id(login, nombre, apellido), seats`)
+        .select(
+          `id, locator, status, amount, currency, user:profiles!user_id(login, nombre, apellido), seats`
+        )
         .eq('funcion_id', funcionId)
         .in('status', ['completed', 'vendido', 'reservado', 'pagado', 'pending', 'reserved']);
 
@@ -237,30 +261,34 @@ const Boleteria = () => {
         throw error;
       }
 
-      const normalizeSeats = (payment) => {
+      const normalizeSeats = payment => {
         const rawSeats = Array.isArray(payment.seats)
           ? payment.seats
           : (() => {
-            if (!payment.seats) return [];
-            if (typeof payment.seats === 'string') {
-              try {
-                return JSON.parse(payment.seats);
-              } catch {
+              if (!payment.seats) return [];
+              if (typeof payment.seats === 'string') {
                 try {
-                  return JSON.parse(JSON.parse(payment.seats));
+                  return JSON.parse(payment.seats);
                 } catch {
-                  return [];
+                  try {
+                    return JSON.parse(JSON.parse(payment.seats));
+                  } catch {
+                    return [];
+                  }
                 }
               }
-            }
-            if (typeof payment.seats === 'object') {
-              return payment.seats.seats || [];
-            }
-            return [];
-          })();
+              if (typeof payment.seats === 'object') {
+                return payment.seats.seats || [];
+              }
+              return [];
+            })();
 
-        const buyerFullName = [payment.user?.nombre, payment.user?.apellido].filter(Boolean).join(' ').trim();
-        const buyerName = buyerFullName || payment.user?.full_name || payment.user?.login || 'Comprador sin nombre';
+        const buyerFullName = [payment.user?.nombre, payment.user?.apellido]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        const buyerName =
+          buyerFullName || payment.user?.full_name || payment.user?.login || 'Comprador sin nombre';
         const buyerEmail = payment.user?.login || '';
         const normalizedStatus = (() => {
           const status = (payment.status || '').toLowerCase();
@@ -271,7 +299,8 @@ const Boleteria = () => {
 
         return rawSeats.map((seat, index) => {
           const seatId = seat._id || seat.id || seat.sillaId || seat.seat_id || `seat-${index}`;
-          const zonaNombre = seat.nombreZona || seat.zona?.nombre || seat.zonaNombre || seat.zona || 'Zona';
+          const zonaNombre =
+            seat.nombreZona || seat.zona?.nombre || seat.zonaNombre || seat.zona || 'Zona';
           const nombre = seat.nombre || seat.name || seat.nombreAsiento || seat.seatLabel || seatId;
           const precio = Number(seat.precio ?? seat.price ?? payment.amount ?? 0);
 
@@ -290,7 +319,7 @@ const Boleteria = () => {
             buyerEmail,
             funcionId: funcionId,
             funcionFecha: selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion,
-            modoVenta: 'boleteria'
+            modoVenta: 'boleteria',
           };
         });
       };
@@ -340,7 +369,7 @@ const Boleteria = () => {
 
     let isMounted = true;
 
-    const parseSeatsCollection = (value) => {
+    const parseSeatsCollection = value => {
       if (!value) return [];
       if (Array.isArray(value)) return value;
 
@@ -400,7 +429,7 @@ const Boleteria = () => {
             precio: Number.isFinite(precio) ? precio : null,
             zona_id: zonaId,
             zona_nombre: zonaNombre,
-            source: 'payment'
+            source: 'payment',
           });
         });
       });
@@ -414,7 +443,16 @@ const Boleteria = () => {
           .from('payment_transactions')
           .select('id, seats, status, locator, user_id')
           .eq('funcion_id', funcionId)
-          .in('status', ['pagado', 'reservado', 'anulado', 'vendido', 'bloqueado', 'completed', 'pending', 'reserved']);
+          .in('status', [
+            'pagado',
+            'reservado',
+            'anulado',
+            'vendido',
+            'bloqueado',
+            'completed',
+            'pending',
+            'reserved',
+          ]);
 
         if (error) {
           throw error;
@@ -463,7 +501,7 @@ const Boleteria = () => {
   }, [selectedFuncion]);
 
   const handleBlockActionToggle = useCallback(
-    (action) => {
+    action => {
       const safeCart = Array.isArray(carrito) ? carrito : [];
       const hasSaleItems = safeCart.some(item => !item.lockAction);
 
@@ -500,13 +538,16 @@ const Boleteria = () => {
   );
 
   const toggleSeat = useCallback(
-    (seatData) => {
+    seatData => {
       setCarrito(prev => {
         const safePrev = Array.isArray(prev) ? prev : [];
         const seatId = seatData?._id || seatData?.sillaId || seatData?.id;
 
         if (!seatId) {
-          logger.warn('Å¡Â Ã¯Â¸Â [Boleteria] toggleSeat llamado sin identificador vÂ¡lido:', seatData);
+          logger.warn(
+            'Å¡Â Ã¯Â¸Â [Boleteria] toggleSeat llamado sin identificador vÂ¡lido:',
+            seatData
+          );
           return safePrev;
         }
 
@@ -532,7 +573,7 @@ const Boleteria = () => {
   );
 
   const handleSeatToggle = useCallback(
-    async (silla) => {
+    async silla => {
       const sillaId = silla._id || silla.id;
       if (!sillaId || !selectedFuncion) return;
 
@@ -541,7 +582,8 @@ const Boleteria = () => {
           await searchExistingSeats();
         }
 
-        const seatName = silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
+        const seatName =
+          silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
         const nombreZona = silla.nombreZona || silla.zona?.nombre || silla?.zona || 'Zona';
 
         await toggleSeat({
@@ -551,7 +593,7 @@ const Boleteria = () => {
           nombre: seatName,
           nombreZona,
           zona: nombreZona,
-          modoVenta: 'search'
+          modoVenta: 'search',
         });
 
         return;
@@ -581,13 +623,17 @@ const Boleteria = () => {
         }
 
         if (lockAction === 'unlock' && !blockedStates.includes(seatEstado)) {
-          message.warning('Solo puedes seleccionar asientos que ya estÂ©n bloqueados para desbloquearlos.');
+          message.warning(
+            'Solo puedes seleccionar asientos que ya estÂ©n bloqueados para desbloquearlos.'
+          );
           return;
         }
 
         setCarrito(prev => {
           const safePrev = Array.isArray(prev) ? prev.filter(item => item.lockAction) : [];
-          const existingIndex = safePrev.findIndex(item => (item._id || item.sillaId || item.id) === sillaId);
+          const existingIndex = safePrev.findIndex(
+            item => (item._id || item.sillaId || item.id) === sillaId
+          );
 
           // Si el asiento ya estÂ¡ seleccionado con la misma acciÂ³n, quitarlo
           if (existingIndex >= 0 && safePrev[existingIndex]?.lockAction === lockAction) {
@@ -595,16 +641,17 @@ const Boleteria = () => {
           }
 
           // Reemplazar acciÂ³n si estaba con la contraria
-          const withoutSeat = existingIndex >= 0
-            ? safePrev.filter((_, index) => index !== existingIndex)
-            : safePrev;
+          const withoutSeat =
+            existingIndex >= 0 ? safePrev.filter((_, index) => index !== existingIndex) : safePrev;
 
           if (safePrev.length !== (Array.isArray(prev) ? prev.length : 0)) {
             message.warning('Solo puedes tener asientos de bloqueo/desbloqueo en el carrito.');
           }
 
-          const seatName = silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
-          const nombreMesa = silla.nombreMesa || silla.mesa_nombre || silla.mesaNombre || silla.tableName || '';
+          const seatName =
+            silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
+          const nombreMesa =
+            silla.nombreMesa || silla.mesa_nombre || silla.mesaNombre || silla.tableName || '';
           const zonaId = silla.zona?.id || silla.zonaId || silla.zona?._id;
           const nombreZona = silla.zona?.nombre || silla?.zonaNombre || silla?.zona || 'Zona';
 
@@ -625,12 +672,16 @@ const Boleteria = () => {
               tipoPrecio: lockAction,
               descuentoNombre: '',
               modoVenta: 'lock',
-              estadoActual: seatEstado
-            }
+              estadoActual: seatEstado,
+            },
           ];
         });
 
-        message.success(lockAction === 'block' ? 'Asiento marcado para bloquear' : 'Asiento marcado para desbloquear');
+        message.success(
+          lockAction === 'block'
+            ? 'Asiento marcado para bloquear'
+            : 'Asiento marcado para desbloquear'
+        );
         return;
       }
 
@@ -645,15 +696,26 @@ const Boleteria = () => {
       // Los bloqueos se manejan por separado con botones especÂ­ficos
 
       if (seatEstado === 'bloqueado' || seatEstado === 'locked' || seatEstado === 'lock') {
-        message.warning('Este asiento estÂ¡ bloqueado. Activa el modo bloqueo/desbloqueo para liberarlo.');
+        message.warning(
+          'Este asiento estÂ¡ bloqueado. Activa el modo bloqueo/desbloqueo para liberarlo.'
+        );
         return;
       }
 
       // Resolver zona y precio
       const zona =
-        (Array.isArray(mapa?.zonas) ? mapa.zonas.find(z => Array.isArray(z.asientos) && z.asientos.some(a => a._id === sillaId)) : null) ||
-        (Array.isArray(mapa?.contenido) ? mapa.contenido.find(el => Array.isArray(el.sillas) && el.sillas.some(a => a._id === sillaId) && el.zona) : null) ||
-        silla.zona || {};
+        (Array.isArray(mapa?.zonas)
+          ? mapa.zonas.find(
+              z => Array.isArray(z.asientos) && z.asientos.some(a => a._id === sillaId)
+            )
+          : null) ||
+        (Array.isArray(mapa?.contenido)
+          ? mapa.contenido.find(
+              el => Array.isArray(el.sillas) && el.sillas.some(a => a._id === sillaId) && el.zona
+            )
+          : null) ||
+        silla.zona ||
+        {};
       const zonaId = zona?.id || silla.zonaId || zona?._id;
       const nombreZona = zona?.nombre || silla?.zona?.nombre || 'Zona';
 
@@ -666,31 +728,38 @@ const Boleteria = () => {
           detalle = [];
         }
       }
-      
+
       // Buscar el precio basado en la zona Y el tipo de entrada seleccionado
       const detalleZona = Array.isArray(detalle)
-        ? detalle.find(d => 
-            (d.zonaId || d.zona?.id || d.zona) === zonaId && 
-            (d.entradaId || d.productoId) === selectedEntradaId
+        ? detalle.find(
+            d =>
+              (d.zonaId || d.zona?.id || d.zona) === zonaId &&
+              (d.entradaId || d.productoId) === selectedEntradaId
           )
         : null;
-      
+
       // Si no se encuentra con el tipo de entrada seleccionado, usar el primer precio de la zona
       const detalleZonaFallback = Array.isArray(detalle)
         ? detalle.find(d => (d.zonaId || d.zona?.id || d.zona) === zonaId)
         : null;
-      
+
       const detalleFinal = detalleZona || detalleZonaFallback;
       const precio = Number(detalleFinal?.precio) || 0;
 
       // Obtener informaciÂ³n del tipo de entrada seleccionado
-      const entradaSeleccionada = priceOptions?.find(option => option.entradaId === selectedEntradaId);
-      const tipoPrecio = entradaSeleccionada?.nombre || detalleFinal?.tipoEntrada || detalleFinal?.tipo || 'general';
+      const entradaSeleccionada = priceOptions?.find(
+        option => option.entradaId === selectedEntradaId
+      );
+      const tipoPrecio =
+        entradaSeleccionada?.nombre || detalleFinal?.tipoEntrada || detalleFinal?.tipo || 'general';
       const descuentoNombre = detalleFinal?.descuentoNombre || detalleFinal?.descuento || '';
-      const seatName = silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
-      const nombreMesa = silla.nombreMesa || silla.mesa_nombre || silla.mesaNombre || silla.tableName || '';
+      const seatName =
+        silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
+      const nombreMesa =
+        silla.nombreMesa || silla.mesa_nombre || silla.mesaNombre || silla.tableName || '';
       const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
-      const funcionFecha = selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion || null;
+      const funcionFecha =
+        selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion || null;
 
       const cartItem = {
         _id: sillaId,
@@ -709,12 +778,12 @@ const Boleteria = () => {
         entradaId: selectedEntradaId,
         entradaNombre: entradaSeleccionada?.nombre || 'General',
         timestamp: Date.now(),
-        modoVenta: 'boleteria'
+        modoVenta: 'boleteria',
       };
 
       // Verificar si el asiento ya estÂ¡ en el carrito
       const exists = carrito.some(item => item.sillaId === sillaId);
-      
+
       if (exists) {
         // Deseleccionar: quitar del carrito y desbloquear en BD
         await toggleSeat(cartItem);
@@ -747,207 +816,255 @@ const Boleteria = () => {
       searchAllSeats,
       searchExistingSeats,
       searchDataLoaded,
-      searchAllSeatsLoading
+      searchAllSeatsLoading,
     ]
   );
 
   const allTicketsPaid = carrito.length > 0 && carrito.every(ticket => ticket.pagado);
 
-  const leftMenuProps = useMemo(() => ({
-    eventos,
-    selectedEvent,
-    onEventSelect: handleEventSelect,
-    funciones,
-    selectedFuncion,
-    onFunctionSelect: handleFunctionSelect,
-    onShowFunctions: () => setIsFunctionsModalVisible(true),
-    selectedPlantilla,
-    setSelectedPlantilla,
-    selectedClient,
-    setSelectedClient,
-    onShowUserSearch: () => setIsSearchModalVisible(true),
-    onShowPaymentModal: () => setIsPaymentModalVisible(true),
-    selectedAffiliate,
-    setSelectedAffiliate,
-    clientAbonos,
-    setClientAbonos,
-    carrito,
-    setCarrito,
-    foundSeats,
-    setFoundSeats,
-    searchResults,
-    paymentResults,
-    searchLoading,
-    handleAddClient,
-    handleUnifiedSearch,
-    clearSearchResults,
-    handleLocatorSearch,
-    onShowSeatModal: () => setIsSeatModalVisible(true),
-    seatPayment,
-    setSeatPayment,
-    setSelectedEvent
-  }), [
-    selectedClient, 
-    setCarrito, 
-    setSelectedClient, 
-    handleFunctionSelect, 
-    setSelectedEvent,
-    handleEventSelect,
-    selectedEvent,
-    eventos,
-    funciones,
-    selectedFuncion,
-    selectedPlantilla,
-    setSelectedPlantilla,
-    carrito,
-    foundSeats,
-    setFoundSeats,
-    searchResults,
-    paymentResults,
-    searchLoading,
-    handleAddClient,
-    handleUnifiedSearch,
-    clearSearchResults,
-    handleLocatorSearch,
-    seatPayment,
-    setSeatPayment,
-    selectedAffiliate,
-    setSelectedAffiliate,
-    clientAbonos,
-    setClientAbonos
-  ]);
+  const leftMenuProps = useMemo(
+    () => ({
+      eventos,
+      selectedEvent,
+      onEventSelect: handleEventSelect,
+      funciones,
+      selectedFuncion,
+      onFunctionSelect: handleFunctionSelect,
+      onShowFunctions: () => setIsFunctionsModalVisible(true),
+      selectedPlantilla,
+      setSelectedPlantilla,
+      selectedClient,
+      setSelectedClient,
+      onShowUserSearch: () => setIsSearchModalVisible(true),
+      onShowPaymentModal: () => setIsPaymentModalVisible(true),
+      selectedAffiliate,
+      setSelectedAffiliate,
+      clientAbonos,
+      setClientAbonos,
+      carrito,
+      setCarrito,
+      foundSeats,
+      setFoundSeats,
+      searchResults,
+      paymentResults,
+      searchLoading,
+      handleAddClient,
+      handleUnifiedSearch,
+      clearSearchResults,
+      handleLocatorSearch,
+      onShowSeatModal: () => setIsSeatModalVisible(true),
+      seatPayment,
+      setSeatPayment,
+      setSelectedEvent,
+    }),
+    [
+      selectedClient,
+      setCarrito,
+      setSelectedClient,
+      handleFunctionSelect,
+      setSelectedEvent,
+      handleEventSelect,
+      selectedEvent,
+      eventos,
+      funciones,
+      selectedFuncion,
+      selectedPlantilla,
+      setSelectedPlantilla,
+      carrito,
+      foundSeats,
+      setFoundSeats,
+      searchResults,
+      paymentResults,
+      searchLoading,
+      handleAddClient,
+      handleUnifiedSearch,
+      clearSearchResults,
+      handleLocatorSearch,
+      seatPayment,
+      setSeatPayment,
+      selectedAffiliate,
+      setSelectedAffiliate,
+      clientAbonos,
+      setClientAbonos,
+    ]
+  );
 
-
-  const cartProps = useMemo(() => ({
-    carrito,
-    setCarrito,
-    selectedClient,
-    onPaymentClick: () => setIsPaymentModalVisible(true),
-    onShowPaymentModal: () => setIsPaymentModalVisible(true),
-    selectedAffiliate,
-    setSelectedAffiliate,
-    clientAbonos,
-    setClientAbonos,
-    onShowUserSearch: () => setIsSearchModalVisible(true),
-    onShowSeatModal: () => setIsSeatModalVisible(true),
-    seatPayment,
-    setSeatPayment,
-    blockMode,
-    onApplyLockActions: async () => {
-      const lockItems = (Array.isArray(carrito) ? carrito : []).filter(item => item.lockAction);
-      if (!lockItems.length) {
-        message.warning('Selecciona asientos para bloquear o desbloquear.');
-        return;
-      }
-
-      if (!selectedFuncion?.id) {
-        message.warning('Selecciona una funciÂ³n para aplicar los cambios.');
-        return;
-      }
-
-      let blockedCount = 0;
-      let unlockedCount = 0;
-
-      for (const item of lockItems) {
-        const seatId = item._id || item.sillaId || item.id;
-        if (!seatId) continue;
-
-        try {
-          if (item.lockAction === 'block') {
-            const locked = await lockSeat(seatId, 'locked', selectedFuncion.id);
-            if (locked) blockedCount += 1;
-          } else {
-            const unlocked = await unlockSeat(seatId, selectedFuncion.id, {
-              allowOverrideSession: true,
-              allowForceUnlock: true
-            });
-            if (unlocked) unlockedCount += 1;
-          }
-        } catch (error) {
-          logger.error('ÂÅ’ [Boleteria] Error aplicando bloqueo/desbloqueo:', error);
+  const cartProps = useMemo(
+    () => ({
+      carrito,
+      setCarrito,
+      selectedClient,
+      onPaymentClick: () => setIsPaymentModalVisible(true),
+      onShowPaymentModal: () => setIsPaymentModalVisible(true),
+      selectedAffiliate,
+      setSelectedAffiliate,
+      clientAbonos,
+      setClientAbonos,
+      onShowUserSearch: () => setIsSearchModalVisible(true),
+      onShowSeatModal: () => setIsSeatModalVisible(true),
+      seatPayment,
+      setSeatPayment,
+      blockMode,
+      onApplyLockActions: async () => {
+        const lockItems = (Array.isArray(carrito) ? carrito : []).filter(item => item.lockAction);
+        if (!lockItems.length) {
+          message.warning('Selecciona asientos para bloquear o desbloquear.');
+          return;
         }
-      }
 
-      setCarrito(prev => (Array.isArray(prev) ? prev.filter(item => !item.lockAction) : []));
-      setBlockMode(false);
-      setBlockAction(null);
+        if (!selectedFuncion?.id) {
+          message.warning('Selecciona una funciÂ³n para aplicar los cambios.');
+          return;
+        }
 
-      if (blockedCount || unlockedCount) {
-        message.success(`Bloqueados: ${blockedCount}, Desbloqueados: ${unlockedCount}`);
-      } else {
-        message.warning('No se aplicaron cambios de bloqueo.');
-      }
-    }
-  }), [
-    carrito,
-    setCarrito,
-    selectedClient,
-    selectedAffiliate,
-    setSelectedAffiliate,
-    clientAbonos,
-    setClientAbonos,
-    seatPayment,
-    setSeatPayment,
-    blockMode,
-    lockSeat,
-    unlockSeat,
-    selectedFuncion?.id
-  ]);
+        let blockedCount = 0;
+        let unlockedCount = 0;
 
-  const clientModalsProps = useMemo(() => ({
-    isSearchModalVisible,
-    onSearchCancel: () => setIsSearchModalVisible(false),
-    searchResults,
-    paymentResults,
-    searchLoading,
-    onAddClient: handleAddClient,
-    handleUnifiedSearch,
-    clearSearchResults,
-    onClientSelect: (client) => {
-      setSelectedClient(client);
-      setIsSearchModalVisible(false);
-    },
-    selectedClient,
-    setSelectedClient,
-    showCreateUser: false,
-    setShowCreateUser: () => {},
-    newUserData: {},
-    setNewUserData: () => {},
-    userSearchValue: '',
-    setUserSearchValue: () => {},
-    userSearchResults: [],
-    setUserSearchResults: () => {},
-    userSearchLoading: false,
-    setUserSearchLoading: () => {}
-  }), [isSearchModalVisible, setIsSearchModalVisible, searchResults, paymentResults, searchLoading, handleAddClient, handleUnifiedSearch, clearSearchResults, handleLocatorSearch, selectedClient, setSelectedClient]);
+        for (const item of lockItems) {
+          const seatId = item._id || item.sillaId || item.id;
+          if (!seatId) continue;
 
-  const functionModalProps = useMemo(() => ({
-    isVisible: isFunctionsModalVisible,
-    onClose: () => setIsFunctionsModalVisible(false),
-    funciones,
-    selectedFuncion,
-    onFunctionSelect: handleFunctionSelect,
-    selectedEvent
-  }), [isFunctionsModalVisible, setIsFunctionsModalVisible, funciones, selectedFuncion, handleFunctionSelect, selectedEvent]);
+          try {
+            if (item.lockAction === 'block') {
+              const locked = await lockSeat(seatId, 'locked', selectedFuncion.id);
+              if (locked) blockedCount += 1;
+            } else {
+              const unlocked = await unlockSeat(seatId, selectedFuncion.id, {
+                allowOverrideSession: true,
+                allowForceUnlock: true,
+              });
+              if (unlocked) unlockedCount += 1;
+            }
+          } catch (error) {
+            logger.error('ÂÅ’ [Boleteria] Error aplicando bloqueo/desbloqueo:', error);
+          }
+        }
 
-  const paymentModalProps = useMemo(() => ({
-    open: isPaymentModalVisible,
-    onCancel: () => setIsPaymentModalVisible(false),
-    carrito,
-    setCarrito,
-    selectedClient,
-    setSelectedClient,
-    selectedAffiliate,
-    setSelectedAffiliate,
-    clientAbonos,
-    setClientAbonos,
-    onShowUserSearch: () => setIsSearchModalVisible(true),
-    onShowSeatModal: () => setIsSeatModalVisible(true),
-    seatPayment,
-    setSeatPayment,
-    selectedFuncion,
-    selectedEvent
-  }), [isPaymentModalVisible, setIsPaymentModalVisible, carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment, selectedFuncion, selectedEvent]);
+        setCarrito(prev => (Array.isArray(prev) ? prev.filter(item => !item.lockAction) : []));
+        setBlockMode(false);
+        setBlockAction(null);
+
+        if (blockedCount || unlockedCount) {
+          message.success(`Bloqueados: ${blockedCount}, Desbloqueados: ${unlockedCount}`);
+        } else {
+          message.warning('No se aplicaron cambios de bloqueo.');
+        }
+      },
+    }),
+    [
+      carrito,
+      setCarrito,
+      selectedClient,
+      selectedAffiliate,
+      setSelectedAffiliate,
+      clientAbonos,
+      setClientAbonos,
+      seatPayment,
+      setSeatPayment,
+      blockMode,
+      lockSeat,
+      unlockSeat,
+      selectedFuncion?.id,
+    ]
+  );
+
+  const clientModalsProps = useMemo(
+    () => ({
+      isSearchModalVisible,
+      onSearchCancel: () => setIsSearchModalVisible(false),
+      searchResults,
+      paymentResults,
+      searchLoading,
+      onAddClient: handleAddClient,
+      handleUnifiedSearch,
+      clearSearchResults,
+      onClientSelect: client => {
+        setSelectedClient(client);
+        setIsSearchModalVisible(false);
+      },
+      selectedClient,
+      setSelectedClient,
+      showCreateUser: false,
+      setShowCreateUser: () => {},
+      newUserData: {},
+      setNewUserData: () => {},
+      userSearchValue: '',
+      setUserSearchValue: () => {},
+      userSearchResults: [],
+      setUserSearchResults: () => {},
+      userSearchLoading: false,
+      setUserSearchLoading: () => {},
+    }),
+    [
+      isSearchModalVisible,
+      setIsSearchModalVisible,
+      searchResults,
+      paymentResults,
+      searchLoading,
+      handleAddClient,
+      handleUnifiedSearch,
+      clearSearchResults,
+      handleLocatorSearch,
+      selectedClient,
+      setSelectedClient,
+    ]
+  );
+
+  const functionModalProps = useMemo(
+    () => ({
+      isVisible: isFunctionsModalVisible,
+      onClose: () => setIsFunctionsModalVisible(false),
+      funciones,
+      selectedFuncion,
+      onFunctionSelect: handleFunctionSelect,
+      selectedEvent,
+    }),
+    [
+      isFunctionsModalVisible,
+      setIsFunctionsModalVisible,
+      funciones,
+      selectedFuncion,
+      handleFunctionSelect,
+      selectedEvent,
+    ]
+  );
+
+  const paymentModalProps = useMemo(
+    () => ({
+      open: isPaymentModalVisible,
+      onCancel: () => setIsPaymentModalVisible(false),
+      carrito,
+      setCarrito,
+      selectedClient,
+      setSelectedClient,
+      selectedAffiliate,
+      setSelectedAffiliate,
+      clientAbonos,
+      setClientAbonos,
+      onShowUserSearch: () => setIsSearchModalVisible(true),
+      onShowSeatModal: () => setIsSeatModalVisible(true),
+      seatPayment,
+      setSeatPayment,
+      selectedFuncion,
+      selectedEvent,
+    }),
+    [
+      isPaymentModalVisible,
+      setIsPaymentModalVisible,
+      carrito,
+      setCarrito,
+      selectedClient,
+      setSelectedClient,
+      selectedAffiliate,
+      setSelectedAffiliate,
+      clientAbonos,
+      setClientAbonos,
+      seatPayment,
+      setSeatPayment,
+      selectedFuncion,
+      selectedEvent,
+    ]
+  );
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -964,10 +1081,7 @@ const Boleteria = () => {
       <>
         {/* Mobile: BotÂ³n para abrir sidebar */}
         <div className="md:hidden fixed top-2 left-2 z-50">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="bg-white p-2 rounded shadow-lg"
-          >
+          <button onClick={() => setSidebarOpen(true)} className="bg-white p-2 rounded shadow-lg">
             <AiOutlineMenu className="text-xl" />
           </button>
         </div>
@@ -983,7 +1097,7 @@ const Boleteria = () => {
         >
           <div className="p-2 border-b border-gray-200 mb-4">
             <button
-              onClick={() => window.location.href = '/dashboard'}
+              onClick={() => (window.location.href = '/dashboard')}
               className="flex items-center gap-2 text-sm font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 shadow-sm hover:bg-purple-100 transition"
             >
               <AiOutlineLeft className="text-base" />
@@ -997,7 +1111,7 @@ const Boleteria = () => {
         <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
           <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-white">
             <button
-              onClick={() => window.location.href = '/dashboard'}
+              onClick={() => (window.location.href = '/dashboard')}
               className="flex items-center gap-2 text-sm font-semibold text-purple-700 bg-white border border-purple-200 rounded-lg px-3 py-2 shadow-sm hover:bg-purple-50 transition"
             >
               <AiOutlineLeft className="text-base" />
@@ -1021,10 +1135,10 @@ const Boleteria = () => {
               <div className="flex items-center gap-2 flex-1">
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-500">Evento:</span>
-                  <select 
+                  <select
                     className="text-xs border border-gray-300 rounded px-1 py-0.5 min-w-0 flex-1"
                     value={selectedEvent?.id || ''}
-                    onChange={(e) => {
+                    onChange={e => {
                       const eventId = e.target.value;
                       if (eventId && handleEventSelect) {
                         handleEventSelect(eventId);
@@ -1041,10 +1155,10 @@ const Boleteria = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-500">FunciÂ³n:</span>
-                  <select 
+                  <select
                     className="text-xs border border-gray-300 rounded px-1 py-0.5 min-w-0 flex-1"
                     value={selectedFuncion?.id || ''}
-                    onChange={(e) => {
+                    onChange={e => {
                       const functionId = e.target.value;
                       if (functionId && handleFunctionSelect) {
                         handleFunctionSelect(functionId);
@@ -1053,11 +1167,17 @@ const Boleteria = () => {
                     disabled={!selectedEvent}
                   >
                     <option value="">Selecciona funciÂ³n</option>
-                    {funciones?.filter(func => func.evento_id === selectedEvent?.id).map(funcion => (
-                      <option key={funcion.id} value={funcion.id}>
-                        {new Date(funcion.fecha_celebracion).toLocaleDateString()} {new Date(funcion.fecha_celebracion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                      </option>
-                    ))}
+                    {funciones
+                      ?.filter(func => func.evento_id === selectedEvent?.id)
+                      .map(funcion => (
+                        <option key={funcion.id} value={funcion.id}>
+                          {new Date(funcion.fecha_celebracion).toLocaleDateString()}{' '}
+                          {new Date(funcion.fecha_celebracion).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>
@@ -1068,11 +1188,11 @@ const Boleteria = () => {
           </div>
 
           {/* NavegaciÂ³n ultra compacta con botones estilo tabs */}
-        <div className="bg-white border-b border-gray-200 sticky top-14 md:static z-10 shadow-sm md:shadow-none">
+          <div className="bg-white border-b border-gray-200 sticky top-14 md:static z-10 shadow-sm md:shadow-none">
             <div className="flex items-center justify-between px-2 py-1">
               {/* BotÂ³n para abrir panel lateral */}
               <div className="flex items-center">
-                <button 
+                <button
                   className="p-1 hover:bg-gray-100 rounded transition-colors"
                   title="Abrir panel"
                 >
@@ -1094,17 +1214,23 @@ const Boleteria = () => {
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
                   Å¡â„¢Ã¯Â¸Â Otros
                 </button>
-        </div>
+              </div>
 
               {/* Botones secundarios */}
               <div className="flex items-center space-x-1">
                 <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="Cliente">
                   <i className="text-sm">Ã°Å¸â€˜Â¤</i>
                 </button>
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="FidelizaciÂ³n">
+                <button
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  title="FidelizaciÂ³n"
+                >
                   <i className="text-sm">Ã°Å¸â€™Â³</i>
                 </button>
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="InformaciÂ³n">
+                <button
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  title="InformaciÂ³n"
+                >
                   <i className="text-sm">â€žÂ¹Ã¯Â¸Â</i>
                 </button>
               </div>
@@ -1112,55 +1238,60 @@ const Boleteria = () => {
           </div>
 
           {/* SecciÂ³n ultra compacta de precios dinÂ¡micos con selecciÂ³n de entrada */}
-                  <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
-                    <div className="flex items-center gap-3 px-1 py-1">
-                      <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={searchAllSeats}
-                          onChange={(e) => setSearchAllSeats(e.target.checked)}
-                        />
-                        Buscar
-                      </label>
-                      <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
-                        <span className="text-[11px] text-gray-600">Bloqueo:</span>
-                        <button
-                          type="button"
-                          onClick={() => handleBlockActionToggle('block')}
-                          className={`px-2 py-1 rounded border text-[11px] font-semibold ${
-                            blockMode && blockAction === 'block'
-                              ? 'bg-red-100 border-red-400 text-red-700'
-                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          Bloquear
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleBlockActionToggle('unlock')}
-                          className={`px-2 py-1 rounded border text-[11px] font-semibold ${
-                            blockMode && blockAction === 'unlock'
-                              ? 'bg-green-100 border-green-400 text-green-700'
-                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          Desbloquear
-                        </button>
-                      </div>
-                      {searchAllSeatsLoading && (
-                        <span className="text-[11px] text-blue-600">Buscando asientos vendidos/reservados...</span>
-                      )}
-                    </div>
-                    <div className="flex space-x-2 overflow-x-auto">
-                      {priceOptions && priceOptions.length > 0 ? (
-                        priceOptions.map((option, index) => {
+          <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
+            <div className="flex items-center gap-3 px-1 py-1">
+              <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={searchAllSeats}
+                  onChange={e => setSearchAllSeats(e.target.checked)}
+                />
+                Buscar
+              </label>
+              <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                <span className="text-[11px] text-gray-600">Bloqueo:</span>
+                <button
+                  type="button"
+                  onClick={() => handleBlockActionToggle('block')}
+                  className={`px-2 py-1 rounded border text-[11px] font-semibold ${
+                    blockMode && blockAction === 'block'
+                      ? 'bg-red-100 border-red-400 text-red-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Bloquear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBlockActionToggle('unlock')}
+                  className={`px-2 py-1 rounded border text-[11px] font-semibold ${
+                    blockMode && blockAction === 'unlock'
+                      ? 'bg-green-100 border-green-400 text-green-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Desbloquear
+                </button>
+              </div>
+              {searchAllSeatsLoading && (
+                <span className="text-[11px] text-blue-600">
+                  Buscando asientos vendidos/reservados...
+                </span>
+              )}
+            </div>
+            <div className="flex space-x-2 overflow-x-auto">
+              {priceOptions && priceOptions.length > 0 ? (
+                priceOptions.map((option, index) => {
                   const isActive = selectedEntradaId === option.entradaId;
                   const minPrecio = Number.isFinite(option.minPrecio) ? option.minPrecio : 0;
-                  const maxPrecio = Number.isFinite(option.maxPrecio) ? option.maxPrecio : minPrecio;
-                  const precioDisplay = minPrecio === maxPrecio
-                    ? `$${minPrecio.toFixed(2)}`
-                    : `$${minPrecio.toFixed(2)}-$${maxPrecio.toFixed(2)}`;
-                  
+                  const maxPrecio = Number.isFinite(option.maxPrecio)
+                    ? option.maxPrecio
+                    : minPrecio;
+                  const precioDisplay =
+                    minPrecio === maxPrecio
+                      ? `$${minPrecio.toFixed(2)}`
+                      : `$${minPrecio.toFixed(2)}-$${maxPrecio.toFixed(2)}`;
+
                   // Determinar color segÂºn tipo de producto
                   let bgColor = 'bg-gray-200 text-gray-700';
                   if (isActive) {
@@ -1170,37 +1301,33 @@ const Boleteria = () => {
                   } else if (option.tipo === 'Reducido') {
                     bgColor = 'bg-blue-200 text-blue-800';
                   }
-                  
+
                   return (
-                    <button 
+                    <button
                       key={option.entradaId}
                       onClick={() => {
                         logger.log('Ã°Å¸Å½Â« Entrada seleccionada:', option);
                         setSelectedEntradaId(option.entradaId);
                       }}
                       className={`flex-shrink-0 px-2 py-1 rounded font-medium text-xs ${
-                        isActive 
-                          ? 'bg-purple-600 text-white' 
-                          : bgColor + ' hover:opacity-80'
+                        isActive ? 'bg-purple-600 text-white' : bgColor + ' hover:opacity-80'
                       } transition-colors`}
                       title={`${option.nombre} - ${option.tipo}`}
                     >
-                      <div className="text-xs font-medium">
-                        {option.nombre.toUpperCase()}
-                      </div>
-                      <div className="text-xs opacity-90">
-                        {precioDisplay}
-                      </div>
+                      <div className="text-xs font-medium">{option.nombre.toUpperCase()}</div>
+                      <div className="text-xs opacity-90">{precioDisplay}</div>
                     </button>
                   );
                 })
               ) : (
                 <div className="text-xs text-gray-500 py-1">
-                  {selectedFuncion ? 'Cargando precios...' : 'Selecciona una funciÂ³n para ver precios'}
+                  {selectedFuncion
+                    ? 'Cargando precios...'
+                    : 'Selecciona una funciÂ³n para ver precios'}
                 </div>
               )}
-                </div>
-              </div>
+            </div>
+          </div>
 
           {/* Mapa de asientos ultra compacto */}
           <div className="flex-1 bg-white overflow-hidden relative">
@@ -1232,8 +1359,14 @@ const Boleteria = () => {
 
                 {carrito?.length > 0 && (
                   <div className="md:hidden sticky bottom-4 left-0 right-0 mx-2 mt-3 rounded-lg bg-purple-600 text-white text-sm font-semibold px-3 py-2 shadow-lg flex items-center justify-between">
-                    <span>{carrito.length === 1 ? 'Asiento seleccionado' : `${carrito.length} asientos seleccionados`}</span>
-                    <span className="text-xs opacity-90">ContinÂºa la compra en el carrito Å¾Å“</span>
+                    <span>
+                      {carrito.length === 1
+                        ? 'Asiento seleccionado'
+                        : `${carrito.length} asientos seleccionados`}
+                    </span>
+                    <span className="text-xs opacity-90">
+                      ContinÂºa la compra en el carrito Å¾Å“
+                    </span>
                   </div>
                 )}
               </div>
@@ -1300,11 +1433,21 @@ const Boleteria = () => {
       >
         {seatPayment && (
           <div>
-            <p><strong>Asiento:</strong> {seatPayment.sillaId}</p>
-            <p><strong>Estado:</strong> {seatPayment.estado}</p>
-            <p><strong>Precio:</strong> ${seatPayment.precio}</p>
-            <p><strong>Cliente:</strong> {seatPayment.cliente}</p>
-            <p><strong>Fecha de Pago:</strong> {new Date(seatPayment.fecha_pago).toLocaleString()}</p>
+            <p>
+              <strong>Asiento:</strong> {seatPayment.sillaId}
+            </p>
+            <p>
+              <strong>Estado:</strong> {seatPayment.estado}
+            </p>
+            <p>
+              <strong>Precio:</strong> ${seatPayment.precio}
+            </p>
+            <p>
+              <strong>Cliente:</strong> {seatPayment.cliente}
+            </p>
+            <p>
+              <strong>Fecha de Pago:</strong> {new Date(seatPayment.fecha_pago).toLocaleString()}
+            </p>
           </div>
         )}
       </Modal>
@@ -1313,5 +1456,3 @@ const Boleteria = () => {
 };
 
 export default Boleteria;
-
-

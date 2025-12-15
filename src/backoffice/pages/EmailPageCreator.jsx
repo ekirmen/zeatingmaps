@@ -19,11 +19,10 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
     tipo: 'newsletter',
     asunto: '',
     contenido: '',
-    configuracion: {}
+    configuracion: {},
   });
 
   useEffect(() => {
-
     return () => setSidebarCollapsed && setSidebarCollapsed(false);
   }, [setSidebarCollapsed]);
 
@@ -62,11 +61,13 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
     try {
       const { data, error } = await supabase
         .from('email_pages')
-        .insert([{
-          ...formData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
+        .insert([
+          {
+            ...formData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ])
         .select()
         .single();
 
@@ -82,7 +83,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
           tipo: 'newsletter',
           asunto: '',
           contenido: '',
-          configuracion: {}
+          configuracion: {},
         });
         loadEmailPages();
       }
@@ -103,7 +104,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
         .from('email_pages')
         .update({
           ...formData,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', editingPage.id);
 
@@ -119,7 +120,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
           tipo: 'newsletter',
           asunto: '',
           contenido: '',
-          configuracion: {}
+          configuracion: {},
         });
         loadEmailPages();
       }
@@ -129,16 +130,13 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
     }
   };
 
-  const handleDeletePage = async (pageId) => {
+  const handleDeletePage = async pageId => {
     if (!window.confirm('¿Estás seguro de que quieres eliminar esta página de email?')) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('email_pages')
-        .delete()
-        .eq('id', pageId);
+      const { error } = await supabase.from('email_pages').delete().eq('id', pageId);
 
       if (error) {
         console.error('Error deleting email page:', error);
@@ -153,7 +151,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
     }
   };
 
-  const handleEditPage = (page) => {
+  const handleEditPage = page => {
     setEditingPage(page);
     setFormData({
       nombre: page.nombre || '',
@@ -161,20 +159,21 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
       tipo: page.tipo || 'newsletter',
       asunto: page.asunto || '',
       contenido: page.contenido || '',
-      configuracion: page.configuracion || {}
+      configuracion: page.configuracion || {},
     });
     setShowCreateModal(true);
   };
 
-  const handleSendTest = async (page) => {
+  const handleSendTest = async page => {
     // Aquí implementarías la lógica para enviar un email de prueba
     toast.success('Email de prueba enviado');
   };
 
-  const filteredPages = emailPages.filter(page =>
-    page.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    page.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    page.tipo?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPages = emailPages.filter(
+    page =>
+      page.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      page.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      page.tipo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const indexOfLast = currentPage * itemsPerPage;
@@ -206,7 +205,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
               tipo: 'newsletter',
               asunto: '',
               contenido: '',
-              configuracion: {}
+              configuracion: {},
             });
             setShowCreateModal(true);
           }}
@@ -223,7 +222,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
           type="text"
           placeholder="Buscar páginas de email..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
@@ -255,7 +254,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {currentPages.map((page) => (
+              {currentPages.map(page => (
                 <tr key={page.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -309,7 +308,8 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
       {/* Pagination */}
       <div className="mt-6 flex justify-between items-center">
         <div className="text-sm text-gray-700">
-          Mostrando {indexOfFirst + 1} a {Math.min(indexOfLast, filteredPages.length)} de {filteredPages.length} páginas
+          Mostrando {indexOfFirst + 1} a {Math.min(indexOfLast, filteredPages.length)} de{' '}
+          {filteredPages.length} páginas
         </div>
         <div className="flex gap-2">
           <button
@@ -347,7 +347,12 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -357,13 +362,11 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
               <div className="grid grid-cols-1 gap-6">
                 {/* Nombre */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nombre *</label>
                   <input
                     type="text"
                     value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    onChange={e => setFormData({ ...formData, nombre: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Nombre de la página de email"
                   />
@@ -376,7 +379,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
                   </label>
                   <textarea
                     value={formData.descripcion}
-                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                    onChange={e => setFormData({ ...formData, descripcion: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={3}
                     placeholder="Descripción de la página"
@@ -385,12 +388,10 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
 
                 {/* Tipo */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo *</label>
                   <select
                     value={formData.tipo}
-                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                    onChange={e => setFormData({ ...formData, tipo: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="newsletter">Newsletter</option>
@@ -409,7 +410,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
                   <input
                     type="text"
                     value={formData.asunto}
-                    onChange={(e) => setFormData({ ...formData, asunto: e.target.value })}
+                    onChange={e => setFormData({ ...formData, asunto: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Asunto del correo electrónico"
                   />
@@ -422,7 +423,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
                   </label>
                   <textarea
                     value={formData.contenido}
-                    onChange={(e) => setFormData({ ...formData, contenido: e.target.value })}
+                    onChange={e => setFormData({ ...formData, contenido: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                     rows={10}
                     placeholder="<html><body><h1>Tu contenido HTML aquí</h1></body></html>"
@@ -462,4 +463,4 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
   );
 };
 
-export default EmailPageCreator; 
+export default EmailPageCreator;

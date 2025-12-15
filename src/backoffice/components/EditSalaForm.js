@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 
 const EditSalaForm = ({ sala, onEditSala, onCancel }) => {
   const [formData, setFormData] = useState({
-    nombre: sala.nombre
+    nombre: sala.nombre,
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
     onEditSala(formData);
   };
@@ -19,13 +19,15 @@ const EditSalaForm = ({ sala, onEditSala, onCancel }) => {
           <input
             type="text"
             value={formData.nombre}
-            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+            onChange={e => setFormData({ ...formData, nombre: e.target.value })}
             required
           />
         </div>
         <div className="form-buttons">
           <button type="submit">Guardar Cambios</button>
-          <button type="button" onClick={onCancel}>Cancelar</button>
+          <button type="button" onClick={onCancel}>
+            Cancelar
+          </button>
         </div>
       </form>
     </div>

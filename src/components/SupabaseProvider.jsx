@@ -8,11 +8,10 @@ export const useSupabaseContext = () => {
   if (!context) {
     throw new Error('useSupabaseContext debe usarse dentro de SupabaseProvider');
 
-  return context;
-};
+    return context;
+  }
 
-export 
-  const [supabaseAdmin, setSupabaseAdmin] = useState(null);
+  export const [supabaseAdmin, setSupabaseAdmin] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -48,7 +47,7 @@ export
     supabaseAdmin,
     isLoading,
     error,
-    isReady: !isLoading && !error && supabase !== null
+    isReady: !isLoading && !error && supabase !== null,
   };
 
   if (isLoading) {
@@ -79,9 +78,5 @@ export
     );
   }
 
-  return (
-    <SupabaseContext.Provider value={value}>
-      {children}
-    </SupabaseContext.Provider>
-  );
+  return <SupabaseContext.Provider value={value}>{children}</SupabaseContext.Provider>;
 };

@@ -24,9 +24,7 @@ class ApiRateLimiter {
     const now = Date.now();
 
     // Limpiar historial de requests antiguos
-    this.requestHistory = this.requestHistory.filter(
-      timestamp => now - timestamp < this.windowMs
-    );
+    this.requestHistory = this.requestHistory.filter(timestamp => now - timestamp < this.windowMs);
 
     // Verificar límite global
     if (this.requestHistory.length >= this.maxRequests) {
@@ -38,9 +36,9 @@ class ApiRateLimiter {
       this.endpointHistory.set(endpoint, []);
     }
 
-    const endpointRequests = this.endpointHistory.get(endpoint).filter(
-      timestamp => now - timestamp < this.windowMs
-    );
+    const endpointRequests = this.endpointHistory
+      .get(endpoint)
+      .filter(timestamp => now - timestamp < this.windowMs);
 
     if (endpointRequests.length >= this.perEndpointLimit) {
       this.blockedEndpoints.add(endpoint);
@@ -125,9 +123,7 @@ class ApiRateLimiter {
    */
   getStats() {
     const now = Date.now();
-    const recentRequests = this.requestHistory.filter(
-      timestamp => now - timestamp < this.windowMs
-    );
+    const recentRequests = this.requestHistory.filter(timestamp => now - timestamp < this.windowMs);
 
     const endpointStats = {};
     this.endpointHistory.forEach((timestamps, endpoint) => {
@@ -135,7 +131,7 @@ class ApiRateLimiter {
       endpointStats[endpoint] = {
         total: timestamps.length,
         recent: recent.length,
-        limit: this.perEndpointLimit
+        limit: this.perEndpointLimit,
       };
     });
 
@@ -146,7 +142,7 @@ class ApiRateLimiter {
       windowMs: this.windowMs,
       blockedEndpoints: Array.from(this.blockedEndpoints),
       pendingRequests: this.pendingRequests.size,
-      endpointStats
+      endpointStats,
     };
   }
 
@@ -165,9 +161,9 @@ class ApiRateLimiter {
 
     // Verificar límite por endpoint
     if (this.endpointHistory.has(endpoint)) {
-      const endpointRequests = this.endpointHistory.get(endpoint).filter(
-        timestamp => now - timestamp < this.windowMs
-      );
+      const endpointRequests = this.endpointHistory
+        .get(endpoint)
+        .filter(timestamp => now - timestamp < this.windowMs);
 
       if (endpointRequests.length >= this.perEndpointLimit) {
         const oldestRequest = Math.min(...endpointRequests);
@@ -189,9 +185,8 @@ class ApiRateLimiter {
 const globalApiRateLimiter = new ApiRateLimiter({
   maxRequests: 30, // Máximo 30 requests por minuto
   windowMs: 60000, // Ventana de 1 minuto
-  perEndpointLimit: 10 // Máximo 10 requests por endpoint por minuto
+  perEndpointLimit: 10, // Máximo 10 requests por endpoint por minuto
 });
 
 export default globalApiRateLimiter;
 export { ApiRateLimiter };
-

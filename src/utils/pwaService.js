@@ -5,7 +5,7 @@
 // Registrar Service Worker
 export const registerServiceWorker = async () => {
   // Verificar si el service worker está deshabilitado
-
+  if (localStorage.getItem('disableServiceWorker') === 'true') {
     return null;
   }
 
@@ -158,7 +158,8 @@ export const onConnectionChange = (callback) => {
   });
 };
 
-export default {
+// Asignar a variable antes de exportar
+const pwaService = {
   registerServiceWorker,
   promptPWAInstall,
   installPWA,
@@ -169,3 +170,4 @@ export default {
   onConnectionChange
 };
 
+export default pwaService;

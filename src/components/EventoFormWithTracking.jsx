@@ -12,13 +12,13 @@ const EventoFormWithTracking = ({ tenantId, onEventoCreated }) => {
     descripcion: '',
     fecha_inicio: '',
     fecha_fin: '',
-    tenant_id: tenantId
+    tenant_id: tenantId,
   });
 
   const [loading, setLoading] = useState(false);
   const { getCurrentUser } = useUserTracking();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
 
@@ -33,14 +33,13 @@ const EventoFormWithTracking = ({ tenantId, onEventoCreated }) => {
         descripcion: '',
         fecha_inicio: '',
         fecha_fin: '',
-        tenant_id: tenantId
+        tenant_id: tenantId,
       });
 
       // Notificar al componente padre
       if (onEventoCreated) {
         onEventoCreated(nuevoEvento);
       }
-
     } catch (error) {
       console.error('❌ Error al crear evento:', error);
       alert('Error al crear el evento. Por favor, inténtalo de nuevo.');
@@ -49,11 +48,11 @@ const EventoFormWithTracking = ({ tenantId, onEventoCreated }) => {
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     const { name, value } = e.target;
     setEvento(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 

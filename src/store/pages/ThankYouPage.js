@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Card, 
-  Button, 
-  Typography, 
-  Space, 
-  Divider,
-  Alert
-} from '../../utils/antdComponents';
+import { Card, Button, Typography, Space, Divider, Alert } from '../../utils/antdComponents';
 import { CheckCircleOutlined, HomeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import FacebookPixel from '../components/FacebookPixel';
-import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
+import {
+  getFacebookPixelByEvent,
+  shouldTrackOnPage,
+  FACEBOOK_EVENTS,
+} from '../services/facebookPixelService';
 
 const { Title, Text } = Typography;
 
@@ -20,12 +17,11 @@ const ThankYouPage = () => {
   const [facebookPixel, setFacebookPixel] = useState(null);
   const [purchaseData, setPurchaseData] = useState(null);
 
-  const getSafeAmount = (value) => {
-
+  const getSafeAmount = value => {
     return Number.isFinite(numericValue) ? numericValue : 0;
   };
 
-  const loadFacebookPixel = async (purchaseData) => {
+  const loadFacebookPixel = async purchaseData => {
     try {
       if (purchaseData?.eventId) {
         const pixel = await getFacebookPixelByEvent(purchaseData.eventId);
@@ -67,7 +63,7 @@ const ThankYouPage = () => {
             value: getSafeAmount(purchaseData.amount),
             currency: 'USD',
             num_items: purchaseData.ticketCount,
-            transaction_id: purchaseData.transactionId
+            transaction_id: purchaseData.transactionId,
           }}
         />
       )}
@@ -75,10 +71,7 @@ const ThankYouPage = () => {
       <div className="max-w-2xl mx-auto px-4">
         <Card className="text-center">
           <div className="mb-6">
-            <CheckCircleOutlined 
-              style={{ fontSize: '64px', color: '#52c41a' }} 
-              className="mb-4"
-            />
+            <CheckCircleOutlined style={{ fontSize: '64px', color: '#52c41a' }} className="mb-4" />
             <Title level={2} className="text-green-600">
               ¡Gracias por tu Compra!
             </Title>
@@ -126,19 +119,15 @@ const ThankYouPage = () => {
           />
 
           <Space size="large">
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               size="large"
-                              icon={<ShoppingCartOutlined />}
+              icon={<ShoppingCartOutlined />}
               onClick={handleContinueShopping}
             >
               Continuar Comprando
             </Button>
-            <Button 
-              size="large"
-              icon={<HomeOutlined />}
-              onClick={handleGoHome}
-            >
+            <Button size="large" icon={<HomeOutlined />} onClick={handleGoHome}>
               Ir al Inicio
             </Button>
           </Space>
@@ -157,4 +146,3 @@ const ThankYouPage = () => {
 };
 
 export default ThankYouPage;
-

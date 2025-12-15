@@ -13,7 +13,7 @@ import {
   Typography,
   Collapse,
   Tooltip,
-  Icon
+  Icon,
 } from '../../utils/antdComponents';
 import {
   MailOutlined,
@@ -21,7 +21,7 @@ import {
   AuditOutlined,
   SaveOutlined,
   InfoCircleOutlined,
-  SecurityScanOutlined
+  SecurityScanOutlined,
 } from '@ant-design/icons';
 import { EmailConfigService } from '../services/emailConfigService';
 
@@ -56,41 +56,39 @@ const EmailConfigPanel = () => {
     }
   };
 
-  const handleProviderChange = (provider) => {
+  const handleProviderChange = provider => {
     setSelectedProvider(provider);
-    
+
     if (provider !== 'custom') {
       const providers = EmailConfigService.getCommonEmailProviders();
       const selected = providers.find(p => p.name === provider);
-      
+
       if (selected) {
         form.setFieldsValue({
           smtp_host: selected.host,
           smtp_port: selected.port,
-          smtp_secure: selected.secure
+          smtp_secure: selected.secure,
         });
       }
     }
   };
 
-  const handleSave = async (values) => {
+  const handleSave = async values => {
     try {
       setLoading(true);
-      
+
       // Validar configuraci³n
       const validation = EmailConfigService.validateEmailConfig(values);
       if (!validation.isValid) {
-
         return;
       }
 
       // Guardar configuraci³n
       await EmailConfigService.saveEmailConfig(values);
       message.success('Configuraci³n de correo guardada correctamente');
-      
+
       // Recargar configuraci³n
       await loadEmailConfig();
-      
     } catch (error) {
       message.error('Error guardando configuraci³n de correo');
       console.error(error);
@@ -103,15 +101,14 @@ const EmailConfigPanel = () => {
     try {
       const values = await form.validateFields();
       setTesting(true);
-      
+
       const result = await EmailConfigService.testEmailConfig(values);
-      
+
       if (result.success) {
         message.success('Correo de prueba enviado correctamente');
       } else {
         message.error('Error enviando correo de prueba');
       }
-      
     } catch (error) {
       if (error.errorFields) {
         message.error('Por favor, completa todos los campos requeridos');
@@ -153,7 +150,7 @@ const EmailConfigPanel = () => {
           onFinish={handleSave}
           initialValues={{
             smtp_port: 587,
-            smtp_secure: true
+            smtp_secure: true,
           }}
         >
           {/* Selecci³n de proveedor */}
@@ -162,7 +159,7 @@ const EmailConfigPanel = () => {
               <SettingOutlined className="mr-2" />
               Proveedor de Correo
             </Title>
-            
+
             <Select
               value={selectedProvider}
               onChange={handleProviderChange}
@@ -228,11 +225,7 @@ const EmailConfigPanel = () => {
             </Form.Item>
           </div>
 
-          <Form.Item
-            name="smtp_secure"
-            label="Conexi³n segura (SSL/TLS)"
-            valuePropName="checked"
-          >
+          <Form.Item name="smtp_secure" label="Conexi³n segura (SSL/TLS)" valuePropName="checked">
             <Switch />
           </Form.Item>
 
@@ -250,7 +243,7 @@ const EmailConfigPanel = () => {
               label="Email del remitente"
               rules={[
                 { required: true, message: 'Email del remitente es requerido' },
-                { type: 'email', message: 'Formato de email inv¡lido' }
+                { type: 'email', message: 'Formato de email inv¡lido' },
               ]}
             >
               <Input placeholder="ventas@tuempresa.com" />
@@ -269,17 +262,12 @@ const EmailConfigPanel = () => {
             <Form.Item
               name="reply_to_email"
               label="Email de respuesta (opcional)"
-              rules={[
-                { type: 'email', message: 'Formato de email inv¡lido' }
-              ]}
+              rules={[{ type: 'email', message: 'Formato de email inv¡lido' }]}
             >
               <Input placeholder="soporte@tuempresa.com" />
             </Form.Item>
 
-            <Form.Item
-              name="reply_to_name"
-              label="Nombre de respuesta (opcional)"
-            >
+            <Form.Item name="reply_to_name" label="Nombre de respuesta (opcional)">
               <Input placeholder="Soporte" />
             </Form.Item>
           </div>
@@ -358,5 +346,3 @@ const EmailConfigPanel = () => {
 };
 
 export default EmailConfigPanel;
-
-

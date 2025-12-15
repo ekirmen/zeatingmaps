@@ -11,7 +11,6 @@ export const IvaProvider = ({ children }) => {
   useEffect(() => {
     const fetchIvas = async () => {
       if (!currentTenant?.id) {
-
         return;
       }
 
@@ -35,11 +34,7 @@ export const IvaProvider = ({ children }) => {
     fetchIvas();
   }, [currentTenant?.id]);
 
-  return (
-    <IvaContext.Provider value={{ ivas, setIvas }}>
-      {children}
-    </IvaContext.Provider>
-  );
+  return <IvaContext.Provider value={{ ivas, setIvas }}>{children}</IvaContext.Provider>;
 };
 
 export const useIva = () => {

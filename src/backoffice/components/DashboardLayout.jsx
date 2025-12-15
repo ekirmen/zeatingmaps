@@ -1,16 +1,24 @@
 import React from 'react';
-import { Layout, Menu, Avatar, Dropdown, Badge, Typography, Space } from '../../utils/antdComponents';
-import { 
-  UserOutlined, 
-  BellOutlined, 
-  SettingOutlined, 
+import {
+  Layout,
+  Menu,
+  Avatar,
+  Dropdown,
+  Badge,
+  Typography,
+  Space,
+} from '../../utils/antdComponents';
+import {
+  UserOutlined,
+  BellOutlined,
+  SettingOutlined,
   LogoutOutlined,
   DashboardOutlined,
   CalendarOutlined,
   TeamOutlined,
   ShoppingOutlined,
   BarChartOutlined,
-  FileTextOutlined
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -83,7 +91,6 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
   };
 
   const getSelectedKey = () => {
-
     if (path.startsWith('/backoffice/eventos')) return '/backoffice/eventos';
     if (path.startsWith('/backoffice/usuarios')) return '/backoffice/usuarios';
     if (path.startsWith('/backoffice/productos')) return '/backoffice/productos';
@@ -103,18 +110,22 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
         }}
       >
         {/* Logo */}
-        <div style={{ 
-          padding: '24px 16px', 
-          textAlign: 'center',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-          marginBottom: '16px'
-        }}>
-          <div style={{ 
-            fontSize: '24px', 
-            fontWeight: 'bold', 
-            color: 'white',
-            marginBottom: '4px'
-          }}>
+        <div
+          style={{
+            padding: '24px 16px',
+            textAlign: 'center',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            marginBottom: '16px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '4px',
+            }}
+          >
             ðŸŽ« Ticketera
           </div>
           <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>
@@ -138,30 +149,30 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
 
       <Layout>
         {/* Header */}
-        <Header style={{
-          background: 'white',
-          padding: '0 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          height: '64px',
-        }}>
+        <Header
+          style={{
+            background: 'white',
+            padding: '0 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            height: '64px',
+          }}
+        >
           {/* Page Title */}
           <div>
-            <h1 style={{ 
-              margin: 0, 
-              fontSize: '24px', 
-              fontWeight: '600',
-              color: '#1e293b'
-            }}>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: '24px',
+                fontWeight: '600',
+                color: '#1e293b',
+              }}
+            >
               {title}
             </h1>
-            {subtitle && (
-              <Text style={{ color: '#64748b', fontSize: '14px' }}>
-                {subtitle}
-              </Text>
-            )}
+            {subtitle && <Text style={{ color: '#64748b', fontSize: '14px' }}>{subtitle}</Text>}
           </div>
 
           {/* Header Actions */}
@@ -172,33 +183,25 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
             </Badge>
 
             {/* User Menu */}
-            <Dropdown
-              menu={{ items: userMenuItems }}
-              placement="bottomRight"
-              trigger={['click']}
-            >
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                cursor: 'pointer',
-                padding: '8px 12px',
-                borderRadius: '8px',
-                transition: 'background-color 0.2s',
-                ':hover': { backgroundColor: '#f1f5f9' }
-              }}>
-                <Avatar 
-                  size="small" 
-                  icon={<UserOutlined />}
-                  style={{ marginRight: '8px' }}
-                />
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  transition: 'background-color 0.2s',
+                  ':hover': { backgroundColor: '#f1f5f9' },
+                }}
+              >
+                <Avatar size="small" icon={<UserOutlined />} style={{ marginRight: '8px' }} />
                 <div>
                   <Text strong style={{ fontSize: '14px' }}>
                     {user?.email || 'Usuario'}
                   </Text>
                   <br />
-                  <Text style={{ fontSize: '12px', color: '#64748b' }}>
-                    Administrador
-                  </Text>
+                  <Text style={{ fontSize: '12px', color: '#64748b' }}>Administrador</Text>
                 </div>
               </div>
             </Dropdown>
@@ -206,23 +209,27 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
         </Header>
 
         {/* Main Content */}
-        <Content style={{
-          margin: '24px',
-          padding: '24px',
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          minHeight: 'calc(100vh - 112px)',
-        }}>
+        <Content
+          style={{
+            margin: '24px',
+            padding: '24px',
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            minHeight: 'calc(100vh - 112px)',
+          }}
+        >
           {/* Page Actions */}
           {actions && (
-            <div style={{
-              marginBottom: '24px',
-              padding: '16px',
-              background: '#f8fafc',
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0',
-            }}>
+            <div
+              style={{
+                marginBottom: '24px',
+                padding: '16px',
+                background: '#f8fafc',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
               {actions}
             </div>
           )}
@@ -236,5 +243,3 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
 };
 
 export default DashboardLayout;
-
-

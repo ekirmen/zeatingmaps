@@ -11,23 +11,15 @@ const NotFoundPage = () => {
       title="404"
       subTitle="Lo sentimos, la página que buscas no existe."
       extra={[
-        <Button 
-          type="primary" 
-          key="home"
-          onClick={() => navigate('/')}
-        >
+        <Button type="primary" key="home" onClick={() => navigate('/')}>
           Ir al Inicio
         </Button>,
-        <Button 
-          key="back"
-          onClick={() => navigate(-1)}
-        >
+        <Button key="back" onClick={() => navigate(-1)}>
           Volver Atrás
-        </Button>
+        </Button>,
       ]}
     />
   );
 };
 
 export default NotFoundPage;
-

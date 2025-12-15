@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { Modal, Input, Button, message, Spin, Card, Typography, Tag, Divider } from '../../../../utils/antdComponents';
+import {
+  Modal,
+  Input,
+  Button,
+  message,
+  Spin,
+  Card,
+  Typography,
+  Tag,
+  Divider,
+} from '../../../../utils/antdComponents';
 import { SearchOutlined, UserOutlined, CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { supabase } from '../../../../supabaseClient';
 
@@ -12,9 +22,8 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
   const [searchResult, setSearchResult] = useState(null);
   const [error, setError] = useState(null);
 
-  const handleSearch = async (value) => {
+  const handleSearch = async value => {
     if (!value || value.trim() === '') {
-
       return;
     }
 
@@ -26,7 +35,8 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
       // Search in payment_transactions table (FIXED: removed user relation)
       const { data: payment, error: paymentError } = await supabase
         .from('payment_transactions')
-        .select(`
+        .select(
+          `
           *,
           event:eventos(*),
           funcion:funciones(
@@ -36,7 +46,8 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
             sala_id,
             plantilla
           )
-        `)
+        `
+        )
         .eq('locator', value.trim())
         .single();
 
@@ -50,7 +61,6 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
       }
       setSearchResult(payment);
       message.success('Localizador encontrado');
-
     } catch (err) {
       console.error('[LocatorSearch] Search error:', err);
       setError(err.message);
@@ -66,7 +76,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
     setError(null);
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'N/A';
     try {
       return new Date(dateString).toLocaleDateString('es-ES', {
@@ -74,22 +84,22 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
     } catch (e) {
       return dateString;
     }
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = amount => {
     if (!amount) return '$0.00';
     return new Intl.NumberFormat('es-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(amount);
   };
 
-  const parseSeats = (seatsData) => {
+  const parseSeats = seatsData => {
     if (!seatsData) return [];
     try {
       if (Array.isArray(seatsData)) return seatsData;
@@ -118,7 +128,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
           <Search
             placeholder="Ingresa el localizador (ej: ORDER-1757205787086-1NNVL87H0)"
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            onChange={e => setSearchValue(e.target.value)}
             onSearch={handleSearch}
             enterButton={
               <Button type="primary" icon={<SearchOutlined />} loading={loading}>
@@ -222,9 +232,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                     Cliente:
                   </Text>
                   <div className="ml-6">
-                    <div className="font-medium">
-                      Usuario ID: {searchResult.user_id}
-                    </div>
+                    <div className="font-medium">Usuario ID: {searchResult.user_id}</div>
                     <div className="text-gray-500 text-sm">
                       Informaci³n de usuario no disponible
                     </div>
@@ -237,79 +245,101 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                 <div>
                   <Text strong className="flex items-center">
                     <DollarOutlined className="mr-2" />
-                    Asientos ({parseSeats(searchResult.seats || searchResult.gateway_response).length}):
+                    Asientos (
+                    {parseSeats(searchResult.seats || searchResult.gateway_response).length}):
                   </Text>
                   <div className="ml-6">
                     <div className="mb-2 text-xs text-gray-500">
                       ðŸŽ¯ Haz click en cualquier asiento para cargar TODA la transacci³n completa
                     </div>
-                    {parseSeats(searchResult.seats || searchResult.gateway_response).map((seat, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center py-2 px-2 rounded hover:bg-blue-50 cursor-pointer transition-colors border border-transparent hover:border-blue-200"
-                        onClick={() => {
-                          // ðŸŽ¯ CARGAR TODA LA TRANSACCI“N COMPLETA al hacer click en cualquier asiento
-                          const allSeats = parseSeats(searchResult.seats || searchResult.gateway_response);
-                          const seatsData = allSeats.map((seatItem, seatIndex) => ({
-                            _id: seatItem.id || seatItem._id || `seat_${seatIndex}`,
-                            nombre: seatItem.name || seatItem.nombre || seatItem.seat_name || `Asiento ${seatIndex + 1}`,
-                            precio: seatItem.price || seatItem.precio || seatItem.amount || 0,
-                            zona: seatItem.zona || seatItem.zonaNombre || 'General',
-                            zonaId: seatItem.zonaId || seatItem.zona?.id || 'general',
-                            mesa: seatItem.mesa || null,
-                            locator: searchResult.locator,
-                            transactionId: searchResult.id,
-                            status: searchResult.status
-                          }));
+                    {parseSeats(searchResult.seats || searchResult.gateway_response).map(
+                      (seat, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center py-2 px-2 rounded hover:bg-blue-50 cursor-pointer transition-colors border border-transparent hover:border-blue-200"
+                          onClick={() => {
+                            // ðŸŽ¯ CARGAR TODA LA TRANSACCI“N COMPLETA al hacer click en cualquier asiento
+                            const allSeats = parseSeats(
+                              searchResult.seats || searchResult.gateway_response
+                            );
+                            const seatsData = allSeats.map((seatItem, seatIndex) => ({
+                              _id: seatItem.id || seatItem._id || `seat_${seatIndex}`,
+                              nombre:
+                                seatItem.name ||
+                                seatItem.nombre ||
+                                seatItem.seat_name ||
+                                `Asiento ${seatIndex + 1}`,
+                              precio: seatItem.price || seatItem.precio || seatItem.amount || 0,
+                              zona: seatItem.zona || seatItem.zonaNombre || 'General',
+                              zonaId: seatItem.zonaId || seatItem.zona?.id || 'general',
+                              mesa: seatItem.mesa || null,
+                              locator: searchResult.locator,
+                              transactionId: searchResult.id,
+                              status: searchResult.status,
+                            }));
 
-                          // Disparar evento para cargar TODA la transacci³n
-                          window.dispatchEvent(new CustomEvent('loadSeatToCart', {
-                            detail: {
-                              seats: seatsData,
-                              transaction: searchResult,
-                              action: 'loadCompleteTransaction',
-                              clickedSeat: seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`
-                            }
-                          }));
+                            // Disparar evento para cargar TODA la transacci³n
+                            window.dispatchEvent(
+                              new CustomEvent('loadSeatToCart', {
+                                detail: {
+                                  seats: seatsData,
+                                  transaction: searchResult,
+                                  action: 'loadCompleteTransaction',
+                                  clickedSeat:
+                                    seat.name ||
+                                    seat.nombre ||
+                                    seat.seat_name ||
+                                    `Asiento ${index + 1}`,
+                                },
+                              })
+                            );
 
-                          message.success(`ðŸŽ« Transacci³n completa cargada: ${seatsData.length} asientos desde ${searchResult.locator}`);
-                        }}
-                      >
-                        <span className="font-medium">
-                          {seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`}
-                        </span>
-                        <span className="text-green-600 font-bold">
-                          {formatCurrency(seat.price || seat.precio || seat.amount)}
-                        </span>
-                      </div>
-                    ))}
+                            message.success(
+                              `ðŸŽ« Transacci³n completa cargada: ${seatsData.length} asientos desde ${searchResult.locator}`
+                            );
+                          }}
+                        >
+                          <span className="font-medium">
+                            {seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`}
+                          </span>
+                          <span className="text-green-600 font-bold">
+                            {formatCurrency(seat.price || seat.precio || seat.amount)}
+                          </span>
+                        </div>
+                      )
+                    )}
                     <div className="mt-2">
                       <Button
                         type="primary"
                         size="small"
                         onClick={() => {
                           // Cargar todos los asientos en el carrito
-                          const allSeats = parseSeats(searchResult.seats || searchResult.gateway_response);
+                          const allSeats = parseSeats(
+                            searchResult.seats || searchResult.gateway_response
+                          );
                           const seatsData = allSeats.map((seat, index) => ({
                             _id: seat.id || seat._id || `seat_${index}`,
-                            nombre: seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`,
+                            nombre:
+                              seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`,
                             precio: seat.price || seat.precio || seat.amount || 0,
                             zona: seat.zona || seat.zonaNombre || 'General',
                             zonaId: seat.zonaId || seat.zona?.id || 'general',
                             mesa: seat.mesa || null,
                             locator: searchResult.locator,
                             transactionId: searchResult.id,
-                            status: searchResult.status
+                            status: searchResult.status,
                           }));
 
                           // Disparar evento para cargar todos los asientos
-                          window.dispatchEvent(new CustomEvent('loadSeatToCart', {
-                            detail: {
-                              seats: seatsData,
-                              transaction: searchResult,
-                              action: 'addAllSeats'
-                            }
-                          }));
+                          window.dispatchEvent(
+                            new CustomEvent('loadSeatToCart', {
+                              detail: {
+                                seats: seatsData,
+                                transaction: searchResult,
+                                action: 'addAllSeats',
+                              },
+                            })
+                          );
 
                           message.success(`${seatsData.length} asientos cargados en el carrito`);
                         }}
@@ -340,16 +370,24 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="font-medium">Estado:</span>
-                    <span className={`font-bold ${
-                      searchResult.status === 'pending' ? 'text-yellow-600' :
-                      searchResult.status === 'completed' ? 'text-green-600' :
-                      searchResult.status === 'failed' ? 'text-red-600' :
-                      'text-gray-600'
-                    }`}>
-                      {searchResult.status === 'pending' ? 'Pendiente' :
-                       searchResult.status === 'completed' ? 'Completado' :
-                       searchResult.status === 'failed' ? 'Fallido' :
-                       searchResult.status}
+                    <span
+                      className={`font-bold ${
+                        searchResult.status === 'pending'
+                          ? 'text-yellow-600'
+                          : searchResult.status === 'completed'
+                            ? 'text-green-600'
+                            : searchResult.status === 'failed'
+                              ? 'text-red-600'
+                              : 'text-gray-600'
+                      }`}
+                    >
+                      {searchResult.status === 'pending'
+                        ? 'Pendiente'
+                        : searchResult.status === 'completed'
+                          ? 'Completado'
+                          : searchResult.status === 'failed'
+                            ? 'Fallido'
+                            : searchResult.status}
                     </span>
                   </div>
                   {searchResult.payment_method && (
@@ -370,9 +408,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
               {/* Created Date */}
               <div>
                 <Text strong>Fecha de Creaci³n:</Text>
-                <div className="ml-6 text-gray-500">
-                  {formatDate(searchResult.created_at)}
-                </div>
+                <div className="ml-6 text-gray-500">{formatDate(searchResult.created_at)}</div>
               </div>
             </div>
           </Card>
@@ -416,9 +452,10 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                         // Primero intentar desde gateway_response
                         if (searchResult.gateway_response) {
                           try {
-                            const responseData = typeof searchResult.gateway_response === 'string'
-                              ? JSON.parse(searchResult.gateway_response)
-                              : searchResult.gateway_response;
+                            const responseData =
+                              typeof searchResult.gateway_response === 'string'
+                                ? JSON.parse(searchResult.gateway_response)
+                                : searchResult.gateway_response;
 
                             if (responseData.seats && Array.isArray(responseData.seats)) {
                               seats.push(...responseData.seats);
@@ -476,7 +513,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                                 // Usar informaci³n de zona guardada en seat_locks si est¡ disponible
                                 let zonaNombre = lock.zona_nombre || 'ORO';
                                 let zonaId = lock.zona_id || 'ORO';
-                                let precioAsignado = lock.precio || 10.00;
+                                let precioAsignado = lock.precio || 10.0;
 
                                 // Si no hay informaci³n de zona guardada, buscar en las zonas disponibles
                                 if (!lock.zona_nombre || !lock.zona_id) {
@@ -507,7 +544,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                                   locator: lock.locator, // Incluir el locator
                                   // Campos adicionales para compatibilidad
                                   sillaId: lock.seat_id,
-                                  zonaNombre: zonaNombre
+                                  zonaNombre: zonaNombre,
                                 };
                               });
 
@@ -532,18 +569,22 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                           user_id: searchResult.user_id,
                           created_at: searchResult.created_at,
                           payment_method: searchResult.payment_method,
-                          gateway_name: searchResult.gateway_name
+                          gateway_name: searchResult.gateway_name,
                         };
 
                         // Emitir evento personalizado para cargar en el carrito
-                        window.dispatchEvent(new CustomEvent('loadPendingTransaction', {
-                          detail: transactionData
-                        }));
+                        window.dispatchEvent(
+                          new CustomEvent('loadPendingTransaction', {
+                            detail: transactionData,
+                          })
+                        );
 
                         message.success('Transacci³n cargada en el carrito para completar venta');
                         onCancel();
                       } else {
-                        message.error('No se pudo cargar la transacci³n: falta informaci³n de la funci³n');
+                        message.error(
+                          'No se pudo cargar la transacci³n: falta informaci³n de la funci³n'
+                        );
                       }
                     }}
                   >
@@ -559,7 +600,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                           .from('payment_transactions')
                           .update({
                             status: 'cancelled',
-                            updated_at: new Date().toISOString()
+                            updated_at: new Date().toISOString(),
                           })
                           .eq('id', searchResult.id);
 
@@ -574,20 +615,23 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                           .from('seat_locks')
                           .update({
                             status: 'anulado',
-                            updated_at: new Date().toISOString()
+                            updated_at: new Date().toISOString(),
                           })
                           .eq('locator', searchResult.locator);
 
                         if (locksError) {
                           console.error('Error actualizando seat_locks:', locksError);
-                          message.warning('Transacci³n anulada pero puede haber problemas con los asientos');
+                          message.warning(
+                            'Transacci³n anulada pero puede haber problemas con los asientos'
+                          );
                         } else {
-                          message.success('Transacci³n pendiente y asientos anulados correctamente');
+                          message.success(
+                            'Transacci³n pendiente y asientos anulados correctamente'
+                          );
                         }
 
                         // Recargar la bºsqueda para mostrar el nuevo estado
                         onSearch(searchResult.locator);
-
                       } catch (error) {
                         console.error('Error anulando transacci³n:', error);
                         message.error('Error al anular la transacci³n');
@@ -642,7 +686,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                           .from('payment_transactions')
                           .update({
                             status: 'cancelled',
-                            updated_at: new Date().toISOString()
+                            updated_at: new Date().toISOString(),
                           })
                           .eq('id', searchResult.id);
 
@@ -657,20 +701,21 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                           .from('seat_locks')
                           .update({
                             status: 'anulado',
-                            updated_at: new Date().toISOString()
+                            updated_at: new Date().toISOString(),
                           })
                           .eq('locator', searchResult.locator);
 
                         if (locksError) {
                           console.error('Error actualizando seat_locks:', locksError);
-                          message.warning('Transacci³n anulada pero puede haber problemas con los asientos');
+                          message.warning(
+                            'Transacci³n anulada pero puede haber problemas con los asientos'
+                          );
                         } else {
                           message.success('Transacci³n y asientos anulados correctamente');
                         }
 
                         // Recargar la bºsqueda para mostrar el nuevo estado
                         onSearch(searchResult.locator);
-
                       } catch (error) {
                         console.error('Error anulando transacci³n:', error);
                         message.error('Error al anular la transacci³n');
@@ -713,9 +758,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
             <div className="text-sm">
               Ingresa el localizador completo para encontrar los detalles del pago
             </div>
-            <div className="text-xs mt-2 text-gray-400">
-              Ejemplo: ORDER-1757205787086-1NNVL87H0
-            </div>
+            <div className="text-xs mt-2 text-gray-400">Ejemplo: ORDER-1757205787086-1NNVL87H0</div>
           </div>
         )}
       </div>
@@ -724,5 +767,3 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
 };
 
 export default LocatorSearchModal;
-
-

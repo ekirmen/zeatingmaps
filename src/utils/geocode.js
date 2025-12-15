@@ -1,12 +1,11 @@
-export const geocodeAddress = async (address) => {
-  const fetchGeo = async (query) => {
+export const geocodeAddress = async address => {
+  const fetchGeo = async query => {
     if (process.env.REACT_APP_GOOGLE_MAPS_API_KEY) {
       const googleRes = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
       );
       const googleData = await googleRes.json();
       if (googleData.results && googleData.results.length) {
-
         return { lat: loc.lat, lon: loc.lng };
       }
     }

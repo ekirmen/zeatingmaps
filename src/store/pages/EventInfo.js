@@ -21,9 +21,7 @@ const EventInfo = () => {
     const fetchEvento = async () => {
       try {
         setLoading(true);
-        const query = supabase
-          .from('eventos')
-          .select(`
+        const query = supabase.from('eventos').select(`
             *,
             recintos!recinto_id (
               id,
@@ -32,7 +30,7 @@ const EventInfo = () => {
               capacidad
             )
           `);
-        
+
         const { data, error } = await (
           isUuid(eventParam)
             ? query.eq('id', eventParam)
@@ -40,7 +38,7 @@ const EventInfo = () => {
               ? query.eq('id', parseInt(eventParam, 10))
               : query.ilike('slug', eventParam)
         ).maybeSingle();
-        
+
         if (error) throw error;
         setEvento(data);
         setVenueInfo(data?.recintos);
@@ -55,7 +53,6 @@ const EventInfo = () => {
 
   useEffect(() => {
     const fetchFuncionesData = async () => {
-
       if (!id) return;
       try {
         const data = await getFunciones(id);
@@ -74,14 +71,14 @@ const EventInfo = () => {
 
   const handleSelect = () => {
     if (selectedFunctionId) {
-      const eventPath = (evento && evento.slug) ? evento.slug : eventParam;
+      const eventPath = evento && evento.slug ? evento.slug : eventParam;
       navigate(`/store/eventos/${eventPath}/map?funcion=${selectedFunctionId}`);
     }
   };
 
   const getEventImages = () => {
     if (!evento?.imagenes) return {};
-    
+
     try {
       if (typeof evento.imagenes === 'string') {
         return JSON.parse(evento.imagenes);
@@ -125,7 +122,7 @@ const EventInfo = () => {
             src={resolveImageUrl(bannerImage)}
             alt={evento.nombre}
             className="w-full h-full object-cover"
-            onError={(e) => {
+            onError={e => {
               e.target.onerror = null;
               e.target.src = `https://placehold.co/1200x400/E0F2F7/000?text=${evento.nombre}`;
             }}
@@ -133,9 +130,7 @@ const EventInfo = () => {
           <div className="absolute inset-0 bg-black bg-opacity-40"></div>
           <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{evento.nombre}</h1>
-            {venueInfo && (
-              <p className="text-lg opacity-90">{venueInfo.nombre}</p>
-            )}
+            {venueInfo && <p className="text-lg opacity-90">{venueInfo.nombre}</p>}
           </div>
         </div>
       )}
@@ -145,9 +140,7 @@ const EventInfo = () => {
         {!bannerImage && (
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">{evento.nombre}</h1>
-            {venueInfo && (
-              <p className="text-xl text-gray-600">{venueInfo.nombre}</p>
-            )}
+            {venueInfo && <p className="text-xl text-gray-600">{venueInfo.nombre}</p>}
           </div>
         )}
 
@@ -162,7 +155,7 @@ const EventInfo = () => {
                   src={resolveImageUrl(thumbnailImage)}
                   alt={evento.nombre}
                   className="w-full h-64 object-cover rounded-lg shadow-lg"
-                  onError={(e) => {
+                  onError={e => {
                     e.target.onerror = null;
                     e.target.src = `https://placehold.co/600x400/E0F2F7/000?text=${evento.nombre}`;
                   }}
@@ -184,26 +177,42 @@ const EventInfo = () => {
             {/* Functions Selection */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Funciones Disponibles</h2>
-              
+
               {/* Mostrar mensaje si el evento está desactivado */}
               {evento && (!evento.activo || evento.desactivado) && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                   <div className="flex items-center">
-                    <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    <svg
+                      className="w-5 h-5 text-red-500 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
                     </svg>
                     <div>
                       <h3 className="text-sm font-medium text-red-800">Evento Desactivado</h3>
-                      <p className="text-sm text-red-700">Este evento está actualmente desactivado. Las funciones no están disponibles para la venta.</p>
+                      <p className="text-sm text-red-700">
+                        Este evento está actualmente desactivado. Las funciones no están disponibles
+                        para la venta.
+                      </p>
                     </div>
                   </div>
                 </div>
               )}
-              
+
               {funciones.length > 0 ? (
                 <div className="space-y-3">
-                  {funciones.map((f) => (
-                    <label key={f.id || f._id} className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                  {funciones.map(f => (
+                    <label
+                      key={f.id || f._id}
+                      className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
                       <input
                         type="radio"
                         name="funcion"
@@ -218,9 +227,7 @@ const EventInfo = () => {
                           {formatDateString(f.fechaCelebracion)}
                         </div>
                         {f.sala && (
-                          <div className="text-sm text-gray-600">
-                            Sala: {f.sala.nombre}
-                          </div>
+                          <div className="text-sm text-gray-600">Sala: {f.sala.nombre}</div>
                         )}
                       </div>
                     </label>
@@ -237,7 +244,9 @@ const EventInfo = () => {
             {/* Venue Information */}
             {venueInfo && (
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Información del Recinto</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Información del Recinto
+                </h3>
                 <div className="space-y-3">
                   <div>
                     <h4 className="font-medium text-gray-900">{venueInfo.nombre}</h4>
@@ -268,7 +277,7 @@ const EventInfo = () => {
                         month: 'long',
                         day: 'numeric',
                         hour: '2-digit',
-                        minute: '2-digit'
+                        minute: '2-digit',
                       })}
                     </div>
                   </div>
@@ -291,10 +300,11 @@ const EventInfo = () => {
                 disabled={!selectedFunctionId || (evento && (!evento.activo || evento.desactivado))}
                 className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                {evento && (!evento.activo || evento.desactivado) 
-                  ? 'Evento Desactivado' 
-                  : (selectedFunctionId ? 'Seleccionar Asientos' : 'Selecciona una función')
-                }
+                {evento && (!evento.activo || evento.desactivado)
+                  ? 'Evento Desactivado'
+                  : selectedFunctionId
+                    ? 'Seleccionar Asientos'
+                    : 'Selecciona una función'}
               </button>
             </div>
           </div>

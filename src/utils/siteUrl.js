@@ -1,4 +1,4 @@
-const sanitizeUrl = (value) => {
+const sanitizeUrl = value => {
   if (!value || typeof value !== 'string') {
     return '';
   }

@@ -22,13 +22,13 @@ body {
 
 /* Fix for iOS Safari input zoom on focus */
 @media screen and (max-width: 767px) {
-  input[type="text"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="number"],
-  input[type="password"],
-  input[type="search"],
-  input[type="url"],
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='number'],
+  input[type='password'],
+  input[type='search'],
+  input[type='url'],
   select,
   textarea {
     font-size: 16px !important;
@@ -44,13 +44,13 @@ body {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
-  
+
   .header-container,
   .store-header,
   .dashboard-header {
     padding-top: max(1rem, env(safe-area-inset-top));
   }
-  
+
   .footer-container,
   .store-footer,
   .dashboard-footer {
@@ -183,19 +183,39 @@ body {
 
 /* Box shadow with vendor prefixes */
 .shadow {
-  -webkit-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  -moz-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  -ms-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  -o-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  -webkit-box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  -moz-box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  -ms-box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  -o-box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .shadow-lg {
-  -webkit-box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  -moz-box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  -ms-box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  -o-box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  -webkit-box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  -ms-box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  -o-box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Backdrop filter with fallback */
@@ -220,12 +240,12 @@ body {
   .flex {
     display: -ms-flexbox;
   }
-  
+
   /* IE 11 grid fallback */
   .grid {
     display: -ms-grid;
   }
-  
+
   /* IE 11 backdrop-filter fallback */
   .backdrop-blur {
     background-color: rgba(255, 255, 255, 0.95);
@@ -238,10 +258,10 @@ body {
   .scrollable-container {
     scroll-behavior: smooth;
   }
-  
+
   /* Fix for Firefox text rendering */
   body {
-    -moz-font-feature-settings: "liga" on;
+    -moz-font-feature-settings: 'liga' on;
   }
 }
 
@@ -252,7 +272,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   /* Fix for Safari text size adjust */
   * {
     -webkit-text-size-adjust: 100%;
@@ -265,12 +285,12 @@ body {
   body {
     -webkit-font-smoothing: antialiased;
   }
-  
+
   /* Fix for iOS Safari 100vh */
   .min-h-screen {
     min-height: -webkit-fill-available;
   }
-  
+
   /* Fix for iOS Safari input */
   input,
   select,
@@ -278,13 +298,13 @@ body {
     -webkit-appearance: none;
     border-radius: 0.5rem;
   }
-  
+
   /* Fix for iOS Safari button */
   button {
     -webkit-appearance: none;
     border-radius: 0.5rem;
   }
-  
+
   /* Fix for iOS Safari select */
   select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
@@ -302,7 +322,7 @@ body {
     padding-left: 1rem;
     padding-right: 1rem;
   }
-  
+
   /* Fix for mobile browsers that don't support CSS Grid */
   @supports not (display: grid) {
     .grid {
@@ -316,7 +336,7 @@ body {
       -ms-flex-wrap: wrap;
       flex-wrap: wrap;
     }
-    
+
     .grid > * {
       -webkit-box-flex: 1;
       -webkit-flex: 1;
@@ -335,9 +355,8 @@ body {
     print-color-adjust: exact;
     color-adjust: exact;
   }
-  
+
   .no-print {
     display: none !important;
   }
 }
-

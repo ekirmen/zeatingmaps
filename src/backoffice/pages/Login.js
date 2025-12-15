@@ -9,16 +9,15 @@ const Login = ({ onLogin }) => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    setFormData(prevData => ({ ...prevData, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     if (!formData.login || !formData.password) {
-
       return;
     }
 
@@ -45,7 +44,8 @@ const Login = ({ onLogin }) => {
     } catch (error) {
       console.error('Login error:', error);
       const feedbackMessage = getAuthMessage(error);
-      const messageType = error?.type && typeof message[error.type] === 'function' ? error.type : 'error';
+      const messageType =
+        error?.type && typeof message[error.type] === 'function' ? error.type : 'error';
       setError(feedbackMessage);
       message[messageType](feedbackMessage);
       localStorage.removeItem('token');
@@ -101,5 +101,3 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
-
-

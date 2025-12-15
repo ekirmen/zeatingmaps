@@ -17,7 +17,7 @@ export const RecintoProvider = ({ children }) => {
   useEffect(() => {
     const storedRecinto = localStorage.getItem('recintoSeleccionado');
     const storedSala = localStorage.getItem('salaSeleccionada');
-    
+
     if (storedRecinto) {
       try {
         setRecintoSeleccionado(JSON.parse(storedRecinto));
@@ -25,7 +25,7 @@ export const RecintoProvider = ({ children }) => {
         localStorage.removeItem('recintoSeleccionado');
       }
     }
-    
+
     if (storedSala) {
       try {
         setSalaSeleccionada(JSON.parse(storedSala));
@@ -39,15 +39,12 @@ export const RecintoProvider = ({ children }) => {
     const tenantId = currentTenant?.id;
 
     if (tenantId === prevTenantId.current) return;
-    
+
     prevTenantId.current = tenantId;
     setLoading(true);
 
     try {
-      let query = supabase
-        .from('recintos')
-        .select('*, salas(*)')
-        .order('nombre');
+      let query = supabase.from('recintos').select('*, salas(*)').order('nombre');
 
       if (tenantId) {
         query = query.eq('tenant_id', tenantId);
@@ -93,14 +90,10 @@ export const RecintoProvider = ({ children }) => {
     setRecintoSeleccionado,
     salaSeleccionada,
     setSalaSeleccionada,
-    refetchRecintos: fetchRecintos
+    refetchRecintos: fetchRecintos,
   };
 
-  return (
-    <RecintoContext.Provider value={value}>
-      {children}
-    </RecintoContext.Provider>
-  );
+  return <RecintoContext.Provider value={value}>{children}</RecintoContext.Provider>;
 };
 
 export const useRecinto = () => {

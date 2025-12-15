@@ -7,7 +7,13 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 // - rootMargin: IntersectionObserver rootMargin
 // - once: boolean (load only once)
 // - loaderProps: props forwarded to the loaded component
-const LoadOnVisible = ({ loader, fallback = null, rootMargin = '200px', once = true, loaderProps = {} }) => {
+const LoadOnVisible = ({
+  loader,
+  fallback = null,
+  rootMargin = '200px',
+  once = true,
+  loaderProps = {},
+}) => {
   const ref = useRef(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [LazyComp, setLazyComp] = useState(null);
@@ -17,8 +23,8 @@ const LoadOnVisible = ({ loader, fallback = null, rootMargin = '200px', once = t
     if (shouldLoad) return;
 
     const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             setShouldLoad(true);
             if (once) io.disconnect();

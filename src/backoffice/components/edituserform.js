@@ -23,7 +23,7 @@ const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
     }
   }, [user]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     try {
@@ -52,15 +52,13 @@ const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
     >
       <h2 className="text-2xl font-bold text-gray-800">Editar Perfil</h2>
 
-      {['login', 'nombre', 'apellido', 'empresa', 'telefono'].map((field) => (
+      {['login', 'nombre', 'apellido', 'empresa', 'telefono'].map(field => (
         <div key={field}>
-          <label className="block text-gray-700 font-semibold mb-1 capitalize">
-            {field}:
-          </label>
+          <label className="block text-gray-700 font-semibold mb-1 capitalize">{field}:</label>
           <input
             type="text"
             value={formData[field]}
-            onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+            onChange={e => setFormData({ ...formData, [field]: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>

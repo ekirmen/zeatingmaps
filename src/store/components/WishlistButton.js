@@ -18,7 +18,6 @@ const WishlistButton = ({ event, size = 'default' }) => {
 
   const checkWishlistStatus = async () => {
     try {
-
       if (!user || !event) return;
 
       const { data, error } = await supabase
@@ -37,12 +36,15 @@ const WishlistButton = ({ event, size = 'default' }) => {
 
   const loadWishlist = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
         .from('wishlist')
-        .select(`
+        .select(
+          `
           *,
           eventos (
             id,
@@ -51,7 +53,8 @@ const WishlistButton = ({ event, size = 'default' }) => {
             imagen_url,
             fecha_evento
           )
-        `)
+        `
+        )
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -65,8 +68,10 @@ const WishlistButton = ({ event, size = 'default' }) => {
   const toggleWishlist = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         message.warning('Debes iniciar sesi³n para guardar favoritos');
         return;
@@ -86,13 +91,11 @@ const WishlistButton = ({ event, size = 'default' }) => {
         setIsInWishlist(false);
       } else {
         // Agregar a wishlist
-        const { error } = await supabase
-          .from('wishlist')
-          .insert({
-            user_id: user.id,
-            evento: event.id,
-            created_at: new Date().toISOString()
-          });
+        const { error } = await supabase.from('wishlist').insert({
+          user_id: user.id,
+          evento: event.id,
+          created_at: new Date().toISOString(),
+        });
 
         if (error) throw error;
 
@@ -109,12 +112,9 @@ const WishlistButton = ({ event, size = 'default' }) => {
     }
   };
 
-  const removeFromWishlist = async (wishlistId) => {
+  const removeFromWishlist = async wishlistId => {
     try {
-      const { error } = await supabase
-        .from('wishlist')
-        .delete()
-        .eq('id', wishlistId);
+      const { error } = await supabase.from('wishlist').delete().eq('id', wishlistId);
 
       if (error) throw error;
 
@@ -137,15 +137,12 @@ const WishlistButton = ({ event, size = 'default' }) => {
       </div>
 
       {wishlistItems.length === 0 ? (
-        <Empty
-          description="No tienes eventos favoritos"
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        />
+        <Empty description="No tienes eventos favoritos" image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
         <List
           size="small"
           dataSource={wishlistItems}
-          renderItem={(item) => (
+          renderItem={item => (
             <List.Item
               className="hover:bg-gray-50 p-2 rounded cursor-pointer"
               actions={[
@@ -153,12 +150,12 @@ const WishlistButton = ({ event, size = 'default' }) => {
                   type="text"
                   size="small"
                   icon={<DeleteOutlined />}
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     removeFromWishlist(item.id);
                   }}
                   danger
-                />
+                />,
               ]}
             >
               <List.Item.Meta
@@ -216,14 +213,11 @@ const WishlistButton = ({ event, size = 'default' }) => {
         onClick={toggleWishlist}
         size={size}
         className={`${
-          isInWishlist 
-            ? 'text-red-500 hover:text-red-600' 
-            : 'text-gray-600 hover:text-red-500'
+          isInWishlist ? 'text-red-500 hover:text-red-600' : 'text-gray-600 hover:text-red-500'
         }`}
       />
     </Popover>
   );
 };
 
-export default WishlistButton; 
-
+export default WishlistButton;

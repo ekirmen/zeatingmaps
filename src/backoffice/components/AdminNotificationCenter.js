@@ -10,7 +10,7 @@ import {
   Empty,
   Spin,
   Alert,
-  Divider
+  Divider,
 } from '../../utils/antdComponents';
 import {
   BellOutlined,
@@ -19,7 +19,7 @@ import {
   FileTextOutlined,
   WarningOutlined,
   InfoCircleOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -33,7 +33,7 @@ const AdminNotificationCenter = () => {
   const [systemAlerts, setSystemAlerts] = useState([]);
 
   // Función auxiliar para formatear tiempo
-  const formatTimeAgo = (dateString) => {
+  const formatTimeAgo = dateString => {
     const now = new Date();
     const date = new Date(dateString);
     const diffInMinutes = Math.floor((now - date) / (1000 * 60));
@@ -95,7 +95,7 @@ const AdminNotificationCenter = () => {
             message: 'Hay 5 transacciones pendientes de confirmación',
             priority: 'high',
             time: 'Hace 30 min',
-            created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+            created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
           },
           {
             id: 2,
@@ -104,7 +104,7 @@ const AdminNotificationCenter = () => {
             message: 'Problema de conectividad con pasarela Stripe',
             priority: 'critical',
             time: 'Hace 1 hora',
-            created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString()
+            created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
           },
           {
             id: 3,
@@ -113,7 +113,7 @@ const AdminNotificationCenter = () => {
             message: 'Se ha registrado un nuevo administrador',
             priority: 'medium',
             time: 'Hace 2 horas',
-            created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+            created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
           },
           {
             id: 4,
@@ -122,8 +122,8 @@ const AdminNotificationCenter = () => {
             message: 'Se han vendido 25 tickets para el evento principal',
             priority: 'low',
             time: 'Hace 3 horas',
-            created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
-          }
+            created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+          },
         ];
 
         setSystemAlerts(staticAlerts);
@@ -141,7 +141,7 @@ const AdminNotificationCenter = () => {
         time: formatTimeAgo(alert.created_at),
         created_at: alert.created_at,
         active: alert.active,
-        category: alert.category
+        category: alert.category,
       }));
 
       setSystemAlerts(formattedAlerts);
@@ -161,9 +161,9 @@ const AdminNotificationCenter = () => {
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'admin_notifications'
+            table: 'admin_notifications',
           },
-          (payload) => {
+          payload => {
             setNotifications(prev => [payload.new, ...prev]);
             if (!payload.new.read) {
               setUnreadCount(prev => prev + 1);
@@ -175,12 +175,10 @@ const AdminNotificationCenter = () => {
           {
             event: 'UPDATE',
             schema: 'public',
-            table: 'admin_notifications'
+            table: 'admin_notifications',
           },
-          (payload) => {
-            setNotifications(prev =>
-              prev.map(n => n.id === payload.new.id ? payload.new : n)
-            );
+          payload => {
+            setNotifications(prev => prev.map(n => (n.id === payload.new.id ? payload.new : n)));
           }
         )
         .subscribe();
@@ -193,9 +191,9 @@ const AdminNotificationCenter = () => {
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'system_alerts'
+            table: 'system_alerts',
           },
-          (payload) => {
+          payload => {
             if (payload.new.active) {
               setSystemAlerts(prev => [payload.new, ...prev]);
             }
@@ -206,16 +204,14 @@ const AdminNotificationCenter = () => {
           {
             event: 'UPDATE',
             schema: 'public',
-            table: 'system_alerts'
+            table: 'system_alerts',
           },
-          (payload) => {
-            setSystemAlerts(prev =>
-              prev.map(a => a.id === payload.new.id ? payload.new : a)
-            );
+          payload => {
+            setSystemAlerts(prev => prev.map(a => (a.id === payload.new.id ? payload.new : a)));
           }
         )
         .subscribe();
-      
+
       // Retornar función de limpieza
       return () => {
         notificationsChannel.unsubscribe();
@@ -242,9 +238,9 @@ const AdminNotificationCenter = () => {
         cleanup();
       }
     };
-  },);
+  });
 
-  const markAsRead = async (notificationId) => {
+  const markAsRead = async notificationId => {
     try {
       // ✅ CONECTAR CON TABLA REAL admin_notifications
       const { error } = await supabase
@@ -255,9 +251,7 @@ const AdminNotificationCenter = () => {
       if (error) {
         // Fallback a actualización local si hay error
         setNotifications(prev =>
-          prev.map(n =>
-            n.id === notificationId ? { ...n, read: true } : n
-          )
+          prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
         );
         setUnreadCount(prev => Math.max(0, prev - 1));
         return;
@@ -274,11 +268,7 @@ const AdminNotificationCenter = () => {
       console.error('Error marking notification as read:', error);
 
       // Fallback a actualización local
-      setNotifications(prev =>
-        prev.map(n =>
-          n.id === notificationId ? { ...n, read: true } : n
-        )
-      );
+      setNotifications(prev => prev.map(n => (n.id === notificationId ? { ...n, read: true } : n)));
       setUnreadCount(prev => Math.max(0, prev - 1));
     }
   };
@@ -288,42 +278,39 @@ const AdminNotificationCenter = () => {
       // La tabla admin_notifications no existe, simular la funcionalidad
       console.log('Marking all notifications as read (simulated)');
 
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, read: true }))
-      );
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
 
       // Simular éxito
       console.log('All notifications marked as read successfully (simulated)');
-
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
   };
 
-  const getNotificationIcon = (type) => {
+  const getNotificationIcon = type => {
     const icons = {
       payment: <CreditCardOutlined style={{ color: '#52c41a' }} />,
       user: <UserOutlined style={{ color: '#1890ff' }} />,
       ticket: <FileTextOutlined style={{ color: '#722ed1' }} />,
       system: <ExclamationCircleOutlined style={{ color: '#faad14' }} />,
       error: <WarningOutlined style={{ color: '#ff4d4f' }} />,
-      info: <InfoCircleOutlined style={{ color: '#1890ff' }} />
+      info: <InfoCircleOutlined style={{ color: '#1890ff' }} />,
     };
     return icons[type] || <BellOutlined />;
   };
 
-  const getPriorityColor = (priority) => {
+  const getPriorityColor = priority => {
     const colors = {
       critical: 'red',
       high: 'orange',
       medium: 'blue',
-      low: 'green'
+      low: 'green',
     };
     return colors[priority] || 'default';
   };
 
-  const formatTime = (dateString) => {
+  const formatTime = dateString => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now - date) / (1000 * 60));
@@ -337,13 +324,11 @@ const AdminNotificationCenter = () => {
   const notificationContent = (
     <div className="w-96">
       <div className="flex justify-between items-center mb-4">
-        <Title level={5} style={{ margin: 0 }}>Notificaciones</Title>
+        <Title level={5} style={{ margin: 0 }}>
+          Notificaciones
+        </Title>
         {unreadCount > 0 && (
-          <Button
-            type="link"
-            size="small"
-            onClick={markAllAsRead}
-          >
+          <Button type="link" size="small" onClick={markAllAsRead}>
             Marcar todas como leídas
           </Button>
         )}
@@ -362,7 +347,7 @@ const AdminNotificationCenter = () => {
           <List
             size="small"
             dataSource={systemAlerts.filter(alert => alert.priority === 'critical')}
-            renderItem={(alert) => (
+            renderItem={alert => (
               <List.Item className="bg-red-50 p-2 rounded">
                 <List.Item.Meta
                   avatar={getNotificationIcon(alert.type)}
@@ -377,9 +362,7 @@ const AdminNotificationCenter = () => {
                   description={
                     <div>
                       <Text type="secondary">{alert.message}</Text>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {alert.time}
-                      </div>
+                      <div className="text-xs text-gray-500 mt-1">{alert.time}</div>
                     </div>
                   }
                 />
@@ -397,15 +380,12 @@ const AdminNotificationCenter = () => {
           <Spin />
         </div>
       ) : notifications.length === 0 ? (
-        <Empty
-          description="No hay notificaciones"
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        />
+        <Empty description="No hay notificaciones" image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
         <List
           size="small"
           dataSource={notifications}
-          renderItem={(notification) => (
+          renderItem={notification => (
             <List.Item
               className={`cursor-pointer hover:bg-gray-50 p-2 rounded ${
                 !notification.read ? 'bg-blue-50' : ''
@@ -413,21 +393,11 @@ const AdminNotificationCenter = () => {
               onClick={() => markAsRead(notification.id)}
             >
               <List.Item.Meta
-                avatar={
-                  <Avatar
-                    icon={getNotificationIcon(notification.type)}
-                    size="small"
-                  />
-                }
+                avatar={<Avatar icon={getNotificationIcon(notification.type)} size="small" />}
                 title={
                   <div className="flex justify-between items-start">
-                    <Text strong={!notification.read}>
-                      {notification.title}
-                    </Text>
-                    <Tag
-                      color={getPriorityColor(notification.priority)}
-                      size="small"
-                    >
+                    <Text strong={!notification.read}>{notification.title}</Text>
+                    <Tag color={getPriorityColor(notification.priority)} size="small">
                       {notification.priority?.toUpperCase()}
                     </Tag>
                   </div>
@@ -441,9 +411,7 @@ const AdminNotificationCenter = () => {
                       <Text type="secondary" className="text-xs">
                         {formatTime(notification.created_at)}
                       </Text>
-                      {!notification.read && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                      )}
+                      {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full" />}
                     </div>
                   </div>
                 }

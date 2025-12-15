@@ -7,10 +7,9 @@ import { sendPushNotification } from '../store/services/paymentNotifications';
 /**
  * Enviar notificación push cuando un evento se activa (estadoVenta = 'a-la-venta')
  */
-export const sendEventActivatedNotification = async (evento) => {
+export const sendEventActivatedNotification = async evento => {
   try {
     if (!evento) {
-
       return null;
     }
 
@@ -44,9 +43,9 @@ export const sendEventActivatedNotification = async (evento) => {
             eventSlug: evento.slug,
             eventName: evento.nombre,
             type: 'event_activated',
-            url: `/store/eventos/${evento.slug || evento.id}`
+            url: `/store/eventos/${evento.slug || evento.id}`,
           },
-          tenant_id: evento.tenant_id
+          tenant_id: evento.tenant_id,
         });
         sentCount++;
       } catch (error) {
@@ -63,7 +62,7 @@ export const sendEventActivatedNotification = async (evento) => {
 /**
  * Enviar notificación push cuando se crea una función en canal internet o todos los canales
  */
-export const sendFunctionCreatedNotification = async (funcion) => {
+export const sendFunctionCreatedNotification = async funcion => {
   try {
     if (!funcion) {
       console.error('[EventPush] Función no válida');
@@ -89,7 +88,9 @@ export const sendFunctionCreatedNotification = async (funcion) => {
       if (canales.internet?.activo === true) {
         shouldNotify = true;
         const ambosCanales = canales.boxOffice?.activo === true;
-        console.log(`[EventPush] Función tiene canal internet activo${ambosCanales ? ' (todos los canales)' : ''}`);
+        console.log(
+          `[EventPush] Función tiene canal internet activo${ambosCanales ? ' (todos los canales)' : ''}`
+        );
       }
     }
     // Si canales es un array, verificar si contiene "internet" o está vacío (todos)
@@ -118,8 +119,7 @@ export const sendFunctionCreatedNotification = async (funcion) => {
           evento = eventoData;
         }
       }
-    } catch (error) {
-    }
+    } catch (error) {}
 
     if (!evento) {
       // Continuar de todas formas, usar datos de la función
@@ -148,7 +148,7 @@ export const sendFunctionCreatedNotification = async (funcion) => {
           month: 'long',
           day: 'numeric',
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
         })
       : 'Fecha disponible';
 
@@ -173,9 +173,9 @@ export const sendFunctionCreatedNotification = async (funcion) => {
             type: 'function_created',
             url: eventoSlug
               ? `/store/eventos/${eventoSlug}/map?funcion=${funcion.id}`
-              : `/store/seat-selection/${funcion.id}`
+              : `/store/seat-selection/${funcion.id}`,
           },
-          tenant_id: tenantId
+          tenant_id: tenantId,
         });
         sentCount++;
       } catch (error) {
@@ -192,7 +192,7 @@ export const sendFunctionCreatedNotification = async (funcion) => {
 /**
  * Suscribir usuario a notificaciones push (PWA)
  */
-export const subscribeToPushNotifications = async (userId) => {
+export const subscribeToPushNotifications = async userId => {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       return null;
@@ -210,22 +210,25 @@ export const subscribeToPushNotifications = async (userId) => {
     // Obtener subscription
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: process.env.REACT_APP_VAPID_PUBLIC_KEY
+      applicationServerKey: process.env.REACT_APP_VAPID_PUBLIC_KEY,
     });
 
     // Guardar subscription en base de datos
     const { data, error } = await supabase
       .from('push_subscriptions')
-      .upsert({
-        user_id: userId,
-        subscription: subscription,
-        endpoint: subscription.endpoint,
-        keys: subscription.toJSON().keys,
-        active: true,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,endpoint'
-      })
+      .upsert(
+        {
+          user_id: userId,
+          subscription: subscription,
+          endpoint: subscription.endpoint,
+          keys: subscription.toJSON().keys,
+          active: true,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'user_id,endpoint',
+        }
+      )
       .select()
       .single();
 
@@ -240,7 +243,7 @@ export const subscribeToPushNotifications = async (userId) => {
 /**
  * Desuscribir usuario de notificaciones push
  */
-export const unsubscribeFromPushNotifications = async (userId) => {
+export const unsubscribeFromPushNotifications = async userId => {
   try {
     const { error } = await supabase
       .from('push_subscriptions')
@@ -263,6 +266,5 @@ export default {
   sendFunctionCreatedNotification,
   sendFunctionActivatedNotification, // Deprecated, usar sendFunctionCreatedNotification
   subscribeToPushNotifications,
-  unsubscribeFromPushNotifications
+  unsubscribeFromPushNotifications,
 };
-

@@ -13,7 +13,7 @@ import {
   Image,
   Space,
   Tag,
-  Tooltip
+  Tooltip,
 } from '../../utils/antdComponents';
 import {
   PlusOutlined,
@@ -21,7 +21,7 @@ import {
   DeleteOutlined,
   SearchOutlined,
   UploadOutlined,
-  EyeOutlined
+  EyeOutlined,
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
@@ -63,7 +63,7 @@ const Productos = () => {
 
         // Procesar datos: obtener la fecha m¡s pr³xima de las funciones activas para cada evento
         const eventosWithFecha = await Promise.all(
-          (data || []).map(async (evento) => {
+          (data || []).map(async evento => {
             // Obtener la primera funci³n activa para este evento
             const { data: funcionData } = await supabase
               .from('funciones')
@@ -76,7 +76,7 @@ const Productos = () => {
 
             return {
               ...evento,
-              fecha_celebracion: funcionData?.fecha_celebracion || null
+              fecha_celebracion: funcionData?.fecha_celebracion || null,
             };
           })
         );
@@ -129,10 +129,12 @@ const Productos = () => {
       // Nota: La tabla productos_eventos puede no existir, por eso usamos manejo de errores
       let productosEventosQuery = supabase
         .from('productos_eventos')
-        .select(`
+        .select(
+          `
           *,
           productos:producto_id(nombre, descripcion, precio, categoria)
-        `)
+        `
+        )
         .eq('evento_id', eventoSeleccionado)
         .eq('activo', true)
         .order('created_at', { ascending: false });
@@ -150,20 +152,22 @@ const Productos = () => {
       productosConEventoQuery = addTenantFilter(productosConEventoQuery);
 
       // Ejecutar consultas con manejo de errores individual
-      const [plantillasResult, productosResult, productosEventosResult, productosConEventoResult] = await Promise.allSettled([
-        plantillasQuery,
-        productosQuery,
-        productosEventosQuery,
-        productosConEventoQuery
-      ]);
+      const [plantillasResult, productosResult, productosEventosResult, productosConEventoResult] =
+        await Promise.allSettled([
+          plantillasQuery,
+          productosQuery,
+          productosEventosQuery,
+          productosConEventoQuery,
+        ]);
 
       // Procesar resultados
-      const plantillasData = plantillasResult.status === 'fulfilled'
-        ? plantillasResult.value
-        : { data: null, error: plantillasResult.reason };
+      const plantillasData =
+        plantillasResult.status === 'fulfilled'
+          ? plantillasResult.value
+          : { data: null, error: plantillasResult.reason };
 
       // Helper para detectar si un error debe ser ignorado silenciosamente
-      const shouldIgnoreError = (error) => {
+      const shouldIgnoreError = error => {
         if (!error) return false;
         const errorMessage = error.message?.toLowerCase() || '';
         const errorHint = error.hint?.toLowerCase() || '';
@@ -180,23 +184,26 @@ const Productos = () => {
         );
       };
 
-      const productosData = productosResult.status === 'fulfilled'
-        ? productosResult.value
-        : shouldIgnoreError(productosResult.reason)
-          ? { data: [], error: null } // Ignorar errores de autenticaci³n o tabla no existente
-          : { data: null, error: productosResult.reason };
+      const productosData =
+        productosResult.status === 'fulfilled'
+          ? productosResult.value
+          : shouldIgnoreError(productosResult.reason)
+            ? { data: [], error: null } // Ignorar errores de autenticaci³n o tabla no existente
+            : { data: null, error: productosResult.reason };
 
-      const productosEventosData = productosEventosResult.status === 'fulfilled'
-        ? productosEventosResult.value
-        : shouldIgnoreError(productosEventosResult.reason)
-          ? { data: [], error: null } // Ignorar errores de autenticaci³n o tabla no existente
-          : { data: null, error: productosEventosResult.reason };
+      const productosEventosData =
+        productosEventosResult.status === 'fulfilled'
+          ? productosEventosResult.value
+          : shouldIgnoreError(productosEventosResult.reason)
+            ? { data: [], error: null } // Ignorar errores de autenticaci³n o tabla no existente
+            : { data: null, error: productosEventosResult.reason };
 
-      const productosConEventoData = productosConEventoResult.status === 'fulfilled'
-        ? productosConEventoResult.value
-        : shouldIgnoreError(productosConEventoResult.reason)
-          ? { data: [], error: null } // Ignorar errores de autenticaci³n o tabla no existente
-          : { data: null, error: productosConEventoResult.reason };
+      const productosConEventoData =
+        productosConEventoResult.status === 'fulfilled'
+          ? productosConEventoResult.value
+          : shouldIgnoreError(productosConEventoResult.reason)
+            ? { data: [], error: null } // Ignorar errores de autenticaci³n o tabla no existente
+            : { data: null, error: productosConEventoResult.reason };
 
       // œ… COMBINAR PRODUCTOS DE TODAS LAS FUENTES
       let allProductos = [];
@@ -206,7 +213,7 @@ const Productos = () => {
         const plantillasWithSource = plantillasData.data.map(p => ({
           ...p,
           source: 'plantillas_productos',
-          tipo: 'plantilla'
+          tipo: 'plantilla',
         }));
         allProductos = [...allProductos, ...plantillasWithSource];
       } else if (plantillasData.error) {
@@ -217,12 +224,14 @@ const Productos = () => {
       // Nota: Solo productos que NO tengan evento_id (productos generales)
       if (productosData.data && !productosData.error) {
         // Filtrar productos que no tengan evento_id o que tengan evento_id null
-        const productosGenerales = productosData.data.filter(p => !p.evento_id || p.evento_id !== eventoSeleccionado);
+        const productosGenerales = productosData.data.filter(
+          p => !p.evento_id || p.evento_id !== eventoSeleccionado
+        );
         const productosWithSource = productosGenerales.map(p => ({
           ...p,
           source: 'productos',
           tipo: 'producto_general',
-          precio: p.precio || 0 // La tabla productos tiene 'precio', no 'precio_base'
+          precio: p.precio || 0, // La tabla productos tiene 'precio', no 'precio_base'
         }));
         allProductos = [...allProductos, ...productosWithSource];
       } else if (productosData.error) {
@@ -256,10 +265,13 @@ const Productos = () => {
           nombre: p.productos?.nombre || p.nombre,
           descripcion: p.productos?.descripcion || p.descripcion,
           precio: p.productos?.precio || p.precio || p.precio_base || 0, // productos tiene 'precio', no 'precio_base'
-          categoria: p.productos?.categoria || p.categoria
+          categoria: p.productos?.categoria || p.categoria,
         }));
         allProductos = [...allProductos, ...productosEventosWithSource];
-        console.log('œ… Productos del evento (productos_eventos) cargados:', productosEventosWithSource.length);
+        console.log(
+          'œ… Productos del evento (productos_eventos) cargados:',
+          productosEventosWithSource.length
+        );
       } else if (productosEventosData.error) {
         // Detectar errores de autenticaci³n, tabla no existente, o relaci³n no encontrada
         const error = productosEventosData.error;
@@ -284,7 +296,9 @@ const Productos = () => {
         } else {
           // Log silencioso para debugging (solo en desarrollo)
           if (process.env.NODE_ENV === 'development') {
-            console.log('„¹ï¸ productos_eventos no disponible (tabla o relaci³n no existe), usando productos directos');
+            console.log(
+              '„¹ï¸ productos_eventos no disponible (tabla o relaci³n no existe), usando productos directos'
+            );
           }
         }
         // Ignorar silenciosamente errores esperados
@@ -296,7 +310,7 @@ const Productos = () => {
           ...p,
           source: 'productos',
           tipo: 'producto_evento_directo',
-          precio: p.precio || 0 // La tabla productos tiene 'precio', no 'precio_base'
+          precio: p.precio || 0, // La tabla productos tiene 'precio', no 'precio_base'
         }));
         allProductos = [...allProductos, ...productosConEventoWithSource];
       } else if (productosConEventoData.error) {
@@ -327,7 +341,7 @@ const Productos = () => {
     }
   };
 
-  const handleEventSelect = (eventId) => {
+  const handleEventSelect = eventId => {
     setEventoSeleccionado(eventId);
   };
 
@@ -337,7 +351,7 @@ const Productos = () => {
     setModalVisible(true);
   };
 
-  const handleEditProduct = (producto) => {
+  const handleEditProduct = producto => {
     setEditingProducto(producto);
 
     // Limpiar imagen_url si es un objeto JSON string
@@ -362,12 +376,12 @@ const Productos = () => {
       descripcion: producto.descripcion,
       imagen_url: imagenUrl, // Usar la URL limpia
       categoria: producto.categoria,
-      activo: producto.activo
+      activo: producto.activo,
     });
     setModalVisible(true);
   };
 
-  const handleDeleteProduct = async (producto) => {
+  const handleDeleteProduct = async producto => {
     try {
       let deleteQuery = supabase
         .from('plantillas_productos')
@@ -386,7 +400,7 @@ const Productos = () => {
     }
   };
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async values => {
     try {
       // Excluir precio_base ya que se asigna desde la plantilla de precios
       const { precio_base, ...valuesWithoutPrice } = values;
@@ -442,7 +456,11 @@ const Productos = () => {
         // Verificar que sea una URL v¡lida
         else if (typeof imagenUrl === 'string') {
           // Si no empieza con http:// o https://, podr­a no ser una URL v¡lida
-          if (!imagenUrl.startsWith('http://') && !imagenUrl.startsWith('https://') && !imagenUrl.startsWith('/')) {
+          if (
+            !imagenUrl.startsWith('http://') &&
+            !imagenUrl.startsWith('https://') &&
+            !imagenUrl.startsWith('/')
+          ) {
             // Si no parece una URL, establecer como null
             imagenUrl = null;
           }
@@ -461,7 +479,7 @@ const Productos = () => {
         ...valuesWithoutPrice,
         imagen_url: imagenUrl, // Usar la URL limpia
         evento_id: eventoSeleccionado,
-        activo: values.activo !== false // Asegurar que activo sea boolean
+        activo: values.activo !== false, // Asegurar que activo sea boolean
       };
 
       if (editingProducto) {
@@ -502,7 +520,7 @@ const Productos = () => {
       dataIndex: 'imagen_url',
       key: 'imagen_url',
       width: 80,
-      render: (imagen_url) => (
+      render: imagen_url => (
         <Image
           width={50}
           height={50}
@@ -516,14 +534,14 @@ const Productos = () => {
       title: 'Nombre',
       dataIndex: 'nombre',
       key: 'nombre',
-      render: (text) => <strong>{text}</strong>,
+      render: text => <strong>{text}</strong>,
     },
     {
       title: 'Descripci³n',
       dataIndex: 'descripcion',
       key: 'descripcion',
       ellipsis: true,
-      render: (text) => (
+      render: text => (
         <Tooltip title={text}>
           <span>{text}</span>
         </Tooltip>
@@ -542,18 +560,14 @@ const Productos = () => {
       title: 'Categor­a',
       dataIndex: 'categoria',
       key: 'categoria',
-      render: (categoria) => (
-        <Tag color="blue">{categoria || 'Sin categor­a'}</Tag>
-      ),
+      render: categoria => <Tag color="blue">{categoria || 'Sin categor­a'}</Tag>,
     },
     {
       title: 'Estado',
       dataIndex: 'activo',
       key: 'activo',
-      render: (activo) => (
-        <Tag color={activo ? 'green' : 'red'}>
-          {activo ? 'Activo' : 'Inactivo'}
-        </Tag>
+      render: activo => (
+        <Tag color={activo ? 'green' : 'red'}>{activo ? 'Activo' : 'Inactivo'}</Tag>
       ),
     },
     {
@@ -587,12 +601,8 @@ const Productos = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Gesti³n de Productos
-          </h1>
-          <p className="text-gray-600">
-            Crea y gestiona productos para tus eventos
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gesti³n de Productos</h1>
+          <p className="text-gray-600">Crea y gestiona productos para tus eventos</p>
         </div>
 
         {/* Selector de Evento */}
@@ -611,7 +621,7 @@ const Productos = () => {
                 style={{ width: '100%' }}
                 loading={!eventos.length}
               >
-                {eventos.map((evento) => (
+                {eventos.map(evento => (
                   <Option key={evento.id} value={evento.id}>
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium flex-1 truncate">{evento.nombre}</span>
@@ -620,13 +630,11 @@ const Productos = () => {
                           {new Date(evento.fecha_celebracion).toLocaleDateString('es-ES', {
                             year: 'numeric',
                             month: 'short',
-                            day: 'numeric'
+                            day: 'numeric',
                           })}
                         </span>
                       ) : (
-                        <span className="text-sm text-gray-400 whitespace-nowrap">
-                          Sin fecha
-                        </span>
+                        <span className="text-sm text-gray-400 whitespace-nowrap">Sin fecha</span>
                       )}
                     </div>
                   </Option>
@@ -634,11 +642,7 @@ const Productos = () => {
               </Select>
             </div>
             {eventoSeleccionado && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleCreateProduct}
-              >
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateProduct}>
                 Crear Producto
               </Button>
             )}
@@ -649,13 +653,9 @@ const Productos = () => {
         {eventoSeleccionado && (
           <Card>
             <div className="mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Productos Disponibles
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-900">Productos Disponibles</h2>
               {productos.length === 0 && !loading && (
-                <p className="text-gray-500 mt-2">
-                  No hay productos disponibles para este evento
-                </p>
+                <p className="text-gray-500 mt-2">No hay productos disponibles para este evento</p>
               )}
             </div>
 
@@ -668,8 +668,7 @@ const Productos = () => {
                 pageSize: 10,
                 showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} de ${total} productos`,
+                showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} productos`,
               }}
             />
           </Card>
@@ -704,18 +703,12 @@ const Productos = () => {
               label="Descripci³n"
               rules={[{ required: true, message: 'Por favor ingresa la descripci³n' }]}
             >
-              <TextArea
-                rows={4}
-                placeholder="Describe el producto detalladamente..."
-              />
+              <TextArea rows={4} placeholder="Describe el producto detalladamente..." />
             </Form.Item>
 
-            <Form.Item
-              name="imagen_url"
-              label="Imagen del Producto"
-            >
+            <Form.Item name="imagen_url" label="Imagen del Producto">
               <Upload
-                beforeUpload={async (file) => {
+                beforeUpload={async file => {
                   try {
                     const fileExt = file.name.split('.').pop();
                     const fileName = `${Date.now()}.${fileExt}`;
@@ -727,9 +720,9 @@ const Productos = () => {
 
                     if (uploadError) throw uploadError;
 
-                    const { data: { publicUrl } } = supabase.storage
-                      .from('productos')
-                      .getPublicUrl(filePath);
+                    const {
+                      data: { publicUrl },
+                    } = supabase.storage.from('productos').getPublicUrl(filePath);
 
                     form.setFieldsValue({ imagen_url: publicUrl });
                     message.success('Imagen subida correctamente');
@@ -742,9 +735,7 @@ const Productos = () => {
                 showUploadList={false}
                 accept="image/*"
               >
-                <Button icon={<UploadOutlined />}>
-                  Subir Imagen
-                </Button>
+                <Button icon={<UploadOutlined />}>Subir Imagen</Button>
               </Upload>
               {form.getFieldValue('imagen_url') && (
                 <div className="mt-2">
@@ -758,10 +749,7 @@ const Productos = () => {
               )}
             </Form.Item>
 
-            <Form.Item
-              name="categoria"
-              label="Categor­a"
-            >
+            <Form.Item name="categoria" label="Categor­a">
               <Select placeholder="Selecciona una categor­a">
                 <Option value="merchandising">Merchandising</Option>
                 <Option value="alimentos">Alimentos y Bebidas</Option>
@@ -770,11 +758,7 @@ const Productos = () => {
               </Select>
             </Form.Item>
 
-            <Form.Item
-              name="activo"
-              label="Estado"
-              valuePropName="checked"
-            >
+            <Form.Item name="activo" label="Estado" valuePropName="checked">
               <Select>
                 <Option value={true}>Activo</Option>
                 <Option value={false}>Inactivo</Option>
@@ -782,9 +766,7 @@ const Productos = () => {
             </Form.Item>
 
             <div className="flex justify-end gap-2 mt-6">
-              <Button onClick={() => setModalVisible(false)}>
-                Cancelar
-              </Button>
+              <Button onClick={() => setModalVisible(false)}>Cancelar</Button>
               <Button type="primary" htmlType="submit">
                 {editingProducto ? 'Actualizar' : 'Crear'} Producto
               </Button>
@@ -797,4 +779,3 @@ const Productos = () => {
 };
 
 export default Productos;
-

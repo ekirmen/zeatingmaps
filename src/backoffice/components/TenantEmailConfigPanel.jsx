@@ -14,7 +14,7 @@ import {
   Collapse,
   Tabs,
   Badge,
-  List
+  List,
 } from '../../utils/antdComponents';
 import {
   MailOutlined,
@@ -25,7 +25,7 @@ import {
   GlobalOutlined,
   TeamOutlined,
   SendOutlined,
-  InboxOutlined
+  InboxOutlined,
 } from '@ant-design/icons';
 import { TenantEmailConfigService } from '../services/tenantEmailConfigService';
 import { supabase } from '../../supabaseClient';
@@ -51,7 +51,9 @@ const TenantEmailConfigPanel = () => {
 
   const loadUserRole = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -68,15 +70,15 @@ const TenantEmailConfigPanel = () => {
   const loadConfigurations = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Cargar configuraci³n del tenant
       const tenantEmailConfig = await TenantEmailConfigService.getTenantEmailConfig();
       setTenantConfig(tenantEmailConfig);
-      
+
       // Cargar configuraci³n global
       const globalEmailConfig = await TenantEmailConfigService.getGlobalEmailConfig();
       setGlobalConfig(globalEmailConfig);
-      
+
       // Establecer valores del formulario
       if (tenantEmailConfig && !tenantEmailConfig.is_global) {
         form.setFieldsValue(tenantEmailConfig);
@@ -85,7 +87,6 @@ const TenantEmailConfigPanel = () => {
         form.setFieldsValue(globalEmailConfig);
         setActiveTab('global');
       }
-      
     } catch (error) {
       message.error('Error cargando configuraciones de correo');
       console.error(error);
@@ -99,27 +100,27 @@ const TenantEmailConfigPanel = () => {
     loadUserRole();
   }, [loadConfigurations, loadUserRole]);
 
-  const handleProviderChange = (provider) => {
+  const handleProviderChange = provider => {
     setSelectedProvider(provider);
-    
+
     if (provider !== 'custom') {
       const providers = TenantEmailConfigService.getCommonEmailProviders();
       const selected = providers.find(p => p.name === provider);
-      
+
       if (selected) {
         form.setFieldsValue({
           smtp_host: selected.host,
           smtp_port: selected.port,
-          smtp_secure: selected.secure
+          smtp_secure: selected.secure,
         });
       }
     }
   };
 
-  const handleSave = async (values) => {
+  const handleSave = async values => {
     try {
       setLoading(true);
-      
+
       if (activeTab === 'tenant') {
         // Guardar configuraci³n del tenant
         await TenantEmailConfigService.saveTenantEmailConfig(values);
@@ -129,9 +130,8 @@ const TenantEmailConfigPanel = () => {
         await TenantEmailConfigService.saveGlobalEmailConfig(values);
         message.success('Configuraci³n global de correo guardada exitosamente');
       }
-      
+
       await loadConfigurations();
-      
     } catch (error) {
       message.error(`Error guardando configuraci³n: ${error.message}`);
       console.error(error);
@@ -143,12 +143,10 @@ const TenantEmailConfigPanel = () => {
   const handleTest = async () => {
     try {
       setTesting(true);
-      
 
       const result = await TenantEmailConfigService.testEmailConfig(values);
 
       message.success('¡Correo de prueba enviado exitosamente!');
-
     } catch (error) {
       message.error(`Error probando configuraci³n: ${error.message}`);
     } finally {
@@ -161,10 +159,7 @@ const TenantEmailConfigPanel = () => {
       setSendingInbound(true);
       const values = await form.validateFields();
 
-      
-
       message.success('Correo de prueba enviado a email@omegaboletos.com');
-
     } catch (error) {
       if (error?.message) {
         message.error(`Error enviando la prueba: ${error.message}`);
@@ -181,16 +176,12 @@ const TenantEmailConfigPanel = () => {
       const welcomeEmail = form.getFieldValue('welcome_target_email');
 
       if (!welcomeEmail) {
-
         return;
       }
 
       await form.validateFields(['welcome_target_email']);
 
-      
-
       message.success(`Correo de bienvenida enviado a ${welcomeEmail}`);
-
     } catch (error) {
       if (error?.message) {
         message.error(`Error enviando la bienvenida: ${error.message}`);
@@ -225,12 +216,8 @@ const TenantEmailConfigPanel = () => {
         />
 
         {/* Tabs para configuraci³n del tenant vs global */}
-        <Tabs 
-          activeKey={activeTab} 
-          onChange={setActiveTab}
-          className="mb-6"
-        >
-          <TabPane 
+        <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-6">
+          <TabPane
             tab={
               <span>
                 <TeamOutlined />
@@ -239,7 +226,7 @@ const TenantEmailConfigPanel = () => {
                   <Badge status="success" style={{ marginLeft: 8 }} />
                 )}
               </span>
-            } 
+            }
             key="tenant"
           >
             <Alert
@@ -250,18 +237,16 @@ const TenantEmailConfigPanel = () => {
               className="mb-6"
             />
           </TabPane>
-          
+
           {userRole === 'super_admin' && (
-            <TabPane 
+            <TabPane
               tab={
                 <span>
                   <GlobalOutlined />
                   Configuraci³n Global
-                  {globalConfig && (
-                    <Badge status="processing" style={{ marginLeft: 8 }} />
-                  )}
+                  {globalConfig && <Badge status="processing" style={{ marginLeft: 8 }} />}
                 </span>
-              } 
+              }
               key="global"
             >
               <Alert
@@ -290,7 +275,7 @@ const TenantEmailConfigPanel = () => {
           initialValues={{
             smtp_port: 465,
             smtp_secure: true,
-            provider: 'smtp'
+            provider: 'smtp',
           }}
         >
           {/* Selecci³n de proveedor */}
@@ -299,7 +284,7 @@ const TenantEmailConfigPanel = () => {
               <SettingOutlined className="mr-2" />
               Proveedor de Correo
             </Title>
-            
+
             <Select
               value={selectedProvider}
               onChange={handleProviderChange}
@@ -388,7 +373,7 @@ const TenantEmailConfigPanel = () => {
               name="from_email"
               rules={[
                 { required: true, message: 'Ingresa el email de env­o' },
-                { type: 'email', message: 'Ingresa un email v¡lido' }
+                { type: 'email', message: 'Ingresa un email v¡lido' },
               ]}
             >
               <Input placeholder="reportes@omegaboletos.com" />
@@ -449,7 +434,9 @@ const TenantEmailConfigPanel = () => {
 
               <div className="text-left sm:text-right">
                 <Text type="secondary" style={{ fontSize: '12px' }}>
-                  {activeTab === 'tenant' ? 'Configuraci³n espec­fica del tenant' : 'Configuraci³n global del sistema'}
+                  {activeTab === 'tenant'
+                    ? 'Configuraci³n espec­fica del tenant'
+                    : 'Configuraci³n global del sistema'}
                 </Text>
               </div>
             </div>
@@ -462,7 +449,8 @@ const TenantEmailConfigPanel = () => {
                 Pruebas r¡pidas de correo
               </Title>
               <Text type="secondary" className="block mb-4">
-                Env­a correos de prueba espec­ficos para validar la recepci³n interna y los mensajes de bienvenida.
+                Env­a correos de prueba espec­ficos para validar la recepci³n interna y los mensajes
+                de bienvenida.
               </Text>
 
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
@@ -482,10 +470,7 @@ const TenantEmailConfigPanel = () => {
                     style={{ flex: 1, marginBottom: 0 }}
                     rules={[{ type: 'email', message: 'Ingresa un email v¡lido' }]}
                   >
-                    <Input 
-                      placeholder="correo@ejemplo.com" 
-                      size="large"
-                    />
+                    <Input placeholder="correo@ejemplo.com" size="large" />
                   </Form.Item>
                   <Button
                     type="primary"
@@ -510,20 +495,39 @@ const TenantEmailConfigPanel = () => {
               <div>
                 <Title level={5}>Configuraci³n recomendada para Omega Boletos:</Title>
                 <ul className="list-disc list-inside space-y-2">
-                  <li><strong>Servidor:</strong> mail.omegaboletos.com</li>
-                  <li><strong>Puerto:</strong> 465 (SSL/TLS)</li>
-                  <li><strong>Usuario:</strong> reportes@omegaboletos.com</li>
-                  <li><strong>Contrase±a:</strong> La contrase±a de la cuenta de correo</li>
-                  <li><strong>Conexi³n segura:</strong> Activada</li>
+                  <li>
+                    <strong>Servidor:</strong> mail.omegaboletos.com
+                  </li>
+                  <li>
+                    <strong>Puerto:</strong> 465 (SSL/TLS)
+                  </li>
+                  <li>
+                    <strong>Usuario:</strong> reportes@omegaboletos.com
+                  </li>
+                  <li>
+                    <strong>Contrase±a:</strong> La contrase±a de la cuenta de correo
+                  </li>
+                  <li>
+                    <strong>Conexi³n segura:</strong> Activada
+                  </li>
                 </ul>
               </div>
-              
+
               <div>
                 <Title level={5}>Configuraci³n para otros proveedores:</Title>
                 <ul className="list-disc list-inside space-y-2">
-                  <li><strong>Gmail:</strong> smtp.gmail.com:587 (TLS) - Requiere contrase±a de aplicaci³n</li>
-                  <li><strong>Outlook:</strong> smtp-mail.outlook.com:587 (TLS) - Requiere autenticaci³n de dos factores</li>
-                  <li><strong>Yahoo:</strong> smtp.mail.yahoo.com:587 (TLS) - Requiere contrase±a de aplicaci³n</li>
+                  <li>
+                    <strong>Gmail:</strong> smtp.gmail.com:587 (TLS) - Requiere contrase±a de
+                    aplicaci³n
+                  </li>
+                  <li>
+                    <strong>Outlook:</strong> smtp-mail.outlook.com:587 (TLS) - Requiere
+                    autenticaci³n de dos factores
+                  </li>
+                  <li>
+                    <strong>Yahoo:</strong> smtp.mail.yahoo.com:587 (TLS) - Requiere contrase±a de
+                    aplicaci³n
+                  </li>
                 </ul>
               </div>
             </div>
@@ -535,5 +539,3 @@ const TenantEmailConfigPanel = () => {
 };
 
 export default TenantEmailConfigPanel;
-
-

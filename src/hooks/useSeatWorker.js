@@ -15,7 +15,6 @@ export const useSeatWorker = (seats, options = {}) => {
 
   const processSeats = useCallback(async () => {
     if (!seats || seats.length === 0) {
-
       return;
     }
 
@@ -57,7 +56,7 @@ export const useSeatWorker = (seats, options = {}) => {
 /**
  * Hook para calcular zonas usando Web Worker
  */
-export const useZonesWorker = (seats) => {
+export const useZonesWorker = seats => {
   const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -130,4 +129,3 @@ export const useFilteredSeatsWorker = (seats, filters = {}, sortBy = null) => {
 
   return { filteredSeats, loading, error, refilter: filterAndSort };
 };
-

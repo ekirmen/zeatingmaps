@@ -388,10 +388,10 @@ const IconSelector = ({ onIconSelect, onClose, onColorChange, currentColor = '#0
     { id: 'moscovium', icon: '☢️', name: 'Moscovio' },
     { id: 'livermorium', icon: '☢️', name: 'Livermorio' },
     { id: 'tennessine', icon: '☢️', name: 'Teneso' },
-    { id: 'oganesson', icon: '☢️', name: 'Oganesón' }
+    { id: 'oganesson', icon: '☢️', name: 'Oganesón' },
   ];
 
-  const handleIconClick = (iconData) => {
+  const handleIconClick = iconData => {
     setSelectedIcon(iconData);
   };
 
@@ -402,7 +402,7 @@ const IconSelector = ({ onIconSelect, onClose, onColorChange, currentColor = '#0
     onClose();
   };
 
-  const handleColorChange = (color) => {
+  const handleColorChange = color => {
     setSelectedColor(color);
     onColorChange(color);
   };
@@ -412,30 +412,25 @@ const IconSelector = ({ onIconSelect, onClose, onColorChange, currentColor = '#0
       <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[80vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Selector de Iconos</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
             ×
           </button>
         </div>
 
         {/* Selector de color */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Color del icono:
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Color del icono:</label>
           <input
             type="color"
             value={selectedColor}
-            onChange={(e) => handleColorChange(e.target.value)}
+            onChange={e => handleColorChange(e.target.value)}
             className="w-20 h-10 border border-gray-300 rounded cursor-pointer"
           />
         </div>
 
         {/* Paleta de iconos */}
         <div className="grid grid-cols-8 gap-2 mb-4">
-          {iconPalette.map((iconData) => (
+          {iconPalette.map(iconData => (
             <button
               key={iconData.id}
               onClick={() => handleIconClick(iconData)}

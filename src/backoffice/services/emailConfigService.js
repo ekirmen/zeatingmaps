@@ -4,17 +4,15 @@ export class EmailConfigService {
   // Obtener configuración de correo de la empresa actual
   static async getEmailConfig() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      const { data, error } = await supabase
-        .from('email_config')
-        .select('*')
-        .single();
+      const { data, error } = await supabase.from('email_config').select('*').single();
 
       if (error) {
         if (error.code === 'PGRST116') {
-
           return null;
         }
         throw error;
@@ -30,12 +28,14 @@ export class EmailConfigService {
   // Crear o actualizar configuración de correo
   static async saveEmailConfig(config) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
       const configData = {
         ...config,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       // Intentar actualizar primero
@@ -75,8 +75,8 @@ export class EmailConfigService {
         secure: config.smtp_secure,
         auth: {
           user: config.smtp_user,
-          pass: config.smtp_password
-        }
+          pass: config.smtp_password,
+        },
       };
 
       // Enviar correo de prueba
@@ -98,7 +98,7 @@ export class EmailConfigService {
 
       return {
         success: true,
-        message: 'Correo de prueba enviado correctamente'
+        message: 'Correo de prueba enviado correctamente',
       };
     } catch (error) {
       console.error('Error enviando correo de prueba:', error);
@@ -133,7 +133,7 @@ export class EmailConfigService {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -145,29 +145,29 @@ export class EmailConfigService {
         host: 'smtp.gmail.com',
         port: 587,
         secure: false,
-        notes: 'Requiere contraseña de aplicación'
+        notes: 'Requiere contraseña de aplicación',
       },
       {
         name: 'Outlook/Hotmail',
         host: 'smtp-mail.outlook.com',
         port: 587,
         secure: false,
-        notes: 'Requiere autenticación de dos factores'
+        notes: 'Requiere autenticación de dos factores',
       },
       {
         name: 'Yahoo',
         host: 'smtp.mail.yahoo.com',
         port: 587,
         secure: false,
-        notes: 'Requiere contraseña de aplicación'
+        notes: 'Requiere contraseña de aplicación',
       },
       {
         name: 'Proveedor personalizado',
         host: '',
         port: 587,
         secure: true,
-        notes: 'Configuración manual'
-      }
+        notes: 'Configuración manual',
+      },
     ];
   }
 }

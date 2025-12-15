@@ -5,31 +5,30 @@ import { supabase } from '../../supabaseClient';
 
 const { Text } = Typography;
 
-const ImageUploader = ({ 
-  onImageUpload, 
-  currentImage, 
+const ImageUploader = ({
+  onImageUpload,
+  currentImage,
   onImageRemove,
-  title = "Imagen de Fondo",
-  description = "Sube una imagen para usar como fondo del mapa"
+  title = 'Imagen de Fondo',
+  description = 'Sube una imagen para usar como fondo del mapa',
 }) => {
   const [uploading, setUploading] = useState(false);
 
-  const handleImageUpload = async (file) => {
+  const handleImageUpload = async file => {
     try {
       setUploading(true);
-      
+
       // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
-
         return;
       }
-      
+
       // Validar tama±o (10MB m¡ximo para mapas)
       if (file.size > 10 * 1024 * 1024) {
         message.error('La imagen debe pesar 10MB o menos');
         return;
       }
-      
+
       const fileExt = file.name.split('.').pop();
       const fileName = `mapas/${Date.now()}.${fileExt}`;
       const filePath = `mapas/${fileName}`;
@@ -38,14 +37,14 @@ const ImageUploader = ({
         .from('productos')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
         });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('productos')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('productos').getPublicUrl(filePath);
 
       onImageUpload(publicUrl);
       message.success('Imagen subida correctamente');
@@ -95,15 +94,15 @@ const ImageUploader = ({
         </div>
       ) : (
         <Upload
-          beforeUpload={(file) => {
+          beforeUpload={file => {
             handleImageUpload(file);
             return false;
           }}
           showUploadList={false}
           accept="image/*"
         >
-          <Button 
-            icon={<UploadOutlined />} 
+          <Button
+            icon={<UploadOutlined />}
             loading={uploading}
             disabled={uploading}
             className="w-full"
@@ -124,5 +123,3 @@ const ImageUploader = ({
 };
 
 export default ImageUploader;
-
-

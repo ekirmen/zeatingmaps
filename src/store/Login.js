@@ -8,7 +8,7 @@ const Login = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate(); // <- Cambiado
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     try {
       const API_URL = API_BASE_URL;
@@ -39,19 +39,14 @@ const Login = ({ onLogin }) => {
     <form onSubmit={handleSubmit}>
       <div>
         <label>Login:</label>
-        <input
-          type="text"
-          value={login}
-          onChange={(e) => setLogin(e.target.value)}
-          required
-        />
+        <input type="text" value={login} onChange={e => setLogin(e.target.value)} required />
       </div>
       <div>
         <label>Contraseña:</label>
         <input
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
           required
         />
       </div>
@@ -61,4 +56,3 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
-

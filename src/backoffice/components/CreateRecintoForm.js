@@ -31,22 +31,18 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
     const geo = await geocodeAddress(fullAddress);
 
     if (geo) {
-      setDetails((prev) => ({
+      setDetails(prev => ({
         ...prev,
         latitud: geo.lat,
         longitud: geo.lon,
       }));
-      setMapUrl(
-        `https://www.google.com/maps?q=${geo.lat},${geo.lon}&output=embed`
-      );
+      setMapUrl(`https://www.google.com/maps?q=${geo.lat},${geo.lon}&output=embed`);
     } else if (fullAddress) {
-      setMapUrl(
-        `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`
-      );
+      setMapUrl(`https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     try {
@@ -56,7 +52,7 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
         .select('tenant_id')
         .eq('id', user.id)
         .single();
-      
+
       if (error) throw error;
 
       // 👉 buildAddress(details) genera 'direccion'
@@ -64,7 +60,7 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
         nombre,
         direccion: buildAddress(details),
         capacidad: Number(capacidad), // guarda como integer
-        ...details,                   // incluye pais, estado, codigopostal, etc.
+        ...details, // incluye pais, estado, codigopostal, etc.
         tenant_id: profile.tenant_id, // incluir tenant_id
       });
     } catch (error) {
@@ -84,7 +80,7 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
           type="text"
           className="border w-full px-2 py-1 rounded"
           value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
+          onChange={e => setNombre(e.target.value)}
           required
         />
       </label>
@@ -119,9 +115,7 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
               className="border w-full px-2 py-1 rounded"
               placeholder={placeholder}
               value={details[field]}
-              onChange={(e) =>
-                setDetails({ ...details, [field]: e.target.value })
-              }
+              onChange={e => setDetails({ ...details, [field]: e.target.value })}
             />
           ))}
 
@@ -150,14 +144,12 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
             className="border w-full px-2 py-1 rounded"
             placeholder="Cómo llegar"
             value={details.comollegar}
-            onChange={(e) =>
-              setDetails({ ...details, comollegar: e.target.value })
-            }
+            onChange={e => setDetails({ ...details, comollegar: e.target.value })}
           />
 
           {/* Lat / Lon readonly */}
           <div className="grid grid-cols-2 gap-2">
-            {['latitud', 'longitud'].map((field) => (
+            {['latitud', 'longitud'].map(field => (
               <input
                 key={field}
                 type="text"
@@ -188,17 +180,14 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
           type="number"
           className="border w-full px-2 py-1 rounded"
           value={capacidad}
-          onChange={(e) => setCapacidad(e.target.value)}
+          onChange={e => setCapacidad(e.target.value)}
           required
         />
       </label>
 
       {/* Actions */}
       <div className="flex gap-3 mt-4">
-        <button
-          type="submit"
-          className="bg-blue-700 text-white px-4 py-2 rounded"
-        >
+        <button type="submit" className="bg-blue-700 text-white px-4 py-2 rounded">
           Crear
         </button>
         <button

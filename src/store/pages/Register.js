@@ -15,12 +15,12 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -35,7 +35,7 @@ const Register = () => {
         password: formData.password.trim(),
         phone: `${formData.phoneCode}${formData.phone}`,
       });
-      
+
       // Si el registro fue exitoso y tenemos una sesi³n, iniciar sesi³n autom¡ticamente
       if (session && session.access_token) {
         const token = session.access_token;
@@ -96,7 +96,10 @@ const Register = () => {
         </Button>
       </form>
       <div className="mt-4 text-sm">
-        <span className="cursor-pointer text-blue-600 hover:underline" onClick={() => navigate('/store/login')}>
+        <span
+          className="cursor-pointer text-blue-600 hover:underline"
+          onClick={() => navigate('/store/login')}
+        >
           {t('header.login')}
         </span>
       </div>
@@ -105,5 +108,3 @@ const Register = () => {
 };
 
 export default Register;
-
-

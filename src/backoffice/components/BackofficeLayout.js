@@ -12,12 +12,11 @@ const BackofficeLayout = () => {
   const location = useLocation();
   const isBoleteriaRoute = location.pathname.includes('/dashboard/boleteria');
 
-  
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-  
+
   // Verificar autenticación al montar el componente
   useEffect(() => {
     const checkAuth = () => {
@@ -30,31 +29,30 @@ const BackofficeLayout = () => {
         setUser(null);
       }
     };
-    
+
     checkAuth();
-    
+
     // Escuchar cambios en el localStorage
     const handleStorageChange = () => {
       checkAuth();
     };
-    
 
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-  
+
   // Función para manejar el login exitoso
   const handleLogin = ({ token, user: userData }) => {
     setIsAuthenticated(true);
     setUser(userData);
   };
-  
+
   // Función para manejar el logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
     setUser(null);
   };
-  
+
   // Si no está autenticado, mostrar el login
   if (!isAuthenticated) {
     return (
@@ -63,7 +61,7 @@ const BackofficeLayout = () => {
       </div>
     );
   }
-  
+
   if (isBoleteriaRoute) {
     return (
       <RecintoProvider>
@@ -104,11 +102,23 @@ const BackofficeLayout = () => {
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                         className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
                       >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        <svg
+                          className="w-6 h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 6h16M4 12h16M4 18h16"
+                          />
                         </svg>
                       </button>
-                      <h1 className="text-xl font-semibold text-gray-900">Panel de Administración</h1>
+                      <h1 className="text-xl font-semibold text-gray-900">
+                        Panel de Administración
+                      </h1>
                     </div>
                     <div className="flex items-center space-x-4">
                       <AdminNotificationCenter />
@@ -141,4 +151,4 @@ const BackofficeLayout = () => {
   );
 };
 
-export default BackofficeLayout; 
+export default BackofficeLayout;

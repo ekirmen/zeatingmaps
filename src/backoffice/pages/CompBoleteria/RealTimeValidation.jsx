@@ -1,26 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Alert, 
-  notification, 
-  Badge, 
-  Tooltip, 
-  Button, 
-  Space, 
+import {
+  Alert,
+  notification,
+  Badge,
+  Tooltip,
+  Button,
+  Space,
   Typography,
   Card,
   Tag,
   Progress,
-  Divider
+  Divider,
 } from '../../../utils/antdComponents';
-import { 
-  CheckCircleOutlined, 
-  ExclamationCircleOutlined, 
+import {
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
   WarningOutlined,
   InfoCircleOutlined,
   CloseCircleOutlined,
   BellOutlined,
   EyeOutlined,
-  EyeInvisibleOutlined
+  EyeInvisibleOutlined,
 } from '@ant-design/icons';
 import VisualNotifications from '../../../utils/VisualNotifications';
 
@@ -44,7 +44,7 @@ const RealTimeValidation = {
     maxGapBetweenSeats: 3,
     enableRealTimeValidation: true,
     showValidationWarnings: true,
-    autoBlockInvalidSeats: false
+    autoBlockInvalidSeats: false,
   },
 
   // Obtener configuraci³n actual (desde localStorage o usar defaults)
@@ -52,7 +52,6 @@ const RealTimeValidation = {
     try {
       const savedSettings = localStorage.getItem('validationSettings');
       if (savedSettings) {
-
         return { ...RealTimeValidation.defaultRules, ...parsedSettings };
       }
     } catch (error) {
@@ -62,7 +61,7 @@ const RealTimeValidation = {
   },
 
   // Actualizar configuraci³n
-  updateRules: (newRules) => {
+  updateRules: newRules => {
     localStorage.setItem('validationSettings', JSON.stringify(newRules));
   },
 
@@ -70,156 +69,165 @@ const RealTimeValidation = {
     const rules = RealTimeValidation.getRules();
     const errors = [];
     const warnings = [];
-    
+
     // Verificar si las validaciones est¡n habilitadas
     if (!rules.enableRealTimeValidation) {
       return {
         isValid: true,
         errors: [],
         warnings: [],
-        totalPrice: 0
+        totalPrice: 0,
       };
     }
-    
+
     // Validar l­mite de asientos por usuario
     if (seats.length > rules.maxSeatsPerUser) {
       errors.push(`M¡ximo ${rules.maxSeatsPerUser} asientos por usuario`);
     }
-    
+
     // Validar l­mite de asientos por transacci³n
     if (seats.length > rules.maxSeatsPerTransaction) {
       errors.push(`M¡ximo ${rules.maxSeatsPerTransaction} asientos por transacci³n`);
     }
-    
+
     // Validar que no haya asientos duplicados
     const seatIds = seats.map(s => s._id);
     if (new Set(seatIds).size !== seatIds.length) {
       errors.push('No se pueden seleccionar asientos duplicados');
     }
-    
+
     // Validar asientos consecutivos si est¡ habilitado
     if (rules.allowConsecutiveSeats && seats.length > 1) {
       const sortedSeats = seats.sort((a, b) => {
         const rowA = a.nombre?.match(/^[A-Z]+/)?.[0] || '';
         const rowB = b.nombre?.match(/^[A-Z]+/)?.[0] || '';
         if (rowA !== rowB) return rowA.localeCompare(rowB);
-        
+
         const numA = parseInt(a.nombre?.match(/\d+/)?.[0] || '0');
         const numB = parseInt(b.nombre?.match(/\d+/)?.[0] || '0');
         return numA - numB;
       });
-      
+
       for (let i = 1; i < sortedSeats.length; i++) {
         const prevSeat = sortedSeats[i - 1];
         const currSeat = sortedSeats[i];
-        
+
         const prevRow = prevSeat.nombre?.match(/^[A-Z]+/)?.[0] || '';
         const currRow = currSeat.nombre?.match(/^[A-Z]+/)?.[0] || '';
-        
+
         if (prevRow === currRow) {
           const prevNum = parseInt(prevSeat.nombre?.match(/\d+/)?.[0] || '0');
           const currNum = parseInt(currSeat.nombre?.match(/\d+/)?.[0] || '0');
           const gap = currNum - prevNum;
-          
+
           if (gap > rules.maxGapBetweenSeats) {
             warnings.push(`Gap grande entre asientos: ${prevSeat.nombre} y ${currSeat.nombre}`);
           }
         }
       }
     }
-    
+
     // Validar precio total
-    const totalPrice = (seats && Array.isArray(seats) ? seats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0);
+    const totalPrice =
+      seats && Array.isArray(seats) ? seats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0;
     if (totalPrice > rules.maxPricePerTransaction) {
       warnings.push(`Precio total alto: $${totalPrice.toFixed(2)}`);
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
       warnings,
-      totalPrice
+      totalPrice,
     };
   },
 
-  validatePayment: (paymentData) => {
+  validatePayment: paymentData => {
     const rules = RealTimeValidation.getRules();
     const errors = [];
     const warnings = [];
-    
+
     // Validaciones b¡sicas
     if (rules.requirePaymentMethod && !paymentData.method) {
       errors.push('M©todo de pago requerido');
     }
-    
+
     if (rules.requireClientInfo && !paymentData.clientId) {
       errors.push('Informaci³n del cliente requerida');
     }
-    
+
     if (paymentData.amount <= 0) {
       errors.push('Monto inv¡lido');
     }
-    
+
     // Validaciones de monto mejoradas
     if (paymentData.amount > 5000) {
       errors.push('Monto excede el l­mite m¡ximo permitido ($5,000)');
     } else if (paymentData.amount > 2000) {
-      warnings.push('Transacci³n de alto valor ($' + paymentData.amount.toFixed(2) + '), se requiere documentaci³n adicional');
+      warnings.push(
+        'Transacci³n de alto valor ($' +
+          paymentData.amount.toFixed(2) +
+          '), se requiere documentaci³n adicional'
+      );
     } else if (paymentData.amount > 1000) {
-      warnings.push('Transacci³n de valor medio ($' + paymentData.amount.toFixed(2) + '), verificar documentaci³n');
+      warnings.push(
+        'Transacci³n de valor medio ($' +
+          paymentData.amount.toFixed(2) +
+          '), verificar documentaci³n'
+      );
     }
-    
+
     // Validaci³n de m©todo de pago espec­fico
     if (paymentData.method) {
       const method = paymentData.method.toLowerCase();
-      
+
       // Validaciones espec­ficas por m©todo
       if (method.includes('efectivo') && paymentData.amount > 1000) {
         warnings.push('Pago en efectivo por monto alto, considerar m©todo alternativo');
       }
-      
+
       if (method.includes('transferencia') && paymentData.amount < 100) {
         warnings.push('Transferencia por monto bajo, considerar pago en efectivo');
       }
-      
+
       if (method.includes('tarjeta') && paymentData.amount > 3000) {
         warnings.push('Pago con tarjeta por monto alto, verificar l­mites');
       }
     }
-    
+
     // Validaci³n de datos adicionales
     if (paymentData.clientId && paymentData.amount > 1000) {
       // Verificar si el cliente tiene historial de transacciones altas
       warnings.push('Cliente con transacci³n de alto valor, revisar historial');
     }
-    
+
     // Validaci³n de frecuencia de transacciones
     if (paymentData.frequency && paymentData.frequency === 'high') {
       warnings.push('Cliente con alta frecuencia de transacciones, verificar patr³n');
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
       warnings,
-      riskLevel: paymentData.amount > 2000 ? 'high' : paymentData.amount > 1000 ? 'medium' : 'low'
+      riskLevel: paymentData.amount > 2000 ? 'high' : paymentData.amount > 1000 ? 'medium' : 'low',
     };
-  }
+  },
 };
 
 // ===== COMPONENTE PRINCIPAL =====
-const RealTimeValidationComponent = ({ 
-  selectedSeats = [], 
-  selectedClient, 
+const RealTimeValidationComponent = ({
+  selectedSeats = [],
+  selectedClient,
   paymentData,
   onValidationChange,
-  showNotifications = true
+  showNotifications = true,
 }) => {
   const [validationResults, setValidationResults] = useState({
     seats: { isValid: true, errors: [], warnings: [], totalPrice: 0 },
-    payment: { isValid: true, errors: [], warnings: [] }
+    payment: { isValid: true, errors: [], warnings: [] },
   });
-  
+
   const [showDetails, setShowDetails] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
 
@@ -228,24 +236,25 @@ const RealTimeValidationComponent = ({
     if (selectedSeats.length === 0) {
       setValidationResults(prev => ({
         ...prev,
-        seats: { isValid: true, errors: [], warnings: [], totalPrice: 0 }
+        seats: { isValid: true, errors: [], warnings: [], totalPrice: 0 },
       }));
       return;
     }
 
     const seatValidation = RealTimeValidation.validateSeatSelection(
-      selectedSeats, 
-      selectedClient?.id, 
+      selectedSeats,
+      selectedClient?.id,
       'current-event'
     );
 
     setValidationResults(prev => ({
       ...prev,
-      seats: seatValidation
+      seats: seatValidation,
     }));
 
     // Notificaciones autom¡ticas (deshabilitadas para evitar spam)
-    if (showNotifications && false) { // Deshabilitado temporalmente
+    if (showNotifications && false) {
+      // Deshabilitado temporalmente
       if (seatValidation.errors.length > 0) {
         VisualNotifications.show('error', seatValidation.errors[0]);
         setNotificationCount(prev => prev + 1);
@@ -268,10 +277,10 @@ const RealTimeValidationComponent = ({
     if (!paymentData) return;
 
     const paymentValidation = RealTimeValidation.validatePayment(paymentData);
-    
+
     setValidationResults(prev => ({
       ...prev,
-      payment: paymentValidation
+      payment: paymentValidation,
     }));
 
     // Notificaciones autom¡ticas
@@ -288,9 +297,11 @@ const RealTimeValidationComponent = ({
 
   // ===== FUNCIONES DE UTILIDAD =====
   const getValidationStatus = () => {
-    const hasErrors = validationResults.seats.errors.length > 0 || validationResults.payment.errors.length > 0;
-    const hasWarnings = validationResults.seats.warnings.length > 0 || validationResults.payment.warnings.length > 0;
-    
+    const hasErrors =
+      validationResults.seats.errors.length > 0 || validationResults.payment.errors.length > 0;
+    const hasWarnings =
+      validationResults.seats.warnings.length > 0 || validationResults.payment.warnings.length > 0;
+
     if (hasErrors) return 'error';
     if (hasWarnings) return 'warning';
     return 'success';
@@ -299,20 +310,28 @@ const RealTimeValidationComponent = ({
   const getStatusIcon = () => {
     const status = getValidationStatus();
     switch (status) {
-      case 'success': return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
-      case 'warning': return <WarningOutlined style={{ color: '#faad14' }} />;
-      case 'error': return <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />;
-      default: return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
+      case 'success':
+        return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
+      case 'warning':
+        return <WarningOutlined style={{ color: '#faad14' }} />;
+      case 'error':
+        return <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />;
+      default:
+        return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
     }
   };
 
   const getStatusColor = () => {
     const status = getValidationStatus();
     switch (status) {
-      case 'success': return '#52c41a';
-      case 'warning': return '#faad14';
-      case 'error': return '#ff4d4f';
-      default: return '#1890ff';
+      case 'success':
+        return '#52c41a';
+      case 'warning':
+        return '#faad14';
+      case 'error':
+        return '#ff4d4f';
+      default:
+        return '#1890ff';
     }
   };
 
@@ -335,7 +354,7 @@ const RealTimeValidationComponent = ({
             style={{
               backgroundColor: getStatusColor(),
               borderColor: getStatusColor(),
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             }}
           />
         </Badge>
@@ -367,9 +386,13 @@ const RealTimeValidationComponent = ({
               </div>
               <Progress
                 percent={
-                  getValidationStatus() === 'success' ? 100 :
-                  getValidationStatus() === 'warning' ? 75 :
-                  getValidationStatus() === 'error' ? 25 : 0
+                  getValidationStatus() === 'success'
+                    ? 100
+                    : getValidationStatus() === 'warning'
+                      ? 75
+                      : getValidationStatus() === 'error'
+                        ? 25
+                        : 0
                 }
                 status={getValidationStatus()}
                 strokeColor={getStatusColor()}
@@ -385,10 +408,12 @@ const RealTimeValidationComponent = ({
                 <Title level={5} className="mb-2">
                   ðŸª‘ Validaci³n de Asientos ({selectedSeats.length})
                 </Title>
-                
+
                 {validationResults.seats.errors.length > 0 && (
                   <div className="mb-2">
-                    <Text type="danger" strong>Errores:</Text>
+                    <Text type="danger" strong>
+                      Errores:
+                    </Text>
                     <div className="space-y-1 mt-1">
                       {validationResults.seats.errors.map((error, index) => (
                         <Alert
@@ -406,7 +431,9 @@ const RealTimeValidationComponent = ({
 
                 {validationResults.seats.warnings.length > 0 && (
                   <div className="mb-2">
-                    <Text type="warning" strong>Advertencias:</Text>
+                    <Text type="warning" strong>
+                      Advertencias:
+                    </Text>
                     <div className="space-y-1 mt-1">
                       {validationResults.seats.warnings.map((warning, index) => (
                         <Alert
@@ -422,19 +449,22 @@ const RealTimeValidationComponent = ({
                   </div>
                 )}
 
-                {validationResults.seats.isValid && validationResults.seats.warnings.length === 0 && (
-                  <Alert
-                    message="œ… Selecci³n de asientos v¡lida"
-                    type="success"
-                    showIcon
-                    size="small"
-                  />
-                )}
+                {validationResults.seats.isValid &&
+                  validationResults.seats.warnings.length === 0 && (
+                    <Alert
+                      message="œ… Selecci³n de asientos v¡lida"
+                      type="success"
+                      showIcon
+                      size="small"
+                    />
+                  )}
 
                 {validationResults.seats.totalPrice > 0 && (
                   <div className="mt-2 p-2 bg-gray-50 rounded">
                     <Text strong>Precio Total: </Text>
-                    <Text className="text-green-600">${validationResults.seats.totalPrice.toFixed(2)}</Text>
+                    <Text className="text-green-600">
+                      ${validationResults.seats.totalPrice.toFixed(2)}
+                    </Text>
                   </div>
                 )}
               </div>
@@ -447,10 +477,12 @@ const RealTimeValidationComponent = ({
                 <Title level={5} className="mb-2">
                   ðŸ’³ Validaci³n de Pago
                 </Title>
-                
+
                 {validationResults.payment.errors.length > 0 && (
                   <div className="mb-2">
-                    <Text type="danger" strong>Errores:</Text>
+                    <Text type="danger" strong>
+                      Errores:
+                    </Text>
                     <div className="space-y-1 mt-1">
                       {validationResults.payment.errors.map((error, index) => (
                         <Alert
@@ -468,7 +500,9 @@ const RealTimeValidationComponent = ({
 
                 {validationResults.payment.warnings.length > 0 && (
                   <div className="mb-2">
-                    <Text type="warning" strong>Advertencias:</Text>
+                    <Text type="warning" strong>
+                      Advertencias:
+                    </Text>
                     <div className="space-y-1 mt-1">
                       {validationResults.payment.warnings.map((warning, index) => (
                         <Alert
@@ -484,14 +518,15 @@ const RealTimeValidationComponent = ({
                   </div>
                 )}
 
-                {validationResults.payment.isValid && validationResults.payment.warnings.length === 0 && (
-                  <Alert
-                    message="œ… Datos de pago v¡lidos"
-                    type="success"
-                    showIcon
-                    size="small"
-                  />
-                )}
+                {validationResults.payment.isValid &&
+                  validationResults.payment.warnings.length === 0 && (
+                    <Alert
+                      message="œ… Datos de pago v¡lidos"
+                      type="success"
+                      showIcon
+                      size="small"
+                    />
+                  )}
               </div>
             )}
 
@@ -499,8 +534,9 @@ const RealTimeValidationComponent = ({
             <Divider />
             <div>
               <Text type="secondary" className="text-xs">
-                <strong>Reglas activas:</strong> M¡x. {RealTimeValidation.rules.maxSeatsPerUser} asientos por usuario, 
-                M¡x. {RealTimeValidation.rules.maxSeatsPerTransaction} por transacci³n
+                <strong>Reglas activas:</strong> M¡x. {RealTimeValidation.rules.maxSeatsPerUser}{' '}
+                asientos por usuario, M¡x. {RealTimeValidation.rules.maxSeatsPerTransaction} por
+                transacci³n
               </Text>
             </div>
           </div>
@@ -513,5 +549,3 @@ const RealTimeValidationComponent = ({
 // ===== EXPORTAR FUNCIONES UTILITARIAS =====
 export { VisualNotifications, RealTimeValidation };
 export default RealTimeValidationComponent;
-
-

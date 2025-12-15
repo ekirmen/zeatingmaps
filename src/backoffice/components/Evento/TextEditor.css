@@ -1,89 +1,89 @@
 /* Estilos para toolbar de formato (opcional) */
 .format-toolbar {
-    display: flex;
-    gap: 8px;
-    padding: 12px 16px;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  
-  .format-button {
-    padding: 6px 12px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s ease;
-  }
-  
-  .format-button:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-  }
-  
-  .format-button.active {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-  }
-  
-  /* Estilos para imágenes dentro del preview */
-  .preview-content img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    margin: 12px 0;
-  }
-  
-  /* Estilos para tablas */
-  .preview-content table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0;
-  }
-  
-  .preview-content th,
-  .preview-content td {
-    padding: 8px 12px;
-    border: 1px solid #e2e8f0;
-    text-align: left;
-  }
-  
-  .preview-content th {
-    background: #f8fafc;
-    font-weight: 600;
-  }
-  
-  /* Estilos para blockquotes */
-  .preview-content blockquote {
-    padding: 12px 20px;
-    margin: 12px 0;
-    border-left: 4px solid #667eea;
-    background: #f8fafc;
-    font-style: italic;
-    color: #475569;
-  }
-  
-  /* Estilos para código */
-  .preview-content code {
-    padding: 2px 6px;
-    background: #f1f5f9;
-    border-radius: 4px;
-    font-family: 'Consolas', monospace;
-    font-size: 13px;
-    color: #dc2626;
-  }
-  
-  .preview-content pre {
-    padding: 16px;
-    background: #1e293b;
-    border-radius: 8px;
-    overflow-x: auto;
-    margin: 12px 0;
-  }
-  
-  .preview-content pre code {
-    background: transparent;
-    color: #e2e8f0;
-  }
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.format-button {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.format-button:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.format-button.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+/* Estilos para imágenes dentro del preview */
+.preview-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+/* Estilos para tablas */
+.preview-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.preview-content th,
+.preview-content td {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.preview-content th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+/* Estilos para blockquotes */
+.preview-content blockquote {
+  padding: 12px 20px;
+  margin: 12px 0;
+  border-left: 4px solid #667eea;
+  background: #f8fafc;
+  font-style: italic;
+  color: #475569;
+}
+
+/* Estilos para código */
+.preview-content code {
+  padding: 2px 6px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  font-family: 'Consolas', monospace;
+  font-size: 13px;
+  color: #dc2626;
+}
+
+.preview-content pre {
+  padding: 16px;
+  background: #1e293b;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.preview-content pre code {
+  background: transparent;
+  color: #e2e8f0;
+}

@@ -4,7 +4,6 @@ import { supabase } from '../../supabaseClient';
  * Servicio para manejar configuraciones de tema por evento
  */
 export class EventThemeService {
-
   /**
    * Obtener configuración de tema para un evento específico
    * @param {string} eventId - ID del evento
@@ -14,7 +13,11 @@ export class EventThemeService {
   static async getEventThemeSettings(eventId, tenantId) {
     try {
       // Si eventId no es un UUID válido, no hacer la consulta
-      if (!eventId || typeof eventId !== 'string' || !eventId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      if (
+        !eventId ||
+        typeof eventId !== 'string' ||
+        !eventId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+      ) {
         return null;
       }
 
@@ -49,14 +52,17 @@ export class EventThemeService {
     try {
       const { data, error } = await supabase
         .from('event_theme_settings')
-        .upsert({
-          event_id: eventId,
-          tenant_id: tenantId,
-          theme_config: themeSettings,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'event_id,tenant_id'
-        })
+        .upsert(
+          {
+            event_id: eventId,
+            tenant_id: tenantId,
+            theme_config: themeSettings,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'event_id,tenant_id',
+          }
+        )
         .select()
         .single();
 
@@ -131,10 +137,9 @@ export class EventThemeService {
   static async getAvailableEvents(tenantId) {
     try {
       // Usar SQL raw para manejar eventos sin fecha_evento
-      const { data, error } = await supabase
-        .rpc('get_available_events_with_fallback', {
-          tenant_id_param: tenantId
-        });
+      const { data, error } = await supabase.rpc('get_available_events_with_fallback', {
+        tenant_id_param: tenantId,
+      });
 
       if (error) {
         // Fallback: consulta simple si la función RPC no existe

@@ -18,42 +18,41 @@ const EditForm = ({
   handleSave,
   handleImageChange,
   imagePreview,
-  files
+  files,
 }) => {
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value, type, checked, files } = e.target;
-    
+
     if (type === 'file') {
       setEventoData(prev => ({
         ...prev,
         imagenes: {
           ...prev.imagenes,
-          [name]: files[0]
-        }
+          [name]: files[0],
+        },
       }));
     } else if (type === 'checkbox') {
       setEventoData(prev => ({
         ...prev,
-        [name]: checked
+        [name]: checked,
       }));
     } else {
       setEventoData(prev => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
 
   const handleFileChange = (e, fieldName) => {
-
     if (!file) return;
 
     setEventoData(prev => ({
       ...prev,
       imagenes: {
         ...prev.imagenes,
-        [fieldName]: file
-      }
+        [fieldName]: file,
+      },
     }));
   };
 
@@ -61,38 +60,38 @@ const EditForm = ({
     <div className="menu-overlay">
       <div className="menu-container">
         <div className="tabs">
-          <button 
-            className={activeTab === 'datosBasicos' ? 'active' : ''} 
+          <button
+            className={activeTab === 'datosBasicos' ? 'active' : ''}
             onClick={() => setActiveTab('datosBasicos')}
           >
             Datos Básicos
           </button>
-          <button 
-            className={activeTab === 'diseno' ? 'active' : ''} 
+          <button
+            className={activeTab === 'diseno' ? 'active' : ''}
             onClick={() => setActiveTab('diseno')}
           >
             Diseño del espectáculo
           </button>
-          <button 
-            className={activeTab === 'venta' ? 'active' : ''} 
+          <button
+            className={activeTab === 'venta' ? 'active' : ''}
             onClick={() => setActiveTab('venta')}
           >
             Configuración de venta
           </button>
-          <button 
-            className={activeTab === 'boletas' ? 'active' : ''} 
+          <button
+            className={activeTab === 'boletas' ? 'active' : ''}
             onClick={() => setActiveTab('boletas')}
           >
             Configuración boletas
           </button>
-          <button 
-            className={activeTab === 'avanzadas' ? 'active' : ''} 
+          <button
+            className={activeTab === 'avanzadas' ? 'active' : ''}
             onClick={() => setActiveTab('avanzadas')}
           >
             Opciones avanzadas
           </button>
-          <button 
-            className={activeTab === 'facebook' ? 'active' : ''} 
+          <button
+            className={activeTab === 'facebook' ? 'active' : ''}
             onClick={() => setActiveTab('facebook')}
           >
             Píxel Facebook
@@ -102,8 +101,8 @@ const EditForm = ({
         <div className="tab-content">
           {activeTab === 'datosBasicos' && (
             <div>
-              <DatosBasicos 
-                eventoData={eventoData} 
+              <DatosBasicos
+                eventoData={eventoData}
                 setEventoData={setEventoData}
                 handleChange={handleChange}
               />
@@ -111,7 +110,7 @@ const EditForm = ({
                 <label>Imagen Principal</label>
                 <input
                   type="file"
-                  onChange={(e) => handleFileChange(e, 'espectaculo')}
+                  onChange={e => handleFileChange(e, 'espectaculo')}
                   accept="image/*"
                 />
 
@@ -131,36 +130,36 @@ const EditForm = ({
             </div>
           )}
           {activeTab === 'diseno' && (
-            <DisenoEspectaculo 
-              eventoData={eventoData} 
+            <DisenoEspectaculo
+              eventoData={eventoData}
               setEventoData={setEventoData}
               handleChange={handleChange}
             />
           )}
           {activeTab === 'venta' && (
-            <ConfiguracionVenta 
-              eventoData={eventoData} 
+            <ConfiguracionVenta
+              eventoData={eventoData}
               setEventoData={setEventoData}
               handleChange={handleChange}
             />
           )}
           {activeTab === 'boletas' && (
-            <ConfiguracionBoletas 
-              eventoData={eventoData} 
+            <ConfiguracionBoletas
+              eventoData={eventoData}
               setEventoData={setEventoData}
               handleChange={handleChange}
             />
           )}
           {activeTab === 'avanzadas' && (
-            <OpcionesAvanzadas 
-              eventoData={eventoData} 
+            <OpcionesAvanzadas
+              eventoData={eventoData}
               setEventoData={setEventoData}
               handleChange={handleChange}
             />
           )}
           {activeTab === 'facebook' && (
-            <FacebookPixelConfig 
-              eventoData={eventoData} 
+            <FacebookPixelConfig
+              eventoData={eventoData}
               setEventoData={setEventoData}
               handleChange={handleChange}
             />

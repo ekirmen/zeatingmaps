@@ -20,17 +20,19 @@ const TenantErrorBoundary = ({ error, onRetry, subdomain }) => {
   };
 
   return (
-    <div style={{ 
-      padding: '40px 20px', 
-      maxWidth: '800px', 
-      margin: '0 auto',
-      textAlign: 'center' 
-    }}>
+    <div
+      style={{
+        padding: '40px 20px',
+        maxWidth: '800px',
+        margin: '0 auto',
+        textAlign: 'center',
+      }}
+    >
       <Card>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <div>
-            <ExclamationCircleOutlined 
-              style={{ fontSize: '64px', color: '#faad14', marginBottom: '16px' }} 
+            <ExclamationCircleOutlined
+              style={{ fontSize: '64px', color: '#faad14', marginBottom: '16px' }}
             />
             <Title level={2} style={{ color: '#d48806' }}>
               Empresa No Configurada
@@ -50,15 +52,16 @@ const TenantErrorBoundary = ({ error, onRetry, subdomain }) => {
           <div style={{ textAlign: 'left' }}>
             <Title level={4}>¿Qué está pasando?</Title>
             <Paragraph>
-              Tu aplicación está intentando acceder a una empresa que no existe o no está configurada 
-              en la base de datos. El subdominio <Text code>{subdomain}</Text> no tiene una empresa asociada.
+              Tu aplicación está intentando acceder a una empresa que no existe o no está
+              configurada en la base de datos. El subdominio <Text code>{subdomain}</Text> no tiene
+              una empresa asociada.
             </Paragraph>
 
             <Title level={4}>¿Cómo solucionarlo?</Title>
             <Paragraph>
               Necesitas crear una empresa en el panel de administración SaaS. Esto incluye:
             </Paragraph>
-            
+
             <ul style={{ textAlign: 'left', marginLeft: '20px' }}>
               <li>Configurar los datos básicos de la empresa</li>
               <li>Crear un recinto y salas</li>
@@ -71,27 +74,20 @@ const TenantErrorBoundary = ({ error, onRetry, subdomain }) => {
           <Divider />
 
           <Space size="middle">
-            <Button 
-              type="primary" 
-              size="large" 
+            <Button
+              type="primary"
+              size="large"
               icon={<PlusOutlined />}
               onClick={handleCreateTenant}
             >
               Crear Empresa
             </Button>
-            
-            <Button 
-              size="large" 
-              icon={<DatabaseOutlined />}
-              onClick={handleGoToBackoffice}
-            >
+
+            <Button size="large" icon={<DatabaseOutlined />} onClick={handleGoToBackoffice}>
               Ir al Panel de Administración
             </Button>
-            
-            <Button 
-              size="large" 
-              onClick={onRetry}
-            >
+
+            <Button size="large" onClick={onRetry}>
               Reintentar Detección
             </Button>
           </Space>
@@ -114,4 +110,3 @@ const TenantErrorBoundary = ({ error, onRetry, subdomain }) => {
 };
 
 export default TenantErrorBoundary;
-

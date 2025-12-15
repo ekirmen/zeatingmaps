@@ -7,7 +7,15 @@ export default function SeatWithTooltip({ seat = {}, x = 0, y = 0, onClick }) {
 
   return (
     <React.Fragment>
-      <Circle x={x} y={y} radius={12} fill={fill} stroke="black" strokeWidth={1} onClick={() => onClick && onClick(seat)} />
+      <Circle
+        x={x}
+        y={y}
+        radius={12}
+        fill={fill}
+        stroke="black"
+        strokeWidth={1}
+        onClick={() => onClick && onClick(seat)}
+      />
       {label && (
         <Label x={x + 14} y={y - 10}>
           <Tag fill="#222" opacity={0.8} cornerRadius={4} />

@@ -31,7 +31,7 @@ export const useZoneManagement = (selectedPlantilla, getPrecioConDescuento) => {
 
   const zonePriceRanges = useMemo(() => {
     const ranges = {};
-    detallesPlantilla.forEach((d) => {
+    detallesPlantilla.forEach(d => {
       const nombre = d.zona?.nombre || d.zonaId || d.zona;
       const precio = getPrecioConDescuento(d);
       if (!ranges[nombre]) {
@@ -61,6 +61,6 @@ export const useZoneManagement = (selectedPlantilla, getPrecioConDescuento) => {
     detallesPlantilla,
     zonePriceRanges,
     handleClearZoneSelection,
-    handleQuantityChange
+    handleQuantityChange,
   };
 };

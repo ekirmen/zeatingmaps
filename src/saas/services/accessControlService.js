@@ -7,53 +7,53 @@ class AccessControlService {
         name: 'Super Administrador',
         level: 100,
         permissions: ['*'], // Todos los permisos
-        description: 'Acceso completo al sistema SaaS'
+        description: 'Acceso completo al sistema SaaS',
       },
       admin: {
         name: 'Administrador',
         level: 80,
         permissions: [
-          'tenant:read', 'tenant:write', 'tenant:delete',
-          'billing:read', 'billing:write',
-          'notifications:read', 'notifications:write',
+          'tenant:read',
+          'tenant:write',
+          'tenant:delete',
+          'billing:read',
+          'billing:write',
+          'notifications:read',
+          'notifications:write',
           'analytics:read',
-          'support:read', 'support:write',
-          'settings:read', 'settings:write'
+          'support:read',
+          'support:write',
+          'settings:read',
+          'settings:write',
         ],
-        description: 'Administración completa de tenants'
+        description: 'Administración completa de tenants',
       },
       manager: {
         name: 'Gerente',
         level: 60,
         permissions: [
-          'tenant:read', 'tenant:write',
+          'tenant:read',
+          'tenant:write',
           'billing:read',
           'notifications:read',
           'analytics:read',
-          'support:read', 'support:write'
+          'support:read',
+          'support:write',
         ],
-        description: 'Gestión de tenants y soporte'
+        description: 'Gestión de tenants y soporte',
       },
       support: {
         name: 'Soporte',
         level: 40,
-        permissions: [
-          'tenant:read',
-          'support:read', 'support:write',
-          'notifications:read'
-        ],
-        description: 'Solo soporte técnico'
+        permissions: ['tenant:read', 'support:read', 'support:write', 'notifications:read'],
+        description: 'Solo soporte técnico',
       },
       viewer: {
         name: 'Visualizador',
         level: 20,
-        permissions: [
-          'tenant:read',
-          'analytics:read',
-          'notifications:read'
-        ],
-        description: 'Solo lectura de información'
-      }
+        permissions: ['tenant:read', 'analytics:read', 'notifications:read'],
+        description: 'Solo lectura de información',
+      },
     };
 
     this.permissions = {
@@ -73,7 +73,7 @@ class AccessControlService {
       'users:read': 'Ver usuarios',
       'users:write': 'Gestionar usuarios',
       'roles:read': 'Ver roles',
-      'roles:write': 'Gestionar roles'
+      'roles:write': 'Gestionar roles',
     };
   }
 
@@ -90,7 +90,7 @@ class AccessControlService {
 
       return {
         role: data.role || 'viewer',
-        permissions: data.permissions ? JSON.parse(data.permissions) : []
+        permissions: data.permissions ? JSON.parse(data.permissions) : [],
       };
     } catch (error) {
       console.error('Error getting user role:', error);
@@ -102,10 +102,10 @@ class AccessControlService {
   async hasPermission(userId, permission) {
     try {
       const userRole = await this.getUserRole(userId);
-      
+
       // Super admin tiene todos los permisos
       if (userRole.role === 'super_admin') return true;
-      
+
       // Verificar permisos del rol
       const rolePermissions = this.roles[userRole.role]?.permissions || [];
       if (rolePermissions.includes('*') || rolePermissions.includes(permission)) {
@@ -126,7 +126,7 @@ class AccessControlService {
       const userRole = await this.getUserRole(userId);
       const userLevel = this.roles[userRole.role]?.level || 0;
       const requiredLevel = this.roles[requiredRole]?.level || 0;
-      
+
       return userLevel >= requiredLevel;
     } catch (error) {
       console.error('Error checking role:', error);
@@ -142,7 +142,7 @@ class AccessControlService {
         .update({
           role: role,
           permissions: JSON.stringify(customPermissions),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
         .select()
@@ -154,7 +154,7 @@ class AccessControlService {
       await this.logAction('role_assigned', {
         user_id: userId,
         role: role,
-        permissions: customPermissions
+        permissions: customPermissions,
       });
 
       return data;
@@ -169,14 +169,16 @@ class AccessControlService {
     try {
       const { data, error } = await supabase
         .from('custom_roles')
-        .insert([{
-          name: roleData.name,
-          description: roleData.description,
-          permissions: JSON.stringify(roleData.permissions),
-          level: roleData.level,
-          is_active: true,
-          created_at: new Date().toISOString()
-        }])
+        .insert([
+          {
+            name: roleData.name,
+            description: roleData.description,
+            permissions: JSON.stringify(roleData.permissions),
+            level: roleData.level,
+            is_active: true,
+            created_at: new Date().toISOString(),
+          },
+        ])
         .select()
         .single();
 
@@ -185,7 +187,7 @@ class AccessControlService {
       // Registrar en auditoría
       await this.logAction('custom_role_created', {
         role_name: roleData.name,
-        permissions: roleData.permissions
+        permissions: roleData.permissions,
       });
 
       return data;
@@ -213,7 +215,7 @@ class AccessControlService {
         description: role.description,
         level: role.level,
         permissions: role.permissions,
-        is_system: true
+        is_system: true,
       }));
 
       const customRoles = data.map(role => ({
@@ -222,7 +224,7 @@ class AccessControlService {
         description: role.description,
         level: role.level,
         permissions: JSON.parse(role.permissions),
-        is_system: false
+        is_system: false,
       }));
 
       return [...systemRoles, ...customRoles];
@@ -234,7 +236,7 @@ class AccessControlService {
         description: role.description,
         level: role.level,
         permissions: role.permissions,
-        is_system: true
+        is_system: true,
       }));
     }
   }
@@ -258,9 +260,7 @@ class AccessControlService {
   // Obtener estadísticas de roles
   async getRoleStats() {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role');
+      const { data, error } = await supabase.from('profiles').select('role');
 
       if (error) throw error;
 
@@ -281,15 +281,17 @@ class AccessControlService {
     try {
       const { data, error } = await supabase
         .from('access_policies')
-        .insert([{
-          name: policyData.name,
-          description: policyData.description,
-          resource: policyData.resource,
-          action: policyData.action,
-          conditions: JSON.stringify(policyData.conditions),
-          is_active: true,
-          created_at: new Date().toISOString()
-        }])
+        .insert([
+          {
+            name: policyData.name,
+            description: policyData.description,
+            resource: policyData.resource,
+            action: policyData.action,
+            conditions: JSON.stringify(policyData.conditions),
+            is_active: true,
+            created_at: new Date().toISOString(),
+          },
+        ])
         .select()
         .single();
 
@@ -299,7 +301,7 @@ class AccessControlService {
       await this.logAction('access_policy_created', {
         policy_name: policyData.name,
         resource: policyData.resource,
-        action: policyData.action
+        action: policyData.action,
       });
 
       return data;
@@ -333,7 +335,7 @@ class AccessControlService {
       for (const policy of data) {
         const conditions = JSON.parse(policy.conditions);
         const userRole = await this.getUserRole(userId);
-        
+
         // Verificar condiciones del rol
         if (conditions.roles && !conditions.roles.includes(userRole.role)) {
           continue;
@@ -370,7 +372,7 @@ class AccessControlService {
 
       return allPermissions.map(permission => ({
         permission,
-        description: this.permissions[permission] || permission
+        description: this.permissions[permission] || permission,
       }));
     } catch (error) {
       console.error('Error getting user permissions:', error);
@@ -381,16 +383,18 @@ class AccessControlService {
   // Registrar acción en auditoría
   async logAction(action, details) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      await supabase
-        .from('audit_logs')
-        .insert([{
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      await supabase.from('audit_logs').insert([
+        {
           user_id: user?.id,
           action: `access_control_${action}`,
           details: JSON.stringify(details),
-          created_at: new Date().toISOString()
-        }]);
+          created_at: new Date().toISOString(),
+        },
+      ]);
     } catch (error) {
       console.error('Error logging action:', error);
     }
@@ -424,12 +428,12 @@ class AccessControlService {
     try {
       const roles = await this.getAllRoles();
       const stats = await this.getRoleStats();
-      
+
       return {
         roles,
         stats,
         permissions: this.permissions,
-        exported_at: new Date().toISOString()
+        exported_at: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error exporting role configuration:', error);

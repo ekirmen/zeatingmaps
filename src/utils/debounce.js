@@ -3,7 +3,6 @@
  * Evita ejecutar una función demasiado frecuentemente
  */
 export function debounce(func, wait) {
-
   return function executedFunction(...args) {
     const later = () => {
       clearTimeout(timeout);
@@ -24,7 +23,7 @@ export function throttle(func, limit) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+      setTimeout(() => (inThrottle = false), limit);
     }
   };
 }

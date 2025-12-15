@@ -19,14 +19,17 @@ class AnalyticsService {
         { count: suspendedTenants },
         { count: totalEvents },
         { count: totalUsers },
-        { count: totalSales }
+        { count: totalSales },
       ] = await Promise.all([
         supabase.from('tenants').select('*', { count: 'exact', head: true }),
         supabase.from('tenants').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('tenants').select('*', { count: 'exact', head: true }).eq('status', 'suspended'),
+        supabase
+          .from('tenants')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'suspended'),
         supabase.from('eventos').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('ventas').select('*', { count: 'exact', head: true })
+        supabase.from('ventas').select('*', { count: 'exact', head: true }),
       ]);
 
       const metrics = {
@@ -38,7 +41,7 @@ class AnalyticsService {
         totalSales: totalSales || 0,
         tenantGrowthRate: await this.getTenantGrowthRate(),
         revenueGrowth: await this.getRevenueGrowth(),
-        averageRevenuePerTenant: await this.getAverageRevenuePerTenant()
+        averageRevenuePerTenant: await this.getAverageRevenuePerTenant(),
       };
 
       this.setCachedData(cacheKey, metrics);
@@ -61,13 +64,26 @@ class AnalyticsService {
         { count: events },
         { count: users },
         { count: sales },
-        { data: revenue }
+        { data: revenue },
       ] = await Promise.all([
         supabase.from('tenants').select('*').eq('id', tenantId).single(),
-        supabase.from('eventos').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('ventas').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('payment_transactions').select('amount').eq('tenant_id', tenantId).eq('status', 'completed')
+        supabase
+          .from('eventos')
+          .select('*', { count: 'exact', head: true })
+          .eq('tenant_id', tenantId),
+        supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('tenant_id', tenantId),
+        supabase
+          .from('ventas')
+          .select('*', { count: 'exact', head: true })
+          .eq('tenant_id', tenantId),
+        supabase
+          .from('payment_transactions')
+          .select('amount')
+          .eq('tenant_id', tenantId)
+          .eq('status', 'completed'),
       ]);
 
       const totalRevenue = revenue?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
@@ -82,7 +98,7 @@ class AnalyticsService {
         usersThisMonth: await this.getUsersThisMonth(tenantId),
         revenueThisMonth: await this.getRevenueThisMonth(tenantId),
         averageEventRevenue: sales > 0 ? totalRevenue / sales : 0,
-        userEngagement: await this.getUserEngagement(tenantId)
+        userEngagement: await this.getUserEngagement(tenantId),
       };
 
       this.setCachedData(cacheKey, metrics);
@@ -101,8 +117,15 @@ class AnalyticsService {
       lastMonth.setMonth(lastMonth.getMonth() - 1);
 
       const [currentCount, lastCount] = await Promise.all([
-        supabase.from('tenants').select('*', { count: 'exact', head: true }).gte('created_at', this.getMonthStart(currentMonth)),
-        supabase.from('tenants').select('*', { count: 'exact', head: true }).gte('created_at', this.getMonthStart(lastMonth)).lt('created_at', this.getMonthStart(currentMonth))
+        supabase
+          .from('tenants')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', this.getMonthStart(currentMonth)),
+        supabase
+          .from('tenants')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', this.getMonthStart(lastMonth))
+          .lt('created_at', this.getMonthStart(currentMonth)),
       ]);
 
       const current = currentCount.count || 0;
@@ -119,11 +142,22 @@ class AnalyticsService {
   async getRevenueGrowth() {
     try {
       const currentMonth = this.getMonthStart(new Date());
-      const lastMonth = this.getMonthStart(new Date(new Date().setMonth(new Date().getMonth() - 1)));
+      const lastMonth = this.getMonthStart(
+        new Date(new Date().setMonth(new Date().getMonth() - 1))
+      );
 
       const [currentRevenue, lastRevenue] = await Promise.all([
-        supabase.from('payment_transactions').select('amount').eq('status', 'completed').gte('created_at', currentMonth),
-        supabase.from('payment_transactions').select('amount').eq('status', 'completed').gte('created_at', lastMonth).lt('created_at', currentMonth)
+        supabase
+          .from('payment_transactions')
+          .select('amount')
+          .eq('status', 'completed')
+          .gte('created_at', currentMonth),
+        supabase
+          .from('payment_transactions')
+          .select('amount')
+          .eq('status', 'completed')
+          .gte('created_at', lastMonth)
+          .lt('created_at', currentMonth),
       ]);
 
       const current = currentRevenue.data?.reduce((sum, t) => sum + t.amount, 0) || 0;
@@ -143,13 +177,13 @@ class AnalyticsService {
       if (!tenants || tenants.length === 0) return 0;
 
       const totalRevenue = await Promise.all(
-        tenants.map(async (tenant) => {
+        tenants.map(async tenant => {
           const { data } = await supabase
             .from('payment_transactions')
             .select('amount')
             .eq('tenant_id', tenant.id)
             .eq('status', 'completed');
-          
+
           return data?.reduce((sum, t) => sum + t.amount, 0) || 0;
         })
       );
@@ -239,22 +273,22 @@ class AnalyticsService {
   // Obtener top tenants por rendimiento
   async getTopPerformingTenants(limit = 10) {
     try {
-      const { data: tenants } = await supabase.from('tenants').select('id, company_name, plan_type');
+      const { data: tenants } = await supabase
+        .from('tenants')
+        .select('id, company_name, plan_type');
 
       const tenantMetrics = await Promise.all(
-        tenants.map(async (tenant) => {
+        tenants.map(async tenant => {
           const metrics = await this.getTenantMetrics(tenant.id);
           return {
             ...tenant,
             ...metrics,
-            performanceScore: this.calculatePerformanceScore(metrics)
+            performanceScore: this.calculatePerformanceScore(metrics),
           };
         })
       );
 
-      return tenantMetrics
-        .sort((a, b) => b.performanceScore - a.performanceScore)
-        .slice(0, limit);
+      return tenantMetrics.sort((a, b) => b.performanceScore - a.performanceScore).slice(0, limit);
     } catch (error) {
       console.error('Error getting top performing tenants:', error);
       return [];
@@ -267,7 +301,7 @@ class AnalyticsService {
       revenue: 0.4,
       events: 0.3,
       users: 0.2,
-      userEngagement: 0.1
+      userEngagement: 0.1,
     };
 
     const normalizedRevenue = Math.min(metrics.revenue / 10000, 1); // Normalizar a 0-1
@@ -276,11 +310,12 @@ class AnalyticsService {
     const normalizedEngagement = metrics.userEngagement / 100;
 
     return (
-      normalizedRevenue * weights.revenue +
-      normalizedEvents * weights.events +
-      normalizedUsers * weights.users +
-      normalizedEngagement * weights.userEngagement
-    ) * 100;
+      (normalizedRevenue * weights.revenue +
+        normalizedEvents * weights.events +
+        normalizedUsers * weights.users +
+        normalizedEngagement * weights.userEngagement) *
+      100
+    );
   }
 
   // Obtener datos de uso por período
@@ -354,7 +389,7 @@ class AnalyticsService {
   setCachedData(key, data) {
     this.cache.set(key, {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -374,7 +409,7 @@ class AnalyticsService {
       totalSales: 0,
       tenantGrowthRate: 0,
       revenueGrowth: 0,
-      averageRevenuePerTenant: 0
+      averageRevenuePerTenant: 0,
     };
   }
 
@@ -389,7 +424,7 @@ class AnalyticsService {
       usersThisMonth: 0,
       revenueThisMonth: 0,
       averageEventRevenue: 0,
-      userEngagement: 0
+      userEngagement: 0,
     };
   }
 }

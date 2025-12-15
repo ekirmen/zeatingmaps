@@ -1,22 +1,22 @@
 import React from 'react';
 
-const SimpleSeatingMap = ({ 
-  onSeatClick, 
-  selectedSeats = [], 
+const SimpleSeatingMap = ({
+  onSeatClick,
+  selectedSeats = [],
   availableSeats = [],
   blockMode = false,
-  blockedSeats = [] // Nuevo prop para asientos bloqueados
+  blockedSeats = [], // Nuevo prop para asientos bloqueados
 }) => {
   const generateSeats = () => {
     const seats = [];
     const rows = 6;
     const cols = 8;
-    
+
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         const seatNumber = row * cols + col + 1;
         const seatId = `seat-${seatNumber}`;
-        
+
         seats.push({
           id: seatId,
           number: seatNumber,
@@ -24,7 +24,7 @@ const SimpleSeatingMap = ({
           col: col + 1,
           isAvailable: !blockedSeats.includes(seatId),
           isSelected: selectedSeats.includes(seatId),
-          isBlocked: blockedSeats.includes(seatId)
+          isBlocked: blockedSeats.includes(seatId),
         });
       }
     }
@@ -34,7 +34,7 @@ const SimpleSeatingMap = ({
 
   const seats = generateSeats();
 
-  const getSeatColor = (seat) => {
+  const getSeatColor = seat => {
     if (seat.isBlocked) {
       return 'bg-red-500 text-white cursor-not-allowed';
     }
@@ -47,7 +47,7 @@ const SimpleSeatingMap = ({
     return 'bg-gray-200 text-gray-800 hover:bg-gray-300';
   };
 
-  const handleSeatClick = (seat) => {
+  const handleSeatClick = seat => {
     if (seat.isBlocked || !seat.isAvailable) {
       return;
     }
@@ -65,7 +65,7 @@ const SimpleSeatingMap = ({
 
       {/* Seating Grid */}
       <div className="grid grid-cols-8 gap-2 max-w-2xl mx-auto">
-        {seats.map((seat) => (
+        {seats.map(seat => (
           <button
             key={seat.id}
             onClick={() => handleSeatClick(seat)}
@@ -118,4 +118,4 @@ const SimpleSeatingMap = ({
   );
 };
 
-export default SimpleSeatingMap; 
+export default SimpleSeatingMap;

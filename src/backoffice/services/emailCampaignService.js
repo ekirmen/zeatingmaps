@@ -2,12 +2,40 @@ import { supabase as supabaseClient } from '../../supabaseClient';
 import { toast } from 'react-hot-toast';
 import emailService from './emailService';
 
+// Constantes para evitar magic strings
+const CAMPAIGN_STATUS = {
+  DRAFT: 'draft',
+  SENDING: 'sending',
+  SENT: 'sent',
+  ERROR: 'error'
+};
+
+const LOG_STATUS = {
+  SENT: 'enviado',
+  FAILED: 'fallido',
+  PENDING: 'pendiente'
+};
+
+// Helper functions
+const processCampaignLogs = (logs) => ({
+  total: logs?.length || 0,
+  sent: logs?.filter(log => log.estado === LOG_STATUS.SENT).length || 0,
+  failed: logs?.filter(log => log.estado === LOG_STATUS.FAILED).length || 0,
+  pending: logs?.filter(log => log.estado === LOG_STATUS.PENDING).length || 0
+});
+
+const processTemplateInfo = (template) => template ? {
+  id: template.id,
+  nombre: template.nombre,
+  tipo: template.tipo,
+  contenido: template.contenido
+} : null;
+
 // Email Campaign Service
 export const emailCampaignService = {
-  // Obtener todas las campañas
+  // 📧 Obtener todas las campañas
   async getCampaigns() {
     try {
-      // 📧 CARGAR CAMPAÑAS CON DATOS RELACIONADOS
       const { data, error } = await supabaseClient
         .from('email_campaigns')
         .select(`
@@ -21,18 +49,17 @@ export const emailCampaignService = {
 
       if (error) throw error;
 
-      // ✅ PROCESAR DATOS DE CAMPAÑAS
-      const processedCampaigns = (data || []).map(campaign => ({
-        ...campaign,
-        // Calcular estadísticas de logs
-        total_enviados: campaign.logs?.length || 0,
-        total_exitosos: campaign.logs?.filter(log => log.estado === 'enviado').length || 0,
-        total_fallidos: campaign.logs?.filter(log => log.estado === 'fallido').length || 0,
-        // Información de plantilla
-        template_name: campaign.templates?.nombre || 'Sin plantilla',
-        template_type: campaign.templates?.tipo || 'personalizada'
-
-      return processedCampaigns;
+      return (data || []).map(campaign => {
+        const stats = processCampaignLogs(campaign.logs);
+        return {
+          ...campaign,
+          total_enviados: stats.total,
+          total_exitosos: stats.sent,
+          total_fallidos: stats.failed,
+          template_name: campaign.templates?.nombre || 'Sin plantilla',
+          template_type: campaign.templates?.tipo || 'personalizada'
+        };
+      });
 
     } catch (error) {
       console.error('Error fetching campaigns:', error);
@@ -41,7 +68,7 @@ export const emailCampaignService = {
     }
   },
 
-  // Obtener una campaña específica
+  // 📧 Obtener una campaña específica
   async getCampaign(id) {
     try {
       const { data, error } = await supabaseClient
@@ -59,25 +86,13 @@ export const emailCampaignService = {
 
       if (error) throw error;
 
-      // ✅ PROCESAR DATOS DE CAMPAÑA ESPECÍFICA
-      const processedCampaign = {
+      const stats = processCampaignLogs(data.logs);
+      
+      return {
         ...data,
-        // Estadísticas detalladas
-        estadisticas: {
-          total_enviados: data.logs?.length || 0,
-          exitosos: data.logs?.filter(log => log.estado === 'enviado').length || 0,
-          fallidos: data.logs?.filter(log => log.estado === 'fallido').length || 0,
-          pendientes: data.logs?.filter(log => log.estado === 'pendiente').length || 0
-        },
-        // Información de plantilla
-        template_info: data.templates ? {
-          id: data.templates.id,
-          nombre: data.templates.nombre,
-          tipo: data.templates.tipo,
-          contenido: data.templates.contenido
-        } : null
+        estadisticas: stats,
+        template_info: processTemplateInfo(data.templates)
       };
-      return processedCampaign;
 
     } catch (error) {
       console.error('Error fetching campaign:', error);
@@ -86,24 +101,24 @@ export const emailCampaignService = {
     }
   },
 
-  // Crear nueva campaña
+  // 📧 Crear nueva campaña
   async createCampaign(campaignData) {
     try {
       const { data, error } = await supabaseClient
         .from('email_campaigns')
-        .insert({
+        .insert([{
           nombre: campaignData.nombre,
-          tipo: campaignData.tipo || 'newsletter',
-          estado: 'draft',
-          configuracion: campaignData.configuracion || {}
-        })
+          tipo: campaignData.tipo,
+          estado: CAMPAIGN_STATUS.DRAFT,
+          configuracion: campaignData.configuracion || {},
+          created_at: new Date().toISOString()
+        }])
         .select()
         .single();
 
       if (error) throw error;
       toast.success('Campaña creada exitosamente');
       return data;
-
     } catch (error) {
       console.error('Error creating campaign:', error);
       toast.error('Error al crear la campaña');
@@ -111,7 +126,32 @@ export const emailCampaignService = {
     }
   },
 
-  // Eliminar campaña
+  // 📧 Actualizar campaña
+  async updateCampaign(id, campaignData) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('email_campaigns')
+        .update({
+          nombre: campaignData.nombre,
+          tipo: campaignData.tipo,
+          configuracion: campaignData.configuracion,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      toast.success('Campaña actualizada exitosamente');
+      return data;
+    } catch (error) {
+      console.error('Error updating campaign:', error);
+      toast.error('Error al actualizar la campaña');
+      return null;
+    }
+  },
+
+  // 📧 Eliminar campaña
   async deleteCampaign(id) {
     try {
       const { error } = await supabaseClient
@@ -122,7 +162,6 @@ export const emailCampaignService = {
       if (error) throw error;
       toast.success('Campaña eliminada exitosamente');
       return true;
-
     } catch (error) {
       console.error('Error deleting campaign:', error);
       toast.error('Error al eliminar la campaña');
@@ -140,7 +179,6 @@ export const emailCampaignService = {
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
       console.error('Error fetching email templates:', error);
       toast.error('Error al cargar las plantillas');
@@ -159,7 +197,6 @@ export const emailCampaignService = {
       if (error) throw error;
       toast.success('Plantilla creada exitosamente');
       return data;
-
     } catch (error) {
       console.error('Error creating email template:', error);
       toast.error('Error al crear la plantilla');
@@ -186,7 +223,6 @@ export const emailCampaignService = {
 
       if (error) throw error;
       return data || [];
-
     } catch (error) {
       console.error('Error fetching email logs:', error);
       toast.error('Error al cargar los logs');
@@ -194,75 +230,7 @@ export const emailCampaignService = {
     }
   },
 
-  // Crear nueva campaña
-  async createCampaign(campaignData) {
-    try {
-      const { data, error } = await supabaseClient
-        .from('email_campaigns')
-        .insert([{
-          nombre: campaignData.nombre,
-          tipo: campaignData.tipo,
-          estado: 'draft',
-          configuracion: campaignData.configuracion || {},
-          created_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      toast.success('Campaña creada exitosamente');
-      return data;
-    } catch (error) {
-      console.error('Error creating campaign:', error);
-      toast.error('Error al crear la campaña');
-      return null;
-    }
-  },
-
-  // Actualizar campaña
-  async updateCampaign(id, campaignData) {
-    try {
-      const { data, error } = await supabaseClient
-        .from('email_campaigns')
-        .update({
-          nombre: campaignData.nombre,
-          tipo: campaignData.tipo,
-          configuracion: campaignData.configuracion,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      toast.success('Campaña actualizada exitosamente');
-      return data;
-    } catch (error) {
-      console.error('Error updating campaign:', error);
-      toast.error('Error al actualizar la campaña');
-      return null;
-    }
-  },
-
-  // Eliminar campaña
-  async deleteCampaign(id) {
-    try {
-      const { error } = await supabaseClient
-        .from('email_campaigns')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      toast.success('Campaña eliminada exitosamente');
-      return true;
-    } catch (error) {
-      console.error('Error deleting campaign:', error);
-      toast.error('Error al eliminar la campaña');
-      return false;
-    }
-  },
-
-  // Guardar widgets de campaña
+  // 📧 Guardar widgets de campaña
   async saveCampaignWidgets(campaignId, widgets) {
     try {
       // Eliminar widgets existentes
@@ -271,8 +239,8 @@ export const emailCampaignService = {
         .delete()
         .eq('campaign_id', campaignId);
 
-      // Insertar nuevos widgets
-      if (widgets.length > 0) {
+      // Insertar nuevos widgets si existen
+      if (widgets?.length > 0) {
         const widgetsData = widgets.map((widget, index) => ({
           campaign_id: campaignId,
           tipo: widget.type,
@@ -296,7 +264,7 @@ export const emailCampaignService = {
     }
   },
 
-  // Obtener eventos disponibles
+  // 📧 Obtener eventos disponibles
   async getEvents() {
     try {
       const { data, error } = await supabaseClient
@@ -313,7 +281,7 @@ export const emailCampaignService = {
     }
   },
 
-  // Obtener canales de venta
+  // 📧 Obtener canales de venta
   async getChannels() {
     try {
       const { data, error } = await supabaseClient
@@ -330,14 +298,14 @@ export const emailCampaignService = {
     }
   },
 
-  // Enviar campaña de email
+  // 📧 Enviar campaña de email
   async sendCampaign(campaignId, recipients) {
     try {
       // Actualizar estado de la campaña
       await supabaseClient
         .from('email_campaigns')
         .update({
-          estado: 'sending',
+          estado: CAMPAIGN_STATUS.SENDING,
           fecha_envio: new Date().toISOString()
         })
         .eq('id', campaignId);
@@ -346,26 +314,16 @@ export const emailCampaignService = {
       const campaign = await this.getCampaign(campaignId);
       if (!campaign) throw new Error('Campaña no encontrada');
 
-      // Generar HTML del email
+      // Generar y enviar emails
       const emailHtml = await this.generateEmailHtml(campaign);
-
-      // Enviar emails
       const sendResults = await this.sendEmails(recipients, campaign, emailHtml);
 
-      // Actualizar estadísticas
-      await this.updateCampaignStats(campaignId, sendResults);
+      // Actualizar estado final y estadísticas
+      await this.updateCampaignAfterSend(campaignId, sendResults);
 
-      // Actualizar estado final
-      await supabaseClient
-        .from('email_campaigns')
-        .update({
-          estado: 'sent',
-          total_enviados: sendResults.sent,
-          total_fallidos: sendResults.failed
-        })
-        .eq('id', campaignId);
-
-      toast.success(`Campaña enviada: ${sendResults.sent} emails enviados`);
+      const message = `Campaña enviada: ${sendResults.sent} emails enviados, ${sendResults.failed} fallidos`;
+      toast.success(message);
+      
       return sendResults;
     } catch (error) {
       console.error('Error sending campaign:', error);
@@ -374,16 +332,34 @@ export const emailCampaignService = {
       // Actualizar estado a error
       await supabaseClient
         .from('email_campaigns')
-        .update({ estado: 'error' })
+        .update({ estado: CAMPAIGN_STATUS.ERROR })
         .eq('id', campaignId);
 
       return { sent: 0, failed: 0, error: error.message };
     }
   },
 
-  // Generar HTML del email
+  // 📧 Actualizar campaña después del envío
+  async updateCampaignAfterSend(campaignId, sendResults) {
+    try {
+      await supabaseClient
+        .from('email_campaigns')
+        .update({
+          estado: CAMPAIGN_STATUS.SENT,
+          total_enviados: sendResults.sent,
+          total_fallidos: sendResults.failed,
+          fecha_actualizacion: new Date().toISOString()
+        })
+        .eq('id', campaignId);
+    } catch (error) {
+      console.error('Error updating campaign after send:', error);
+      throw error;
+    }
+  },
+
+  // 📧 Generar HTML del email
   async generateEmailHtml(campaign) {
-    let html = `
+    const baseHtml = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -406,16 +382,16 @@ export const emailCampaignService = {
           </div>
     `;
 
-    // Renderizar widgets
+    let widgetsHtml = '';
     if (campaign.widgets) {
-      for (const widget of campaign.widgets) {
-        html += this.renderWidgetHtml(widget);
-      }
+      widgetsHtml = campaign.widgets
+        .map(widget => this.renderWidgetHtml(widget))
+        .join('');
     }
 
-    html += `
+    const footerHtml = `
           <div class="footer">
-            <p>© 2024 Kreatickets. Todos los derechos reservados.</p>
+            <p>© ${new Date().getFullYear()} Kreatickets. Todos los derechos reservados.</p>
             <p><a href="{{unsubscribe_url}}">Cancelar suscripción</a></p>
           </div>
         </div>
@@ -423,10 +399,10 @@ export const emailCampaignService = {
       </html>
     `;
 
-    return html;
+    return baseHtml + widgetsHtml + footerHtml;
   },
 
-  // Renderizar HTML de widget
+  // 📧 Renderizar HTML de widget
   renderWidgetHtml(widget) {
     const config = widget.configuracion || {};
 
@@ -453,7 +429,9 @@ export const emailCampaignService = {
         const buttonUrl = this.getButtonUrl(config);
         return `
           <div class="widget" style="text-align: center;">
-            <a href="${buttonUrl}" class="button" style="margin-top: ${config.margin_top || 10}px; margin-bottom: ${config.margin_bottom || 10}px;">
+            <a href="${buttonUrl}" class="button" 
+               style="margin-top: ${config.margin_top || 10}px; 
+                      margin-bottom: ${config.margin_bottom || 10}px;">
               ${buttonText}
             </a>
           </div>
@@ -475,7 +453,7 @@ export const emailCampaignService = {
     }
   },
 
-  // Obtener URL del botón
+  // 📧 Obtener URL del botón
   getButtonUrl(config) {
     if (config.urlButton) return config.urlButton;
 
@@ -488,7 +466,7 @@ export const emailCampaignService = {
     return '#';
   },
 
-  // Obtener URL del canal
+  // 📧 Obtener URL del canal
   getChannelUrl(channelId) {
     const channels = {
       '8': 'https://kreatickets.pagatusboletos.com/tickets/',
@@ -498,27 +476,30 @@ export const emailCampaignService = {
     return channels[channelId] || 'https://ventas.kreatickets.com/venta/';
   },
 
-  // Enviar emails
+  // 📧 Enviar emails
   async sendEmails(recipients, campaign, emailHtml) {
     try {
-      // Usar el servicio de email real
-      const results = await emailService.sendCampaign(recipients, campaign, emailHtml);
-      return results;
+      return await emailService.sendCampaign(recipients, campaign, emailHtml);
     } catch (error) {
       console.error('Error sending emails:', error);
-      return { sent: 0, failed: recipients.length, errors: [error.message] };
+      return { 
+        sent: 0, 
+        failed: recipients.length, 
+        errors: [error.message] 
+      };
     }
   },
 
-  // Personalizar email
+  // 📧 Personalizar email
   personalizeEmail(html, recipient) {
     return html
       .replace(/\{\{nombre\}\}/g, recipient.nombre || 'Usuario')
       .replace(/\{\{email\}\}/g, recipient.email)
-      .replace(/\{\{unsubscribe_url\}\}/g, `https://kreatickets.com/unsubscribe?email=${recipient.email}`);
+      .replace(/\{\{unsubscribe_url\}\}/g, 
+               `https://kreatickets.com/unsubscribe?email=${encodeURIComponent(recipient.email)}`);
   },
 
-  // Enviar email individual usando el servicio de email
+  // 📧 Enviar email individual
   async sendEmail(to, subject, html) {
     try {
       return await emailService.sendEmail(to, subject, html);
@@ -528,23 +509,7 @@ export const emailCampaignService = {
     }
   },
 
-  // Actualizar estadísticas de campaña
-  async updateCampaignStats(campaignId, stats) {
-    try {
-      await supabaseClient
-        .from('email_campaigns')
-        .update({
-          total_enviados: stats.sent,
-          total_fallidos: stats.failed,
-          fecha_actualizacion: new Date().toISOString()
-        })
-        .eq('id', campaignId);
-    } catch (error) {
-      console.error('Error updating campaign stats:', error);
-    }
-  },
-
-  // Obtener estadísticas de campaña
+  // 📧 Obtener estadísticas de campaña
   async getCampaignStats(campaignId) {
     try {
       const { data, error } = await supabaseClient
@@ -561,19 +526,15 @@ export const emailCampaignService = {
     }
   },
 
-  // Enviar email de prueba
+  // 📧 Enviar email de prueba
   async sendTestEmail(campaignId, testEmail) {
     try {
-      // Obtener datos de la campaña
       const campaign = await this.getCampaign(campaignId);
       if (!campaign) throw new Error('Campaña no encontrada');
 
-      // Generar HTML del email
       const emailHtml = await this.generateEmailHtml(campaign);
-
-      // Enviar email de prueba
-      const emailServiceInstance = new emailService();
-      await emailServiceInstance.sendEmail(
+      
+      await emailService.sendEmail(
         testEmail,
         `[PRUEBA] ${campaign.nombre}`,
         emailHtml
@@ -588,10 +549,9 @@ export const emailCampaignService = {
     }
   },
 
-  // Lanzar campaña
+  // 📧 Lanzar campaña
   async launchCampaign(campaignId) {
     try {
-      // Obtener destinatarios de la campaña
       const { data: recipients, error } = await supabaseClient
         .from('campaign_recipients')
         .select('*')
@@ -599,12 +559,11 @@ export const emailCampaignService = {
 
       if (error) throw error;
 
-      if (!recipients || recipients.length === 0) {
+      if (!recipients?.length) {
         toast.error('No hay destinatarios para esta campaña');
         return false;
       }
 
-      // Enviar la campaña
       const result = await this.sendCampaign(campaignId, recipients);
       return result.sent > 0;
     } catch (error) {
@@ -614,7 +573,7 @@ export const emailCampaignService = {
     }
   },
 
-  // Guardar campaña
+  // 📧 Guardar campaña
   async saveCampaign(campaignId, campaignData) {
     try {
       const result = await this.updateCampaign(campaignId, campaignData);

@@ -12,17 +12,16 @@ class ErrorBoundary extends React.Component {
       error: null,
       errorInfo: null,
       errorCount: 0,
-      lastErrorTime: null
+      lastErrorTime: null,
     };
   }
 
   static getDerivedStateFromError(error) {
-
     return {
       hasError: true,
       error: error,
       errorCount: this.state?.errorCount + 1 || 1,
-      lastErrorTime: new Date()
+      lastErrorTime: new Date(),
     };
   }
 
@@ -35,7 +34,7 @@ class ErrorBoundary extends React.Component {
       error: error,
       errorInfo: errorInfo,
       errorCount: this.state.errorCount + 1,
-      lastErrorTime: new Date()
+      lastErrorTime: new Date(),
     });
 
     // Log adicional para el error espec­fico de 'R'
@@ -55,17 +54,19 @@ class ErrorBoundary extends React.Component {
       'useBoleteria',
       'TenantContext',
       'ThemeContext',
-      'seatLockStore'
+      'seatLockStore',
     ];
 
     problematicImports.forEach(importName => {
       try {
         // Intentar importar din¡micamente para detectar problemas
-        import(`../../../${importName}`).then(module => {
-          console.log(`œ… [ErrorBoundary] ${importName} import successful:`, Object.keys(module));
-        }).catch(importError => {
-          console.error(`Œ [ErrorBoundary] ${importName} import failed:`, importError);
-        });
+        import(`../../../${importName}`)
+          .then(module => {
+            console.log(`œ… [ErrorBoundary] ${importName} import successful:`, Object.keys(module));
+          })
+          .catch(importError => {
+            console.error(`Œ [ErrorBoundary] ${importName} import failed:`, importError);
+          });
       } catch (e) {
         console.error(`Œ [ErrorBoundary] Error testing ${importName}:`, e);
       }
@@ -78,13 +79,13 @@ class ErrorBoundary extends React.Component {
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
-  }
+  };
 
   handleReload = () => {
     window.location.reload();
-  }
+  };
 
   render() {
     if (this.state.hasError) {
@@ -128,7 +129,8 @@ class ErrorBoundary extends React.Component {
                   description={
                     <div>
                       <Paragraph>
-                        Este error indica que el c³digo est¡ intentando usar la variable <Text code>R</Text> antes de que est© inicializada.
+                        Este error indica que el c³digo est¡ intentando usar la variable{' '}
+                        <Text code>R</Text> antes de que est© inicializada.
                       </Paragraph>
                       <Paragraph>
                         <Text strong>Posibles causas:</Text>
@@ -136,7 +138,10 @@ class ErrorBoundary extends React.Component {
                       <ul>
                         <li>Dependencia circular entre m³dulos</li>
                         <li>Importaci³n incorrecta de un m³dulo</li>
-                        <li>Variable declarada con <Text code>let</Text> o <Text code>const</Text> usada antes de su declaraci³n</li>
+                        <li>
+                          Variable declarada con <Text code>let</Text> o <Text code>const</Text>{' '}
+                          usada antes de su declaraci³n
+                        </li>
                         <li>Problema con el bundler (webpack/vite)</li>
                       </ul>
                       <Paragraph>
@@ -162,14 +167,16 @@ class ErrorBoundary extends React.Component {
                 <Title level={5}>ðŸ“‹ Detalles del Error</Title>
                 <details>
                   <summary>Stack Trace</summary>
-                  <pre style={{
-                    fontSize: '12px',
-                    backgroundColor: '#f5f5f5',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    overflow: 'auto',
-                    maxHeight: '200px'
-                  }}>
+                  <pre
+                    style={{
+                      fontSize: '12px',
+                      backgroundColor: '#f5f5f5',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      overflow: 'auto',
+                      maxHeight: '200px',
+                    }}
+                  >
                     {this.state.error?.stack}
                   </pre>
                 </details>
@@ -180,14 +187,16 @@ class ErrorBoundary extends React.Component {
                   <Title level={5}>ðŸ“‹ Component Stack</Title>
                   <details>
                     <summary>Component Stack</summary>
-                    <pre style={{
-                      fontSize: '12px',
-                      backgroundColor: '#f5f5f5',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      overflow: 'auto',
-                      maxHeight: '200px'
-                    }}>
+                    <pre
+                      style={{
+                        fontSize: '12px',
+                        backgroundColor: '#f5f5f5',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        overflow: 'auto',
+                        maxHeight: '200px',
+                      }}
+                    >
                       {this.state.errorInfo.componentStack}
                     </pre>
                   </details>
@@ -199,24 +208,13 @@ class ErrorBoundary extends React.Component {
               {/* Actions */}
               <div style={{ textAlign: 'center' }}>
                 <Space>
-                  <Button
-                    type="primary"
-                    icon={<ReloadOutlined />}
-                    onClick={this.handleRetry}
-                  >
+                  <Button type="primary" icon={<ReloadOutlined />} onClick={this.handleRetry}>
                     Reintentar
                   </Button>
-                  <Button
-                    icon={<ReloadOutlined />}
-                    onClick={this.handleReload}
-                  >
+                  <Button icon={<ReloadOutlined />} onClick={this.handleReload}>
                     Recargar P¡gina
                   </Button>
-                  <Button
-                    icon={<InfoCircleOutlined />}
-                    onClick={() => {
-                    }}
-                  >
+                  <Button icon={<InfoCircleOutlined />} onClick={() => {}}>
                     Debug Info
                   </Button>
                 </Space>
@@ -245,5 +243,3 @@ class ErrorBoundary extends React.Component {
 }
 
 export default ErrorBoundary;
-
-

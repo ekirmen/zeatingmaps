@@ -7,16 +7,11 @@ const labels = {
   verificarEmail: 'Verificar email',
   verificacionEmail: 'Verificación de email',
   pregunta1: 'Pregunta personalizada 1',
-  pregunta2: 'Pregunta personalizada 2'
+  pregunta2: 'Pregunta personalizada 2',
 };
 
-const DatosPorBoleto = ({
-  mostrarDatos,
-  toggleMostrarDatos,
-  datosBoleto,
-  updateDatosBoleto
-}) => {
-  const handleChange = (e) => {
+const DatosPorBoleto = ({ mostrarDatos, toggleMostrarDatos, datosBoleto, updateDatosBoleto }) => {
+  const handleChange = e => {
     const { name, checked } = e.target;
     updateDatosBoleto(name, checked);
   };
@@ -34,8 +29,11 @@ const DatosPorBoleto = ({
       </div>
       {mostrarDatos && (
         <div className="space-y-3">
-          {Object.keys(datosBoleto).map((key) => (
-            <label key={key} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+          {Object.keys(datosBoleto).map(key => (
+            <label
+              key={key}
+              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+            >
               <input
                 type="checkbox"
                 name={key}

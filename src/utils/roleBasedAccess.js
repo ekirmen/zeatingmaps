@@ -15,7 +15,7 @@ export const ROLES = {
   MARKETING: 'marketing',
   REPORTS: 'reports',
   FINANCE: 'finance',
-  TECHNICAL: 'technical'
+  TECHNICAL: 'technical',
 };
 
 // =====================================================
@@ -39,7 +39,7 @@ export const ROLE_PERMISSIONS = {
     'gestión_de_tenants',
     'gestión_de_usuarios',
     'gestión_de_facturación',
-    'configuración_del_sistema'
+    'configuración_del_sistema',
   ],
   [ROLES.TENANT_ADMIN]: [
     'dashboard',
@@ -91,7 +91,7 @@ export const ROLE_PERMISSIONS = {
     'legal_texts',
     'webstudio',
     'pages',
-    'webcolors'
+    'webcolors',
   ],
   [ROLES.EVENT_MANAGER]: [
     'dashboard',
@@ -101,7 +101,7 @@ export const ROLE_PERMISSIONS = {
     'boleteria',
     'crear_eventos',
     'editar_eventos',
-    'publicar_eventos'
+    'publicar_eventos',
   ],
   [ROLES.SALES_MANAGER]: [
     'dashboard',
@@ -112,7 +112,7 @@ export const ROLE_PERMISSIONS = {
     'editar_ventas',
     'cancelar_ventas',
     'reembolsos',
-    'reportes_de_ventas'
+    'reportes_de_ventas',
   ],
   [ROLES.BOX_OFFICE]: [
     'dashboard',
@@ -121,28 +121,22 @@ export const ROLE_PERMISSIONS = {
     'ver_ventas',
     'crear_ventas',
     'editar_ventas',
-    'cancelar_ventas'
+    'cancelar_ventas',
   ],
   [ROLES.CUSTOMER_SUPPORT]: [
     'dashboard',
     'crm',
     'tickets_de_soporte',
     'datos_de_clientes',
-    'reportes_de_soporte'
+    'reportes_de_soporte',
   ],
-  [ROLES.MARKETING]: [
-    'dashboard',
-    'crm',
-    'campañas_de_marketing',
-    'email_marketing',
-    'analytics'
-  ],
+  [ROLES.MARKETING]: ['dashboard', 'crm', 'campañas_de_marketing', 'email_marketing', 'analytics'],
   [ROLES.REPORTS]: [
     'dashboard',
     'reports',
     'analytics',
     'reportes_de_ventas',
-    'reportes_de_soporte'
+    'reportes_de_soporte',
   ],
   [ROLES.FINANCE]: [
     'dashboard',
@@ -150,15 +144,15 @@ export const ROLE_PERMISSIONS = {
     'ver_finanzas',
     'editar_finanzas',
     'gestión_de_facturas',
-    'procesamiento_de_pagos'
+    'procesamiento_de_pagos',
   ],
   [ROLES.TECHNICAL]: [
     'dashboard',
     'reports',
     'soporte_técnico',
     'acceso_a_api',
-    'logs_del_sistema'
-  ]
+    'logs_del_sistema',
+  ],
 };
 
 // =====================================================
@@ -173,17 +167,17 @@ export const ROLE_PERMISSIONS = {
  */
 export const hasPermission = (user, permission) => {
   if (!user || !user.role) return false;
-  
+
   // Super admin tiene todos los permisos
   if (user.role === ROLES.SUPER_ADMIN) return true;
-  
+
   // Verificar permisos del rol
   const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
   if (rolePermissions.includes(permission)) return true;
-  
+
   // Verificar permisos personalizados del usuario
   if (user.permissions && user.permissions[permission]) return true;
-  
+
   return false;
 };
 
@@ -205,12 +199,12 @@ export const hasRouteAccess = (user, route) => {
     '/dashboard/reports': 'reports',
     '/dashboard/personalizacion': 'personalizacion',
     '/dashboard/boleteria': 'boleteria',
-    '/dashboard/panel-saas': 'panel_saas'
+    '/dashboard/panel-saas': 'panel_saas',
   };
-  
+
   const requiredPermission = routePermissions[route];
   if (!requiredPermission) return true; // Ruta sin restricciones
-  
+
   return hasPermission(user, requiredPermission);
 };
 
@@ -236,11 +230,11 @@ export const canAccessFunctionality = (user, functionality) => {
  */
 export const filterMenuByPermissions = (menuItems, user) => {
   if (!user || !user.role) return [];
-  
+
   return menuItems.filter(item => {
     // Si el item no tiene restricciones, mostrarlo
     if (!item.requiredPermission) return true;
-    
+
     // Verificar si el usuario tiene el permiso requerido
     return hasPermission(user, item.requiredPermission);
   });
@@ -251,14 +245,14 @@ export const filterMenuByPermissions = (menuItems, user) => {
  * @param {Object} user - Objeto usuario
  * @returns {Array} - Menú completo filtrado
  */
-export const generateFilteredMenu = (user) => {
+export const generateFilteredMenu = user => {
   const fullMenu = [
     {
       id: 'dashboard',
       label: 'Dashboard',
       path: '/dashboard',
       icon: 'house',
-      requiredPermission: 'dashboard'
+      requiredPermission: 'dashboard',
     },
 
     {
@@ -272,71 +266,71 @@ export const generateFilteredMenu = (user) => {
           label: 'Recintos',
           path: '/dashboard/recintos',
           icon: 'building',
-          requiredPermission: 'recintos'
+          requiredPermission: 'recintos',
         },
         {
           id: 'plano',
           label: 'Plano',
           path: '/dashboard/plano',
           icon: 'map',
-          requiredPermission: 'plano'
+          requiredPermission: 'plano',
         },
         {
           id: 'usuarios',
           label: 'Usuarios',
           path: '/dashboard/usuarios',
           icon: 'users',
-          requiredPermission: 'usuarios'
+          requiredPermission: 'usuarios',
         },
         {
           id: 'liquidaciones',
           label: 'Liquidaciones',
           path: '/dashboard/liquidaciones',
           icon: 'money-bill-wave',
-          requiredPermission: 'liquidaciones'
-        }
-      ]
+          requiredPermission: 'liquidaciones',
+        },
+      ],
     },
     {
       id: 'programacion',
       label: 'Programación',
       icon: 'calendar-days',
-      requiredPermission: 'programacion'
+      requiredPermission: 'programacion',
     },
     {
       id: 'crm',
       label: 'CRM',
       icon: 'users-gear',
-      requiredPermission: 'crm'
+      requiredPermission: 'crm',
     },
     {
       id: 'reports',
       label: 'Informes',
       path: '/dashboard/reports',
       icon: 'file-lines',
-      requiredPermission: 'reports'
+      requiredPermission: 'reports',
     },
     {
       id: 'personalizacion',
       label: 'Personalización',
       icon: 'palette',
-      requiredPermission: 'personalizacion'
+      requiredPermission: 'personalizacion',
     },
     {
       id: 'boleteria',
       label: 'Boletería',
       path: '/dashboard/boleteria',
       icon: 'ticket-simple',
-      requiredPermission: 'boleteria'
+      requiredPermission: 'boleteria',
     },
     {
       id: 'panel_saas',
       label: 'Panel SaaS',
       icon: 'globe',
-      requiredPermission: 'panel_saas'
-    }
+      requiredPermission: 'panel_saas',
+    },
   ];
-  
+
   return filterMenuByPermissions(fullMenu, user);
 };
 
@@ -349,7 +343,7 @@ export const generateFilteredMenu = (user) => {
  * @param {string} role - Rol del usuario
  * @returns {string} - Rol legible
  */
-export const getReadableRole = (role) => {
+export const getReadableRole = role => {
   const roleLabels = {
     [ROLES.SUPER_ADMIN]: 'Super Administrador',
     [ROLES.TENANT_ADMIN]: 'Administrador de Tenant',
@@ -360,9 +354,9 @@ export const getReadableRole = (role) => {
     [ROLES.MARKETING]: 'Marketing',
     [ROLES.REPORTS]: 'Reportes y Analytics',
     [ROLES.FINANCE]: 'Finanzas y Facturación',
-    [ROLES.TECHNICAL]: 'Soporte Técnico'
+    [ROLES.TECHNICAL]: 'Soporte Técnico',
   };
-  
+
   return roleLabels[role] || role;
 };
 
@@ -371,7 +365,7 @@ export const getReadableRole = (role) => {
  * @param {Object} user - Objeto usuario
  * @returns {boolean}
  */
-export const isUserActive = (user) => {
+export const isUserActive = user => {
   return user && user.is_active !== false;
 };
 
@@ -380,7 +374,7 @@ export const isUserActive = (user) => {
  * @param {string} role - Rol del usuario
  * @returns {Array} - Array de permisos
  */
-export const getRolePermissions = (role) => {
+export const getRolePermissions = role => {
   return ROLE_PERMISSIONS[role] || [];
 };
 
@@ -394,5 +388,5 @@ export default {
   generateFilteredMenu,
   getReadableRole,
   isUserActive,
-  getRolePermissions
+  getRolePermissions,
 };

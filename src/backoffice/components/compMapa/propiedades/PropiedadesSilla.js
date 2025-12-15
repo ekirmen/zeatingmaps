@@ -4,13 +4,11 @@ const PropiedadesSilla = ({ selectedElement, setElements, setSelectedElement }) 
   const [nombreSilla, setNombreSilla] = useState(selectedElement.nombre);
 
   const handleUpdateNombre = () => {
-    setElements((prev) =>
-      prev.map((el) => ({
+    setElements(prev =>
+      prev.map(el => ({
         ...el,
-        sillas: el.sillas.map((silla) =>
-          silla._id === selectedElement._id
-            ? { ...silla, nombre: nombreSilla }
-            : silla
+        sillas: el.sillas.map(silla =>
+          silla._id === selectedElement._id ? { ...silla, nombre: nombreSilla } : silla
         ),
       }))
     );
@@ -34,7 +32,7 @@ const PropiedadesSilla = ({ selectedElement, setElements, setSelectedElement }) 
         type="text"
         placeholder="Nombre de la silla"
         value={nombreSilla}
-        onChange={(e) => setNombreSilla(e.target.value)}
+        onChange={e => setNombreSilla(e.target.value)}
       />
       <button onClick={handleUpdateNombre}>Actualizar Nombre</button>
       <button onClick={() => setSelectedElement(null)}>Cerrar</button>

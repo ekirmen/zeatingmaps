@@ -47,9 +47,12 @@ class SeatLockBatchManager {
     if (Object.keys(normalUpdates).length > 0) {
       // Usar requestIdleCallback si está disponible para no bloquear UI
       if (typeof window !== 'undefined' && window.requestIdleCallback) {
-        window.requestIdleCallback(() => {
-          this.updateCallback(normalUpdates, false);
-        }, { timeout: 100 });
+        window.requestIdleCallback(
+          () => {
+            this.updateCallback(normalUpdates, false);
+          },
+          { timeout: 100 }
+        );
       } else {
         // Fallback para navegadores sin requestIdleCallback
         setTimeout(() => {
@@ -103,4 +106,3 @@ class SeatLockBatchManager {
 }
 
 export default SeatLockBatchManager;
-

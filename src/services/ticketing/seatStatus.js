@@ -1,4 +1,4 @@
-const normalizeStatus = (status) => {
+const normalizeStatus = status => {
   if (!status || typeof status !== 'string') return null;
   return status.trim().toLowerCase();
 };
@@ -39,14 +39,16 @@ export const determineSeatLockStatus = ({
   }
 
   if (['pending', 'processing', 'in_process'].includes(normalizedTransactionStatus)) {
-    if ([
-      'stripe',
-      'paypal',
-      'transferencia',
-      'efectivo_tienda',
-      'boleteria_manual',
-      'manual',
-    ].includes(normalizedMethodId)) {
+    if (
+      [
+        'stripe',
+        'paypal',
+        'transferencia',
+        'efectivo_tienda',
+        'boleteria_manual',
+        'manual',
+      ].includes(normalizedMethodId)
+    ) {
       return 'reservado';
     }
   }

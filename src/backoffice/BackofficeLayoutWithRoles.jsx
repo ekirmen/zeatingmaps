@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
-import { Layout, Button, Dropdown, Menu, Avatar, Space, Typography, Badge, Result, Drawer } from '../utils/antdComponents';
-import { 
-  MenuFoldOutlined, 
-  MenuUnfoldOutlined, 
-  UserOutlined, 
+import {
+  Layout,
+  Button,
+  Dropdown,
+  Menu,
+  Avatar,
+  Space,
+  Typography,
+  Badge,
+  Result,
+  Drawer,
+} from '../utils/antdComponents';
+import {
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  UserOutlined,
   LogoutOutlined,
   SettingOutlined,
-  BellOutlined
+  BellOutlined,
 } from '@ant-design/icons';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -32,10 +43,10 @@ const BackofficeLayoutWithRoles = ({ children }) => {
   const location = useLocation();
   const { getRole, isStoreUser, hasPermission, loading } = useRole();
   const { isMobile, isTablet } = useResponsive();
-  
+
   // Ocultar sidebar en boletería
   const isBoleteriaRoute = location.pathname.includes('/boleteria');
-  
+
   // En móvil, colapsar automáticamente
   React.useEffect(() => {
     if (isMobile) {
@@ -46,7 +57,9 @@ const BackofficeLayoutWithRoles = ({ children }) => {
   // Cargando permisos/rol
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <div
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+      >
         <div>Cargando permisos...</div>
       </div>
     );
@@ -66,7 +79,9 @@ const BackofficeLayoutWithRoles = ({ children }) => {
         title="Acceso Denegado"
         subTitle="No puedes acceder al dashboard sin iniciar sesión."
         extra={
-          <Button type="primary" href="/store">Ir a la Tienda</Button>
+          <Button type="primary" href="/store">
+            Ir a la Tienda
+          </Button>
         }
       />
     );
@@ -86,23 +101,23 @@ const BackofficeLayoutWithRoles = ({ children }) => {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Perfil',
-      onClick: () => navigate('/dashboard/profile')
+      onClick: () => navigate('/dashboard/profile'),
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'Configuración',
-      onClick: () => navigate('/dashboard/settings')
+      onClick: () => navigate('/dashboard/settings'),
     },
     {
-      type: 'divider'
+      type: 'divider',
     },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: 'Cerrar Sesión',
-      onClick: handleLogout
-    }
+      onClick: handleLogout,
+    },
   ];
 
   const siderWidth = collapsed ? 80 : 250;
@@ -117,7 +132,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                 <Layout style={{ minHeight: '100vh' }}>
                   {/* Sidebar con control de roles - oculto en boletería */}
                   {!isBoleteriaRoute && <SidebarMenuWithRoles collapsed={collapsed} />}
-                  
+
                   <Layout>
                     {/* Header */}
                     <Header
@@ -132,13 +147,20 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                         position: 'fixed',
                         top: 0,
                         right: 0,
-                        left: isBoleteriaRoute ? 0 : (isMobile ? 0 : siderWidth),
+                        left: isBoleteriaRoute ? 0 : isMobile ? 0 : siderWidth,
                         zIndex: 999,
                         transition: 'left 0.2s',
-                        height: isMobile ? '56px' : '64px'
+                        height: isMobile ? '56px' : '64px',
                       }}
                     >
-                      <div className="dashboard-header-left" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
+                      <div
+                        className="dashboard-header-left"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: isMobile ? '8px' : '16px',
+                        }}
+                      >
                         {!isBoleteriaRoute && (
                           <>
                             {isMobile ? (
@@ -160,7 +182,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                             )}
                           </>
                         )}
-                        
+
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                           <Text strong style={{ fontSize: isMobile ? '16px' : '18px', margin: 0 }}>
                             {isMobile ? 'Dashboard' : 'Dashboard Administrativo'}
@@ -168,7 +190,14 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                         </div>
                       </div>
 
-                      <div className="dashboard-header-right" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
+                      <div
+                        className="dashboard-header-right"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: isMobile ? '8px' : '12px',
+                        }}
+                      >
                         {/* Notificaciones */}
                         {hasPermission('dashboard') && !isMobile && (
                           <Badge count={0} size="small">
@@ -187,11 +216,15 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                           placement="bottomRight"
                           trigger={['click']}
                         >
-                          <Button type="text" className="header-user-btn" style={{ padding: isMobile ? '4px 6px' : '6px 10px' }}>
+                          <Button
+                            type="text"
+                            className="header-user-btn"
+                            style={{ padding: isMobile ? '4px 6px' : '6px 10px' }}
+                          >
                             <Space size={isMobile ? 4 : 8}>
                               <Avatar
                                 size={isMobile ? 'small' : 'default'}
-                                icon={<UserOutlined />} 
+                                icon={<UserOutlined />}
                                 style={{ backgroundColor: '#1890ff' }}
                               />
                               {!isMobile && <Text>Usuario</Text>}
@@ -200,7 +233,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                         </Dropdown>
                       </div>
                     </Header>
-                    
+
                     {/* Mobile Menu Drawer */}
                     {isMobile && !isBoleteriaRoute && (
                       <Drawer
@@ -213,8 +246,8 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                         headerStyle={{ display: 'none' }}
                         closable={true}
                       >
-                        <SidebarMenuWithRoles 
-                          collapsed={false} 
+                        <SidebarMenuWithRoles
+                          collapsed={false}
                           asDrawer={true}
                           onMenuClick={() => setMobileMenuOpen(false)}
                         />
@@ -229,14 +262,18 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                         marginRight: isMobile ? 12 : 24,
                         marginBottom: isMobile ? 12 : 24,
                         marginLeft: isBoleteriaRoute
-                          ? (isMobile ? 12 : 24)
-                          : (isMobile ? 12 : siderWidth + 24),
+                          ? isMobile
+                            ? 12
+                            : 24
+                          : isMobile
+                            ? 12
+                            : siderWidth + 24,
                         padding: isMobile ? 16 : 24,
                         minHeight: `calc(100vh - ${isMobile ? 132 : 156}px)`,
                         background: '#f5f5f5',
                         borderRadius: isMobile ? '8px' : '12px',
                         overflow: 'auto',
-                        transition: 'margin-left 0.2s, margin-top 0.2s'
+                        transition: 'margin-left 0.2s, margin-top 0.2s',
                       }}
                     >
                       <Outlet />
@@ -245,11 +282,15 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                       className="dashboard-footer"
                       style={{
                         marginLeft: isBoleteriaRoute
-                          ? (isMobile ? 12 : 24)
-                          : (isMobile ? 12 : siderWidth + 24),
+                          ? isMobile
+                            ? 12
+                            : 24
+                          : isMobile
+                            ? 12
+                            : siderWidth + 24,
                         marginRight: isMobile ? 12 : 24,
                         padding: isMobile ? '12px 16px' : '16px 24px',
-                        background: 'transparent'
+                        background: 'transparent',
                       }}
                     >
                       <DashboardFooter />

@@ -16,7 +16,7 @@ const EventSearch = () => {
   useEffect(() => {
     const lastEvent = localStorage.getItem('lastSelectedEvent');
     const lastFunction = localStorage.getItem('lastSelectedFunction');
-    
+
     if (lastEvent) {
       try {
         setSelectedEvent(JSON.parse(lastEvent));
@@ -24,7 +24,7 @@ const EventSearch = () => {
         console.error('Error parsing last event:', e);
       }
     }
-    
+
     if (lastFunction) {
       try {
         setSelectedFunction(JSON.parse(lastFunction));
@@ -34,7 +34,7 @@ const EventSearch = () => {
     }
   }, []);
 
-  const searchEvents = async (term) => {
+  const searchEvents = async term => {
     if (!term || term.length < 2) {
       setEvents([]);
 
@@ -56,13 +56,15 @@ const EventSearch = () => {
       // Buscar funciones
       const { data: functionsData, error: functionsError } = await supabase
         .from('funciones')
-        .select(`
+        .select(
+          `
           id, 
           nombre, 
           fecha, 
           hora_inicio,
           eventos!inner(id, nombre)
-        `)
+        `
+        )
         .ilike('nombre', `%${term}%`)
         .limit(5);
 
@@ -77,50 +79,50 @@ const EventSearch = () => {
     }
   };
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = e => {
     const value = e.target.value;
     setSearchTerm(value);
     searchEvents(value);
     setShowDropdown(true);
   };
 
-  const handleEventSelect = (event) => {
+  const handleEventSelect = event => {
     setSelectedEvent(event);
     setSelectedFunction(null);
     localStorage.setItem('lastSelectedEvent', JSON.stringify(event));
     setSearchTerm(event.nombre);
     setShowDropdown(false);
-    
+
     // Navegar a boletería con el evento seleccionado
-    navigate('/dashboard/boleteria', { 
-      state: { selectedEventId: event.id } 
+    navigate('/dashboard/boleteria', {
+      state: { selectedEventId: event.id },
     });
   };
 
-  const handleFunctionSelect = (func) => {
+  const handleFunctionSelect = func => {
     setSelectedFunction(func);
     setSelectedEvent(func.eventos);
     localStorage.setItem('lastSelectedFunction', JSON.stringify(func));
     localStorage.setItem('lastSelectedEvent', JSON.stringify(func.eventos));
     setSearchTerm(`${func.eventos.nombre} - ${func.nombre}`);
     setShowDropdown(false);
-    
+
     // Navegar a boletería con la función seleccionada
-    navigate('/dashboard/boleteria', { 
-      state: { 
+    navigate('/dashboard/boleteria', {
+      state: {
         selectedEventId: func.eventos.id,
-        selectedFunctionId: func.id 
-      } 
+        selectedFunctionId: func.id,
+      },
     });
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES');
   };
 
-  const formatTime = (timeString) => {
+  const formatTime = timeString => {
     if (!timeString) return '';
     return timeString.substring(0, 5); // HH:MM
   };
@@ -155,16 +157,14 @@ const EventSearch = () => {
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">
                 Eventos
               </div>
-              {events.map((event) => (
+              {events.map(event => (
                 <div
                   key={`event-${event.id}`}
                   onClick={() => handleEventSelect(event)}
                   className="px-2 py-2 hover:bg-blue-50 cursor-pointer rounded"
                 >
                   <div className="font-medium text-sm">{event.nombre}</div>
-                  <div className="text-xs text-gray-500">
-                    {formatDate(event.fecha_evento)}
-                  </div>
+                  <div className="text-xs text-gray-500">{formatDate(event.fecha_evento)}</div>
                 </div>
               ))}
             </div>
@@ -176,7 +176,7 @@ const EventSearch = () => {
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">
                 Funciones
               </div>
-              {functions.map((func) => (
+              {functions.map(func => (
                 <div
                   key={`function-${func.id}`}
                   onClick={() => handleFunctionSelect(func)}
@@ -198,12 +198,11 @@ const EventSearch = () => {
       {/* Información de la selección actual */}
       {selectedEvent && (
         <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-          <div className="text-sm font-medium text-blue-900">
-            {selectedEvent.nombre}
-          </div>
+          <div className="text-sm font-medium text-blue-900">{selectedEvent.nombre}</div>
           {selectedFunction && (
             <div className="text-xs text-blue-700 mt-1">
-              Función: {selectedFunction.nombre} - {formatDate(selectedFunction.fecha)} {formatTime(selectedFunction.hora_inicio)}
+              Función: {selectedFunction.nombre} - {formatDate(selectedFunction.fecha)}{' '}
+              {formatTime(selectedFunction.hora_inicio)}
             </div>
           )}
         </div>
@@ -212,4 +211,4 @@ const EventSearch = () => {
   );
 };
 
-export default EventSearch; 
+export default EventSearch;

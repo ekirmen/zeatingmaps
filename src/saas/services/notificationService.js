@@ -11,13 +11,14 @@ class NotificationService {
     try {
       this.realtimeSubscription = supabase
         .channel('notifications')
-        .on('postgres_changes', 
-          { 
-            event: 'INSERT', 
-            schema: 'public', 
-            table: 'notifications' 
-          }, 
-          (payload) => {
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+          },
+          payload => {
             this.handleNewNotification(payload.new);
           }
         )
@@ -33,7 +34,7 @@ class NotificationService {
   // Manejar nueva notificación
   handleNewNotification(notification) {
     // Notificar a todos los listeners
-    this.listeners.forEach((callback) => {
+    this.listeners.forEach(callback => {
       callback(notification);
     });
 
@@ -42,7 +43,7 @@ class NotificationService {
       new Notification(notification.title, {
         body: notification.message,
         icon: '/favicon.ico',
-        tag: notification.id
+        tag: notification.id,
       });
     }
   }
@@ -69,7 +70,7 @@ class NotificationService {
         message,
         data: JSON.stringify(data),
         read: false,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
 
       const { data: notification, error } = await supabase
@@ -182,12 +183,10 @@ class NotificationService {
         title,
         message,
         read: false,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       }));
 
-      const { error: insertError } = await supabase
-        .from('notifications')
-        .insert(notifications);
+      const { error: insertError } = await supabase.from('notifications').insert(notifications);
 
       if (insertError) throw insertError;
 
@@ -202,7 +201,7 @@ class NotificationService {
   async sendMaintenanceNotification(startTime, endTime, description) {
     const title = 'Mantenimiento Programado';
     const message = `El sistema estará en mantenimiento desde ${startTime} hasta ${endTime}. ${description}`;
-    
+
     return await this.sendSystemNotification(title, message, 'warning');
   }
 
@@ -210,7 +209,7 @@ class NotificationService {
   async sendUpdateNotification(version, features) {
     const title = 'Actualización del Sistema';
     const message = `El sistema ha sido actualizado a la versión ${version}. Nuevas características: ${features.join(', ')}`;
-    
+
     return await this.sendSystemNotification(title, message, 'info');
   }
 
@@ -218,7 +217,7 @@ class NotificationService {
   async sendSecurityAlert(description, action) {
     const title = 'Alerta de Seguridad';
     const message = `${description} Acción requerida: ${action}`;
-    
+
     return await this.sendSystemNotification(title, message, 'error');
   }
 
@@ -248,19 +247,28 @@ class NotificationService {
         { count: totalNotifications },
         { count: unreadNotifications },
         { count: systemNotifications },
-        { count: paymentNotifications }
+        { count: paymentNotifications },
       ] = await Promise.all([
         supabase.from('notifications').select('*', { count: 'exact', head: true }),
-        supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('read', false),
-        supabase.from('notifications').select('*', { count: 'exact', head: true }).like('type', 'system_%'),
-        supabase.from('notifications').select('*', { count: 'exact', head: true }).like('type', 'payment_%')
+        supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('read', false),
+        supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .like('type', 'system_%'),
+        supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .like('type', 'payment_%'),
       ]);
 
       return {
         total: totalNotifications || 0,
         unread: unreadNotifications || 0,
         system: systemNotifications || 0,
-        payment: paymentNotifications || 0
+        payment: paymentNotifications || 0,
       };
     } catch (error) {
       console.error('Error getting notification stats:', error);
@@ -268,7 +276,7 @@ class NotificationService {
         total: 0,
         unread: 0,
         system: 0,
-        payment: 0
+        payment: 0,
       };
     }
   }

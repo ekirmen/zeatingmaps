@@ -32,40 +32,37 @@ const CmsPage = ({ slug }) => {
   }, [pageSlug]);
 
   // Memoizar renderWidget antes de early returns
-  const renderWidget = useCallback((widget, index) => {
-    const config = widget.config || {};
+  const renderWidget = useCallback(
+    (widget, index) => {
+      const config = widget.config || {};
 
-    switch (widget.type) {
-      case 'page_header':
-        return (
-          <div key={index} className="mb-6">
-            {widget.title && (
-              <h1 className="text-2xl font-bold mb-2">{widget.title}</h1>
-            )}
-            {widget.description && (
-              <p className="text-gray-700">{widget.description}</p>
-            )}
-          </div>
-        );
-      case 'html':
-        return (
-          <div key={index} dangerouslySetInnerHTML={{ __html: widget.html }} />
-        );
-      case 'Listado de eventos':
-        return <EventListWidget key={index} events={events} {...config} />;
-      case 'Eventos Destacados':
-        return <FeaturedEventsWidget key={index} {...config} />;
-      case 'Preguntas frecuentes':
-        return <FaqWidget key={index} {...config} />;
-      case 'Información de Recinto':
-        return <VenueInfoWidget key={index} venueId={config.venueId} {...config} />;
-      case 'Información de Función':
-        return <FunctionInfoWidget key={index} functionId={config.functionId} {...config} />;
-      default:
-        logger.warn(`[CmsPage] Tipo de widget desconocido: ${widget.type}`);
-        return null;
-    }
-  }, [events]); // Memoizar renderWidget para evitar recreación
+      switch (widget.type) {
+        case 'page_header':
+          return (
+            <div key={index} className="mb-6">
+              {widget.title && <h1 className="text-2xl font-bold mb-2">{widget.title}</h1>}
+              {widget.description && <p className="text-gray-700">{widget.description}</p>}
+            </div>
+          );
+        case 'html':
+          return <div key={index} dangerouslySetInnerHTML={{ __html: widget.html }} />;
+        case 'Listado de eventos':
+          return <EventListWidget key={index} events={events} {...config} />;
+        case 'Eventos Destacados':
+          return <FeaturedEventsWidget key={index} {...config} />;
+        case 'Preguntas frecuentes':
+          return <FaqWidget key={index} {...config} />;
+        case 'Información de Recinto':
+          return <VenueInfoWidget key={index} venueId={config.venueId} {...config} />;
+        case 'Información de Función':
+          return <FunctionInfoWidget key={index} functionId={config.functionId} {...config} />;
+        default:
+          logger.warn(`[CmsPage] Tipo de widget desconocido: ${widget.type}`);
+          return null;
+      }
+    },
+    [events]
+  ); // Memoizar renderWidget para evitar recreación
 
   // Memoizar widgets renderizados antes de early returns
   const renderedWidgets = useMemo(() => {
@@ -81,12 +78,7 @@ const CmsPage = ({ slug }) => {
     return <NotFoundPage />;
   }
 
-  return (
-    <div className="p-6">
-      {renderedWidgets}
-    </div>
-  );
+  return <div className="p-6">{renderedWidgets}</div>;
 };
 
 export default memo(CmsPage);
-

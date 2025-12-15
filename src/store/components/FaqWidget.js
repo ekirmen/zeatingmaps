@@ -22,16 +22,25 @@ const FaqWidget = () => {
   const faqs = [
     {
       question: t('faq.q1', '¿Cómo compro entradas?'),
-      answer: t('faq.a1', 'Selecciona el evento deseado, elige tus asientos y completa el proceso de pago.')
+      answer: t(
+        'faq.a1',
+        'Selecciona el evento deseado, elige tus asientos y completa el proceso de pago.'
+      ),
     },
     {
       question: t('faq.q2', '¿Puedo obtener un reembolso?'),
-      answer: t('faq.a2', 'Dependerá de las políticas del evento. Contacta con soporte si tienes dudas.')
+      answer: t(
+        'faq.a2',
+        'Dependerá de las políticas del evento. Contacta con soporte si tienes dudas.'
+      ),
     },
     {
       question: t('faq.q3', '¿Dónde encuentro mis tickets?'),
-      answer: t('faq.a3', 'Tras la compra podrás descargarlos desde tu perfil o desde el enlace enviado a tu correo.')
-    }
+      answer: t(
+        'faq.a3',
+        'Tras la compra podrás descargarlos desde tu perfil o desde el enlace enviado a tu correo.'
+      ),
+    },
   ];
 
   return (

@@ -23,7 +23,7 @@ const labels = {
   snapchat: 'Snapchat',
   instagram: 'Instagram',
   contactoEmergencia: 'Contacto de emergencia',
-  nacionalidad: 'Nacionalidad'
+  nacionalidad: 'Nacionalidad',
 };
 
 const DatosCompradorObligatorios = ({
@@ -32,9 +32,9 @@ const DatosCompradorObligatorios = ({
   datosComprador,
   updateDatosComprador,
   setAllDatosSolicitados,
-  setAllDatosObligatorios
+  setAllDatosObligatorios,
 }) => {
-  const handleSolicitarChange = (e) => {
+  const handleSolicitarChange = e => {
     const { name, checked } = e.target;
     updateDatosComprador(name, 'solicitado', checked);
     if (!checked) {
@@ -42,13 +42,15 @@ const DatosCompradorObligatorios = ({
     }
   };
 
-  const handleObligatorioChange = (e) => {
+  const handleObligatorioChange = e => {
     const { name, checked } = e.target;
     updateDatosComprador(name, 'obligatorio', checked);
   };
 
-  const allSolicitados = Object.values(datosComprador).every((dato) => dato.solicitado);
-  const allObligatorios = Object.values(datosComprador).every((dato) => dato.solicitado && dato.obligatorio);
+  const allSolicitados = Object.values(datosComprador).every(dato => dato.solicitado);
+  const allObligatorios = Object.values(datosComprador).every(
+    dato => dato.solicitado && dato.obligatorio
+  );
 
   return (
     <div className="datos-comprador-obligatorios bg-white p-6 rounded-lg border border-gray-200 space-y-4">
@@ -72,7 +74,7 @@ const DatosCompradorObligatorios = ({
                     <input
                       type="checkbox"
                       checked={allSolicitados}
-                      onChange={(e) => setAllDatosSolicitados(e.target.checked)}
+                      onChange={e => setAllDatosSolicitados(e.target.checked)}
                       className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 cursor-pointer"
                     />
                     <span>Solicitar</span>
@@ -83,7 +85,7 @@ const DatosCompradorObligatorios = ({
                     <input
                       type="checkbox"
                       checked={allObligatorios}
-                      onChange={(e) => setAllDatosObligatorios(e.target.checked)}
+                      onChange={e => setAllDatosObligatorios(e.target.checked)}
                       className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 cursor-pointer"
                     />
                     <span>Obligatorio</span>
@@ -92,9 +94,14 @@ const DatosCompradorObligatorios = ({
               </tr>
             </thead>
             <tbody>
-              {Object.keys(datosComprador).map((key) => (
-                <tr key={key} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-sm text-gray-700">{labels[key] || key.replace(/([A-Z])/g, ' $1').trim()}</td>
+              {Object.keys(datosComprador).map(key => (
+                <tr
+                  key={key}
+                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {labels[key] || key.replace(/([A-Z])/g, ' $1').trim()}
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <input
                       type="checkbox"

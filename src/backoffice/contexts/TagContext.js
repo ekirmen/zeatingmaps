@@ -10,9 +10,8 @@ export const TagProvider = ({ children }) => {
   const hasLoaded = useRef(false);
 
   useEffect(() => {
-
     if (hasLoaded.current) return;
-    
+
     const loadTags = async () => {
       hasLoaded.current = true;
       try {
@@ -33,14 +32,14 @@ export const TagProvider = ({ children }) => {
 
   // Log para debuggear el estado de los tags (solo en desarrollo)
   useEffect(() => {
-    logger.log('🔍 [TagContext] Estado actual:', { tags: tags.length, loading, tagsCount: tags.length });
+    logger.log('🔍 [TagContext] Estado actual:', {
+      tags: tags.length,
+      loading,
+      tagsCount: tags.length,
+    });
   }, [tags.length, loading]);
 
-  return (
-    <TagContext.Provider value={{ tags, setTags, loading }}>
-      {children}
-    </TagContext.Provider>
-  );
+  return <TagContext.Provider value={{ tags, setTags, loading }}>{children}</TagContext.Provider>;
 };
 
 export const useTags = () => {

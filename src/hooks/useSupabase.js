@@ -40,6 +40,6 @@ export const useSupabase = () => {
     supabaseAdmin,
     isLoading,
     error,
-    isReady: !isLoading && !error && supabase !== null
+    isReady: !isLoading && !error && supabase !== null,
   };
-}; 
+};

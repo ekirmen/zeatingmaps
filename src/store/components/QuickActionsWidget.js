@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { Card, Button, Space, Typography, Tooltip, Badge } from '../../utils/antdComponents';
-import { 
-  ShoppingCartOutlined, 
-  SaveOutlined, 
-  DeleteOutlined, 
+import {
+  ShoppingCartOutlined,
+  SaveOutlined,
+  DeleteOutlined,
   HistoryOutlined,
   UserOutlined,
-  ShoppingOutlined  
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 
@@ -20,12 +20,15 @@ const QuickActionsWidget = () => {
   const { getItemCount, calculateTotal, clearCart, items, products } = useCartStore();
 
   // Memoizar c¡lculos del carrito
-  const { itemCount, total, seatsCount, productsCount } = useMemo(() => ({
-    itemCount: getItemCount(),
-    total: calculateTotal(),
-    seatsCount: items.length,
-    productsCount: products.length
-  }), [getItemCount, calculateTotal, items.length, products.length]);
+  const { itemCount, total, seatsCount, productsCount } = useMemo(
+    () => ({
+      itemCount: getItemCount(),
+      total: calculateTotal(),
+      seatsCount: items.length,
+      productsCount: products.length,
+    }),
+    [getItemCount, calculateTotal, items.length, products.length]
+  );
 
   const handleClearCart = useCallback(() => clearCart(), [clearCart]);
   const openSavedCarts = useCallback(() => setSavedCartsVisible(true), []);
@@ -33,7 +36,7 @@ const QuickActionsWidget = () => {
 
   return (
     <>
-      <Card 
+      <Card
         title={
           <div className="flex items-center space-x-2">
             <ShoppingCartOutlined className="text-blue-500" />
@@ -50,7 +53,7 @@ const QuickActionsWidget = () => {
                 <Text strong>Resumen del Carrito</Text>
                 <Badge count={itemCount} size="small" />
               </div>
-              
+
               <div className="space-y-1 text-sm">
                 {seatsCount > 0 && (
                   <div className="flex items-center space-x-2">
@@ -66,7 +69,9 @@ const QuickActionsWidget = () => {
                 )}
                 <div className="flex items-center justify-between pt-1 border-t">
                   <Text strong>Total:</Text>
-                  <Text strong className="text-blue-600">${total.toFixed(2)}</Text>
+                  <Text strong className="text-blue-600">
+                    ${total.toFixed(2)}
+                  </Text>
                 </div>
               </div>
             </div>
@@ -75,8 +80,8 @@ const QuickActionsWidget = () => {
           {/* Quick Actions */}
           <div className="space-y-2">
             <Tooltip title="Guardar carrito actual">
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<SaveOutlined />}
                 block
                 onClick={openSavedCarts}
@@ -87,23 +92,14 @@ const QuickActionsWidget = () => {
             </Tooltip>
 
             <Tooltip title="Ver carritos guardados">
-              <Button 
-                icon={<HistoryOutlined />}
-                block
-                onClick={openSavedCarts}
-              >
+              <Button icon={<HistoryOutlined />} block onClick={openSavedCarts}>
                 Carritos Guardados
               </Button>
             </Tooltip>
 
             {itemCount > 0 && (
               <Tooltip title="Limpiar carrito actual">
-                <Button 
-                  danger
-                  icon={<DeleteOutlined />}
-                  block
-                  onClick={handleClearCart}
-                >
+                <Button danger icon={<DeleteOutlined />} block onClick={handleClearCart}>
                   Limpiar Carrito
                 </Button>
               </Tooltip>
@@ -134,5 +130,3 @@ const QuickActionsWidget = () => {
 };
 
 export default QuickActionsWidget;
-
-

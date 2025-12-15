@@ -12,7 +12,7 @@ const Silla = ({
   zonaId,
   zonas = [], // ✅ nuevo prop
 }) => {
-  const zona = zonas.find((z) => z.id === zonaId);
+  const zona = zonas.find(z => z.id === zonaId);
   const zonaColor = zona?.color || 'black';
   const strokeColor = selected ? 'blue' : zonaColor;
 
@@ -31,12 +31,7 @@ const Silla = ({
   };
 
   return shape === 'circle' ? (
-    <Circle
-      {...commonProps}
-      radius={width / 2}
-      width={undefined}
-      height={undefined}
-    />
+    <Circle {...commonProps} radius={width / 2} width={undefined} height={undefined} />
   ) : (
     <Rect {...commonProps} />
   );

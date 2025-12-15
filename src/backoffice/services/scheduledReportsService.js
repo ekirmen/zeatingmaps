@@ -6,7 +6,8 @@ class ScheduledReportsService {
     try {
       const { data, error } = await supabase
         .from('scheduled_reports')
-        .select(`
+        .select(
+          `
           *,
           evento:eventos(nombre, fecha_evento),
           executions:scheduled_report_executions(
@@ -17,10 +18,10 @@ class ScheduledReportsService {
             email_enviado_a,
             archivo_generado
           )
-        `)
+        `
+        )
         .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false });
-
 
       return { data, error: null };
     } catch (error) {
@@ -67,10 +68,7 @@ class ScheduledReportsService {
   // Delete a scheduled report
   async deleteScheduledReport(id) {
     try {
-      const { error } = await supabase
-        .from('scheduled_reports')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('scheduled_reports').delete().eq('id', id);
 
       if (error) throw error;
       return { error: null };
@@ -193,63 +191,53 @@ class ScheduledReportsService {
   async generateReportData(reportType, filters = {}) {
     try {
       let query;
-      
+
       switch (reportType) {
         case 'sales':
           query = supabase
             .from('payment_transactions')
-            .select(`
+            .select(
+              `
               *,
               user:profiles!user_id(*),
               event:eventos(*)
-            `)
+            `
+            )
             .eq('status', 'pagado');
           break;
-          
+
         case 'events':
-          query = supabase
-            .from('eventos')
-            .select(`
+          query = supabase.from('eventos').select(`
               *,
               funciones(*),
               entradas(*)
             `);
           break;
-          
+
         case 'users':
-          query = supabase
-            .from('profiles')
-            .select('*');
+          query = supabase.from('profiles').select('*');
           break;
-          
+
         case 'payments':
-          query = supabase
-            .from('payment_transactions')
-            .select(`
+          query = supabase.from('payment_transactions').select(`
               *,
               user:profiles!user_id(*),
               event:eventos(*)
             `);
           break;
-          
+
         case 'products':
-          query = supabase
-            .from('productos')
-            .select('*');
+          query = supabase.from('productos').select('*');
           break;
-          
+
         case 'promociones':
-          query = supabase
-            .from('promociones')
-            .select('*');
+          query = supabase.from('promociones').select('*');
           break;
-          
+
         case 'carritos':
-          query = supabase
-            .from('saved_carts')
-            .select('*');
+          query = supabase.from('saved_carts').select('*');
           break;
-          
+
         default:
           throw new Error(`Tipo de reporte no soportado: ${reportType}`);
       }
@@ -258,9 +246,7 @@ class ScheduledReportsService {
       if (filters.dateRange) {
         const startDate = filters.dateRange[0];
         const endDate = filters.dateRange[1];
-        query = query
-          .gte('created_at', startDate)
-          .lte('created_at', endDate);
+        query = query.gte('created_at', startDate).lte('created_at', endDate);
       }
 
       if (filters.evento_id) {
@@ -302,10 +288,10 @@ class ScheduledReportsService {
   validateEmailList(emailString) {
     const emails = emailString.split(',').map(email => email.trim());
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     const validEmails = [];
     const invalidEmails = [];
-    
+
     emails.forEach(email => {
       if (emailRegex.test(email)) {
         validEmails.push(email);
@@ -313,11 +299,11 @@ class ScheduledReportsService {
         invalidEmails.push(email);
       }
     });
-    
+
     return {
       valid: validEmails,
       invalid: invalidEmails,
-      isValid: invalidEmails.length === 0
+      isValid: invalidEmails.length === 0,
     };
   }
 
@@ -325,12 +311,12 @@ class ScheduledReportsService {
   calculateNextExecution(scheduledReport) {
     const now = new Date();
     const { periodicidad, hora_ejecucion, dias_semana, dia_mes } = scheduledReport;
-    
+
     const [hours, minutes] = hora_ejecucion.split(':').map(Number);
-    
+
     let nextExecution = new Date();
     nextExecution.setHours(hours, minutes, 0, 0);
-    
+
     switch (periodicidad) {
       case 'daily':
         // If time has passed today, schedule for tomorrow
@@ -338,27 +324,27 @@ class ScheduledReportsService {
           nextExecution.setDate(nextExecution.getDate() + 1);
         }
         break;
-        
+
       case 'weekly':
         if (dias_semana && dias_semana.length > 0) {
           // Find next occurrence of any selected day
           const today = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
           const nextDays = dias_semana
-            .map(day => day === 7 ? 0 : day) // Convert Sunday from 7 to 0
+            .map(day => (day === 7 ? 0 : day)) // Convert Sunday from 7 to 0
             .filter(day => day >= today)
             .sort((a, b) => a - b);
-          
+
           if (nextDays.length > 0) {
             const daysUntilNext = nextDays[0] - today;
             nextExecution.setDate(nextExecution.getDate() + daysUntilNext);
           } else {
             // Next week
-            const daysUntilNext = (7 - today) + dias_semana[0];
+            const daysUntilNext = 7 - today + dias_semana[0];
             nextExecution.setDate(nextExecution.getDate() + daysUntilNext);
           }
         }
         break;
-        
+
       case 'monthly':
         if (dia_mes) {
           nextExecution.setDate(dia_mes);
@@ -369,7 +355,7 @@ class ScheduledReportsService {
         }
         break;
     }
-    
+
     return nextExecution;
   }
 }

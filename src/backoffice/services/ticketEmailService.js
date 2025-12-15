@@ -19,7 +19,7 @@ export class TicketEmailService {
         to: recipientEmail,
         subject: `Tu ticket para ${ticketData.eventName}`,
         html: ticketHTML,
-        emailConfig
+        emailConfig,
       });
 
       return result;
@@ -63,7 +63,7 @@ export class TicketEmailService {
       return {
         success: true,
         messageId: `simulated-${Date.now()}`,
-        message: 'Correo enviado correctamente'
+        message: 'Correo enviado correctamente',
       };
     } catch (error) {
       console.error('Error enviando correo:', error);
@@ -240,7 +240,7 @@ export class TicketEmailService {
         to: recipientEmail,
         subject: `Tus tickets para ${ticketsData.eventName}`,
         html: ticketsHTML,
-        emailConfig
+        emailConfig,
       });
 
       return result;
@@ -252,14 +252,18 @@ export class TicketEmailService {
 
   // Generar HTML para múltiples tickets
   static generateMultipleTicketsHTML(ticketsData) {
-    const ticketsList = ticketsData.tickets.map(ticket => `
+    const ticketsList = ticketsData.tickets
+      .map(
+        ticket => `
       <div class="ticket-item" style="border: 1px solid #ddd; margin: 15px 0; padding: 15px; border-radius: 5px;">
         <div class="detail-row">
           <span class="detail-label">Ticket #${ticket.ticketNumber}:</span>
           <span class="detail-value">${ticket.seatInfo || 'General'} - ${ticket.zoneName || 'General'}</span>
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
 
     return `
       <!DOCTYPE html>

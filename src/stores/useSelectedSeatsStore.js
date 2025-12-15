@@ -10,74 +10,73 @@ const useSelectedSeatsStore = create(
       selectedEvent: null,
       selectedFuncion: null,
       selectedAffiliate: null,
-      
-      // Acciones para asientos
-      addSeat: (seat) => {
-        set((state) => {
 
+      // Acciones para asientos
+      addSeat: seat => {
+        set(state => {
           if (exists) return state;
-          
+
           return {
-            selectedSeats: [...state.selectedSeats, seat]
+            selectedSeats: [...state.selectedSeats, seat],
           };
         });
       },
-      
-      removeSeat: (seatId) => {
-        set((state) => ({
-          selectedSeats: state.selectedSeats.filter(s => s._id !== seatId)
+
+      removeSeat: seatId => {
+        set(state => ({
+          selectedSeats: state.selectedSeats.filter(s => s._id !== seatId),
         }));
       },
-      
-      toggleSeat: (seat) => {
-        set((state) => {
+
+      toggleSeat: seat => {
+        set(state => {
           const exists = state.selectedSeats.find(s => s._id === seat._id);
           if (exists) {
             return {
-              selectedSeats: state.selectedSeats.filter(s => s._id !== seat._id)
+              selectedSeats: state.selectedSeats.filter(s => s._id !== seat._id),
             };
           } else {
             return {
-              selectedSeats: [...state.selectedSeats, seat]
+              selectedSeats: [...state.selectedSeats, seat],
             };
           }
         });
       },
-      
+
       clearSeats: () => {
         set({ selectedSeats: [] });
       },
-      
-      setSeats: (seats) => {
+
+      setSeats: seats => {
         set({ selectedSeats: Array.isArray(seats) ? seats : [] });
       },
-      
-      setSelectedSeats: (seats) => {
+
+      setSelectedSeats: seats => {
         set({ selectedSeats: Array.isArray(seats) ? seats : [] });
       },
-      
+
       // Acciones para cliente
-      setSelectedClient: (client) => {
+      setSelectedClient: client => {
         set({ selectedClient: client });
       },
-      
+
       clearSelectedClient: () => {
         set({ selectedClient: null });
       },
-      
+
       // Acciones para evento y función
-      setSelectedEvent: (event) => {
+      setSelectedEvent: event => {
         set({ selectedEvent: event });
       },
-      
-      setSelectedFuncion: (funcion) => {
+
+      setSelectedFuncion: funcion => {
         set({ selectedFuncion: funcion });
       },
-      
-      setSelectedAffiliate: (affiliate) => {
+
+      setSelectedAffiliate: affiliate => {
         set({ selectedAffiliate: affiliate });
       },
-      
+
       // Acciones para limpiar todo
       clearAll: () => {
         set({
@@ -85,28 +84,28 @@ const useSelectedSeatsStore = create(
           selectedClient: null,
           selectedEvent: null,
           selectedFuncion: null,
-          selectedAffiliate: null
+          selectedAffiliate: null,
         });
       },
-      
+
       // Getters
       getSeatCount: () => {
         return get().selectedSeats.length;
       },
-      
+
       getTotalPrice: () => {
         return get().selectedSeats.reduce((total, seat) => {
           return total + (seat.precio || 0);
         }, 0);
       },
-      
-      isSeatSelected: (seatId) => {
+
+      isSeatSelected: seatId => {
         return get().selectedSeats.some(s => s._id === seatId);
       },
-      
+
       // Acciones para sincronización con seat_locks
-      syncWithSeatLocks: (lockedSeats) => {
-        set((state) => {
+      syncWithSeatLocks: lockedSeats => {
+        set(state => {
           // Filtrar solo asientos que están en seat_locks con status 'seleccionado'
           const syncedSeats = lockedSeats
             .filter(lock => lock.status === 'seleccionado')
@@ -114,39 +113,39 @@ const useSelectedSeatsStore = create(
               // Buscar el asiento en la lista actual o crear uno básico
               const existingSeat = state.selectedSeats.find(s => s._id === lock.seat_id);
               if (existingSeat) return existingSeat;
-              
+
               // Crear asiento básico desde seat_locks
               return {
                 _id: lock.seat_id,
                 nombre: `Asiento ${lock.seat_id}`,
-                precio: lock.precio || 10.00,
+                precio: lock.precio || 10.0,
                 zona: {
                   id: lock.zona_id || 'ORO',
-                  nombre: lock.zona_nombre || 'ORO'
+                  nombre: lock.zona_nombre || 'ORO',
                 },
                 zonaId: lock.zona_id || 'ORO',
                 precioInfo: {
-                  base: lock.precio || 10.00,
+                  base: lock.precio || 10.0,
                   tipoPrecio: 'normal',
                   descuentoNombre: '',
-                  zonaId: lock.zona_id || 'ORO'
-                }
+                  zonaId: lock.zona_id || 'ORO',
+                },
               };
             });
-          
+
           return { selectedSeats: syncedSeats };
         });
-      }
+      },
     }),
     {
       name: 'selected-seats-storage',
-      partialize: (state) => ({
+      partialize: state => ({
         selectedSeats: state.selectedSeats,
         // selectedClient: NO se persiste para evitar errores de atención al cliente
         selectedEvent: state.selectedEvent,
         selectedFuncion: state.selectedFuncion,
-        selectedAffiliate: state.selectedAffiliate
-      })
+        selectedAffiliate: state.selectedAffiliate,
+      }),
     }
   )
 );

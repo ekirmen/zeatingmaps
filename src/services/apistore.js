@@ -10,7 +10,6 @@ export async function getFunciones(eventId) {
       .single();
 
     if (eventoError) {
-
       return [];
     }
 
@@ -47,7 +46,7 @@ export async function getFunciones(eventId) {
       id: func.id,
       fecha_celebracion: func.fecha_celebracion,
       evento: func.evento_id ?? func.evento,
-      sala: func.sala_id ?? func.sala
+      sala: func.sala_id ?? func.sala,
     }));
   } catch (err) {
     console.error('Exception fetching funciones:', err.message || err);

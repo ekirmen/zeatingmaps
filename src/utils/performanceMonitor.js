@@ -18,31 +18,31 @@ class PerformanceMonitor {
    */
   startMonitoring(onMetric) {
     // Largest Contentful Paint (LCP)
-    onLCP((metric) => {
+    onLCP(metric => {
       this.metrics.lcp = metric;
       this.reportMetric('LCP', metric, onMetric);
     });
 
     // Cumulative Layout Shift (CLS)
-    onCLS((metric) => {
+    onCLS(metric => {
       this.metrics.cls = metric;
       this.reportMetric('CLS', metric, onMetric);
     });
 
     // First Contentful Paint (FCP)
-    onFCP((metric) => {
+    onFCP(metric => {
       this.metrics.fcp = metric;
       this.reportMetric('FCP', metric, onMetric);
     });
 
     // Time to First Byte (TTFB)
-    onTTFB((metric) => {
+    onTTFB(metric => {
       this.metrics.ttfb = metric;
       this.reportMetric('TTFB', metric, onMetric);
     });
 
     // Interaction to Next Paint (INP) - reemplaza a FID (First Input Delay)
-    onINP((metric) => {
+    onINP(metric => {
       this.metrics.inp = metric;
       this.reportMetric('INP', metric, onMetric);
     });
@@ -86,7 +86,6 @@ class PerformanceMonitor {
       INP: { good: 200, needsImprovement: 500 },
     };
 
-
     if (!threshold) return 'unknown';
 
     if (value <= threshold.good) return 'good';
@@ -126,7 +125,7 @@ class PerformanceMonitor {
    */
   getSummary() {
     const summary = {};
-    Object.keys(this.metrics).forEach((key) => {
+    Object.keys(this.metrics).forEach(key => {
       const metric = this.metrics[key];
       summary[key] = {
         value: metric.value,
@@ -140,7 +139,7 @@ class PerformanceMonitor {
    * Limpia los observadores
    */
   cleanup() {
-    this.observers.forEach((observer) => {
+    this.observers.forEach(observer => {
       if (observer && typeof observer.disconnect === 'function') {
         observer.disconnect();
       }
@@ -153,4 +152,3 @@ class PerformanceMonitor {
 const performanceMonitor = new PerformanceMonitor();
 
 export default performanceMonitor;
-

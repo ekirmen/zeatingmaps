@@ -6,7 +6,6 @@ import auditService from './auditService';
  * Servicio para bloqueo atómico de asientos que previene condiciones de carrera
  */
 class AtomicSeatLockService {
-
   /**
    * Bloquea un asiento de forma atómica usando una función de base de datos
    * Esto previene condiciones de carrera entre múltiples usuarios
@@ -19,7 +18,9 @@ class AtomicSeatLockService {
 
       if (!apiRateLimiter.canMakeRequest(endpoint, requestKey)) {
         const waitTime = apiRateLimiter.getWaitTime(endpoint);
-        throw new Error(`Demasiadas solicitudes. Por favor, espera ${Math.ceil(waitTime / 1000)} segundos antes de intentar nuevamente.`);
+        throw new Error(
+          `Demasiadas solicitudes. Por favor, espera ${Math.ceil(waitTime / 1000)} segundos antes de intentar nuevamente.`
+        );
       }
 
       // Registrar el request para rate limiting
@@ -47,29 +48,40 @@ class AtomicSeatLockService {
         p_seat_id: normalizedSeatId,
         p_funcion_id: normalizedFuncionId,
         p_session_id: normalizedSessionId,
-        p_status: status
+        p_status: status,
       };
 
-      const activePermanentLock = await this.getActivePermanentLock(normalizedSeatId, normalizedFuncionId);
+      const activePermanentLock = await this.getActivePermanentLock(
+        normalizedSeatId,
+        normalizedFuncionId
+      );
       if (activePermanentLock) {
-        throw new Error('Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.');
+        throw new Error(
+          'Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.'
+        );
       }
 
       // Usar función RPC para bloqueo atómico
       const { data, error } = await supabase.rpc('lock_seat_atomically', lockData);
 
       // Registrar acción de bloqueo en auditoría
-      auditService.logSeatAction('locked', {
-        seatId: normalizedSeatId,
-        functionId: normalizedFuncionId,
-        sessionId: normalizedSessionId,
-        status: status,
-        previousStatus: null,
-        newStatus: status
-      }, {
-        tenantId: tenantId || null,
-        severity: 'info'
-      }).catch(err => console.error('Error logging seat lock:', err));
+      auditService
+        .logSeatAction(
+          'locked',
+          {
+            seatId: normalizedSeatId,
+            functionId: normalizedFuncionId,
+            sessionId: normalizedSessionId,
+            status: status,
+            previousStatus: null,
+            newStatus: status,
+          },
+          {
+            tenantId: tenantId || null,
+            severity: 'info',
+          }
+        )
+        .catch(err => console.error('Error logging seat lock:', err));
 
       if (error) {
         console.error('❌ [ATOMIC_LOCK] Error en bloqueo atómico:', error);
@@ -77,15 +89,22 @@ class AtomicSeatLockService {
           code: error.code,
           message: error.message,
           details: error.details,
-          hint: error.hint
+          hint: error.hint,
         });
 
         // Manejar errores específicos
         // Error 23505 = violación de restricción única (duplicate key) - asiento ya bloqueado
         // Error 409 = Conflict (HTTP status code equivalente)
-        if (error.code === '23505' || error.code === '409' || error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
+        if (
+          error.code === '23505' ||
+          error.code === '409' ||
+          error.message?.includes('duplicate key') ||
+          error.message?.includes('already exists')
+        ) {
           // Si es un duplicate key, verificar consultando el lock existente
-          console.warn('⚠️ [ATOMIC_LOCK] Asiento ya bloqueado (duplicate key), verificando si es del mismo usuario...');
+          console.warn(
+            '⚠️ [ATOMIC_LOCK] Asiento ya bloqueado (duplicate key), verificando si es del mismo usuario...'
+          );
 
           try {
             // Consultar el lock existente para verificar si es del mismo usuario
@@ -107,24 +126,32 @@ class AtomicSeatLockService {
             const existingSessionId = existingLock.session_id?.toString() || '';
             const expiresAt = existingLock.expires_at ? new Date(existingLock.expires_at) : null;
             const isExpired = expiresAt ? expiresAt <= new Date() : false;
-            const isPermanentLock = ['locked', 'bloqueado', 'vendido', 'pagado', 'reservado'].includes(existingLock.status);
+            const isPermanentLock = [
+              'locked',
+              'bloqueado',
+              'vendido',
+              'pagado',
+              'reservado',
+            ].includes(existingLock.status);
 
-            const permanentLock = isPermanentLock && !isExpired
-              ? existingLock
-              : await this.getActivePermanentLock(normalizedSeatId, normalizedFuncionId);
+            const permanentLock =
+              isPermanentLock && !isExpired
+                ? existingLock
+                : await this.getActivePermanentLock(normalizedSeatId, normalizedFuncionId);
 
             if (permanentLock) {
-              throw new Error('Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.');
+              throw new Error(
+                'Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.'
+              );
             }
 
             // Comparar session_ids normalizados
             if (currentSessionId === existingSessionId) {
-
               return {
                 success: true,
                 lockData: existingLock,
                 alreadyLocked: true,
-                error: null
+                error: null,
               };
             }
 
@@ -147,14 +174,28 @@ class AtomicSeatLockService {
           throw new Error('Asiento no está disponible');
         } else if (error.message?.includes('invalid_seat')) {
           throw new Error('Asiento no válido');
-        } else if (error.code === 'P0004' || error.message?.includes('session_id no puede ser NULL')) {
+        } else if (
+          error.code === 'P0004' ||
+          error.message?.includes('session_id no puede ser NULL')
+        ) {
           throw new Error('Error de sesión: session_id inválido. Por favor, recarga la página.');
-        } else if (error.code === 'P0006' || error.code === 'P0007' || error.message?.includes('UUID válido')) {
-          throw new Error('Error de sesión: formato de session_id inválido. Por favor, recarga la página.');
-        } else if (error.code === '42804' || error.message?.includes('is of type uuid but expression is of type text')) {
+        } else if (
+          error.code === 'P0006' ||
+          error.code === 'P0007' ||
+          error.message?.includes('UUID válido')
+        ) {
+          throw new Error(
+            'Error de sesión: formato de session_id inválido. Por favor, recarga la página.'
+          );
+        } else if (
+          error.code === '42804' ||
+          error.message?.includes('is of type uuid but expression is of type text')
+        ) {
           throw new Error('Error de tipo de datos: session_id. Por favor, recarga la página.');
         } else {
-          throw new Error(`Error al seleccionar asiento: ${error.message || error.code || 'Error desconocido'}`);
+          throw new Error(
+            `Error al seleccionar asiento: ${error.message || error.code || 'Error desconocido'}`
+          );
         }
       }
 
@@ -166,14 +207,13 @@ class AtomicSeatLockService {
       return {
         success: true,
         lockData: lockRow,
-        locator: locator
+        locator: locator,
       };
-
     } catch (error) {
       console.error('❌ [ATOMIC_LOCK] Error inesperado:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -191,7 +231,9 @@ class AtomicSeatLockService {
 
       if (!apiRateLimiter.canMakeRequest(endpoint, requestKey)) {
         const waitTime = apiRateLimiter.getWaitTime(endpoint);
-        throw new Error(`Demasiadas solicitudes. Por favor, espera ${Math.ceil(waitTime / 1000)} segundos antes de intentar nuevamente.`);
+        throw new Error(
+          `Demasiadas solicitudes. Por favor, espera ${Math.ceil(waitTime / 1000)} segundos antes de intentar nuevamente.`
+        );
       }
 
       // Registrar el request para rate limiting
@@ -210,14 +252,16 @@ class AtomicSeatLockService {
         : await this.getActivePermanentLock(normalizedSeatId, normalizedFuncionId);
 
       if (activePermanentLock) {
-        throw new Error('Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.');
+        throw new Error(
+          'Asiento bloqueado permanentemente. Solo puede desbloquearse desde boletería.'
+        );
       }
 
       // Usar función RPC para desbloqueo atómico
       const { data, error } = await supabase.rpc('unlock_seat_atomically', {
         p_seat_id: normalizedSeatId,
         p_funcion_id: normalizedFuncionId,
-        p_session_id: normalizedSessionId
+        p_session_id: normalizedSessionId,
       });
 
       if (error) {
@@ -237,27 +281,32 @@ class AtomicSeatLockService {
       const tenantId = this.getCurrentTenantId();
 
       // Registrar acción de desbloqueo en auditoría
-      auditService.logSeatAction('unlocked', {
-        seatId: normalizedSeatId,
-        functionId: normalizedFuncionId,
-        sessionId: normalizedSessionId,
-        previousStatus: 'locked',
-        newStatus: 'available'
-      }, {
-        tenantId: tenantId || null,
-        severity: 'info'
-      }).catch(err => console.error('Error logging seat unlock:', err));
+      auditService
+        .logSeatAction(
+          'unlocked',
+          {
+            seatId: normalizedSeatId,
+            functionId: normalizedFuncionId,
+            sessionId: normalizedSessionId,
+            previousStatus: 'locked',
+            newStatus: 'available',
+          },
+          {
+            tenantId: tenantId || null,
+            severity: 'info',
+          }
+        )
+        .catch(err => console.error('Error logging seat unlock:', err));
 
       return {
         success: true,
-        data: unlockedRow
+        data: unlockedRow,
       };
-
     } catch (error) {
       console.error('❌ [ATOMIC_UNLOCK] Error inesperado:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -269,7 +318,7 @@ class AtomicSeatLockService {
     try {
       const params = {
         p_seat_id: seatId,
-        p_funcion_id: parseInt(funcionId, 10)
+        p_funcion_id: parseInt(funcionId, 10),
       };
 
       // Si se proporciona sessionId, incluirlo para verificar solo locks de otros usuarios
@@ -284,10 +333,13 @@ class AtomicSeatLockService {
 
         // Si el error es porque la función no existe, intentar sin session_id
         if (error.code === '42883' && sessionId) {
-          const { data: fallbackData, error: fallbackError } = await supabase.rpc('check_seat_availability', {
-            p_seat_id: seatId,
-            p_funcion_id: parseInt(funcionId, 10)
-          });
+          const { data: fallbackData, error: fallbackError } = await supabase.rpc(
+            'check_seat_availability',
+            {
+              p_seat_id: seatId,
+              p_funcion_id: parseInt(funcionId, 10),
+            }
+          );
 
           if (fallbackError) {
             console.error('❌ [AVAILABILITY_CHECK] Error en fallback:', fallbackError);
@@ -362,7 +414,6 @@ class AtomicSeatLockService {
         return { success: false, error: error.message };
       }
       return { success: true, cleaned: data?.count || 0 };
-
     } catch (error) {
       console.error('❌ [CLEANUP] Error inesperado:', error);
       return { success: false, error: error.message };
@@ -392,8 +443,9 @@ class AtomicSeatLockService {
    */
   generateTempLocator() {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return Array.from({ length: 8 }, () =>
-      alphabet[Math.floor(Math.random() * alphabet.length)]
+    return Array.from(
+      { length: 8 },
+      () => alphabet[Math.floor(Math.random() * alphabet.length)]
     ).join('');
   }
 
@@ -423,7 +475,7 @@ class AtomicSeatLockService {
       errors: errors,
       normalizedSeatId,
       normalizedFuncionId,
-      normalizedSessionId
+      normalizedSessionId,
     };
   }
 
@@ -435,13 +487,7 @@ class AtomicSeatLockService {
     let value = seatId;
 
     if (typeof value === 'object') {
-      value =
-        value.seat_id ||
-        value.seatId ||
-        value._id ||
-        value.id ||
-        value.sillaId ||
-        null;
+      value = value.seat_id || value.seatId || value._id || value.id || value.sillaId || null;
     }
 
     if (value === undefined || value === null) {
@@ -489,10 +535,12 @@ class AtomicSeatLockService {
         return null;
       }
 
-      return locks.find(lock => {
-        const expiresAt = lock.expires_at ? new Date(lock.expires_at) : null;
-        return !expiresAt || expiresAt > now;
-      }) || null;
+      return (
+        locks.find(lock => {
+          const expiresAt = lock.expires_at ? new Date(lock.expires_at) : null;
+          return !expiresAt || expiresAt > now;
+        }) || null
+      );
     } catch (error) {
       return null;
     }
@@ -569,9 +617,10 @@ class AtomicSeatLockService {
     }
 
     // Si no se encontró un UUID válido, generar uno nuevo
-    const newUuid = (typeof crypto !== 'undefined' && crypto?.randomUUID)
-      ? crypto.randomUUID()
-      : this.generateUuidFallback();
+    const newUuid =
+      typeof crypto !== 'undefined' && crypto?.randomUUID
+        ? crypto.randomUUID()
+        : this.generateUuidFallback();
     return newUuid.toLowerCase();
   }
 
@@ -579,9 +628,9 @@ class AtomicSeatLockService {
    * Genera un UUID si crypto.randomUUID no está disponible
    */
   generateUuidFallback() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }

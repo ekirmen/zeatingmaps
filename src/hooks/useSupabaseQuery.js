@@ -17,7 +17,7 @@ export const useSupabaseQuery = (tableName, options = {}) => {
     ascending = true,
     immediate = true,
     single = false,
-    enabled = true
+    enabled = true,
   } = options;
 
   const { tenantId, loading: tenantLoading, error: tenantError } = useTenant();
@@ -34,10 +34,7 @@ export const useSupabaseQuery = (tableName, options = {}) => {
       setLoading(true);
       setError(null);
 
-      let query = supabase
-        .from(tableName)
-        .select(select)
-        .eq('tenant_id', tenantId);
+      let query = supabase.from(tableName).select(select).eq('tenant_id', tenantId);
 
       // Aplicar filtros adicionales
       Object.entries(filters).forEach(([key, value]) => {
@@ -56,9 +53,7 @@ export const useSupabaseQuery = (tableName, options = {}) => {
       }
 
       // Ejecutar query
-      const result = single 
-        ? await query.single()
-        : await query;
+      const result = single ? await query.single() : await query;
 
       if (result.error) {
         throw new Error(result.error.message || `Error fetching ${tableName}`);
@@ -93,123 +88,131 @@ export const useSupabaseQuery = (tableName, options = {}) => {
     data,
     loading: loading || tenantLoading,
     error: error || tenantError,
-    refetch
+    refetch,
   };
 };
 
 /**
  * Hook para operaciones CRUD con tenant automático
  */
-export const useSupabaseMutation = (tableName) => {
+export const useSupabaseMutation = tableName => {
   const { tenantId, loading: tenantLoading } = useTenant();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const create = useCallback(async (data) => {
-    if (!tenantId) {
-      throw new Error('Tenant ID no disponible');
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const recordWithTenant = {
-        ...data,
-        tenant_id: tenantId
-      };
-
-      const { data: result, error: createError } = await supabase
-        .from(tableName)
-        .insert([recordWithTenant])
-        .select()
-        .single();
-
-      if (createError) {
-        throw new Error(createError.message || `Error creating ${tableName}`);
+  const create = useCallback(
+    async data => {
+      if (!tenantId) {
+        throw new Error('Tenant ID no disponible');
       }
 
-      return result;
-    } catch (err) {
-      logger.error(`Error in useSupabaseMutation.create(${tableName}):`, err);
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [tableName, tenantId]);
+      try {
+        setLoading(true);
+        setError(null);
 
-  const update = useCallback(async (id, data) => {
-    if (!tenantId) {
-      throw new Error('Tenant ID no disponible');
-    }
+        const recordWithTenant = {
+          ...data,
+          tenant_id: tenantId,
+        };
 
-    try {
-      setLoading(true);
-      setError(null);
+        const { data: result, error: createError } = await supabase
+          .from(tableName)
+          .insert([recordWithTenant])
+          .select()
+          .single();
 
-      const recordWithTenant = {
-        ...data,
-        tenant_id: tenantId
-      };
+        if (createError) {
+          throw new Error(createError.message || `Error creating ${tableName}`);
+        }
 
-      const { data: result, error: updateError } = await supabase
-        .from(tableName)
-        .update(recordWithTenant)
-        .eq('id', id)
-        .eq('tenant_id', tenantId)
-        .select()
-        .single();
+        return result;
+      } catch (err) {
+        logger.error(`Error in useSupabaseMutation.create(${tableName}):`, err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [tableName, tenantId]
+  );
 
-      if (updateError) {
-        throw new Error(updateError.message || `Error updating ${tableName}`);
+  const update = useCallback(
+    async (id, data) => {
+      if (!tenantId) {
+        throw new Error('Tenant ID no disponible');
       }
 
-      return result;
-    } catch (err) {
-      logger.error(`Error in useSupabaseMutation.update(${tableName}):`, err);
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [tableName, tenantId]);
+      try {
+        setLoading(true);
+        setError(null);
 
-  const remove = useCallback(async (id) => {
-    if (!tenantId) {
-      throw new Error('Tenant ID no disponible');
-    }
+        const recordWithTenant = {
+          ...data,
+          tenant_id: tenantId,
+        };
 
-    try {
-      setLoading(true);
-      setError(null);
+        const { data: result, error: updateError } = await supabase
+          .from(tableName)
+          .update(recordWithTenant)
+          .eq('id', id)
+          .eq('tenant_id', tenantId)
+          .select()
+          .single();
 
-      const { error: deleteError } = await supabase
-        .from(tableName)
-        .delete()
-        .eq('id', id)
-        .eq('tenant_id', tenantId);
+        if (updateError) {
+          throw new Error(updateError.message || `Error updating ${tableName}`);
+        }
 
-      if (deleteError) {
-        throw new Error(deleteError.message || `Error deleting ${tableName}`);
+        return result;
+      } catch (err) {
+        logger.error(`Error in useSupabaseMutation.update(${tableName}):`, err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [tableName, tenantId]
+  );
+
+  const remove = useCallback(
+    async id => {
+      if (!tenantId) {
+        throw new Error('Tenant ID no disponible');
       }
 
-      return { success: true };
-    } catch (err) {
-      logger.error(`Error in useSupabaseMutation.remove(${tableName}):`, err);
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [tableName, tenantId]);
+      try {
+        setLoading(true);
+        setError(null);
+
+        const { error: deleteError } = await supabase
+          .from(tableName)
+          .delete()
+          .eq('id', id)
+          .eq('tenant_id', tenantId);
+
+        if (deleteError) {
+          throw new Error(deleteError.message || `Error deleting ${tableName}`);
+        }
+
+        return { success: true };
+      } catch (err) {
+        logger.error(`Error in useSupabaseMutation.remove(${tableName}):`, err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [tableName, tenantId]
+  );
 
   return {
     create,
     update,
     remove,
     loading: loading || tenantLoading,
-    error
+    error,
   };
 };
-

@@ -5,7 +5,7 @@ import { supabase } from '../../supabaseClient';
 
  * @returns {Object} Objeto con recintos asignados y funciones de gestión
  */
-export const useUserRecintos = (userId) => {
+export const useUserRecintos = userId => {
   const [recintos, setRecintos] = useState([]);
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,8 @@ export const useUserRecintos = (userId) => {
 
       const { data, error } = await supabase
         .from('user_recinto_assignments')
-        .select(`
+        .select(
+          `
           recinto_id,
           recintos (
             id,
@@ -30,7 +31,8 @@ export const useUserRecintos = (userId) => {
             ciudad,
             estado
           )
-        `)
+        `
+        )
         .eq('user_id', userId);
 
       if (error) throw error;
@@ -63,7 +65,8 @@ export const useUserRecintos = (userId) => {
 
       const { data, error } = await supabase
         .from('eventos')
-        .select(`
+        .select(
+          `
           id,
           nombre,
           fecha_celebracion,
@@ -75,7 +78,8 @@ export const useUserRecintos = (userId) => {
             direccion,
             ciudad
           )
-        `)
+        `
+        )
         .in('recinto_id', recintoIds)
         .eq('estado', 'activo')
         .order('fecha_celebracion', { ascending: true });
@@ -92,20 +96,22 @@ export const useUserRecintos = (userId) => {
   };
 
   // Cargar funciones de eventos asignados
-  const loadFunciones = async (eventoId) => {
+  const loadFunciones = async eventoId => {
     if (!eventoId) return [];
 
     try {
       const { data, error } = await supabase
         .from('funciones')
-        .select(`
+        .select(
+          `
           id,
           nombre,
           fecha_celebracion,
           hora_inicio,
           estado,
           evento_id
-        `)
+        `
+        )
         .eq('evento_id', eventoId)
         .eq('estado', 'activo')
         .order('fecha_celebracion', { ascending: true });
@@ -120,12 +126,12 @@ export const useUserRecintos = (userId) => {
   };
 
   // Verificar si un usuario puede acceder a un recinto
-  const canAccessRecinto = (recintoId) => {
+  const canAccessRecinto = recintoId => {
     return recintos.some(r => r.id === recintoId);
   };
 
   // Verificar si un usuario puede acceder a un evento
-  const canAccessEvento = (eventoId) => {
+  const canAccessEvento = eventoId => {
     return eventos.some(e => e.id === eventoId);
   };
 
@@ -148,26 +154,21 @@ export const useUserRecintos = (userId) => {
   };
 
   // Asignar recintos a un usuario
-  const assignRecintos = async (recintoIds) => {
+  const assignRecintos = async recintoIds => {
     if (!userId) return;
 
     try {
       // Eliminar asignaciones existentes
-      await supabase
-        .from('user_recinto_assignments')
-        .delete()
-        .eq('user_id', userId);
+      await supabase.from('user_recinto_assignments').delete().eq('user_id', userId);
 
       // Crear nuevas asignaciones
       if (recintoIds.length > 0) {
         const assignments = recintoIds.map(recintoId => ({
           user_id: userId,
-          recinto_id: recintoId
+          recinto_id: recintoId,
         }));
 
-        const { error } = await supabase
-          .from('user_recinto_assignments')
-          .insert(assignments);
+        const { error } = await supabase.from('user_recinto_assignments').insert(assignments);
 
         if (error) throw error;
       }
@@ -208,7 +209,7 @@ export const useUserRecintos = (userId) => {
     canAccessRecinto,
     canAccessEvento,
     getAvailableRecintos,
-    assignRecintos
+    assignRecintos,
   };
 };
 

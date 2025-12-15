@@ -9,7 +9,6 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-
     return { hasError: true };
   }
 
@@ -18,7 +17,7 @@ class ErrorBoundary extends React.Component {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({
       error: error,
-      errorInfo: errorInfo
+      errorInfo: errorInfo,
     });
   }
 
@@ -37,11 +36,13 @@ class ErrorBoundary extends React.Component {
               description={
                 <div className="space-y-4">
                   <p>
-                    Ha ocurrido un error al cargar la aplicaci³n. Esto puede deberse a un problema 
+                    Ha ocurrido un error al cargar la aplicaci³n. Esto puede deberse a un problema
                     temporal de inicializaci³n del c³digo.
                   </p>
                   <div className="text-sm text-gray-600">
-                    <p><strong>Error:</strong> {this.state.error?.message || 'Error desconocido'}</p>
+                    <p>
+                      <strong>Error:</strong> {this.state.error?.message || 'Error desconocido'}
+                    </p>
                     {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
                       <details className="mt-2">
                         <summary className="cursor-pointer">Detalles t©cnicos</summary>
@@ -52,15 +53,13 @@ class ErrorBoundary extends React.Component {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Button 
-                      type="primary" 
-                      icon={<ReloadOutlined />} 
-                      onClick={this.handleReload}
-                    >
+                    <Button type="primary" icon={<ReloadOutlined />} onClick={this.handleReload}>
                       Recargar P¡gina
                     </Button>
-                    <Button 
-                      onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
+                    <Button
+                      onClick={() =>
+                        this.setState({ hasError: false, error: null, errorInfo: null })
+                      }
                     >
                       Reintentar
                     </Button>
@@ -81,5 +80,3 @@ class ErrorBoundary extends React.Component {
 }
 
 export default ErrorBoundary;
-
-

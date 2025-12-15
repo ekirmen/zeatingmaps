@@ -3,12 +3,11 @@ import { Button, message, Dropdown, Menu, Card } from '../../../utils/antdCompon
 import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
 import downloadTicket from '../../../utils/downloadTicket';
 
-const formatCurrency = (value) => {
-
+const formatCurrency = value => {
   return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '0.00';
 };
 
-const getNumericPrice = (value) => {
+const getNumericPrice = value => {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue : 0;
 };
@@ -23,19 +22,24 @@ const Cart = ({
   onShowUserSearch,
   children,
   blockMode = false,
-  onApplyLockActions
+  onApplyLockActions,
 }) => {
   // Ensure carrito is always an array to avoid runtime errors
   const safeCarrito = Array.isArray(carrito) ? carrito : [];
   const [menuVisible, setMenuVisible] = useState(false);
 
-  const handleRemoveLockItem = useCallback((seatId) => {
-    const normalizedId = seatId?.toString();
-    setCarrito(
-      safeCarrito.filter(item => (item._id || item.sillaId || item.id)?.toString() !== normalizedId)
-    );
-    message.success('Asiento quitado del modo bloqueo/desbloqueo');
-  }, [safeCarrito, setCarrito]);
+  const handleRemoveLockItem = useCallback(
+    seatId => {
+      const normalizedId = seatId?.toString();
+      setCarrito(
+        safeCarrito.filter(
+          item => (item._id || item.sillaId || item.id)?.toString() !== normalizedId
+        )
+      );
+      message.success('Asiento quitado del modo bloqueo/desbloqueo');
+    },
+    [safeCarrito, setCarrito]
+  );
 
   const handleApplyLockActions = useCallback(() => {
     if (onApplyLockActions) {
@@ -45,10 +49,7 @@ const Cart = ({
     }
   }, [onApplyLockActions]);
 
-  const lockActionItems = useMemo(
-    () => safeCarrito.filter(item => item.lockAction),
-    [safeCarrito]
-  );
+  const lockActionItems = useMemo(() => safeCarrito.filter(item => item.lockAction), [safeCarrito]);
   const hasLockActions = lockActionItems.length > 0;
 
   const subtotal = useMemo(() => {
@@ -71,17 +72,18 @@ const Cart = ({
       if (!acc[key]) {
         acc[key] = { fecha: item.funcionFecha, items: [] };
       }
-      
+
       const precioValue = getNumericPrice(item.precio ?? item.precio_total);
 
       // Agrupar por zona y precio
-      const existingGroup = acc[key].items.find(group =>
-        group.zona === item.zona &&
-        group.precio === precioValue &&
-        group.tipoPrecio === item.tipoPrecio &&
-        group.descuentoNombre === item.descuentoNombre
+      const existingGroup = acc[key].items.find(
+        group =>
+          group.zona === item.zona &&
+          group.precio === precioValue &&
+          group.tipoPrecio === item.tipoPrecio &&
+          group.descuentoNombre === item.descuentoNombre
       );
-      
+
       if (existingGroup) {
         existingGroup.cantidad += 1;
         existingGroup.asientos.push({
@@ -91,7 +93,7 @@ const Cart = ({
           locator: item.locator,
           buyerName: item.buyerName,
           buyerEmail: item.buyerEmail,
-          status: item.status
+          status: item.status,
         });
       } else {
         acc[key].items.push({
@@ -100,38 +102,44 @@ const Cart = ({
           tipoPrecio: item.tipoPrecio,
           descuentoNombre: item.descuentoNombre,
           cantidad: 1,
-          asientos: [{
-            _id: item._id,
-            nombre: item.nombre,
-            nombreMesa: item.nombreMesa,
-            locator: item.locator,
-            buyerName: item.buyerName,
-            buyerEmail: item.buyerEmail,
-            status: item.status
-          }]
+          asientos: [
+            {
+              _id: item._id,
+              nombre: item.nombre,
+              nombreMesa: item.nombreMesa,
+              locator: item.locator,
+              buyerName: item.buyerName,
+              buyerEmail: item.buyerEmail,
+              status: item.status,
+            },
+          ],
         });
       }
-      
+
       return acc;
     }, {});
   }, [safeCarrito]);
 
-  const handleRemoveSeat = useCallback((groupKey) => {
-    // groupKey es una combinaci³n de zona, precio y tipo
-    const [zona, precio, tipoPrecio, descuentoNombre] = groupKey.split('|');
-    
-    setCarrito(
-      safeCarrito.filter(
-        (item) => !(
-          item.zona === zona && 
-          item.precio === parseFloat(precio) &&
-          item.tipoPrecio === tipoPrecio &&
-          item.descuentoNombre === descuentoNombre
+  const handleRemoveSeat = useCallback(
+    groupKey => {
+      // groupKey es una combinaci³n de zona, precio y tipo
+      const [zona, precio, tipoPrecio, descuentoNombre] = groupKey.split('|');
+
+      setCarrito(
+        safeCarrito.filter(
+          item =>
+            !(
+              item.zona === zona &&
+              item.precio === parseFloat(precio) &&
+              item.tipoPrecio === tipoPrecio &&
+              item.descuentoNombre === descuentoNombre
+            )
         )
-      )
-    );
-    message.success('Asientos eliminados del carrito');
-  }, [safeCarrito, setCarrito]);
+      );
+      message.success('Asientos eliminados del carrito');
+    },
+    [safeCarrito, setCarrito]
+  );
 
   const clearCart = useCallback(() => {
     setCarrito([]);
@@ -144,14 +152,14 @@ const Cart = ({
 
   const handleDownloadAllTickets = useCallback(async () => {
     if (!safeCarrito.length) return;
-    
+
     try {
       const locators = [...new Set(safeCarrito.map(item => item.locator).filter(Boolean))];
 
       for (const locator of locators) {
         await downloadTicket(locator);
       }
-      
+
       message.success('Tickets descargados correctamente');
     } catch (error) {
       console.error('Error downloading tickets:', error);
@@ -179,13 +187,20 @@ const Cart = ({
           <h3 className="text-lg font-semibold">Carrito de Compras</h3>
           {safeCarrito.length > 0 && (
             <p className="text-xs text-gray-500 mt-1">
-              {safeCarrito.length} elemento{safeCarrito.length !== 1 ? 's' : ''} seleccionado{safeCarrito.length !== 1 ? 's' : ''}
+              {safeCarrito.length} elemento{safeCarrito.length !== 1 ? 's' : ''} seleccionado
+              {safeCarrito.length !== 1 ? 's' : ''}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2">
           {safeCarrito.length > 0 && !hasLockActions && (
-            <Dropdown overlay={menu} trigger={["click"]} visible={menuVisible} onVisibleChange={setMenuVisible} placement="bottomRight">
+            <Dropdown
+              overlay={menu}
+              trigger={['click']}
+              visible={menuVisible}
+              onVisibleChange={setMenuVisible}
+              placement="bottomRight"
+            >
               <button className="text-gray-500 hover:text-gray-800" title="Opciones">
                 <AiOutlineMore size={20} />
               </button>
@@ -213,7 +228,11 @@ const Cart = ({
             const seatId = item._id || item.sillaId || item.id;
 
             return (
-              <Card key={`${item.lockAction}-${seatId}`} size="small" className="mb-2 border-dashed border-gray-200">
+              <Card
+                key={`${item.lockAction}-${seatId}`}
+                size="small"
+                className="mb-2 border-dashed border-gray-200"
+              >
                 <div className="flex justify-between items-start">
                   <div className="flex-1 space-y-1">
                     <div className={`text-xs font-semibold ${actionColor}`}>
@@ -248,16 +267,18 @@ const Cart = ({
               <div key={fid} className="space-y-1">
                 <div className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded">
                   {`ðŸŽ­ Funci³n ${idx + 1}: `}
-                  {group.fecha ? new Date(group.fecha).toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  }) : 'Fecha no disponible'}
+                  {group.fecha
+                    ? new Date(group.fecha).toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : 'Fecha no disponible'}
                 </div>
-                {group.items.map((item) => {
+                {group.items.map(item => {
                   const groupKey = `${item.zona}|${item.precio}|${item.tipoPrecio}|${item.descuentoNombre}`;
 
                   return (
@@ -268,7 +289,9 @@ const Cart = ({
                             <span className="text-blue-600">ðŸ“</span>
                             <span>{item.zona}</span>
                             <span className="text-gray-400">|</span>
-                            <span className="font-bold text-green-600">${formatCurrency(item.precio)}</span>
+                            <span className="font-bold text-green-600">
+                              ${formatCurrency(item.precio)}
+                            </span>
                           </div>
                           {item.tipoPrecio === 'descuento' && (
                             <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
@@ -285,19 +308,30 @@ const Cart = ({
                               // Mostrar todos los asientos si son 5 o menos
                               item.asientos.map(seat => {
                                 const seatName = seat.nombre || seat.sillaId || 'Asiento';
-                                const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
+                                const mesaName =
+                                  seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
 
                                 // Mostrar informaci³n m¡s clara del boleto
                                 if (mesaName) {
                                   return (
                                     <div key={seat._id} className="text-xs flex items-center gap-1">
                                       <span className="text-blue-600">ðŸŽ«</span>
-                                      <span className="font-medium">{mesaName} - {seatName}</span>
+                                      <span className="font-medium">
+                                        {mesaName} - {seatName}
+                                      </span>
                                       {(seat.locator || seat.buyerName || seat.buyerEmail) && (
                                         <span className="text-[11px] text-gray-500">
-                                          {seat.locator && <span className="mr-1">ðŸ”– {seat.locator}</span>}
-                                          {seat.buyerName && <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>}
-                                          {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
+                                          {seat.locator && (
+                                            <span className="mr-1">ðŸ”– {seat.locator}</span>
+                                          )}
+                                          {seat.buyerName && (
+                                            <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>
+                                          )}
+                                          {seat.buyerEmail && (
+                                            <span className="text-gray-400">
+                                              ({seat.buyerEmail})
+                                            </span>
+                                          )}
                                         </span>
                                       )}
                                     </div>
@@ -309,9 +343,17 @@ const Cart = ({
                                       <span className="font-medium">{seatName}</span>
                                       {(seat.locator || seat.buyerName || seat.buyerEmail) && (
                                         <span className="text-[11px] text-gray-500">
-                                          {seat.locator && <span className="mr-1">ðŸ”– {seat.locator}</span>}
-                                          {seat.buyerName && <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>}
-                                          {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
+                                          {seat.locator && (
+                                            <span className="mr-1">ðŸ”– {seat.locator}</span>
+                                          )}
+                                          {seat.buyerName && (
+                                            <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>
+                                          )}
+                                          {seat.buyerEmail && (
+                                            <span className="text-gray-400">
+                                              ({seat.buyerEmail})
+                                            </span>
+                                          )}
                                         </span>
                                       )}
                                     </div>
@@ -323,12 +365,20 @@ const Cart = ({
                               <div className="text-xs flex items-center gap-1">
                                 <span className="text-green-600">ðŸŽ«</span>
                                 <span className="font-medium">
-                                  {item.asientos.slice(0, 3).map(seat => {
-                                    const seatName = seat.nombre || seat.sillaId || 'Asiento';
-                                    const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
-                                    return mesaName ? `${mesaName}-${seatName}` : seatName;
-                                  }).join(', ')}
-                                  {item.asientos.length > 3 && ` y ${item.asientos.length - 3} m¡s...`}
+                                  {item.asientos
+                                    .slice(0, 3)
+                                    .map(seat => {
+                                      const seatName = seat.nombre || seat.sillaId || 'Asiento';
+                                      const mesaName =
+                                        seat.nombreMesa ||
+                                        seat.mesa_nombre ||
+                                        seat.nombreMesa ||
+                                        '';
+                                      return mesaName ? `${mesaName}-${seatName}` : seatName;
+                                    })
+                                    .join(', ')}
+                                  {item.asientos.length > 3 &&
+                                    ` y ${item.asientos.length - 3} m¡s...`}
                                 </span>
                               </div>
                             )}
@@ -357,7 +407,12 @@ const Cart = ({
               ? 'Modo bloqueo/desbloqueo activo. Aplica los cambios cuando termines de seleccionar.'
               : 'Estos asientos se aplicar¡n como bloqueo/desbloqueo al confirmar.'}
           </div>
-          <Button type="primary" block className="h-12 text-base font-semibold" onClick={handleApplyLockActions}>
+          <Button
+            type="primary"
+            block
+            className="h-12 text-base font-semibold"
+            onClick={handleApplyLockActions}
+          >
             Aplicar bloqueo/desbloqueo
           </Button>
         </div>
@@ -379,7 +434,9 @@ const Cart = ({
                   <span>ðŸ’¸</span>
                   <span>Comisi³n ({selectedAffiliate.percentage}%):</span>
                 </span>
-                <span className="text-red-600">-${(subtotal * (selectedAffiliate.percentage / 100)).toFixed(2)}</span>
+                <span className="text-red-600">
+                  -${(subtotal * (selectedAffiliate.percentage / 100)).toFixed(2)}
+                </span>
               </div>
             )}
             <div className="flex justify-between font-semibold border-t pt-3 text-lg">
@@ -410,5 +467,3 @@ const Cart = ({
 };
 
 export default Cart;
-
-

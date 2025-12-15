@@ -1,12 +1,19 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Card, Button, Typography, Spin, Tag, message, Alert } from '../../../../utils/antdComponents';
+import {
+  Card,
+  Button,
+  Typography,
+  Spin,
+  Tag,
+  message,
+  Alert,
+} from '../../../../utils/antdComponents';
 import { supabase } from '../../../../supabaseClient';
 import logger from '../../../../utils/logger';
 
 const { Text } = Typography;
 
-const formatCurrency = (value) => {
-
+const formatCurrency = value => {
   return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '0.00';
 };
 
@@ -111,19 +118,19 @@ const ZonesPanel = ({
     try {
       // Extraer detalles de la plantilla
       const { detalles, source } = extractDetalles(selectedFuncion, selectedPlantilla);
-      
+
       logger.log('ðŸ“‹ Detalles extra­dos:', detalles?.length || 0);
       logger.log('ðŸ“‹ Fuente de detalles:', source);
-      
+
       if (!Array.isArray(detalles) || detalles.length === 0) {
         logger.log('Œ No hay detalles v¡lidos en la plantilla');
         setPriceOptions([]);
-        setDebugInfo({ 
+        setDebugInfo({
           error: 'No hay detalles v¡lidos en la plantilla',
           source,
           detalles: detalles,
           selectedPlantilla: selectedPlantilla,
-          selectedFuncionPlantilla: selectedFuncion.plantilla
+          selectedFuncionPlantilla: selectedFuncion.plantilla,
         });
         return;
       }
@@ -141,24 +148,22 @@ const ZonesPanel = ({
 
       // Cargar entradas y zonas desde la BD
       logger.log('ðŸ“¥ Cargando entradas y zonas desde BD...');
-      
+
       // Consulta de entradas
       const entradasQuery = supabase.from('entradas').select('*').order('nombre_entrada');
       // Debug log removed for production performance
-      
+
       // Consulta de zonas con m¡s logging
       const zonasQuery = supabase
         .from('zonas')
         .select('*')
         .eq('sala_id', String(salaId))
         .order('nombre');
-      
+
       // Debug logs removed for production performance
 
-      const [{ data: entradas, error: entradasError }, { data: zonas, error: zonasError }] = await Promise.all([
-        entradasQuery,
-        zonasQuery,
-      ]);
+      const [{ data: entradas, error: entradasError }, { data: zonas, error: zonasError }] =
+        await Promise.all([entradasQuery, zonasQuery]);
 
       logger.log('ðŸ“¦ Resultado entradas:', { data: entradas?.length || 0, error: entradasError });
       logger.log('ðŸŽ¯ Resultado zonas:', { data: zonas?.length || 0, error: zonasError });
@@ -177,7 +182,12 @@ const ZonesPanel = ({
         return;
       }
 
-      logger.log('œ… Consultas exitosas - Entradas:', entradas?.length || 0, 'Zonas:', zonas?.length || 0);
+      logger.log(
+        'œ… Consultas exitosas - Entradas:',
+        entradas?.length || 0,
+        'Zonas:',
+        zonas?.length || 0
+      );
 
       if (!entradas || entradas.length === 0) {
         logger.log('Œ No se pudieron cargar entradas');
@@ -189,31 +199,32 @@ const ZonesPanel = ({
       if (!zonas || zonas.length === 0) {
         logger.log('Œ No se pudieron cargar zonas');
         logger.log('ðŸ” Intentando consulta alternativa...');
-        
+
         // Intentar consulta alternativa sin filtros
         try {
           const { data: todasLasZonas, error: errorTodas } = await supabase
             .from('zonas')
             .select('*')
             .order('nombre');
-          
+
           logger.log('ðŸ” Todas las zonas en la BD:', todasLasZonas?.length || 0);
           logger.log('ðŸ” Error consulta alternativa:', errorTodas);
-          
+
           if (todasLasZonas && todasLasZonas.length > 0) {
             logger.log('ðŸ” Zonas disponibles en la BD:', todasLasZonas?.length || 0);
           }
         } catch (e) {
           logger.error('Œ Error en consulta alternativa:', e);
         }
-        
+
         setPriceOptions([]);
-        setDebugInfo({ 
-          error: 'No se pudieron cargar zonas', 
+        setDebugInfo({
+          error: 'No se pudieron cargar zonas',
           salaId,
-          entradas, 
+          entradas,
           zonas,
-          sugerencia: 'Verificar que la sala tenga zonas asignadas o que el campo sala_id/sala en la tabla zonas sea correcto'
+          sugerencia:
+            'Verificar que la sala tenga zonas asignadas o que el campo sala_id/sala en la tabla zonas sea correcto',
         });
         return;
       }
@@ -232,18 +243,32 @@ const ZonesPanel = ({
 
       detalles.forEach((detalle, index) => {
         logger.log(`ðŸ” Procesando detalle ${index}`);
-        
+
         // Validar que detalle no sea null/undefined
         if (!detalle || typeof detalle !== 'object') {
           logger.warn(`Œ Detalle ${index} es null/undefined o no es un objeto`);
           detallesConError++;
           return;
         }
-        
+
         // Extraer campos con mºltiples nombres posibles
-        const zonaId = detalle.zonaId || detalle.zona_id || detalle.zona?.id || detalle.id_zona || detalle.idZona;
-        const entradaId = detalle.entradaId || detalle.entrada_id || detalle.entrada?.id || detalle.id_entrada || detalle.idEntrada || detalle.productoId || detalle.producto_id;
-        const precio = parseFloat(detalle.precio || detalle.price || detalle.monto || detalle.valor || 0);
+        const zonaId =
+          detalle.zonaId ||
+          detalle.zona_id ||
+          detalle.zona?.id ||
+          detalle.id_zona ||
+          detalle.idZona;
+        const entradaId =
+          detalle.entradaId ||
+          detalle.entrada_id ||
+          detalle.entrada?.id ||
+          detalle.id_entrada ||
+          detalle.idEntrada ||
+          detalle.productoId ||
+          detalle.producto_id;
+        const precio = parseFloat(
+          detalle.precio || detalle.price || detalle.monto || detalle.valor || 0
+        );
         const comision = parseFloat(detalle.comision || detalle.fee || detalle.cargo || 0);
 
         logger.log(`  - zonaId: ${zonaId}, entradaId: ${entradaId}, precio: ${precio}`);
@@ -290,12 +315,12 @@ const ZonesPanel = ({
             precios: [],
             total: 0,
             vendidos: 0,
-            reservados: 0
+            reservados: 0,
           });
         }
 
         const zonaGrupo = zonasAgrupadas.get(zonaId);
-        
+
         // Evitar duplicados de entrada por zona
         const entradaExistente = zonaGrupo.precios.find(p => p.entradaId === entradaId);
         if (!entradaExistente) {
@@ -307,7 +332,7 @@ const ZonesPanel = ({
             entrada: entrada,
             precio: precio,
             comision: comision,
-            color: zona.color || entrada.color || '#6366f1'
+            color: zona.color || entrada.color || '#6366f1',
           });
           logger.log(`  œ… Precio agregado a zona ${zonaId}`);
           detallesProcesados++;
@@ -317,18 +342,22 @@ const ZonesPanel = ({
       });
 
       logger.log('ðŸ—ï¸ Zonas agrupadas:', zonasAgrupadas?.length || 0);
-      logger.log(`ðŸ“Š Resumen: ${detallesProcesados} detalles procesados, ${detallesConError} con error`);
+      logger.log(
+        `ðŸ“Š Resumen: ${detallesProcesados} detalles procesados, ${detallesConError} con error`
+      );
 
       // Convertir a array y calcular estad­sticas
       const opciones = Array.from(zonasAgrupadas.values()).map(grupo => {
         // Calcular estad­sticas de ocupaci³n si hay mapa
         if (mapa) {
-          const asientosZona = Object.values(mapa).filter(asiento => 
-            String(asiento.zona_id) === String(grupo.zona.id)
+          const asientosZona = Object.values(mapa).filter(
+            asiento => String(asiento.zona_id) === String(grupo.zona.id)
           );
-          
+
           grupo.total = asientosZona.length;
-          grupo.vendidos = asientosZona.filter(a => a.estado === 'vendido' || a.estado === 'reservado').length;
+          grupo.vendidos = asientosZona.filter(
+            a => a.estado === 'vendido' || a.estado === 'reservado'
+          ).length;
           grupo.reservados = asientosZona.filter(a => a.estado === 'reservado').length;
           grupo.ocupacion = grupo.total > 0 ? Math.round((grupo.vendidos / grupo.total) * 100) : 0;
         }
@@ -338,7 +367,7 @@ const ZonesPanel = ({
 
       logger.log('ðŸŽ¯ Opciones de precio finales:', opciones?.length || 0);
       setPriceOptions(opciones);
-      
+
       // Actualizar informaci³n de debug
       setDebugInfo({
         success: true,
@@ -348,7 +377,7 @@ const ZonesPanel = ({
         zonasEncontradas: opciones.length,
         salaId,
         entradasCargadas: entradas.length,
-        zonasCargadas: zonas.length
+        zonasCargadas: zonas.length,
       });
 
       // Restaurar selecci³n previa si existe
@@ -364,7 +393,6 @@ const ZonesPanel = ({
       }
 
       logger.log('œ… loadPriceOptions completado exitosamente');
-
     } catch (error) {
       logger.error('ðŸ’¥ Error cargando opciones de precio:', error);
       setPriceOptions([]);
@@ -405,18 +433,20 @@ const ZonesPanel = ({
       logger.log('ðŸ”„ Mapa cambi³, actualizando estad­sticas...');
       const opcionesActualizadas = priceOptions.map(grupo => {
         // Calcular estad­sticas de ocupaci³n si hay mapa
-        const asientosZona = Object.values(mapa).filter(asiento => 
-          String(asiento.zona_id) === String(grupo.zona.id)
+        const asientosZona = Object.values(mapa).filter(
+          asiento => String(asiento.zona_id) === String(grupo.zona.id)
         );
-        
+
         grupo.total = asientosZona.length;
-        grupo.vendidos = asientosZona.filter(a => a.estado === 'vendido' || a.estado === 'reservado').length;
+        grupo.vendidos = asientosZona.filter(
+          a => a.estado === 'vendido' || a.estado === 'reservado'
+        ).length;
         grupo.reservados = asientosZona.filter(a => a.estado === 'reservado').length;
         grupo.ocupacion = grupo.total > 0 ? Math.round((grupo.vendidos / grupo.total) * 100) : 0;
-        
+
         return grupo;
       });
-      
+
       setPriceOptions([...opcionesActualizadas]);
     }
   }, [mapa]); // Solo depende del mapa
@@ -446,12 +476,14 @@ const ZonesPanel = ({
               )}
               {debugInfo.entradas && (
                 <div className="text-xs text-gray-600 mb-1">
-                  <strong>Entradas cargadas:</strong> {Array.isArray(debugInfo.entradas) ? debugInfo.entradas.length : 'Error'}
+                  <strong>Entradas cargadas:</strong>{' '}
+                  {Array.isArray(debugInfo.entradas) ? debugInfo.entradas.length : 'Error'}
                 </div>
               )}
               {debugInfo.zonas && (
                 <div className="text-xs text-gray-600 mb-1">
-                  <strong>Zonas cargadas:</strong> {Array.isArray(debugInfo.zonas) ? debugInfo.zonas.length : 'Error'}
+                  <strong>Zonas cargadas:</strong>{' '}
+                  {Array.isArray(debugInfo.zonas) ? debugInfo.zonas.length : 'Error'}
                 </div>
               )}
             </div>
@@ -461,8 +493,6 @@ const ZonesPanel = ({
           className="mb-3"
         />
       )}
-
-
 
       {/* Barra de zonas */}
       <div className="flex items-center space-x-2 overflow-x-auto p-2 border rounded bg-white">
@@ -477,11 +507,11 @@ const ZonesPanel = ({
           <div className="text-xs text-gray-500 px-2 py-1">
             <div>No hay zonas configuradas en la plantilla</div>
             <div className="text-[10px] mt-1">
-              Debug: {selectedFuncion ? 'Funci³n seleccionada' : 'Sin funci³n'} | 
-              {selectedPlantilla ? 'Plantilla cargada' : 'Sin plantilla'} | 
+              Debug: {selectedFuncion ? 'Funci³n seleccionada' : 'Sin funci³n'} |
+              {selectedPlantilla ? 'Plantilla cargada' : 'Sin plantilla'} |
               {selectedPlantilla?.detalles ? 'Con detalles' : 'Sin detalles'}
             </div>
-            <button 
+            <button
               onClick={() => {
                 logger.log('ðŸ” Debug - Datos actuales');
                 setDataLoaded(false); // Resetear para permitir recarga
@@ -491,27 +521,34 @@ const ZonesPanel = ({
             >
               ðŸ” Debug - Recargar
             </button>
-            
-            <button 
+
+            <button
               onClick={async () => {
                 logger.log('ðŸ” Debug - Probar consultas de BD...');
-                const salaId = selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
+                const salaId =
+                  selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
                 logger.log('ðŸ¢ Sala ID:', salaId);
-                
+
                 // Probar consulta de entradas
                 const { data: entradas, error: entradasError } = await supabase
                   .from('entradas')
                   .select('*')
                   .order('nombre_entrada');
-                logger.log('ðŸ“¦ Entradas (sin filtro):', { data: entradas?.length || 0, error: entradasError });
-                
+                logger.log('ðŸ“¦ Entradas (sin filtro):', {
+                  data: entradas?.length || 0,
+                  error: entradasError,
+                });
+
                 // Probar consulta de zonas sin filtro
                 const { data: zonas, error: zonasError } = await supabase
                   .from('zonas')
                   .select('*')
                   .order('nombre');
-                logger.log('ðŸŽ¯ Zonas (sin filtro):', { data: zonas?.length || 0, error: zonasError });
-                
+                logger.log('ðŸŽ¯ Zonas (sin filtro):', {
+                  data: zonas?.length || 0,
+                  error: zonasError,
+                });
+
                 // Probar consulta de zonas con filtro
                 if (salaId) {
                   const { data: zonasFiltradas, error: zonasFiltradasError } = await supabase
@@ -519,7 +556,10 @@ const ZonesPanel = ({
                     .select('*')
                     .eq('sala_id', String(salaId))
                     .order('nombre');
-                  logger.log('ðŸŽ¯ Zonas filtradas por sala:', { data: zonasFiltradas?.length || 0, error: zonasFiltradasError });
+                  logger.log('ðŸŽ¯ Zonas filtradas por sala:', {
+                    data: zonasFiltradas?.length || 0,
+                    error: zonasFiltradasError,
+                  });
                 }
               }}
               className="mt-2 ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
@@ -529,12 +569,15 @@ const ZonesPanel = ({
           </div>
         )}
 
-        {!loading && priceOptions.length > 0 && (
-          priceOptions.map((zonaData) => (
+        {!loading &&
+          priceOptions.length > 0 &&
+          priceOptions.map(zonaData => (
             <div
               key={zonaData.zona.id}
               className={`px-3 py-2 rounded cursor-pointer whitespace-nowrap border ${
-                activeZonaId === zonaData.zona.id ? 'bg-purple-50 border-purple-300' : 'bg-gray-50 border-gray-200'
+                activeZonaId === zonaData.zona.id
+                  ? 'bg-purple-50 border-purple-300'
+                  : 'bg-gray-50 border-gray-200'
               }`}
               onClick={() => {
                 setActiveZonaId(zonaData.zona.id);
@@ -545,13 +588,15 @@ const ZonesPanel = ({
                 }
               }}
             >
-              <div className="text-xs font-semibold" style={{ color: zonaData.zona.color || '#333' }}>
+              <div
+                className="text-xs font-semibold"
+                style={{ color: zonaData.zona.color || '#333' }}
+              >
                 {zonaData.zona.nombre}
               </div>
               <div className="text-[10px] text-gray-500">Ocupaci³n: {zonaData.ocupacion || 0}%</div>
             </div>
-          ))
-        )}
+          ))}
       </div>
 
       {/* Opciones de precio de la zona activa */}
@@ -560,13 +605,21 @@ const ZonesPanel = ({
           <div className="px-3 py-2 border-b text-sm font-medium flex items-center justify-between">
             <span>Zona: {activeZona.zona.nombre}</span>
             <span className="text-gray-500 text-xs">
-              Aforo {activeZona.total} | Vendidos {activeZona.vendidos} | Reservados {activeZona.reservados}
+              Aforo {activeZona.total} | Vendidos {activeZona.vendidos} | Reservados{' '}
+              {activeZona.reservados}
             </span>
           </div>
           <div className="divide-y">
             {activeZona.precios
-              .filter((opt) => opt && opt.entrada && opt.entrada.nombre_entrada && activeZona.zona && activeZona.zona.nombre)
-              .map((opt) => {
+              .filter(
+                opt =>
+                  opt &&
+                  opt.entrada &&
+                  opt.entrada.nombre_entrada &&
+                  activeZona.zona &&
+                  activeZona.zona.nombre
+              )
+              .map(opt => {
                 return (
                   <div
                     key={opt.id}
@@ -582,7 +635,10 @@ const ZonesPanel = ({
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }}></div>
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: opt.color }}
+                      ></div>
                       <div>
                         <div className="font-medium">{opt.entrada.nombre_entrada}</div>
                         <div className="text-gray-500">{activeZona.zona.nombre}</div>
@@ -590,7 +646,11 @@ const ZonesPanel = ({
                     </div>
                     <div className="text-right">
                       <div className="font-bold">${formatCurrency(opt.precio)}</div>
-                      {opt.comision > 0 && <div className="text-gray-500">+${formatCurrency(opt.comision)} comisi³n</div>}
+                      {opt.comision > 0 && (
+                        <div className="text-gray-500">
+                          +${formatCurrency(opt.comision)} comisi³n
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -603,7 +663,3 @@ const ZonesPanel = ({
 };
 
 export default ZonesPanel;
-
-
-
-

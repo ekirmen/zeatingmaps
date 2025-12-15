@@ -11,7 +11,6 @@ export class ImageService {
         .eq('is_active', true)
         .order('orden', { ascending: true });
 
-
       return data || [];
     } catch (error) {
       console.error('Error obteniendo imágenes del evento:', error);
@@ -42,13 +41,15 @@ export class ImageService {
     try {
       const { data, error } = await supabase
         .from('evento_imagenes')
-        .insert([{
-          evento_id: eventId,
-          url: imageData.url,
-          alt_text: imageData.alt_text || '',
-          tipo: imageData.tipo || 'galeria',
-          orden: imageData.orden || 0
-        }])
+        .insert([
+          {
+            evento_id: eventId,
+            url: imageData.url,
+            alt_text: imageData.alt_text || '',
+            tipo: imageData.tipo || 'galeria',
+            orden: imageData.orden || 0,
+          },
+        ])
         .select()
         .single();
 
@@ -65,13 +66,15 @@ export class ImageService {
     try {
       const { data, error } = await supabase
         .from('recinto_imagenes')
-        .insert([{
-          recinto_id: venueId,
-          url: imageData.url,
-          alt_text: imageData.alt_text || '',
-          tipo: imageData.tipo || 'galeria',
-          orden: imageData.orden || 0
-        }])
+        .insert([
+          {
+            recinto_id: venueId,
+            url: imageData.url,
+            alt_text: imageData.alt_text || '',
+            tipo: imageData.tipo || 'galeria',
+            orden: imageData.orden || 0,
+          },
+        ])
         .select()
         .single();
 
@@ -93,7 +96,7 @@ export class ImageService {
           alt_text: imageData.alt_text,
           tipo: imageData.tipo,
           orden: imageData.orden,
-          is_active: imageData.is_active
+          is_active: imageData.is_active,
         })
         .eq('id', imageId)
         .select()
@@ -110,10 +113,7 @@ export class ImageService {
   // Eliminar imagen
   static async deleteImage(imageId, tableName = 'evento_imagenes') {
     try {
-      const { error } = await supabase
-        .from(tableName)
-        .delete()
-        .eq('id', imageId);
+      const { error } = await supabase.from(tableName).delete().eq('id', imageId);
 
       if (error) throw error;
       return true;
@@ -144,12 +144,10 @@ export class ImageService {
     try {
       const updates = imageIds.map((id, index) => ({
         id,
-        orden: index + 1
+        orden: index + 1,
       }));
 
-      const { error } = await supabase
-        .from(tableName)
-        .upsert(updates, { onConflict: 'id' });
+      const { error } = await supabase.from(tableName).upsert(updates, { onConflict: 'id' });
 
       if (error) throw error;
       return true;
@@ -200,14 +198,12 @@ export class ImageService {
   // Validar URL de imagen
   static isValidImageUrl(url) {
     if (!url) return false;
-    
+
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    const hasValidExtension = imageExtensions.some(ext => 
-      url.toLowerCase().includes(ext)
-    );
-    
+    const hasValidExtension = imageExtensions.some(ext => url.toLowerCase().includes(ext));
+
     const isValidUrl = url.startsWith('http://') || url.startsWith('https://');
-    
+
     return hasValidExtension && isValidUrl;
   }
 
@@ -216,9 +212,9 @@ export class ImageService {
     const defaultImages = {
       event: 'https://via.placeholder.com/400x300/4A90E2/FFFFFF?text=Evento',
       venue: 'https://via.placeholder.com/400x300/50C878/FFFFFF?text=Recinto',
-      placeholder: 'https://via.placeholder.com/400x300/CCCCCC/666666?text=Imagen'
+      placeholder: 'https://via.placeholder.com/400x300/CCCCCC/666666?text=Imagen',
     };
-    
+
     return defaultImages[type] || defaultImages.placeholder;
   }
 
@@ -227,13 +223,13 @@ export class ImageService {
     try {
       const [eventImages, venueImages] = await Promise.all([
         supabase.from('evento_imagenes').select('id', { count: 'exact' }),
-        supabase.from('recinto_imagenes').select('id', { count: 'exact' })
+        supabase.from('recinto_imagenes').select('id', { count: 'exact' }),
       ]);
 
       return {
         totalEventImages: eventImages.count || 0,
         totalVenueImages: venueImages.count || 0,
-        totalImages: (eventImages.count || 0) + (venueImages.count || 0)
+        totalImages: (eventImages.count || 0) + (venueImages.count || 0),
       };
     } catch (error) {
       console.error('Error obteniendo estadísticas de imágenes:', error);

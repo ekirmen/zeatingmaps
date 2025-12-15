@@ -11,16 +11,18 @@ class MapaImageService {
   async restoreImagesForEditing(mapaId, elementos) {
     try {
       const elementosRestaurados = await Promise.all(
-        elementos.map(async (elemento) => {
+        elementos.map(async elemento => {
           // Si el elemento tiene imageDataRef, restaurar la imagen comprimida para vista previa
           if (elemento.imageDataRef && elemento.type === 'background') {
             try {
               // Obtener imagen comprimida para vista previa
-              const { data: imagenComprimida, error } = await supabase
-                .rpc('get_mapa_imagen_compressed', {
+              const { data: imagenComprimida, error } = await supabase.rpc(
+                'get_mapa_imagen_compressed',
+                {
                   mapa_id_param: mapaId,
-                  elemento_id_param: elemento.imageDataRef
-                });
+                  elemento_id_param: elemento.imageDataRef,
+                }
+              );
 
               if (error) {
                 console.error('❌ [MAPA_IMAGE_SERVICE] Error obteniendo imagen comprimida:', error);
@@ -37,7 +39,7 @@ class MapaImageService {
                   ...elemento,
                   imageData: imagenComprimida,
                   image: img,
-                  imageDataRef: undefined // Remover la referencia
+                  imageDataRef: undefined, // Remover la referencia
                 };
               }
             } catch (error) {
@@ -63,11 +65,10 @@ class MapaImageService {
    */
   async optimizeMapAfterEditing(mapaId, elementos) {
     try {
-      const { data, error } = await supabase
-        .rpc('optimize_mapa_after_editing', {
-          mapa_id_param: mapaId,
-          nuevo_contenido: elementos
-        });
+      const { data, error } = await supabase.rpc('optimize_mapa_after_editing', {
+        mapa_id_param: mapaId,
+        nuevo_contenido: elementos,
+      });
 
       if (error) {
         console.error('❌ [MAPA_IMAGE_SERVICE] Error optimizando mapa:', error);
@@ -91,11 +92,10 @@ class MapaImageService {
     try {
       const functionName = original ? 'get_mapa_imagen_original' : 'get_mapa_imagen_compressed';
 
-      const { data, error } = await supabase
-        .rpc(functionName, {
-          mapa_id_param: mapaId,
-          elemento_id_param: elementoId
-        });
+      const { data, error } = await supabase.rpc(functionName, {
+        mapa_id_param: mapaId,
+        elemento_id_param: elementoId,
+      });
 
       if (error) {
         console.error('❌ [MAPA_IMAGE_SERVICE] Error obteniendo imagen:', error);
@@ -115,9 +115,7 @@ class MapaImageService {
    * @returns {boolean} - True si tiene elementos con imageDataRef
    */
   hasOptimizedImages(elementos) {
-    return elementos.some(elemento =>
-      elemento.type === 'background' && elemento.imageDataRef
-    );
+    return elementos.some(elemento => elemento.type === 'background' && elemento.imageDataRef);
   }
 
   /**
@@ -129,7 +127,7 @@ class MapaImageService {
   async loadBackgroundImages(mapaId, elementos) {
     try {
       const elementosConImagenes = await Promise.all(
-        elementos.map(async (elemento) => {
+        elementos.map(async elemento => {
           if (elemento.imageDataRef && elemento.type === 'background') {
             try {
               // Obtener imagen comprimida para vista previa
@@ -142,7 +140,7 @@ class MapaImageService {
                 return {
                   ...elemento,
                   image: img,
-                  imageUrl: imagenComprimida
+                  imageUrl: imagenComprimida,
                 };
               }
             } catch (error) {

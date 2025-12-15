@@ -79,4 +79,3 @@ const OptimizedSeatAnimation = ({ seat, onAnimationComplete }) => {
 };
 
 export default OptimizedSeatAnimation;
-

@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message, Alert } from '../../../utils/antdComponents';
+import {
+  Modal,
+  Tabs,
+  Input,
+  Button,
+  Radio,
+  DatePicker,
+  Select,
+  Table,
+  message,
+  Alert,
+} from '../../../utils/antdComponents';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from '../../../utils/antdComponents';
 import { createPayment, updatePayment } from '../../services/apibackoffice';
@@ -24,7 +35,7 @@ const CASHEA_STEPS = [
   { label: 'Scan QR', status: 'upcoming' },
   { label: 'Seguridad', status: 'upcoming' },
   { label: 'ID Factura', status: 'upcoming' },
-  { label: 'Confirmar', status: 'upcoming' }
+  { label: 'Confirmar', status: 'upcoming' },
 ];
 
 const CheckIcon = ({ className }) => (
@@ -50,12 +61,12 @@ const CasheaStepIndicator = ({ label, status }) => {
 
   const circleClasses = [
     'flex items-center justify-center w-5 h-5 rounded-full border-2 transition-colors duration-200',
-    isActive ? 'bg-black border-black text-white' : 'bg-[#9E9E9E] border-[#9E9E9E] text-gray-400'
+    isActive ? 'bg-black border-black text-white' : 'bg-[#9E9E9E] border-[#9E9E9E] text-gray-400',
   ].join(' ');
 
   const labelClasses = [
     'text-sm font-bold transition-colors duration-200',
-    isActive ? 'text-black' : 'text-gray-400'
+    isActive ? 'text-black' : 'text-gray-400',
   ].join(' ');
 
   return (
@@ -85,7 +96,7 @@ const CasheaStepper = () => (
   </div>
 );
 
-const formatCurrency = (value) => {
+const formatCurrency = value => {
   const numericValue = Number(value || 0);
   if (Number.isNaN(numericValue)) {
     return '$0.00';
@@ -104,7 +115,7 @@ const CasheaOrderPanel = ({
   total,
   order,
   error,
-  seats = []
+  seats = [],
 }) => {
   const sanitizedAmount = amount ?? '';
   const eventName = selectedEvent?.nombre || 'Boleter­a';
@@ -117,7 +128,7 @@ const CasheaOrderPanel = ({
   const normalizedSeats = Array.isArray(seats) ? seats : [];
   const seatCount = normalizedSeats.length;
 
-  const handleAmountChange = (value) => {
+  const handleAmountChange = value => {
     const rawValue = typeof value === 'string' ? value : '';
     const normalized = rawValue.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
     onAmountChange(normalized);
@@ -127,7 +138,7 @@ const CasheaOrderPanel = ({
     { label: 'Evento', value: eventName },
     functionName ? { label: 'Funci³n', value: functionName } : null,
     { label: 'Asientos seleccionados', value: seatCount.toString() },
-    { label: 'Total estimado', value: formatCurrency(total) }
+    { label: 'Total estimado', value: formatCurrency(total) },
   ].filter(Boolean);
 
   return (
@@ -167,7 +178,7 @@ const CasheaOrderPanel = ({
                     type="text"
                     inputMode="decimal"
                     value={sanitizedAmount}
-                    onChange={(event) => handleAmountChange(event.target.value)}
+                    onChange={event => handleAmountChange(event.target.value)}
                   />
                 </div>
               </div>
@@ -177,7 +188,7 @@ const CasheaOrderPanel = ({
               <div className="flex-1 rounded-2xl bg-[#F2F2F2] p-4">
                 <h3 className="text-base font-bold text-gray-900">Detalle</h3>
                 <div className="mt-4 space-y-3 text-sm text-gray-600">
-                  {orderDetails.map((detail) => (
+                  {orderDetails.map(detail => (
                     <div key={detail.label} className="flex flex-col">
                       <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                         {detail.label}
@@ -215,7 +226,9 @@ const CasheaOrderPanel = ({
               )}
               {order && (
                 <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Orden Cashea generada</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    Orden Cashea generada
+                  </h3>
                   <div className="space-y-1 text-sm text-gray-700">
                     {order.invoiceId && (
                       <div>
@@ -229,7 +242,8 @@ const CasheaOrderPanel = ({
                     )}
                     {order.securityCode && (
                       <div>
-                        <span className="font-semibold">C³digo de seguridad:</span> {order.securityCode}
+                        <span className="font-semibold">C³digo de seguridad:</span>{' '}
+                        {order.securityCode}
                       </div>
                     )}
                     {order.status && (
@@ -305,7 +319,15 @@ const resolveTenantId = ({ user, selectedEvent, selectedFuncion, seats = [], car
   return null;
 };
 
-const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFuncion, selectedAffiliate, selectedEvent }) => {
+const PaymentModal = ({
+  open,
+  onCancel,
+  carrito = [],
+  selectedClient,
+  selectedFuncion,
+  selectedAffiliate,
+  selectedEvent,
+}) => {
   // Ensure carrito is always an array
   const safeCarrito = Array.isArray(carrito) ? carrito : [];
   const { user } = useAuth();
@@ -339,9 +361,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const [casheaOrder, setCasheaOrder] = useState(null);
   const [casheaError, setCasheaError] = useState(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email?.trim());
+  const isValidEmail = email => /\S+@\S+\.\S+/.test(email?.trim());
 
-  const parsePaymentsFromTransaction = (paymentsData) => {
+  const parsePaymentsFromTransaction = paymentsData => {
     if (!paymentsData) return [];
 
     let parsedPayments = paymentsData;
@@ -397,7 +419,6 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     }
   }, [user?.id]);
 
-  
   const existingLocator = safeCarrito?.[0]?.locator;
 
   useEffect(() => {
@@ -412,16 +433,19 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
     const fetchExistingPayments = async () => {
       try {
-        const transactionResponse = await seatLocatorService.getTransactionWithSeats(existingLocator);
+        const transactionResponse =
+          await seatLocatorService.getTransactionWithSeats(existingLocator);
         const transaction = transactionResponse?.transaction || transactionResponse;
 
         if (transaction?.locator) {
           setLocator(transaction.locator);
         } else {
-          setLocator((prev) => prev || existingLocator);
+          setLocator(prev => prev || existingLocator);
         }
 
-        const parsedPayments = parsePaymentsFromTransaction(transaction?.payments || transaction?.payment_methods);
+        const parsedPayments = parsePaymentsFromTransaction(
+          transaction?.payments || transaction?.payment_methods
+        );
 
         if (parsedPayments.length > 0) {
           setPaymentEntries(parsedPayments);
@@ -469,7 +493,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         .from('profiles')
         .update({
           tags: uniqueTags,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
 
@@ -501,7 +525,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       const res = await fetch(emailUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmedEmail, downloadOnly: true })
+        body: JSON.stringify({ email: trimmedEmail, downloadOnly: true }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -529,12 +553,14 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   };
 
   // Add the date change handler
-  const handleDateChange = (date) => {
+  const handleDateChange = date => {
     setSelectedDate(date);
   };
 
   const subtotal = safeCarrito.reduce((sum, item) => sum + (item.precio || 0), 0);
-  const commission = selectedAffiliate ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100) : 0;
+  const commission = selectedAffiliate
+    ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100)
+    : 0;
   const total = subtotal - commission;
   const totalPagado = paymentEntries.reduce((sum, entry) => sum + entry.importe, 0);
 
@@ -548,18 +574,19 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     }
   }, [selectedPaymentMethod, total, paymentAmount]);
 
-  const isCasheaAmountValid = selectedPaymentMethod !== 'Cashea'
-    || (!!paymentAmount && !Number.isNaN(Number(paymentAmount)) && Number(paymentAmount) > 0);
+  const isCasheaAmountValid =
+    selectedPaymentMethod !== 'Cashea' ||
+    (!!paymentAmount && !Number.isNaN(Number(paymentAmount)) && Number(paymentAmount) > 0);
   const diferencia = total - totalPagado;
   const isFullyPaid = diferencia <= 0;
 
-  const handleCashInput = (value) => {
+  const handleCashInput = value => {
     setEntregado(value);
     if (value && !isNaN(value)) {
       const newEntry = {
         sc: scCounter,
         formaPago: 'Efectivo',
-        importe: parseFloat(value)
+        importe: parseFloat(value),
       };
       setPaymentEntries([{ ...newEntry }]);
       setScCounter(scCounter + 1);
@@ -592,9 +619,10 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       return;
     }
 
-    const sanitizedAmountString = typeof paymentAmount === 'string'
-      ? paymentAmount.replace(/,/g, '.').trim()
-      : String(paymentAmount || '');
+    const sanitizedAmountString =
+      typeof paymentAmount === 'string'
+        ? paymentAmount.replace(/,/g, '.').trim()
+        : String(paymentAmount || '');
     const parsedAmount = Number(sanitizedAmountString || total || 0);
 
     if (!parsedAmount || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -606,7 +634,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     setCasheaError(null);
 
     try {
-      const invoiceId = existingLocator ? `INV-${existingLocator}` : `INV-${generateSimpleLocator()}`;
+      const invoiceId = existingLocator
+        ? `INV-${existingLocator}`
+        : `INV-${generateSimpleLocator()}`;
       const orderReference = generateSimpleLocator();
       const currency = selectedFuncion?.moneda || selectedFuncion?.currency || 'USD';
 
@@ -622,9 +652,18 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             `${selectedClient?.nombre || selectedClient?.name || ''} ${selectedClient?.apellido || selectedClient?.lastName || ''}`.trim() ||
             selectedClient?.fullName ||
             undefined,
-          email: selectedClient?.email || selectedClient?.correo || selectedClient?.mail || undefined,
-          document: selectedClient?.documento || selectedClient?.document || selectedClient?.dni || undefined,
-          phone: selectedClient?.telefono || selectedClient?.phone || selectedClient?.celular || undefined,
+          email:
+            selectedClient?.email || selectedClient?.correo || selectedClient?.mail || undefined,
+          document:
+            selectedClient?.documento ||
+            selectedClient?.document ||
+            selectedClient?.dni ||
+            undefined,
+          phone:
+            selectedClient?.telefono ||
+            selectedClient?.phone ||
+            selectedClient?.celular ||
+            undefined,
         },
         items: safeCarrito,
         metadata: {
@@ -648,8 +687,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       setCasheaOrder({ ...response, metadata });
       setPaymentAmount(parsedAmount.toFixed(2));
 
-      setPaymentEntries((prev) => {
-        const withoutCashea = prev.filter((entry) => entry.formaPago !== 'Cashea');
+      setPaymentEntries(prev => {
+        const withoutCashea = prev.filter(entry => entry.formaPago !== 'Cashea');
         const newEntry = {
           sc: scCounter,
           formaPago: 'Cashea',
@@ -659,7 +698,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         return [...withoutCashea, newEntry];
       });
 
-      setScCounter((prev) => prev + 1);
+      setScCounter(prev => prev + 1);
       message.success('Orden Cashea creada correctamente');
     } catch (error) {
       console.error('Error creando orden Cashea:', error);
@@ -676,15 +715,15 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       const newEntry = {
         sc: scCounter,
         formaPago: selectedPaymentMethod,
-        importe: parseFloat(paymentAmount)
+        importe: parseFloat(paymentAmount),
       };
-      setPaymentEntries((prev) => [...prev, newEntry]);
-      setScCounter((prev) => prev + 1);
+      setPaymentEntries(prev => [...prev, newEntry]);
+      setScCounter(prev => prev + 1);
       setPaymentAmount('0.00');
     }
   };
 
-  const handleDeleteEntry = (sc) => {
+  const handleDeleteEntry = sc => {
     // Remove the entry
     const removedEntry = paymentEntries.find(entry => entry.sc === sc);
     const updatedEntries = paymentEntries.filter(entry => entry.sc !== sc);
@@ -697,7 +736,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     // Reorder SC numbers
     const reorderedEntries = updatedEntries.map((entry, index) => ({
       ...entry,
-      sc: index + 1
+      sc: index + 1,
     }));
 
     setPaymentEntries(reorderedEntries);
@@ -720,31 +759,31 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             onClick={() => handleDeleteEntry(record.sc)}
           />
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   const getPaymentStatus = () => {
     if (paymentEntries.some(entry => entry.metadata?.gateway === 'cashea')) {
       return {
         text: 'Pago pendiente de aprobaci³n Cashea',
-        color: '#faad14'
+        color: '#faad14',
       };
     }
     if (diferencia > 0) {
       return {
         text: `Pendiente: $${diferencia.toFixed(2)}`,
-        color: '#ff4d4f'
+        color: '#ff4d4f',
       };
     } else if (diferencia < 0) {
       return {
         text: `Pago en exceso: $${Math.abs(diferencia).toFixed(2)}`,
-        color: '#faad14'
+        color: '#faad14',
       };
     }
     return {
       text: 'Pago completo',
-      color: '#52c41a'
+      color: '#52c41a',
     };
   };
 
@@ -800,7 +839,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         return acc;
       }, {});
 
-      const hasCasheaPaymentOverall = paymentEntries.some(entry => entry.metadata?.gateway === 'cashea');
+      const hasCasheaPaymentOverall = paymentEntries.some(
+        entry => entry.metadata?.gateway === 'cashea'
+      );
 
       // Create a payment for each event
       const paymentPromises = Object.entries(seatsByEvent).map(async ([eventId, seats]) => {
@@ -809,7 +850,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         const finalLocator = existingPayment?.locator || effectiveLocator || generateLocator();
 
         if (!effectiveLocator && !existingLocator) {
-          setLocator((prev) => prev || finalLocator);
+          setLocator(prev => prev || finalLocator);
         }
 
         const resolvedTenantId = resolveTenantId({
@@ -823,7 +864,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         if (!resolvedTenantId) {
         }
 
-        const primaryMethod = (paymentEntries[0]?.formaPago || selectedPaymentMethod || 'manual');
+        const primaryMethod = paymentEntries[0]?.formaPago || selectedPaymentMethod || 'manual';
         const hasCasheaPayment = hasCasheaPaymentOverall;
         const paymentStatus = hasCasheaPayment
           ? 'pending'
@@ -846,9 +887,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             id: item.id || item._id || item.sillaId,
             name: item.nombre,
             price: item.precio,
-            zona: item.zonaId || (item.zona?._id || null),
+            zona: item.zonaId || item.zona?._id || null,
             mesa: item.mesa?._id || null,
-            ...(item.abonoGroup ? { abonoGroup: item.abonoGroup } : {})
+            ...(item.abonoGroup ? { abonoGroup: item.abonoGroup } : {}),
           })),
           // Usar localizador existente si ya hay uno, sino generar uno nuevo
           locator: existingPayment ? existingPayment.locator : finalLocator,
@@ -856,28 +897,29 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           status: paymentStatus,
           payments: normalizedPayments,
           // Asegurar columnas de monto/amount para la inserci³n
-          amount: paymentEntries.length > 0
-            ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
-            : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
+          amount:
+            paymentEntries.length > 0
+              ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
+              : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
           // Campos faltantes para compatibilidad y tracking
           order_id: existingPayment ? existingPayment.locator : finalLocator, // lo normalizamos en service a locator
           payment_method: hasCasheaPayment ? 'Cashea' : primaryMethod,
           tenant_id: resolvedTenantId || undefined,
           gateway_name: hasCasheaPayment ? 'Cashea' : 'manual',
-          ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
+          ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {}),
         };
         // Actualizar seat_locks con el locator final y estado correcto antes de crear el pago
         if (paymentData.locator) {
           try {
             const normalizedMethodId = hasCasheaPayment
               ? 'cashea'
-              : (selectedPaymentMethod || '')
-                  .toString()
-                  .trim()
-                  .toLowerCase()
-                  .replace(/\s+/g, '_');
+              : (selectedPaymentMethod || '').toString().trim().toLowerCase().replace(/\s+/g, '_');
 
-            const isReservationFlow = hasCasheaPayment || reservationType === '2' || reservationType === '3' || diferencia > 0;
+            const isReservationFlow =
+              hasCasheaPayment ||
+              reservationType === '2' ||
+              reservationType === '3' ||
+              diferencia > 0;
             const seatStatus = determineSeatLockStatus({
               methodId: normalizedMethodId || 'boleteria_manual',
               transactionStatus: paymentData.status,
@@ -899,143 +941,155 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           }
         }
 
-          // Si ya existe un pago, verificar que no est© completamente pagado antes de actualizar
-          if (existingPayment) {
-            // Verificar el estado del pago existente
-            try {
-              const { data: existingPaymentData, error: fetchError } = await supabase
-                .from('payment_transactions')
-                .select('id, status, amount, locator')
-                .eq('id', existingPayment.paymentId)
-                .single();
-
-              if (fetchError) {
-                console.error('Error obteniendo pago existente:', fetchError);
-                throw new Error('Error al verificar el estado del pago existente');
-              }
-
-              // Verificar si el pago ya est¡ completado
-              if (existingPaymentData && existingPaymentData.status === 'completed') {
-                message.error(`Este ticket ya est¡ completamente pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator}). No se puede procesar otro pago.`);
-                throw new Error(`El ticket ya est¡ pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator})`);
-              }
-
-              // Si el pago existe pero no est¡ completado, actualizarlo
-              return updatePayment(existingPayment.paymentId, paymentData);
-            } catch (error) {
-              console.error('Error validando pago existente:', error);
-              throw error;
-            }
-          } else {
-            // Add reservation deadline if applicable (solo para pagos nuevos)
-            if (reservationType === '2') {
-              paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
-            } else if (reservationType === '3' && selectedDate) {
-              paymentData.reservationDeadline = selectedDate.toDate();
-            }
-
-            return createPayment(paymentData);
-          }
-        });
-
-        const results = await Promise.all(paymentPromises);
-        const tenantIdForTransactions = resolveTenantId({
-          user,
-          selectedEvent,
-          selectedFuncion,
-          seats: safeCarrito,
-          carrito: safeCarrito,
-        });
-
-        if (!tenantIdForTransactions) {
-        }
-        if (results && results.length > 0 && results[0]) {
-          const locator = results[0].locator || effectiveLocator;
-          setLocator(locator);
-          const userId = selectedClient?.id || selectedClient?._id;
-
-          // Crear payment_transaction para cada m©todo de pago usado
+        // Si ya existe un pago, verificar que no est© completamente pagado antes de actualizar
+        if (existingPayment) {
+          // Verificar el estado del pago existente
           try {
-            const paymentTransactionPromises = paymentEntries.map(async (entry) => {
-              const entryIsCashea = entry.metadata?.gateway === 'cashea' || entry.formaPago === 'Cashea';
-              const entryStatus = entry.metadata?.status || (entryIsCashea ? 'pending' : 'completed');
-              const transactionData = {
-                orderId: locator,
-                gatewayId: null, // Para pagos manuales no hay gateway
-                amount: Number(entry.importe) || 0,
-                currency: entry.metadata?.currency || selectedFuncion?.moneda || selectedFuncion?.currency || 'USD',
-                status: entryStatus,
-                gatewayTransactionId: entry.metadata?.orderId || entry.metadata?.transactionId || null,
-                gatewayResponse: entry.metadata?.raw || entry.metadata || null,
-                locator: locator,
-                tenantId: tenantIdForTransactions || null,
-                userId: userId,
-                eventoId: selectedEvent?.id,
-                funcionId: selectedFuncion?.id || selectedFuncion?._id,
-                paymentMethod: entry.formaPago,
-                gatewayName: entryIsCashea ? 'Cashea' : 'manual',
-                metadata: entry.metadata || null,
-                payments: [
-                  {
-                    method: entry.formaPago,
-                    amount: Number(entry.importe) || 0,
-                    metadata: entry.metadata || null,
-                    reference: entry.metadata?.orderId || entry.metadata?.invoiceId || null,
-                    status: entryStatus,
-                  },
-                ],
-              };
+            const { data: existingPaymentData, error: fetchError } = await supabase
+              .from('payment_transactions')
+              .select('id, status, amount, locator')
+              .eq('id', existingPayment.paymentId)
+              .single();
 
-              return await createPaymentTransaction(transactionData);
-            });
+            if (fetchError) {
+              console.error('Error obteniendo pago existente:', fetchError);
+              throw new Error('Error al verificar el estado del pago existente');
+            }
 
-            const transactions = await Promise.all(paymentTransactionPromises);
-            // Determinar el status final del pago (completed si todos est¡n completados, sino reservado/pending)
-            const finalStatus = hasCasheaPaymentOverall || diferencia > 0 || paymentStatus === 'reserved'
+            // Verificar si el pago ya est¡ completado
+            if (existingPaymentData && existingPaymentData.status === 'completed') {
+              message.error(
+                `Este ticket ya est¡ completamente pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator}). No se puede procesar otro pago.`
+              );
+              throw new Error(
+                `El ticket ya est¡ pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator})`
+              );
+            }
+
+            // Si el pago existe pero no est¡ completado, actualizarlo
+            return updatePayment(existingPayment.paymentId, paymentData);
+          } catch (error) {
+            console.error('Error validando pago existente:', error);
+            throw error;
+          }
+        } else {
+          // Add reservation deadline if applicable (solo para pagos nuevos)
+          if (reservationType === '2') {
+            paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
+          } else if (reservationType === '3' && selectedDate) {
+            paymentData.reservationDeadline = selectedDate.toDate();
+          }
+
+          return createPayment(paymentData);
+        }
+      });
+
+      const results = await Promise.all(paymentPromises);
+      const tenantIdForTransactions = resolveTenantId({
+        user,
+        selectedEvent,
+        selectedFuncion,
+        seats: safeCarrito,
+        carrito: safeCarrito,
+      });
+
+      if (!tenantIdForTransactions) {
+      }
+      if (results && results.length > 0 && results[0]) {
+        const locator = results[0].locator || effectiveLocator;
+        setLocator(locator);
+        const userId = selectedClient?.id || selectedClient?._id;
+
+        // Crear payment_transaction para cada m©todo de pago usado
+        try {
+          const paymentTransactionPromises = paymentEntries.map(async entry => {
+            const entryIsCashea =
+              entry.metadata?.gateway === 'cashea' || entry.formaPago === 'Cashea';
+            const entryStatus = entry.metadata?.status || (entryIsCashea ? 'pending' : 'completed');
+            const transactionData = {
+              orderId: locator,
+              gatewayId: null, // Para pagos manuales no hay gateway
+              amount: Number(entry.importe) || 0,
+              currency:
+                entry.metadata?.currency ||
+                selectedFuncion?.moneda ||
+                selectedFuncion?.currency ||
+                'USD',
+              status: entryStatus,
+              gatewayTransactionId:
+                entry.metadata?.orderId || entry.metadata?.transactionId || null,
+              gatewayResponse: entry.metadata?.raw || entry.metadata || null,
+              locator: locator,
+              tenantId: tenantIdForTransactions || null,
+              userId: userId,
+              eventoId: selectedEvent?.id,
+              funcionId: selectedFuncion?.id || selectedFuncion?._id,
+              paymentMethod: entry.formaPago,
+              gatewayName: entryIsCashea ? 'Cashea' : 'manual',
+              metadata: entry.metadata || null,
+              payments: [
+                {
+                  method: entry.formaPago,
+                  amount: Number(entry.importe) || 0,
+                  metadata: entry.metadata || null,
+                  reference: entry.metadata?.orderId || entry.metadata?.invoiceId || null,
+                  status: entryStatus,
+                },
+              ],
+            };
+
+            return await createPaymentTransaction(transactionData);
+          });
+
+          const transactions = await Promise.all(paymentTransactionPromises);
+          // Determinar el status final del pago (completed si todos est¡n completados, sino reservado/pending)
+          const finalStatus =
+            hasCasheaPaymentOverall || diferencia > 0 || paymentStatus === 'reserved'
               ? 'reservado'
               : 'completed';
 
-            // Enviar correo autom¡ticamente segºn el status
-            if (locator && userId) {
-              try {
-                // Importar din¡micamente para evitar problemas de ciclo
-                const { sendPaymentEmailByStatus } = await import('../../../store/services/paymentEmailService');
+          // Enviar correo autom¡ticamente segºn el status
+          if (locator && userId) {
+            try {
+              // Importar din¡micamente para evitar problemas de ciclo
+              const { sendPaymentEmailByStatus } =
+                await import('../../../store/services/paymentEmailService');
 
-                const emailResult = await sendPaymentEmailByStatus({
-                  locator,
-                  user_id: userId,
-                  status: finalStatus,
-                  transactionId: transactions[0]?.id,
-                  amount: total,
-                });
+              const emailResult = await sendPaymentEmailByStatus({
+                locator,
+                user_id: userId,
+                status: finalStatus,
+                transactionId: transactions[0]?.id,
+                amount: total,
+              });
 
-                if (emailResult.success) {
-                } else {
-                }
-              } catch (emailError) {
-                console.error('Œ [PAYMENT_MODAL] Error enviando correo:', emailError);
-                // No bloquear el flujo si falla el env­o de correo
+              if (emailResult.success) {
+              } else {
               }
+            } catch (emailError) {
+              console.error('Œ [PAYMENT_MODAL] Error enviando correo:', emailError);
+              // No bloquear el flujo si falla el env­o de correo
             }
-          } catch (transactionError) {
-            console.error('Œ Error creating payment transactions:', transactionError);
-            // No fallar el pago por esto, solo loggear el error
           }
+        } catch (transactionError) {
+          console.error('Œ Error creating payment transactions:', transactionError);
+          // No fallar el pago por esto, solo loggear el error
         }
+      }
 
-        // Asignar tags del evento al comprador si el pago fue exitoso
-        if (selectedEvent?.tags && selectedClient?.id) {
-          await assignEventTagsToUser(selectedClient.id, selectedEvent.tags);
-        }
+      // Asignar tags del evento al comprador si el pago fue exitoso
+      if (selectedEvent?.tags && selectedClient?.id) {
+        await assignEventTagsToUser(selectedClient.id, selectedEvent.tags);
+      }
 
-        if (!hasCasheaPaymentOverall) {
-          setShowConfirmation(true);
-        }
-        const successMessage = hasCasheaPaymentOverall
-          ? 'Orden registrada con Cashea. Pendiente de confirmaci³n.'
-          : 'Pago procesado exitosamente';
-        message.success(successMessage);
-        onCancel();
+      if (!hasCasheaPaymentOverall) {
+        setShowConfirmation(true);
+      }
+      const successMessage = hasCasheaPaymentOverall
+        ? 'Orden registrada con Cashea. Pendiente de confirmaci³n.'
+        : 'Pago procesado exitosamente';
+      message.success(successMessage);
+      onCancel();
     } catch (error) {
       console.error('Payment error:', error);
 
@@ -1043,7 +1097,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       let errorMessage = 'Error al procesar el pago';
 
       if (error.message?.includes('duplicate key value violates unique constraint')) {
-        errorMessage = 'Œ Error: Uno o m¡s asientos ya est¡n vendidos. Por favor, selecciona otros asientos.';
+        errorMessage =
+          'Œ Error: Uno o m¡s asientos ya est¡n vendidos. Por favor, selecciona otros asientos.';
       } else if (error.message?.includes('ya est¡ vendido')) {
         errorMessage = `Œ ${error.message}`;
       } else if (error.message?.includes('ya est¡ reservado')) {
@@ -1051,7 +1106,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       } else if (error.message?.includes('Asiento sin ID v¡lido')) {
         errorMessage = 'Œ Error: Algunos asientos no tienen IDs v¡lidos. Por favor, verifica.';
       } else if (error.message?.includes('invalid input syntax for type json')) {
-        errorMessage = 'Œ Error: Los datos de los asientos no tienen el formato correcto. Por favor, verifica.';
+        errorMessage =
+          'Œ Error: Los datos de los asientos no tienen el formato correcto. Por favor, verifica.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -1084,40 +1140,46 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           <div>
             {/* Informaci³n de la taquilla */}
             {user && (
-              <div style={{
-                marginBottom: '15px',
-                padding: '10px',
-                background: '#e6f7ff',
-                borderRadius: '4px',
-                border: '1px solid #91d5ff'
-              }}>
+              <div
+                style={{
+                  marginBottom: '15px',
+                  padding: '10px',
+                  background: '#e6f7ff',
+                  borderRadius: '4px',
+                  border: '1px solid #91d5ff',
+                }}
+              >
                 <Text strong style={{ color: '#1890ff' }}>
                   ðŸŽ« Taquilla: {user.email || user.user_metadata?.email || 'Usuario actual'}
                 </Text>
               </div>
             )}
 
-            <div style={{
-              marginBottom: '20px',
-              padding: '15px',
-              background: '#f5f5f5',
-              borderRadius: '4px'
-            }}>
+            <div
+              style={{
+                marginBottom: '20px',
+                padding: '15px',
+                background: '#f5f5f5',
+                borderRadius: '4px',
+              }}
+            >
               {selectedAffiliate && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}
+                >
                   <Text strong>{`Com.Ref ${selectedAffiliate.user.login}:`}</Text>
                   <Input style={{ width: '200px' }} value={`-$${commission.toFixed(2)}`} disabled />
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}
+              >
                 <Text strong>Total a pagar:</Text>
-                <Input
-                  style={{ width: '200px' }}
-                  value={`$${total.toFixed(2)}`}
-                  disabled
-                />
+                <Input style={{ width: '200px' }} value={`$${total.toFixed(2)}`} disabled />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <Text strong>Estado:</Text>
                 <Text style={{ color: paymentStatus.color, fontSize: '16px' }}>
                   {paymentStatus.text}
@@ -1143,7 +1205,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   block
                   onClick={handlePaymentOrReservation}
                   loading={isProcessing}
-                  disabled={!selectedClient || (diferencia === 0 && paymentEntries.length === 0)}  // Updated condition
+                  disabled={!selectedClient || (diferencia === 0 && paymentEntries.length === 0)} // Updated condition
                 >
                   {diferencia > 0 ? 'Reservar' : 'Pagar'}
                 </Button>
@@ -1161,7 +1223,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                     <Input
                       placeholder="Entregado"
                       value={entregado}
-                      onChange={(e) => handleCashInput(e.target.value)}
+                      onChange={e => handleCashInput(e.target.value)}
                       style={{ width: '200px' }}
                     />
                     <Button onClick={handleCashAll}>Todo</Button>
@@ -1170,7 +1232,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   <div style={{ marginTop: '20px' }}>
                     <h4>Fecha l­mite de reserva</h4>
                     <Radio.Group
-                      onChange={(e) => setReservationType(e.target.value)}
+                      onChange={e => setReservationType(e.target.value)}
                       value={reservationType}
                     >
                       <Radio value="1">Sin fecha l­mite</Radio>
@@ -1192,7 +1254,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
               <TabPane tab="Otros" key="2">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                  <div
+                    style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}
+                  >
                     <div>
                       <label>Forma de pago</label>
                       <Select
@@ -1220,7 +1284,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                           <Input
                             type="number"
                             value={paymentAmount}
-                            onChange={(e) => setPaymentAmount(e.target.value)}
+                            onChange={e => setPaymentAmount(e.target.value)}
                             style={{ width: '150px' }}
                           />
                         </div>
@@ -1243,19 +1307,14 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                       error={casheaError}
                       seats={safeCarrito}
                     />
-              )}
+                  )}
                 </div>
               </TabPane>
             </Tabs>
           </div>
 
           <div style={{ flex: 1 }}>
-            <Table
-              dataSource={paymentEntries}
-              columns={columns}
-              pagination={false}
-              size="small"
-            />
+            <Table dataSource={paymentEntries} columns={columns} pagination={false} size="small" />
           </div>
         </div>
       </Modal>
@@ -1273,7 +1332,12 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   block
                   onClick={handleEmailTicket}
                   loading={isSendingEmail}
-                  disabled={!effectiveLocator || !emailToSend || !isValidEmail(emailToSend) || isSendingEmail}
+                  disabled={
+                    !effectiveLocator ||
+                    !emailToSend ||
+                    !isValidEmail(emailToSend) ||
+                    isSendingEmail
+                  }
                 >
                   Enviar por correo
                 </Button>,
@@ -1286,7 +1350,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   disabled={!effectiveLocator}
                 >
                   Descargar Ticket
-                </Button>
+                </Button>,
               ]
             : null
         }
@@ -1296,7 +1360,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           <Input
             placeholder="Correo electr³nico"
             value={emailToSend}
-            onChange={(e) => setEmailToSend(e.target.value)}
+            onChange={e => setEmailToSend(e.target.value)}
             style={{ marginTop: '20px' }}
           />
         </div>
@@ -1306,4 +1370,3 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 };
 
 export default PaymentModal;
-

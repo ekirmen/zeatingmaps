@@ -11,9 +11,15 @@ import {
   Space,
   Table,
   Tag,
-  Typography
+  Typography,
 } from '../../utils/antdComponents';
-import { EyeInvisibleOutlined, EyeOutlined, ReloadOutlined, SearchOutlined, DeleteOutlined } from '@ant-design/icons';
+import {
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
 import { format, parseISO } from 'date-fns';
 
 import { supabase } from '../../supabaseClient';
@@ -22,7 +28,7 @@ import {
   deletePaymentTransaction,
   hidePaymentTransaction,
   unhidePaymentTransaction,
-  updatePaymentTransactionStatus
+  updatePaymentTransactionStatus,
 } from '../../services/paymentTransactionsService';
 
 const { Text, Title } = Typography;
@@ -32,7 +38,7 @@ const STATUS_OPTIONS = [
   { value: 'completed', label: 'Pagado' },
   { value: 'failed', label: 'Fallido' },
   { value: 'refunded', label: 'Reembolsado' },
-  { value: 'canceled', label: 'Cancelado' }
+  { value: 'canceled', label: 'Cancelado' },
 ];
 
 const STATUS_COLORS = {
@@ -40,7 +46,7 @@ const STATUS_COLORS = {
   completed: 'green',
   failed: 'red',
   refunded: 'gold',
-  canceled: 'default'
+  canceled: 'default',
 };
 
 const SOURCE_LABELS = {
@@ -49,7 +55,7 @@ const SOURCE_LABELS = {
   web: 'Venta Online',
   affiliate: 'Afiliado',
   marketplace: 'Marketplace',
-  unknown: 'Sin definir'
+  unknown: 'Sin definir',
 };
 
 const SalesTransactions = () => {
@@ -73,15 +79,16 @@ const SalesTransactions = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [showHidden, setShowHidden] = useState(false);
 
-  const isMultiTenant = useMemo(() => currentTenant?.id && currentTenant.id !== 'main-domain', [currentTenant?.id]);
+  const isMultiTenant = useMemo(
+    () => currentTenant?.id && currentTenant.id !== 'main-domain',
+    [currentTenant?.id]
+  );
 
   const loadFilters = useCallback(async () => {
     try {
       setFiltersLoading(true);
 
-      let recintosQuery = supabase
-        .from('recintos')
-        .select('id, nombre');
+      let recintosQuery = supabase.from('recintos').select('id, nombre');
 
       let eventosQuery = supabase
         .from('eventos')
@@ -97,16 +104,14 @@ const SalesTransactions = () => {
         funcionesQuery = funcionesQuery.eq('tenant_id', currentTenant.id);
       }
 
-      const [recintosResponse, eventosResponse] = await Promise.all([
-        recintosQuery,
-        eventosQuery
-      ]);
+      const [recintosResponse, eventosResponse] = await Promise.all([recintosQuery, eventosQuery]);
 
-      const handleFuncionesFallback = async (error) => {
-        console.warn('š ï¸ [SalesTransactions] Error cargando funciones, usando fallback select("*"):', error);
-        let fallbackQuery = supabase
-          .from('funciones')
-          .select('*');
+      const handleFuncionesFallback = async error => {
+        console.warn(
+          'š ï¸ [SalesTransactions] Error cargando funciones, usando fallback select("*"):',
+          error
+        );
+        let fallbackQuery = supabase.from('funciones').select('*');
 
         if (isMultiTenant) {
           fallbackQuery = fallbackQuery.eq('tenant_id', currentTenant.id);
@@ -115,13 +120,12 @@ const SalesTransactions = () => {
         const fallbackResponse = await fallbackQuery;
 
         if (fallbackResponse.error) {
-
           return fallbackResponse;
         }
 
         return {
           data: fallbackResponse.data || [],
-          error: null
+          error: null,
         };
       };
 
@@ -151,10 +155,7 @@ const SalesTransactions = () => {
       } else {
         const normalizedFunctions = (funcionesResponse.data || []).map(funcion => {
           const fechaCelebracion =
-            funcion.fecha_celebracion ||
-            funcion.fechaCelebracion ||
-            funcion.fecha ||
-            null;
+            funcion.fecha_celebracion || funcion.fechaCelebracion || funcion.fecha || null;
 
           let hora = funcion.hora;
 
@@ -167,8 +168,7 @@ const SalesTransactions = () => {
                 const minutes = String(parsed.getMinutes()).padStart(2, '0');
                 hora = `${hours}:${minutes}`;
               }
-            } catch (parseError) {
-            }
+            } catch (parseError) {}
           }
 
           let nombre = funcion.nombre;
@@ -181,11 +181,10 @@ const SalesTransactions = () => {
                 if (!Number.isNaN(parsed.getTime())) {
                   nombre = new Intl.DateTimeFormat('es-ES', {
                     dateStyle: 'medium',
-                    timeStyle: 'short'
+                    timeStyle: 'short',
                   }).format(parsed);
                 }
-              } catch (formatError) {
-              }
+              } catch (formatError) {}
             }
 
             if (!nombre) {
@@ -198,7 +197,7 @@ const SalesTransactions = () => {
             nombre,
             fecha: funcion.fecha || fechaCelebracion,
             hora,
-            fecha_celebracion: fechaCelebracion
+            fecha_celebracion: fechaCelebracion,
           };
         });
 
@@ -265,7 +264,7 @@ const SalesTransactions = () => {
 
         return {
           ...profile,
-          full_name: computedFullName || null
+          full_name: computedFullName || null,
         };
       });
 
@@ -332,7 +331,7 @@ const SalesTransactions = () => {
     });
   }, [functions, selectedEvent]);
 
-  const formatProfile = useCallback((profile) => {
+  const formatProfile = useCallback(profile => {
     if (!profile) {
       return { name: 'Sin asignar', email: null };
     }
@@ -340,7 +339,7 @@ const SalesTransactions = () => {
     const name = profile?.nombre || profile?.full_name || profile?.email || 'Sin nombre';
     return {
       name,
-      email: profile?.email || null
+      email: profile?.email || null,
     };
   }, []);
 
@@ -350,7 +349,8 @@ const SalesTransactions = () => {
     return (transactions || [])
       .map(transaction => {
         const eventId = transaction?.evento_id || transaction?.event_id || transaction?.eventId;
-        const functionId = transaction?.funcion_id || transaction?.function_id || transaction?.functionId;
+        const functionId =
+          transaction?.funcion_id || transaction?.function_id || transaction?.functionId;
 
         const event = eventId ? eventsMap.get(String(eventId)) : null;
         const funcion = functionId ? functionsMap.get(String(functionId)) : null;
@@ -358,15 +358,16 @@ const SalesTransactions = () => {
         const venue = venueId ? venuesMap.get(String(venueId)) : null;
 
         const buyerProfile = transaction?.user_id ? profilesMap.get(transaction.user_id) : null;
-        const sellerProfile = transaction?.processed_by ? profilesMap.get(transaction.processed_by) : null;
+        const sellerProfile = transaction?.processed_by
+          ? profilesMap.get(transaction.processed_by)
+          : null;
 
         const buyer = formatProfile(buyerProfile);
         const seller = formatProfile(sellerProfile);
 
         const rawSource = transaction?.channel || transaction?.source || transaction?.sales_channel;
-        const normalizedSource = typeof rawSource === 'string'
-          ? rawSource.toLowerCase()
-          : rawSource;
+        const normalizedSource =
+          typeof rawSource === 'string' ? rawSource.toLowerCase() : rawSource;
         let sourceLabel = SOURCE_LABELS[normalizedSource];
         if (!sourceLabel) {
           if (transaction?.processed_by) {
@@ -398,11 +399,11 @@ const SalesTransactions = () => {
                 buyer?.name,
                 buyer?.email,
                 seller?.name,
-                seller?.email
+                seller?.email,
               ]
-              .filter(Boolean)
-              .some(value => String(value).toLowerCase().includes(normalizedSearch))
-            : true
+                .filter(Boolean)
+                .some(value => String(value).toLowerCase().includes(normalizedSearch))
+            : true,
         };
       })
       .filter(transaction => {
@@ -439,7 +440,7 @@ const SalesTransactions = () => {
     selectedFunction,
     selectedVenue,
     transactions,
-    venuesMap
+    venuesMap,
   ]);
 
   const handleStatusChange = useCallback(async (transaction, newStatus) => {
@@ -453,11 +454,7 @@ const SalesTransactions = () => {
       await updatePaymentTransactionStatus(transaction.id, newStatus);
       message.success('Estado actualizado correctamente');
       setTransactions(prev =>
-        prev.map(item =>
-          item.id === transaction.id
-            ? { ...item, status: newStatus }
-            : item
-        )
+        prev.map(item => (item.id === transaction.id ? { ...item, status: newStatus } : item))
       );
     } catch (error) {
       console.error('Error al actualizar el estado de la transacci³n:', error);
@@ -467,7 +464,7 @@ const SalesTransactions = () => {
     }
   }, []);
 
-  const handleHideTransaction = useCallback(async (transaction) => {
+  const handleHideTransaction = useCallback(async transaction => {
     if (!transaction?.id) {
       message.warning('No se pudo identificar la transacci³n seleccionada');
       return;
@@ -478,11 +475,7 @@ const SalesTransactions = () => {
       const updated = await hidePaymentTransaction(transaction.id);
       message.success('Transacci³n ocultada correctamente');
       setTransactions(prev =>
-        prev.map(item =>
-          item.id === transaction.id
-            ? { ...item, ...updated }
-            : item
-        )
+        prev.map(item => (item.id === transaction.id ? { ...item, ...updated } : item))
       );
     } catch (error) {
       console.error('Error al ocultar la transacci³n:', error);
@@ -492,7 +485,7 @@ const SalesTransactions = () => {
     }
   }, []);
 
-  const handleUnhideTransaction = useCallback(async (transaction) => {
+  const handleUnhideTransaction = useCallback(async transaction => {
     if (!transaction?.id) {
       message.warning('No se pudo identificar la transacci³n seleccionada');
       return;
@@ -503,11 +496,7 @@ const SalesTransactions = () => {
       const updated = await unhidePaymentTransaction(transaction.id);
       message.success('Transacci³n mostrada nuevamente');
       setTransactions(prev =>
-        prev.map(item =>
-          item.id === transaction.id
-            ? { ...item, ...updated }
-            : item
-        )
+        prev.map(item => (item.id === transaction.id ? { ...item, ...updated } : item))
       );
     } catch (error) {
       console.error('Error al mostrar la transacci³n:', error);
@@ -517,7 +506,7 @@ const SalesTransactions = () => {
     }
   }, []);
 
-  const handleDeleteTransaction = useCallback(async (transaction) => {
+  const handleDeleteTransaction = useCallback(async transaction => {
     if (!transaction?.id) {
       message.warning('No se pudo identificar la transacci³n seleccionada');
       return;
@@ -536,206 +525,221 @@ const SalesTransactions = () => {
     }
   }, []);
 
-  const columns = useMemo(() => [
-    {
-      title: 'Localizador',
-      dataIndex: 'locator',
-      key: 'locator',
-      render: (locator, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong copyable>{locator || record?.id}</Text>
-          {record?.order_id && (
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Pedido: {record.order_id}
-            </Text>
-          )}
-        </Space>
-      )
-    },
-    {
-      title: 'Monto',
-      dataIndex: 'amount',
-      key: 'amount',
-      render: (_, record) => {
-        const amount = record?.amount ?? record?.monto ?? 0;
-        const currency = record?.currency || 'USD';
-        return (
-          <Text>{new Intl.NumberFormat('es-ES', {
-            style: 'currency',
-            currency
-          }).format(Number(amount) || 0)}</Text>
-        );
-      }
-    },
-    {
-      title: 'Pasarela',
-      dataIndex: 'gateway_name',
-      key: 'gateway_name',
-      render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record?.gateway_name || record?.gateway_id || 'Sin definir'}</Text>
-          {record?.payment_method && (
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              M©todo: {record.payment_method.toUpperCase()}
-            </Text>
-          )}
-        </Space>
-      )
-    },
-    {
-      title: 'Estado',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status, record) => (
-        <Space direction="vertical" size={4}>
-          <Tag color={STATUS_COLORS[status] || 'default'}>
-            {(STATUS_OPTIONS.find(option => option.value === status)?.label || status || 'Desconocido').toUpperCase()}
-          </Tag>
-          <Select
-            size="small"
-            value={status || 'pending'}
-            options={STATUS_OPTIONS}
-            onChange={value => handleStatusChange(record, value)}
-            loading={updatingId === record?.id}
-            style={{ minWidth: 140 }}
-          />
-        </Space>
-      )
-    },
-    {
-      title: 'Fecha',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (createdAt) => createdAt
-        ? format(new Date(createdAt), 'dd/MM/yyyy, HH:mm:ss')
-
-        : 'Sin fecha'
-    },
-    {
-      title: 'Recinto',
-      dataIndex: ['venue', 'nombre'],
-      key: 'venue',
-      render: (_, record) => record?.venue?.nombre || '-”'
-    },
-    {
-      title: 'Evento',
-      dataIndex: ['event', 'nombre'],
-      key: 'event',
-      render: (_, record) => record?.event?.nombre || '-”'
-    },
-    {
-      title: 'Funci³n',
-      dataIndex: ['funcion', 'id'],
-      key: 'funcion',
-      render: (_, record) => {
-        if (!record?.funcion) {
-          return '-”';
-        }
-
-        const date = record.funcion?.fecha || record.funcion?.fecha_celebracion;
-        const time = record.funcion?.hora;
-        return (
+  const columns = useMemo(
+    () => [
+      {
+        title: 'Localizador',
+        dataIndex: 'locator',
+        key: 'locator',
+        render: (locator, record) => (
           <Space direction="vertical" size={0}>
-            <Text strong>{record.funcion?.nombre || `Funci³n ${record.funcion?.id}`}</Text>
-            {(date || time) && (
+            <Text strong copyable>
+              {locator || record?.id}
+            </Text>
+            {record?.order_id && (
               <Text type="secondary" style={{ fontSize: 12 }}>
-                {[date ? format(new Date(date), 'dd/MM/yyyy') : null, time].filter(Boolean).join(' · ')}
+                Pedido: {record.order_id}
               </Text>
             )}
           </Space>
-        );
-      }
-    },
-    {
-      title: 'Comprador',
-      dataIndex: 'buyer',
-      key: 'buyer',
-      render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record?.buyer?.name}</Text>
-          {record?.buyer?.email && (
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.buyer.email}</Text>
-          )}
-        </Space>
-      )
-    },
-    {
-      title: 'Vendedor',
-      dataIndex: 'seller',
-      key: 'seller',
-      render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record?.seller?.name}</Text>
-          {record?.seller?.email && (
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.seller.email}</Text>
-          )}
-        </Space>
-      )
-    },
-    {
-      title: 'Canal',
-      dataIndex: 'sourceLabel',
-      key: 'sourceLabel',
-      render: (sourceLabel) => sourceLabel || 'Sin definir'
-    },
-    {
-      title: 'Acciones',
-      key: 'actions',
-      render: (_, record) => {
-        const isProcessing = [updatingId, hidingId, deletingId].includes(record?.id);
-        return (
-          <Space>
-            {record?.isHidden ? (
-              <Button
-                size="small"
-                icon={<EyeOutlined />}
-                onClick={() => handleUnhideTransaction(record)}
-                loading={hidingId === record?.id}
-                disabled={isProcessing}
-              >
-                Mostrar
-              </Button>
-            ) : (
-              <Button
-                size="small"
-                icon={<EyeInvisibleOutlined />}
-                onClick={() => handleHideTransaction(record)}
-                loading={hidingId === record?.id}
-                disabled={isProcessing}
-              >
-                Ocultar
-              </Button>
+        ),
+      },
+      {
+        title: 'Monto',
+        dataIndex: 'amount',
+        key: 'amount',
+        render: (_, record) => {
+          const amount = record?.amount ?? record?.monto ?? 0;
+          const currency = record?.currency || 'USD';
+          return (
+            <Text>
+              {new Intl.NumberFormat('es-ES', {
+                style: 'currency',
+                currency,
+              }).format(Number(amount) || 0)}
+            </Text>
+          );
+        },
+      },
+      {
+        title: 'Pasarela',
+        dataIndex: 'gateway_name',
+        key: 'gateway_name',
+        render: (_, record) => (
+          <Space direction="vertical" size={0}>
+            <Text strong>{record?.gateway_name || record?.gateway_id || 'Sin definir'}</Text>
+            {record?.payment_method && (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                M©todo: {record.payment_method.toUpperCase()}
+              </Text>
             )}
-            <Popconfirm
-              title="¿Eliminar transacci³n?"
-              description="Esta acci³n no se puede deshacer."
-              onConfirm={() => handleDeleteTransaction(record)}
-              okText="S­, eliminar"
-              cancelText="Cancelar"
-            >
-              <Button
-                danger
-                size="small"
-                icon={<DeleteOutlined />}
-                loading={deletingId === record?.id}
-                disabled={isProcessing}
-              >
-                Eliminar
-              </Button>
-            </Popconfirm>
           </Space>
-        );
-      }
-    }
-  ], [
-    deletingId,
-    handleDeleteTransaction,
-    handleHideTransaction,
-    handleStatusChange,
-    handleUnhideTransaction,
-    hidingId,
-    updatingId
-  ]);
+        ),
+      },
+      {
+        title: 'Estado',
+        dataIndex: 'status',
+        key: 'status',
+        render: (status, record) => (
+          <Space direction="vertical" size={4}>
+            <Tag color={STATUS_COLORS[status] || 'default'}>
+              {(
+                STATUS_OPTIONS.find(option => option.value === status)?.label ||
+                status ||
+                'Desconocido'
+              ).toUpperCase()}
+            </Tag>
+            <Select
+              size="small"
+              value={status || 'pending'}
+              options={STATUS_OPTIONS}
+              onChange={value => handleStatusChange(record, value)}
+              loading={updatingId === record?.id}
+              style={{ minWidth: 140 }}
+            />
+          </Space>
+        ),
+      },
+      {
+        title: 'Fecha',
+        dataIndex: 'created_at',
+        key: 'created_at',
+        render: createdAt =>
+          createdAt ? format(new Date(createdAt), 'dd/MM/yyyy, HH:mm:ss') : 'Sin fecha',
+      },
+      {
+        title: 'Recinto',
+        dataIndex: ['venue', 'nombre'],
+        key: 'venue',
+        render: (_, record) => record?.venue?.nombre || '-”',
+      },
+      {
+        title: 'Evento',
+        dataIndex: ['event', 'nombre'],
+        key: 'event',
+        render: (_, record) => record?.event?.nombre || '-”',
+      },
+      {
+        title: 'Funci³n',
+        dataIndex: ['funcion', 'id'],
+        key: 'funcion',
+        render: (_, record) => {
+          if (!record?.funcion) {
+            return '-”';
+          }
+
+          const date = record.funcion?.fecha || record.funcion?.fecha_celebracion;
+          const time = record.funcion?.hora;
+          return (
+            <Space direction="vertical" size={0}>
+              <Text strong>{record.funcion?.nombre || `Funci³n ${record.funcion?.id}`}</Text>
+              {(date || time) && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {[date ? format(new Date(date), 'dd/MM/yyyy') : null, time]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </Text>
+              )}
+            </Space>
+          );
+        },
+      },
+      {
+        title: 'Comprador',
+        dataIndex: 'buyer',
+        key: 'buyer',
+        render: (_, record) => (
+          <Space direction="vertical" size={0}>
+            <Text strong>{record?.buyer?.name}</Text>
+            {record?.buyer?.email && (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {record.buyer.email}
+              </Text>
+            )}
+          </Space>
+        ),
+      },
+      {
+        title: 'Vendedor',
+        dataIndex: 'seller',
+        key: 'seller',
+        render: (_, record) => (
+          <Space direction="vertical" size={0}>
+            <Text strong>{record?.seller?.name}</Text>
+            {record?.seller?.email && (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {record.seller.email}
+              </Text>
+            )}
+          </Space>
+        ),
+      },
+      {
+        title: 'Canal',
+        dataIndex: 'sourceLabel',
+        key: 'sourceLabel',
+        render: sourceLabel => sourceLabel || 'Sin definir',
+      },
+      {
+        title: 'Acciones',
+        key: 'actions',
+        render: (_, record) => {
+          const isProcessing = [updatingId, hidingId, deletingId].includes(record?.id);
+          return (
+            <Space>
+              {record?.isHidden ? (
+                <Button
+                  size="small"
+                  icon={<EyeOutlined />}
+                  onClick={() => handleUnhideTransaction(record)}
+                  loading={hidingId === record?.id}
+                  disabled={isProcessing}
+                >
+                  Mostrar
+                </Button>
+              ) : (
+                <Button
+                  size="small"
+                  icon={<EyeInvisibleOutlined />}
+                  onClick={() => handleHideTransaction(record)}
+                  loading={hidingId === record?.id}
+                  disabled={isProcessing}
+                >
+                  Ocultar
+                </Button>
+              )}
+              <Popconfirm
+                title="¿Eliminar transacci³n?"
+                description="Esta acci³n no se puede deshacer."
+                onConfirm={() => handleDeleteTransaction(record)}
+                okText="S­, eliminar"
+                cancelText="Cancelar"
+              >
+                <Button
+                  danger
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  loading={deletingId === record?.id}
+                  disabled={isProcessing}
+                >
+                  Eliminar
+                </Button>
+              </Popconfirm>
+            </Space>
+          );
+        },
+      },
+    ],
+    [
+      deletingId,
+      handleDeleteTransaction,
+      handleHideTransaction,
+      handleStatusChange,
+      handleUnhideTransaction,
+      hidingId,
+      updatingId,
+    ]
+  );
 
   const handleShowAll = useCallback(() => {
     setRecordLimit(500);
@@ -745,51 +749,57 @@ const SalesTransactions = () => {
     loadTransactions();
   }, [loadTransactions]);
 
-  const venueOptions = useMemo(() => [
-    { value: 'all', label: 'Todos los recintos' },
-    ...(venues || []).map(venue => ({
-      value: String(venue.id),
-      label: venue.nombre
-    }))
-  ], [venues]);
+  const venueOptions = useMemo(
+    () => [
+      { value: 'all', label: 'Todos los recintos' },
+      ...(venues || []).map(venue => ({
+        value: String(venue.id),
+        label: venue.nombre,
+      })),
+    ],
+    [venues]
+  );
 
-  const eventOptions = useMemo(() => [
-    { value: 'all', label: 'Todos los eventos' },
-    ...(filteredEvents || []).map(event => ({
-      value: String(event.id),
-      label: event.nombre
-    }))
-  ], [filteredEvents]);
+  const eventOptions = useMemo(
+    () => [
+      { value: 'all', label: 'Todos los eventos' },
+      ...(filteredEvents || []).map(event => ({
+        value: String(event.id),
+        label: event.nombre,
+      })),
+    ],
+    [filteredEvents]
+  );
 
-  const functionOptions = useMemo(() => [
-    { value: 'all', label: 'Todas las funciones' },
-    ...(filteredFunctions || []).map(funcion => ({
-      value: String(funcion.id),
-      label: (() => {
-        const pieces = [];
-        if (funcion.nombre) {
-          pieces.push(funcion.nombre);
-        } else {
-          pieces.push(`Funci³n ${funcion.id}`);
-        }
+  const functionOptions = useMemo(
+    () => [
+      { value: 'all', label: 'Todas las funciones' },
+      ...(filteredFunctions || []).map(funcion => ({
+        value: String(funcion.id),
+        label: (() => {
+          const pieces = [];
+          if (funcion.nombre) {
+            pieces.push(funcion.nombre);
+          } else {
+            pieces.push(`Funci³n ${funcion.id}`);
+          }
 
-        const fecha = funcion.fecha || funcion.fecha_celebracion;
-        const hora = funcion.hora;
-        const schedule = [
-          fecha ? format(new Date(fecha), 'dd/MM/yyyy') : null,
-          hora
-        ]
-          .filter(Boolean)
-          .join(' · ');
+          const fecha = funcion.fecha || funcion.fecha_celebracion;
+          const hora = funcion.hora;
+          const schedule = [fecha ? format(new Date(fecha), 'dd/MM/yyyy') : null, hora]
+            .filter(Boolean)
+            .join(' · ');
 
-        if (schedule) {
-          pieces.push(schedule);
-        }
+          if (schedule) {
+            pieces.push(schedule);
+          }
 
-        return pieces.join(' -” ');
-      })()
-    }))
-  ], [filteredFunctions]);
+          return pieces.join(' -” ');
+        })(),
+      })),
+    ],
+    [filteredFunctions]
+  );
 
   return (
     <div className="p-6 space-y-6">
@@ -884,5 +894,3 @@ const SalesTransactions = () => {
 };
 
 export default SalesTransactions;
-
-

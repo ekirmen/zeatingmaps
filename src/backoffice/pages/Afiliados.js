@@ -3,16 +3,35 @@
  * Gestiona programas de afiliados con links ºnicos, comisiones y dashboard
  */
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Modal, Form, Input, InputNumber, Tag, Space, message, Tooltip, Statistic, Row, Col, Tabs, Badge, Switch, Typography } from '../../utils/antdComponents';
-import { 
-  UserAddOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
-  CopyOutlined, 
+import {
+  Card,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Tag,
+  Space,
+  message,
+  Tooltip,
+  Statistic,
+  Row,
+  Col,
+  Tabs,
+  Badge,
+  Switch,
+  Typography,
+} from '../../utils/antdComponents';
+import {
+  UserAddOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CopyOutlined,
   LinkOutlined,
   DollarOutlined,
   BarChartOutlined,
-  ShareAltOutlined
+  ShareAltOutlined,
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
@@ -32,7 +51,7 @@ const Afiliados = () => {
     totalAfiliados: 0,
     totalComisiones: 0,
     totalVentas: 0,
-    ventasMes: 0
+    ventasMes: 0,
   });
 
   useEffect(() => {
@@ -72,23 +91,23 @@ const Afiliados = () => {
       const totalVentas = ventas?.length || 0;
       const totalComisiones = ventas?.reduce((sum, v) => sum + (v.comision_afiliado || 0), 0) || 0;
       const mesActual = new Date().getMonth();
-      const ventasMes = ventas?.filter(v => {
-
-        return fecha.getMonth() === mesActual;
-      }).length || 0;
+      const ventasMes =
+        ventas?.filter(v => {
+          return fecha.getMonth() === mesActual;
+        }).length || 0;
 
       setStats({
         totalAfiliados: afiliados.length,
         totalComisiones,
         totalVentas,
-        ventasMes
+        ventasMes,
       });
     } catch (error) {
       console.error('Error cargando estad­sticas:', error);
     }
   };
 
-  const generateAffiliateLink = (afiliadoId) => {
+  const generateAffiliateLink = afiliadoId => {
     const baseUrl = window.location.origin;
     return `${baseUrl}/store?ref=${afiliadoId}`;
   };
@@ -99,22 +118,19 @@ const Afiliados = () => {
     setIsModalVisible(true);
   };
 
-  const handleEdit = (afiliado) => {
+  const handleEdit = afiliado => {
     setEditingAfiliado(afiliado);
     form.setFieldsValue(afiliado);
     setIsModalVisible(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     Modal.confirm({
       title: '¿Eliminar afiliado?',
       content: 'Esta acci³n no se puede deshacer.',
       onOk: async () => {
         try {
-          const { error } = await supabase
-            .from('afiliados')
-            .delete()
-            .eq('id', id);
+          const { error } = await supabase.from('afiliados').delete().eq('id', id);
 
           if (error) throw error;
           message.success('Afiliado eliminado');
@@ -123,23 +139,23 @@ const Afiliados = () => {
           console.error('Error eliminando afiliado:', error);
           message.error('Error al eliminar afiliado');
         }
-      }
+      },
     });
   };
 
-  const handleCopyLink = (afiliadoId) => {
+  const handleCopyLink = afiliadoId => {
     const link = generateAffiliateLink(afiliadoId);
     navigator.clipboard.writeText(link);
     message.success('Link copiado al portapapeles');
   };
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async values => {
     try {
       const data = {
         ...values,
         tenant_id: currentTenant?.id,
         link_afiliado: editingAfiliado?.link_afiliado || `ref_${Date.now()}`,
-        activo: values.activo !== undefined ? values.activo : true
+        activo: values.activo !== undefined ? values.activo : true,
       };
 
       if (editingAfiliado) {
@@ -151,11 +167,7 @@ const Afiliados = () => {
         if (error) throw error;
         message.success('Afiliado actualizado');
       } else {
-        const { error } = await supabase
-          .from('afiliados')
-          .insert([data])
-          .select()
-          .single();
+        const { error } = await supabase.from('afiliados').insert([data]).select().single();
 
         if (error) throw error;
         message.success('Afiliado creado');
@@ -175,18 +187,18 @@ const Afiliados = () => {
     {
       title: 'Nombre',
       dataIndex: 'nombre',
-      key: 'nombre'
+      key: 'nombre',
     },
     {
       title: 'Email',
       dataIndex: 'email',
-      key: 'email'
+      key: 'email',
     },
     {
       title: 'Comisi³n (%)',
       dataIndex: 'comision_porcentaje',
       key: 'comision_porcentaje',
-      render: (value) => `${value || 0}%`
+      render: value => `${value || 0}%`,
     },
     {
       title: 'Link Afiliado',
@@ -194,10 +206,10 @@ const Afiliados = () => {
       render: (_, record) => (
         <Space>
           <Tooltip title={generateAffiliateLink(record.id)}>
-            <Text 
-              copyable={{ 
+            <Text
+              copyable={{
                 text: generateAffiliateLink(record.id),
-                onCopy: () => handleCopyLink(record.id)
+                onCopy: () => handleCopyLink(record.id),
               }}
               style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
@@ -205,17 +217,15 @@ const Afiliados = () => {
             </Text>
           </Tooltip>
         </Space>
-      )
+      ),
     },
     {
       title: 'Estado',
       dataIndex: 'activo',
       key: 'activo',
-      render: (activo) => (
-        <Tag color={activo ? 'green' : 'red'}>
-          {activo ? 'Activo' : 'Inactivo'}
-        </Tag>
-      )
+      render: activo => (
+        <Tag color={activo ? 'green' : 'red'}>{activo ? 'Activo' : 'Inactivo'}</Tag>
+      ),
     },
     {
       title: 'Acciones',
@@ -223,30 +233,22 @@ const Afiliados = () => {
       render: (_, record) => (
         <Space>
           <Tooltip title="Editar">
-            <Button 
-              type="link" 
-              icon={<EditOutlined />} 
-              onClick={() => handleEdit(record)}
-            />
+            <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Tooltip title="Copiar Link">
-            <Button 
-              type="link" 
-              icon={<CopyOutlined />} 
-              onClick={() => handleCopyLink(record.id)}
-            />
+            <Button type="link" icon={<CopyOutlined />} onClick={() => handleCopyLink(record.id)} />
           </Tooltip>
           <Tooltip title="Eliminar">
-            <Button 
-              type="link" 
-              danger 
-              icon={<DeleteOutlined />} 
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
               onClick={() => handleDelete(record.id)}
             />
           </Tooltip>
         </Space>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -302,11 +304,7 @@ const Afiliados = () => {
       <Card
         title="Afiliados"
         extra={
-          <Button 
-            type="primary" 
-            icon={<UserAddOutlined />}
-            onClick={handleCreate}
-          >
+          <Button type="primary" icon={<UserAddOutlined />} onClick={handleCreate}>
             Nuevo Afiliado
           </Button>
         }
@@ -331,11 +329,7 @@ const Afiliados = () => {
         onOk={() => form.submit()}
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             name="nombre"
             label="Nombre"
@@ -349,7 +343,7 @@ const Afiliados = () => {
             label="Email"
             rules={[
               { required: true, message: 'Ingresa el email' },
-              { type: 'email', message: 'Email inv¡lido' }
+              { type: 'email', message: 'Email inv¡lido' },
             ]}
           >
             <Input placeholder="email@ejemplo.com" />
@@ -360,33 +354,17 @@ const Afiliados = () => {
             label="Comisi³n (%)"
             rules={[
               { required: true, message: 'Ingresa el porcentaje de comisi³n' },
-              { type: 'number', min: 0, max: 100, message: 'Debe estar entre 0 y 100' }
+              { type: 'number', min: 0, max: 100, message: 'Debe estar entre 0 y 100' },
             ]}
           >
-            <InputNumber
-              style={{ width: '100%' }}
-              placeholder="5"
-              min={0}
-              max={100}
-              suffix="%"
-            />
+            <InputNumber style={{ width: '100%' }} placeholder="5" min={0} max={100} suffix="%" />
           </Form.Item>
 
-          <Form.Item
-            name="descripcion"
-            label="Descripci³n"
-          >
-            <TextArea 
-              rows={3} 
-              placeholder="Descripci³n del afiliado (opcional)"
-            />
+          <Form.Item name="descripcion" label="Descripci³n">
+            <TextArea rows={3} placeholder="Descripci³n del afiliado (opcional)" />
           </Form.Item>
 
-          <Form.Item
-            name="activo"
-            label="Estado"
-            valuePropName="checked"
-          >
+          <Form.Item name="activo" label="Estado" valuePropName="checked">
             <Switch checkedChildren="Activo" unCheckedChildren="Inactivo" />
           </Form.Item>
         </Form>
@@ -396,6 +374,3 @@ const Afiliados = () => {
 };
 
 export default Afiliados;
-
-
-

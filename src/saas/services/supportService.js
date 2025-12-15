@@ -16,7 +16,7 @@ class SupportService {
         status: 'open',
         priority: ticketData.priority || 'medium',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
@@ -31,7 +31,7 @@ class SupportService {
       await this.addMessage(data.id, {
         content: ticketData.description,
         sender_type: 'customer',
-        sender_id: ticketData.customer_id
+        sender_id: ticketData.customer_id,
       });
 
       // Enviar notificación
@@ -64,7 +64,8 @@ class SupportService {
     try {
       let query = supabase
         .from('support_tickets')
-        .select(`
+        .select(
+          `
           *,
           tenants!support_tickets_tenant_id_fkey (
             company_name,
@@ -78,30 +79,31 @@ class SupportService {
             nombre,
             email
           )
-        `)
+        `
+        )
         .order('created_at', { ascending: false });
 
       // Aplicar filtros
       if (filters.tenantId) {
         query = query.eq('tenant_id', filters.tenantId);
       }
-      
+
       if (filters.status) {
         query = query.eq('status', filters.status);
       }
-      
+
       if (filters.priority) {
         query = query.eq('priority', filters.priority);
       }
-      
+
       if (filters.category) {
         query = query.eq('category', filters.category);
       }
-      
+
       if (filters.assignedTo) {
         query = query.eq('assigned_to', filters.assignedTo);
       }
-      
+
       if (filters.limit) {
         query = query.limit(filters.limit);
       }
@@ -121,7 +123,8 @@ class SupportService {
     try {
       const { data, error } = await supabase
         .from('support_tickets')
-        .select(`
+        .select(
+          `
           *,
           tenants!support_tickets_tenant_id_fkey (
             company_name,
@@ -135,7 +138,8 @@ class SupportService {
             nombre,
             email
           )
-        `)
+        `
+        )
         .eq('id', ticketId)
         .single();
 
@@ -157,7 +161,7 @@ class SupportService {
     try {
       const updateData = {
         ...updates,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
@@ -189,7 +193,7 @@ class SupportService {
         .update({
           assigned_to: assignedTo,
           status: 'in_progress',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', ticketId)
         .select()
@@ -213,7 +217,7 @@ class SupportService {
       const message = {
         ...messageData,
         ticket_id: ticketId,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
@@ -245,13 +249,15 @@ class SupportService {
     try {
       const { data, error } = await supabase
         .from('support_messages')
-        .select(`
+        .select(
+          `
           *,
           profiles!support_messages_sender_id_fkey (
             nombre,
             email
           )
-        `)
+        `
+        )
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
 
@@ -272,7 +278,7 @@ class SupportService {
           status: 'resolved',
           resolution,
           resolved_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', ticketId)
         .select()
@@ -298,7 +304,7 @@ class SupportService {
         .update({
           status: 'closed',
           closed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', ticketId)
         .select()
@@ -323,7 +329,7 @@ class SupportService {
       if (!ticket) return;
 
       let title, message;
-      
+
       switch (type) {
         case 'created':
           title = 'Nuevo Ticket de Soporte';
@@ -355,16 +361,16 @@ class SupportService {
       }
 
       // Crear notificación
-      await supabase
-        .from('notifications')
-        .insert([{
+      await supabase.from('notifications').insert([
+        {
           tenant_id: ticket.tenant_id,
           type: `support_${type}`,
           title,
           message,
           read: false,
-          created_at: new Date().toISOString()
-        }]);
+          created_at: new Date().toISOString(),
+        },
+      ]);
     } catch (error) {
       console.error('Error sending ticket notification:', error);
     }
@@ -378,13 +384,25 @@ class SupportService {
         { count: openTickets },
         { count: inProgressTickets },
         { count: resolvedTickets },
-        { count: urgentTickets }
+        { count: urgentTickets },
       ] = await Promise.all([
         supabase.from('support_tickets').select('*', { count: 'exact', head: true }),
-        supabase.from('support_tickets').select('*', { count: 'exact', head: true }).eq('status', 'open'),
-        supabase.from('support_tickets').select('*', { count: 'exact', head: true }).eq('status', 'in_progress'),
-        supabase.from('support_tickets').select('*', { count: 'exact', head: true }).eq('status', 'resolved'),
-        supabase.from('support_tickets').select('*', { count: 'exact', head: true }).eq('priority', 'urgent')
+        supabase
+          .from('support_tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'open'),
+        supabase
+          .from('support_tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'in_progress'),
+        supabase
+          .from('support_tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'resolved'),
+        supabase
+          .from('support_tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('priority', 'urgent'),
       ]);
 
       return {
@@ -393,7 +411,7 @@ class SupportService {
         inProgress: inProgressTickets || 0,
         resolved: resolvedTickets || 0,
         urgent: urgentTickets || 0,
-        resolutionRate: totalTickets > 0 ? ((resolvedTickets || 0) / totalTickets) * 100 : 0
+        resolutionRate: totalTickets > 0 ? ((resolvedTickets || 0) / totalTickets) * 100 : 0,
       };
     } catch (error) {
       console.error('Error getting support stats:', error);
@@ -403,7 +421,7 @@ class SupportService {
         inProgress: 0,
         resolved: 0,
         urgent: 0,
-        resolutionRate: 0
+        resolutionRate: 0,
       };
     }
   }
@@ -411,9 +429,7 @@ class SupportService {
   // Obtener tickets por categoría
   async getTicketsByCategory() {
     try {
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .select('category');
+      const { data, error } = await supabase.from('support_tickets').select('category');
 
       if (error) throw error;
 
@@ -447,7 +463,8 @@ class SupportService {
         return resolved - created;
       });
 
-      const averageTime = resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length;
+      const averageTime =
+        resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length;
       return averageTime / (1000 * 60 * 60); // Convertir a horas
     } catch (error) {
       console.error('Error getting average resolution time:', error);
@@ -460,7 +477,8 @@ class SupportService {
     try {
       let query = supabase
         .from('support_tickets')
-        .select(`
+        .select(
+          `
           *,
           tenants!support_tickets_tenant_id_fkey (
             company_name,
@@ -470,19 +488,22 @@ class SupportService {
             nombre,
             email
           )
-        `)
-        .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,ticket_number.ilike.%${searchTerm}%`)
+        `
+        )
+        .or(
+          `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,ticket_number.ilike.%${searchTerm}%`
+        )
         .order('created_at', { ascending: false });
 
       // Aplicar filtros adicionales
       if (filters.status) {
         query = query.eq('status', filters.status);
       }
-      
+
       if (filters.priority) {
         query = query.eq('priority', filters.priority);
       }
-      
+
       if (filters.limit) {
         query = query.limit(filters.limit);
       }
@@ -501,7 +522,7 @@ class SupportService {
   async exportTickets(filters = {}) {
     try {
       const tickets = await this.getTickets({ ...filters, limit: 10000 });
-      
+
       const csvData = tickets.map(ticket => ({
         ticket_number: ticket.ticket_number,
         title: ticket.title,
@@ -512,7 +533,7 @@ class SupportService {
         customer: ticket.profiles?.nombre || 'N/A',
         created_at: ticket.created_at,
         updated_at: ticket.updated_at,
-        resolved_at: ticket.resolved_at
+        resolved_at: ticket.resolved_at,
       }));
 
       return csvData;

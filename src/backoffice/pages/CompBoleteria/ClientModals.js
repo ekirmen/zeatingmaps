@@ -19,18 +19,16 @@ const ClientModals = ({
   const [newClientForm, setNewClientForm] = useState({
     nombre: '',
     email: '',
-    telefono: ''
+    telefono: '',
   });
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
-
       return;
     }
 
     try {
       if (handleUnifiedSearch && typeof handleUnifiedSearch === 'function') {
-        
       } else {
         // Fallback to direct search if handleUnifiedSearch is not provided
         const { data, error } = await supabase
@@ -42,7 +40,7 @@ const ClientModals = ({
 
         if (error) throw error;
 
-        const mappedResults = data.map((p) => ({
+        const mappedResults = data.map(p => ({
           _id: p.id,
           nombre: p.login,
           email: p.email || p.login || '',
@@ -74,7 +72,9 @@ const ClientModals = ({
 
     if (!supabaseAdmin) {
       message.error('Cliente admin no disponible. No se puede crear usuario.');
-      console.error('Admin client (supabaseAdmin) is not initialized. Ensure Service Role Key is configured.');
+      console.error(
+        'Admin client (supabaseAdmin) is not initialized. Ensure Service Role Key is configured.'
+      );
       return;
     }
 
@@ -88,7 +88,7 @@ const ClientModals = ({
 
       if (error) throw error;
 
-      await new Promise((res) => setTimeout(res, 1500));
+      await new Promise(res => setTimeout(res, 1500));
 
       const { data: profileData, error: profileError } = await supabaseAdmin
         .from('profiles')
@@ -170,7 +170,7 @@ const ClientModals = ({
           placeholder="Buscar por email"
           enterButton="Buscar"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
           onSearch={handleSearch}
           loading={searchLoading}
           allowClear
@@ -193,18 +193,18 @@ const ClientModals = ({
             <Input
               placeholder="Nombre completo"
               value={newClientForm.nombre}
-              onChange={(e) => setNewClientForm({...newClientForm, nombre: e.target.value})}
+              onChange={e => setNewClientForm({ ...newClientForm, nombre: e.target.value })}
             />
             <Input
               placeholder="Email"
               type="email"
               value={newClientForm.email}
-              onChange={(e) => setNewClientForm({...newClientForm, email: e.target.value})}
+              onChange={e => setNewClientForm({ ...newClientForm, email: e.target.value })}
             />
             <Input
               placeholder="Tel©fono (opcional)"
               value={newClientForm.telefono}
-              onChange={(e) => setNewClientForm({...newClientForm, telefono: e.target.value})}
+              onChange={e => setNewClientForm({ ...newClientForm, telefono: e.target.value })}
             />
             <div className="flex gap-2">
               <Button
@@ -214,9 +214,7 @@ const ClientModals = ({
               >
                 Crear
               </Button>
-              <Button onClick={() => setIsAddingAccount(false)}>
-                Cancelar
-              </Button>
+              <Button onClick={() => setIsAddingAccount(false)}>Cancelar</Button>
             </div>
           </div>
         )}
@@ -238,5 +236,3 @@ const ClientModals = ({
 };
 
 export default ClientModals;
-
-

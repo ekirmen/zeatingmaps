@@ -12,18 +12,18 @@ const VisualNotifications = {
     paymentWarning: { type: 'warning', message: 'Transacción de alto valor', duration: 4 },
     seatBlocked: { type: 'error', message: 'Asiento bloqueado por otro usuario', duration: 3 },
     reservationExpired: { type: 'warning', message: 'Reserva expirada', duration: 3 },
-    cartUpdated: { type: 'info', message: 'Carrito actualizado', duration: 2 }
+    cartUpdated: { type: 'info', message: 'Carrito actualizado', duration: 2 },
   },
 
   show: (type, customMessage = null, customDescription = null) => {
     const config = VisualNotifications.types[type];
     if (!config) return;
-    
+
     notification[config.type]({
       message: customMessage || config.message,
       description: customDescription || 'Notificación del sistema',
       duration: config.duration,
-      placement: 'topRight'
+      placement: 'topRight',
     });
   },
 
@@ -32,13 +32,13 @@ const VisualNotifications = {
       message,
       description,
       duration,
-      placement: 'topRight'
+      placement: 'topRight',
     });
   },
 
   destroy: () => {
     notification.destroy();
-  }
+  },
 };
 
 export default VisualNotifications;

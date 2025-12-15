@@ -11,7 +11,7 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
   const { login } = useAuth();
   const [form] = Form.useForm();
 
-  const handleLogin = async (values) => {
+  const handleLogin = async values => {
     setLoading(true);
     try {
       await login(values);
@@ -20,14 +20,15 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
       onClose();
     } catch (error) {
       const feedbackMessage = getAuthMessage(error);
-      const messageType = error?.type && typeof message[error.type] === 'function' ? error.type : 'error';
+      const messageType =
+        error?.type && typeof message[error.type] === 'function' ? error.type : 'error';
       message[messageType](feedbackMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRegister = async (values) => {
+  const handleRegister = async values => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.signUp({
@@ -36,9 +37,9 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
         options: {
           data: {
             nombre: values.nombre,
-            telefono: values.telefono
-          }
-        }
+            telefono: values.telefono,
+          },
+        },
       });
 
       if (error) throw error;
@@ -53,7 +54,7 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
     }
   };
 
-  const handleSubmit = (values) => {
+  const handleSubmit = values => {
     if (isLogin) {
       handleLogin(values);
     } else {
@@ -70,14 +71,9 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
     <Modal
       title={
         <div className="text-center">
-          <h2 className="text-xl font-bold">
-            {isLogin ? 'Iniciar Sesi³n' : 'Registrarse'}
-          </h2>
+          <h2 className="text-xl font-bold">{isLogin ? 'Iniciar Sesi³n' : 'Registrarse'}</h2>
           <p className="text-gray-600 mt-1">
-            {isLogin 
-              ? 'Inicia sesi³n para completar tu compra' 
-              : 'Crea una cuenta para continuar'
-            }
+            {isLogin ? 'Inicia sesi³n para completar tu compra' : 'Crea una cuenta para continuar'}
           </p>
         </div>
       }
@@ -110,32 +106,21 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
           />
         )}
 
-        <Form
-          form={form}
-          onFinish={handleSubmit}
-          layout="vertical"
-          size="large"
-        >
+        <Form form={form} onFinish={handleSubmit} layout="vertical" size="large">
           {!isLogin && (
             <>
               <Form.Item
                 name="nombre"
                 rules={[{ required: true, message: 'Por favor ingresa tu nombre' }]}
               >
-                <Input
-                  prefix={<UserOutlined />}
-                  placeholder="Nombre completo"
-                />
+                <Input prefix={<UserOutlined />} placeholder="Nombre completo" />
               </Form.Item>
 
               <Form.Item
                 name="telefono"
                 rules={[{ required: true, message: 'Por favor ingresa tu tel©fono' }]}
               >
-                <Input
-                  prefix={<PhoneOutlined />}
-                  placeholder="Tel©fono"
-                />
+                <Input prefix={<PhoneOutlined />} placeholder="Tel©fono" />
               </Form.Item>
             </>
           )}
@@ -144,27 +129,20 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
             name="email"
             rules={[
               { required: true, message: 'Por favor ingresa tu email' },
-              { type: 'email', message: 'Por favor ingresa un email v¡lido' }
+              { type: 'email', message: 'Por favor ingresa un email v¡lido' },
             ]}
           >
-            <Input
-              prefix={<MailOutlined />}
-              placeholder="Email"
-              type="email"
-            />
+            <Input prefix={<MailOutlined />} placeholder="Email" type="email" />
           </Form.Item>
 
           <Form.Item
             name="password"
             rules={[
               { required: true, message: 'Por favor ingresa tu contrase±a' },
-              { min: 6, message: 'La contrase±a debe tener al menos 6 caracteres' }
+              { min: 6, message: 'La contrase±a debe tener al menos 6 caracteres' },
             ]}
           >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Contrase±a"
-            />
+            <Input.Password prefix={<LockOutlined />} placeholder="Contrase±a" />
           </Form.Item>
 
           {!isLogin && (
@@ -183,21 +161,12 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
                 }),
               ]}
             >
-              <Input.Password
-                prefix={<LockOutlined />}
-                placeholder="Confirmar contrase±a"
-              />
+              <Input.Password prefix={<LockOutlined />} placeholder="Confirmar contrase±a" />
             </Form.Item>
           )}
 
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block
-              size="large"
-            >
+            <Button type="primary" htmlType="submit" loading={loading} block size="large">
               {isLogin ? 'Iniciar Sesi³n' : 'Registrarse'}
             </Button>
           </Form.Item>
@@ -205,10 +174,9 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
 
         <div className="text-center">
           <Button type="link" onClick={switchMode}>
-            {isLogin 
-              ? '¿No tienes cuenta? Reg­strate aqu­' 
-              : '¿Ya tienes cuenta? Inicia sesi³n aqu­'
-            }
+            {isLogin
+              ? '¿No tienes cuenta? Reg­strate aqu­'
+              : '¿Ya tienes cuenta? Inicia sesi³n aqu­'}
           </Button>
         </div>
       </div>
@@ -217,5 +185,3 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
 };
 
 export default AuthCheck;
-
-

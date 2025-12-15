@@ -16,7 +16,6 @@ const CreateIva = () => {
 
   const fetchIvas = async () => {
     if (!currentTenant?.id) {
-
       return;
     }
 
@@ -34,7 +33,7 @@ const CreateIva = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     if (!currentTenant?.id) {
@@ -45,14 +44,11 @@ const CreateIva = () => {
     const payload = {
       nombre,
       porcentaje: parseFloat(porcentaje),
-      tenant_id: currentTenant.id
+      tenant_id: currentTenant.id,
     };
 
     if (editingId) {
-      const { error } = await supabase
-        .from('ivas')
-        .update(payload)
-        .eq('id', editingId);
+      const { error } = await supabase.from('ivas').update(payload).eq('id', editingId);
 
       if (error) {
         alert('Error al actualizar: ' + error.message);
@@ -60,9 +56,7 @@ const CreateIva = () => {
       }
       alert('IVA actualizado con éxito');
     } else {
-      const { error } = await supabase
-        .from('ivas')
-        .insert([payload]);
+      const { error } = await supabase.from('ivas').insert([payload]);
 
       if (error) {
         alert('Error al crear: ' + error.message);
@@ -77,13 +71,13 @@ const CreateIva = () => {
     fetchIvas();
   };
 
-  const handleEdit = (iva) => {
+  const handleEdit = iva => {
     setNombre(iva.nombre);
     setPorcentaje(iva.porcentaje);
     setEditingId(iva.id);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     if (window.confirm('¿Deseas eliminar este IVA?')) {
       const { error } = await supabase.from('ivas').delete().eq('id', id);
       if (error) {
@@ -99,14 +93,14 @@ const CreateIva = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Gestión de IVA</h1>
-        <p className="text-gray-600 mb-4">Administra los tipos de IVA para tus productos y servicios</p>
+        <p className="text-gray-600 mb-4">
+          Administra los tipos de IVA para tus productos y servicios
+        </p>
         {/* Removed tenant badge to reduce noise */}
         {!currentTenant?.id && (
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full">
             <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            <span className="text-sm font-medium">
-              ⚠️ No hay tenant configurado
-            </span>
+            <span className="text-sm font-medium">⚠️ No hay tenant configurado</span>
           </div>
         )}
       </div>
@@ -118,7 +112,7 @@ const CreateIva = () => {
             <input
               type="text"
               value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
+              onChange={e => setNombre(e.target.value)}
               required
               className="w-full border rounded p-2"
               placeholder="Nombre del IVA"
@@ -129,7 +123,7 @@ const CreateIva = () => {
             <input
               type="number"
               value={porcentaje}
-              onChange={(e) => setPorcentaje(e.target.value)}
+              onChange={e => setPorcentaje(e.target.value)}
               required
               step="0.01"
               className="w-full border rounded p-2"
@@ -171,7 +165,7 @@ const CreateIva = () => {
             </tr>
           </thead>
           <tbody>
-            {ivas.map((iva) => (
+            {ivas.map(iva => (
               <tr key={iva.id} className="border-t">
                 <td className="py-2 px-4">{iva.nombre}</td>
                 <td className="py-2 px-4">{iva.porcentaje}%</td>

@@ -37,9 +37,8 @@ const Login = ({ onLogin }) => {
     };
     checkSession();
   }, [navigate, onLogin]);
-  
 
-  const handleLogin = async (e) => {
+  const handleLogin = async e => {
     e.preventDefault();
     try {
       let data = null;
@@ -53,7 +52,7 @@ const Login = ({ onLogin }) => {
       } else {
         ({ error } = await supabase.auth.signInWithOtp({
           email: login,
-          options: { emailRedirectTo: getStoreBaseUrl() }
+          options: { emailRedirectTo: getStoreBaseUrl() },
         }));
       }
 
@@ -81,9 +80,9 @@ const Login = ({ onLogin }) => {
     }
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = e => {
     const { name, value } = e.target;
-    setPasswordData((prev) => ({ ...prev, [name]: value }));
+    setPasswordData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSavePassword = async () => {
@@ -99,7 +98,7 @@ const Login = ({ onLogin }) => {
 
       const { error } = await supabase.auth.updateUser({
         password: passwordData.newPassword.trim(),
-        data: { password_set: true }
+        data: { password_set: true },
       });
 
       if (error) throw await createAuthError({ error, email: login, supabaseClient: supabase });
@@ -113,7 +112,6 @@ const Login = ({ onLogin }) => {
     }
   };
 
-
   return (
     <>
       <form onSubmit={handleLogin} className="space-y-4 max-w-md mx-auto mt-10">
@@ -122,7 +120,7 @@ const Login = ({ onLogin }) => {
           <input
             type="email"
             value={login}
-            onChange={(e) => setLogin(e.target.value)}
+            onChange={e => setLogin(e.target.value)}
             className="w-full border px-3 py-2 rounded"
             required
           />
@@ -132,7 +130,7 @@ const Login = ({ onLogin }) => {
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             className="w-full border px-3 py-2 rounded"
           />
         </div>
@@ -197,5 +195,3 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
-
-

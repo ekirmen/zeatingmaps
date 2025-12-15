@@ -14,7 +14,7 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
   const handlePrint = async () => {
     try {
       setPrinting(true);
-      
+
       // Cargar configuraci³n de formato
       const config = await getFormatConfig();
       setFormatConfig(config);
@@ -24,13 +24,12 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
       setPrinterStatus(status);
 
       if (!status.connected) {
-
         return;
       }
 
       // Imprimir ticket
       const success = await bocaPrinterService.printTicket(ticketData, config);
-      
+
       if (success) {
         message.success('Ticket impreso exitosamente');
         setIsModalVisible(false);
@@ -58,12 +57,7 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
 
   return (
     <>
-      <Button
-        type="primary"
-        icon={<PrinterOutlined />}
-        onClick={showModal}
-        size="large"
-      >
+      <Button type="primary" icon={<PrinterOutlined />} onClick={showModal} size="large">
         Imprimir con Boca
       </Button>
 
@@ -96,15 +90,21 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
               <Title level={5}>Estado de la Impresora:</Title>
               <Space>
                 <Text>
-                  <CheckCircleOutlined style={{ color: printerStatus.connected ? '#52c41a' : '#ff4d4f' }} />
+                  <CheckCircleOutlined
+                    style={{ color: printerStatus.connected ? '#52c41a' : '#ff4d4f' }}
+                  />
                   {printerStatus.connected ? ' Conectada' : ' Desconectada'}
                 </Text>
                 <Text>
-                  <CheckCircleOutlined style={{ color: printerStatus.ready ? '#52c41a' : '#ff4d4f' }} />
+                  <CheckCircleOutlined
+                    style={{ color: printerStatus.ready ? '#52c41a' : '#ff4d4f' }}
+                  />
                   {printerStatus.ready ? ' Lista' : ' No Lista'}
                 </Text>
                 <Text>
-                  <CheckCircleOutlined style={{ color: printerStatus.paperStatus === 'OK' ? '#52c41a' : '#ff4d4f' }} />
+                  <CheckCircleOutlined
+                    style={{ color: printerStatus.paperStatus === 'OK' ? '#52c41a' : '#ff4d4f' }}
+                  />
                   Papel: {printerStatus.paperStatus}
                 </Text>
               </Space>
@@ -144,7 +144,9 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
             <div className="mb-4">
               <Title level={5}>Configuraci³n de Formato:</Title>
               <div className="format-info">
-                <Text>Papel: {formatConfig.paperWidth}mm x {formatConfig.paperHeight}mm</Text>
+                <Text>
+                  Papel: {formatConfig.paperWidth}mm x {formatConfig.paperHeight}mm
+                </Text>
                 <br />
                 <Text>Fuente: {formatConfig.fontSize === '00' ? 'Normal' : 'Doble'}</Text>
                 <br />
@@ -165,5 +167,4 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
   );
 };
 
-export default PrintTicketButton; 
-
+export default PrintTicketButton;

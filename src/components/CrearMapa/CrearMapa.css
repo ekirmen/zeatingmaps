@@ -38,13 +38,17 @@
   color: #374151;
 }
 
-.ant-input, .ant-select-selector, .ant-input-number {
+.ant-input,
+.ant-select-selector,
+.ant-input-number {
   border-radius: 8px;
   border: 2px solid #e5e7eb;
   transition: all 0.2s ease;
 }
 
-.ant-input:focus, .ant-select-focused .ant-select-selector, .ant-input-number-focused {
+.ant-input:focus,
+.ant-select-focused .ant-select-selector,
+.ant-input-number-focused {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
@@ -319,7 +323,11 @@
 
 /* Estilos para elementos de texto */
 .text-element {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   font-weight: 500;
 }
 
@@ -338,7 +346,7 @@
 .zone-area {
   fill-opacity: 0.1;
   stroke-width: 2;
-  stroke-dasharray: 5,5;
+  stroke-dasharray: 5, 5;
 }
 
 .zone-area:hover {
@@ -367,7 +375,7 @@
 .measurement-line {
   stroke: #ef4444;
   stroke-width: 2;
-  stroke-dasharray: 5,5;
+  stroke-dasharray: 5, 5;
 }
 
 .measurement-text {
@@ -380,7 +388,7 @@
 .alignment-guide {
   stroke: #3b82f6;
   stroke-width: 1;
-  stroke-dasharray: 3,3;
+  stroke-dasharray: 3, 3;
   opacity: 0.7;
 }
 
@@ -388,7 +396,7 @@
 .symmetry-line {
   stroke: #8b5cf6;
   stroke-width: 2;
-  stroke-dasharray: 8,4;
+  stroke-dasharray: 8, 4;
   opacity: 0.8;
 }
 
@@ -456,7 +464,7 @@
 }
 
 .development-mode::before {
-  content: "DEV MODE";
+  content: 'DEV MODE';
   position: absolute;
   top: 0;
   left: 0;

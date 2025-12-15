@@ -7,15 +7,15 @@ import { useSeatLockStore } from '../../components/seatLockStore';
 import { useCartStore } from '../cartStore';
 
 // Lazy load del canvas pesado
-const SelectSeatsCanvas = React.lazy(() => 
-  import(/* webpackChunkName: "canvas-seatmap" */ './SelectSeatsCanvas')
+const SelectSeatsCanvas = React.lazy(
+  () => import(/* webpackChunkName: "canvas-seatmap" */ './SelectSeatsCanvas')
 );
 
 const SelectSeats = () => {
   const { salaId, funcionId } = useParams();
   const navigate = useNavigate();
   const { refParam } = useRefParam();
-  
+
   // Estado optimizado
   const [mapa, setMapa] = useState(null);
   const [mapElements, setMapElements] = useState([]);
@@ -27,41 +27,36 @@ const SelectSeats = () => {
 
   // Stores optimizados
   const { items, toggleSeat, clearCart } = useCartStore();
-  const {
-    subscribeToFunction,
-    lockSeat,
-    unlockSeat,
-    isSeatLocked,
-    isSeatLockedByMe,
-  } = useSeatLockStore();
+  const { subscribeToFunction, lockSeat, unlockSeat, isSeatLocked, isSeatLockedByMe } =
+    useSeatLockStore();
 
   const setVisibleSeats = useSeatLockStore(state => state.setVisibleSeats);
   const lockedSeats = useSeatLockStore(state => state.lockedSeats);
   const getSeatState = useSeatLockStore(state => state.getSeatState);
-  
+
   // Memoize expensive computations
-  const currentSessionId = useMemo(() => 
-    typeof window !== 'undefined' ? localStorage.getItem('anonSessionId') : null, 
+  const currentSessionId = useMemo(
+    () => (typeof window !== 'undefined' ? localStorage.getItem('anonSessionId') : null),
     []
   );
 
   // 1. Carga inicial minimal
   useEffect(() => {
     let mounted = true;
-    
+
     const cargarDatos = async () => {
       try {
         // Primero carga datos mínimos para mostrar algo rápido
         const minimal = await fetchMapa(salaId, 'sala', { minimal: true });
-        
+
         if (!minimal) {
           const fallback = await fetchMapa(salaId);
           if (!fallback?.contenido) throw new Error('Datos no válidos o vacíos');
-          
+
           if (mounted) {
             setMapa(fallback);
-            const elementos = Array.isArray(fallback?.contenido) 
-              ? fallback.contenido 
+            const elementos = Array.isArray(fallback?.contenido)
+              ? fallback.contenido
               : fallback.contenido?.elementos || [];
             setMapElements(elementos.filter(Boolean));
           }
@@ -70,15 +65,13 @@ const SelectSeats = () => {
             setMapa(minimal);
             setLoading(false); // Ya podemos mostrar la interfaz
           }
-          
+
           // Carga pesada en segundo plano
           setTimeout(async () => {
             try {
               const contenido = await fetchMapaContent(salaId, 'sala');
               if (contenido && mounted) {
-                const elementos = Array.isArray(contenido) 
-                  ? contenido 
-                  : contenido.elementos || [];
+                const elementos = Array.isArray(contenido) ? contenido : contenido.elementos || [];
                 setMapElements(elementos.filter(Boolean));
                 setMapa(prev => ({ ...(prev || {}), contenido }));
               }
@@ -115,14 +108,14 @@ const SelectSeats = () => {
       try {
         // Lazy load del worker
         const WorkerModule = await import(
-          /* webpackChunkName: "map-worker" */ 
+          /* webpackChunkName: "map-worker" */
           '../../workers/mapLayout.worker.js'
         );
-        
+
         worker = new Worker(WorkerModule.default || WorkerModule);
         setWorkerReady(true);
-        
-        worker.addEventListener('message', (ev) => {
+
+        worker.addEventListener('message', ev => {
           if (!mounted) return;
           const { success, processed } = ev.data || {};
           if (success && Array.isArray(processed)) {
@@ -132,7 +125,7 @@ const SelectSeats = () => {
             setProcessedElements(computeLocally(mapElements));
           }
         });
-        
+
         worker.postMessage({ mapElements, stageSize });
       } catch (err) {
         console.warn('Worker no disponible, usando cálculo local');
@@ -140,42 +133,42 @@ const SelectSeats = () => {
       }
     };
 
-    const computeLocally = (elements) => {
+    const computeLocally = elements => {
       try {
-        return elements.map((elemento) => {
+        return elements.map(elemento => {
           if (!elemento) return elemento;
-          
+
           if (elemento.type === 'mesa' && Array.isArray(elemento.sillas)) {
             const mesa = { ...elemento };
             const cx = mesa.posicion?.x || 0;
             const cy = mesa.posicion?.y || 0;
             const radius = mesa.radio || 50;
             const total = mesa.sillas.length;
-            
+
             mesa.sillas = mesa.sillas.map((silla, idx) => {
               const angle = (idx * 360) / total;
               const rad = (angle * Math.PI) / 180;
               const x = cx + Math.cos(rad) * radius;
               const y = cy + Math.sin(rad) * radius;
-              return { 
-                ...silla, 
+              return {
+                ...silla,
                 _computed: { x, y, angle },
-                _id: silla._id || silla.id || silla.sillaId
+                _id: silla._id || silla.id || silla.sillaId,
               };
             });
             return mesa;
           }
-          
+
           if (['zona', 'fila', 'grada'].includes(elemento.type)) {
-            return { 
-              ...elemento, 
-              _computed: { 
-                x: elemento.posicion?.x || 0, 
-                y: elemento.posicion?.y || 0 
-              } 
+            return {
+              ...elemento,
+              _computed: {
+                x: elemento.posicion?.x || 0,
+                y: elemento.posicion?.y || 0,
+              },
             };
           }
-          
+
           return elemento;
         });
       } catch (err) {
@@ -204,11 +197,11 @@ const SelectSeats = () => {
       const height = window.innerHeight;
       setStageSize({ width, height });
     };
-    
+
     updateSize();
     const resizeHandler = () => requestAnimationFrame(updateSize);
     window.addEventListener('resize', resizeHandler);
-    
+
     return () => window.removeEventListener('resize', resizeHandler);
   }, []);
 
@@ -222,22 +215,22 @@ const SelectSeats = () => {
   // 5. Asientos visibles (optimizado)
   useEffect(() => {
     if (!mapElements.length) return;
-    
+
     const updateVisibleSeats = () => {
       try {
         const width = stageSize.width || window.innerWidth;
         const height = stageSize.height || window.innerHeight;
         const visibleIds = new Set();
         const elements = processedElements.length ? processedElements : mapElements;
-        
-        elements.forEach((el) => {
+
+        elements.forEach(el => {
           if (!el || !el.type) return;
-          
+
           if (el.type === 'mesa' && Array.isArray(el.sillas)) {
-            el.sillas.forEach((silla) => {
+            el.sillas.forEach(silla => {
               const x = silla._computed?.x ?? silla.posicion?.x;
               const y = silla._computed?.y ?? silla.posicion?.y;
-              
+
               if (typeof x === 'number' && typeof y === 'number') {
                 // Buffer de 200px alrededor de la vista
                 if (x >= -200 && x <= width + 200 && y >= -200 && y <= height + 200) {
@@ -247,16 +240,16 @@ const SelectSeats = () => {
             });
           }
         });
-        
+
         setVisibleSeats(Array.from(visibleIds));
       } catch (err) {
         console.warn('Error calculando asientos visibles:', err);
       }
     };
-    
+
     const debouncedUpdate = () => requestAnimationFrame(updateVisibleSeats);
     debouncedUpdate();
-    
+
     // Solo recalcular si cambia significativamente
     const resizeHandler = () => {
       if (performance.now() - (window.lastResize || 0) > 200) {
@@ -264,13 +257,13 @@ const SelectSeats = () => {
         window.lastResize = performance.now();
       }
     };
-    
+
     window.addEventListener('resize', resizeHandler);
     return () => window.removeEventListener('resize', resizeHandler);
   }, [processedElements, mapElements, stageSize, setVisibleSeats]);
 
   // Handlers optimizados
-  const toggleSeatSelection = async (seat) => {
+  const toggleSeatSelection = async seat => {
     if (['reservado', 'pagado'].includes(seat.estado)) return;
 
     const isLocked = await isSeatLocked(seat._id, funcionId);
@@ -288,9 +281,7 @@ const SelectSeats = () => {
   };
 
   const irAPagar = () => {
-    const path = refParam 
-      ? `/store/payment?ref=${refParam}` 
-      : '/store/payment';
+    const path = refParam ? `/store/payment?ref=${refParam}` : '/store/payment';
     navigate(path, { state: { carrito: items, funcionId } });
   };
 
@@ -320,7 +311,7 @@ const SelectSeats = () => {
         <div className="text-center text-red-600">
           <p className="text-lg font-semibold mb-2">Error</p>
           <p>{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -346,7 +337,7 @@ const SelectSeats = () => {
           backgroundColor: backgroundUrl ? 'transparent' : '#f5f5f5',
         }}
       >
-        <Suspense 
+        <Suspense
           fallback={
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
@@ -377,15 +368,15 @@ const SelectSeats = () => {
           onSeatsCleared={handleSeatsCleared}
           onTimeExpired={handleTimeExpired}
         />
-        
+
         <h2 className="text-lg font-semibold mb-3 text-gray-800">Carrito</h2>
-        
+
         {items.length === 0 ? (
           <p className="text-gray-500 text-sm">No hay asientos seleccionados</p>
         ) : (
           <ul className="mb-4 space-y-2">
-            {items.map((seat) => (
-              <li 
+            {items.map(seat => (
+              <li
                 key={seat._id || seat.id || seat.sillaId}
                 className="p-2 bg-gray-50 rounded border border-gray-200"
               >
@@ -397,7 +388,7 @@ const SelectSeats = () => {
             ))}
           </ul>
         )}
-        
+
         {items.length > 0 && (
           <button
             onClick={irAPagar}

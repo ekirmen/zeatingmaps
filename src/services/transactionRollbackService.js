@@ -6,7 +6,6 @@ import atomicSeatLockService from './atomicSeatLock';
  * Previene estados inconsistentes cuando fallan los pagos
  */
 class TransactionRollbackService {
-
   /**
    * Ejecuta una transacción con rollback automático en caso de error
    */
@@ -20,9 +19,8 @@ class TransactionRollbackService {
       return {
         success: true,
         data: transactionResult,
-        rollbackExecuted: false
+        rollbackExecuted: false,
       };
-
     } catch (error) {
       console.error('❌ [ROLLBACK_SERVICE] Error en transacción, ejecutando rollback:', error);
 
@@ -34,9 +32,8 @@ class TransactionRollbackService {
           success: false,
           error: error.message,
           rollbackExecuted: true,
-          originalError: error
+          originalError: error,
         };
-
       } catch (rollbackError) {
         console.error('❌ [ROLLBACK_SERVICE] Error crítico en rollback:', rollbackError);
 
@@ -44,7 +41,7 @@ class TransactionRollbackService {
         await this.reportCriticalError({
           transactionError: error,
           rollbackError: rollbackError,
-          context: context
+          context: context,
         });
 
         return {
@@ -52,7 +49,7 @@ class TransactionRollbackService {
           error: 'Error crítico: No se pudo completar la transacción ni el rollback',
           rollbackExecuted: false,
           originalError: error,
-          rollbackError: rollbackError
+          rollbackError: rollbackError,
         };
       }
     }
@@ -67,7 +64,7 @@ class TransactionRollbackService {
         return { success: true, released: 0 };
       }
 
-      const releasePromises = seats.map(async (seat) => {
+      const releasePromises = seats.map(async seat => {
         try {
           const seatId = seat.id || seat._id || seat.sillaId || seat.seatId;
           const funcionId = seat.functionId || seat.funcionId || context.funcionId;
@@ -102,9 +99,8 @@ class TransactionRollbackService {
         success: true,
         released: released,
         total: seats.length,
-        results: results
+        results: results,
       };
-
     } catch (error) {
       console.error('❌ [ROLLBACK_SERVICE] Error crítico en rollback de asientos:', error);
       throw error;
@@ -126,7 +122,7 @@ class TransactionRollbackService {
         .update({
           status: 'failed',
           error_message: context.error || 'Transacción fallida y revertida',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', transactionId);
 
@@ -136,9 +132,8 @@ class TransactionRollbackService {
       }
       return {
         success: true,
-        transactionId: transactionId
+        transactionId: transactionId,
       };
-
     } catch (error) {
       console.error('❌ [ROLLBACK_SERVICE] Error en rollback de transacción de pago:', error);
       throw error;
@@ -153,7 +148,7 @@ class TransactionRollbackService {
       const rollbackResults = {
         seats: { success: false, released: 0 },
         payment: { success: false },
-        notifications: { success: false }
+        notifications: { success: false },
       };
 
       // 1. Liberar asientos
@@ -168,7 +163,10 @@ class TransactionRollbackService {
       // 2. Revertir transacción de pago
       if (saleData.transactionId) {
         try {
-          rollbackResults.payment = await this.rollbackPaymentTransaction(saleData.transactionId, context);
+          rollbackResults.payment = await this.rollbackPaymentTransaction(
+            saleData.transactionId,
+            context
+          );
         } catch (error) {
           console.error('❌ [ROLLBACK_SERVICE] Error en rollback de pago:', error);
         }
@@ -184,9 +182,8 @@ class TransactionRollbackService {
       }
       return {
         success: true,
-        results: rollbackResults
+        results: rollbackResults,
       };
-
     } catch (error) {
       console.error('❌ [ROLLBACK_SERVICE] Error crítico en rollback completo:', error);
       throw error;
@@ -202,7 +199,7 @@ class TransactionRollbackService {
         .from('payment_notifications')
         .update({
           status: 'cancelled',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', notificationId);
 
@@ -212,7 +209,6 @@ class TransactionRollbackService {
       }
 
       return { success: true };
-
     } catch (error) {
       console.error('❌ [ROLLBACK_SERVICE] Error en rollback de notificaciones:', error);
       throw error;
@@ -234,7 +230,7 @@ class TransactionRollbackService {
         timestamp: new Date().toISOString(),
         data: errorData,
         userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : null,
-        url: typeof window !== 'undefined' ? window.location.href : null
+        url: typeof window !== 'undefined' ? window.location.href : null,
       };
 
       // Log local para debugging
@@ -242,7 +238,6 @@ class TransactionRollbackService {
 
       // Opcional: Enviar a servicio de monitoreo
       // await this.sendToMonitoringService(errorReport);
-
     } catch (error) {
       console.error('❌ [ROLLBACK_SERVICE] Error reportando error crítico:', error);
     }
@@ -273,7 +268,7 @@ class TransactionRollbackService {
 
     return {
       isValid: errors.length === 0,
-      errors: errors
+      errors: errors,
     };
   }
 
@@ -287,7 +282,7 @@ class TransactionRollbackService {
       userId: transactionData.userId || transactionData.user?.id,
       tenantId: transactionData.tenantId || transactionData.tenant?.id,
       timestamp: new Date().toISOString(),
-      originalData: transactionData
+      originalData: transactionData,
     };
   }
 }

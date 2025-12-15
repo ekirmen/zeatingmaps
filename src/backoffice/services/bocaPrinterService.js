@@ -1,19 +1,17 @@
 import { supabase } from '../../supabaseClient';
 
-// Configuración de impresora Boca
 export class BocaPrinterService {
   constructor() {
     this.printer = null;
     this.isConnected = false;
   }
 
-  // Detectar impresoras disponibles
   async detectPrinters() {
     try {
       if (navigator.usb) {
-
+        const devices = await navigator.usb.getDevices();
         return devices.filter(device => 
-          device.vendorId === 0x0483 || // Boca Systems
+          device.vendorId === 0x0483 ||
           device.manufacturerName?.includes('Boca') ||
           device.productName?.includes('Boca')
         );
@@ -25,7 +23,6 @@ export class BocaPrinterService {
     }
   }
 
-  // Conectar a impresora específica
   async connectToPrinter(device) {
     try {
       await device.open();
@@ -40,7 +37,6 @@ export class BocaPrinterService {
     }
   }
 
-  // Desconectar impresora
   disconnectPrinter() {
     if (this.printer) {
       this.printer.close();
@@ -49,7 +45,6 @@ export class BocaPrinterService {
     }
   }
 
-  // Enviar comando a la impresora
   async sendCommand(command) {
     if (!this.isConnected || !this.printer) {
       throw new Error('Printer not connected');
@@ -66,7 +61,6 @@ export class BocaPrinterService {
     }
   }
 
-  // Imprimir ticket
   async printTicket(ticketData, formatConfig) {
     if (!this.isConnected) {
       throw new Error('Printer not connected');
@@ -77,7 +71,6 @@ export class BocaPrinterService {
       
       for (const command of commands) {
         await this.sendCommand(command);
-        // Pequeña pausa entre comandos
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
@@ -88,23 +81,17 @@ export class BocaPrinterService {
     }
   }
 
-  // Generar comandos de impresión
   generatePrintCommands(ticketData, formatConfig) {
     const commands = [];
     
-    // Comando de inicio
-    commands.push('\x1B\x40'); // Initialize printer
+    commands.push('\x1B\x40');
+    commands.push(`\x1B\x61${formatConfig.alignment || '1'}`);
+    commands.push(`\x1B\x21${formatConfig.fontSize || '00'}`);
     
-    // Configurar formato
-    commands.push(`\x1B\x61${formatConfig.alignment || '1'}`); // Alignment
-    commands.push(`\x1B\x21${formatConfig.fontSize || '00'}`); // Font size
-    
-    // Imprimir encabezado
     if (formatConfig.header) {
       commands.push(`${formatConfig.header}\n`);
     }
     
-    // Imprimir datos del ticket
     commands.push(`Evento: ${ticketData.eventName}\n`);
     commands.push(`Fecha: ${ticketData.eventDate}\n`);
     commands.push(`Hora: ${ticketData.eventTime}\n`);
@@ -113,36 +100,31 @@ export class BocaPrinterService {
     commands.push(`Precio: $${ticketData.price}\n`);
     commands.push(`Ticket #: ${ticketData.ticketNumber}\n`);
     
-    // Imprimir código QR o código de barras
     if (ticketData.qrCode) {
-      commands.push(`\x1D\x6B\x04${ticketData.qrCode}\x00`); // QR Code
+      commands.push(`\x1D\x6B\x04${ticketData.qrCode}\x00`);
     }
     
-    // Imprimir pie de página
     if (formatConfig.footer) {
       commands.push(`${formatConfig.footer}\n`);
     }
     
-    // Cortar papel
     commands.push('\x1D\x56\x00');
     
     return commands;
   }
 
-  // Probar conexión
   async testConnection() {
     try {
-      await this.sendCommand('\x1B\x40'); // Initialize command
+      await this.sendCommand('\x1B\x40');
       return true;
     } catch (error) {
       return false;
     }
   }
 
-  // Obtener estado de la impresora
   async getPrinterStatus() {
     try {
-      await this.sendCommand('\x1B\x76'); // Status request
+      await this.sendCommand('\x1B\x76');
       return {
         connected: this.isConnected,
         ready: true,
@@ -158,16 +140,15 @@ export class BocaPrinterService {
   }
 }
 
-// Configuración de formatos de impresión
 export const DEFAULT_FORMAT_CONFIG = {
-  paperWidth: 80, // mm
-  paperHeight: 297, // mm
-  marginTop: 5, // mm
-  marginBottom: 5, // mm
-  marginLeft: 5, // mm
-  marginRight: 5, // mm
-  fontSize: '00', // 00=normal, 01=double height, 02=double width, 03=double size
-  alignment: '1', // 0=left, 1=center, 2=right
+  paperWidth: 80,
+  paperHeight: 297,
+  marginTop: 5,
+  marginBottom: 5,
+  marginLeft: 5,
+  marginRight: 5,
+  fontSize: '00',
+  alignment: '1',
   header: 'BOLETERÍA SISTEMA\n',
   footer: 'Gracias por su compra\n',
   showQRCode: true,
@@ -175,16 +156,15 @@ export const DEFAULT_FORMAT_CONFIG = {
   logo: null
 };
 
-// Plantilla predefinida para impresora Boca
 export const BOCA_DEFAULT_TEMPLATE = {
-  paperWidth: 80, // mm - Ancho estándar para Boca
-  paperHeight: 297, // mm - Alto estándar A4
-  marginTop: 3, // mm - Margen superior mínimo
-  marginBottom: 3, // mm - Margen inferior mínimo
-  marginLeft: 2, // mm - Margen izquierdo mínimo
-  marginRight: 2, // mm - Margen derecho mínimo
-  fontSize: '00', // Normal - Boca maneja mejor fuentes normales
-  alignment: '1', // Centro - Mejor presentación
+  paperWidth: 80,
+  paperHeight: 297,
+  marginTop: 3,
+  marginBottom: 3,
+  marginLeft: 2,
+  marginRight: 2,
+  fontSize: '00',
+  alignment: '1',
   header: `╔══════════════════════════════════════════════════════════════╗
 ║                    BOLETERÍA SISTEMA                    ║
 ║                                                          ║
@@ -208,22 +188,20 @@ export const BOCA_DEFAULT_TEMPLATE = {
   showQRCode: true,
   showBarcode: false,
   logo: null,
-  // Configuraciones específicas para Boca
   bocaSettings: {
-    printDensity: 'normal', // normal, light, dark
-    printSpeed: 'normal', // slow, normal, fast
-    cutMode: 'full', // full, partial, none
-    paperType: 'thermal', // thermal, normal
-    characterSet: 'latin1', // latin1, latin2, etc.
+    printDensity: 'normal',
+    printSpeed: 'normal',
+    cutMode: 'full',
+    paperType: 'thermal',
+    characterSet: 'latin1',
     autoFeed: true,
     autoCut: true
   }
 };
 
-// Plantilla para eventos pequeños (58mm)
 export const BOCA_SMALL_TEMPLATE = {
-  paperWidth: 58, // mm - Boca pequeña
-  paperHeight: 200, // mm - Más corto
+  paperWidth: 58,
+  paperHeight: 200,
   marginTop: 2,
   marginBottom: 2,
   marginLeft: 1,
@@ -262,15 +240,14 @@ export const BOCA_SMALL_TEMPLATE = {
   }
 };
 
-// Plantilla para eventos premium (112mm)
 export const BOCA_PREMIUM_TEMPLATE = {
-  paperWidth: 112, // mm - Boca ancha
-  paperHeight: 297, // mm - A4 completo
+  paperWidth: 112,
+  paperHeight: 297,
   marginTop: 5,
   marginBottom: 5,
   marginLeft: 3,
   marginRight: 3,
-  fontSize: '01', // Doble alto para mejor legibilidad
+  fontSize: '01',
   alignment: '1',
   header: `╔══════════════════════════════════════════════════════════════════════════════════════════════════════╗
 ║                                                                                                              ║
@@ -309,8 +286,9 @@ export const BOCA_PREMIUM_TEMPLATE = {
   }
 };
 
-// Función para aplicar plantilla
-export 
+export async function applyBocaTemplate(templateName = 'default') {
+  try {
+    let template;
     
     switch (templateName) {
       case 'small':
@@ -330,10 +308,11 @@ export
     console.error('Error applying Boca template:', error);
     throw error;
   }
-};
+}
 
-// Guardar configuración de formato
-export 
+export async function saveFormatConfig(config) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
     let tenant_id = null;
     
     if (user) {
@@ -351,7 +330,7 @@ export
     const { data, error } = await supabase
       .from('printer_formats')
       .upsert({
-        id: 1, // Solo una configuración global
+        id: 1,
         config: config,
         tenant_id: tenant_id,
         updated_at: new Date().toISOString()
@@ -365,10 +344,11 @@ export
     console.error('Error saving format config:', error);
     throw error;
   }
-};
+}
 
-// Obtener configuración de formato
-export 
+export async function getFormatConfig() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
     let tenant_id = null;
     
     if (user) {
@@ -400,7 +380,6 @@ export
     console.error('Error getting format config:', error);
     return DEFAULT_FORMAT_CONFIG;
   }
-};
+}
 
-// Instancia global del servicio
-export  
+export const bocaPrinterService = new BocaPrinterService();

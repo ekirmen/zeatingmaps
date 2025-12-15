@@ -9,15 +9,14 @@ import { EventListSkeleton } from './SkeletonLoaders';
  */
 const EventCard = ({ evento, index, setItemSize, onEventClick }) => {
   const cardRef = useRef(null);
-  
+
   useEffect(() => {
     if (cardRef.current && setItemSize) {
-      const resizeObserver = new ResizeObserver((entries) => {
+      const resizeObserver = new ResizeObserver(entries => {
         for (const entry of entries) {
           setItemSize(index, entry.contentRect.height);
         }
       });
-      
 
       return () => resizeObserver.disconnect();
     }
@@ -25,35 +24,28 @@ const EventCard = ({ evento, index, setItemSize, onEventClick }) => {
 
   return (
     <div ref={cardRef} className="p-2">
-      <Card
-        hoverable
-        onClick={() => onEventClick?.(evento)}
-        className="w-full"
-        size="small"
-      >
+      <Card hoverable onClick={() => onEventClick?.(evento)} className="w-full" size="small">
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <h3 className="font-semibold text-lg mb-2">{evento.nombre}</h3>
-            
+
             {evento.descripcion && (
-              <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                {evento.descripcion}
-              </p>
+              <p className="text-gray-600 text-sm mb-2 line-clamp-2">{evento.descripcion}</p>
             )}
-            
+
             <div className="flex flex-wrap gap-2 mt-2">
               {evento.fecha_inicio && (
                 <Tag icon={<CalendarOutlined />} color="blue">
                   {new Date(evento.fecha_inicio).toLocaleDateString()}
                 </Tag>
               )}
-              
+
               {evento.hora_inicio && (
                 <Tag icon={<ClockCircleOutlined />} color="green">
                   {evento.hora_inicio}
                 </Tag>
               )}
-              
+
               {evento.precio_minimo && (
                 <Tag icon={<DollarOutlined />} color="orange">
                   Desde ${evento.precio_minimo}
@@ -61,7 +53,7 @@ const EventCard = ({ evento, index, setItemSize, onEventClick }) => {
               )}
             </div>
           </div>
-          
+
           {evento.imagen && (
             <img
               src={evento.imagen}
@@ -84,7 +76,7 @@ const VirtualizedEventList = ({
   loading = false,
   onEventClick,
   height = 600,
-  className = ''
+  className = '',
 }) => {
   const renderEvent = (evento, index, setItemSize) => {
     return (
@@ -115,5 +107,3 @@ const VirtualizedEventList = ({
 };
 
 export default VirtualizedEventList;
-
-

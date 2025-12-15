@@ -10,82 +10,88 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
       title: 'Filas con secciones',
       description: 'Recintos de tama±o medio y grande, como teatros o estadios',
       icon: 'ðŸŸï¸',
-      value: 'ROWS_WITH_SECTIONS'
+      value: 'ROWS_WITH_SECTIONS',
     },
     {
       id: 'ROWS_WITHOUT_SECTIONS',
       title: 'Filas sin secciones',
       description: 'Recintos peque±os, como peque±os teatros o salas de cine',
       icon: 'ðŸŽ­',
-      value: 'ROWS_WITHOUT_SECTIONS'
+      value: 'ROWS_WITHOUT_SECTIONS',
     },
     {
       id: 'MIXED',
       title: 'Dise±o mixto',
       description: 'Todas las herramientas est¡n disponibles (excepto secciones)',
       icon: 'ðŸŽ¨',
-      value: 'MIXED'
+      value: 'MIXED',
     },
     {
       id: 'TABLES',
       title: 'Mesas',
       description: 'Plano de mesas, por ejemplo para restaurantes',
       icon: 'ðŸ½ï¸',
-      value: 'TABLES'
+      value: 'TABLES',
     },
     {
       id: 'GENERAL_ADMISSION',
       title: 'Entrada general',
       description: 'Recintos sin asientos, por ejemplo: festivales y conciertos',
       icon: 'ðŸŽª',
-      value: 'GENERAL_ADMISSION'
-    }
+      value: 'GENERAL_ADMISSION',
+    },
   ];
 
   const handleSelect = () => {
     onSelect(selectedType);
   };
 
-  const handleTypeChange = (e) => {
+  const handleTypeChange = e => {
     setSelectedType(e.target.value);
   };
 
   if (!visible) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      zIndex: 1000,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        padding: '2rem',
-        maxWidth: '800px',
-        width: '90%',
-        maxHeight: '90vh',
-        overflow: 'auto'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          fontSize: '1.5rem',
-          fontWeight: 'bold',
-          color: '#1e293b',
-          marginBottom: '2rem'
-        }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '2rem',
+          maxWidth: '800px',
+          width: '90%',
+          maxHeight: '90vh',
+          overflow: 'auto',
+        }}
+      >
+        <div
+          style={{
+            textAlign: 'center',
+            fontSize: '1.5rem',
+            fontWeight: 'bold',
+            color: '#1e293b',
+            marginBottom: '2rem',
+          }}
+        >
           ðŸŽ¯ ¿Qu© tipo de plano de asientos quieres dise±ar?
         </div>
-        
+
         <div style={{ marginBottom: '2rem' }}>
-          {seatmapTypes.map((type) => (
+          {seatmapTypes.map(type => (
             <div
               key={type.id}
               style={{
@@ -95,39 +101,45 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
                 marginBottom: '1rem',
                 cursor: 'pointer',
                 backgroundColor: selectedType === type.value ? '#f0f4ff' : 'white',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
               }}
               onClick={() => setSelectedType(type.value)}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <div style={{
-                  fontSize: '3rem',
-                  width: '80px',
-                  height: '80px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: selectedType === type.value ? '#667eea' : '#f8fafc',
-                  borderRadius: '50%',
-                  border: `2px solid ${selectedType === type.value ? '#667eea' : '#e2e8f0'}`,
-                  color: selectedType === type.value ? 'white' : 'black'
-                }}>
+                <div
+                  style={{
+                    fontSize: '3rem',
+                    width: '80px',
+                    height: '80px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: selectedType === type.value ? '#667eea' : '#f8fafc',
+                    borderRadius: '50%',
+                    border: `2px solid ${selectedType === type.value ? '#667eea' : '#e2e8f0'}`,
+                    color: selectedType === type.value ? 'white' : 'black',
+                  }}
+                >
                   {type.icon}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h4 style={{
-                    margin: '0 0 0.5rem 0',
-                    fontSize: '1.25rem',
-                    fontWeight: '700',
-                    color: '#1e293b'
-                  }}>
+                  <h4
+                    style={{
+                      margin: '0 0 0.5rem 0',
+                      fontSize: '1.25rem',
+                      fontWeight: '700',
+                      color: '#1e293b',
+                    }}
+                  >
                     {type.title}
                   </h4>
-                  <p style={{
-                    margin: 0,
-                    color: '#64748b',
-                    fontSize: '0.875rem'
-                  }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: '#64748b',
+                      fontSize: '0.875rem',
+                    }}
+                  >
                     {type.description}
                   </p>
                 </div>
@@ -140,7 +152,7 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
             </div>
           ))}
         </div>
-        
+
         <div style={{ textAlign: 'center' }}>
           <Button
             type="primary"
@@ -153,7 +165,7 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
               borderRadius: '12px',
               backgroundColor: '#667eea',
               border: 'none',
-              padding: '0 2rem'
+              padding: '0 2rem',
             }}
           >
             œ… Seleccionar y Continuar
@@ -165,5 +177,3 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
 };
 
 export default SeatmapTypeSelector;
-
-

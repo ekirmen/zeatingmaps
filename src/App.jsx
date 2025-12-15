@@ -15,36 +15,37 @@ import { loadGtm, loadMetaPixel, trackEvent } from './store/utils/analytics';
 import './styles/store-design.css';
 
 // Función de lazy import con manejo de errores
-const lazyImport = (path, componentName) => React.lazy(() => 
-  import(`${path}`)
-    .then(module => ({ default: module.default }))
-    .catch(error => {
-      console.error(`Error cargando ${componentName || path}:`, error);
+const lazyImport = (path, componentName) =>
+  React.lazy(() =>
+    import(`${path}`)
+      .then(module => ({ default: module.default }))
+      .catch(error => {
+        console.error(`Error cargando ${componentName || path}:`, error);
 
-      return { 
-        default: () => (
-          <div style={{ padding: '40px', textAlign: 'center' }}>
-            <h3>Error cargando {componentName || 'componente'}</h3>
-            <p>Por favor, recarga la página o contacta soporte.</p>
-            <button 
-              onClick={() => window.location.reload()}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#1890ff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                marginTop: '20px'
-              }}
-            >
-              Recargar página
-            </button>
-          </div>
-        )
-      };
-    })
-);
+        return {
+          default: () => (
+            <div style={{ padding: '40px', textAlign: 'center' }}>
+              <h3>Error cargando {componentName || 'componente'}</h3>
+              <p>Por favor, recarga la página o contacta soporte.</p>
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#1890ff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  marginTop: '20px',
+                }}
+              >
+                Recargar página
+              </button>
+            </div>
+          ),
+        };
+      })
+  );
 
 // Lazy load con prefetch y manejo de errores
 const Pages = {
@@ -78,7 +79,7 @@ const Pages = {
 const StoreApp = () => {
   const location = useLocation();
   const { user, updateProfile } = useAuth();
-  const restoreTimer = useCartStore((s) => s.restoreTimer);
+  const restoreTimer = useCartStore(s => s.restoreTimer);
   const { currentTenant, domainConfig } = useTenant();
   const previousPath = React.useRef(location.pathname);
   const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
@@ -110,7 +111,8 @@ const StoreApp = () => {
     }
   }, [location.pathname, trackEvent]);
 
-  const showHeader = location.pathname.startsWith('/store') || location.pathname.startsWith('/payment-success');
+  const showHeader =
+    location.pathname.startsWith('/store') || location.pathname.startsWith('/payment-success');
   const showFooter = showHeader;
 
   return (
@@ -133,19 +135,36 @@ const StoreApp = () => {
                   <Route path="select-seats/:salaId/:funcionId" element={<Pages.SelectSeats />} />
                   <Route path="seat-selection/:funcionId" element={<Pages.SeatSelectionPage />} />
                   <Route path="cart" element={<Pages.CartPage />} />
-                  <Route path="payment" element={<ProtectedRoute requireTenantAccess={false}><Pages.Pay /></ProtectedRoute>} />
+                  <Route
+                    path="payment"
+                    element={
+                      <ProtectedRoute requireTenantAccess={false}>
+                        <Pages.Pay />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="login" element={<Pages.StoreLogin />} />
                   <Route path="register" element={<Pages.Register />} />
                   <Route path="forgot-password" element={<Pages.ForgotPassword />} />
                   <Route path="reset-password" element={<Pages.ResetPassword />} />
                   <Route path="search-map" element={<Pages.EventSearchMap />} />
                   <Route path="faq" element={<Pages.FaqPage />} />
-                  <Route path="perfil" element={<Pages.Profile userData={user} onUpdateProfile={updateProfile} />} />
+                  <Route
+                    path="perfil"
+                    element={<Pages.Profile userData={user} onUpdateProfile={updateProfile} />}
+                  />
                   <Route path="privacy-policy" element={<Pages.PrivacyPolicy />} />
                   <Route path="cookies-policy" element={<Pages.CookiesPolicy />} />
                   <Route path="legal-terms" element={<Pages.LegalTerms />} />
                   <Route path=":pageSlug" element={<Pages.CmsPage />} />
-                  <Route path="payment-success/:locator?" element={<ProtectedRoute requireTenantAccess={false}><Pages.PaymentSuccess /></ProtectedRoute>} />
+                  <Route
+                    path="payment-success/:locator?"
+                    element={
+                      <ProtectedRoute requireTenantAccess={false}>
+                        <Pages.PaymentSuccess />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="thank-you" element={<Pages.ThankYouPage />} />
                   <Route path="404" element={<Pages.NotFound />} />
                   <Route path="*" element={<Pages.NotFound />} />

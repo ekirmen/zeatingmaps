@@ -1,17 +1,9 @@
-/**
- * Hook para precargar imágenes de forma eficiente
- * Útil para precargar imágenes críticas antes de que se necesiten
- */
 import { useEffect, useState, useCallback } from 'react';
 
 const imageCache = new Map();
 
-/**
- * Precarga una imagen
- */
-
+const preloadImage = (src) => {
   return new Promise((resolve, reject) => {
-    // Si ya está en cache, resolver inmediatamente
     if (imageCache.has(src)) {
       resolve(imageCache.get(src));
       return;
@@ -27,9 +19,6 @@ const imageCache = new Map();
   });
 };
 
-/**
- * Hook para precargar imágenes
- */
 export const useImagePreloader = (imageUrls = [], options = {}) => {
   const { priority = false, onComplete, onError } = options;
   const [loadedImages, setLoadedImages] = useState(new Map());
@@ -63,8 +52,6 @@ export const useImagePreloader = (imageUrls = [], options = {}) => {
 
   useEffect(() => {
     if (imageUrls.length > 0) {
-      // Si es priority, precargar inmediatamente
-      // Si no, usar requestIdleCallback para precargar cuando el navegador esté libre
       if (priority || typeof requestIdleCallback === 'undefined') {
         preload(imageUrls);
       } else {
@@ -84,4 +71,3 @@ export const useImagePreloader = (imageUrls = [], options = {}) => {
 };
 
 export default useImagePreloader;
-

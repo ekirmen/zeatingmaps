@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
  */
 export const useUserTracking = () => {
   const { user } = useAuth();
-  
+
   /**
 
    * @returns {string} Email del usuario o ID si no hay email
@@ -15,75 +15,75 @@ export const useUserTracking = () => {
     if (!user) return 'anonymous';
     return user.email || user.id || 'anonymous';
   };
-  
+
   /**
    * Agrega campos de tracking para operaciones de inserción
    * @param {Object} data - Datos a insertar
    * @returns {Object} Datos con campos de tracking agregados
    */
-  const addUserTracking = (data) => {
+  const addUserTracking = data => {
     const currentUser = getCurrentUser();
     const now = new Date().toISOString();
-    
+
     return {
       ...data,
       created_by: currentUser,
       updated_by: currentUser,
       created_at: now,
-      updated_at: now
+      updated_at: now,
     };
   };
-  
+
   /**
    * Agrega campos de tracking para operaciones de actualización
    * @param {Object} data - Datos a actualizar
    * @returns {Object} Datos con campos de tracking agregados
    */
-  const addUpdateTracking = (data) => {
+  const addUpdateTracking = data => {
     const currentUser = getCurrentUser();
     const now = new Date().toISOString();
-    
+
     return {
       ...data,
       updated_by: currentUser,
-      updated_at: now
+      updated_at: now,
     };
   };
-  
+
   /**
    * Agrega solo el campo updated_by para actualizaciones simples
    * @param {Object} data - Datos a actualizar
    * @returns {Object} Datos con updated_by agregado
    */
-  const addUpdateUser = (data) => {
+  const addUpdateUser = data => {
     const currentUser = getCurrentUser();
-    
+
     return {
       ...data,
-      updated_by: currentUser
+      updated_by: currentUser,
     };
   };
-  
+
   /**
    * Agrega solo el campo updated_at para actualizaciones simples
    * @param {Object} data - Datos a actualizar
    * @returns {Object} Datos con updated_at agregado
    */
-  const addUpdateTime = (data) => {
+  const addUpdateTime = data => {
     const now = new Date().toISOString();
-    
+
     return {
       ...data,
-      updated_at: now
+      updated_at: now,
     };
   };
-  
+
   return {
     getCurrentUser,
     addUserTracking,
     addUpdateTracking,
     addUpdateUser,
-    addUpdateTime
+    addUpdateTime,
   };
 };
 

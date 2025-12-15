@@ -2,7 +2,7 @@ import React from 'react';
 import { Layer } from 'react-konva';
 import SeatWithTooltip from './SeatWithTooltipCore.jsx';
 
-
+const SeatLayerCore = ({ seats = [], onSeatClick = () => {} }) => {
   return (
     <Layer>
       {seats.map((s, idx) => (
@@ -10,4 +10,6 @@ import SeatWithTooltip from './SeatWithTooltipCore.jsx';
       ))}
     </Layer>
   );
-}
+};
+
+export default SeatLayerCore;

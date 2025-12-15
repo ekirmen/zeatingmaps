@@ -47,11 +47,9 @@ export const funcionesService = {
    */
   async obtenerFuncionesPorEvento(eventoId) {
     try {
-      const { data, error } = await supabaseWithTracking.select(
-        'funciones',
-        '*',
-        { evento_id: eventoId }
-      );
+      const { data, error } = await supabaseWithTracking.select('funciones', '*', {
+        evento_id: eventoId,
+      });
 
       if (error) throw error;
       return data;
@@ -68,11 +66,7 @@ export const funcionesService = {
    */
   async obtenerFuncionPorId(id) {
     try {
-      const { data, error } = await supabaseWithTracking.select(
-        'funciones',
-        '*',
-        { id }
-      );
+      const { data, error } = await supabaseWithTracking.select('funciones', '*', { id });
 
       if (error) throw error;
       return data[0];
@@ -144,7 +138,7 @@ export const funcionesService = {
       console.error('❌ Error al obtener funciones para boletería:', error);
       throw error;
     }
-  }
+  },
 };
 
 export default funcionesService;

@@ -32,7 +32,7 @@ class BillingService {
       const planPrices = {
         basic: 29.99,
         pro: 79.99,
-        enterprise: 199.99
+        enterprise: 199.99,
       };
 
       const subscriptionData = {
@@ -42,7 +42,7 @@ class BillingService {
         status: 'active',
         next_billing_date: this.getNextBillingDate(),
         customer_email: customerEmail,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
@@ -56,10 +56,10 @@ class BillingService {
       // Actualizar el tenant con el plan
       await supabase
         .from('tenants')
-        .update({ 
+        .update({
           plan_type: planType,
           billing_status: 'active',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', tenantId);
 
@@ -74,7 +74,7 @@ class BillingService {
   async processRecurringPayments() {
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       const { data: subscriptions, error } = await supabase
         .from('billing_subscriptions')
         .select('*')
@@ -109,7 +109,7 @@ class BillingService {
         success: Math.random() > 0.1, // 90% éxito simulado
         transaction_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         amount: subscription.amount,
-        tenant_id: subscription.tenant_id
+        tenant_id: subscription.tenant_id,
       };
 
       if (paymentResult.success) {
@@ -120,26 +120,26 @@ class BillingService {
             last_payment_date: new Date().toISOString(),
             next_billing_date: this.getNextBillingDate(),
             payment_count: subscription.payment_count + 1,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .eq('id', subscription.id);
 
         // Crear registro de pago
-        await supabase
-          .from('payment_transactions')
-          .insert([{
+        await supabase.from('payment_transactions').insert([
+          {
             tenant_id: subscription.tenant_id,
             amount: subscription.amount,
             type: 'subscription',
             status: 'completed',
             transaction_id: paymentResult.transaction_id,
-            created_at: new Date().toISOString()
-          }]);
+            created_at: new Date().toISOString(),
+          },
+        ]);
 
         // Enviar notificación de pago exitoso
         await this.sendPaymentNotification(subscription.tenant_id, 'success', {
           amount: subscription.amount,
-          transaction_id: paymentResult.transaction_id
+          transaction_id: paymentResult.transaction_id,
         });
       } else {
         throw new Error('Payment failed');
@@ -161,24 +161,24 @@ class BillingService {
         .update({
           status: 'payment_failed',
           failure_count: subscription.failure_count + 1,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', subscription.id);
 
       // Enviar notificación de fallo
       await this.sendPaymentNotification(subscription.tenant_id, 'failure', {
         amount: subscription.amount,
-        failure_count: subscription.failure_count + 1
+        failure_count: subscription.failure_count + 1,
       });
 
       // Si es el tercer fallo, suspender el tenant
       if (subscription.failure_count >= 2) {
         await supabase
           .from('tenants')
-          .update({ 
+          .update({
             status: 'suspended',
             billing_status: 'suspended',
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .eq('id', subscription.tenant_id);
       }
@@ -194,16 +194,15 @@ class BillingService {
         tenant_id: tenantId,
         type: `payment_${type}`,
         title: type === 'success' ? 'Pago Procesado Exitosamente' : 'Fallo en el Pago',
-        message: type === 'success' 
-          ? `Su pago de $${data.amount} ha sido procesado exitosamente. ID de transacción: ${data.transaction_id}`
-          : `Su pago de $${data.amount} ha fallado. Intento ${data.failure_count}/3.`,
+        message:
+          type === 'success'
+            ? `Su pago de $${data.amount} ha sido procesado exitosamente. ID de transacción: ${data.transaction_id}`
+            : `Su pago de $${data.amount} ha fallado. Intento ${data.failure_count}/3.`,
         read: false,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
 
-      await supabase
-        .from('notifications')
-        .insert([notificationData]);
+      await supabase.from('notifications').insert([notificationData]);
     } catch (error) {
       console.error('Error sending payment notification:', error);
     }
@@ -223,22 +222,33 @@ class BillingService {
         { count: totalSubscriptions },
         { count: activeSubscriptions },
         { count: failedSubscriptions },
-        { data: monthlyRevenue }
+        { data: monthlyRevenue },
       ] = await Promise.all([
         supabase.from('billing_subscriptions').select('*', { count: 'exact', head: true }),
-        supabase.from('billing_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('billing_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'payment_failed'),
-        supabase.from('payment_transactions').select('amount').eq('status', 'completed').gte('created_at', this.getCurrentMonthStart())
+        supabase
+          .from('billing_subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'active'),
+        supabase
+          .from('billing_subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'payment_failed'),
+        supabase
+          .from('payment_transactions')
+          .select('amount')
+          .eq('status', 'completed')
+          .gte('created_at', this.getCurrentMonthStart()),
       ]);
 
-      const revenue = monthlyRevenue?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
+      const revenue =
+        monthlyRevenue?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
 
       return {
         totalSubscriptions: totalSubscriptions || 0,
         activeSubscriptions: activeSubscriptions || 0,
         failedSubscriptions: failedSubscriptions || 0,
         monthlyRevenue: revenue,
-        successRate: activeSubscriptions / (totalSubscriptions || 1) * 100
+        successRate: (activeSubscriptions / (totalSubscriptions || 1)) * 100,
       };
     } catch (error) {
       console.error('Error getting billing stats:', error);
@@ -247,7 +257,7 @@ class BillingService {
         activeSubscriptions: 0,
         failedSubscriptions: 0,
         monthlyRevenue: 0,
-        successRate: 0
+        successRate: 0,
       };
     }
   }
@@ -266,7 +276,7 @@ class BillingService {
         .update({
           status: 'cancelled',
           cancelled_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', subscriptionId)
         .select()
@@ -279,7 +289,7 @@ class BillingService {
         .from('tenants')
         .update({
           billing_status: 'cancelled',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', data.tenant_id);
 
@@ -298,7 +308,7 @@ class BillingService {
         .update({
           status: 'active',
           next_billing_date: this.getNextBillingDate(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', subscriptionId)
         .select()
@@ -311,7 +321,7 @@ class BillingService {
         .from('tenants')
         .update({
           billing_status: 'active',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', data.tenant_id);
 

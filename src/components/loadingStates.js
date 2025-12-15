@@ -41,7 +41,7 @@ export const useLoadingState = (initialState = LOADING_STATES.IDLE) => {
     setProgress(100);
   };
 
-  const setErrorState = (errorMessage) => {
+  const setErrorState = errorMessage => {
     setState(LOADING_STATES.ERROR);
     setError(errorMessage);
     setProgress(0);
@@ -53,7 +53,7 @@ export const useLoadingState = (initialState = LOADING_STATES.IDLE) => {
     setProgress(0);
   };
 
-  const setProgressValue = (value) => {
+  const setProgressValue = value => {
     setProgress(Math.min(100, Math.max(0, value)));
   };
 
@@ -76,12 +76,12 @@ export const useLoadingState = (initialState = LOADING_STATES.IDLE) => {
 /**
  * Componente de skeleton loader optimizado
  */
-export const SkeletonLoader = ({ 
-  type = 'text', 
-  width = '100%', 
+export const SkeletonLoader = ({
+  type = 'text',
+  width = '100%',
   height = '20px',
   count = 1,
-  className = ''
+  className = '',
 }) => {
   const skeletons = Array.from({ length: count }).map((_, index) => (
     <div
@@ -133,12 +133,7 @@ export const SeatListSkeleton = ({ count = 10 }) => (
 /**
  * Loading state component con mensajes específicos
  */
-export const LoadingState = ({ 
-  state, 
-  message = null, 
-  error = null,
-  children = null 
-}) => {
+export const LoadingState = ({ state, message = null, error = null, children = null }) => {
   const messages = {
     [LOADING_STATES.LOADING]: message || 'Cargando...',
     [LOADING_STATES.REFRESHING]: message || 'Actualizando...',
@@ -191,4 +186,3 @@ export default {
   SeatListSkeleton,
   LoadingState,
 };
-

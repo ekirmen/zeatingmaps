@@ -18,9 +18,7 @@ const RecintoItem = ({ recinto, onEdit, onAddSala }) => {
       <button onClick={() => onAddSala(recinto)}>Agregar Sala</button>
 
       {/* Botón para mostrar/ocultar el menú de salas */}
-      <button onClick={toggleSalas}>
-        {showSalas ? 'Ocultar Salas' : 'Mostrar Salas'}
-      </button>
+      <button onClick={toggleSalas}>{showSalas ? 'Ocultar Salas' : 'Mostrar Salas'}</button>
 
       {/* Menú desplegable de salas */}
       {showSalas && (

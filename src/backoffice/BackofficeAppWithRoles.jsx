@@ -55,49 +55,55 @@ const BackofficeAppWithRoles = () => {
         <Routes>
           <Route path="/" element={<BackofficeLayoutWithRoles />}>
             {/* Dashboard Principal */}
-            <Route 
-              index 
+            <Route
+              index
               element={
                 <ProtectedRoute permission="dashboard">
                   <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* Administración */}
-            <Route 
-              path="recintos" 
+            <Route
+              path="recintos"
               element={
                 <ProtectedRoute permission="recintos">
                   <Recinto />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="plano" 
+            <Route
+              path="plano"
               element={
                 <ProtectedRoute permission="recintos">
                   <Plano />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="crear-mapa/:salaId?" 
+            <Route
+              path="crear-mapa/:salaId?"
               element={
                 <ProtectedRoute permission="recintos">
-                  <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando editor de mapas...</div>}>
+                  <Suspense
+                    fallback={
+                      <div style={{ padding: 40, textAlign: 'center' }}>
+                        Cargando editor de mapas...
+                      </div>
+                    }
+                  >
                     <CrearMapaPage />
                   </Suspense>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="usuarios" 
+            <Route
+              path="usuarios"
               element={
                 <ProtectedRoute permission="usuarios">
                   <Usuarios />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route
               path="liquidaciones"
@@ -115,117 +121,123 @@ const BackofficeAppWithRoles = () => {
                 </ProtectedRoute>
               }
             />
-            
+
             {/* Programación */}
-            <Route 
-              path="entradas" 
+            <Route
+              path="entradas"
               element={
                 <ProtectedRoute permission="entradas">
                   <Entrada />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="productos" 
+            <Route
+              path="productos"
               element={
                 <ProtectedRoute permission="productos">
                   <Productos />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="plantillas-productos" 
+            <Route
+              path="plantillas-productos"
               element={
                 <ProtectedRoute permission="plantillas_productos">
                   <PlantillasProductos />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="donaciones" 
+            <Route
+              path="donaciones"
               element={
                 <ProtectedRoute permission="entradas">
                   <Entrada />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="comisiones" 
+            <Route
+              path="comisiones"
               element={
                 <ProtectedRoute permission="comisiones">
                   <ComisionesTasas />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="seguros" 
+            <Route
+              path="seguros"
               element={
                 <ProtectedRoute permission="seguros">
                   <PaymentGateways />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="envio" 
+            <Route
+              path="envio"
               element={
                 <ProtectedRoute permission="envio">
                   <PaymentGateways />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="eventos" 
+            <Route
+              path="eventos"
               element={
                 <ProtectedRoute permission="eventos">
-                  <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <Suspense
+                    fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}
+                  >
                     <Evento />
                   </Suspense>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="plantillas-precios" 
+            <Route
+              path="plantillas-precios"
               element={
                 <ProtectedRoute permission="plantillas_precios">
                   <PlantillaPrecios />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="funciones" 
+            <Route
+              path="funciones"
               element={
                 <ProtectedRoute permission="funciones">
-                  <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <Suspense
+                    fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}
+                  >
                     <Funciones />
                   </Suspense>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="cupos" 
+            <Route
+              path="cupos"
               element={
                 <ProtectedRoute permission="funciones">
                   <Cupos />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="plantillas-cupos" 
+            <Route
+              path="plantillas-cupos"
               element={
                 <ProtectedRoute permission="plantillas_precios">
                   <PlantillasCupos />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="filas-virtuales" 
+            <Route
+              path="filas-virtuales"
               element={
                 <ProtectedRoute permission="funciones">
-                  <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <Suspense
+                    fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}
+                  >
                     <Funciones />
                   </Suspense>
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route
               path="paquetes"
@@ -235,45 +247,49 @@ const BackofficeAppWithRoles = () => {
                 </ProtectedRoute>
               }
             />
-            <Route 
-              path="multipase" 
+            <Route
+              path="multipase"
               element={
                 <ProtectedRoute permission="multipase">
                   <Abonos />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="abonos" 
+            <Route
+              path="abonos"
               element={
                 <ProtectedRoute permission="abonos">
                   <Abonos />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="afiliados" 
+            <Route
+              path="afiliados"
               element={
                 <ProtectedRoute permission="afiliados">
                   <Afiliados />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="iva" 
+            <Route
+              path="iva"
               element={
                 <ProtectedRoute permission="iva">
                   <CreateIva />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* Ventas */}
             <Route
               path="boleteria"
               element={
                 <ProtectedRoute permission="boleteria">
-                  <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando boletería...</div>}>
+                  <Suspense
+                    fallback={
+                      <div style={{ padding: 40, textAlign: 'center' }}>Cargando boletería...</div>
+                    }
+                  >
                     <Boleteria />
                   </Suspense>
                 </ProtectedRoute>
@@ -287,188 +303,202 @@ const BackofficeAppWithRoles = () => {
                 </ProtectedRoute>
               }
             />
-            <Route 
-              path="reportes" 
+            <Route
+              path="reportes"
               element={
                 <ProtectedRoute permission="reportes">
-                  <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <Suspense
+                    fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}
+                  >
                     <Reports />
                   </Suspense>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="crm" 
+            <Route
+              path="crm"
               element={
                 <ProtectedRoute permission="crm">
                   <CRM />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="tags" 
+            <Route
+              path="tags"
               element={
                 <ProtectedRoute permission="tags">
                   <Tags />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="email-campaigns" 
+            <Route
+              path="email-campaigns"
               element={
                 <ProtectedRoute permission="email_campaigns">
                   <EmailCampaigns />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* Configuración */}
-            <Route 
-              path="settings" 
+            <Route
+              path="settings"
               element={
                 <ProtectedRoute permission="settings">
                   <SystemSettings />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="seat-settings" 
+            <Route
+              path="seat-settings"
               element={
                 <ProtectedRoute permission="seat_settings">
                   <SeatSettings />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="printer-settings" 
+            <Route
+              path="printer-settings"
               element={
                 <ProtectedRoute permission="printer_settings">
                   <PrinterSettings />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="email-config" 
+            <Route
+              path="email-config"
               element={
                 <ProtectedRoute permission="email_config">
                   <TenantEmailConfigPanel />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="audit-logs" 
+            <Route
+              path="audit-logs"
               element={
                 <ProtectedRoute permission="audit_logs">
                   <AuditLogs />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="refund-management" 
+            <Route
+              path="refund-management"
               element={
                 <ProtectedRoute permission="refund_management">
                   <RefundManagement />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="payment-analytics" 
+            <Route
+              path="payment-analytics"
               element={
                 <ProtectedRoute permission="payment_analytics">
                   <PaymentAnalytics />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="payment-gateways" 
+            <Route
+              path="payment-gateways"
               element={
                 <ProtectedRoute permission="payment_gateways">
                   <PaymentGateways />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="webstudio" 
+            <Route
+              path="webstudio"
               element={
                 <ProtectedRoute permission="personalizacion">
-                  <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando WebStudio...</div>}>
+                  <Suspense
+                    fallback={
+                      <div style={{ padding: 40, textAlign: 'center' }}>Cargando WebStudio...</div>
+                    }
+                  >
                     <WebStudio />
                   </Suspense>
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* Panel SaaS - Solo para usuarios del sistema */}
-            <Route 
-              path="saas" 
+            <Route
+              path="saas"
               element={
                 <ProtectedRoute permission="saas">
-                  <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+                  <Suspense
+                    fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}
+                  >
                     <SaasDashboard />
                   </Suspense>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="saas/users" 
+            <Route
+              path="saas/users"
               element={
                 <ProtectedRoute permission="saas_roles">
                   <SaasUserManagement />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="saas/settings" 
+            <Route
+              path="saas/settings"
               element={
                 <ProtectedRoute permission="saas_settings">
                   <SaasSettings />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="saas/billing" 
+            <Route
+              path="saas/billing"
               element={
                 <ProtectedRoute permission="saas_billing">
                   <BillingDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="saas/payment-gateways" 
+            <Route
+              path="saas/payment-gateways"
               element={
                 <ProtectedRoute permission="saas_payment_gateways">
                   <PaymentGatewayConfig />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="saas/roles" 
+            <Route
+              path="saas/roles"
               element={
                 <ProtectedRoute permission="saas_roles">
                   <RoleManagement />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="saas/api-explorer" 
+            <Route
+              path="saas/api-explorer"
               element={
                 <ProtectedRoute permission="saas_api_explorer">
-                  <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando API Explorer...</div>}>
+                  <Suspense
+                    fallback={
+                      <div style={{ padding: 40, textAlign: 'center' }}>
+                        Cargando API Explorer...
+                      </div>
+                    }
+                  >
                     <ApiExplorer />
                   </Suspense>
                 </ProtectedRoute>
-              } 
+              }
             />
 
-            <Route 
-              path="tenant/:id" 
+            <Route
+              path="tenant/:id"
               element={
                 <ProtectedRoute permission="saas">
                   <TenantDetail />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* Redirecciones */}
             <Route path="*" element={<Navigate to="." replace />} />
           </Route>

@@ -17,7 +17,6 @@ export const useResponsive = () => {
       });
     };
 
-
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -32,4 +31,3 @@ export const useResponsive = () => {
 };
 
 export default useResponsive;
-

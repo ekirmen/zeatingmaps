@@ -21,22 +21,22 @@ export const FooterProvider = ({ children }) => {
   }, []);
 
   // Establecer contenido personalizado
-  const setCustomFooter = useCallback((content) => {
+  const setCustomFooter = useCallback(content => {
     setFooterContent(content);
   }, []);
 
   // Actualizar altura del footer
-  const updateFooterHeight = useCallback((height) => {
+  const updateFooterHeight = useCallback(height => {
     setFooterHeight(height);
   }, []);
 
   // Actualizar estilo del footer
-  const updateFooterStyle = useCallback((style) => {
+  const updateFooterStyle = useCallback(style => {
     setFooterStyle(prev => ({ ...prev, ...style }));
   }, []);
 
   // Actualizar clase CSS del footer
-  const updateFooterClassName = useCallback((className) => {
+  const updateFooterClassName = useCallback(className => {
     setFooterClassName(className);
   }, []);
 
@@ -57,7 +57,7 @@ export const FooterProvider = ({ children }) => {
     footerHeight,
     footerStyle,
     footerClassName,
-    
+
     // Métodos
     showFooter,
     hideFooter,
@@ -66,27 +66,23 @@ export const FooterProvider = ({ children }) => {
     updateFooterStyle,
     updateFooterClassName,
     resetFooter,
-    
+
     // Helper methods
     isFooterVisible: footerVisible,
-    hasCustomContent: !!footerContent
+    hasCustomContent: !!footerContent,
   };
 
-  return (
-    <FooterContext.Provider value={value}>
-      {children}
-    </FooterContext.Provider>
-  );
+  return <FooterContext.Provider value={value}>{children}</FooterContext.Provider>;
 };
 
 // Hook personalizado para usar el contexto
 export const useFooter = () => {
   const context = useContext(FooterContext);
-  
+
   if (!context) {
     throw new Error('useFooter debe ser usado dentro de un FooterProvider');
   }
-  
+
   return context;
 };
 

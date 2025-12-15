@@ -1,12 +1,17 @@
 import React from 'react';
 import { Card, Typography, Space, Button, Divider } from '../utils/antdComponents';
-import { 
-  SettingOutlined, 
+import {
+  SettingOutlined,
   ShoppingOutlined,
   CalendarOutlined,
-  BankOutlined
+  BankOutlined,
 } from '@ant-design/icons';
-import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldShowStore } from '../config/domainConfig';
+import {
+  getCurrentDomainConfig,
+  shouldShowSaaS,
+  shouldShowBackoffice,
+  shouldShowStore,
+} from '../config/domainConfig';
 
 const { Title, Text } = Typography;
 
@@ -15,12 +20,14 @@ const DomainWelcome = () => {
   const hostname = window.location.hostname;
 
   return (
-    <div style={{ 
-      padding: '40px 20px', 
-      maxWidth: '1200px', 
-      margin: '0 auto',
-      textAlign: 'center'
-    }}>
+    <div
+      style={{
+        padding: '40px 20px',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        textAlign: 'center',
+      }}
+    >
       {/* Header con branding del dominio */}
       <div style={{ marginBottom: '40px' }}>
         <Title level={1} style={{ color: config.theme.primaryColor }}>
@@ -29,9 +36,7 @@ const DomainWelcome = () => {
         <Title level={3} type="secondary">
           {config.branding.tagline}
         </Title>
-        <Text type="secondary">
-          Dominio: {hostname}
-        </Text>
+        <Text type="secondary">Dominio: {hostname}</Text>
       </div>
 
       {/* Información del sistema */}
@@ -48,7 +53,7 @@ const DomainWelcome = () => {
             <Text strong>Contacto:</Text> {config.branding.contactEmail}
           </div>
           <div>
-            <Text strong>Estado:</Text> 
+            <Text strong>Estado:</Text>
             <Text type="success" style={{ marginLeft: '8px' }}>
               ✅ Activo y funcionando
             </Text>
@@ -61,51 +66,51 @@ const DomainWelcome = () => {
         <Title level={4}>⚙️ Funcionalidades Disponibles</Title>
         <Space wrap size="large" style={{ justifyContent: 'center' }}>
           {shouldShowSaaS() && (
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<SettingOutlined />}
               size="large"
-              onClick={() => window.location.href = '/dashboard'}
+              onClick={() => (window.location.href = '/dashboard')}
             >
               Panel SaaS
             </Button>
           )}
-          
+
           {shouldShowBackoffice() && (
-            <Button 
+            <Button
               icon={<BankOutlined />}
               size="large"
-              onClick={() => window.location.href = '/dashboard/backoffice'}
+              onClick={() => (window.location.href = '/dashboard/backoffice')}
             >
               Backoffice
             </Button>
           )}
-          
+
           {shouldShowStore() && (
-            <Button 
+            <Button
               icon={<ShoppingOutlined />}
               size="large"
-              onClick={() => window.location.href = '/store'}
+              onClick={() => (window.location.href = '/store')}
             >
               Tienda
             </Button>
           )}
-          
+
           {config.features.showEvents && (
-            <Button 
+            <Button
               icon={<CalendarOutlined />}
               size="large"
-              onClick={() => window.location.href = '/eventos'}
+              onClick={() => (window.location.href = '/eventos')}
             >
               Eventos
             </Button>
           )}
-          
+
           {config.features.showVenues && (
-            <Button 
+            <Button
               icon={<BankOutlined />}
               size="large"
-              onClick={() => window.location.href = '/recintos'}
+              onClick={() => (window.location.href = '/recintos')}
             >
               Recintos
             </Button>
@@ -120,30 +125,34 @@ const DomainWelcome = () => {
           <div>
             <Text strong>Colores del Tema:</Text>
             <div style={{ marginTop: '10px' }}>
-              <div style={{ 
-                display: 'inline-block', 
-                width: '20px', 
-                height: '20px', 
-                backgroundColor: config.theme.primaryColor,
-                marginRight: '10px',
-                borderRadius: '3px'
-              }}></div>
+              <div
+                style={{
+                  display: 'inline-block',
+                  width: '20px',
+                  height: '20px',
+                  backgroundColor: config.theme.primaryColor,
+                  marginRight: '10px',
+                  borderRadius: '3px',
+                }}
+              ></div>
               <Text>Primario: {config.theme.primaryColor}</Text>
-              <div style={{ 
-                display: 'inline-block', 
-                width: '20px', 
-                height: '20px', 
-                backgroundColor: config.theme.secondaryColor,
-                marginLeft: '20px',
-                marginRight: '10px',
-                borderRadius: '3px'
-              }}></div>
+              <div
+                style={{
+                  display: 'inline-block',
+                  width: '20px',
+                  height: '20px',
+                  backgroundColor: config.theme.secondaryColor,
+                  marginLeft: '20px',
+                  marginRight: '10px',
+                  borderRadius: '3px',
+                }}
+              ></div>
               <Text>Secundario: {config.theme.secondaryColor}</Text>
             </div>
           </div>
-          
+
           <Divider />
-          
+
           <div>
             <Text strong>Características Habilitadas:</Text>
             <ul style={{ textAlign: 'left', marginTop: '10px' }}>
@@ -161,8 +170,8 @@ const DomainWelcome = () => {
       {/* Footer */}
       <div style={{ marginTop: '40px', padding: '20px', borderTop: '1px solid #f0f0f0' }}>
         <Text type="secondary">
-          Sistema configurado para {config.branding.companyName} | 
-          Desarrollado con ❤️ por ZeatingMaps
+          Sistema configurado para {config.branding.companyName} | Desarrollado con ❤️ por
+          ZeatingMaps
         </Text>
       </div>
     </div>
@@ -170,4 +179,3 @@ const DomainWelcome = () => {
 };
 
 export default DomainWelcome;
-

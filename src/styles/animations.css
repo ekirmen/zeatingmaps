@@ -115,7 +115,8 @@
 
 /* Pulse (para elementos que necesitan atención) */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale3d(1, 1, 1);
   }
@@ -127,13 +128,21 @@
 
 /* Shake (para errores) */
 @keyframes shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate3d(0, 0, 0);
   }
-  10%, 30%, 50%, 70%, 90% {
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
     transform: translate3d(-5px, 0, 0);
   }
-  20%, 40%, 60%, 80% {
+  20%,
+  40%,
+  60%,
+  80% {
     transform: translate3d(5px, 0, 0);
   }
 }
@@ -150,7 +159,8 @@
 
 /* Skeleton Loading Pulse */
 @keyframes skeletonPulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -223,19 +233,25 @@
 
 /* Transiciones rápidas para hover */
 .transition-fast {
-  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  transition:
+    opacity 0.15s ease-out,
+    transform 0.15s ease-out;
   will-change: opacity, transform;
 }
 
 /* Transiciones base */
 .transition-base {
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out;
   will-change: opacity, transform;
 }
 
 /* Transiciones lentas */
 .transition-slow {
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out;
   will-change: opacity, transform;
 }
 
@@ -287,7 +303,9 @@
 
 /* Card hover animation */
 .card-hover {
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
   will-change: transform;
 }
 
@@ -330,12 +348,7 @@
 
 /* Skeleton loader */
 .skeleton-loader {
-  background: linear-gradient(
-    90deg,
-    #f0f0f0 25%,
-    #e0e0e0 50%,
-    #f0f0f0 75%
-  );
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: skeletonPulse 1.5s ease-in-out infinite;
   will-change: background-position;
@@ -377,4 +390,3 @@
      element.classList.add('will-change-none');
    });
 */
-

@@ -8,45 +8,43 @@ import logger from '../utils/logger';
  * @returns {Object} { data, loading, error, execute, reset }
  */
 export const useAsyncOperation = (asyncFunction, options = {}) => {
-  const {
-    immediate = false,
-    onSuccess,
-    onError,
-    initialData = null
-  } = options;
+  const { immediate = false, onSuccess, onError, initialData = null } = options;
 
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const execute = useCallback(async (...args) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await asyncFunction(...args);
-      
-      setData(result);
-      
-      if (onSuccess) {
-        onSuccess(result);
+  const execute = useCallback(
+    async (...args) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const result = await asyncFunction(...args);
+
+        setData(result);
+
+        if (onSuccess) {
+          onSuccess(result);
+        }
+
+        return result;
+      } catch (err) {
+        const errorMessage = err.message || 'Error en operación asíncrona';
+        logger.error('Error in useAsyncOperation:', err);
+        setError(errorMessage);
+
+        if (onError) {
+          onError(err);
+        }
+
+        throw err;
+      } finally {
+        setLoading(false);
       }
-      
-      return result;
-    } catch (err) {
-      const errorMessage = err.message || 'Error en operación asíncrona';
-      logger.error('Error in useAsyncOperation:', err);
-      setError(errorMessage);
-      
-      if (onError) {
-        onError(err);
-      }
-      
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [asyncFunction, onSuccess, onError]);
+    },
+    [asyncFunction, onSuccess, onError]
+  );
 
   const reset = useCallback(() => {
     setData(initialData);
@@ -64,13 +62,7 @@ export const useAsyncOperation = (asyncFunction, options = {}) => {
  * @returns {Object} { data, loading, error, refetch }
  */
 export const useTenantData = (tableName, options = {}) => {
-  const { 
-    filters = {}, 
-    select = '*', 
-    orderBy, 
-    ascending = true,
-    immediate = true 
-  } = options;
+  const { filters = {}, select = '*', orderBy, ascending = true, immediate = true } = options;
 
   // Nota: useTenantData ahora usa useSupabaseQuery
   // Este hook se mantiene para compatibilidad pero se recomienda usar useSupabaseQuery directamente

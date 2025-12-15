@@ -11,10 +11,10 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
     apellido: '',
     empresa: '',
     telefono: '',
-    permisos: { role: 'usuario' }
+    permisos: { role: 'usuario' },
   });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     try {
@@ -28,7 +28,7 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
       if (error) throw error;
 
       // Esperar un poco para que el trigger inserte en profiles
-      await new Promise((res) => setTimeout(res, 1500));
+      await new Promise(res => setTimeout(res, 1500));
 
       // Actualizamos los datos del perfil usando el ID del usuario recién creado
       const { error: profileError } = await supabase
@@ -46,7 +46,10 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
       if (profileError) throw profileError;
 
       // Asignar recintos automáticamente si el usuario es administrador
-      if (formData.permisos?.role === 'administrador' || formData.permisos?.role === 'super_administrador') {
+      if (
+        formData.permisos?.role === 'administrador' ||
+        formData.permisos?.role === 'super_administrador'
+      ) {
         try {
           // Obtener todos los recintos disponibles
           const { data: recintos, error: recintosError } = await supabase
@@ -59,7 +62,7 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
             const recintosUsuario = recintos.map(recinto => ({
               usuario_id: userResponse.user.id,
               recinto_id: recinto.id,
-              permisos: { role: 'administrador' }
+              permisos: { role: 'administrador' },
             }));
 
             const { error: asignacionError } = await supabase
@@ -70,8 +73,7 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
             } else {
             }
           }
-        } catch (error) {
-        }
+        } catch (error) {}
       }
 
       // Obtener el nuevo perfil
@@ -97,7 +99,7 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
             type={field === 'password' ? 'password' : 'text'}
             required={['email', 'password', 'login'].includes(field)}
             value={formData[field]}
-            onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+            onChange={e => setFormData({ ...formData, [field]: e.target.value })}
             className="w-full border rounded px-3 py-2"
           />
         </div>
@@ -107,10 +109,12 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
         <label className="block text-sm font-medium text-gray-700">Rol:</label>
         <select
           value={formData.permisos?.role || 'usuario'}
-          onChange={(e) => setFormData({
-            ...formData,
-            permisos: { ...formData.permisos, role: e.target.value }
-          })}
+          onChange={e =>
+            setFormData({
+              ...formData,
+              permisos: { ...formData.permisos, role: e.target.value },
+            })
+          }
           className="w-full border rounded px-3 py-2"
         >
           <option value="usuario">Usuario</option>

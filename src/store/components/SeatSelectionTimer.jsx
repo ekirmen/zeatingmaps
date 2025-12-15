@@ -32,7 +32,7 @@ const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) =>
     }
   }, [timeLeft, selectedSeats.length, onSeatsCleared, onTimeExpired]);
 
-  const formatTime = (seconds) => {
+  const formatTime = seconds => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -49,14 +49,11 @@ const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) =>
   return (
     <div className="fixed top-4 right-4 bg-white border border-gray-300 rounded-lg shadow-lg p-4 z-50">
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-          Tiempo Restante
-        </h3>
-        <div className={`text-3xl font-bold ${getTimeColor()} mb-2`}>
-          {formatTime(timeLeft)}
-        </div>
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">Tiempo Restante</h3>
+        <div className={`text-3xl font-bold ${getTimeColor()} mb-2`}>{formatTime(timeLeft)}</div>
         <div className="text-sm text-gray-600">
-          {selectedSeats.length} asiento{selectedSeats.length !== 1 ? 's' : ''} seleccionado{selectedSeats.length !== 1 ? 's' : ''}
+          {selectedSeats.length} asiento{selectedSeats.length !== 1 ? 's' : ''} seleccionado
+          {selectedSeats.length !== 1 ? 's' : ''}
         </div>
         {timeLeft <= 300 && (
           <div className="text-xs text-red-500 mt-1">
@@ -69,4 +66,3 @@ const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) =>
 };
 
 export default SeatSelectionTimer;
-

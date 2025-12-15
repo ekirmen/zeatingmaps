@@ -6,7 +6,14 @@
 
 let _loadingPromise = null;
 
-function buildUrl({ apiKey, libraries, language, region, v = 'weekly', callbackName = '__gmapsLoader' }) {
+function buildUrl({
+  apiKey,
+  libraries,
+  language,
+  region,
+  v = 'weekly',
+  callbackName = '__gmapsLoader',
+}) {
   const params = new URLSearchParams();
   if (apiKey) params.set('key', apiKey);
   if (libraries && libraries.length) params.set('libraries', libraries.join(','));
@@ -19,7 +26,13 @@ function buildUrl({ apiKey, libraries, language, region, v = 'weekly', callbackN
 }
 
 export default function loadGoogleMaps(options = {}) {
-  const { apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY, libraries = [], language, region, v } = options;
+  const {
+    apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+    libraries = [],
+    language,
+    region,
+    v,
+  } = options;
 
   if (typeof window === 'undefined') {
     return Promise.reject(new Error('loadGoogleMaps can only be used in the browser'));
@@ -51,7 +64,7 @@ export default function loadGoogleMaps(options = {}) {
     script.src = buildUrl({ apiKey, libraries, language, region, v, callbackName });
     script.async = true;
     script.defer = true;
-    script.onerror = (err) => {
+    script.onerror = err => {
       try {
         delete window[callbackName];
       } catch (e) {}

@@ -14,7 +14,7 @@ const useCartRestore = () => {
     const now = Date.now();
 
     if (cartExpiration && cartExpiration < now) {
-      cart.forEach((seat) => {
+      cart.forEach(seat => {
         if (seat.sillaId || seat.id || seat._id) {
           unlockSeat(
             seat.sillaId || seat.id || seat._id,

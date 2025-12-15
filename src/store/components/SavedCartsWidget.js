@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, List, Tag, Space, Typography, Modal, Input, message, Tooltip, Badge } from '../../utils/antdComponents';
-import { 
-  SaveOutlined, 
-  DeleteOutlined, 
-  ShoppingCartOutlined, 
+import {
+  Card,
+  Button,
+  List,
+  Tag,
+  Space,
+  Typography,
+  Modal,
+  Input,
+  message,
+  Tooltip,
+  Badge,
+} from '../../utils/antdComponents';
+import {
+  SaveOutlined,
+  DeleteOutlined,
+  ShoppingCartOutlined,
   ClockCircleOutlined,
   UserOutlined,
   CalendarOutlined,
-  PlusOutlined
+  PlusOutlined,
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 
@@ -16,15 +28,15 @@ const { Title, Text } = Typography;
 const SavedCartsWidget = ({ visible, onClose }) => {
   const [cartName, setCartName] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const { 
-    savedCarts, 
-    savedCartsLoading, 
-    loadSavedCarts, 
-    saveCurrentCart, 
-    loadSavedCart, 
+  const {
+    savedCarts,
+    savedCartsLoading,
+    loadSavedCarts,
+    saveCurrentCart,
+    loadSavedCart,
     deleteSavedCart,
     getItemCount,
-    calculateTotal
+    calculateTotal,
   } = useCartStore();
 
   useEffect(() => {
@@ -35,7 +47,6 @@ const SavedCartsWidget = ({ visible, onClose }) => {
 
   const handleSaveCart = async () => {
     if (!cartName.trim()) {
-
       return;
     }
 
@@ -49,7 +60,7 @@ const SavedCartsWidget = ({ visible, onClose }) => {
     setShowSaveModal(false);
   };
 
-  const handleLoadCart = async (cartId) => {
+  const handleLoadCart = async cartId => {
     try {
       await loadSavedCart(cartId);
       message.success('Carrito cargado correctamente');
@@ -59,7 +70,7 @@ const SavedCartsWidget = ({ visible, onClose }) => {
     }
   };
 
-  const handleDeleteCart = async (cartId) => {
+  const handleDeleteCart = async cartId => {
     try {
       await deleteSavedCart(cartId);
       message.success('Carrito eliminado correctamente');
@@ -68,13 +79,13 @@ const SavedCartsWidget = ({ visible, onClose }) => {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     return new Date(dateString).toLocaleString('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -90,9 +101,9 @@ const SavedCartsWidget = ({ visible, onClose }) => {
         open={visible}
         onCancel={onClose}
         footer={[
-          <Button 
-            key="save" 
-            type="primary" 
+          <Button
+            key="save"
+            type="primary"
             icon={<PlusOutlined />}
             onClick={() => setShowSaveModal(true)}
           >
@@ -100,7 +111,7 @@ const SavedCartsWidget = ({ visible, onClose }) => {
           </Button>,
           <Button key="close" onClick={onClose}>
             Cerrar
-          </Button>
+          </Button>,
         ]}
         width={700}
         destroyOnClose
@@ -113,20 +124,20 @@ const SavedCartsWidget = ({ visible, onClose }) => {
         ) : savedCarts.length === 0 ? (
           <div className="text-center py-8">
             <ShoppingCartOutlined className="text-4xl text-gray-400 mb-4" />
-            <Title level={4} className="text-gray-500">No hay carritos guardados</Title>
-            <Text type="secondary">
-              Guarda tu carrito actual para acceder a ©l m¡s tarde
-            </Text>
+            <Title level={4} className="text-gray-500">
+              No hay carritos guardados
+            </Title>
+            <Text type="secondary">Guarda tu carrito actual para acceder a ©l m¡s tarde</Text>
           </div>
         ) : (
           <List
             dataSource={savedCarts}
-            renderItem={(cart) => (
+            renderItem={cart => (
               <List.Item
                 actions={[
                   <Tooltip key="load" title="Cargar carrito">
-                    <Button 
-                      type="primary" 
+                    <Button
+                      type="primary"
                       size="small"
                       icon={<ShoppingCartOutlined />}
                       onClick={() => handleLoadCart(cart.id)}
@@ -135,8 +146,8 @@ const SavedCartsWidget = ({ visible, onClose }) => {
                     </Button>
                   </Tooltip>,
                   <Tooltip key="delete" title="Eliminar carrito">
-                    <Button 
-                      type="text" 
+                    <Button
+                      type="text"
                       danger
                       size="small"
                       icon={<DeleteOutlined />}
@@ -144,7 +155,7 @@ const SavedCartsWidget = ({ visible, onClose }) => {
                     >
                       Eliminar
                     </Button>
-                  </Tooltip>
+                  </Tooltip>,
                 ]}
                 className="border rounded-lg p-4 mb-2 hover:bg-gray-50 transition-colors"
               >
@@ -152,9 +163,9 @@ const SavedCartsWidget = ({ visible, onClose }) => {
                   title={
                     <div className="flex items-center space-x-2">
                       <Text strong>{cart.name || `Carrito ${cart.id}`}</Text>
-                      <Badge 
-                        count={getItemCount()} 
-                        size="small" 
+                      <Badge
+                        count={getItemCount()}
+                        size="small"
                         style={{ backgroundColor: '#1890ff' }}
                       />
                     </div>
@@ -165,7 +176,7 @@ const SavedCartsWidget = ({ visible, onClose }) => {
                         <ClockCircleOutlined />
                         <Text type="secondary">{formatDate(cart.created_at)}</Text>
                       </div>
-                      
+
                       <div className="flex items-center space-x-4">
                         {cart.seats?.length > 0 && (
                           <div className="flex items-center space-x-1">
@@ -180,7 +191,7 @@ const SavedCartsWidget = ({ visible, onClose }) => {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <Text strong className="text-lg text-blue-600">
                           Total: ${cart.total?.toFixed(2) || '0.00'}
@@ -210,20 +221,16 @@ const SavedCartsWidget = ({ visible, onClose }) => {
             <Input
               placeholder="Ej: Carrito para evento X"
               value={cartName}
-              onChange={(e) => setCartName(e.target.value)}
+              onChange={e => setCartName(e.target.value)}
               onPressEnter={handleSaveCart}
               autoFocus
             />
           </div>
-          
+
           <div className="bg-gray-50 p-3 rounded">
-            <Text type="secondary">
-              Items en carrito actual: {getItemCount()}
-            </Text>
+            <Text type="secondary">Items en carrito actual: {getItemCount()}</Text>
             <br />
-            <Text type="secondary">
-              Total: ${calculateTotal().toFixed(2)}
-            </Text>
+            <Text type="secondary">Total: ${calculateTotal().toFixed(2)}</Text>
           </div>
         </div>
       </Modal>
@@ -232,5 +239,3 @@ const SavedCartsWidget = ({ visible, onClose }) => {
 };
 
 export default SavedCartsWidget;
-
-

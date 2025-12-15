@@ -22,12 +22,14 @@ const AuthGuard = ({ children }) => {
       const activeUser = sessionData?.session?.user;
 
       if (activeUser) {
-
         return;
       }
 
       // Fallback: intentar obtener el usuario directamente (puede requerir llamada de red)
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
       if (error) {
         console.error('Error checking auth:', error);
@@ -45,14 +47,16 @@ const AuthGuard = ({ children }) => {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        flexDirection: 'column',
-        gap: '16px'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          flexDirection: 'column',
+          gap: '16px',
+        }}
+      >
         <Spin size="large" />
         <div>Verificando autenticaci³n...</div>
       </div>
@@ -75,5 +79,3 @@ const AuthGuard = ({ children }) => {
 };
 
 export default AuthGuard;
-
-

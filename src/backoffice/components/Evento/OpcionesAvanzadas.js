@@ -10,7 +10,7 @@ import {
   DollarOutlined,
   AppleOutlined,
   AndroidOutlined,
-  ShopOutlined
+  ShopOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -28,96 +28,96 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
     otrasOpciones: {
       observacionesEmail: {
         mostrar: eventoData?.otrasOpciones?.observacionesEmail?.mostrar || false,
-        texto: eventoData?.otrasOpciones?.observacionesEmail?.texto || ''
+        texto: eventoData?.otrasOpciones?.observacionesEmail?.texto || '',
       },
       observacionesCompra: {
-        mostrar:
-          eventoData?.otrasOpciones?.observacionesCompra?.mostrar || false,
-        texto: eventoData?.otrasOpciones?.observacionesCompra?.texto || ''
+        mostrar: eventoData?.otrasOpciones?.observacionesCompra?.mostrar || false,
+        texto: eventoData?.otrasOpciones?.observacionesCompra?.texto || '',
       },
       popupAntesAsiento: {
         mostrar: eventoData?.otrasOpciones?.popupAntesAsiento?.mostrar || false,
-        texto: eventoData?.otrasOpciones?.popupAntesAsiento?.texto || ''
+        texto: eventoData?.otrasOpciones?.popupAntesAsiento?.texto || '',
       },
-      habilitarMetodosPago:
-        eventoData?.otrasOpciones?.habilitarMetodosPago || false,
-      metodosPagoPermitidos:
-        eventoData?.otrasOpciones?.metodosPagoPermitidos || []
+      habilitarMetodosPago: eventoData?.otrasOpciones?.habilitarMetodosPago || false,
+      metodosPagoPermitidos: eventoData?.otrasOpciones?.metodosPagoPermitidos || [],
     },
     analytics: {
       enabled: eventoData?.analytics?.enabled || false,
       gtmId: eventoData?.analytics?.gtmId || '',
       metaPixelId: eventoData?.analytics?.metaPixelId || '',
-      metaAccessToken: eventoData?.analytics?.metaAccessToken || ''
-    }
+      metaAccessToken: eventoData?.analytics?.metaAccessToken || '',
+    },
   });
 
   // Métodos de pago disponibles con iconos
-  const availableMethods = useMemo(() => [
-    {
-      id: 'stripe',
-      name: 'Stripe',
-      icon: <CreditCardOutlined style={{ color: '#6772e5' }} />,
-      description: 'Tarjetas de crédito y débito',
-      recommended: true
-    },
-    {
-      id: 'paypal',
-      name: 'PayPal',
-      icon: <DollarOutlined style={{ color: '#0070ba' }} />,
-      description: 'Pagos a través de PayPal',
-      recommended: true
-    },
-    {
-      id: 'cashea',
-      name: 'Cashea',
-      icon: <CreditCardOutlined style={{ color: '#111827' }} />,
-      description: 'Compra ahora y paga después con Cashea',
-      recommended: false
-    },
-    {
-      id: 'apple_pay',
-      name: 'Apple Pay',
-      icon: <AppleOutlined style={{ color: '#000000' }} />,
-      description: 'Pagos para usuarios iOS',
-      recommended: true
-    },
-    {
-      id: 'google_pay',
-      name: 'Google Pay',
-      icon: <AndroidOutlined style={{ color: '#4285f4' }} />,
-      description: 'Pagos para usuarios Android',
-      recommended: true
-    },
-    {
-      id: 'transferencia',
-      name: 'Transferencia Bancaria',
-      icon: <BankOutlined style={{ color: '#52c41a' }} />,
-      description: 'Transferencias bancarias directas',
-      recommended: false
-    },
-    {
-      id: 'pago_movil',
-      name: 'Pago Móvil',
-      icon: <MobileOutlined style={{ color: '#1890ff' }} />,
-      description: 'Pagos móviles (MercadoPago, etc.)',
-      recommended: false
-    },
-    {
-      id: 'efectivo_tienda',
-      name: 'Pago en Efectivo en Tienda',
-      icon: <ShopOutlined style={{ color: '#fa8c16' }} />,
-      description: 'Pagos en efectivo en tienda física',
-      recommended: false
-    },
-    {
-      id: 'efectivo',
-      name: 'Efectivo',
-      icon: <DollarOutlined style={{ color: '#fa8c16' }} />,
-      description: 'Pagos en efectivo',
-      recommended: false
-    }
-  ], []);
+  const availableMethods = useMemo(
+    () => [
+      {
+        id: 'stripe',
+        name: 'Stripe',
+        icon: <CreditCardOutlined style={{ color: '#6772e5' }} />,
+        description: 'Tarjetas de crédito y débito',
+        recommended: true,
+      },
+      {
+        id: 'paypal',
+        name: 'PayPal',
+        icon: <DollarOutlined style={{ color: '#0070ba' }} />,
+        description: 'Pagos a través de PayPal',
+        recommended: true,
+      },
+      {
+        id: 'cashea',
+        name: 'Cashea',
+        icon: <CreditCardOutlined style={{ color: '#111827' }} />,
+        description: 'Compra ahora y paga después con Cashea',
+        recommended: false,
+      },
+      {
+        id: 'apple_pay',
+        name: 'Apple Pay',
+        icon: <AppleOutlined style={{ color: '#000000' }} />,
+        description: 'Pagos para usuarios iOS',
+        recommended: true,
+      },
+      {
+        id: 'google_pay',
+        name: 'Google Pay',
+        icon: <AndroidOutlined style={{ color: '#4285f4' }} />,
+        description: 'Pagos para usuarios Android',
+        recommended: true,
+      },
+      {
+        id: 'transferencia',
+        name: 'Transferencia Bancaria',
+        icon: <BankOutlined style={{ color: '#52c41a' }} />,
+        description: 'Transferencias bancarias directas',
+        recommended: false,
+      },
+      {
+        id: 'pago_movil',
+        name: 'Pago Móvil',
+        icon: <MobileOutlined style={{ color: '#1890ff' }} />,
+        description: 'Pagos móviles (MercadoPago, etc.)',
+        recommended: false,
+      },
+      {
+        id: 'efectivo_tienda',
+        name: 'Pago en Efectivo en Tienda',
+        icon: <ShopOutlined style={{ color: '#fa8c16' }} />,
+        description: 'Pagos en efectivo en tienda física',
+        recommended: false,
+      },
+      {
+        id: 'efectivo',
+        name: 'Efectivo',
+        icon: <DollarOutlined style={{ color: '#fa8c16' }} />,
+        description: 'Pagos en efectivo',
+        recommended: false,
+      },
+    ],
+    []
+  );
 
   // Fetch available payment methods on mount
   useEffect(() => {
@@ -126,25 +126,26 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
     const fetchMetodos = async () => {
       try {
         // Cargar métodos de pago desde Supabase
-        const { data: methods, error } = await supabase
-          .from('payment_methods')
-          .select('*');
+        const { data: methods, error } = await supabase.from('payment_methods').select('*');
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
+        if (error && error.code !== 'PGRST116') {
+          // PGRST116 = tabla no existe
         }
 
         if (!isSubscribed) return;
 
         // Si no hay datos en la BD, usar los métodos por defecto (desactivados)
         if (!methods || methods.length === 0) {
-          setMetodos(availableMethods.map(method => ({
-            _id: method.id,
-            metodo: method.name,
-            activo: false, // Por defecto desactivados
-            habilitado: false, // No habilitado en payment-gateways
-            icon: method.icon,
-            description: method.description
-          })));
+          setMetodos(
+            availableMethods.map(method => ({
+              _id: method.id,
+              metodo: method.name,
+              activo: false, // Por defecto desactivados
+              habilitado: false, // No habilitado en payment-gateways
+              icon: method.icon,
+              description: method.description,
+            }))
+          );
         } else {
           // Combinar con los métodos disponibles
           const combinedMethods = availableMethods.map(method => {
@@ -156,7 +157,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
               activo: estaHabilitado, // Activo solo si está habilitado en payment-gateways
               habilitado: estaHabilitado, // Indica si está habilitado en payment-gateways
               icon: method.icon,
-              description: method.description
+              description: method.description,
             };
           });
           setMetodos(combinedMethods);
@@ -165,14 +166,16 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         console.error('Error cargando métodos de pago', e);
         if (!isSubscribed) return;
         // Fallback a métodos por defecto (desactivados)
-        setMetodos(availableMethods.map(method => ({
-          _id: method.id,
-          metodo: method.name,
-          activo: false, // Por defecto desactivados
-          habilitado: false, // No habilitado en payment-gateways
-          icon: method.icon,
-          description: method.description
-        })));
+        setMetodos(
+          availableMethods.map(method => ({
+            _id: method.id,
+            metodo: method.name,
+            activo: false, // Por defecto desactivados
+            habilitado: false, // No habilitado en payment-gateways
+            icon: method.icon,
+            description: method.description,
+          }))
+        );
       }
     };
 
@@ -193,9 +196,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
     const isExistingEvent = Boolean(eventoData?.id);
 
     // Obtener métodos habilitados en payment-gateways
-    const metodosHabilitados = metodos
-      .filter(m => m.habilitado === true)
-      .map(m => m._id);
+    const metodosHabilitados = metodos.filter(m => m.habilitado === true).map(m => m._id);
 
     // Para eventos nuevos sin configuración explícita, activar TODOS los métodos habilitados en payment-gateways
     if (!isExistingEvent && !hasExplicitSelection) {
@@ -203,8 +204,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         ...prev,
         otrasOpciones: {
           ...prev.otrasOpciones,
-          metodosPagoPermitidos: [...metodosHabilitados] // Copia del array para evitar mutaciones
-        }
+          metodosPagoPermitidos: [...metodosHabilitados], // Copia del array para evitar mutaciones
+        },
       }));
 
       setEventoData(prev => {
@@ -213,8 +214,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           ...prev,
           otrasOpciones: {
             ...prev.otrasOpciones,
-            metodosPagoPermitidos: [...metodosHabilitados] // Copia del array para evitar mutaciones
-          }
+            metodosPagoPermitidos: [...metodosHabilitados], // Copia del array para evitar mutaciones
+          },
         };
       });
     } else if (hasExplicitSelection && isExistingEvent) {
@@ -231,8 +232,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           ...prev,
           otrasOpciones: {
             ...prev.otrasOpciones,
-            metodosPagoPermitidos: metodosPermitidosFiltrados
-          }
+            metodosPagoPermitidos: metodosPermitidosFiltrados,
+          },
         }));
 
         setEventoData(prev => {
@@ -241,8 +242,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
             ...prev,
             otrasOpciones: {
               ...prev.otrasOpciones,
-              metodosPagoPermitidos: metodosPermitidosFiltrados
-            }
+              metodosPagoPermitidos: metodosPermitidosFiltrados,
+            },
           };
         });
       }
@@ -253,46 +254,40 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   useEffect(() => {
     // Si es un evento nuevo y hay métodos habilitados, inicializar con todos los habilitados
     const isNewEvent = !eventoData?.id;
-    const metodosHabilitados = metodos
-      .filter(m => m.habilitado === true)
-      .map(m => m._id);
+    const metodosHabilitados = metodos.filter(m => m.habilitado === true).map(m => m._id);
 
-    const metodosPagoPermitidos = isNewEvent && metodosHabilitados.length > 0
-      ? metodosHabilitados // Para eventos nuevos, activar todos los habilitados por defecto
-      : (eventoData?.otrasOpciones?.metodosPagoPermitidos || []); // Para eventos existentes, usar los guardados
+    const metodosPagoPermitidos =
+      isNewEvent && metodosHabilitados.length > 0
+        ? metodosHabilitados // Para eventos nuevos, activar todos los habilitados por defecto
+        : eventoData?.otrasOpciones?.metodosPagoPermitidos || []; // Para eventos existentes, usar los guardados
 
     setForm({
       otrasOpciones: {
         observacionesEmail: {
-          mostrar:
-            eventoData?.otrasOpciones?.observacionesEmail?.mostrar || false,
-          texto: eventoData?.otrasOpciones?.observacionesEmail?.texto || ''
+          mostrar: eventoData?.otrasOpciones?.observacionesEmail?.mostrar || false,
+          texto: eventoData?.otrasOpciones?.observacionesEmail?.texto || '',
         },
         observacionesCompra: {
-          mostrar:
-            eventoData?.otrasOpciones?.observacionesCompra?.mostrar || false,
-          texto: eventoData?.otrasOpciones?.observacionesCompra?.texto || ''
+          mostrar: eventoData?.otrasOpciones?.observacionesCompra?.mostrar || false,
+          texto: eventoData?.otrasOpciones?.observacionesCompra?.texto || '',
         },
         popupAntesAsiento: {
-          mostrar:
-            eventoData?.otrasOpciones?.popupAntesAsiento?.mostrar || false,
-          texto: eventoData?.otrasOpciones?.popupAntesAsiento?.texto || ''
+          mostrar: eventoData?.otrasOpciones?.popupAntesAsiento?.mostrar || false,
+          texto: eventoData?.otrasOpciones?.popupAntesAsiento?.texto || '',
         },
-        habilitarMetodosPago:
-          eventoData?.otrasOpciones?.habilitarMetodosPago || false,
-        metodosPagoPermitidos: metodosPagoPermitidos
+        habilitarMetodosPago: eventoData?.otrasOpciones?.habilitarMetodosPago || false,
+        metodosPagoPermitidos: metodosPagoPermitidos,
       },
       analytics: {
         enabled: eventoData?.analytics?.enabled || false,
         gtmId: eventoData?.analytics?.gtmId || '',
         metaPixelId: eventoData?.analytics?.metaPixelId || '',
-        metaAccessToken: eventoData?.analytics?.metaAccessToken || ''
-      }
+        metaAccessToken: eventoData?.analytics?.metaAccessToken || '',
+      },
     });
   }, [eventoData]);
 
-
-  const handleOtherOptionsChange = (option, field) => (e) => {
+  const handleOtherOptionsChange = (option, field) => e => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setForm(prev => ({
       ...prev,
@@ -300,9 +295,9 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         ...prev.otrasOpciones,
         [option]: {
           ...prev.otrasOpciones[option],
-          [field]: value
-        }
-      }
+          [field]: value,
+        },
+      },
     }));
     setEventoData(prev => ({
       ...prev,
@@ -310,37 +305,37 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         ...prev.otrasOpciones,
         [option]: {
           ...prev.otrasOpciones?.[option],
-          [field]: value
-        }
-      }
+          [field]: value,
+        },
+      },
     }));
   };
 
-  const handleAnalyticsToggle = (e) => {
+  const handleAnalyticsToggle = e => {
     const checked = e.target.checked;
     setForm(prev => ({
       ...prev,
-      analytics: { ...prev.analytics, enabled: checked }
+      analytics: { ...prev.analytics, enabled: checked },
     }));
     setEventoData(prev => ({
       ...prev,
-      analytics: { ...prev.analytics, enabled: checked }
+      analytics: { ...prev.analytics, enabled: checked },
     }));
   };
 
-  const handleAnalyticsFieldChange = (field) => (e) => {
+  const handleAnalyticsFieldChange = field => e => {
     const value = e.target.value;
     setForm(prev => ({
       ...prev,
-      analytics: { ...prev.analytics, [field]: value }
+      analytics: { ...prev.analytics, [field]: value },
     }));
     setEventoData(prev => ({
       ...prev,
-      analytics: { ...prev.analytics, [field]: value }
+      analytics: { ...prev.analytics, [field]: value },
     }));
   };
 
-  const handleMetodoToggle = (metodo) => {
+  const handleMetodoToggle = metodo => {
     const metodoInfo = metodos.find(m => m._id === metodo);
     if (!metodoInfo) {
       return;
@@ -356,15 +351,15 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           ...prev,
           otrasOpciones: {
             ...prev.otrasOpciones,
-            metodosPagoPermitidos: nuevos
-          }
+            metodosPagoPermitidos: nuevos,
+          },
         };
         setEventoData(ePrev => ({
           ...ePrev,
           otrasOpciones: {
             ...ePrev.otrasOpciones,
-            metodosPagoPermitidos: nuevos
-          }
+            metodosPagoPermitidos: nuevos,
+          },
         }));
         return updated;
       }
@@ -381,41 +376,41 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         ...prev,
         otrasOpciones: {
           ...prev.otrasOpciones,
-          metodosPagoPermitidos: nuevos
-        }
+          metodosPagoPermitidos: nuevos,
+        },
       };
       setEventoData(ePrev => ({
         ...ePrev,
         otrasOpciones: {
           ...ePrev.otrasOpciones,
-          metodosPagoPermitidos: nuevos
-        }
+          metodosPagoPermitidos: nuevos,
+        },
       }));
       return updated;
     });
   };
 
-  const handleMetodosPagoCheck = (e) => {
+  const handleMetodosPagoCheck = e => {
     const checked = e.target.checked;
     setForm(prev => ({
       ...prev,
       otrasOpciones: {
         ...prev.otrasOpciones,
-        habilitarMetodosPago: checked
-      }
+        habilitarMetodosPago: checked,
+      },
     }));
     setEventoData(prev => ({
       ...prev,
       otrasOpciones: {
         ...prev.otrasOpciones,
-        habilitarMetodosPago: checked
-      }
+        habilitarMetodosPago: checked,
+      },
     }));
   };
 
   return (
     <div className="tab-content opciones-avanzadas space-y-4">
-     <h4>Otras opciones</h4>
+      <h4>Otras opciones</h4>
 
       <div className="form-group space-y-2">
         <label>
@@ -423,8 +418,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
             type="checkbox"
             checked={form.otrasOpciones.observacionesEmail.mostrar}
             onChange={handleOtherOptionsChange('observacionesEmail', 'mostrar')}
-          />
-          {' '}Mostrar observaciones en correo electrónico de confirmación
+          />{' '}
+          Mostrar observaciones en correo electrónico de confirmación
         </label>
         {form.otrasOpciones.observacionesEmail.mostrar && (
           <textarea
@@ -435,15 +430,14 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         )}
       </div>
 
-
       <div className="form-group space-y-2">
         <label>
           <input
             type="checkbox"
             checked={form.otrasOpciones.observacionesCompra.mostrar}
             onChange={handleOtherOptionsChange('observacionesCompra', 'mostrar')}
-          />
-          {' '}Mostrar observaciones en proceso de compra
+          />{' '}
+          Mostrar observaciones en proceso de compra
         </label>
         {form.otrasOpciones.observacionesCompra.mostrar && (
           <textarea
@@ -460,8 +454,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
             type="checkbox"
             checked={form.otrasOpciones.popupAntesAsiento.mostrar}
             onChange={handleOtherOptionsChange('popupAntesAsiento', 'mostrar')}
-          />
-          {' '}Mostrar un pop-up bloqueante antes de seleccionar el asiento
+          />{' '}
+          Mostrar un pop-up bloqueante antes de seleccionar el asiento
         </label>
         {form.otrasOpciones.popupAntesAsiento.mostrar && (
           <textarea
@@ -478,8 +472,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
             type="checkbox"
             checked={form.otrasOpciones.habilitarMetodosPago}
             onChange={handleMetodosPagoCheck}
-          />
-          {' '}Métodos de pago permitidos
+          />{' '}
+          Métodos de pago permitidos
         </label>
         {form.otrasOpciones.habilitarMetodosPago && (
           <div className="flex flex-col gap-2">
@@ -547,7 +541,9 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
               onChange={handleAnalyticsFieldChange('gtmId')}
               className="w-full p-2 border border-gray-300 rounded-md"
             />
-            <p className="text-xs text-gray-500">En caso de que tengas una cuenta GTM a nivel de empresa será sustituida por esta.</p>
+            <p className="text-xs text-gray-500">
+              En caso de que tengas una cuenta GTM a nivel de empresa será sustituida por esta.
+            </p>
           </div>
 
           <div className="form-group space-y-1">
@@ -589,10 +585,25 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           >
             <div className="bg-white p-6 rounded-md max-w-lg mx-auto">
               <h2 className="text-xl font-bold mb-4">META PIXEL CODE</h2>
-              <p className="mb-2">Allows you to track visitors activity on the website, manage Meta ads, measure ad effectiveness, target users, dynamic ad campaigns, and analyze web login/ticket sales effectiveness.</p>
+              <p className="mb-2">
+                Allows you to track visitors activity on the website, manage Meta ads, measure ad
+                effectiveness, target users, dynamic ad campaigns, and analyze web login/ticket
+                sales effectiveness.
+              </p>
               <p className="font-semibold mb-1">Step 1: Create a Meta Pixel</p>
               <ol className="list-decimal list-inside space-y-1 mb-3 text-sm">
-                <li>Go to events manager: <a className="text-blue-600 underline" href="https://www.facebook.com/events_manager" target="_blank" rel="noreferrer">https://www.facebook.com/events_manager</a>.</li>
+                <li>
+                  Go to events manager:{' '}
+                  <a
+                    className="text-blue-600 underline"
+                    href="https://www.facebook.com/events_manager"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    https://www.facebook.com/events_manager
+                  </a>
+                  .
+                </li>
                 <li>Click on "Connect data origins" and select "Web".</li>
                 <li>Select "Meta Pixel" and click "Connect".</li>
                 <li>Add the name of the pixel.</li>

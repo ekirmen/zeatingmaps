@@ -16,7 +16,9 @@ class SupabaseWithTracking {
    */
   async getCurrentUser() {
     try {
-      const { data: { user } } = await this.supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await this.supabase.auth.getUser();
       if (!user) return 'anonymous';
       return user.email || user.id || 'anonymous';
     } catch (error) {
@@ -30,7 +32,6 @@ class SupabaseWithTracking {
    * @returns {Object} Datos con tracking agregado
    */
   async addInsertTracking(data) {
-    
     const now = new Date().toISOString();
 
     return {
@@ -38,7 +39,7 @@ class SupabaseWithTracking {
       created_by: currentUser,
       updated_by: currentUser,
       created_at: now,
-      updated_at: now
+      updated_at: now,
     };
   }
 
@@ -48,13 +49,12 @@ class SupabaseWithTracking {
    * @returns {Object} Datos con tracking agregado
    */
   async addUpdateTracking(data) {
-    
     const now = new Date().toISOString();
 
     return {
       ...data,
       updated_by: currentUser,
-      updated_at: now
+      updated_at: now,
     };
   }
 
@@ -70,9 +70,7 @@ class SupabaseWithTracking {
 
       if (Array.isArray(data)) {
         // Si es un array, agregar tracking a cada elemento
-        dataWithTracking = await Promise.all(
-          data.map(item => this.addInsertTracking(item))
-        );
+        dataWithTracking = await Promise.all(data.map(item => this.addInsertTracking(item)));
       } else {
         // Si es un objeto, agregar tracking
         dataWithTracking = await this.addInsertTracking(data);
@@ -179,9 +177,7 @@ class SupabaseWithTracking {
 
       if (Array.isArray(data)) {
         // Para upsert, agregar tracking de inserción
-        dataWithTracking = await Promise.all(
-          data.map(item => this.addInsertTracking(item))
-        );
+        dataWithTracking = await Promise.all(data.map(item => this.addInsertTracking(item)));
       } else {
         dataWithTracking = await this.addInsertTracking(data);
       }

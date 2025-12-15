@@ -8,7 +8,7 @@ const CartWithTimer = ({
   onPaymentClick,
   selectedClient,
   selectedAffiliate,
-  fixed = false
+  fixed = false,
 }) => {
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutos en segundos
   const [isVisible, setIsVisible] = useState(false);
@@ -33,13 +33,13 @@ const CartWithTimer = ({
         tipoPrecio: item.tipoPrecio,
         descuentoNombre: item.descuentoNombre,
         asientos: [],
-        cantidad: 0
+        cantidad: 0,
       };
     }
     acc[key].asientos.push({
       _id: item._id,
       nombre: item.nombre,
-      nombreMesa: item.nombreMesa
+      nombreMesa: item.nombreMesa,
     });
 
     return acc;
@@ -74,17 +74,20 @@ const CartWithTimer = ({
   }, [timeLeft, safeCarrito.length, setCarrito]);
 
   // Formatear tiempo
-  const formatTime = (seconds) => {
+  const formatTime = seconds => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   // Eliminar asiento del carrito
-  const handleRemoveSeat = useCallback((seatId) => {
-    setCarrito(prev => prev.filter(item => item._id !== seatId));
-    message.success('Asiento eliminado del carrito');
-  }, [setCarrito]);
+  const handleRemoveSeat = useCallback(
+    seatId => {
+      setCarrito(prev => prev.filter(item => item._id !== seatId));
+      message.success('Asiento eliminado del carrito');
+    },
+    [setCarrito]
+  );
 
   // Limpiar carrito
   const handleClearCart = useCallback(() => {
@@ -97,8 +100,8 @@ const CartWithTimer = ({
   }
 
   const containerClasses = fixed
-    ? "w-full h-full bg-white border border-gray-200 overflow-hidden"
-    : "fixed top-4 right-4 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[calc(100vh-2rem)] overflow-hidden";
+    ? 'w-full h-full bg-white border border-gray-200 overflow-hidden'
+    : 'fixed top-4 right-4 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[calc(100vh-2rem)] overflow-hidden';
 
   return (
     <div className={containerClasses}>
@@ -107,9 +110,7 @@ const CartWithTimer = ({
         <h3 className="font-semibold text-lg">Carrito</h3>
         <div className="flex items-center gap-2">
           <AiOutlineClockCircle className="text-yellow-300" />
-          <span className="font-mono text-sm">
-            {formatTime(timeLeft)}
-          </span>
+          <span className="font-mono text-sm">{formatTime(timeLeft)}</span>
         </div>
       </div>
 
@@ -144,10 +145,11 @@ const CartWithTimer = ({
 
             {/* Individual seats */}
             <div className="space-y-1">
-              {group.asientos.map((seat) => (
+              {group.asientos.map(seat => (
                 <div key={seat._id} className="flex justify-between items-center text-sm">
                   <span className="text-gray-700">
-                    {seat.nombreMesa ? `${seat.nombreMesa} - ` : ''}{seat.nombre}
+                    {seat.nombreMesa ? `${seat.nombreMesa} - ` : ''}
+                    {seat.nombre}
                   </span>
                   <button
                     onClick={() => handleRemoveSeat(seat._id)}
@@ -167,7 +169,9 @@ const CartWithTimer = ({
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Boletos:</span>
-            <span>{safeCarrito.length} - ${subtotal.toFixed(2)}</span>
+            <span>
+              {safeCarrito.length} - ${subtotal.toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Productos:</span>
@@ -206,7 +210,8 @@ const CartWithTimer = ({
         {/* Warning when time is low */}
         {timeLeft <= 300 && timeLeft > 0 && (
           <div className="mt-3 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-xs">
-            š ï¸ Tiempo restante: {formatTime(timeLeft)}. Completa tu compra antes de que se liberen los asientos.
+            š ï¸ Tiempo restante: {formatTime(timeLeft)}. Completa tu compra antes de que se liberen
+            los asientos.
           </div>
         )}
       </div>
@@ -215,4 +220,3 @@ const CartWithTimer = ({
 };
 
 export default CartWithTimer;
-

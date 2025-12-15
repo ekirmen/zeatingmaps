@@ -28,7 +28,10 @@ export default async function downloadPkpass(locator, ticketId, source = 'web') 
 
   try {
     // Obtener token fresco de Supabase
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
     if (sessionError) {
       console.error('❌ [PKPASS] Error obteniendo sesión:', sessionError);
@@ -42,12 +45,12 @@ export default async function downloadPkpass(locator, ticketId, source = 'web') 
     const headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       Accept: 'application/vnd.apple.pkpass, application/octet-stream, */*',
-      'Cache-Control': 'no-cache'
+      'Cache-Control': 'no-cache',
     };
     const response = await fetch(url, {
       headers,
       method: 'GET',
-      mode: 'cors'
+      mode: 'cors',
     });
 
     if (!response.ok) {
@@ -58,7 +61,8 @@ export default async function downloadPkpass(locator, ticketId, source = 'web') 
         if (errorData?.error?.message) {
           errorMessage = errorData.error.message;
         } else if (errorData?.error) {
-          errorMessage = typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error);
+          errorMessage =
+            typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error);
         }
       } catch (e) {
         // Si no se puede parsear como JSON, usar el mensaje por defecto
@@ -75,10 +79,11 @@ export default async function downloadPkpass(locator, ticketId, source = 'web') 
     }
 
     const contentType = response.headers.get('Content-Type');
-    const validContent = contentType &&
+    const validContent =
+      contentType &&
       (contentType.includes('application/vnd.apple.pkpass') ||
-       contentType.includes('application/zip') ||
-       contentType.includes('application/octet-stream'));
+        contentType.includes('application/zip') ||
+        contentType.includes('application/octet-stream'));
 
     if (!validContent) {
       console.error('❌ [PKPASS] Tipo de contenido inválido:', contentType);
@@ -103,8 +108,9 @@ export default async function downloadPkpass(locator, ticketId, source = 'web') 
     // Trackear descarga exitosa
     trackTicketDownload(locator, 'pkpass', true, null);
 
-    toast.success('Archivo .pkpass descargado exitosamente. Puedes agregarlo a Apple Wallet o Google Wallet.');
-
+    toast.success(
+      'Archivo .pkpass descargado exitosamente. Puedes agregarlo a Apple Wallet o Google Wallet.'
+    );
   } catch (error) {
     let errorMessage = 'Error al descargar el archivo .pkpass';
 
@@ -124,4 +130,3 @@ export default async function downloadPkpass(locator, ticketId, source = 'web') 
     throw new Error(errorMessage);
   }
 }
-

@@ -28,7 +28,7 @@ const ZONAS_HORARIAS = [
   'America/Tegucigalpa',
   'America/Santo_Domingo',
   'America/Caracas',
-  'America/Costa_Rica'
+  'America/Costa_Rica',
 ];
 
 // Opciones de tiempo de liberación de reservas
@@ -61,7 +61,7 @@ const TIEMPOS_LIBERACION = [
   { value: 5760, label: '4 días después' },
   { value: 7200, label: '5 días después' },
   { value: 10080, label: '7 días después' },
-  { value: 14400, label: '10 días después' }
+  { value: 14400, label: '10 días después' },
 ];
 
 // Opciones de liberación de impresión de tickets
@@ -79,7 +79,7 @@ const TIEMPOS_IMPRESION = [
   { value: 5760, label: '4 días' },
   { value: 7200, label: '5 días' },
   { value: 10080, label: '7 días' },
-  { value: 'custom', label: 'Fecha personalizada' }
+  { value: 'custom', label: 'Fecha personalizada' },
 ];
 
 // Plataformas de streaming
@@ -92,11 +92,10 @@ const PLATAFORMAS_STREAMING = [
   { value: 'TEAMS', label: 'Microsoft Teams' },
   { value: 'VIMEO', label: 'Vimeo' },
   { value: 'YOUTUBE', label: 'YouTube' },
-  { value: 'ZOOM', label: 'Zoom' }
+  { value: 'ZOOM', label: 'Zoom' },
 ];
 
 // Número de plazos de pago
-
 
 const Funciones = () => {
   const { currentTenant } = useTenant();
@@ -117,7 +116,6 @@ const Funciones = () => {
       try {
         const { session, error } = await checkAndRefreshAuth();
         if (error || !session?.user) {
-
           return;
         }
         // Probar lectura
@@ -136,8 +134,7 @@ const Funciones = () => {
     };
 
     // Función para verificar el estado actual del componente
-    window.checkFuncionesState = () => {
-    };
+    window.checkFuncionesState = () => {};
 
     // Función para forzar la recarga de funciones
     window.reloadFunciones = async () => {
@@ -151,10 +148,7 @@ const Funciones = () => {
         const tableNames = ['funciones', 'function', 'sessions', 'eventos_sessions'];
 
         for (const tableName of tableNames) {
-          const { error } = await supabase
-            .from(tableName)
-            .select('*')
-            .limit(1);
+          const { error } = await supabase.from(tableName).select('*').limit(1);
 
           if (error) {
             if (error.code === 'PGRST116') {
@@ -194,11 +188,16 @@ const Funciones = () => {
       }
     };
   }, []);
-  const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
+  const {
+    recintoSeleccionado,
+    salaSeleccionada,
+    setRecintoSeleccionado,
+    setSalaSeleccionada,
+    recintos,
+  } = useRecinto();
 
   // Debug: Mostrar estado de recinto y sala
-  useEffect(() => {
-  }, [recintoSeleccionado, salaSeleccionada, recintos]);
+  useEffect(() => {}, [recintoSeleccionado, salaSeleccionada, recintos]);
 
   // Debug eliminado
   const [eventos, setEventos] = useState([]);
@@ -251,7 +250,7 @@ const Funciones = () => {
     fechaFinVenta: '',
     canales: {
       boxOffice: { activo: true, inicio: '', fin: '' },
-      internet: { activo: true, inicio: '', fin: '' }
+      internet: { activo: true, inicio: '', fin: '' },
     },
     cancellationDateSelected: false,
     endDateCancellation: '',
@@ -263,7 +262,7 @@ const Funciones = () => {
     idBarcodePool: null,
     activo: true,
     visibleEnBoleteria: true,
-    visibleEnStore: true
+    visibleEnStore: true,
   });
 
   // Cargar último formulario usado al iniciar y cuando cambie la sala seleccionada
@@ -292,50 +291,50 @@ const Funciones = () => {
     }
   }, [nuevaFuncion]);
 
-  const getEventoNombre = (eventoId) => {
-    const evento = eventos.find((e) => e.id === eventoId);
+  const getEventoNombre = eventoId => {
+    const evento = eventos.find(e => e.id === eventoId);
     if (evento) return evento.nombre;
     return eventoId ? `Evento ${eventoId}` : 'Evento desconocido';
   };
 
-  const getPlantillaNombre = (plantillaId) => {
+  const getPlantillaNombre = plantillaId => {
     if (plantillaId && typeof plantillaId === 'object' && plantillaId.nombre) {
       return plantillaId.nombre;
     }
-    const plantilla = plantillas.find((p) => p.id === plantillaId);
+    const plantilla = plantillas.find(p => p.id === plantillaId);
     if (plantilla) return plantilla.nombre;
     return plantillaId ? `Plantilla ${plantillaId}` : 'Sin plantilla';
   };
 
-  const getPlantillaComisionesNombre = (plantillaId) => {
+  const getPlantillaComisionesNombre = plantillaId => {
     if (plantillaId && typeof plantillaId === 'object' && plantillaId.nombre) {
       return plantillaId.nombre;
     }
-    const plantilla = plantillasComisiones.find((p) => p.id === plantillaId);
+    const plantilla = plantillasComisiones.find(p => p.id === plantillaId);
     if (plantilla) return plantilla.nombre;
     return plantillaId ? `Plantilla ${plantillaId}` : 'Sin plantilla';
   };
 
-  const getPlantillaProductoNombre = (plantillaId) => {
+  const getPlantillaProductoNombre = plantillaId => {
     if (plantillaId && typeof plantillaId === 'object' && plantillaId.nombre) {
       return plantillaId.nombre;
     }
-    const plantilla = plantillasProductos.find((p) => p.id === plantillaId);
+    const plantilla = plantillasProductos.find(p => p.id === plantillaId);
     if (plantilla) return plantilla.nombre;
     return plantillaId ? `Plantilla ${plantillaId}` : 'Sin plantilla';
   };
 
-  const formatFecha = (date) => {
+  const formatFecha = date => {
     return formatDateString(date);
   };
 
   // Helper function to convert empty strings to null for timestamp fields
-  const formatTimestampField = (value) => {
+  const formatTimestampField = value => {
     return value === '' ? null : value;
   };
 
   // Helper function to convert ISO timestamp to datetime-local format (YYYY-MM-DDTHH:mm)
-  const formatDateTimeLocal = (isoString) => {
+  const formatDateTimeLocal = isoString => {
     if (!isoString) return '';
     try {
       const date = new Date(isoString);
@@ -356,13 +355,13 @@ const Funciones = () => {
   };
 
   // Helper function to convert empty strings to null for integer fields
-  const formatIntegerField = (value) => {
+  const formatIntegerField = value => {
     if (value === '' || value === null || value === undefined) return null;
     return parseInt(value) || null;
   };
 
   // Helper function to convert empty strings to null for UUID fields
-  const formatUUIDField = (value) => {
+  const formatUUIDField = value => {
     if (value === '' || value === null || value === undefined) return null;
 
     // Convert to string if it's a number or other type
@@ -380,7 +379,7 @@ const Funciones = () => {
   };
 
   // Helper function for ID fields that can be integers or UUIDs
-  const formatIDField = (value) => {
+  const formatIDField = value => {
     if (value === '' || value === null || value === undefined) return null;
 
     // If it's already a number, return it
@@ -404,7 +403,7 @@ const Funciones = () => {
     return null;
   };
 
-  const getTiempoCaducidadText = (minutos) => {
+  const getTiempoCaducidadText = minutos => {
     if (minutos === 0) return 'En la fecha de celebración';
     if (minutos < 0) {
       const horas = Math.abs(minutos) / 60;
@@ -422,7 +421,7 @@ const Funciones = () => {
   };
 
   // Función para calcular fecha de apertura de puertas (2 horas antes)
-  const calcularAperturaPuertas = (fechaCelebracion) => {
+  const calcularAperturaPuertas = fechaCelebracion => {
     if (!fechaCelebracion) return '';
     const fecha = new Date(fechaCelebracion);
     // Restar 2 horas exactas
@@ -444,8 +443,8 @@ const Funciones = () => {
         ...prev,
         canales: {
           boxOffice: { ...prev.canales.boxOffice, inicio: fechaInicio || '', fin: fechaFin || '' },
-          internet: { ...prev.canales.internet, inicio: fechaInicio || '', fin: fechaFin || '' }
-        }
+          internet: { ...prev.canales.internet, inicio: fechaInicio || '', fin: fechaFin || '' },
+        },
       }));
     }
   };
@@ -489,7 +488,7 @@ const Funciones = () => {
       fechaFinVenta: '',
       canales: {
         boxOffice: { activo: true, inicio: '', fin: '' },
-        internet: { activo: true, inicio: '', fin: '' }
+        internet: { activo: true, inicio: '', fin: '' },
       },
       cancellationDateSelected: false,
       endDateCancellation: '',
@@ -501,7 +500,7 @@ const Funciones = () => {
       idBarcodePool: null,
       activo: true,
       visibleEnBoleteria: true,
-      visibleEnStore: true
+      visibleEnStore: true,
     });
   };
 
@@ -555,7 +554,8 @@ const Funciones = () => {
       // Intentar con la tabla 'funciones' primero
       let { data, error } = await supabase
         .from('funciones')
-        .select(`
+        .select(
+          `
           id,
           fecha_celebracion,
           inicio_venta,
@@ -611,7 +611,8 @@ const Funciones = () => {
           eventos!evento_id(*),
           salas!sala_id(*),
           plantillas!plantilla_entradas(*)
-        `)
+        `
+        )
         .eq('sala_id', salaSeleccionada.id)
         .order('fecha_celebracion', { ascending: true });
 
@@ -641,13 +642,15 @@ const Funciones = () => {
           code: error.code,
           message: error.message,
           details: error.details,
-          hint: error.hint
+          hint: error.hint,
         });
 
         // Si es un error 404, mostrar mensaje específico
         if (error.code === 'PGRST116') {
           console.error('💡 [loadFunciones] La tabla "funciones" no existe en la base de datos');
-          console.error('💡 [loadFunciones] Necesitas crear la tabla o verificar el nombre correcto');
+          console.error(
+            '💡 [loadFunciones] Necesitas crear la tabla o verificar el nombre correcto'
+          );
         }
 
         setFunciones([]);
@@ -674,9 +677,7 @@ const Funciones = () => {
   useEffect(() => {
     if (!recintoSeleccionado && !salaSeleccionada && !eventoSeleccionado) {
       const fetchAllFunciones = async () => {
-        const { data, error } = await supabase
-          .from('funciones')
-          .select(`
+        const { data, error } = await supabase.from('funciones').select(`
             id,
             fechaCelebracion:fecha_celebracion,
             inicioVenta:inicio_venta,
@@ -705,10 +706,7 @@ const Funciones = () => {
 
   useEffect(() => {
     const fetchPlantillas = async () => {
-      const { data, error } = await supabase
-        .from('plantillas')
-        .select('*')
-        .order('nombre');
+      const { data, error } = await supabase.from('plantillas').select('*').order('nombre');
 
       if (error) {
         /* omitido */
@@ -748,7 +746,8 @@ const Funciones = () => {
 
       if (error) {
         // Si la tabla no existe, establecer un array vacío
-        if (error.code === '42P01') { // undefined_table
+        if (error.code === '42P01') {
+          // undefined_table
           setPlantillasProductos([]);
         } else {
           setPlantillasProductos([]);
@@ -802,19 +801,23 @@ const Funciones = () => {
     if (salaSeleccionada?.id) {
       setNuevaFuncion(prev => ({
         ...prev,
-        idSala: salaSeleccionada.id
+        idSala: salaSeleccionada.id,
       }));
     }
   }, [salaSeleccionada]);
 
   // Sincronizar fechas de canales cuando se marque/desmarque "Misma fecha en todos los canales"
   useEffect(() => {
-    if (nuevaFuncion.mismaFechaCanales && nuevaFuncion.fechaInicioVenta && nuevaFuncion.fechaFinVenta) {
+    if (
+      nuevaFuncion.mismaFechaCanales &&
+      nuevaFuncion.fechaInicioVenta &&
+      nuevaFuncion.fechaFinVenta
+    ) {
       sincronizarFechasCanales(nuevaFuncion.fechaInicioVenta, nuevaFuncion.fechaFinVenta);
     }
   }, [nuevaFuncion.mismaFechaCanales]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     try {
@@ -823,7 +826,10 @@ const Funciones = () => {
       if (authError || !session?.user) {
         console.error('❌ Error de autenticación:', authError);
         // Intentar obtener más información sobre el estado de autenticación
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        const {
+          data: { session: currentSession },
+          error: sessionError,
+        } = await supabase.auth.getSession();
         alert('Error de autenticación. Por favor, inicie sesión nuevamente.');
         return;
       }
@@ -944,7 +950,7 @@ const Funciones = () => {
         visible_en_store: nuevaFuncion.visibleEnStore,
         tenant_id: formatUUIDField(currentTenant?.id),
         recinto_id: formatIDField(recintoSeleccionado?.id),
-        creadopor: session.user.id // Usar el ID del usuario de la sesión
+        creadopor: session.user.id, // Usar el ID del usuario de la sesión
       };
       // Validación final antes de enviar
       if (!funcionData.sala_id) {
@@ -954,7 +960,9 @@ const Funciones = () => {
 
       // Validación del tenant_id
       if (!funcionData.tenant_id) {
-        alert('Error: El tenant_id no puede ser null. Por favor, verifique la configuración del tenant.');
+        alert(
+          'Error: El tenant_id no puede ser null. Por favor, verifique la configuración del tenant.'
+        );
         return;
       }
 
@@ -971,7 +979,7 @@ const Funciones = () => {
             code: error.code,
             message: error.message,
             details: error.details,
-            hint: error.hint
+            hint: error.hint,
           });
           throw error;
         }
@@ -988,7 +996,7 @@ const Funciones = () => {
             code: error.code,
             message: error.message,
             details: error.details,
-            hint: error.hint
+            hint: error.hint,
           });
           throw error;
         }
@@ -1002,17 +1010,19 @@ const Funciones = () => {
             if (typeof funcionCreada.canales === 'string') {
               try {
                 funcionCreada.canales = JSON.parse(funcionCreada.canales);
-              } catch (e) {
-              }
+              } catch (e) {}
             }
 
-            const { sendFunctionCreatedNotification } = await import('../../services/eventPushNotifications');
+            const { sendFunctionCreatedNotification } =
+              await import('../../services/eventPushNotifications');
             const result = await sendFunctionCreatedNotification(funcionCreada);
 
             if (result) {
               if (result.skipped) {
               } else if (result.sent > 0) {
-                alert(`Función creada exitosamente. Notificaciones enviadas a ${result.sent} usuarios.`);
+                alert(
+                  `Función creada exitosamente. Notificaciones enviadas a ${result.sent} usuarios.`
+                );
               } else {
                 alert('Función creada exitosamente');
               }
@@ -1040,7 +1050,7 @@ const Funciones = () => {
     }
   };
 
-  const handleEdit = async (funcion) => {
+  const handleEdit = async funcion => {
     setEditingFuncion(funcion);
 
     try {
@@ -1050,12 +1060,16 @@ const Funciones = () => {
         .select('*')
         .eq('id', funcion.id)
         .single();
-      const f = error ? funcion : (full || funcion);
+      const f = error ? funcion : full || funcion;
 
       // Parsear canales si viene en string
       let canalesParsed = f.canales;
       if (typeof canalesParsed === 'string') {
-        try { canalesParsed = JSON.parse(canalesParsed); } catch (_) { canalesParsed = null; }
+        try {
+          canalesParsed = JSON.parse(canalesParsed);
+        } catch (_) {
+          canalesParsed = null;
+        }
       }
 
       const funcionEditada = {
@@ -1102,13 +1116,17 @@ const Funciones = () => {
         // Ventas y canales
         fechaInicioVenta: f.inicio_venta || '',
         fechaFinVenta: f.fin_venta || '',
-        canales: canalesParsed || { boxOffice: { activo: true, inicio: '', fin: '' }, internet: { activo: true, inicio: '', fin: '' } },
+        canales: canalesParsed || {
+          boxOffice: { activo: true, inicio: '', fin: '' },
+          internet: { activo: true, inicio: '', fin: '' },
+        },
 
         // Cancelación e impresión
         cancellationDateSelected: !!f.cancellation_date_selected,
         endDateCancellation: f.end_date_cancellation || '',
         ticketPrintingReleaseDateSelected: !!f.ticket_printing_release_date_selected,
-        ticketPrintingReleaseDate: typeof f.ticket_printing_release_date === 'number' ? f.ticket_printing_release_date : 120,
+        ticketPrintingReleaseDate:
+          typeof f.ticket_printing_release_date === 'number' ? f.ticket_printing_release_date : 120,
         customPrintingTicketDate: f.custom_printing_ticket_date || '',
 
         // Custom fields
@@ -1119,7 +1137,7 @@ const Funciones = () => {
         idBarcodePool: f.id_barcode_pool || null,
         visibleEnBoleteria: f.visible_en_boleteria !== false,
         visibleEnStore: f.visible_en_store !== false,
-        activo: f.activo !== false
+        activo: f.activo !== false,
       };
 
       setNuevaFuncion(funcionEditada);
@@ -1149,7 +1167,7 @@ const Funciones = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     if (!window.confirm('¿Eliminar esta función?')) return;
 
     try {
@@ -1161,7 +1179,7 @@ const Funciones = () => {
     }
   };
 
-  const handleDuplicate = async (id) => {
+  const handleDuplicate = async id => {
     const { data, error } = await supabase.from('funciones').select('*').eq('id', id).single();
     if (error || !data) {
       alert('No se pudo duplicar');
@@ -1205,7 +1223,7 @@ const Funciones = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Recinto</label>
                 <select
                   value={recintoSeleccionado ? recintoSeleccionado.id : ''}
-                  onChange={(e) => {
+                  onChange={e => {
                     const recinto = recintos.find(r => String(r.id) === e.target.value);
                     setRecintoSeleccionado(recinto);
                     setSalaSeleccionada(null);
@@ -1214,7 +1232,9 @@ const Funciones = () => {
                 >
                   <option value="">Seleccionar Recinto</option>
                   {recintos.map(recinto => (
-                    <option key={recinto.id} value={recinto.id}>{recinto.nombre}</option>
+                    <option key={recinto.id} value={recinto.id}>
+                      {recinto.nombre}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1224,15 +1244,19 @@ const Funciones = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Sala</label>
                   <select
                     value={salaSeleccionada ? salaSeleccionada.id : ''}
-                    onChange={(e) => {
-                      const sala = recintoSeleccionado.salas.find(s => String(s.id) === e.target.value);
+                    onChange={e => {
+                      const sala = recintoSeleccionado.salas.find(
+                        s => String(s.id) === e.target.value
+                      );
                       setSalaSeleccionada(sala);
                     }}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Seleccionar Sala</option>
                     {recintoSeleccionado.salas.map(sala => (
-                      <option key={sala.id} value={sala.id}>{sala.nombre}</option>
+                      <option key={sala.id} value={sala.id}>
+                        {sala.nombre}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -1243,7 +1267,7 @@ const Funciones = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Evento</label>
                   <select
                     value={eventoSeleccionado ? eventoSeleccionado.id : ''}
-                    onChange={(e) => {
+                    onChange={e => {
                       const evento = eventos.find(ev => String(ev.id) === e.target.value);
                       setEventoSeleccionado(evento);
                     }}
@@ -1251,7 +1275,9 @@ const Funciones = () => {
                   >
                     <option value="">Seleccionar Evento</option>
                     {eventos.map(evento => (
-                      <option key={evento.id} value={evento.id}>{evento.nombre}</option>
+                      <option key={evento.id} value={evento.id}>
+                        {evento.nombre}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -1302,13 +1328,21 @@ const Funciones = () => {
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Evento</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Sala</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Precios</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Comisiones</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">
+                    Comisiones
+                  </th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Producto</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Inicio</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Fin</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Liberación</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase">Opciones</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase">Acciones</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">
+                    Liberación
+                  </th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase">
+                    Opciones
+                  </th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1317,8 +1351,7 @@ const Funciones = () => {
                     <td colSpan="11" className="px-4 py-8 text-center text-gray-500 bg-gray-50">
                       {recintoSeleccionado || salaSeleccionada || eventoSeleccionado
                         ? 'No se encontraron funciones con los filtros seleccionados'
-                        : 'No hay funciones creadas. Crea una nueva función para comenzar.'
-                      }
+                        : 'No hay funciones creadas. Crea una nueva función para comenzar.'}
                     </td>
                   </tr>
                 ) : (
@@ -1334,42 +1367,55 @@ const Funciones = () => {
                       <td className="px-3 py-2 text-xs font-medium text-gray-900 whitespace-nowrap">
                         {formatFecha(funcion.fechaCelebracion)}
                       </td>
-                      <td className="px-3 py-2 text-xs text-gray-900 max-w-[150px] truncate" title={getEventoNombre(funcion.evento_id)}>
+                      <td
+                        className="px-3 py-2 text-xs text-gray-900 max-w-[150px] truncate"
+                        title={getEventoNombre(funcion.evento_id)}
+                      >
                         {getEventoNombre(funcion.evento_id) || '—'}
                       </td>
                       <td className="px-3 py-2 text-xs text-gray-900">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          funcion.sala?.nombre
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            funcion.sala?.nombre
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
                           {funcion.sala?.nombre || 'Sin sala'}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-xs">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          getPlantillaNombre(funcion.plantilla_entradas) !== 'Sin plantilla'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            getPlantillaNombre(funcion.plantilla_entradas) !== 'Sin plantilla'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
                           {getPlantillaNombre(funcion.plantilla_entradas)}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-xs">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          getPlantillaComisionesNombre(funcion.plantilla_comisiones) !== 'Sin plantilla'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            getPlantillaComisionesNombre(funcion.plantilla_comisiones) !==
+                            'Sin plantilla'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
                           {getPlantillaComisionesNombre(funcion.plantilla_comisiones)}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-xs">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          getPlantillaProductoNombre(funcion.plantilla_producto) !== 'Sin plantilla'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            getPlantillaProductoNombre(funcion.plantilla_producto) !==
+                            'Sin plantilla'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
                           {getPlantillaProductoNombre(funcion.plantilla_producto)}
                         </span>
                       </td>
@@ -1391,12 +1437,18 @@ const Funciones = () => {
                       <td className="px-3 py-2 text-xs">
                         <div className="flex flex-wrap items-center gap-1 justify-center">
                           {funcion.pagoAPlazos && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title="Pago a plazos">
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                              title="Pago a plazos"
+                            >
                               💳
                             </span>
                           )}
                           {funcion.permitirReservasWeb && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" title="Reservas web">
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
+                              title="Reservas web"
+                            >
                               🌐
                             </span>
                           )}
@@ -1452,8 +1504,8 @@ const Funciones = () => {
           overlay: { zIndex: 2001 },
           content: {
             maxHeight: '90vh',
-            overflow: 'hidden'
-          }
+            overflow: 'hidden',
+          },
         }}
       >
         <div className="flex items-center justify-between border-b border-gray-200 p-4">
@@ -1469,7 +1521,12 @@ const Funciones = () => {
             className="text-gray-400 hover:text-gray-600"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -1484,9 +1541,13 @@ const Funciones = () => {
                     type="checkbox"
                     id="streamingMode"
                     checked={nuevaFuncion.streamingMode}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingMode: e.target.checked })}
+                    onChange={e =>
+                      setNuevaFuncion({ ...nuevaFuncion, streamingMode: e.target.checked })
+                    }
                   />
-                  <label htmlFor="streamingMode" className="text-sm font-medium text-gray-700">En línea</label>
+                  <label htmlFor="streamingMode" className="text-sm font-medium text-gray-700">
+                    En línea
+                  </label>
                 </div>
               </div>
 
@@ -1503,38 +1564,48 @@ const Funciones = () => {
                     type="datetime-local"
                     className="border p-2 w-full rounded"
                     value={nuevaFuncion.fechaCelebracion}
-                    onChange={(e) => {
+                    onChange={e => {
                       const fechaCelebracion = e.target.value;
                       const aperturaPuertas = calcularAperturaPuertas(fechaCelebracion);
                       setNuevaFuncion({
                         ...nuevaFuncion,
                         fechaCelebracion,
-                        aperturaPuertas
+                        aperturaPuertas,
                       });
                     }}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Zona horaria</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Zona horaria
+                  </label>
                   <select
                     className="border p-2 w-full rounded"
                     value={nuevaFuncion.zonaHoraria}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, zonaHoraria: e.target.value })}
+                    onChange={e =>
+                      setNuevaFuncion({ ...nuevaFuncion, zonaHoraria: e.target.value })
+                    }
                     required
                   >
                     {ZONAS_HORARIAS.map(zona => (
-                      <option key={zona} value={zona}>{zona}</option>
+                      <option key={zona} value={zona}>
+                        {zona}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Apertura de puertas</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Apertura de puertas
+                  </label>
                   <input
                     type="datetime-local"
                     className="border p-2 w-full rounded"
                     value={nuevaFuncion.aperturaPuertas}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, aperturaPuertas: e.target.value })}
+                    onChange={e =>
+                      setNuevaFuncion({ ...nuevaFuncion, aperturaPuertas: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -1546,9 +1617,13 @@ const Funciones = () => {
                     type="checkbox"
                     id="utilizaLitSesion"
                     checked={nuevaFuncion.utilizaLitSesion}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, utilizaLitSesion: e.target.checked })}
+                    onChange={e =>
+                      setNuevaFuncion({ ...nuevaFuncion, utilizaLitSesion: e.target.checked })
+                    }
                   />
-                  <label htmlFor="utilizaLitSesion" className="text-sm font-medium text-gray-700">Literal de función</label>
+                  <label htmlFor="utilizaLitSesion" className="text-sm font-medium text-gray-700">
+                    Literal de función
+                  </label>
                 </div>
                 <div>
                   <input
@@ -1556,7 +1631,7 @@ const Funciones = () => {
                     className="border p-2 w-full rounded"
                     placeholder="Literal de función"
                     value={nuevaFuncion.litSesion}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, litSesion: e.target.value })}
+                    onChange={e => setNuevaFuncion({ ...nuevaFuncion, litSesion: e.target.value })}
                     disabled={!nuevaFuncion.utilizaLitSesion}
                   />
                 </div>
@@ -1567,13 +1642,21 @@ const Funciones = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Fecha de liberación de reservas
                   <span className="ml-1 text-gray-500">
-                    <i className="fas fa-question-circle" title="Tiempo antes o después de la fecha de celebración para liberar reservas"></i>
+                    <i
+                      className="fas fa-question-circle"
+                      title="Tiempo antes o después de la fecha de celebración para liberar reservas"
+                    ></i>
                   </span>
                 </label>
                 <select
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={nuevaFuncion.tiempoCaducidadReservas}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, tiempoCaducidadReservas: parseInt(e.target.value) })}
+                  onChange={e =>
+                    setNuevaFuncion({
+                      ...nuevaFuncion,
+                      tiempoCaducidadReservas: parseInt(e.target.value),
+                    })
+                  }
                   required
                 >
                   <optgroup label="Antes de la fecha de celebración">
@@ -1599,7 +1682,10 @@ const Funciones = () => {
                   <i className="fas fa-tag mr-2"></i>
                   Etiqueta promocional de la función
                   <span className="ml-1 text-gray-500">
-                    <i className="fas fa-question-circle" title="Etiqueta promocional para marketing"></i>
+                    <i
+                      className="fas fa-question-circle"
+                      title="Etiqueta promocional para marketing"
+                    ></i>
                   </span>
                 </label>
                 <input
@@ -1607,7 +1693,9 @@ const Funciones = () => {
                   className="border p-2 w-full rounded"
                   placeholder="Etiqueta promocional"
                   value={nuevaFuncion.promotionalSessionLabel}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, promotionalSessionLabel: e.target.value })}
+                  onChange={e =>
+                    setNuevaFuncion({ ...nuevaFuncion, promotionalSessionLabel: e.target.value })
+                  }
                   maxLength={50}
                 />
               </div>
@@ -1619,20 +1707,30 @@ const Funciones = () => {
                     type="checkbox"
                     id="sessionBelongsSeasonPass"
                     checked={nuevaFuncion.sessionBelongsSeasonPass}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, sessionBelongsSeasonPass: e.target.checked })}
+                    onChange={e =>
+                      setNuevaFuncion({
+                        ...nuevaFuncion,
+                        sessionBelongsSeasonPass: e.target.checked,
+                      })
+                    }
                   />
-                  <label htmlFor="sessionBelongsSeasonPass" className="text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="sessionBelongsSeasonPass"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     La función pertenece al pase de temporada
                   </label>
                 </div>
                 {nuevaFuncion.sessionBelongsSeasonPass && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Pertenece a Abono</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Pertenece a Abono
+                    </label>
                     <select
                       className="border p-2 w-full rounded"
                       multiple
                       value={nuevaFuncion.idAbonoSala}
-                      onChange={(e) => {
+                      onChange={e => {
                         const values = Array.from(e.target.selectedOptions, option => option.value);
                         setNuevaFuncion({ ...nuevaFuncion, idAbonoSala: values });
                       }}
@@ -1654,20 +1752,32 @@ const Funciones = () => {
                         type="checkbox"
                         id="overwriteStreamingSetup"
                         checked={nuevaFuncion.overwriteStreamingSetup}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, overwriteStreamingSetup: e.target.checked })}
+                        onChange={e =>
+                          setNuevaFuncion({
+                            ...nuevaFuncion,
+                            overwriteStreamingSetup: e.target.checked,
+                          })
+                        }
                       />
-                      <label htmlFor="overwriteStreamingSetup" className="text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="overwriteStreamingSetup"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Sobrescribir la configuración del evento
                       </label>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Plataforma de streaming</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Plataforma de streaming
+                        </label>
                         <select
                           className="border p-2 w-full rounded"
                           value={nuevaFuncion.streamingType}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingType: e.target.value })}
+                          onChange={e =>
+                            setNuevaFuncion({ ...nuevaFuncion, streamingType: e.target.value })
+                          }
                         >
                           {PLATAFORMAS_STREAMING.map(plataforma => (
                             <option key={plataforma.value} value={plataforma.value}>
@@ -1677,26 +1787,34 @@ const Funciones = () => {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">URL del video</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          URL del video
+                        </label>
                         <input
                           type="text"
                           className="border p-2 w-full rounded"
                           placeholder="URL del video"
                           value={nuevaFuncion.streamingUrl}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingUrl: e.target.value })}
+                          onChange={e =>
+                            setNuevaFuncion({ ...nuevaFuncion, streamingUrl: e.target.value })
+                          }
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Identificador de la sala</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Identificador de la sala
+                        </label>
                         <input
                           type="text"
                           className="border p-2 w-full rounded"
                           placeholder="ID de la sala"
                           value={nuevaFuncion.streamingId}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingId: e.target.value })}
+                          onChange={e =>
+                            setNuevaFuncion({ ...nuevaFuncion, streamingId: e.target.value })
+                          }
                         />
                       </div>
                       <div>
@@ -1708,7 +1826,9 @@ const Funciones = () => {
                           className="border p-2 w-full rounded"
                           placeholder="Contraseña"
                           value={nuevaFuncion.streamingPassword}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingPassword: e.target.value })}
+                          onChange={e =>
+                            setNuevaFuncion({ ...nuevaFuncion, streamingPassword: e.target.value })
+                          }
                         />
                       </div>
                     </div>
@@ -1719,9 +1839,17 @@ const Funciones = () => {
                           type="checkbox"
                           id="streamingOnlyOneSessionByTicket"
                           checked={nuevaFuncion.streamingOnlyOneSessionByTicket}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingOnlyOneSessionByTicket: e.target.checked })}
+                          onChange={e =>
+                            setNuevaFuncion({
+                              ...nuevaFuncion,
+                              streamingOnlyOneSessionByTicket: e.target.checked,
+                            })
+                          }
                         />
-                        <label htmlFor="streamingOnlyOneSessionByTicket" className="text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="streamingOnlyOneSessionByTicket"
+                          className="text-sm font-medium text-gray-700"
+                        >
                           Solo un dispositivo simultáneo por entrada
                         </label>
                       </div>
@@ -1730,9 +1858,14 @@ const Funciones = () => {
                           type="checkbox"
                           id="streamingShowUrl"
                           checked={nuevaFuncion.streamingShowUrl}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingShowUrl: e.target.checked })}
+                          onChange={e =>
+                            setNuevaFuncion({ ...nuevaFuncion, streamingShowUrl: e.target.checked })
+                          }
                         />
-                        <label htmlFor="streamingShowUrl" className="text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="streamingShowUrl"
+                          className="text-sm font-medium text-gray-700"
+                        >
                           Mostrar URL
                         </label>
                       </div>
@@ -1741,24 +1874,36 @@ const Funciones = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Fecha de inicio de la transmisión <span className="text-gray-500">(Opcional)</span>
+                          Fecha de inicio de la transmisión{' '}
+                          <span className="text-gray-500">(Opcional)</span>
                         </label>
                         <input
                           type="datetime-local"
                           className="border p-2 w-full rounded"
                           value={nuevaFuncion.streamingTransmissionStart}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingTransmissionStart: e.target.value })}
+                          onChange={e =>
+                            setNuevaFuncion({
+                              ...nuevaFuncion,
+                              streamingTransmissionStart: e.target.value,
+                            })
+                          }
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Fecha fin de la transmisión <span className="text-gray-500">(Opcional)</span>
+                          Fecha fin de la transmisión{' '}
+                          <span className="text-gray-500">(Opcional)</span>
                         </label>
                         <input
                           type="datetime-local"
                           className="border p-2 w-full rounded"
                           value={nuevaFuncion.streamingTransmissionStop}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingTransmissionStop: e.target.value })}
+                          onChange={e =>
+                            setNuevaFuncion({
+                              ...nuevaFuncion,
+                              streamingTransmissionStop: e.target.value,
+                            })
+                          }
                         />
                       </div>
                     </div>
@@ -1772,89 +1917,125 @@ const Funciones = () => {
 
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
                   <p className="text-sm text-blue-800">
-                    <strong>Nota:</strong> La sala se selecciona automáticamente desde el buscador de recinto/sala/evento en la parte superior.
+                    <strong>Nota:</strong> La sala se selecciona automáticamente desde el buscador
+                    de recinto/sala/evento en la parte superior.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de tickets</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Plantilla de tickets
+                    </label>
                     <select
                       className="border p-2 w-full rounded"
                       value={nuevaFuncion.idPlantillaEntradas}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaEntradas: e.target.value })}
+                      onChange={e =>
+                        setNuevaFuncion({ ...nuevaFuncion, idPlantillaEntradas: e.target.value })
+                      }
                       required
                     >
                       <option value="">Selecciona la plantilla de entradas</option>
                       {plantillas.map(plantilla => (
-                        <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
+                        <option key={plantilla.id} value={plantilla.id}>
+                          {plantilla.nombre}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de productos</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Plantilla de productos
+                    </label>
                     <select
                       className="border p-2 w-full rounded"
                       value={nuevaFuncion.idPlantillaProductos}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaProductos: e.target.value })}
+                      onChange={e =>
+                        setNuevaFuncion({ ...nuevaFuncion, idPlantillaProductos: e.target.value })
+                      }
                     >
                       <option value="">No existen plantillas de productos activas</option>
                       {plantillasProductos.map(plantilla => (
-                        <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
+                        <option key={plantilla.id} value={plantilla.id}>
+                          {plantilla.nombre}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de precios especiales</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Plantilla de precios especiales
+                    </label>
                     <select
                       className="border p-2 w-full rounded"
                       value={nuevaFuncion.idSpecialProductsTemplate}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idSpecialProductsTemplate: e.target.value })}
+                      onChange={e =>
+                        setNuevaFuncion({
+                          ...nuevaFuncion,
+                          idSpecialProductsTemplate: e.target.value,
+                        })
+                      }
                     >
                       <option value="">Selecciona una plantilla de productos especiales</option>
                       {plantillasComisiones.map(plantilla => (
-                        <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
+                        <option key={plantilla.id} value={plantilla.id}>
+                          {plantilla.nombre}
+                        </option>
                       ))}
                     </select>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de cupos</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Plantilla de cupos
+                    </label>
                     <select
                       className="border p-2 w-full rounded"
                       value={nuevaFuncion.idPlantillaCupos}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaCupos: e.target.value })}
+                      onChange={e =>
+                        setNuevaFuncion({ ...nuevaFuncion, idPlantillaCupos: e.target.value })
+                      }
                     >
                       <option value="">No existen plantillas de cupos activas</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Pool códigos de barras</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Pool códigos de barras
+                    </label>
                     <select
                       className="border p-2 w-full rounded"
                       value={nuevaFuncion.idBarcodePool}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idBarcodePool: e.target.value })}
+                      onChange={e =>
+                        setNuevaFuncion({ ...nuevaFuncion, idBarcodePool: e.target.value })
+                      }
                     >
                       <option value="">Selecciona pool de códigos</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de paquetes</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Plantilla de paquetes
+                    </label>
                     <select
                       className="border p-2 w-full rounded"
                       value={nuevaFuncion.idPlantillaPaquetes}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaPaquetes: e.target.value })}
+                      onChange={e =>
+                        setNuevaFuncion({ ...nuevaFuncion, idPlantillaPaquetes: e.target.value })
+                      }
                     >
                       <option value="">No existen plantillas de paquetes activas</option>
-                      {plantillasPaquetes.map((plantilla) => (
+                      {plantillasPaquetes.map(plantilla => (
                         <option key={plantilla.id} value={plantilla.id}>
                           {plantilla.nombre}
                         </option>
                       ))}
                     </select>
                     {loadingPlantillasPaquetes && (
-                      <p className="text-xs text-gray-500 mt-1">Cargando plantillas de paquetes...</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Cargando plantillas de paquetes...
+                      </p>
                     )}
                   </div>
                 </div>
@@ -1871,9 +2052,14 @@ const Funciones = () => {
                         type="checkbox"
                         id="permitePagoPlazos"
                         checked={nuevaFuncion.permitePagoPlazos}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, permitePagoPlazos: e.target.checked })}
+                        onChange={e =>
+                          setNuevaFuncion({ ...nuevaFuncion, permitePagoPlazos: e.target.checked })
+                        }
                       />
-                      <label htmlFor="permitePagoPlazos" className="text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="permitePagoPlazos"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Pago a plazos
                       </label>
                     </div>
@@ -1889,7 +2075,12 @@ const Funciones = () => {
                             max="12"
                             className="border p-2 w-full rounded"
                             value={nuevaFuncion.cantidadCuotas || ''}
-                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, cantidadCuotas: parseInt(e.target.value) || 0 })}
+                            onChange={e =>
+                              setNuevaFuncion({
+                                ...nuevaFuncion,
+                                cantidadCuotas: parseInt(e.target.value) || 0,
+                              })
+                            }
                             placeholder="Ej: 3"
                           />
                         </div>
@@ -1903,7 +2094,12 @@ const Funciones = () => {
                             max="365"
                             className="border p-2 w-full rounded"
                             value={nuevaFuncion.diasEntrePagos || ''}
-                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, diasEntrePagos: parseInt(e.target.value) || 0 })}
+                            onChange={e =>
+                              setNuevaFuncion({
+                                ...nuevaFuncion,
+                                diasEntrePagos: parseInt(e.target.value) || 0,
+                              })
+                            }
                             placeholder="Ej: 30"
                           />
                         </div>
@@ -1915,7 +2111,12 @@ const Funciones = () => {
                             type="datetime-local"
                             className="border p-2 w-full rounded"
                             value={nuevaFuncion.fechaInicioPagosPlazos || ''}
-                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaInicioPagosPlazos: e.target.value })}
+                            onChange={e =>
+                              setNuevaFuncion({
+                                ...nuevaFuncion,
+                                fechaInicioPagosPlazos: e.target.value,
+                              })
+                            }
                           />
                         </div>
                         <div>
@@ -1926,7 +2127,12 @@ const Funciones = () => {
                             type="datetime-local"
                             className="border p-2 w-full rounded"
                             value={nuevaFuncion.fechaFinPagosPlazos || ''}
-                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaFinPagosPlazos: e.target.value })}
+                            onChange={e =>
+                              setNuevaFuncion({
+                                ...nuevaFuncion,
+                                fechaFinPagosPlazos: e.target.value,
+                              })
+                            }
                           />
                         </div>
                       </div>
@@ -1937,12 +2143,17 @@ const Funciones = () => {
                       type="checkbox"
                       id="permiteReserva"
                       checked={nuevaFuncion.permiteReserva}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, permiteReserva: e.target.checked })}
+                      onChange={e =>
+                        setNuevaFuncion({ ...nuevaFuncion, permiteReserva: e.target.checked })
+                      }
                     />
                     <label htmlFor="permiteReserva" className="text-sm font-medium text-gray-700">
                       Permite reservas a clientes web
                       <span className="ml-1 text-gray-500">
-                        <i className="fas fa-question-circle" title="Permitir reservas desde la web"></i>
+                        <i
+                          className="fas fa-question-circle"
+                          title="Permitir reservas desde la web"
+                        ></i>
                       </span>
                     </label>
                   </div>
@@ -1951,7 +2162,9 @@ const Funciones = () => {
 
               {/* Canales y periodos de venta */}
               <div className="border-t pt-4">
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Canales y periodos de venta</h4>
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                  Canales y periodos de venta
+                </h4>
 
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
@@ -1959,21 +2172,28 @@ const Funciones = () => {
                       type="checkbox"
                       id="mismaFechaCanales"
                       checked={nuevaFuncion.mismaFechaCanales}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, mismaFechaCanales: e.target.checked })}
+                      onChange={e =>
+                        setNuevaFuncion({ ...nuevaFuncion, mismaFechaCanales: e.target.checked })
+                      }
                     />
-                    <label htmlFor="mismaFechaCanales" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="mismaFechaCanales"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Misma fecha en todos los canales
                     </label>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Inicio venta</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Inicio venta
+                      </label>
                       <input
                         type="datetime-local"
                         className="border p-2 w-full rounded"
                         value={nuevaFuncion.fechaInicioVenta}
-                        onChange={(e) => {
+                        onChange={e => {
                           const fechaInicio = e.target.value;
                           setNuevaFuncion({ ...nuevaFuncion, fechaInicioVenta: fechaInicio });
                           sincronizarFechasCanales(fechaInicio, nuevaFuncion.fechaFinVenta);
@@ -1982,12 +2202,14 @@ const Funciones = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Fin venta</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Fin venta
+                      </label>
                       <input
                         type="datetime-local"
                         className="border p-2 w-full rounded"
                         value={nuevaFuncion.fechaFinVenta}
-                        onChange={(e) => {
+                        onChange={e => {
                           const fechaFin = e.target.value;
                           setNuevaFuncion({ ...nuevaFuncion, fechaFinVenta: fechaFin });
                           sincronizarFechasCanales(nuevaFuncion.fechaInicioVenta, fechaFin);
@@ -1998,7 +2220,7 @@ const Funciones = () => {
                   </div>
 
                   {/* Tabla de canales */}
-                                    <div className="overflow-x-auto">
+                  <div className="overflow-x-auto">
                     <table className="min-w-full border border-gray-300">
                       <thead>
                         <tr className="bg-gray-50">
@@ -2007,21 +2229,29 @@ const Funciones = () => {
                               <input
                                 type="checkbox"
                                 className="channelsChk"
-                                onChange={(e) => {
+                                onChange={e => {
                                   const checked = e.target.checked;
                                   setNuevaFuncion({
                                     ...nuevaFuncion,
                                     canales: {
-                                      boxOffice: { ...nuevaFuncion.canales.boxOffice, activo: checked },
-                                      internet: { ...nuevaFuncion.canales.internet, activo: checked }
-                                    }
+                                      boxOffice: {
+                                        ...nuevaFuncion.canales.boxOffice,
+                                        activo: checked,
+                                      },
+                                      internet: {
+                                        ...nuevaFuncion.canales.internet,
+                                        activo: checked,
+                                      },
+                                    },
                                   });
                                 }}
                               />
                               <span>Canales activos</span>
                             </div>
                           </th>
-                          <th className="border border-gray-300 px-4 py-2 text-left">Inicio venta</th>
+                          <th className="border border-gray-300 px-4 py-2 text-left">
+                            Inicio venta
+                          </th>
                           <th className="border border-gray-300 px-4 py-2 text-left">Fin venta</th>
                         </tr>
                       </thead>
@@ -2032,13 +2262,18 @@ const Funciones = () => {
                               <input
                                 type="checkbox"
                                 checked={nuevaFuncion.canales.boxOffice.activo}
-                                onChange={(e) => setNuevaFuncion({
-                                  ...nuevaFuncion,
-                                  canales: {
-                                    ...nuevaFuncion.canales,
-                                    boxOffice: { ...nuevaFuncion.canales.boxOffice, activo: e.target.checked }
-                                  }
-                                })}
+                                onChange={e =>
+                                  setNuevaFuncion({
+                                    ...nuevaFuncion,
+                                    canales: {
+                                      ...nuevaFuncion.canales,
+                                      boxOffice: {
+                                        ...nuevaFuncion.canales.boxOffice,
+                                        activo: e.target.checked,
+                                      },
+                                    },
+                                  })
+                                }
                               />
                               <span>Box office</span>
                             </div>
@@ -2048,14 +2283,22 @@ const Funciones = () => {
                               type="datetime-local"
                               className="border p-2 w-full rounded"
                               value={nuevaFuncion.canales.boxOffice.inicio}
-                              onChange={(e) => setNuevaFuncion({
-                                ...nuevaFuncion,
-                                canales: {
-                                  ...nuevaFuncion.canales,
-                                  boxOffice: { ...nuevaFuncion.canales.boxOffice, inicio: e.target.value }
-                                }
-                              })}
-                              disabled={!nuevaFuncion.canales.boxOffice.activo || nuevaFuncion.mismaFechaCanales}
+                              onChange={e =>
+                                setNuevaFuncion({
+                                  ...nuevaFuncion,
+                                  canales: {
+                                    ...nuevaFuncion.canales,
+                                    boxOffice: {
+                                      ...nuevaFuncion.canales.boxOffice,
+                                      inicio: e.target.value,
+                                    },
+                                  },
+                                })
+                              }
+                              disabled={
+                                !nuevaFuncion.canales.boxOffice.activo ||
+                                nuevaFuncion.mismaFechaCanales
+                              }
                             />
                           </td>
                           <td className="border border-gray-300 px-4 py-2">
@@ -2063,14 +2306,22 @@ const Funciones = () => {
                               type="datetime-local"
                               className="border p-2 w-full rounded"
                               value={nuevaFuncion.canales.boxOffice.fin}
-                              onChange={(e) => setNuevaFuncion({
-                                ...nuevaFuncion,
-                                canales: {
-                                  ...nuevaFuncion.canales,
-                                  boxOffice: { ...nuevaFuncion.canales.boxOffice, fin: e.target.value }
-                                }
-                              })}
-                              disabled={!nuevaFuncion.canales.boxOffice.activo || nuevaFuncion.mismaFechaCanales}
+                              onChange={e =>
+                                setNuevaFuncion({
+                                  ...nuevaFuncion,
+                                  canales: {
+                                    ...nuevaFuncion.canales,
+                                    boxOffice: {
+                                      ...nuevaFuncion.canales.boxOffice,
+                                      fin: e.target.value,
+                                    },
+                                  },
+                                })
+                              }
+                              disabled={
+                                !nuevaFuncion.canales.boxOffice.activo ||
+                                nuevaFuncion.mismaFechaCanales
+                              }
                             />
                           </td>
                         </tr>
@@ -2080,51 +2331,72 @@ const Funciones = () => {
                               <input
                                 type="checkbox"
                                 checked={nuevaFuncion.canales.internet.activo}
-                                onChange={(e) => setNuevaFuncion({
+                                onChange={e =>
+                                  setNuevaFuncion({
+                                    ...nuevaFuncion,
+                                    canales: {
+                                      ...nuevaFuncion.canales,
+                                      internet: {
+                                        ...nuevaFuncion.canales.internet,
+                                        activo: e.target.checked,
+                                      },
+                                    },
+                                  })
+                                }
+                              />
+                              <span>Internet</span>
+                            </div>
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <input
+                              type="datetime-local"
+                              className="border p-2 w-full rounded"
+                              value={nuevaFuncion.canales.internet.inicio}
+                              onChange={e =>
+                                setNuevaFuncion({
                                   ...nuevaFuncion,
                                   canales: {
                                     ...nuevaFuncion.canales,
-                                    internet: { ...nuevaFuncion.canales.internet, activo: e.target.checked }
-                                }
-                              })}
+                                    internet: {
+                                      ...nuevaFuncion.canales.internet,
+                                      inicio: e.target.value,
+                                    },
+                                  },
+                                })
+                              }
+                              disabled={
+                                !nuevaFuncion.canales.internet.activo ||
+                                nuevaFuncion.mismaFechaCanales
+                              }
                             />
-                            <span>Internet</span>
-                          </div>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <input
-                            type="datetime-local"
-                            className="border p-2 w-full rounded"
-                            value={nuevaFuncion.canales.internet.inicio}
-                            onChange={(e) => setNuevaFuncion({
-                              ...nuevaFuncion,
-                              canales: {
-                                ...nuevaFuncion.canales,
-                                internet: { ...nuevaFuncion.canales.internet, inicio: e.target.value }
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <input
+                              type="datetime-local"
+                              className="border p-2 w-full rounded"
+                              value={nuevaFuncion.canales.internet.fin}
+                              onChange={e =>
+                                setNuevaFuncion({
+                                  ...nuevaFuncion,
+                                  canales: {
+                                    ...nuevaFuncion.canales,
+                                    internet: {
+                                      ...nuevaFuncion.canales.internet,
+                                      fin: e.target.value,
+                                    },
+                                  },
+                                })
                               }
-                            })}
-                            disabled={!nuevaFuncion.canales.internet.activo || nuevaFuncion.mismaFechaCanales}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <input
-                            type="datetime-local"
-                            className="border p-2 w-full rounded"
-                            value={nuevaFuncion.canales.internet.fin}
-                            onChange={(e) => setNuevaFuncion({
-                              ...nuevaFuncion,
-                              canales: {
-                                ...nuevaFuncion.canales,
-                                internet: { ...nuevaFuncion.canales.internet, fin: e.target.value }
+                              disabled={
+                                !nuevaFuncion.canales.internet.activo ||
+                                nuevaFuncion.mismaFechaCanales
                               }
-                            })}
-                            disabled={!nuevaFuncion.canales.internet.activo || nuevaFuncion.mismaFechaCanales}
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
@@ -2138,20 +2410,32 @@ const Funciones = () => {
                       type="checkbox"
                       id="cancellationDateSelected"
                       checked={nuevaFuncion.cancellationDateSelected}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, cancellationDateSelected: e.target.checked })}
+                      onChange={e =>
+                        setNuevaFuncion({
+                          ...nuevaFuncion,
+                          cancellationDateSelected: e.target.checked,
+                        })
+                      }
                     />
-                    <label htmlFor="cancellationDateSelected" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="cancellationDateSelected"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Fecha límite para cancelar entradas
                     </label>
                   </div>
                   {nuevaFuncion.cancellationDateSelected && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de fin de cancelación</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Fecha de fin de cancelación
+                      </label>
                       <input
                         type="datetime-local"
                         className="border p-2 w-full rounded"
                         value={nuevaFuncion.endDateCancellation}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, endDateCancellation: e.target.value })}
+                        onChange={e =>
+                          setNuevaFuncion({ ...nuevaFuncion, endDateCancellation: e.target.value })
+                        }
                       />
                     </div>
                   )}
@@ -2160,7 +2444,9 @@ const Funciones = () => {
 
               {/* Bloqueo de impresión de tickets */}
               <div className="border-t pt-4">
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Bloqueo de impresión de tickets</h4>
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                  Bloqueo de impresión de tickets
+                </h4>
 
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
@@ -2168,9 +2454,17 @@ const Funciones = () => {
                       type="checkbox"
                       id="ticketPrintingReleaseDateSelected"
                       checked={nuevaFuncion.ticketPrintingReleaseDateSelected}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, ticketPrintingReleaseDateSelected: e.target.checked })}
+                      onChange={e =>
+                        setNuevaFuncion({
+                          ...nuevaFuncion,
+                          ticketPrintingReleaseDateSelected: e.target.checked,
+                        })
+                      }
                     />
-                    <label htmlFor="ticketPrintingReleaseDateSelected" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="ticketPrintingReleaseDateSelected"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       Restringir la impresión antes de la fecha de celebración
                     </label>
                   </div>
@@ -2178,18 +2472,27 @@ const Funciones = () => {
                   {nuevaFuncion.ticketPrintingReleaseDateSelected && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de liberación de tickets</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Fecha de liberación de tickets
+                        </label>
                         <select
                           className="border p-2 w-full rounded"
                           value={nuevaFuncion.ticketPrintingReleaseDate}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, ticketPrintingReleaseDate: e.target.value })}
+                          onChange={e =>
+                            setNuevaFuncion({
+                              ...nuevaFuncion,
+                              ticketPrintingReleaseDate: e.target.value,
+                            })
+                          }
                         >
                           <optgroup label="Antes de la fecha de celebración">
-                            {TIEMPOS_IMPRESION.filter(option => option.value !== 'custom').map(option => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
+                            {TIEMPOS_IMPRESION.filter(option => option.value !== 'custom').map(
+                              option => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              )
+                            )}
                           </optgroup>
                           <optgroup label="Fecha custom">
                             <option value="custom">Fecha personalizada</option>
@@ -2205,7 +2508,12 @@ const Funciones = () => {
                             type="datetime-local"
                             className="border p-2 w-full rounded"
                             value={nuevaFuncion.customPrintingTicketDate}
-                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, customPrintingTicketDate: e.target.value })}
+                            onChange={e =>
+                              setNuevaFuncion({
+                                ...nuevaFuncion,
+                                customPrintingTicketDate: e.target.value,
+                              })
+                            }
                           />
                         </div>
                       )}
@@ -2220,31 +2528,37 @@ const Funciones = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Personalizado 1</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Personalizado 1
+                    </label>
                     <input
                       type="text"
                       className="border p-2 w-full rounded"
                       placeholder="Campo personalizado 1"
                       value={nuevaFuncion.customSes1}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, customSes1: e.target.value })}
+                      onChange={e =>
+                        setNuevaFuncion({ ...nuevaFuncion, customSes1: e.target.value })
+                      }
                       maxLength={250}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Personalizado 2</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Personalizado 2
+                    </label>
                     <input
                       type="text"
                       className="border p-2 w-full rounded"
                       placeholder="Campo personalizado 2"
                       value={nuevaFuncion.customSes2}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, customSes2: e.target.value })}
+                      onChange={e =>
+                        setNuevaFuncion({ ...nuevaFuncion, customSes2: e.target.value })
+                      }
                       maxLength={250}
                     />
                   </div>
                 </div>
               </div>
-
-
 
               {/* Botones de acción */}
               <div className="flex justify-end space-x-4 pt-6 border-t">
@@ -2269,9 +2583,9 @@ const Funciones = () => {
             </form>
           </div>
         </div>
-        </Modal>
-      </div>
-    );
-  };
+      </Modal>
+    </div>
+  );
+};
 
-  export default Funciones;
+export default Funciones;

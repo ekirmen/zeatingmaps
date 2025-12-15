@@ -3,7 +3,14 @@ import { supabase } from '../../supabaseClient';
 import CreateUserForm from '../components/CreateUserForm';
 import EnhancedEditUserForm from '../components/EnhancedEditUserForm';
 import { toast } from 'react-hot-toast';
-import { AiOutlineEdit, AiOutlineDelete, AiOutlineKey, AiOutlineMail, AiOutlinePhone, AiOutlineUser } from 'react-icons/ai';
+import {
+  AiOutlineEdit,
+  AiOutlineDelete,
+  AiOutlineKey,
+  AiOutlineMail,
+  AiOutlinePhone,
+  AiOutlineUser,
+} from 'react-icons/ai';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const Usuarios = () => {
@@ -27,10 +34,7 @@ const Usuarios = () => {
     setLoading(true);
     try {
       // 👥 CARGAR USUARIOS DESDE PROFILES CON FILTRO DE TENANT
-      let query = supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabase.from('profiles').select('*').order('created_at', { ascending: false });
 
       // Aplicar filtro de tenant para multiempresas
       query = addTenantFilter(query);
@@ -48,16 +52,20 @@ const Usuarios = () => {
       const processedProfiles = (data || []).map(profile => ({
         ...profile,
         // Información de tenants (si existe tenant_id en el perfil)
-        tenants_info: profile.tenant_id ? [{
-          tenant_id: profile.tenant_id,
-          role: profile.role || 'usuario',
-          status: profile.activo ? 'active' : 'inactive'
-        }] : [],
+        tenants_info: profile.tenant_id
+          ? [
+              {
+                tenant_id: profile.tenant_id,
+                role: profile.role || 'usuario',
+                status: profile.activo ? 'active' : 'inactive',
+              },
+            ]
+          : [],
         // Estadísticas básicas
         total_tenants: profile.tenant_id ? 1 : 0,
         active_tenants: profile.activo && profile.tenant_id ? 1 : 0,
         // Campos de compatibilidad
-        email: profile.login || profile.email || ''
+        email: profile.login || profile.email || '',
       }));
 
       setProfiles(processedProfiles);
@@ -75,13 +83,13 @@ const Usuarios = () => {
     setIsCreating(false);
   };
 
-  const handleUpdateUser = (updatedUser) => {
+  const handleUpdateUser = updatedUser => {
     setProfiles(prev => prev.map(u => (u.id === updatedUser.id ? updatedUser : u)));
     setEditingUser(null);
     toast.success('Usuario actualizado correctamente');
   };
 
-  const handleDelete = async (userId) => {
+  const handleDelete = async userId => {
     if (!window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) return;
 
     try {
@@ -106,7 +114,7 @@ const Usuarios = () => {
 
     try {
       const { error } = await supabase.auth.admin.updateUserById(selectedUser.id, {
-        password: newPassword
+        password: newPassword,
       });
 
       if (error) {
@@ -123,11 +131,12 @@ const Usuarios = () => {
     }
   };
 
-  const filtered = profiles.filter(u =>
-    u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.telefono?.includes(searchTerm)
+  const filtered = profiles.filter(
+    u =>
+      u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.telefono?.includes(searchTerm)
   );
 
   const indexOfLast = currentPage * recordsPerPage;
@@ -147,7 +156,9 @@ const Usuarios = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold">Gestión de Usuarios</h1>
-          <p className="text-gray-600 text-sm sm:text-base">Administra los usuarios registrados en el sistema</p>
+          <p className="text-gray-600 text-sm sm:text-base">
+            Administra los usuarios registrados en el sistema
+          </p>
         </div>
         <div className="flex sm:hidden flex-col gap-2">
           <button
@@ -314,7 +325,8 @@ const Usuarios = () => {
           </button>
         </div>
         <div className="text-sm text-gray-700 text-center sm:text-left">
-          Mostrando {indexOfFirst + 1} a {Math.min(indexOfLast, filtered.length)} de {filtered.length} usuarios
+          Mostrando {indexOfFirst + 1} a {Math.min(indexOfLast, filtered.length)} de{' '}
+          {filtered.length} usuarios
         </div>
       </div>
 
@@ -331,10 +343,7 @@ const Usuarios = () => {
                 &times;
               </button>
             </div>
-            <CreateUserForm
-              onCreateUser={handleCreateUser}
-              onCancel={() => setIsCreating(false)}
-            />
+            <CreateUserForm onCreateUser={handleCreateUser} onCancel={() => setIsCreating(false)} />
           </div>
         </div>
       )}
@@ -380,7 +389,10 @@ const Usuarios = () => {
             </div>
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
-                Cambiar contraseña para: <strong>{selectedUser.nombre} {selectedUser.apellido}</strong>
+                Cambiar contraseña para:{' '}
+                <strong>
+                  {selectedUser.nombre} {selectedUser.apellido}
+                </strong>
               </p>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nueva Contraseña
@@ -388,7 +400,7 @@ const Usuarios = () => {
               <input
                 type="password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={e => setNewPassword(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Ingresa la nueva contraseña"
               />

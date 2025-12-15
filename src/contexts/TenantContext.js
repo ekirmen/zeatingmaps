@@ -15,11 +15,11 @@ export const TenantProvider = ({ children }) => {
         setLoading(true);
         // Aquí normalmente harías una llamada a tu API
         // para obtener la configuración del tenant basado en el dominio
-        
+
         const hostname = window.location.hostname;
         let tenantData = null;
         let domainData = null;
-        
+
         // Ejemplo básico - ajusta según tu lógica
         if (hostname.includes('localhost')) {
           tenantData = {
@@ -27,7 +27,7 @@ export const TenantProvider = ({ children }) => {
             name: 'Desarrollo Local',
             theme: { primaryColor: '#1890ff', secondaryColor: '#52c41a' },
             analytics: { enabled: false },
-            features: { showSaaS: true, showBackoffice: true, showStore: true }
+            features: { showSaaS: true, showBackoffice: true, showStore: true },
           };
         } else {
           // Lógica para producción
@@ -36,10 +36,10 @@ export const TenantProvider = ({ children }) => {
             name: 'VEN Eventos',
             theme: { primaryColor: '#1890ff', secondaryColor: '#52c41a' },
             analytics: { enabled: true },
-            features: { showSaaS: true, showBackoffice: true, showStore: true }
+            features: { showSaaS: true, showBackoffice: true, showStore: true },
           };
         }
-        
+
         setCurrentTenant(tenantData);
         setDomainConfig(domainData);
       } catch (err) {
@@ -59,16 +59,12 @@ export const TenantProvider = ({ children }) => {
     loading,
     error,
     setCurrentTenant,
-    updateTenant: (updates) => {
+    updateTenant: updates => {
       setCurrentTenant(prev => ({ ...prev, ...updates }));
-    }
+    },
   };
 
-  return (
-    <TenantContext.Provider value={value}>
-      {children}
-    </TenantContext.Provider>
-  );
+  return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
 };
 
 export const useTenant = () => {

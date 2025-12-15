@@ -244,6 +244,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
   // Cargar páginas desde la base de datos al montar el componente
   useEffect(() => {
+    const loadCmsPages = async () => {
 
       if (!tenantId) return;
 
@@ -655,7 +656,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     setEditingValue('');
   };
 
-  
+  const openContextMenu = (e, item, type) => {
+    e?.preventDefault && e.preventDefault();
     setContextMenu({
       show: true,
       x: e.clientX,

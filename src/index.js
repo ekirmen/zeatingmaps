@@ -24,7 +24,8 @@ try {
 
 // Cargar Ant Design CSS condicionalmente
 if (typeof window !== 'undefined') {
-  const shouldLoadAntdReset = window.location.pathname.startsWith('/backoffice') ||
+  const shouldLoadAntdReset =
+    window.location.pathname.startsWith('/backoffice') ||
     window.location.pathname.startsWith('/admin') ||
     window.location.pathname.startsWith('/dashboard');
 
@@ -66,20 +67,22 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ 
-          padding: '40px', 
-          textAlign: 'center', 
-          fontFamily: 'Arial, sans-serif',
-          maxWidth: '600px',
-          margin: '0 auto'
-        }}>
+        <div
+          style={{
+            padding: '40px',
+            textAlign: 'center',
+            fontFamily: 'Arial, sans-serif',
+            maxWidth: '600px',
+            margin: '0 auto',
+          }}
+        >
           <h1 style={{ color: '#d32f2f' }}>¡Ups! Algo salió mal</h1>
           <p style={{ margin: '20px 0', color: '#555' }}>
             {this.state.error?.toString() || 'Error desconocido'}
           </p>
           <div style={{ marginTop: '30px' }}>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               style={{
                 padding: '10px 20px',
                 backgroundColor: '#1890ff',
@@ -87,7 +90,7 @@ class ErrorBoundary extends React.Component {
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
-                fontSize: '16px'
+                fontSize: '16px',
               }}
             >
               Recargar página

@@ -24,12 +24,4 @@ try {
   Spin = require('antd/lib/spin').default;
 }
 
-export {
-  Button,
-  Card,
-  Form,
-  Input,
-  Select,
-  Modal,
-  Spin
-};
+export { Button, Card, Form, Input, Select, Modal, Spin };

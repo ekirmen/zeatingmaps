@@ -1,22 +1,31 @@
 import React from 'react';
-import { Button, Input, Select, Slider, Switch, Divider, Space, Tooltip } from '../../../utils/antdComponents';
-import { 
-  CopyOutlined, 
-  DeleteOutlined, 
-  ScissorOutlined, 
+import {
+  Button,
+  Input,
+  Select,
+  Slider,
+  Switch,
+  Divider,
+  Space,
+  Tooltip,
+} from '../../../utils/antdComponents';
+import {
+  CopyOutlined,
+  DeleteOutlined,
+  ScissorOutlined,
   ClearOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
   ReloadOutlined,
   PictureOutlined,
   LinkOutlined,
-  SettingOutlined
+  SettingOutlined,
 } from '@ant-design/icons';
 
 const { Option } = Select;
 
 // Componente Secci³n reutilizable
-const Seccion = ({ titulo, children, className = "" }) => (
+const Seccion = ({ titulo, children, className = '' }) => (
   <div className={`bg-white rounded-md shadow p-3 mb-3 ${className}`}>
     <h4 className="font-semibold text-gray-700 mb-3">{titulo}</h4>
     {children}
@@ -33,28 +42,28 @@ const MenuMapa = ({
   selectedZone,
   numSillas,
   sillaShape,
-  
+
   // Nuevos estados de escalado
   selectedScale,
   showScaleControls,
   scaleSystem,
-  
+
   // Nuevos estados de asientos
   selectedSeatState,
   seatStates,
-  
+
   // Nuevos estados de conexiones
   showConnections,
   connectionStyle,
   connectionThreshold,
-  
+
   // Nuevos estados de fondo
   backgroundImage,
   backgroundScale,
   backgroundOpacity,
   showBackgroundInWeb,
   backgroundSystem,
-  
+
   // Funciones b¡sicas
   updateElementProperty,
   updateElementSize,
@@ -62,71 +71,70 @@ const MenuMapa = ({
   crearSeccion,
   limpiarSeleccion,
   assignZoneToSelected,
-  
+
   // Nuevas funciones de escalado
   scaleElement,
   scaleSelectedElements,
-  
+
   // Nuevas funciones de estados de asientos
   changeSeatState,
   changeSelectedSeatsState,
   changeMesaSeatsState,
   setSelectedSeatState,
-  
+
   // Nuevas funciones de conexiones
   autoConnectSeats,
   createManualConnection,
   removeConnections,
   changeConnectionStyle,
-  
+
   // Nuevas funciones de coordenadas precisas
   precisePositioning,
   snapToCustomGrid,
-  
+
   // Nuevas funciones de fondo
   setBackgroundImage,
   updateBackground,
   removeBackground,
-  
+
   // Funciones existentes
   addMesa,
   addSillasToMesa,
   snapToGrid,
   setActiveMode,
   setNumSillas,
-  setSillaShape
+  setSillaShape,
 }) => {
-
   // ===== MANEJADORES DE EVENTOS =====
-  
-  const handleImageUpload = (event) => {
+
+  const handleImageUpload = event => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         setBackgroundImage(e.target.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleBackgroundScaleChange = (value) => {
+  const handleBackgroundScaleChange = value => {
     updateBackground({ scale: value / 100 });
   };
 
-  const handleBackgroundOpacityChange = (value) => {
+  const handleBackgroundOpacityChange = value => {
     updateBackground({ opacity: value / 100 });
   };
 
-  const handleShowBackgroundInWebChange = (checked) => {
+  const handleShowBackgroundInWebChange = checked => {
     updateBackground({ showInWeb: checked });
   };
 
-  const handleSnapToCustomGrid = (gridSize) => {
+  const handleSnapToCustomGrid = gridSize => {
     snapToCustomGrid(gridSize);
   };
 
-  const handleScaleChange = (scaleFactor) => {
+  const handleScaleChange = scaleFactor => {
     if (selectedElement) {
       scaleElement(selectedElement._id, scaleFactor);
     } else {
@@ -134,7 +142,7 @@ const MenuMapa = ({
     }
   };
 
-  const handleSeatStateChange = (newState) => {
+  const handleSeatStateChange = newState => {
     if (selectedElement && selectedElement.type === 'silla') {
       changeSeatState(selectedElement._id, newState);
     } else {
@@ -142,7 +150,7 @@ const MenuMapa = ({
     }
   };
 
-  const handleConnectionStyleChange = (newStyle) => {
+  const handleConnectionStyleChange = newStyle => {
     changeConnectionStyle(newStyle);
   };
 
@@ -157,7 +165,7 @@ const MenuMapa = ({
               <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre:</label>
               <Input
                 value={selectedElement.nombre || ''}
-                onChange={(e) => updateElementProperty(selectedElement._id, 'nombre', e.target.value)}
+                onChange={e => updateElementProperty(selectedElement._id, 'nombre', e.target.value)}
                 placeholder="Nombre del elemento"
                 className="text-sm"
               />
@@ -171,7 +179,13 @@ const MenuMapa = ({
                   <Input
                     type="number"
                     value={selectedElement.width || 120}
-                    onChange={(e) => updateElementSize(selectedElement._id, parseInt(e.target.value) || 120, selectedElement.height || 80)}
+                    onChange={e =>
+                      updateElementSize(
+                        selectedElement._id,
+                        parseInt(e.target.value) || 120,
+                        selectedElement.height || 80
+                      )
+                    }
                     className="text-sm"
                   />
                 </div>
@@ -180,7 +194,13 @@ const MenuMapa = ({
                   <Input
                     type="number"
                     value={selectedElement.height || 80}
-                    onChange={(e) => updateElementSize(selectedElement._id, selectedElement.width || 120, parseInt(e.target.value) || 80)}
+                    onChange={e =>
+                      updateElementSize(
+                        selectedElement._id,
+                        selectedElement.width || 120,
+                        parseInt(e.target.value) || 80
+                      )
+                    }
                     className="text-sm"
                   />
                 </div>
@@ -191,7 +211,13 @@ const MenuMapa = ({
                 <Input
                   type="number"
                   value={selectedElement.radius || 60}
-                  onChange={(e) => updateElementProperty(selectedElement._id, 'radius', parseInt(e.target.value) || 60)}
+                  onChange={e =>
+                    updateElementProperty(
+                      selectedElement._id,
+                      'radius',
+                      parseInt(e.target.value) || 60
+                    )
+                  }
                   className="text-sm"
                 />
               </div>
@@ -221,7 +247,7 @@ const MenuMapa = ({
                 min={0}
                 max={360}
                 value={selectedElement.rotation || 0}
-                onChange={(value) => updateElementProperty(selectedElement._id, 'rotation', value)}
+                onChange={value => updateElementProperty(selectedElement._id, 'rotation', value)}
                 className="w-full"
               />
             </div>
@@ -232,7 +258,7 @@ const MenuMapa = ({
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Zona:</label>
                 <Select
                   value={selectedElement.zonaId || undefined}
-                  onChange={(value) => updateElementProperty(selectedElement._id, 'zonaId', value)}
+                  onChange={value => updateElementProperty(selectedElement._id, 'zonaId', value)}
                   placeholder="Seleccionar zona"
                   className="w-full"
                   allowClear
@@ -253,7 +279,13 @@ const MenuMapa = ({
                 <Input
                   type="number"
                   value={selectedElement.numero || ''}
-                  onChange={(e) => updateElementProperty(selectedElement._id, 'numero', parseInt(e.target.value) || '')}
+                  onChange={e =>
+                    updateElementProperty(
+                      selectedElement._id,
+                      'numero',
+                      parseInt(e.target.value) || ''
+                    )
+                  }
                   className="text-sm"
                 />
               </div>
@@ -271,8 +303,8 @@ const MenuMapa = ({
                   {Object.entries(seatStates).map(([state, config]) => (
                     <Option key={state} value={state}>
                       <div className="flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-2" 
+                        <div
+                          className="w-3 h-3 rounded-full mr-2"
                           style={{ backgroundColor: config.fill }}
                         />
                         {state === 'available' && 'Disponible'}
@@ -289,18 +321,20 @@ const MenuMapa = ({
 
             {/* Botones de acci³n */}
             <div className="flex gap-2">
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<CopyOutlined />}
                 onClick={duplicarElementos}
                 className="flex-1"
               >
                 Duplicar
               </Button>
-              <Button 
-                danger 
+              <Button
+                danger
                 icon={<DeleteOutlined />}
-                onClick={() => {/* Implementar eliminaci³n */}}
+                onClick={() => {
+                  /* Implementar eliminaci³n */
+                }}
                 className="flex-1"
               >
                 Eliminar
@@ -315,12 +349,14 @@ const MenuMapa = ({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Mostrar controles de escala</span>
-            <Switch 
+            <Switch
               checked={showScaleControls}
-              onChange={(checked) => {/* Implementar setShowScaleControls */}}
+              onChange={checked => {
+                /* Implementar setShowScaleControls */
+              }}
             />
           </div>
-          
+
           {showScaleControls && (
             <>
               <div>
@@ -336,24 +372,15 @@ const MenuMapa = ({
                   className="w-full"
                 />
               </div>
-              
+
               <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  size="small"
-                  onClick={() => handleScaleChange(0.5)}
-                >
+                <Button size="small" onClick={() => handleScaleChange(0.5)}>
                   50%
                 </Button>
-                <Button 
-                  size="small"
-                  onClick={() => handleScaleChange(1.0)}
-                >
+                <Button size="small" onClick={() => handleScaleChange(1.0)}>
                   100%
                 </Button>
-                <Button 
-                  size="small"
-                  onClick={() => handleScaleChange(2.0)}
-                >
+                <Button size="small" onClick={() => handleScaleChange(2.0)}>
                   200%
                 </Button>
               </div>
@@ -366,17 +393,15 @@ const MenuMapa = ({
       <Seccion titulo="Estados de Asientos">
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Estado Seleccionado:</label>
-            <Select
-              value={selectedSeatState}
-              onChange={setSelectedSeatState}
-              className="w-full"
-            >
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Estado Seleccionado:
+            </label>
+            <Select value={selectedSeatState} onChange={setSelectedSeatState} className="w-full">
               {Object.entries(seatStates).map(([state, config]) => (
                 <Option key={state} value={state}>
                   <div className="flex items-center">
-                    <div 
-                      className="w-3 h-3 rounded-full mr-2" 
+                    <div
+                      className="w-3 h-3 rounded-full mr-2"
                       style={{ backgroundColor: config.fill }}
                     />
                     {state === 'available' && 'Disponible'}
@@ -389,17 +414,16 @@ const MenuMapa = ({
               ))}
             </Select>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2">
-            <Button 
-              size="small"
-              onClick={() => changeSelectedSeatsState(selectedSeatState)}
-            >
+            <Button size="small" onClick={() => changeSelectedSeatsState(selectedSeatState)}>
               Aplicar a Seleccionados
             </Button>
-            <Button 
+            <Button
               size="small"
-              onClick={() => {/* Implementar cambio de estado por mesa */}}
+              onClick={() => {
+                /* Implementar cambio de estado por mesa */
+              }}
             >
               Aplicar por Mesa
             </Button>
@@ -412,14 +436,18 @@ const MenuMapa = ({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Mostrar conexiones</span>
-            <Switch 
+            <Switch
               checked={showConnections}
-              onChange={(checked) => {/* Implementar setShowConnections */}}
+              onChange={checked => {
+                /* Implementar setShowConnections */
+              }}
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Estilo de conexiones:</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Estilo de conexiones:
+            </label>
             <Select
               value={connectionStyle}
               onChange={handleConnectionStyleChange}
@@ -430,7 +458,7 @@ const MenuMapa = ({
               <Option value="dotted">L­nea de puntos</Option>
             </Select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Umbral de conexi³n: {connectionThreshold}px
@@ -439,23 +467,29 @@ const MenuMapa = ({
               min={20}
               max={100}
               value={connectionThreshold}
-              onChange={(value) => {/* Implementar setConnectionThreshold */}}
+              onChange={value => {
+                /* Implementar setConnectionThreshold */
+              }}
               className="w-full"
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2">
-            <Button 
+            <Button
               size="small"
               icon={<LinkOutlined />}
-              onClick={() => {/* Implementar conexi³n manual */}}
+              onClick={() => {
+                /* Implementar conexi³n manual */
+              }}
             >
               Conectar Manual
             </Button>
-            <Button 
+            <Button
               size="small"
               icon={<DeleteOutlined />}
-              onClick={() => {/* Implementar remover conexiones */}}
+              onClick={() => {
+                /* Implementar remover conexiones */
+              }}
             >
               Remover
             </Button>
@@ -467,35 +501,25 @@ const MenuMapa = ({
       <Seccion titulo="Coordenadas Precisas">
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Ajustar a cuadr­cula:</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Ajustar a cuadr­cula:
+            </label>
             <div className="grid grid-cols-2 gap-2">
-              <Button 
-                size="small"
-                onClick={() => handleSnapToCustomGrid(5)}
-              >
+              <Button size="small" onClick={() => handleSnapToCustomGrid(5)}>
                 5px
               </Button>
-              <Button 
-                size="small"
-                onClick={() => handleSnapToCustomGrid(10)}
-              >
+              <Button size="small" onClick={() => handleSnapToCustomGrid(10)}>
                 10px
               </Button>
-              <Button 
-                size="small"
-                onClick={() => handleSnapToCustomGrid(20)}
-              >
+              <Button size="small" onClick={() => handleSnapToCustomGrid(20)}>
                 20px
               </Button>
-              <Button 
-                size="small"
-                onClick={() => handleSnapToCustomGrid(50)}
-              >
+              <Button size="small" onClick={() => handleSnapToCustomGrid(50)}>
                 50px
               </Button>
             </div>
           </div>
-          
+
           <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
             ðŸ’¡ <strong>Consejo:</strong> Usa cuadr­culas m¡s peque±as para mayor precisi³n
           </div>
@@ -506,7 +530,9 @@ const MenuMapa = ({
       <Seccion titulo="Fondo del Mapa">
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Imagen de fondo:</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Imagen de fondo:
+            </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors cursor-pointer">
               <input
                 type="file"
@@ -524,20 +550,18 @@ const MenuMapa = ({
               </label>
             </div>
           </div>
-          
+
           {backgroundImage && (
             <>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <Switch 
+                  <Switch
                     checked={showBackgroundInWeb}
                     onChange={handleShowBackgroundInWebChange}
                   />
-                  <span className="text-sm text-gray-700">
-                    Mostrar imagen de fondo en la venta
-                  </span>
+                  <span className="text-sm text-gray-700">Mostrar imagen de fondo en la venta</span>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Escalar imagen: {backgroundScale * 100}%
@@ -551,7 +575,7 @@ const MenuMapa = ({
                     className="w-full"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Opacidad: {backgroundOpacity * 100}%
@@ -566,8 +590,8 @@ const MenuMapa = ({
                   />
                 </div>
               </div>
-              
-              <Button 
+
+              <Button
                 danger
                 icon={<DeleteOutlined />}
                 onClick={removeBackground}
@@ -578,7 +602,7 @@ const MenuMapa = ({
               </Button>
             </>
           )}
-          
+
           <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
             ðŸ’¡ <strong>Consejo:</strong> Las im¡genes m¡s grandes son m¡s f¡ciles de pintar encima
           </div>
@@ -589,10 +613,12 @@ const MenuMapa = ({
       <Seccion titulo="Zonas y Ajustes">
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Zona seleccionada:</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Zona seleccionada:
+            </label>
             <Select
               value={selectedZone?.id || undefined}
-              onChange={(value) => {
+              onChange={value => {
                 const zona = zones.find(z => z.id === value);
                 // Implementar setSelectedZone
               }}
@@ -609,11 +635,13 @@ const MenuMapa = ({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Nºmero de sillas:</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Nºmero de sillas:
+            </label>
             <Input
               type="number"
               value={numSillas}
-              onChange={(e) => setNumSillas(parseInt(e.target.value) || 0)}
+              onChange={e => setNumSillas(parseInt(e.target.value) || 0)}
               min="0"
               max="100"
               className="text-sm"
@@ -621,36 +649,26 @@ const MenuMapa = ({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Forma de silla:</label>
-            <Select
-              value={sillaShape}
-              onChange={setSillaShape}
-              className="w-full"
-            >
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Forma de silla:
+            </label>
+            <Select value={sillaShape} onChange={setSillaShape} className="w-full">
               <Option value="rect">Rectangular</Option>
               <Option value="circle">Circular</Option>
             </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Button 
-              type="primary"
-              onClick={() => addMesa('rect')}
-              className="w-full"
-            >
+            <Button type="primary" onClick={() => addMesa('rect')} className="w-full">
               Mesa Cuadrada
             </Button>
-            <Button 
-              type="primary"
-              onClick={() => addMesa('circle')}
-              className="w-full"
-            >
+            <Button type="primary" onClick={() => addMesa('circle')} className="w-full">
               Mesa Circular
             </Button>
           </div>
 
           {selectedZone && (
-            <Button 
+            <Button
               onClick={() => {
                 if (selectedElement && selectedElement.type === 'mesa') {
                   addSillasToMesa(selectedElement._id, numSillas, sillaShape);
@@ -668,7 +686,7 @@ const MenuMapa = ({
       {/* ===== ACCIONES ===== */}
       <Seccion titulo="Acciones">
         <div className="space-y-2">
-          <Button 
+          <Button
             type={activeMode === 'section' ? 'primary' : 'default'}
             icon={<ScissorOutlined />}
             onClick={crearSeccion}
@@ -676,26 +694,20 @@ const MenuMapa = ({
           >
             {isCreatingSection ? 'Cancelar Creaci³n de Secci³n' : 'Crear Secci³n'}
           </Button>
-          
-          <Button 
-            icon={<ClearOutlined />}
-            onClick={limpiarSeleccion}
-            className="w-full"
-          >
+
+          <Button icon={<ClearOutlined />} onClick={limpiarSeleccion} className="w-full">
             Limpiar Selecci³n
           </Button>
-          
-          <Button 
-            icon={<ReloadOutlined />}
-            onClick={snapToGrid}
-            className="w-full"
-          >
+
+          <Button icon={<ReloadOutlined />} onClick={snapToGrid} className="w-full">
             Ajustar a Cuadr­cula
           </Button>
-          
-          <Button 
+
+          <Button
             icon={<SettingOutlined />}
-            onClick={() => {/* Implementar configuraci³n avanzada */}}
+            onClick={() => {
+              /* Implementar configuraci³n avanzada */
+            }}
             className="w-full"
           >
             Configuraci³n Avanzada
@@ -706,12 +718,24 @@ const MenuMapa = ({
       {/* ===== INFORMACI“N DE NAVEGACI“N ===== */}
       <Seccion titulo="Navegaci³n del Mapa">
         <div className="text-xs text-gray-600 space-y-1">
-          <div>ðŸ–±ï¸ <strong>Bot³n central:</strong> Paneo del mapa</div>
-          <div>ðŸ” <strong>Rueda:</strong> Zoom in/out</div>
-          <div>ðŸ‘† <strong>Bot³n izquierdo:</strong> Seleccionar elementos</div>
-          <div>ðŸ‘†ðŸ‘† <strong>Doble clic en mesa:</strong> Seleccionar grupo completo</div>
-          <div>Œ¨ï¸ <strong>Ctrl + Click:</strong> Selecci³n mºltiple</div>
-          <div>ðŸ“ <strong>Shift + Arrastrar:</strong> Selecci³n rectangular</div>
+          <div>
+            ðŸ–±ï¸ <strong>Bot³n central:</strong> Paneo del mapa
+          </div>
+          <div>
+            ðŸ” <strong>Rueda:</strong> Zoom in/out
+          </div>
+          <div>
+            ðŸ‘† <strong>Bot³n izquierdo:</strong> Seleccionar elementos
+          </div>
+          <div>
+            ðŸ‘†ðŸ‘† <strong>Doble clic en mesa:</strong> Seleccionar grupo completo
+          </div>
+          <div>
+            Œ¨ï¸ <strong>Ctrl + Click:</strong> Selecci³n mºltiple
+          </div>
+          <div>
+            ðŸ“ <strong>Shift + Arrastrar:</strong> Selecci³n rectangular
+          </div>
         </div>
       </Seccion>
     </div>
@@ -719,5 +743,3 @@ const MenuMapa = ({
 };
 
 export default MenuMapa;
-
-

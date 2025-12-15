@@ -47,11 +47,9 @@ export const recintosService = {
    */
   async obtenerRecintosPorTenant(tenantId) {
     try {
-      const { data, error } = await supabaseWithTracking.select(
-        'recintos',
-        '*',
-        { tenant_id: tenantId }
-      );
+      const { data, error } = await supabaseWithTracking.select('recintos', '*', {
+        tenant_id: tenantId,
+      });
 
       if (error) throw error;
       return data;
@@ -68,11 +66,7 @@ export const recintosService = {
    */
   async obtenerRecintoPorId(id) {
     try {
-      const { data, error } = await supabaseWithTracking.select(
-        'recintos',
-        '*',
-        { id }
-      );
+      const { data, error } = await supabaseWithTracking.select('recintos', '*', { id });
 
       if (error) throw error;
       return data[0];
@@ -118,7 +112,7 @@ export const recintosService = {
       console.error('❌ Error al obtener recintos públicos:', error);
       throw error;
     }
-  }
+  },
 };
 
 export default recintosService;

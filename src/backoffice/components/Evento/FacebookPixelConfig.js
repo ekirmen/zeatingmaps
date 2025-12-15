@@ -1,25 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Form, 
-  Input, 
-  Switch, 
-  Button, 
-  Alert, 
-  Space, 
+import {
+  Card,
+  Form,
+  Input,
+  Switch,
+  Button,
+  Alert,
+  Space,
   Typography,
   Divider,
   Row,
-  Col
+  Col,
 } from '../../../utils/antdComponents';
-import { 
+import {
   FacebookOutlined,
   EyeOutlined,
   ShoppingCartOutlined,
   CreditCardOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
 } from '@ant-design/icons';
-import { upsertFacebookPixel, getFacebookPixelByEvent } from '../../../store/services/facebookPixelService';
+import {
+  upsertFacebookPixel,
+  getFacebookPixelByEvent,
+} from '../../../store/services/facebookPixelService';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -33,8 +36,8 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
       event_page: true,
       cart_page: true,
       payment_page: true,
-      thank_you_page: true
-    }
+      thank_you_page: true,
+    },
   });
   const [loading, setLoading] = useState(false);
 
@@ -51,8 +54,8 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
             event_page: true,
             cart_page: true,
             payment_page: true,
-            thank_you_page: true
-          }
+            thank_you_page: true,
+          },
         });
       }
     } catch (error) {
@@ -71,16 +74,16 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
   const handleSavePixel = async () => {
     try {
       setLoading(true);
-      
+
       if (facebookPixel.pixel_id || facebookPixel.pixel_script) {
         await upsertFacebookPixel({
           evento: eventoData.id,
           pixel_id: facebookPixel.pixel_id,
           pixel_script: facebookPixel.pixel_script,
           is_active: facebookPixel.is_active,
-          tracking_pages: facebookPixel.tracking_pages
+          tracking_pages: facebookPixel.tracking_pages,
         });
-        
+
         // Mostrar mensaje de éxito
         alert('Pixel de Facebook guardado correctamente');
       }
@@ -94,7 +97,7 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
 
   return (
     <div className="facebook-pixel-config">
-      <Card 
+      <Card
         title={
           <Space>
             <FacebookOutlined />
@@ -113,31 +116,29 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
-            <Form.Item
-              label="ID del Pixel de Facebook"
-              help="Ejemplo: 123456789012345"
-            >
+            <Form.Item label="ID del Pixel de Facebook" help="Ejemplo: 123456789012345">
               <Input
                 placeholder="Ingresa el ID de tu pixel de Facebook"
                 value={facebookPixel.pixel_id}
-                onChange={(e) => setFacebookPixel(prev => ({
-                  ...prev,
-                  pixel_id: e.target.value
-                }))}
+                onChange={e =>
+                  setFacebookPixel(prev => ({
+                    ...prev,
+                    pixel_id: e.target.value,
+                  }))
+                }
               />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item
-              label="Pixel Activo"
-              help="Activa o desactiva el tracking del pixel"
-            >
+            <Form.Item label="Pixel Activo" help="Activa o desactiva el tracking del pixel">
               <Switch
                 checked={facebookPixel.is_active}
-                onChange={(checked) => setFacebookPixel(prev => ({
-                  ...prev,
-                  is_active: checked
-                }))}
+                onChange={checked =>
+                  setFacebookPixel(prev => ({
+                    ...prev,
+                    is_active: checked,
+                  }))
+                }
               />
             </Form.Item>
           </Col>
@@ -176,10 +177,12 @@ fbq('track', 'PageView');
 </noscript>
 <!-- End Facebook Pixel Code -->`}
             value={facebookPixel.pixel_script}
-            onChange={(e) => setFacebookPixel(prev => ({
-              ...prev,
-              pixel_script: e.target.value
-            }))}
+            onChange={e =>
+              setFacebookPixel(prev => ({
+                ...prev,
+                pixel_script: e.target.value,
+              }))
+            }
           />
         </Form.Item>
 
@@ -196,13 +199,15 @@ fbq('track', 'PageView');
               <div className="tracking-page-header">
                 <Switch
                   checked={facebookPixel.tracking_pages.event_page}
-                  onChange={(checked) => setFacebookPixel(prev => ({
-                    ...prev,
-                    tracking_pages: {
-                      ...prev.tracking_pages,
-                      event_page: checked
-                    }
-                  }))}
+                  onChange={checked =>
+                    setFacebookPixel(prev => ({
+                      ...prev,
+                      tracking_pages: {
+                        ...prev.tracking_pages,
+                        event_page: checked,
+                      },
+                    }))
+                  }
                 />
                 <Space className="ml-2">
                   <EyeOutlined />
@@ -214,19 +219,21 @@ fbq('track', 'PageView');
               </Text>
             </div>
           </Col>
-          
+
           <Col xs={24} sm={12}>
             <div className="tracking-page-item">
               <div className="tracking-page-header">
                 <Switch
                   checked={facebookPixel.tracking_pages.cart_page}
-                  onChange={(checked) => setFacebookPixel(prev => ({
-                    ...prev,
-                    tracking_pages: {
-                      ...prev.tracking_pages,
-                      cart_page: checked
-                    }
-                  }))}
+                  onChange={checked =>
+                    setFacebookPixel(prev => ({
+                      ...prev,
+                      tracking_pages: {
+                        ...prev.tracking_pages,
+                        cart_page: checked,
+                      },
+                    }))
+                  }
                 />
                 <Space className="ml-2">
                   <ShoppingCartOutlined />
@@ -238,19 +245,21 @@ fbq('track', 'PageView');
               </Text>
             </div>
           </Col>
-          
+
           <Col xs={24} sm={12}>
             <div className="tracking-page-item">
               <div className="tracking-page-header">
                 <Switch
                   checked={facebookPixel.tracking_pages.payment_page}
-                  onChange={(checked) => setFacebookPixel(prev => ({
-                    ...prev,
-                    tracking_pages: {
-                      ...prev.tracking_pages,
-                      payment_page: checked
-                    }
-                  }))}
+                  onChange={checked =>
+                    setFacebookPixel(prev => ({
+                      ...prev,
+                      tracking_pages: {
+                        ...prev.tracking_pages,
+                        payment_page: checked,
+                      },
+                    }))
+                  }
                 />
                 <Space className="ml-2">
                   <CreditCardOutlined />
@@ -262,19 +271,21 @@ fbq('track', 'PageView');
               </Text>
             </div>
           </Col>
-          
+
           <Col xs={24} sm={12}>
             <div className="tracking-page-item">
               <div className="tracking-page-header">
                 <Switch
                   checked={facebookPixel.tracking_pages.thank_you_page}
-                  onChange={(checked) => setFacebookPixel(prev => ({
-                    ...prev,
-                    tracking_pages: {
-                      ...prev.tracking_pages,
-                      thank_you_page: checked
-                    }
-                  }))}
+                  onChange={checked =>
+                    setFacebookPixel(prev => ({
+                      ...prev,
+                      tracking_pages: {
+                        ...prev.tracking_pages,
+                        thank_you_page: checked,
+                      },
+                    }))
+                  }
                 />
                 <Space className="ml-2">
                   <CheckCircleOutlined />
@@ -297,8 +308,8 @@ fbq('track', 'PageView');
         />
 
         <div className="mt-4">
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             onClick={handleSavePixel}
             loading={loading}
             icon={<FacebookOutlined />}
@@ -315,7 +326,7 @@ fbq('track', 'PageView');
           border-radius: 6px;
           margin-bottom: 8px;
         }
-        
+
         .tracking-page-header {
           display: flex;
           align-items: center;

@@ -9,19 +9,14 @@ export const useAuth = () => {
   const [error, setError] = useState(null);
 
   // Obtener perfil del usuario
-  const fetchUserProfile = useCallback(async (userId) => {
+  const fetchUserProfile = useCallback(async userId => {
     try {
       const supabase = getSupabaseClient();
       if (!supabase) {
-
         return null;
       }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
 
       if (error) {
         console.error('[useAuth] Error obteniendo perfil:', error);
@@ -47,7 +42,10 @@ export const useAuth = () => {
       }
 
       // Obtener sesión actual
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
       if (sessionError) {
         throw sessionError;
@@ -87,7 +85,7 @@ export const useAuth = () => {
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
       if (error || !data?.session) {
@@ -113,9 +111,10 @@ export const useAuth = () => {
       });
     } catch (err) {
       console.error('[useAuth] Error en login:', err);
-      const authError = err?.code && err?.i18nKey
-        ? err
-        : await createAuthError({ error: err, email, supabaseClient: supabase });
+      const authError =
+        err?.code && err?.i18nKey
+          ? err
+          : await createAuthError({ error: err, email, supabaseClient: supabase });
       setError(authError.message);
       throw authError;
     } finally {
@@ -145,19 +144,22 @@ export const useAuth = () => {
   };
 
   // Verificar permisos
-  const hasPermission = useCallback((permission) => {
-    if (!userProfile) return false;
+  const hasPermission = useCallback(
+    permission => {
+      if (!userProfile) return false;
 
-    // Super admin tiene todos los permisos
-    if (userProfile.role === 'super_admin') return true;
+      // Super admin tiene todos los permisos
+      if (userProfile.role === 'super_admin') return true;
 
-    // Verificar permisos específicos del rol
-    if (userProfile.permissions && Array.isArray(userProfile.permissions)) {
-      return userProfile.permissions.includes(permission);
-    }
+      // Verificar permisos específicos del rol
+      if (userProfile.permissions && Array.isArray(userProfile.permissions)) {
+        return userProfile.permissions.includes(permission);
+      }
 
-    return false;
-  }, [userProfile]);
+      return false;
+    },
+    [userProfile]
+  );
 
   // Verificar si es super admin
   const isSuperAdmin = useCallback(() => {
@@ -175,51 +177,57 @@ export const useAuth = () => {
   }, [isSuperAdmin, isTenantAdmin]);
 
   // Verificar acceso a tenant
-  const hasTenantAccess = useCallback((targetTenantId) => {
-    if (!userProfile) return false;
+  const hasTenantAccess = useCallback(
+    targetTenantId => {
+      if (!userProfile) return false;
 
-    // Super admin tiene acceso a todos los tenants
-    if (isSuperAdmin()) return true;
+      // Super admin tiene acceso a todos los tenants
+      if (isSuperAdmin()) return true;
 
-    // Tenant admin solo tiene acceso a su propio tenant
-    if (isTenantAdmin()) {
-      return userProfile.tenant_id === targetTenantId;
-    }
+      // Tenant admin solo tiene acceso a su propio tenant
+      if (isTenantAdmin()) {
+        return userProfile.tenant_id === targetTenantId;
+      }
 
-    return false;
-  }, [userProfile, isSuperAdmin, isTenantAdmin]);
+      return false;
+    },
+    [userProfile, isSuperAdmin, isTenantAdmin]
+  );
 
   // Actualizar perfil del usuario
-  const updateProfile = useCallback(async (updates) => {
-    try {
-      if (!user?.id) {
-        throw new Error('Usuario no autenticado');
+  const updateProfile = useCallback(
+    async updates => {
+      try {
+        if (!user?.id) {
+          throw new Error('Usuario no autenticado');
+        }
+
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+          throw new Error('Cliente de Supabase no disponible');
+        }
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', user.id)
+          .select()
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        setUserProfile(data);
+        return { success: true, profile: data };
+      } catch (err) {
+        console.error('[useAuth] Error actualizando perfil:', err);
+        setError(err.message);
+        throw err;
       }
-
-      const supabase = getSupabaseClient();
-      if (!supabase) {
-        throw new Error('Cliente de Supabase no disponible');
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      setUserProfile(data);
-      return { success: true, profile: data };
-    } catch (err) {
-      console.error('[useAuth] Error actualizando perfil:', err);
-      setError(err.message);
-      throw err;
-    }
-  }, [user]);
+    },
+    [user]
+  );
 
   // Escuchar cambios de autenticación
   useEffect(() => {
@@ -233,20 +241,20 @@ export const useAuth = () => {
     validateSession();
 
     // Escuchar cambios de autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          setUser(session.user);
-          const profile = await fetchUserProfile(session.user.id);
-          setUserProfile(profile);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setUserProfile(null);
-        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          setUser(session.user);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+        const profile = await fetchUserProfile(session.user.id);
+        setUserProfile(profile);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setUserProfile(null);
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        setUser(session.user);
       }
-    );
+    });
 
     return () => {
       subscription?.unsubscribe();
@@ -274,6 +282,6 @@ export const useAuth = () => {
 
     // Utilidades
     isAuthenticated: !!user,
-    isReady: !loading && !error
+    isReady: !loading && !error,
   };
 };

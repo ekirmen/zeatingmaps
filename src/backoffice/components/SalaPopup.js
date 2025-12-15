@@ -29,20 +29,14 @@ const SalaPopup = ({ recintoId, onClose }) => {
         type="text"
         className="w-full border p-2 mb-2"
         value={newSala.nombre}
-        onChange={(e) => setNewSala({ nombre: e.target.value })}
+        onChange={e => setNewSala({ nombre: e.target.value })}
         placeholder="Nombre de la sala"
       />
       <div className="flex gap-2">
-        <button
-          onClick={handleCreateSala}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
+        <button onClick={handleCreateSala} className="bg-blue-500 text-white px-4 py-2 rounded">
           Crear Sala
         </button>
-        <button
-          onClick={onClose}
-          className="bg-gray-300 text-black px-4 py-2 rounded"
-        >
+        <button onClick={onClose} className="bg-gray-300 text-black px-4 py-2 rounded">
           Cerrar
         </button>
       </div>

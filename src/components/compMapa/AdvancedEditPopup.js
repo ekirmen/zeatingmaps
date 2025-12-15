@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-const AdvancedEditPopup = ({ 
-  element, 
-  zoom = 1, 
-  onUpdate, 
-  onDelete, 
-  onDuplicate, 
+const AdvancedEditPopup = ({
+  element,
+  zoom = 1,
+  onUpdate,
+  onDelete,
+  onDuplicate,
   onClose,
-  position = { x: 0, y: 0 }
+  position = { x: 0, y: 0 },
 }) => {
   const [localValues, setLocalValues] = useState({});
 
@@ -23,7 +23,7 @@ const AdvancedEditPopup = ({
         fillColor: element.fillColor || '#ffffff',
         numSillas: element.numSillas || 4,
         openSpaces: element.openSpaces || 0,
-        curve: element.curve || 0
+        curve: element.curve || 0,
       });
     }
   }, [element]);
@@ -60,7 +60,7 @@ const AdvancedEditPopup = ({
     borderRadius: '8px',
     zIndex: 1000,
     minWidth: '280px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
   };
 
   const renderSlider = (property, label, min, max, step = 1) => (
@@ -75,7 +75,7 @@ const AdvancedEditPopup = ({
         max={max}
         step={step}
         value={localValues[property] || 0}
-        onChange={(e) => handleSliderChange(property, parseFloat(e.target.value))}
+        onChange={e => handleSliderChange(property, parseFloat(e.target.value))}
         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
       />
     </div>
@@ -87,7 +87,7 @@ const AdvancedEditPopup = ({
       <input
         type="color"
         value={localValues[property] || '#000000'}
-        onChange={(e) => handleInputChange(property, e.target.value)}
+        onChange={e => handleInputChange(property, e.target.value)}
         className="w-full h-10 border border-gray-300 rounded cursor-pointer"
       />
     </div>
@@ -101,7 +101,7 @@ const AdvancedEditPopup = ({
         min={min}
         max={max}
         value={localValues[property] || 0}
-        onChange={(e) => handleInputChange(property, parseFloat(e.target.value) || 0)}
+        onChange={e => handleInputChange(property, parseFloat(e.target.value) || 0)}
         className="w-full p-2 border border-gray-300 rounded text-sm"
       />
     </div>
@@ -127,10 +127,7 @@ const AdvancedEditPopup = ({
           <h3 className="font-semibold text-gray-800">
             {element.type === 'mesa' ? 'Mesa' : element.type === 'silla' ? 'Silla' : 'Elemento'}
           </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">
             ×
           </button>
         </div>
@@ -152,14 +149,16 @@ const AdvancedEditPopup = ({
                     max={12}
                     step={1}
                     value={localValues.numSillas || 4}
-                    onChange={(e) => handleSliderChange('numSillas', parseInt(e.target.value))}
+                    onChange={e => handleSliderChange('numSillas', parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
 
                 <div className="control mb-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="sliderLabel text-sm font-medium text-gray-700">Abrir espacios</span>
+                    <span className="sliderLabel text-sm font-medium text-gray-700">
+                      Abrir espacios
+                    </span>
                     <span className="text-sm text-gray-600">{localValues.openSpaces}</span>
                   </div>
                   <input
@@ -168,7 +167,7 @@ const AdvancedEditPopup = ({
                     max={localValues.numSillas || 4}
                     step={1}
                     value={localValues.openSpaces || 0}
-                    onChange={(e) => handleSliderChange('openSpaces', parseInt(e.target.value))}
+                    onChange={e => handleSliderChange('openSpaces', parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
@@ -192,7 +191,7 @@ const AdvancedEditPopup = ({
                     max={16}
                     step={1}
                     value={localValues.numSillas || 4}
-                    onChange={(e) => handleSliderChange('numSillas', parseInt(e.target.value))}
+                    onChange={e => handleSliderChange('numSillas', parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
@@ -218,12 +217,14 @@ const AdvancedEditPopup = ({
         {element.type === 'seccion' && (
           <>
             <div className="control mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nombre del sector</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre del sector
+              </label>
               <input
                 type="text"
                 placeholder="Label"
                 value={localValues.nombre || ''}
-                onChange={(e) => handleInputChange('nombre', e.target.value)}
+                onChange={e => handleInputChange('nombre', e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded text-sm"
               />
             </div>

@@ -9,7 +9,6 @@ export const RecintoSalaProvider = ({ children }) => {
   const { currentTenant } = useTenant();
   const [recintos, setRecintos] = useState([]);
   const [recinto, setRecinto] = useState(() => {
-
     return stored ? JSON.parse(stored) : null;
   });
   const [salas, setSalas] = useState([]);
@@ -19,25 +18,29 @@ export const RecintoSalaProvider = ({ children }) => {
   });
 
   const prevTenantId = useRef(null);
-  
+
   useEffect(() => {
     const tenantId = currentTenant?.id;
-    
+
     // Solo cargar si cambió el tenant o si no se ha cargado antes
     if (tenantId === prevTenantId.current && recintos.length > 0) return;
-    if (!tenantId && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('vercel.app')) {
+    if (
+      !tenantId &&
+      !window.location.hostname.includes('localhost') &&
+      !window.location.hostname.includes('vercel.app')
+    ) {
       logger.log('⏳ [RecintoSalaContext] Esperando tenant...');
       return;
     }
-    
+
     prevTenantId.current = tenantId;
-    
+
     const fetchRecintos = async () => {
       try {
         logger.log('🔍 [RecintoSalaContext] Obteniendo recintos para tenant:', tenantId);
-        
+
         let query = supabase.from('recintos').select('*, salas(*)');
-        
+
         // Filtrar por tenant_id si está disponible
         if (tenantId) {
           query = query.eq('tenant_id', tenantId);
@@ -45,7 +48,7 @@ export const RecintoSalaProvider = ({ children }) => {
         } else {
           logger.warn('⚠️ [RecintoSalaContext] No hay tenant disponible, consultando sin filtro');
         }
-        
+
         const { data, error } = await query;
         if (error) {
           logger.error('❌ [RecintoSalaContext] Error fetching recintos:', error.message);
@@ -61,7 +64,11 @@ export const RecintoSalaProvider = ({ children }) => {
     };
 
     // Solo ejecutar si tenemos un tenant o si estamos en desarrollo
-    if (tenantId || window.location.hostname === 'localhost' || window.location.hostname.includes('vercel.app')) {
+    if (
+      tenantId ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname.includes('vercel.app')
+    ) {
       fetchRecintos();
     }
   }, [currentTenant?.id, recintos.length]);

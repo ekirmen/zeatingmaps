@@ -1,21 +1,19 @@
-
-
 // Email Service Configuration
 const EMAIL_CONFIG = {
   // SendGrid Configuration
   sendgrid: {
     apiKey: process.env.REACT_APP_SENDGRID_API_KEY,
     fromEmail: process.env.REACT_APP_FROM_EMAIL || 'noreply@kreatickets.com',
-    fromName: process.env.REACT_APP_FROM_NAME || 'Kreatickets'
+    fromName: process.env.REACT_APP_FROM_NAME || 'Kreatickets',
   },
-  
+
   // Mailgun Configuration (alternative)
   mailgun: {
     apiKey: process.env.REACT_APP_MAILGUN_API_KEY,
     domain: process.env.REACT_APP_MAILGUN_DOMAIN,
-    fromEmail: process.env.REACT_APP_FROM_EMAIL || 'noreply@kreatickets.com'
+    fromEmail: process.env.REACT_APP_FROM_EMAIL || 'noreply@kreatickets.com',
   },
-  
+
   // SMTP Configuration (fallback)
   smtp: {
     host: process.env.REACT_APP_SMTP_HOST,
@@ -23,9 +21,9 @@ const EMAIL_CONFIG = {
     secure: process.env.REACT_APP_SMTP_SECURE === 'true',
     auth: {
       user: process.env.REACT_APP_SMTP_USER,
-      pass: process.env.REACT_APP_SMTP_PASS
-    }
-  }
+      pass: process.env.REACT_APP_SMTP_PASS,
+    },
+  },
 };
 
 // Email Service Class
@@ -39,7 +37,6 @@ class EmailService {
   // Obtener configuración activa (tenant o global)
   async getActiveConfig() {
     try {
-
       return await TenantEmailConfigService.getActiveEmailConfig(this.tenantId);
     } catch (error) {
       console.error('Error obteniendo configuración activa:', error);
@@ -61,8 +58,8 @@ class EmailService {
           html,
           text,
           from: this.config.fromEmail,
-          fromName: this.config.fromName
-        })
+          fromName: this.config.fromName,
+        }),
       });
 
       if (!response.ok) {
@@ -90,8 +87,8 @@ class EmailService {
           subject,
           html,
           text,
-          from: this.config.fromEmail
-        })
+          from: this.config.fromEmail,
+        }),
       });
 
       if (!response.ok) {
@@ -126,10 +123,10 @@ class EmailService {
             secure: this.config.secure,
             auth: {
               user: this.config.auth.user,
-              pass: this.config.auth.pass
-            }
-          }
-        })
+              pass: this.config.auth.pass,
+            },
+          },
+        }),
       });
 
       if (!response.ok) {
@@ -150,12 +147,12 @@ class EmailService {
     try {
       // Obtener configuración activa (tenant o global)
       const activeConfig = await this.getActiveConfig();
-      
+
       // Si hay configuración específica del tenant, usar SMTP
       if (activeConfig && activeConfig.smtp_host) {
         return await this.sendWithTenantSMTP(to, subject, html, text, activeConfig);
       }
-      
+
       // Si no, usar el proveedor configurado por defecto
       switch (this.provider) {
         case 'sendgrid':
@@ -176,8 +173,8 @@ class EmailService {
   // Enviar email usando configuración específica del tenant
   async sendWithTenantSMTP(to, subject, html, text = null, config = null) {
     try {
-      const activeConfig = config || await this.getActiveConfig();
-      
+      const activeConfig = config || (await this.getActiveConfig());
+
       if (!activeConfig || !activeConfig.smtp_host) {
         throw new Error('No hay configuración SMTP disponible');
       }
@@ -199,10 +196,10 @@ class EmailService {
             secure: activeConfig.smtp_secure,
             auth: {
               user: activeConfig.smtp_user,
-              pass: activeConfig.smtp_pass
-            }
-          }
-        })
+              pass: activeConfig.smtp_pass,
+            },
+          },
+        }),
       });
 
       if (!response.ok) {
@@ -223,32 +220,27 @@ class EmailService {
     const results = {
       sent: 0,
       failed: 0,
-      errors: []
+      errors: [],
     };
 
     for (const recipient of recipients) {
       try {
         // Personalizar HTML para cada destinatario
         const personalizedHtml = this.personalizeEmail(emailHtml, recipient);
-        
+
         // Enviar email
-        await this.sendEmail(
-          recipient.email,
-          campaign.nombre,
-          personalizedHtml
-        );
-        
+        await this.sendEmail(recipient.email, campaign.nombre, personalizedHtml);
+
         results.sent++;
-        
+
         // Simular delay para evitar rate limiting
         await new Promise(resolve => setTimeout(resolve, 100));
-        
       } catch (error) {
         console.error(`Error sending email to ${recipient.email}:`, error);
         results.failed++;
         results.errors.push({
           email: recipient.email,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -374,31 +366,32 @@ class EmailService {
       return '<p>No hay contenido configurado para esta campaña.</p>';
     }
 
-    return widgets.map(widget => {
-      const config = widget.configuracion || {};
-      
-      switch (widget.tipo) {
-        case 'Título':
-          return `<div class="widget"><h2 style="text-align: center; color: #333;">${config.texto || 'Título'}</h2></div>`;
+    return widgets
+      .map(widget => {
+        const config = widget.configuracion || {};
 
-        case 'Subtítulo':
-          return `<div class="widget"><h3 style="text-align: center; color: #666;">${config.texto || 'Subtítulo'}</h3></div>`;
+        switch (widget.tipo) {
+          case 'Título':
+            return `<div class="widget"><h2 style="text-align: center; color: #333;">${config.texto || 'Título'}</h2></div>`;
 
-        case 'Paragraph':
-          return `<div class="widget"><p>${config.texto || 'Contenido del párrafo...'}</p></div>`;
+          case 'Subtítulo':
+            return `<div class="widget"><h3 style="text-align: center; color: #666;">${config.texto || 'Subtítulo'}</h3></div>`;
 
-        case 'Banner':
-          return `
+          case 'Paragraph':
+            return `<div class="widget"><p>${config.texto || 'Contenido del párrafo...'}</p></div>`;
+
+          case 'Banner':
+            return `
             <div class="widget">
               ${config.imagen ? `<img src="${config.imagen}" alt="Banner" style="max-width: 100%; height: auto; border-radius: 8px;">` : ''}
               ${config.texto ? `<p style="text-align: center; margin-top: 8px;">${config.texto}</p>` : ''}
             </div>
           `;
 
-        case 'Botón':
-          const buttonText = config.textButton || 'Hacer clic';
-          const buttonUrl = this.getButtonUrl(config);
-          return `
+          case 'Botón':
+            const buttonText = config.textButton || 'Hacer clic';
+            const buttonUrl = this.getButtonUrl(config);
+            return `
             <div class="widget" style="text-align: center;">
               <a href="${buttonUrl}" class="button" style="margin-top: ${config.margin_top || 10}px; margin-bottom: ${config.margin_bottom || 10}px;">
                 ${buttonText}
@@ -406,21 +399,22 @@ class EmailService {
             </div>
           `;
 
-        case 'Información del evento':
-          return `
+          case 'Información del evento':
+            return `
             <div class="widget" style="background-color: #f8f9fa; padding: 16px; border-radius: 8px;">
               <h4 style="margin: 0 0 8px 0; color: #333;">Información del Evento</h4>
               <p style="margin: 0; color: #666; font-size: 14px;">ID del evento: ${config.eventoId || 'No especificado'}</p>
             </div>
           `;
 
-        case 'Código HTML':
-          return `<div class="widget">${config.html || '<div>Contenido HTML personalizado</div>'}</div>`;
+          case 'Código HTML':
+            return `<div class="widget">${config.html || '<div>Contenido HTML personalizado</div>'}</div>`;
 
-        default:
-          return `<div class="widget"><p>Widget no reconocido: ${widget.tipo}</p></div>`;
-      }
-    }).join('');
+          default:
+            return `<div class="widget"><p>Widget no reconocido: ${widget.tipo}</p></div>`;
+        }
+      })
+      .join('');
   }
 
   // Obtener URL del botón
@@ -439,9 +433,9 @@ class EmailService {
   // Obtener URL del canal
   getChannelUrl(channelId) {
     const channels = {
-      '8': 'https://kreatickets.pagatusboletos.com/tickets/',
-      '2': 'https://ventas.kreatickets.com/venta/',
-      '999': 'https://ventas.kreatickets.com/test/'
+      8: 'https://kreatickets.pagatusboletos.com/tickets/',
+      2: 'https://ventas.kreatickets.com/venta/',
+      999: 'https://ventas.kreatickets.com/test/',
     };
     return channels[channelId] || 'https://ventas.kreatickets.com/venta/';
   }
@@ -477,14 +471,14 @@ class EmailService {
   async testConnection() {
     try {
       this.validateConfig();
-      
+
       // Enviar email de prueba
       await this.sendEmail(
         'test@example.com',
         'Test Email',
         '<h1>Test Email</h1><p>This is a test email to verify the configuration.</p>'
       );
-      
+
       return true;
     } catch (error) {
       console.error('Email connection test failed:', error);
@@ -496,4 +490,4 @@ class EmailService {
 // Instancia singleton del servicio de email
 const emailService = new EmailService();
 
-export default emailService; 
+export default emailService;

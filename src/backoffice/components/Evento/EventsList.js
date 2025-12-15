@@ -2,23 +2,28 @@ import React from 'react';
 import resolveImageUrl, { resolveEventImageWithTenant } from '../../../utils/resolveImageUrl';
 import { useTenant } from '../../../contexts/TenantContext';
 import { Card, Tag, Button } from '../../../utils/antdComponents';
-import { EditOutlined, DeleteOutlined, CopyOutlined, CalendarOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import {
+  EditOutlined,
+  DeleteOutlined,
+  CopyOutlined,
+  CalendarOutlined,
+  EnvironmentOutlined,
+} from '@ant-design/icons';
 
-const EventsList = ({ 
-  eventosFiltrados, 
-  viewMode, 
+const EventsList = ({
+  eventosFiltrados,
+  viewMode,
   recintoSeleccionado,
   handleEdit,
   handleDelete,
   handleDuplicate,
-  onToggleEventStatus
+  onToggleEventStatus,
 }) => {
   const { currentTenant } = useTenant();
 
-  const resolveBestImage = (evento) => {
+  const resolveBestImage = evento => {
     const tryTypes = ['banner', 'obraImagen', 'portada', 'logoHorizontal', 'logoCuadrado'];
     for (const t of tryTypes) {
-
       if (url) return url;
     }
     return null;
@@ -31,17 +36,14 @@ const EventsList = ({
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">No hay eventos configurados</h3>
         <p className="text-gray-500 mb-6">
-          {!recintoSeleccionado 
+          {!recintoSeleccionado
             ? 'Selecciona un recinto y sala para ver los eventos'
-            : 'Crea tu primer evento usando el bot³n "Crear Evento"'
-          }
+            : 'Crea tu primer evento usando el bot³n "Crear Evento"'}
         </p>
         {recintoSeleccionado && (
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg">
             <EnvironmentOutlined className="text-blue-500" />
-            <span className="text-sm font-medium">
-              {recintoSeleccionado.nombre}
-            </span>
+            <span className="text-sm font-medium">{recintoSeleccionado.nombre}</span>
           </div>
         )}
       </div>
@@ -55,28 +57,34 @@ const EventsList = ({
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Eventos Configurados</h2>
           <p className="text-sm text-gray-600 mt-1">
-            {eventosFiltrados.length} evento{eventosFiltrados.length !== 1 ? 's' : ''} en {recintoSeleccionado?.nombre}
+            {eventosFiltrados.length} evento{eventosFiltrados.length !== 1 ? 's' : ''} en{' '}
+            {recintoSeleccionado?.nombre}
           </p>
-          
+
           {/* Resumen del estado de los eventos */}
           {eventosFiltrados.length > 0 && (
             <div className="mt-2 flex items-center gap-4 text-xs">
               {(() => {
-                const activeCount = eventosFiltrados.filter(e => 
-                  (e.activo === true || e.activo === 'true') && 
-                  !(e.desactivado === true || e.desactivado === 'true')
+                const activeCount = eventosFiltrados.filter(
+                  e =>
+                    (e.activo === true || e.activo === 'true') &&
+                    !(e.desactivado === true || e.desactivado === 'true')
                 ).length;
                 const inactiveCount = eventosFiltrados.length - activeCount;
-                
+
                 return (
                   <>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-green-600">{activeCount} activo{activeCount !== 1 ? 's' : ''}</span>
+                      <span className="text-green-600">
+                        {activeCount} activo{activeCount !== 1 ? 's' : ''}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                      <span className="text-red-600">{inactiveCount} inactivo{inactiveCount !== 1 ? 's' : ''}</span>
+                      <span className="text-red-600">
+                        {inactiveCount} inactivo{inactiveCount !== 1 ? 's' : ''}
+                      </span>
                     </div>
                   </>
                 );
@@ -84,13 +92,11 @@ const EventsList = ({
             </div>
           )}
         </div>
-        
+
         {/* Contador de eventos */}
         <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
           <CalendarOutlined className="text-blue-500" />
-          <span className="text-sm font-medium">
-            {eventosFiltrados.length}
-          </span>
+          <span className="text-sm font-medium">{eventosFiltrados.length}</span>
         </div>
       </div>
 
@@ -102,7 +108,7 @@ const EventsList = ({
             : 'space-y-4'
         }
       >
-        {eventosFiltrados.map((evento) => (
+        {eventosFiltrados.map(evento => (
           <Card
             key={evento.id}
             hoverable
@@ -117,11 +123,7 @@ const EventsList = ({
                   {(() => {
                     const img = resolveBestImage(evento);
                     return img ? (
-                      <img
-                        src={img}
-                        alt={evento.nombre}
-                        className="object-cover w-full h-full"
-                      />
+                      <img src={img} alt={evento.nombre} className="object-cover w-full h-full" />
                     ) : (
                       <div className="text-center text-gray-400">
                         <CalendarOutlined className="text-4xl mb-2" />
@@ -135,12 +137,13 @@ const EventsList = ({
             actions={
               viewMode === 'grid' ? (
                 <div className="grid grid-cols-2 gap-2 p-2">
-                  <Button 
+                  <Button
                     key="toggle-status"
                     type={(() => {
                       const isActive = evento.activo === true || evento.activo === 'true';
-                      const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
-                      return (isActive && !isDisabled) ? 'default' : 'primary';
+                      const isDisabled =
+                        evento.desactivado === true || evento.desactivado === 'true';
+                      return isActive && !isDisabled ? 'default' : 'primary';
                     })()}
                     size="small"
                     onClick={() => onToggleEventStatus && onToggleEventStatus(evento.id, evento)}
@@ -149,13 +152,14 @@ const EventsList = ({
                   >
                     {(() => {
                       const isActive = evento.activo === true || evento.activo === 'true';
-                      const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
-                      return (isActive && !isDisabled) ? 'Desactivar' : 'Activar';
+                      const isDisabled =
+                        evento.desactivado === true || evento.desactivado === 'true';
+                      return isActive && !isDisabled ? 'Desactivar' : 'Activar';
                     })()}
                   </Button>
-                  <Button 
-                    type="primary" 
-                    icon={<EditOutlined />} 
+                  <Button
+                    type="primary"
+                    icon={<EditOutlined />}
                     size="small"
                     onClick={() => handleEdit(evento.id)}
                     className="w-full"
@@ -163,9 +167,9 @@ const EventsList = ({
                   >
                     Editar
                   </Button>
-                  <Button 
-                    type="default" 
-                    icon={<CopyOutlined />} 
+                  <Button
+                    type="default"
+                    icon={<CopyOutlined />}
                     size="small"
                     onClick={() => handleDuplicate(evento.id)}
                     className="w-full"
@@ -173,9 +177,9 @@ const EventsList = ({
                   >
                     Duplicar
                   </Button>
-                  <Button 
-                    danger 
-                    icon={<DeleteOutlined />} 
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
                     size="small"
                     onClick={() => handleDelete(evento.id)}
                     className="w-full"
@@ -184,48 +188,52 @@ const EventsList = ({
                     Eliminar
                   </Button>
                 </div>
-              ) : [
-                <Button 
-                  key="toggle-status"
-                  type={(() => {
-                    const isActive = evento.activo === true || evento.activo === 'true';
-                    const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
-                    return (isActive && !isDisabled) ? 'default' : 'primary';
-                  })()}
-                  size="small"
-                  onClick={() => onToggleEventStatus && onToggleEventStatus(evento.id, evento)}
-                >
-                  {(() => {
-                    const isActive = evento.activo === true || evento.activo === 'true';
-                    const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
-                    return (isActive && !isDisabled) ? 'Desactivar' : 'Activar';
-                  })()}
-                </Button>,
-                <Button 
-                  type="primary" 
-                  icon={<EditOutlined />} 
-                  size="small"
-                  onClick={() => handleEdit(evento.id)}
-                >
-                  Editar
-                </Button>,
-                <Button 
-                  type="default" 
-                  icon={<CopyOutlined />} 
-                  size="small"
-                  onClick={() => handleDuplicate(evento.id)}
-                >
-                  Duplicar
-                </Button>,
-                <Button 
-                  danger 
-                  icon={<DeleteOutlined />} 
-                  size="small"
-                  onClick={() => handleDelete(evento.id)}
-                >
-                  Eliminar
-                </Button>
-              ]
+              ) : (
+                [
+                  <Button
+                    key="toggle-status"
+                    type={(() => {
+                      const isActive = evento.activo === true || evento.activo === 'true';
+                      const isDisabled =
+                        evento.desactivado === true || evento.desactivado === 'true';
+                      return isActive && !isDisabled ? 'default' : 'primary';
+                    })()}
+                    size="small"
+                    onClick={() => onToggleEventStatus && onToggleEventStatus(evento.id, evento)}
+                  >
+                    {(() => {
+                      const isActive = evento.activo === true || evento.activo === 'true';
+                      const isDisabled =
+                        evento.desactivado === true || evento.desactivado === 'true';
+                      return isActive && !isDisabled ? 'Desactivar' : 'Activar';
+                    })()}
+                  </Button>,
+                  <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    size="small"
+                    onClick={() => handleEdit(evento.id)}
+                  >
+                    Editar
+                  </Button>,
+                  <Button
+                    type="default"
+                    icon={<CopyOutlined />}
+                    size="small"
+                    onClick={() => handleDuplicate(evento.id)}
+                  >
+                    Duplicar
+                  </Button>,
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    size="small"
+                    onClick={() => handleDelete(evento.id)}
+                  >
+                    Eliminar
+                  </Button>,
+                ]
+              )
             }
           >
             <Card.Meta
@@ -239,8 +247,9 @@ const EventsList = ({
                     <div className="mt-1 flex items-center gap-2">
                       {(() => {
                         const isActive = evento.activo === true || evento.activo === 'true';
-                        const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
-                        
+                        const isDisabled =
+                          evento.desactivado === true || evento.desactivado === 'true';
+
                         if (isActive && !isDisabled) {
                           return (
                             <div className="flex items-center gap-1">
@@ -279,18 +288,34 @@ const EventsList = ({
                   <div className="flex items-center gap-3 text-xs">
                     {(() => {
                       const isActive = evento.activo === true || evento.activo === 'true';
-                      const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
-                      const activeTag = isActive && !isDisabled ? (
-                        <Tag color="green" className="text-xs m-0">Activo</Tag>
-                      ) : (
-                        <Tag color="red" className="text-xs m-0">Inactivo</Tag>
-                      );
-                      const ventaColor = evento.estadoVenta === 'a-la-venta' ? 'green' : 
-                        evento.estadoVenta === 'agotado' ? 'red' : 
-                        evento.estadoVenta === 'proximamente' ? 'blue' : 'default';
-                      const ventaLabel = evento.estadoVenta === 'a-la-venta' ? 'A la venta' :
-                        evento.estadoVenta === 'agotado' ? 'Agotado' :
-                        evento.estadoVenta === 'proximamente' ? 'Pr³ximamente' : evento.estadoVenta;
+                      const isDisabled =
+                        evento.desactivado === true || evento.desactivado === 'true';
+                      const activeTag =
+                        isActive && !isDisabled ? (
+                          <Tag color="green" className="text-xs m-0">
+                            Activo
+                          </Tag>
+                        ) : (
+                          <Tag color="red" className="text-xs m-0">
+                            Inactivo
+                          </Tag>
+                        );
+                      const ventaColor =
+                        evento.estadoVenta === 'a-la-venta'
+                          ? 'green'
+                          : evento.estadoVenta === 'agotado'
+                            ? 'red'
+                            : evento.estadoVenta === 'proximamente'
+                              ? 'blue'
+                              : 'default';
+                      const ventaLabel =
+                        evento.estadoVenta === 'a-la-venta'
+                          ? 'A la venta'
+                          : evento.estadoVenta === 'agotado'
+                            ? 'Agotado'
+                            : evento.estadoVenta === 'proximamente'
+                              ? 'Pr³ximamente'
+                              : evento.estadoVenta;
                       return (
                         <>
                           <span className="text-gray-500">Estado:</span>
@@ -299,7 +324,9 @@ const EventsList = ({
                             <>
                               <span className="text-gray-400">-¢</span>
                               <span className="text-gray-500">Venta:</span>
-                              <Tag color={ventaColor} className="text-xs m-0">{ventaLabel}</Tag>
+                              <Tag color={ventaColor} className="text-xs m-0">
+                                {ventaLabel}
+                              </Tag>
                             </>
                           )}
                         </>
@@ -317,4 +344,3 @@ const EventsList = ({
 };
 
 export default EventsList;
-

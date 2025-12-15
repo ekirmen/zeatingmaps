@@ -70,7 +70,7 @@ const VentaDeZonas = () => {
                   <input
                     type="number"
                     value={asientosUmbral}
-                    onChange={(e) => setAsientosUmbral(e.target.value)}
+                    onChange={e => setAsientosUmbral(e.target.value)}
                     className="ml-2 border p-1 w-16"
                   />
                   asientos libres por zona
@@ -110,7 +110,7 @@ const VentaDeZonas = () => {
                   <input
                     type="number"
                     value={porcentajeUmbral}
-                    onChange={(e) => setPorcentajeUmbral(e.target.value)}
+                    onChange={e => setPorcentajeUmbral(e.target.value)}
                     className="ml-2 border p-1 w-16"
                   />
                   % Selección de asientos libres por zona
@@ -135,7 +135,7 @@ const VentaDeZonas = () => {
         <input
           type="checkbox"
           checked={mostrarAforoTotal}
-          onChange={(e) => setMostrarAforoTotal(e.target.checked)}
+          onChange={e => setMostrarAforoTotal(e.target.checked)}
         />
         Mostrar aforo total de las zonas
       </label>
@@ -144,7 +144,7 @@ const VentaDeZonas = () => {
         <input
           type="checkbox"
           checked={ocultarPrecioDesde}
-          onChange={(e) => setOcultarPrecioDesde(e.target.checked)}
+          onChange={e => setOcultarPrecioDesde(e.target.checked)}
         />
         No mostrar el "precio desde" en los botones de selección de zonas
       </label>

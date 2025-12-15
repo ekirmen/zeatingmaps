@@ -22,9 +22,7 @@ class ClickThrottle {
     const now = Date.now();
 
     // Limpiar historial de clicks antiguos
-    this.clickHistory = this.clickHistory.filter(
-      timestamp => now - timestamp < this.windowMs
-    );
+    this.clickHistory = this.clickHistory.filter(timestamp => now - timestamp < this.windowMs);
 
     // Verificar si se excedió el máximo de clicks en la ventana de tiempo
     if (this.clickHistory.length >= this.maxClicks) {
@@ -99,9 +97,7 @@ class ClickThrottle {
    */
   getStats() {
     const now = Date.now();
-    const recentClicks = this.clickHistory.filter(
-      timestamp => now - timestamp < this.windowMs
-    );
+    const recentClicks = this.clickHistory.filter(timestamp => now - timestamp < this.windowMs);
 
     return {
       totalClicks: this.clickHistory.length,
@@ -109,7 +105,7 @@ class ClickThrottle {
       maxClicks: this.maxClicks,
       windowMs: this.windowMs,
       blockedSeats: this.blockedSeats.size,
-      pendingSeats: this.pendingClicks.size
+      pendingSeats: this.pendingClicks.size,
     };
   }
 }
@@ -128,9 +124,8 @@ const isMobileDevice = () => {
 const globalClickThrottle = new ClickThrottle({
   delay: isMobileDevice() ? 500 : 300, // Mayor delay en mobile (500ms vs 300ms)
   maxClicks: isMobileDevice() ? 5 : 10, // Menos clicks permitidos en mobile
-  windowMs: isMobileDevice() ? 7000 : 5000 // Ventana de tiempo más larga en mobile
+  windowMs: isMobileDevice() ? 7000 : 5000, // Ventana de tiempo más larga en mobile
 });
 
 export default globalClickThrottle;
 export { ClickThrottle };
-

@@ -28,7 +28,6 @@ class BatchUpdateQueue {
 
     // Si la cola está llena, procesar inmediatamente
     if (this.queue.size + this.priorityQueue.size >= this.maxBatchSize) {
-
       return;
     }
 
@@ -50,10 +49,7 @@ class BatchUpdateQueue {
     }
 
     // Combinar colas (prioridad primero)
-    const allUpdates = new Map([
-      ...this.priorityQueue,
-      ...this.queue
-    ]);
+    const allUpdates = new Map([...this.priorityQueue, ...this.queue]);
 
     if (allUpdates.size === 0) {
       return;
@@ -93,4 +89,3 @@ class BatchUpdateQueue {
 }
 
 export default BatchUpdateQueue;
-

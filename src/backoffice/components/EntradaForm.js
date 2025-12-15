@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
 import { RecintoContext } from '../contexts/RecintoContext';
-import { useIva } from '../contexts/IvaContext';  // Asegúrate de que la ruta sea correcta
+import { useIva } from '../contexts/IvaContext'; // Asegúrate de que la ruta sea correcta
 
 const EntradaForm = ({ onClose, onSave }) => {
   const { recintos } = useContext(RecintoContext);
-  const { ivaList } = useIva();  // Usa el hook useIva correctamente
+  const { ivaList } = useIva(); // Usa el hook useIva correctamente
 
   const [selectedRecinto, setSelectedRecinto] = useState('');
   const [productName, setProductName] = useState('');
@@ -33,9 +33,9 @@ const EntradaForm = ({ onClose, onSave }) => {
       <div className="modal-content">
         <h3>Añadir Ticket</h3>
         <label>Recinto</label>
-        <select value={selectedRecinto} onChange={(e) => setSelectedRecinto(e.target.value)}>
+        <select value={selectedRecinto} onChange={e => setSelectedRecinto(e.target.value)}>
           <option value="">Selecciona un recinto</option>
-          {recintos.map((recinto) => (
+          {recintos.map(recinto => (
             <option key={recinto.id} value={recinto.name}>
               {recinto.name}
             </option>
@@ -46,16 +46,12 @@ const EntradaForm = ({ onClose, onSave }) => {
         <input
           type="text"
           value={productName}
-          onChange={(e) => setProductName(e.target.value)}
+          onChange={e => setProductName(e.target.value)}
           placeholder="Nombre del ticket"
         />
 
         <div>
-          <input
-            type="checkbox"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-          />
+          <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} />
           <label>Activo</label>
         </div>
 
@@ -68,7 +64,7 @@ const EntradaForm = ({ onClose, onSave }) => {
               type="radio"
               value="General"
               checked={ticketType === 'General'}
-              onChange={(e) => setTicketType(e.target.value)}
+              onChange={e => setTicketType(e.target.value)}
             />
             General
             <small> - Precio general.</small>
@@ -78,7 +74,7 @@ const EntradaForm = ({ onClose, onSave }) => {
               type="radio"
               value="Reducido"
               checked={ticketType === 'Reducido'}
-              onChange={(e) => setTicketType(e.target.value)}
+              onChange={e => setTicketType(e.target.value)}
             />
             Reducido
             <small> - Precio con descuento para niños o jubilados.</small>
@@ -89,9 +85,9 @@ const EntradaForm = ({ onClose, onSave }) => {
         <div>
           <h5>Opciones</h5>
           <label>IVA</label>
-          <select value={selectedIva} onChange={(e) => setSelectedIva(e.target.value)}>
+          <select value={selectedIva} onChange={e => setSelectedIva(e.target.value)}>
             <option value="">Selecciona IVA</option>
-            {ivaList.map((iva) => (
+            {ivaList.map(iva => (
               <option key={iva.id} value={iva.value}>
                 {iva.name}
               </option>
@@ -102,14 +98,14 @@ const EntradaForm = ({ onClose, onSave }) => {
           <input
             type="number"
             value={minQuantity}
-            onChange={(e) => setMinQuantity(e.target.value)}
+            onChange={e => setMinQuantity(e.target.value)}
             style={{ width: '45%', marginRight: '10%' }}
           />
           <label>Cantidad máxima de venta</label>
           <input
             type="number"
             value={maxQuantity}
-            onChange={(e) => setMaxQuantity(e.target.value)}
+            onChange={e => setMaxQuantity(e.target.value)}
             style={{ width: '45%' }}
           />
         </div>

@@ -6,12 +6,11 @@ const ImageUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
 
-  const handleFileChange = (event) => {
+  const handleFileChange = event => {
     setSelectedFile(event.target.files[0]);
   };
 
-  const handleSubmit = async (event) => {
-
+  const handleSubmit = async event => {
     if (!selectedFile) return;
 
     const formData = new FormData();

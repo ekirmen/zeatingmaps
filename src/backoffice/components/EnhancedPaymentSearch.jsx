@@ -1,6 +1,23 @@
 import React, { useState } from 'react';
-import { Input, Button, Tabs, Table, message, Card, Tag, Space, Typography, Divider } from '../../utils/antdComponents';
-import { SearchOutlined, UserOutlined, FileTextOutlined, CalendarOutlined, DollarOutlined } from '@ant-design/icons';
+import {
+  Input,
+  Button,
+  Tabs,
+  Table,
+  message,
+  Card,
+  Tag,
+  Space,
+  Typography,
+  Divider,
+} from '../../utils/antdComponents';
+import {
+  SearchOutlined,
+  UserOutlined,
+  FileTextOutlined,
+  CalendarOutlined,
+  DollarOutlined,
+} from '@ant-design/icons';
 import { fetchPaymentByLocator, fetchPaymentsByUserEmail } from '../services/apibackoffice';
 
 const { TabPane } = Tabs;
@@ -16,14 +33,13 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
   // Bºsqueda por localizador
   const handleLocatorSearch = async () => {
     if (!searchValue.trim()) {
-
       return;
     }
 
     setLoading(true);
     try {
       const result = await fetchPaymentByLocator(searchValue.trim());
-      
+
       if (result.error) {
         message.error('Error al buscar el localizador');
         setSearchResults(null);
@@ -58,7 +74,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
     setLoading(true);
     try {
       const result = await fetchPaymentsByUserEmail(searchValue.trim());
-      
+
       if (result.error) {
         message.error('Error al buscar por email');
         setSearchResults(null);
@@ -95,7 +111,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
   };
 
   // Seleccionar pago
-  const handlePaymentSelect = (payment) => {
+  const handlePaymentSelect = payment => {
     if (onPaymentSelect) {
       onPaymentSelect(payment);
     }
@@ -114,7 +130,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       title: 'Localizador',
       dataIndex: 'locator',
       key: 'locator',
-      render: (locator) => (
+      render: locator => (
         <Tag color="blue" icon={<FileTextOutlined />}>
           {locator}
         </Tag>
@@ -124,17 +140,19 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       title: 'Evento',
       dataIndex: 'event',
       key: 'event',
-      render: (event) => event?.nombre || 'N/A',
+      render: event => event?.nombre || 'N/A',
     },
     {
       title: 'Funci³n',
       dataIndex: 'funcion',
       key: 'funcion',
-      render: (funcion) => (
+      render: funcion => (
         <div>
           <div>{funcion?.evento?.nombre || 'N/A'}</div>
           <Text type="secondary" style={{ fontSize: '12px' }}>
-            {funcion?.fecha_celebracion ? new Date(funcion.fecha_celebracion).toLocaleDateString() : 'N/A'}
+            {funcion?.fecha_celebracion
+              ? new Date(funcion.fecha_celebracion).toLocaleDateString()
+              : 'N/A'}
           </Text>
         </div>
       ),
@@ -143,7 +161,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       title: 'Asientos',
       dataIndex: 'seatsCount',
       key: 'seatsCount',
-      render: (count) => (
+      render: count => (
         <Tag color="green">
           {count} asiento{count !== 1 ? 's' : ''}
         </Tag>
@@ -153,7 +171,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       title: 'Total',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
-      render: (amount) => (
+      render: amount => (
         <Text strong style={{ color: '#52c41a' }}>
           ${amount?.toFixed(2) || '0.00'}
         </Text>
@@ -163,7 +181,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       title: 'Estado',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => {
+      render: status => {
         const normalized = (status || '').toLowerCase();
         const color = ['pagado', 'completed'].includes(normalized)
           ? 'green'
@@ -182,18 +200,14 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       title: 'Fecha',
       dataIndex: 'created_at',
       key: 'created_at',
-      render: (date) => new Date(date).toLocaleDateString(),
+      render: date => new Date(date).toLocaleDateString(),
     },
     {
       title: 'Acciones',
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button 
-            type="primary" 
-            size="small"
-            onClick={() => handlePaymentSelect(record)}
-          >
+          <Button type="primary" size="small" onClick={() => handlePaymentSelect(record)}>
             Seleccionar
           </Button>
         </Space>
@@ -204,27 +218,27 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
   return (
     <Card title="Bºsqueda de Pagos" style={{ marginBottom: 16 }}>
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <FileTextOutlined />
               Buscar por Localizador
             </span>
-          } 
+          }
           key="locator"
         >
           <div style={{ marginBottom: 16 }}>
             <Text>Ingrese el localizador del pago para encontrar los detalles espec­ficos.</Text>
           </div>
         </TabPane>
-        
-        <TabPane 
+
+        <TabPane
           tab={
             <span>
               <UserOutlined />
               Buscar por Email
             </span>
-          } 
+          }
           key="email"
         >
           <div style={{ marginBottom: 16 }}>
@@ -238,16 +252,11 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
           <Input
             placeholder={activeTab === 'locator' ? 'Ingrese localizador...' : 'Ingrese email...'}
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            onChange={e => setSearchValue(e.target.value)}
             onPressEnter={handleSearch}
             style={{ flex: 1 }}
           />
-          <Button
-            type="primary"
-            icon={<SearchOutlined />}
-            onClick={handleSearch}
-            loading={loading}
-          >
+          <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch} loading={loading}>
             Buscar
           </Button>
         </Space.Compact>
@@ -255,8 +264,8 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
 
       {/* Informaci³n del usuario (solo para bºsqueda por email) */}
       {userInfo && activeTab === 'email' && (
-        <Card 
-          size="small" 
+        <Card
+          size="small"
           style={{ marginBottom: 16, backgroundColor: '#f6ffed' }}
           title={
             <Space>
@@ -267,15 +276,21 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div><strong>Email:</strong> {userInfo.login}</div>
-              {userInfo.empresa && <div><strong>Empresa:</strong> {userInfo.empresa}</div>}
-              {userInfo.telefono && <div><strong>Tel©fono:</strong> {userInfo.telefono}</div>}
+              <div>
+                <strong>Email:</strong> {userInfo.login}
+              </div>
+              {userInfo.empresa && (
+                <div>
+                  <strong>Empresa:</strong> {userInfo.empresa}
+                </div>
+              )}
+              {userInfo.telefono && (
+                <div>
+                  <strong>Tel©fono:</strong> {userInfo.telefono}
+                </div>
+              )}
             </div>
-            <Button 
-              type="default" 
-              onClick={handleUserSelect}
-              icon={<UserOutlined />}
-            >
+            <Button type="default" onClick={handleUserSelect} icon={<UserOutlined />}>
               Seleccionar Usuario
             </Button>
           </div>
@@ -290,7 +305,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
               {activeTab === 'locator' ? 'Resultado de Bºsqueda' : 'Pagos Encontrados'}
             </Title>
           </Divider>
-          
+
           {searchResults.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
               No se encontraron resultados
@@ -312,5 +327,3 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
 };
 
 export default EnhancedPaymentSearch;
-
-

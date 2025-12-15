@@ -12,7 +12,7 @@ export default function SelectSeatsCanvas(props) {
     getSeatState,
     currentSessionId,
     toggleSeatSelection,
-    mapa = {}
+    mapa = {},
   } = props;
 
   return (
@@ -25,10 +25,10 @@ export default function SelectSeatsCanvas(props) {
               estado === 'reservado'
                 ? '#666'
                 : estado === 'pagado'
-                ? '#999'
-                : estado === 'bloqueado'
-                ? 'orange'
-                : color || 'rgba(0, 128, 0, 0.35)';
+                  ? '#999'
+                  : estado === 'bloqueado'
+                    ? 'orange'
+                    : color || 'rgba(0, 128, 0, 0.35)';
 
             return (
               <Group key={elemento._id || idx}>
@@ -79,25 +79,34 @@ export default function SelectSeatsCanvas(props) {
                 {mesa.sillas &&
                   mesa.sillas.map((silla, sillaIndex) => {
                     const computed = silla._computed || {};
-                    const x = computed.x ?? (mesa.posicion?.x || 0) + Math.cos((sillaIndex * Math.PI * 2) / mesa.sillas.length) * 50;
-                    const y = computed.y ?? (mesa.posicion?.y || 0) + Math.sin((sillaIndex * Math.PI * 2) / mesa.sillas.length) * 50;
+                    const x =
+                      computed.x ??
+                      (mesa.posicion?.x || 0) +
+                        Math.cos((sillaIndex * Math.PI * 2) / mesa.sillas.length) * 50;
+                    const y =
+                      computed.y ??
+                      (mesa.posicion?.y || 0) +
+                        Math.sin((sillaIndex * Math.PI * 2) / mesa.sillas.length) * 50;
 
                     const isLockedByMe = lockedSeats.some(
-                      (lock) =>
-                        lock.seat_id === silla._id && lock.funcion_id === funcionId && lock.session_id === currentSessionId
+                      lock =>
+                        lock.seat_id === silla._id &&
+                        lock.funcion_id === funcionId &&
+                        lock.session_id === currentSessionId
                     );
-                    const isLocked = lockedSeats.some((lock) => lock.seat_id === silla._id);
-                    const seatEstado = silla.estado || (getSeatState ? getSeatState(silla._id) : undefined);
+                    const isLocked = lockedSeats.some(lock => lock.seat_id === silla._id);
+                    const seatEstado =
+                      silla.estado || (getSeatState ? getSeatState(silla._id) : undefined);
 
                     const fillColor = isLockedByMe
                       ? 'blue'
                       : isLocked
-                      ? 'orange'
-                      : seatEstado === 'reservado'
-                      ? '#555'
-                      : seatEstado === 'pagado'
-                      ? 'gray'
-                      : silla.color || 'lightblue';
+                        ? 'orange'
+                        : seatEstado === 'reservado'
+                          ? '#555'
+                          : seatEstado === 'pagado'
+                            ? 'gray'
+                            : silla.color || 'lightblue';
 
                     return (
                       <React.Fragment key={silla._id || sillaIndex}>
@@ -110,7 +119,15 @@ export default function SelectSeatsCanvas(props) {
                           strokeWidth={1}
                           onClick={() => toggleSeatSelection(silla)}
                         />
-                        <Text x={x - 10} y={y - 6} text={`${sillaIndex + 1}`} fontSize={12} fill="black" align="center" width={20} />
+                        <Text
+                          x={x - 10}
+                          y={y - 6}
+                          text={`${sillaIndex + 1}`}
+                          fontSize={12}
+                          fill="black"
+                          align="center"
+                          width={20}
+                        />
                       </React.Fragment>
                     );
                   })}

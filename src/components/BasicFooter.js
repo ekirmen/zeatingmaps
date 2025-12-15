@@ -8,15 +8,13 @@ import {
   FaYoutube,
   FaTiktok,
   FaWhatsapp,
-  FaTelegramPlane
+  FaTelegramPlane,
 } from 'react-icons/fa';
 import { useFooter } from '../contexts/FooterContext';
 
 const BasicFooter = () => {
   const { footer } = useFooter();
-  const text =
-    footer?.copyrightText ||
-    `© ${new Date().getFullYear()} Zeatingmaps`;
+  const text = footer?.copyrightText || `© ${new Date().getFullYear()} Zeatingmaps`;
 
   const iconMap = {
     facebook: FaFacebookF,
@@ -26,7 +24,7 @@ const BasicFooter = () => {
     youtube: FaYoutube,
     tiktok: FaTiktok,
     whatsapp: FaWhatsapp,
-    telegram: FaTelegramPlane
+    telegram: FaTelegramPlane,
   };
 
   const socials = footer?.socials || {};
@@ -56,22 +54,13 @@ const BasicFooter = () => {
 
         {/* Enlaces legales */}
         <div className="flex justify-center mb-6 space-x-6 text-sm">
-          <Link 
-            to="/store/privacy-policy" 
-            className="hover:text-gray-300 transition-colors"
-          >
+          <Link to="/store/privacy-policy" className="hover:text-gray-300 transition-colors">
             Política de Privacidad
           </Link>
-          <Link 
-            to="/store/cookies-policy" 
-            className="hover:text-gray-300 transition-colors"
-          >
+          <Link to="/store/cookies-policy" className="hover:text-gray-300 transition-colors">
             Política de Cookies
           </Link>
-          <Link 
-            to="/store/legal-terms" 
-            className="hover:text-gray-300 transition-colors"
-          >
+          <Link to="/store/legal-terms" className="hover:text-gray-300 transition-colors">
             Términos y Condiciones
           </Link>
         </div>

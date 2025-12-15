@@ -27,7 +27,6 @@ export const EventListSkeletonOptimized = ({ count = 6 }) => (
   </div>
 );
 
-
 /**
  * Skeleton loader para mapa de asientos
  */
@@ -60,5 +59,3 @@ export default {
   SeatMapSkeleton,
   CartSkeleton,
 };
-
-

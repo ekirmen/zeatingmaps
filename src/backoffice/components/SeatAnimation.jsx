@@ -26,39 +26,40 @@ const SeatAnimation = ({ seat, onAnimationComplete }) => {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ 
-            opacity: 0, 
-            scale: 0.8, 
+          initial={{
+            opacity: 0,
+            scale: 0.8,
             y: 20,
-            x: Math.random() * 100 - 50 // Posición aleatoria horizontal
+            x: Math.random() * 100 - 50, // Posición aleatoria horizontal
           }}
-          animate={{ 
-            opacity: 1, 
-            scale: 1, 
+          animate={{
+            opacity: 1,
+            scale: 1,
             y: 0,
-            x: 0
+            x: 0,
           }}
-          exit={{ 
-            opacity: 0, 
-            scale: 0.8, 
+          exit={{
+            opacity: 0,
+            scale: 0.8,
             y: -20,
-            x: Math.random() * 100 - 50
+            x: Math.random() * 100 - 50,
           }}
-          transition={{ 
+          transition={{
             duration: 0.5,
-            ease: "easeOut"
+            ease: 'easeOut',
           }}
           className="fixed z-50 pointer-events-none"
           style={{
             left: `${Math.random() * (window.innerWidth - 200)}px`,
-            top: `${Math.random() * (window.innerHeight - 100)}px`
+            top: `${Math.random() * (window.innerHeight - 100)}px`,
           }}
         >
           <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg border-2 border-green-400">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
               <span className="font-medium text-sm">
-                {seat.nombreMesa ? `${seat.nombreMesa} - ` : ''}{seat.nombre}
+                {seat.nombreMesa ? `${seat.nombreMesa} - ` : ''}
+                {seat.nombre}
               </span>
             </div>
             <div className="text-xs mt-1 opacity-90">
@@ -71,4 +72,4 @@ const SeatAnimation = ({ seat, onAnimationComplete }) => {
   );
 };
 
-export default SeatAnimation; 
+export default SeatAnimation;

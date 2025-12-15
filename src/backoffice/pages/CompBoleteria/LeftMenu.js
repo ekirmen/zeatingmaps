@@ -1,11 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Card, Table, Form, Button, message, Select, Checkbox } from '../../../utils/antdComponents';
-import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit, AiOutlineSetting, AiOutlineDown, AiOutlineUp } from 'react-icons/ai';
+import {
+  Modal,
+  Input,
+  Card,
+  Table,
+  Form,
+  Button,
+  message,
+  Select,
+  Checkbox,
+} from '../../../utils/antdComponents';
+import {
+  AiOutlineSearch,
+  AiOutlineUserAdd,
+  AiOutlineClose,
+  AiOutlineEdit,
+  AiOutlineSetting,
+  AiOutlineDown,
+  AiOutlineUp,
+} from 'react-icons/ai';
 import { supabase, supabaseAdmin } from '../../../supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
 import downloadTicket from '../../../utils/downloadTicket';
 
-const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect, setSelectedEvent }) => {
+const LeftMenu = ({
+  onAddClientClick,
+  selectedClient,
+  onClientRemove,
+  setCarrito,
+  setSelectedClient,
+  onFunctionSelect,
+  setSelectedEvent,
+}) => {
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [searchMode, setSearchMode] = useState('locator');
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,12 +58,13 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
   }, [selectedClient]);
 
-  const handleTicketSearch = async (locator) => {
+  const handleTicketSearch = async locator => {
     setSearchLoading(true);
     try {
-        const { data: payment, error } = await supabase
-          .from('payment_transactions')
-          .select(`*,
+      const { data: payment, error } = await supabase
+        .from('payment_transactions')
+        .select(
+          `*,
             user:profiles!user_id(*),
             seats,
             event:eventos(*),
@@ -47,9 +74,10 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               evento_id,
               sala_id,
               plantilla
-            )`)
-          .eq('locator', locator)
-          .single();
+            )`
+        )
+        .eq('locator', locator)
+        .single();
 
       if (error) {
         console.error(`[Boleteria] Error searching ticket for locator ${locator}:`, error);
@@ -91,7 +119,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           nombreZona: seat.nombreZona || seat.zona?.nombre || seat.zona || 'Sin zona',
           mesa: seat.mesa?.nombre || seat.mesa || '',
           precio: seat.precio || seat.price || seat.total || 0,
-          raw: seat
+          raw: seat,
         };
       });
 
@@ -128,7 +156,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
 
     if (ticketData.seats && setCarrito) {
-      const seatsToCart = ticketData.seats.map((seat) => ({
+      const seatsToCart = ticketData.seats.map(seat => ({
         _id: seat._id || seat.id || seat.sillaId,
         nombre: seat.nombre || seat.name || `Asiento ${seat._id || seat.id}`,
         precio: seat.precio || seat.price || 0,
@@ -138,7 +166,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         paymentId: ticketData.id,
         locator: ticketData.locator,
         funcionId: ticketData.funcion?.id || ticketData.funcion,
-        funcionFecha: ticketData.funcion?.fecha_celebracion
+        funcionFecha: ticketData.funcion?.fecha_celebracion,
       }));
 
       setCarrito(seatsToCart);
@@ -157,7 +185,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     message.success('Ticket cargado correctamente');
   };
 
-  const handleDownloadTicket = async (locator) => {
+  const handleDownloadTicket = async locator => {
     try {
       await downloadTicket(locator);
       message.success('Ticket descargado correctamente');
@@ -167,7 +195,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
   };
 
-  const handleEmailSearch = async (email) => {
+  const handleEmailSearch = async email => {
     setSearchLoading(true);
     try {
       // Obtener primero el usuario por email para tener su id asociado
@@ -200,10 +228,10 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         }
       }
 
-      const formatted = payments.map((p) => ({
+      const formatted = payments.map(p => ({
         ...p,
         event_name: p.eventData?.nombre || 'Sin evento',
-        funcion_fecha: p.funcion?.fecha_celebracion || null
+        funcion_fecha: p.funcion?.fecha_celebracion || null,
       }));
 
       setEmailSearchResults(formatted);
@@ -225,7 +253,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
   };
 
-  const handleAccountSearch = async (term) => {
+  const handleAccountSearch = async term => {
     setSearchLoading(true);
     try {
       const cleanTerm = term.trim();
@@ -262,9 +290,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           .eq('id', userResp.user.id)
           .maybeSingle();
 
-        profileData = fallbackResult.data
-          ? { ...fallbackResult.data }
-          : null;
+        profileData = fallbackResult.data ? { ...fallbackResult.data } : null;
         profileError = fallbackResult.error;
       }
 
@@ -278,9 +304,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         return;
       }
 
-      setAccountSearchResults([
-        { ...profileData, email: userResp.user.email }
-      ]);
+      setAccountSearchResults([{ ...profileData, email: userResp.user.email }]);
     } catch (err) {
       message.error(err.message);
     } finally {
@@ -288,7 +312,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
   };
 
-  const handleAddAccount = async (values) => {
+  const handleAddAccount = async values => {
     setSearchLoading(true);
     try {
       // Create auth user first
@@ -302,7 +326,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       if (error) throw error;
 
       // Wait a bit for the trigger to create the profile
-      await new Promise((res) => setTimeout(res, 1500));
+      await new Promise(res => setTimeout(res, 1500));
 
       const client = supabaseAdmin || supabase;
       const { data, error: profileError } = await client
@@ -353,32 +377,26 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           icon={isMenuCollapsed ? <AiOutlineDown /> : <AiOutlineUp />}
           onClick={toggleMenu}
           className="bg-white shadow-md rounded-full w-8 h-8 flex items-center justify-center"
-          title={isMenuCollapsed ? "Mostrar menº" : "Ocultar menº"}
+          title={isMenuCollapsed ? 'Mostrar menº' : 'Ocultar menº'}
         />
       </div>
 
       {/* Menº colapsible */}
-      <div className={`transition-all duration-300 ease-in-out ${
-        isMenuCollapsed ? 'h-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
-      }`}>
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          isMenuCollapsed ? 'h-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
+        }`}
+      >
         <div className="p-4 space-y-4 bg-white shadow rounded">
           <Button icon={<AiOutlineSearch />} onClick={() => setIsSearchModalVisible(true)} block>
             Buscar Tickets
           </Button>
 
-          <Button
-            icon={<AiOutlineUserAdd />}
-            onClick={() => setIsAccountModalVisible(true)}
-            block
-          >
+          <Button icon={<AiOutlineUserAdd />} onClick={() => setIsAccountModalVisible(true)} block>
             Buscar/A±adir Cuenta
           </Button>
 
-          <Button
-            icon={<AiOutlineSetting />}
-            onClick={() => setIsConfigModalVisible(true)}
-            block
-          >
+          <Button icon={<AiOutlineSetting />} onClick={() => setIsConfigModalVisible(true)} block>
             Configuraci³n
           </Button>
 
@@ -389,11 +407,22 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                   <div className="font-semibold">
                     {userData.login || userData.nombre || userData.email || 'Cliente sin nombre'}
                   </div>
-                  <div className="text-sm text-gray-500">{userData.email || userData.telefono || 'Sin datos de contacto'}</div>
+                  <div className="text-sm text-gray-500">
+                    {userData.email || userData.telefono || 'Sin datos de contacto'}
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="small" icon={<AiOutlineEdit />} onClick={() => setIsAccountModalVisible(true)} />
-                  <Button size="small" icon={<AiOutlineClose />} danger onClick={handleClearClient} />
+                  <Button
+                    size="small"
+                    icon={<AiOutlineEdit />}
+                    onClick={() => setIsAccountModalVisible(true)}
+                  />
+                  <Button
+                    size="small"
+                    icon={<AiOutlineClose />}
+                    danger
+                    onClick={handleClearClient}
+                  />
                 </div>
               </div>
             </Card>
@@ -417,7 +446,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           placeholder={searchMode === 'locator' ? 'Ingrese localizador' : 'Ingrese email'}
           enterButton="Buscar"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
           onSearch={handleSearch}
           loading={searchLoading}
         />
@@ -437,7 +466,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             {ticketData.funcion && (
               <div>
                 <strong>Funci³n:</strong>{' '}
-                {ticketData.funcion.fecha_celebracion ? new Date(ticketData.funcion.fecha_celebracion).toLocaleString() : 'Fecha no disponible'}
+                {ticketData.funcion.fecha_celebracion
+                  ? new Date(ticketData.funcion.fecha_celebracion).toLocaleString()
+                  : 'Fecha no disponible'}
               </div>
             )}
             <div>
@@ -448,20 +479,26 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 <strong>Estado:</strong> {ticketData.status || 'Desconocido'}
               </div>
               <div>
-                <strong>Monto:</strong> {ticketData.amount ? `$${Number(ticketData.amount).toFixed(2)} ${ticketData.currency || ''}` : 'No registrado'}
+                <strong>Monto:</strong>{' '}
+                {ticketData.amount
+                  ? `$${Number(ticketData.amount).toFixed(2)} ${ticketData.currency || ''}`
+                  : 'No registrado'}
               </div>
               <div>
-                <strong>Forma de pago:</strong> {ticketData.payment_method || ticketData.gateway_name || 'No registrado'}
+                <strong>Forma de pago:</strong>{' '}
+                {ticketData.payment_method || ticketData.gateway_name || 'No registrado'}
               </div>
               <div>
                 <strong>Creado:</strong>{' '}
-                {ticketData.created_at ? new Date(ticketData.created_at).toLocaleString() : 'Fecha no disponible'}
+                {ticketData.created_at
+                  ? new Date(ticketData.created_at).toLocaleString()
+                  : 'Fecha no disponible'}
               </div>
             </div>
             {ticketData.normalizedSeats?.length > 0 && (
               <Table
                 dataSource={ticketData.normalizedSeats}
-                rowKey={(s) => s.key}
+                rowKey={s => s.key}
                 size="small"
                 pagination={false}
                 columns={[
@@ -471,8 +508,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                   {
                     title: 'Precio',
                     dataIndex: 'precio',
-                    render: (value) => `$${Number(value || 0).toFixed(2)}`
-                  }
+                    render: value => `$${Number(value || 0).toFixed(2)}`,
+                  },
                 ]}
               />
             )}
@@ -489,15 +526,24 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                     {
                       title: 'Forma de pago',
                       dataIndex: 'method',
-                      render: (value) => value || ticketData.payment_method || ticketData.gateway_name || 'N/D'
+                      render: value =>
+                        value || ticketData.payment_method || ticketData.gateway_name || 'N/D',
                     },
                     {
                       title: 'Importe',
                       dataIndex: 'amount',
-                      render: (value) => `$${Number(value || 0).toFixed(2)}`
+                      render: value => `$${Number(value || 0).toFixed(2)}`,
                     },
-                    { title: 'Estado', dataIndex: 'status', render: (value) => value || ticketData.status || 'N/D' },
-                    { title: 'Referencia', dataIndex: 'reference', render: (value) => value || ticketData.locator || 'N/D' }
+                    {
+                      title: 'Estado',
+                      dataIndex: 'status',
+                      render: value => value || ticketData.status || 'N/D',
+                    },
+                    {
+                      title: 'Referencia',
+                      dataIndex: 'reference',
+                      render: value => value || ticketData.locator || 'N/D',
+                    },
                   ]}
                 />
               </div>
@@ -507,7 +553,11 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 Seleccionar
               </Button>
               {ticketData.status === 'pagado' && (
-                <Button type="default" onClick={() => handleDownloadTicket(ticketData.locator)} block>
+                <Button
+                  type="default"
+                  onClick={() => handleDownloadTicket(ticketData.locator)}
+                  block
+                >
                   Descargar Ticket
                 </Button>
               )}
@@ -527,18 +577,22 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               {
                 title: 'Funci³n',
                 dataIndex: 'funcion_fecha',
-                render: (date) => (date ? new Date(date).toLocaleString() : '-')
+                render: date => (date ? new Date(date).toLocaleString() : '-'),
               },
               { title: 'Estado', dataIndex: 'status' },
-              { title: 'Fecha', dataIndex: 'created_at', render: (date) => new Date(date).toLocaleDateString() },
+              {
+                title: 'Fecha',
+                dataIndex: 'created_at',
+                render: date => new Date(date).toLocaleDateString(),
+              },
               {
                 title: 'Acci³n',
                 render: (_, record) => (
                   <Button type="link" onClick={() => handleTicketSearch(record.locator)}>
                     Ver
                   </Button>
-                )
-              }
+                ),
+              },
             ]}
           />
         )}
@@ -579,7 +633,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               onSearch={handleAccountSearch}
               loading={searchLoading}
             />
-            <Button className="mt-2" onClick={() => setIsAddingAccount(true)} block icon={<AiOutlineUserAdd />}>
+            <Button
+              className="mt-2"
+              onClick={() => setIsAddingAccount(true)}
+              block
+              icon={<AiOutlineUserAdd />}
+            >
               Crear nueva cuenta
             </Button>
 
@@ -595,15 +654,18 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                   {
                     title: 'Acci³n',
                     render: (_, record) => (
-                      <Button type="link" onClick={() => {
-                        setSelectedClient(record);
-                        setUserData(record);
-                        setIsAccountModalVisible(false);
-                      }}>
+                      <Button
+                        type="link"
+                        onClick={() => {
+                          setSelectedClient(record);
+                          setUserData(record);
+                          setIsAccountModalVisible(false);
+                        }}
+                      >
                         Seleccionar
                       </Button>
-                    )
-                  }
+                    ),
+                  },
                 ]}
               />
             )}
@@ -622,14 +684,14 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           </Button>,
           <Button key="save" type="primary" onClick={() => configForm.submit()}>
             Guardar
-          </Button>
+          </Button>,
         ]}
         width={600}
       >
         <Form
           form={configForm}
           layout="vertical"
-          onFinish={(values) => {
+          onFinish={values => {
             message.success('Configuraci³n guardada exitosamente');
             setIsConfigModalVisible(false);
           }}
@@ -637,27 +699,21 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             ticketPaperType: '1',
             automaticTicketPrint: false,
             receiptPaperType: '2',
-            automaticReceiptPrint: false
+            automaticReceiptPrint: false,
           }}
         >
           <div className="space-y-6">
             {/* Configuraci³n de Tickets */}
             <div>
               <h4 className="font-semibold mb-4">Entradas</h4>
-              <Form.Item
-                name="ticketPaperType"
-                label="Tipo de papel de tickets"
-              >
+              <Form.Item name="ticketPaperType" label="Tipo de papel de tickets">
                 <Select>
                   <Select.Option value="1">DIN-A4</Select.Option>
                   <Select.Option value="2">80mm continuos</Select.Option>
                   <Select.Option value="28">139x50</Select.Option>
                 </Select>
               </Form.Item>
-              <Form.Item
-                name="automaticTicketPrint"
-                valuePropName="checked"
-              >
+              <Form.Item name="automaticTicketPrint" valuePropName="checked">
                 <Checkbox>Impresi³n autom¡tica de tickets</Checkbox>
               </Form.Item>
             </div>
@@ -665,18 +721,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             {/* Configuraci³n de Recibos */}
             <div>
               <h4 className="font-semibold mb-4">Recibo</h4>
-              <Form.Item
-                name="receiptPaperType"
-                label="Tipo de papel de recibos"
-              >
+              <Form.Item name="receiptPaperType" label="Tipo de papel de recibos">
                 <Select>
                   <Select.Option value="2">80mm continuos</Select.Option>
                 </Select>
               </Form.Item>
-              <Form.Item
-                name="automaticReceiptPrint"
-                valuePropName="checked"
-              >
+              <Form.Item name="automaticReceiptPrint" valuePropName="checked">
                 <Checkbox>Impresi³n autom¡tica de recibos</Checkbox>
               </Form.Item>
             </div>
@@ -688,5 +738,3 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 };
 
 export default LeftMenu;
-
-

@@ -13,25 +13,26 @@ const VirtualizedSeatList = ({
   getSeatStatus,
   loading = false,
   height = 600,
-  className = ''
+  className = '',
 }) => {
   const renderSeat = (seat, index, setItemSize) => {
     const seatRef = React.useRef(null);
     const seatId = seat._id || seat.id || seat.sillaId;
     const isSelected = selectedSeats.includes(seatId);
-    const seatStatus = getSeatStatus ? getSeatStatus(seat) : { status: 'available', text: 'Disponible', color: 'processing' };
+    const seatStatus = getSeatStatus
+      ? getSeatStatus(seat)
+      : { status: 'available', text: 'Disponible', color: 'processing' };
     const precio = seat.precio || 0;
     const nombreZona = seat.nombreZona || seat.zona?.nombre || 'General';
     const nombreAsiento = seat.nombre || seat.numero || `Asiento ${seatId}`;
 
     React.useEffect(() => {
       if (seatRef.current && setItemSize) {
-        const resizeObserver = new ResizeObserver((entries) => {
+        const resizeObserver = new ResizeObserver(entries => {
           for (const entry of entries) {
             setItemSize(index, entry.contentRect.height);
           }
         });
-        
 
         return () => resizeObserver.disconnect();
       }
@@ -41,9 +42,7 @@ const VirtualizedSeatList = ({
       <div ref={seatRef} className="p-2">
         <div
           className={`p-3 border rounded cursor-pointer transition-all ${
-            isSelected 
-              ? 'ring-2 ring-blue-500 border-blue-500 bg-blue-50' 
-              : 'hover:bg-gray-50'
+            isSelected ? 'ring-2 ring-blue-500 border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
           } ${
             seatStatus.status === 'locked' || seatStatus.status === 'sold'
               ? 'opacity-60 cursor-not-allowed'
@@ -56,15 +55,10 @@ const VirtualizedSeatList = ({
               <div className="font-semibold text-lg">{nombreAsiento}</div>
               <div className="text-sm text-gray-500">{nombreZona}</div>
             </div>
-            
+
             <div className="flex items-center gap-3">
-              <Badge 
-                status={seatStatus.color} 
-                text={seatStatus.text}
-              />
-              <span className="text-xl font-bold text-blue-600">
-                ${precio.toFixed(2)}
-              </span>
+              <Badge status={seatStatus.color} text={seatStatus.text} />
+              <span className="text-xl font-bold text-blue-600">${precio.toFixed(2)}</span>
               <Button
                 type={isSelected ? 'primary' : 'default'}
                 size="small"
@@ -97,5 +91,3 @@ const VirtualizedSeatList = ({
 };
 
 export default VirtualizedSeatList;
-
-

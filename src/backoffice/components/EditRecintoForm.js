@@ -16,7 +16,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
     direccionLinea1: '',
     latitud: '',
     longitud: '',
-    comollegar: ''
+    comollegar: '',
   });
 
   const [showAddress, setShowAddress] = useState(false);
@@ -36,13 +36,17 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
         direccionLinea1: recinto.direccionLinea1 || recinto.direccionlinea1 || '',
         latitud: recinto.latitud || '',
         longitud: recinto.longitud || '',
-        comollegar: recinto.comollegar || ''
+        comollegar: recinto.comollegar || '',
       });
 
       if (recinto.latitud && recinto.longitud) {
-        setMapUrl(`https://www.google.com/maps?q=${recinto.latitud},${recinto.longitud}&output=embed`);
+        setMapUrl(
+          `https://www.google.com/maps?q=${recinto.latitud},${recinto.longitud}&output=embed`
+        );
       } else if (recinto.direccion) {
-        setMapUrl(`https://www.google.com/maps?q=${encodeURIComponent(recinto.direccion)}&output=embed`);
+        setMapUrl(
+          `https://www.google.com/maps?q=${encodeURIComponent(recinto.direccion)}&output=embed`
+        );
       }
     }
   }, [recinto]);
@@ -56,7 +60,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
           ...prev,
           latitud: geo.lat,
           longitud: geo.lon,
-          direccion: full
+          direccion: full,
         }));
         setMapUrl(`https://www.google.com/maps?q=${geo.lat},${geo.lon}&output=embed`);
       } else {
@@ -70,7 +74,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -96,7 +100,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
         latitud: formData.latitud ? parseFloat(formData.latitud) : null,
         longitud: formData.longitud ? parseFloat(formData.longitud) : null,
         comollegar: formData.comollegar.trim() || null,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       // Filtrar campos vacíos
@@ -104,10 +108,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
         Object.entries(payload).filter(([_, value]) => value !== null && value !== '')
       );
 
-      const { error } = await supabase
-        .from('recintos')
-        .update(cleanPayload)
-        .eq('id', recinto.id);
+      const { error } = await supabase.from('recintos').update(cleanPayload).eq('id', recinto.id);
 
       if (error) {
         throw new Error(error.message);
@@ -146,7 +147,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
           <input
             type="text"
             value={formData.nombre}
-            onChange={(e) => handleInputChange('nombre', e.target.value)}
+            onChange={e => handleInputChange('nombre', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             placeholder="Ingresa el nombre del recinto"
             required
@@ -155,13 +156,11 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
 
         {/* Capacidad */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Capacidad *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Capacidad *</label>
           <input
             type="number"
             value={formData.capacidad}
-            onChange={(e) => handleInputChange('capacidad', e.target.value)}
+            onChange={e => handleInputChange('capacidad', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             placeholder="Número de asientos disponibles"
             min="1"
@@ -171,9 +170,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
 
         {/* Dirección */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Dirección Completa
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Dirección Completa</label>
           <input
             type="text"
             value={buildAddress(formData)}
@@ -195,7 +192,12 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
                 className="text-gray-400 hover:text-gray-600"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -207,17 +209,19 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
                   type="text"
                   placeholder="País"
                   value={formData.pais}
-                  onChange={(e) => handleInputChange('pais', e.target.value)}
+                  onChange={e => handleInputChange('pais', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Estado/Provincia</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Estado/Provincia
+                </label>
                 <input
                   type="text"
                   placeholder="Estado"
                   value={formData.estado}
-                  onChange={(e) => handleInputChange('estado', e.target.value)}
+                  onChange={e => handleInputChange('estado', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
@@ -227,39 +231,45 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
                   type="text"
                   placeholder="Ciudad"
                   value={formData.ciudad}
-                  onChange={(e) => handleInputChange('ciudad', e.target.value)}
+                  onChange={e => handleInputChange('ciudad', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Código Postal</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Código Postal
+                </label>
                 <input
                   type="text"
                   placeholder="Código postal"
                   value={formData.codigoPostal}
-                  onChange={(e) => handleInputChange('codigoPostal', e.target.value)}
+                  onChange={e => handleInputChange('codigoPostal', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Dirección Línea 1</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Dirección Línea 1
+              </label>
               <input
                 type="text"
                 placeholder="Calle, número, piso, etc."
                 value={formData.direccionLinea1}
-                onChange={(e) => handleInputChange('direccionLinea1', e.target.value)}
+                onChange={e => handleInputChange('direccionLinea1', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Instrucciones de Llegada</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Instrucciones de Llegada
+              </label>
               <textarea
                 placeholder="Instrucciones adicionales para llegar al recinto"
                 value={formData.comollegar}
-                onChange={(e) => handleInputChange('comollegar', e.target.value)}
+                onChange={e => handleInputChange('comollegar', e.target.value)}
                 rows="2"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
               />
@@ -272,8 +282,18 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
                 onClick={handleSearchAddress}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
               >
-                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  className="w-4 h-4 inline mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 Buscar Coordenadas
               </button>
@@ -306,7 +326,9 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
             {/* Mapa */}
             {mapUrl && (
               <div className="mt-4">
-                <label className="block text-xs font-medium text-gray-600 mb-2">Ubicación en el Mapa</label>
+                <label className="block text-xs font-medium text-gray-600 mb-2">
+                  Ubicación en el Mapa
+                </label>
                 <div className="border border-gray-300 rounded-md overflow-hidden">
                   <iframe
                     title="Ubicación del recinto"
@@ -339,9 +361,25 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
           >
             {isLoading ? (
               <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Actualizando...
               </>

@@ -50,11 +50,11 @@ export const ThemeProvider = ({ children }) => {
     // Aplicar clases CSS al documento
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.classList.toggle('dark-mode', isDarkMode);
-    
+
     // Aplicar variables CSS personalizadas
     document.documentElement.style.setProperty('--primary-color', primaryColor);
     document.documentElement.style.setProperty('--secondary-color', secondaryColor);
-    
+
     // Para compatibilidad con Ant Design
     if (isDarkMode) {
       document.body.classList.add('ant-dark');
@@ -73,7 +73,7 @@ export const ThemeProvider = ({ children }) => {
   };
 
   // Establecer tema específico
-  const setThemeMode = (mode) => {
+  const setThemeMode = mode => {
     setTheme(mode);
     setIsDarkMode(mode === 'dark');
   };
@@ -103,17 +103,17 @@ export const ThemeProvider = ({ children }) => {
     primaryColor,
     secondaryColor,
     isDarkMode,
-    
+
     // Métodos
     toggleTheme,
     setThemeMode,
     updateColors,
     resetTheme,
-    
+
     // Helper methods
     isDark: theme === 'dark',
     isLight: theme === 'light',
-    
+
     // Para Ant Design
     antdTheme: {
       token: {
@@ -124,24 +124,20 @@ export const ThemeProvider = ({ children }) => {
         colorError: '#ff4d4f',
       },
       algorithm: isDarkMode ? 'darkAlgorithm' : 'defaultAlgorithm',
-    }
+    },
   };
 
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 // Hook personalizado para usar el contexto
 export const useTheme = () => {
   const context = useContext(ThemeContext);
-  
+
   if (!context) {
     throw new Error('useTheme debe ser usado dentro de un ThemeProvider');
   }
-  
+
   return context;
 };
 

@@ -48,11 +48,10 @@ export const eventosService = {
    */
   async obtenerEventosPorTenant(tenantId, options = {}) {
     try {
-      const { data, error } = await supabaseWithTracking.select(
-        'eventos',
-        '*',
-        { tenant_id: tenantId, ...options }
-      );
+      const { data, error } = await supabaseWithTracking.select('eventos', '*', {
+        tenant_id: tenantId,
+        ...options,
+      });
 
       if (error) throw error;
       return data;
@@ -69,11 +68,7 @@ export const eventosService = {
    */
   async obtenerEventoPorId(id) {
     try {
-      const { data, error } = await supabaseWithTracking.select(
-        'eventos',
-        '*',
-        { id }
-      );
+      const { data, error } = await supabaseWithTracking.select('eventos', '*', { id });
 
       if (error) throw error;
       return data[0];
@@ -121,7 +116,7 @@ export const eventosService = {
       console.error('❌ Error al obtener eventos públicos:', error);
       throw error;
     }
-  }
+  },
 };
 
 export default eventosService;

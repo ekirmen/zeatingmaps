@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { 
-  AiOutlinePlus, 
-  AiOutlineSearch, 
-  AiOutlineDelete, 
-  AiOutlineCopy, 
-  AiOutlineBarChart, 
+import {
+  AiOutlinePlus,
+  AiOutlineSearch,
+  AiOutlineDelete,
+  AiOutlineCopy,
+  AiOutlineBarChart,
   AiOutlineEdit,
   AiOutlineMail,
   AiOutlineCalendar,
   AiOutlineEye,
-  AiOutlineSend
+  AiOutlineSend,
 } from 'react-icons/ai';
 import { emailCampaignService } from '../services/emailCampaignService';
 
@@ -23,7 +23,6 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
-
     return () => setSidebarCollapsed && setSidebarCollapsed(false);
   }, [setSidebarCollapsed]);
 
@@ -39,12 +38,14 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
         id: campaign.id,
         name: campaign.nombre,
         status: campaign.estado,
-        sentDate: campaign.fecha_envio ? new Date(campaign.fecha_envio).toLocaleString('es-ES') : '-',
+        sentDate: campaign.fecha_envio
+          ? new Date(campaign.fecha_envio).toLocaleString('es-ES')
+          : '-',
         type: campaign.tipo,
         opened: `${campaign.total_exitosos || 0}/${campaign.total_enviados || 0}`,
         sent: campaign.total_enviados || 0,
         template_name: campaign.template_name || 'Sin plantilla',
-        template_type: campaign.template_type || 'personalizada'
+        template_type: campaign.template_type || 'personalizada',
       }));
       setCampaigns(formattedCampaigns);
     } catch (error) {
@@ -60,9 +61,9 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
       const newCampaign = await emailCampaignService.createCampaign({
         nombre: 'Nueva Campaña',
         tipo: 'newsletter',
-        configuracion: {}
+        configuracion: {},
       });
-      
+
       if (newCampaign) {
         await loadCampaigns(); // Recargar la lista
       }
@@ -71,22 +72,22 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
     }
   };
 
-  const handleEditCampaign = (id) => {
+  const handleEditCampaign = id => {
     toast.success(`Editando campaña ${id}`);
     // Aquí iría la lógica para editar campaña
   };
 
-  const handleCopyCampaign = (id) => {
+  const handleCopyCampaign = id => {
     toast.success(`Copiando campaña ${id}`);
     // Aquí iría la lógica para copiar campaña
   };
 
-  const handleShowCharts = (id) => {
+  const handleShowCharts = id => {
     toast.success(`Mostrando gráficos de campaña ${id}`);
     // Aquí iría la lógica para mostrar gráficos
   };
 
-  const handleDeleteCampaign = async (id) => {
+  const handleDeleteCampaign = async id => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta campaña?')) {
       try {
         const success = await emailCampaignService.deleteCampaign(id);
@@ -99,7 +100,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     switch (status) {
       case 'sended':
       case 'enviado':
@@ -115,7 +116,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
     }
   };
 
-  const getStatusText = (status) => {
+  const getStatusText = status => {
     switch (status) {
       case 'sended':
       case 'enviado':
@@ -131,7 +132,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
     }
   };
 
-  const getTypeText = (type) => {
+  const getTypeText = type => {
     switch (type) {
       case 'newsletter':
         return 'Newsletter';
@@ -179,7 +180,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
               <p className="mt-2 text-gray-600">Gestiona tus campañas de marketing por email</p>
             </div>
             <div className="mt-4 sm:mt-0">
-              <button 
+              <button
                 onClick={handleNewCampaign}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
               >
@@ -218,7 +219,10 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Enviadas</dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {campaigns.filter(c => c.status === 'sended' || c.status === 'enviado').length}
+                      {
+                        campaigns.filter(c => c.status === 'sended' || c.status === 'enviado')
+                          .length
+                      }
                     </dd>
                   </dl>
                 </div>
@@ -236,7 +240,10 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Borradores</dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {campaigns.filter(c => c.status === 'draft' || c.status === 'borrador').length}
+                      {
+                        campaigns.filter(c => c.status === 'draft' || c.status === 'borrador')
+                          .length
+                      }
                     </dd>
                   </dl>
                 </div>
@@ -253,9 +260,14 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Tasa Apertura</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {campaigns.length > 0 ? 
-                      Math.round((campaigns.reduce((acc, c) => acc + (c.sent || 0), 0) / campaigns.length) * 100) || 0
-                      : 0}%
+                    {campaigns.length > 0
+                      ? Math.round(
+                          (campaigns.reduce((acc, c) => acc + (c.sent || 0), 0) /
+                            campaigns.length) *
+                            100
+                        ) || 0
+                      : 0}
+                    %
                   </dd>
                 </dl>
               </div>
@@ -277,14 +289,14 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                     placeholder="Buscar campañas..."
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
-                
+
                 <select
                   className="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
+                  onChange={e => setFilterType(e.target.value)}
                 >
                   <option value="0">Todos los tipos</option>
                   <option value="newsletter">Newsletter</option>
@@ -299,7 +311,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                 <select
                   className="block px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                  onChange={e => setItemsPerPage(parseInt(e.target.value))}
                 >
                   <option value={10}>10</option>
                   <option value={25}>25</option>
@@ -348,8 +360,11 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                     </td>
                   </tr>
                 ) : (
-                  currentCampaigns.map((campaign) => (
-                    <tr key={campaign.id} className="hover:bg-gray-50 transition-colors duration-150">
+                  currentCampaigns.map(campaign => (
+                    <tr
+                      key={campaign.id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
@@ -358,9 +373,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                             </div>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {campaign.name}
-                            </div>
+                            <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
                             <div className="text-sm text-gray-500">
                               ID: {campaign.id.slice(0, 8)}...
                             </div>
@@ -368,7 +381,9 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(campaign.status)}`}>
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(campaign.status)}`}
+                        >
                           {getStatusText(campaign.status)}
                         </span>
                       </td>
@@ -446,23 +461,38 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                 <div>
                   <p className="text-sm text-gray-700">
                     Mostrando <span className="font-medium">{startIndex + 1}</span> a{' '}
-                    <span className="font-medium">{Math.min(endIndex, filteredCampaigns.length)}</span> de{' '}
-                    <span className="font-medium">{filteredCampaigns.length}</span> resultados
+                    <span className="font-medium">
+                      {Math.min(endIndex, filteredCampaigns.length)}
+                    </span>{' '}
+                    de <span className="font-medium">{filteredCampaigns.length}</span> resultados
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <nav
+                    className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                    aria-label="Pagination"
+                  >
                     <button
                       onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
                       className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <span className="sr-only">Anterior</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      <svg
+                        className="h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </button>
-                    
+
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       const pageNum = i + 1;
                       return (
@@ -479,7 +509,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                         </button>
                       );
                     })}
-                    
+
                     {totalPages > 5 && (
                       <>
                         <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
@@ -493,15 +523,25 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                         </button>
                       </>
                     )}
-                    
+
                     <button
                       onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
                       className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <span className="sr-only">Siguiente</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      <svg
+                        className="h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </button>
                   </nav>

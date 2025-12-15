@@ -8,17 +8,17 @@ const { TextArea } = Input;
 const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
   const [form] = Form.useForm();
 
-  const handleSubmit = (values) => {
+  const handleSubmit = values => {
     const updatedMapa = {
       ...mapa,
       nombre: values.nombre,
       descripcion: values.descripcion,
       metadata: {
         ...mapa.metadata,
-        notes: values.notes || ''
-      }
+        notes: values.notes || '',
+      },
     };
-    
+
     onUpdate(updatedMapa);
     onNext();
   };
@@ -36,7 +36,8 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
           Configuraci³n B¡sica del Mapa
         </Title>
         <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Comienza creando tu mapa de asientos personalizado. Define la informaci³n fundamental y luego pasa al editor visual donde podr¡s dise±ar la distribuci³n perfecta.
+          Comienza creando tu mapa de asientos personalizado. Define la informaci³n fundamental y
+          luego pasa al editor visual donde podr¡s dise±ar la distribuci³n perfecta.
         </Text>
       </div>
 
@@ -48,7 +49,7 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
           initialValues={{
             nombre: mapa.nombre || '',
             descripcion: mapa.descripcion || '',
-            notes: mapa.metadata?.notes || ''
+            notes: mapa.metadata?.notes || '',
           }}
           className="space-y-6"
         >
@@ -57,14 +58,10 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
             name="nombre"
             rules={[
               { required: true, message: 'Por favor ingresa el nombre del mapa' },
-              { min: 3, message: 'El nombre debe tener al menos 3 caracteres' }
+              { min: 3, message: 'El nombre debe tener al menos 3 caracteres' },
             ]}
           >
-            <Input 
-              size="large" 
-              placeholder="Ej: Mapa Principal - Sala A"
-              className="text-lg"
-            />
+            <Input size="large" placeholder="Ej: Mapa Principal - Sala A" className="text-lg" />
           </Form.Item>
 
           <Form.Item
@@ -72,7 +69,7 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
             name="descripcion"
             rules={[
               { required: true, message: 'Por favor ingresa una descripci³n' },
-              { min: 10, message: 'La descripci³n debe tener al menos 10 caracteres' }
+              { min: 10, message: 'La descripci³n debe tener al menos 10 caracteres' },
             ]}
           >
             <TextArea
@@ -82,10 +79,7 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
             />
           </Form.Item>
 
-          <Form.Item
-            label="Notas Adicionales"
-            name="notes"
-          >
+          <Form.Item label="Notas Adicionales" name="notes">
             <TextArea
               rows={3}
               placeholder="Informaci³n adicional, instrucciones especiales, etc..."
@@ -110,5 +104,3 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
 };
 
 export default CrearMapaBasicConfig;
-
-

@@ -10,7 +10,7 @@ const ButtonWidget = ({ config = {}, onConfigChange }) => {
     urlButton: '',
     margin_top: 10,
     margin_bottom: 10,
-    ...config
+    ...config,
   });
 
   const [eventsData, setEventsData] = useState([]);
@@ -25,20 +25,14 @@ const ButtonWidget = ({ config = {}, onConfigChange }) => {
         // Cargar eventos
         setLoadingEvents(true);
         const eventos = await fetchEventos();
-        const eventosConDefault = [
-          { id: '0', nombre: 'Seleccione el evento' },
-          ...eventos
-        ];
+        const eventosConDefault = [{ id: '0', nombre: 'Seleccione el evento' }, ...eventos];
         setEventsData(eventosConDefault);
         setLoadingEvents(false);
 
         // Cargar canales de venta
         setLoadingChannels(true);
         const canales = await fetchCanalesVenta();
-        const canalesConDefault = [
-          { id: '0', nombre: 'Seleccione el canal' },
-          ...canales
-        ];
+        const canalesConDefault = [{ id: '0', nombre: 'Seleccione el canal' }, ...canales];
         setChannelsData(canalesConDefault);
         setLoadingChannels(false);
       } catch (error) {
@@ -46,11 +40,11 @@ const ButtonWidget = ({ config = {}, onConfigChange }) => {
         // En caso de error, usar datos por defecto
         setEventsData([
           { id: '0', nombre: 'Seleccione el evento' },
-          { id: 'error', nombre: 'Error al cargar eventos' }
+          { id: 'error', nombre: 'Error al cargar eventos' },
         ]);
         setChannelsData([
           { id: '0', nombre: 'Seleccione el canal' },
-          { id: 'error', nombre: 'Error al cargar canales' }
+          { id: 'error', nombre: 'Error al cargar canales' },
         ]);
         setLoadingEvents(false);
         setLoadingChannels(false);
@@ -70,7 +64,7 @@ const ButtonWidget = ({ config = {}, onConfigChange }) => {
     { value: '0', label: 'Botón de compra' },
     { value: '1', label: 'Botón de invitación individual' },
     { value: '2', label: 'Renovación de abono de temporada' },
-    { value: '3', label: 'Url personalizada' }
+    { value: '3', label: 'Url personalizada' },
   ];
 
   // Los eventos ahora se cargan dinámicamente desde la base de datos
@@ -84,34 +78,30 @@ const ButtonWidget = ({ config = {}, onConfigChange }) => {
         <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
           <div className="flex items-center">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-            <span className="text-sm text-blue-700">
-              Cargando datos desde la base de datos...
-            </span>
+            <span className="text-sm text-blue-700">Cargando datos desde la base de datos...</span>
           </div>
         </div>
       )}
 
       {/* Tipo de botón */}
       <div className="element-form-input">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Tipo de botón
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de botón</label>
         <div className="space-y-2">
-          {buttonTypes.map((type) => (
+          {buttonTypes.map(type => (
             <label key={type.value} className="flex items-center">
               <input
                 type="radio"
                 name="buttonType"
                 value={type.value}
                 checked={localConfig.buttonType === type.value}
-                onChange={(e) => {
+                onChange={e => {
                   const newValue = e.target.value;
-                  const newConfig = { 
-                    ...localConfig, 
+                  const newConfig = {
+                    ...localConfig,
                     buttonType: newValue,
                     // Reset event selection for custom URL
                     eventId: newValue === '3' ? '' : localConfig.eventId,
-                    channelId: newValue === '3' ? '' : localConfig.channelId
+                    channelId: newValue === '3' ? '' : localConfig.channelId,
                   };
                   setLocalConfig(newConfig);
                   onConfigChange?.(newConfig);
@@ -125,21 +115,21 @@ const ButtonWidget = ({ config = {}, onConfigChange }) => {
       </div>
 
       {/* Selección de evento (solo para tipos 0, 1, 2) */}
-      {(localConfig.buttonType === '0' || localConfig.buttonType === '1' || localConfig.buttonType === '2') && (
+      {(localConfig.buttonType === '0' ||
+        localConfig.buttonType === '1' ||
+        localConfig.buttonType === '2') && (
         <div className="element-form-input">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Evento
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Evento</label>
           <select
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={localConfig.eventId}
-            onChange={(e) => handleConfigChange('eventId', e.target.value)}
+            onChange={e => handleConfigChange('eventId', e.target.value)}
             disabled={loadingEvents}
           >
             {loadingEvents ? (
               <option value="">Cargando eventos...</option>
             ) : (
-              eventsData.map((event) => (
+              eventsData.map(event => (
                 <option key={event.id} value={event.id}>
                   {event.nombre}
                 </option>
@@ -155,21 +145,21 @@ const ButtonWidget = ({ config = {}, onConfigChange }) => {
       )}
 
       {/* Canal de venta (solo para tipos 0, 1, 2) */}
-      {(localConfig.buttonType === '0' || localConfig.buttonType === '1' || localConfig.buttonType === '2') && (
+      {(localConfig.buttonType === '0' ||
+        localConfig.buttonType === '1' ||
+        localConfig.buttonType === '2') && (
         <div className="element-form-input">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Canal de venta
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Canal de venta</label>
           <select
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={localConfig.channelId}
-            onChange={(e) => handleConfigChange('channelId', e.target.value)}
+            onChange={e => handleConfigChange('channelId', e.target.value)}
             disabled={loadingChannels}
           >
             {loadingChannels ? (
               <option value="">Cargando canales...</option>
             ) : (
-              channelsData.map((channel) => (
+              channelsData.map(channel => (
                 <option key={channel.id} value={channel.id}>
                   {channel.nombre}
                 </option>
@@ -186,33 +176,32 @@ const ButtonWidget = ({ config = {}, onConfigChange }) => {
 
       {/* Texto del botón */}
       <div className="element-form-input">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Texto del botón
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Texto del botón</label>
         <input
           type="text"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Comprar ahora"
           value={localConfig.textButton}
-          onChange={(e) => handleConfigChange('textButton', e.target.value)}
+          onChange={e => handleConfigChange('textButton', e.target.value)}
         />
       </div>
 
       {/* URL personalizada (solo para tipo 3) */}
       {localConfig.buttonType === '3' && (
         <div className="element-form-input">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Url
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Url</label>
           <input
             type="url"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="https://www.website.com"
             value={localConfig.urlButton}
-            onChange={(e) => handleConfigChange('urlButton', e.target.value)}
+            onChange={e => handleConfigChange('urlButton', e.target.value)}
           />
           <div className="text-xs text-gray-500 mt-1">
-            El formato debe ser <i><b>https://www.website.com</b></i>
+            El formato debe ser{' '}
+            <i>
+              <b>https://www.website.com</b>
+            </i>
           </div>
         </div>
       )}
@@ -220,43 +209,35 @@ const ButtonWidget = ({ config = {}, onConfigChange }) => {
       {/* Personalización */}
       <div className="border-t pt-4">
         <h4 className="text-sm font-medium text-gray-700 mb-4">Personalización</h4>
-        
+
         {/* Margen superior */}
         <div className="element-form-input mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Margen superior
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Margen superior</label>
           <input
             type="number"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="0"
             value={localConfig.margin_top}
-            onChange={(e) => handleConfigChange('margin_top', e.target.value)}
+            onChange={e => handleConfigChange('margin_top', e.target.value)}
           />
-          <div className="text-xs text-gray-500 mt-1">
-            Unidades en px.
-          </div>
+          <div className="text-xs text-gray-500 mt-1">Unidades en px.</div>
         </div>
 
         {/* Margen inferior */}
         <div className="element-form-input mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Margen inferior
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Margen inferior</label>
           <input
             type="number"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="0"
             value={localConfig.margin_bottom}
-            onChange={(e) => handleConfigChange('margin_bottom', e.target.value)}
+            onChange={e => handleConfigChange('margin_bottom', e.target.value)}
           />
-          <div className="text-xs text-gray-500 mt-1">
-            Unidades en px.
-          </div>
+          <div className="text-xs text-gray-500 mt-1">Unidades en px.</div>
         </div>
       </div>
     </div>
   );
 };
 
-export default ButtonWidget; 
+export default ButtonWidget;

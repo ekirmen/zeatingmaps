@@ -20,8 +20,7 @@ export const logger = {
   },
   debug: (...args) => {
     if (isDev) console.debug(...args);
-  }
+  },
 };
 
 export default logger;
-

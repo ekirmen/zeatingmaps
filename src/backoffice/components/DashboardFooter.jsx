@@ -8,7 +8,7 @@ import {
   FaYoutube,
   FaTiktok,
   FaWhatsapp,
-  FaTelegramPlane
+  FaTelegramPlane,
 } from 'react-icons/fa';
 import { useFooter } from '../../contexts/FooterContext';
 
@@ -17,8 +17,7 @@ const { Text } = Typography;
 const DashboardFooter = () => {
   const { footer } = useFooter();
   const socials = footer?.socials || {};
-  const copyrightText =
-    footer?.copyrightText || `© ${new Date().getFullYear()} VenEventos`;
+  const copyrightText = footer?.copyrightText || `© ${new Date().getFullYear()} VenEventos`;
 
   const iconMap = {
     facebook: FaFacebookF,
@@ -28,7 +27,7 @@ const DashboardFooter = () => {
     youtube: FaYoutube,
     tiktok: FaTiktok,
     whatsapp: FaWhatsapp,
-    telegram: FaTelegramPlane
+    telegram: FaTelegramPlane,
   };
 
   return (
@@ -60,5 +59,3 @@ const DashboardFooter = () => {
 };
 
 export default DashboardFooter;
-
-

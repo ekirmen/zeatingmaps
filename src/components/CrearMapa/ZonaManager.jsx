@@ -1,37 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Modal, 
-  Form, 
-  Input, 
-  Button, 
-  ColorPicker, 
-  Switch, 
-  Space, 
-  List, 
+import {
+  Modal,
+  Form,
+  Input,
+  Button,
+  ColorPicker,
+  Switch,
+  Space,
+  List,
   Popconfirm,
   message,
   Typography,
   Row,
   Col,
   Card,
-  Badge
+  Badge,
 } from '../../utils/antdComponents';
 import { createZona, updateZona, deleteZona } from '../../backoffice/services/apibackoffice';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined
-} from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-const ZonaManager = ({ 
-  zonas = [], 
-  onZonasChange, 
-  selectedElements = [], 
+const ZonaManager = ({
+  zonas = [],
+  onZonasChange,
+  selectedElements = [],
   onAssignZone,
-  salaId
+  salaId,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingZona, setEditingZona] = useState(null);
@@ -54,7 +50,7 @@ const ZonaManager = ({
         aforo: zona.aforo,
         color: zona.color || '#1890ff',
         numerada: zona.numerada || false,
-        descripcion: zona.descripcion || ''
+        descripcion: zona.descripcion || '',
       });
     } else {
       form.resetFields();
@@ -68,22 +64,21 @@ const ZonaManager = ({
     form.resetFields();
   };
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async values => {
     try {
-      
       if (editingZona) {
         // Editar zona existente
         const zonaActualizada = await updateZona(editingZona.id, {
           ...values,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         });
-        
-        const zonasActualizadas = zonasList.map(z => 
+
+        const zonasActualizadas = zonasList.map(z =>
           z.id === editingZona.id ? zonaActualizada : z
         );
         setZonasList(zonasActualizadas);
         message.success('Zona actualizada exitosamente');
-        
+
         if (onZonasChange) {
           onZonasChange(zonasActualizadas);
         }
@@ -93,17 +88,17 @@ const ZonaManager = ({
           ...values,
           sala_id: salaId,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         });
-        
+
         setZonasList([...zonasList, zonaCreada]);
         message.success('Zona creada exitosamente');
-        
+
         if (onZonasChange) {
           onZonasChange([...zonasList, zonaCreada]);
         }
       }
-      
+
       handleCancel();
     } catch (error) {
       message.error('Error al guardar la zona');
@@ -111,17 +106,17 @@ const ZonaManager = ({
     }
   };
 
-  const handleDeleteZona = async (zonaId) => {
+  const handleDeleteZona = async zonaId => {
     try {
       await deleteZona(zonaId);
-      
+
       const zonasActualizadas = zonasList.filter(z => z.id !== zonaId);
       setZonasList(zonasActualizadas);
-      
+
       if (onZonasChange) {
         onZonasChange(zonasActualizadas);
       }
-      
+
       message.success('Zona eliminada exitosamente');
     } catch (error) {
       message.error('Error al eliminar la zona');
@@ -129,12 +124,11 @@ const ZonaManager = ({
     }
   };
 
-  const handleAssignZone = (zonaId) => {
+  const handleAssignZone = zonaId => {
     if (selectedElements.length === 0) {
-
       return;
     }
-    
+
     if (onAssignZone) {
       onAssignZone(zonaId, selectedElements);
       message.success(`Zona asignada a ${selectedElements.length} elementos`);
@@ -145,12 +139,7 @@ const ZonaManager = ({
   return (
     <>
       {/* ===== BOT“N PARA ABRIR MODAL ===== */}
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={() => showModal()}
-        className="mb-4"
-      >
+      <Button type="primary" icon={<PlusOutlined />} onClick={() => showModal()} className="mb-4">
         Gestionar Zonas
       </Button>
 
@@ -159,7 +148,7 @@ const ZonaManager = ({
         <Title level={5}>Zonas Disponibles</Title>
         <List
           dataSource={zonasList}
-          renderItem={(zona) => (
+          renderItem={zona => (
             <List.Item
               actions={[
                 <Button
@@ -177,13 +166,8 @@ const ZonaManager = ({
                   okText="S­"
                   cancelText="No"
                 >
-                  <Button
-                    type="text"
-                    danger
-                    icon={<DeleteOutlined />}
-                    title="Eliminar zona"
-                  />
-                </Popconfirm>
+                  <Button type="text" danger icon={<DeleteOutlined />} title="Eliminar zona" />
+                </Popconfirm>,
               ]}
             >
               <List.Item.Meta
@@ -195,26 +179,20 @@ const ZonaManager = ({
                       backgroundColor: zona.color || '#1890ff',
                       borderRadius: '50%',
                       border: '2px solid #fff',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                     }}
                   />
                 }
                 title={
                   <Space>
                     <Text strong>{zona.nombre}</Text>
-                    {zona.numerada && (
-                      <Badge count="N" style={{ backgroundColor: '#52c41a' }} />
-                    )}
+                    {zona.numerada && <Badge count="N" style={{ backgroundColor: '#52c41a' }} />}
                   </Space>
                 }
                 description={
                   <Space direction="vertical" size="small">
-                    <Text type="secondary">
-                      Aforo: {zona.aforo || 'Sin l­mite'}
-                    </Text>
-                    {zona.descripcion && (
-                      <Text type="secondary">{zona.descripcion}</Text>
-                    )}
+                    <Text type="secondary">Aforo: {zona.aforo || 'Sin l­mite'}</Text>
+                    {zona.descripcion && <Text type="secondary">{zona.descripcion}</Text>}
                   </Space>
                 }
               />
@@ -239,7 +217,7 @@ const ZonaManager = ({
                 style={{
                   backgroundColor: zona.color,
                   borderColor: zona.color,
-                  color: 'white'
+                  color: 'white',
                 }}
               >
                 {zona.nombre}
@@ -263,7 +241,7 @@ const ZonaManager = ({
           onFinish={handleSubmit}
           initialValues={{
             color: '#1890ff',
-            numerada: false
+            numerada: false,
           }}
         >
           <Row gutter={16}>
@@ -273,74 +251,58 @@ const ZonaManager = ({
                 label="Nombre de la Zona"
                 rules={[
                   { required: true, message: 'El nombre es obligatorio' },
-                  { min: 2, message: 'El nombre debe tener al menos 2 caracteres' }
+                  { min: 2, message: 'El nombre debe tener al menos 2 caracteres' },
                 ]}
               >
                 <Input placeholder="Ej: Platea, Palco, VIP" />
               </Form.Item>
             </Col>
-            
+
             <Col span={8}>
-              <Form.Item
-                name="aforo"
-                label="Aforo M¡ximo"
-              >
-                <Input 
-                  type="number" 
-                  min={1}
-                  placeholder="Sin l­mite"
-                />
+              <Form.Item name="aforo" label="Aforo M¡ximo">
+                <Input type="number" min={1} placeholder="Sin l­mite" />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item
-                name="color"
-                label="Color de la Zona"
-              >
-                <ColorPicker 
+              <Form.Item name="color" label="Color de la Zona">
+                <ColorPicker
                   showText
                   presets={[
                     {
                       label: 'Colores Recomendados',
                       colors: [
-                        '#1890ff', '#52c41a', '#faad14', '#f5222d',
-                        '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'
-                      ]
-                    }
+                        '#1890ff',
+                        '#52c41a',
+                        '#faad14',
+                        '#f5222d',
+                        '#722ed1',
+                        '#13c2c2',
+                        '#eb2f96',
+                        '#fa8c16',
+                      ],
+                    },
                   ]}
                 />
               </Form.Item>
             </Col>
-            
+
             <Col span={12}>
-              <Form.Item
-                name="numerada"
-                label="Asientos Numerados"
-                valuePropName="checked"
-              >
+              <Form.Item name="numerada" label="Asientos Numerados" valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item
-            name="descripcion"
-            label="Descripci³n"
-          >
-            <TextArea 
-              rows={3}
-              placeholder="Descripci³n opcional de la zona..."
-            />
+          <Form.Item name="descripcion" label="Descripci³n">
+            <TextArea rows={3} placeholder="Descripci³n opcional de la zona..." />
           </Form.Item>
 
           <div className="text-right">
             <Space>
-              <Button onClick={handleCancel}>
-                Cancelar
-              </Button>
+              <Button onClick={handleCancel}>Cancelar</Button>
               <Button type="primary" htmlType="submit">
                 {editingZona ? 'Actualizar' : 'Crear'} Zona
               </Button>
@@ -353,5 +315,3 @@ const ZonaManager = ({
 };
 
 export default ZonaManager;
-
-

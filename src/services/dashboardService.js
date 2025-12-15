@@ -13,7 +13,6 @@ class DashboardCache {
   }
 
   get(key) {
-
     if (!cached) return null;
 
     // Verificar si el cache expiró
@@ -29,7 +28,7 @@ class DashboardCache {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
-      ttl
+      ttl,
     });
   }
 
@@ -56,9 +55,12 @@ const dashboardCache = new DashboardCache();
 
 // Limpiar cache expirado cada 5 minutos
 if (typeof window !== 'undefined') {
-  setInterval(() => {
-    dashboardCache.cleanup();
-  }, 5 * 60 * 1000);
+  setInterval(
+    () => {
+      dashboardCache.cleanup();
+    },
+    5 * 60 * 1000
+  );
 }
 
 /**
@@ -84,7 +86,7 @@ export async function getDashboardStats(tenantId = null, options = {}) {
   try {
     // Llamar a la función RPC
     const { data, error } = await supabase.rpc('get_dashboard_stats', {
-      p_tenant_id: tenantId
+      p_tenant_id: tenantId,
     });
 
     if (error) {
@@ -97,13 +99,15 @@ export async function getDashboardStats(tenantId = null, options = {}) {
       dashboardCache.set(cacheKey, data, cacheTTL);
     }
 
-    return data || {
-      totalEvents: 0,
-      totalUsers: 0,
-      totalProducts: 0,
-      totalRevenue: 0,
-      recentEvents: []
-    };
+    return (
+      data || {
+        totalEvents: 0,
+        totalUsers: 0,
+        totalProducts: 0,
+        totalRevenue: 0,
+        recentEvents: [],
+      }
+    );
   } catch (error) {
     console.error('Error getting dashboard stats:', error);
     // Retornar valores por defecto en caso de error
@@ -112,7 +116,7 @@ export async function getDashboardStats(tenantId = null, options = {}) {
       totalUsers: 0,
       totalProducts: 0,
       totalRevenue: 0,
-      recentEvents: []
+      recentEvents: [],
     };
   }
 }
@@ -140,7 +144,7 @@ export async function loadDashboardData(options = {}) {
     loadStats = true,
     loadRecentEvents = true,
     recentEventsLimit = 5,
-    useCache = true
+    useCache = true,
   } = options;
 
   const promises = [];
@@ -166,7 +170,7 @@ export async function loadDashboardData(options = {}) {
   }
 
   const results = await Promise.all(promises);
-  
+
   if (loadStats && loadRecentEvents) {
     // Los eventos recientes están incluidos en stats
     return results[0];
@@ -180,6 +184,5 @@ export async function loadDashboardData(options = {}) {
 export default {
   getDashboardStats,
   invalidateDashboardCache,
-  loadDashboardData
+  loadDashboardData,
 };
-

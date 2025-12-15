@@ -17,7 +17,6 @@ const PWAInstallPrompt = () => {
   useEffect(() => {
     // Verificar si ya está instalada
     if (isPWAInstalled()) {
-
       return;
     }
 
@@ -34,7 +33,7 @@ const PWAInstallPrompt = () => {
     }
 
     // Obtener el prompt de instalación
-    promptPWAInstall().then((prompt) => {
+    promptPWAInstall().then(prompt => {
       if (prompt) {
         setDeferredPrompt(prompt);
         // Mostrar el prompt después de un pequeño delay
@@ -45,7 +44,7 @@ const PWAInstallPrompt = () => {
     });
 
     // Escuchar el evento beforeinstallprompt
-    const handleBeforeInstallPrompt = (e) => {
+    const handleBeforeInstallPrompt = e => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowPrompt(true);
@@ -93,22 +92,16 @@ const PWAInstallPrompt = () => {
         <DownloadOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
         <h2 style={{ marginBottom: '12px' }}>{t('pwa.install.title', 'Instalar App')}</h2>
         <p style={{ color: '#666', marginBottom: '24px' }}>
-          {t('pwa.install.description', 'Instala nuestra app para una mejor experiencia. Recibe notificaciones de nuevos eventos y accede rápidamente desde tu pantalla de inicio.')}
+          {t(
+            'pwa.install.description',
+            'Instala nuestra app para una mejor experiencia. Recibe notificaciones de nuevos eventos y accede rápidamente desde tu pantalla de inicio.'
+          )}
         </p>
         <Space size="middle">
-          <Button 
-            type="primary" 
-            icon={<DownloadOutlined />}
-            onClick={handleInstall}
-            size="large"
-          >
+          <Button type="primary" icon={<DownloadOutlined />} onClick={handleInstall} size="large">
             {t('pwa.install.button', 'Instalar')}
           </Button>
-          <Button 
-            onClick={handleDismiss}
-            icon={<CloseOutlined />}
-            size="large"
-          >
+          <Button onClick={handleDismiss} icon={<CloseOutlined />} size="large">
             {t('pwa.install.later', 'Ahora no')}
           </Button>
         </Space>
@@ -118,5 +111,3 @@ const PWAInstallPrompt = () => {
 };
 
 export default PWAInstallPrompt;
-
-
