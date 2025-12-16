@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Select, Switch, message, Space, Typography, Row, Col, Alert, Tag, Tooltip, Modal, InputNumber, Tabs, Table } from '../../utils/antdComponents'; 
+import { Card, Form, Input, Button, Select, Switch, message, Space, Typography, Row, Col, Alert, Tag, Tooltip, Modal, InputNumber, Tabs, Table } from '../../utils/antdComponents';
 import { PlusOutlined, DeleteOutlined, EditOutlined, SaveOutlined, SettingOutlined, DollarOutlined, GlobalOutlined, CreditCardOutlined, SafetyCertificateOutlined, DatabaseOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -45,7 +45,12 @@ const SaasSettings = () => {
     }
   };
 
-  
+  const loadSystemConfig = async () => {
+    try {
+      setLoading(true);
+      // Simular carga de configuraci³n
+      // const { data } = await supabase.from('system_config').select('*').single();
+      // if (data) setSystemConfig(data);
     } catch (error) {
       console.error('Error loading system config:', error);
     }
@@ -134,7 +139,7 @@ const SaasSettings = () => {
   };
 
   const getPlanColor = (plan) => {
-
+    switch (plan) {
       case 'enterprise': return 'purple';
       case 'pro': return 'blue';
       case 'basic': return 'green';
@@ -189,17 +194,17 @@ const SaasSettings = () => {
       render: (_, record) => (
         <Space>
           <Tooltip title="Editar">
-            <Button 
-              type="text" 
-              icon={<EditOutlined />} 
+            <Button
+              type="text"
+              icon={<EditOutlined />}
               onClick={() => handleEditPlan(record)}
             />
           </Tooltip>
           <Tooltip title="Eliminar">
-            <Button 
-              type="text" 
-              danger 
-              icon={<DeleteOutlined />} 
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
               onClick={() => {
                 Modal.confirm({
                   title: '¿Eliminar plan?',
@@ -242,18 +247,18 @@ const SaasSettings = () => {
       {/* Tabs de configuraci³n */}
       <Card>
         <Tabs defaultActiveKey="plans">
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <CreditCardOutlined />
                 Gesti³n de Planes
               </span>
-            } 
+            }
             key="plans"
           >
             <div style={{ marginBottom: '16px' }}>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<PlusOutlined />}
                 onClick={handleAddPlan}
               >
@@ -273,13 +278,13 @@ const SaasSettings = () => {
             />
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <GlobalOutlined />
                 Configuraci³n General
               </span>
-            } 
+            }
             key="general"
           >
             <Row gutter={[16, 16]}>
@@ -287,9 +292,9 @@ const SaasSettings = () => {
                 <Card title="Configuraci³n de Planes">
                   <Form layout="vertical">
                     <Form.Item label="Plan por Defecto">
-                      <Select 
+                      <Select
                         value={systemConfig.defaultPlan}
-                        onChange={(value) => setSystemConfig({...systemConfig, defaultPlan: value})}
+                        onChange={(value) => setSystemConfig({ ...systemConfig, defaultPlan: value })}
                       >
                         <Option value="basic">Basic</Option>
                         <Option value="pro">Pro</Option>
@@ -299,7 +304,7 @@ const SaasSettings = () => {
                     <Form.Item label="D­as de Prueba Gratuita">
                       <InputNumber
                         value={systemConfig.trialDays}
-                        onChange={(value) => setSystemConfig({...systemConfig, trialDays: value})}
+                        onChange={(value) => setSystemConfig({ ...systemConfig, trialDays: value })}
                         min={0}
                         max={365}
                       />
@@ -307,7 +312,7 @@ const SaasSettings = () => {
                     <Form.Item label="Longitud M¡xima de Subdominio">
                       <InputNumber
                         value={systemConfig.maxSubdomainLength}
-                        onChange={(value) => setSystemConfig({...systemConfig, maxSubdomainLength: value})}
+                        onChange={(value) => setSystemConfig({ ...systemConfig, maxSubdomainLength: value })}
                         min={3}
                         max={100}
                       />
@@ -319,21 +324,21 @@ const SaasSettings = () => {
                 <Card title="Configuraci³n de Seguridad">
                   <Form layout="vertical">
                     <Form.Item label="Habilitar SSL Autom¡tico">
-                      <Switch 
+                      <Switch
                         checked={systemConfig.enableSSL}
-                        onChange={(checked) => setSystemConfig({...systemConfig, enableSSL: checked})}
+                        onChange={(checked) => setSystemConfig({ ...systemConfig, enableSSL: checked })}
                       />
                     </Form.Item>
                     <Form.Item label="Habilitar Analytics">
-                      <Switch 
+                      <Switch
                         checked={systemConfig.enableAnalytics}
-                        onChange={(checked) => setSystemConfig({...systemConfig, enableAnalytics: checked})}
+                        onChange={(checked) => setSystemConfig({ ...systemConfig, enableAnalytics: checked })}
                       />
                     </Form.Item>
                     <Form.Item label="Habilitar Backups Autom¡ticos">
-                      <Switch 
+                      <Switch
                         checked={systemConfig.enableBackups}
-                        onChange={(checked) => setSystemConfig({...systemConfig, enableBackups: checked})}
+                        onChange={(checked) => setSystemConfig({ ...systemConfig, enableBackups: checked })}
                       />
                     </Form.Item>
                   </Form>
@@ -341,8 +346,8 @@ const SaasSettings = () => {
               </Col>
             </Row>
             <div style={{ marginTop: '16px', textAlign: 'right' }}>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<SaveOutlined />}
                 onClick={handleSaveSystemConfig}
               >
@@ -351,13 +356,13 @@ const SaasSettings = () => {
             </div>
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <DollarOutlined />
                 Configuraci³n de Facturaci³n
               </span>
-            } 
+            }
             key="billing"
           >
             <Row gutter={[16, 16]}>
@@ -414,13 +419,13 @@ const SaasSettings = () => {
             </div>
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <DatabaseOutlined />
                 Configuraci³n de Base de Datos
               </span>
-            } 
+            }
             key="database"
           >
             <Row gutter={[16, 16]}>

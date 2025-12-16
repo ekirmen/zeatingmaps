@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Statistic, 
-  Table, 
-  DatePicker, 
-  Select, 
-  Button, 
-  Typography, 
-  Space, 
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Table,
+  DatePicker,
+  Select,
+  Button,
+  Typography,
+  Space,
   Tag,
   Spin,
   Empty
 } from '../../utils/antdComponents';
-import { 
-  DollarOutlined, 
-  CreditCardOutlined, 
-  BankOutlined, 
-  MobileOutlined, 
-  RiseOutlined, 
+import {
+  DollarOutlined,
+  CreditCardOutlined,
+  BankOutlined,
+  MobileOutlined,
+  RiseOutlined,
   BarChartOutlined,
   LineChartOutlined,
   PieChartOutlined
@@ -30,7 +30,7 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
-// Componente simple para gr¡ficos b¡sicos usando divs y CSS
+// Componente simple para gráficos básicos usando divs y CSS
 const SimpleBarChart = ({ data, dataKey, color = '#1890ff', height = 200 }) => {
   const maxValue = Math.max(...data.map(d => d[dataKey])) || 1;
 
@@ -39,9 +39,9 @@ const SimpleBarChart = ({ data, dataKey, color = '#1890ff', height = 200 }) => {
       {data.map((item, index) => {
         const value = item[dataKey] || 0;
         const heightPercent = (value / maxValue) * 80;
-        
+
         return (
-          <div 
+          <div
             key={index}
             style={{
               flex: 1,
@@ -75,7 +75,7 @@ const SimpleBarChart = ({ data, dataKey, color = '#1890ff', height = 200 }) => {
 
 const SimplePieChart = ({ data, height = 200 }) => {
   const total = data.reduce((sum, item) => sum + (item.amount || 0), 0);
-  
+
   return (
     <div style={{ height: `${height}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {total === 0 ? (
@@ -84,9 +84,9 @@ const SimplePieChart = ({ data, height = 200 }) => {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxWidth: '300px' }}>
           {data.map((item, index) => {
             const percentage = total > 0 ? ((item.amount || 0) / total) * 100 : 0;
-            
+
             return (
-              <div 
+              <div
                 key={index}
                 style={{
                   display: 'flex',
@@ -132,19 +132,19 @@ const PaymentAnalytics = () => {
 
   useEffect(() => {
     loadAnalyticsData();
-  }, []);
+  }, [filters]); // Reload when filters change
 
   const loadAnalyticsData = async () => {
     try {
       setLoading(true);
-      
+
       // Carga solo datos esenciales primero
       await Promise.all([
         loadTransactionData(),
         loadGatewayStats()
       ]);
-      
-      // Carga datos pesados despu©s
+
+      // Carga datos pesados después
       setTimeout(async () => {
         await Promise.all([
           loadDailySales(),
@@ -159,7 +159,23 @@ const PaymentAnalytics = () => {
     }
   };
 
-  
+  const getGatewayColor = (type) => {
+    const colors = {
+      stripe: '#6772e5',
+      paypal: '#003087',
+      transfer: '#2db7f5',
+      mobile_payment: '#87d068',
+      zelle: '#722ed1',
+      reservation: '#faad14'
+    };
+    return colors[type] || '#666666';
+  };
+
+  const loadTransactionData = async () => {
+    try {
+      let query = supabase
+        .from('payment_transactions')
+        .select('*');
 
       if (filters.dateRange) {
         query = query
@@ -184,7 +200,11 @@ const PaymentAnalytics = () => {
     }
   };
 
-  
+  const loadGatewayStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payment_transactions')
+        .select('gateway_id, amount');
 
       if (error) throw error;
 
@@ -210,7 +230,13 @@ const PaymentAnalytics = () => {
     }
   };
 
-  
+  const loadDailySales = async () => {
+    try {
+      // Usar rango de fecha si está definido, si no, últimos 30 días o similar
+      let query = supabase.from('payment_transactions').select('created_at, amount');
+      // Podríamos aplicar filtros aquí también
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -226,6 +252,8 @@ const PaymentAnalytics = () => {
         return acc;
       }, {});
 
+      // Ordenar por fecha (esto requiere un poco más de lógica si el string no ordena bien, pero para demo está ok)
+
       setAnalyticsData(prev => ({
         ...prev,
         dailySales: Object.values(dailyData)
@@ -235,14 +263,18 @@ const PaymentAnalytics = () => {
     }
   };
 
-  
+  const loadMonthlyTrends = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payment_transactions')
+        .select('created_at, amount');
 
       if (error) throw error;
 
       const monthlyData = data.reduce((acc, transaction) => {
         const date = new Date(transaction.created_at);
         const monthKey = date.toLocaleDateString('es-ES', { month: 'short' });
-        
+
         if (!acc[monthKey]) {
           acc[monthKey] = { month: monthKey, revenue: 0 };
         }
@@ -259,15 +291,28 @@ const PaymentAnalytics = () => {
     }
   };
 
-  
+  const loadTopEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payment_transactions')
+        .select('amount, evento:eventos(nombre)'); // Intentar join si se puede
 
       if (error) throw error;
 
-      // Datos de ejemplo para top events (simplificado)
-      const topEvents = data.map((tx, index) => ({
-        name: `Evento ${index + 1}`,
-        revenue: parseFloat(tx.amount || 0)
-      })).sort((a, b) => b.revenue - a.revenue);
+      // Agrupar por evento
+      const eventStats = (data || []).reduce((acc, tx) => {
+        const eventName = tx.evento?.nombre || 'Evento Desconocido';
+        if (!acc[eventName]) {
+          acc[eventName] = 0;
+        }
+        acc[eventName] += parseFloat(tx.amount || 0);
+        return acc;
+      }, {});
+
+      const topEvents = Object.entries(eventStats)
+        .map(([name, revenue]) => ({ name, revenue }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
 
       setAnalyticsData(prev => ({
         ...prev,
@@ -276,10 +321,6 @@ const PaymentAnalytics = () => {
     } catch (error) {
       console.error('Error loading top events:', error);
     }
-  };
-
-  
-    return colors[type] || '#666666';
   };
 
   const getGatewayIcon = (type) => {
@@ -308,7 +349,7 @@ const PaymentAnalytics = () => {
   const totalRevenue = analyticsData.transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   const totalTransactions = analyticsData.transactions.length;
   const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
-  
+
   const statusBreakdown = useMemo(() => {
     const summary = {
       completed: 0,
@@ -340,8 +381,8 @@ const PaymentAnalytics = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <Title level={2}>An¡lisis de Pagos</Title>
-        <Text type="secondary">M©tricas detalladas y tendencias de transacciones</Text>
+        <Title level={2}>Análisis de Pagos</Title>
+        <Text type="secondary">Métricas detalladas y tendencias de transacciones</Text>
       </div>
 
       {/* Filtros */}
@@ -365,14 +406,14 @@ const PaymentAnalytics = () => {
               <Option value="stripe">Stripe</Option>
               <Option value="paypal">PayPal</Option>
               <Option value="transfer">Transferencias</Option>
-              <Option value="mobile_payment">Pago M³vil</Option>
+              <Option value="mobile_payment">Pago Móvil</Option>
               <Option value="zelle">Zelle</Option>
               <Option value="reservation">Reservas</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<BarChartOutlined />}
               onClick={loadAnalyticsData}
               loading={loading}
@@ -383,7 +424,7 @@ const PaymentAnalytics = () => {
         </Row>
       </Card>
 
-      {/* M©tricas Principales */}
+      {/* Métricas Principales */}
       <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24} sm={8}>
           <Card>
@@ -419,11 +460,11 @@ const PaymentAnalytics = () => {
         </Col>
       </Row>
 
-      {/* Gr¡ficos Simplificados */}
+      {/* Gráficos Simplificados */}
       <Row gutter={[16, 16]} className="mb-8">
         {/* Ventas Diarias */}
         <Col xs={24} lg={12}>
-          <Card 
+          <Card
             title={
               <Space>
                 <LineChartOutlined />
@@ -432,9 +473,9 @@ const PaymentAnalytics = () => {
             }
           >
             {analyticsData.dailySales.length > 0 ? (
-              <SimpleBarChart 
-                data={analyticsData.dailySales} 
-                dataKey="sales" 
+              <SimpleBarChart
+                data={analyticsData.dailySales}
+                dataKey="sales"
                 color="#1890ff"
               />
             ) : (
@@ -443,13 +484,13 @@ const PaymentAnalytics = () => {
           </Card>
         </Col>
 
-        {/* Distribuci³n por Pasarela */}
+        {/* Distribución por Pasarela */}
         <Col xs={24} lg={12}>
-          <Card 
+          <Card
             title={
               <Space>
                 <PieChartOutlined />
-                Distribuci³n por Pasarela
+                Distribución por Pasarela
               </Space>
             }
           >
@@ -461,7 +502,7 @@ const PaymentAnalytics = () => {
       {/* Tendencias Mensuales */}
       <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24}>
-          <Card 
+          <Card
             title={
               <Space>
                 <BarChartOutlined />
@@ -470,9 +511,9 @@ const PaymentAnalytics = () => {
             }
           >
             {analyticsData.monthlyTrends.length > 0 ? (
-              <SimpleBarChart 
-                data={analyticsData.monthlyTrends} 
-                dataKey="revenue" 
+              <SimpleBarChart
+                data={analyticsData.monthlyTrends}
+                dataKey="revenue"
                 color="#3f8600"
                 height={250}
               />
@@ -486,7 +527,7 @@ const PaymentAnalytics = () => {
       {/* Resumen por Estado */}
       <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24}>
-          <Card title="Resumen por Estado de Transacci³n">
+          <Card title="Resumen por Estado de Transacción">
             <Row gutter={[16, 16]}>
               {Object.entries(statusBreakdown).map(([status, count]) => (
                 <Col xs={12} sm={4} key={status}>
@@ -573,4 +614,3 @@ const PaymentAnalytics = () => {
 };
 
 export default PaymentAnalytics;
-

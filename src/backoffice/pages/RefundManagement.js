@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Modal, 
-  Form, 
-  Input, 
-  message, 
-  Tag, 
+import {
+  Card,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  message,
+  Tag,
   Space,
   Typography,
   DatePicker,
@@ -15,19 +15,19 @@ import {
   Tooltip,
   Popconfirm
 } from '../../utils/antdComponents';
-import { 
-  DollarOutlined, 
+import {
+  DollarOutlined,
   CheckCircleOutlined,
   CloseOutlined,
   ClockCircleOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
-import { 
-  getAllRefunds, 
-  approveManualRefund, 
+import {
+  getAllRefunds,
+  approveManualRefund,
   rejectRefund,
-  processRefund 
+  processRefund
 } from '../../store/services/refundService';
 
 const { Title, Text } = Typography;
@@ -96,7 +96,7 @@ const RefundManagement = () => {
     try {
       setSelectedRefund(refund);
       setModalVisible(true);
-      
+
       const gateway = refund.payment_transactions?.payment_gateways;
       if (gateway) {
         await processRefund(refund.id, gateway);
@@ -121,6 +121,7 @@ const RefundManagement = () => {
       cancelled: 'gray',
       pending_manual: 'blue',
       rejected: 'red'
+    };
 
     return colors[status] || 'default';
   };
@@ -258,9 +259,9 @@ const RefundManagement = () => {
             <Option value="rejected">Rechazado</Option>
           </Select>
           <RangePicker
-            onChange={(dates) => setFilters(prev => ({ 
-              ...prev, 
-              dateRange: dates ? [dates[0].toISOString(), dates[1].toISOString()] : null 
+            onChange={(dates) => setFilters(prev => ({
+              ...prev,
+              dateRange: dates ? [dates[0].toISOString(), dates[1].toISOString()] : null
             }))}
             placeholder={['Fecha inicio', 'Fecha fin']}
           />
@@ -281,7 +282,7 @@ const RefundManagement = () => {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} de ${total} reembolsos`
           }}
         />
@@ -342,5 +343,5 @@ const RefundManagement = () => {
   );
 };
 
-export default RefundManagement; 
+export default RefundManagement;
 

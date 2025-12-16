@@ -4,14 +4,14 @@ import { Skeleton, Card } from '../utils/antdComponents';
 /**
  * Skeleton Loader para el mapa de asientos
  */
-
+export const SeatMapSkeleton = () => {
   return (
     <div className="w-full h-full p-4">
       <Skeleton active paragraph={{ rows: 0 }} />
       <div className="mt-4">
-        <Skeleton.Image 
-          active 
-          style={{ width: '100%', height: '400px' }} 
+        <Skeleton.Image
+          active
+          style={{ width: '100%', height: '400px' }}
         />
       </div>
       <div className="mt-4 grid grid-cols-4 gap-4">
@@ -120,9 +120,9 @@ export const TableSkeleton = ({ columns = 5, rows = 5 }) => {
       </div>
       {/* Rows */}
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div 
-          key={rowIndex} 
-          className="grid gap-4" 
+        <div
+          key={rowIndex}
+          className="grid gap-4"
           style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
         >
           {Array.from({ length: columns }).map((_, colIndex) => (

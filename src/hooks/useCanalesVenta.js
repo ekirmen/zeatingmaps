@@ -4,7 +4,8 @@ import { fetchCanalesVenta, isCanalVentaActivo, getCanalVentaByUrl } from '../se
 /**
  * Hook personalizado para manejar canales de venta
  */
-export 
+export const useCanalesVenta = () => {
+  const [canales, setCanales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,47 +26,48 @@ export
 
   // Verificar si un canal específico está activo
   const verificarCanalActivo = async (canalId) => {
-
+    try {
       return await isCanalVentaActivo(canalId);
     } catch (err) {
       console.error('Error verificando canal activo:', err);
       return false;
     }
   };
+};
 
-  // Obtener canal por URL actual
-  const obtenerCanalPorUrl = async (url) => {
-    try {
-      return await getCanalVentaByUrl(url);
-    } catch (err) {
-      console.error('Error obteniendo canal por URL:', err);
-      return null;
-    }
-  };
+// Obtener canal por URL actual
+const obtenerCanalPorUrl = async (url) => {
+  try {
+    return await getCanalVentaByUrl(url);
+  } catch (err) {
+    console.error('Error obteniendo canal por URL:', err);
+    return null;
+  }
+};
 
-  // Cargar canales al montar el componente
-  useEffect(() => {
-    loadCanales();
-  }, []);
+// Cargar canales al montar el componente
+useEffect(() => {
+  loadCanales();
+}, []);
 
-  return {
-    canales,
-    loading,
-    error,
-    loadCanales,
-    verificarCanalActivo,
-    obtenerCanalPorUrl,
-    // Helpers útiles
-    canalesActivos: canales.filter(c => c.activo),
-    canalesInactivos: canales.filter(c => !c.activo),
-    totalCanales: canales.length
-  };
+return {
+  canales,
+  loading,
+  error,
+  loadCanales,
+  verificarCanalActivo,
+  obtenerCanalPorUrl,
+  // Helpers útiles
+  canalesActivos: canales.filter(c => c.activo),
+  canalesInactivos: canales.filter(c => !c.activo),
+  totalCanales: canales.length
 };
 
 /**
  * Hook específico para verificar si las ventas están habilitadas en el canal actual
  */
-export 
+export const useVentasHabilitadas = (canalId) => {
+  const [habilitado, setHabilitado] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

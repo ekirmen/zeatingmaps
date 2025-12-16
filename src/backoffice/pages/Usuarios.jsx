@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Modal, 
-  Form, 
-  Input, 
-  Select, 
-  Switch, 
-  message, 
-  Tag, 
-  Space, 
+import {
+  Card,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Switch,
+  message,
+  Tag,
+  Space,
   Popconfirm,
   Row,
   Col,
@@ -20,10 +20,10 @@ import {
   Tooltip,
   Checkbox
 } from '../../utils/antdComponents';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   UserOutlined,
   LockOutlined,
   UnlockOutlined,
@@ -69,7 +69,7 @@ const Usuarios = () => {
   const loadUsuarios = async () => {
     try {
       setLoading(true);
-      
+
       // Obtener usuarios desde profiles con filtro de tenant
       let query = supabase
         .from('profiles')
@@ -102,7 +102,9 @@ const Usuarios = () => {
     }
   };
 
-  
+  const loadRecintos = async () => {
+    try {
+      const { data, error } = await supabase.from('recintos').select('*');
 
       if (error) throw error;
       setRecintos(data || []);
@@ -173,11 +175,11 @@ const Usuarios = () => {
       role: user.role,
       activo: user.isActive
     });
-    
+
     // Cargar recintos asignados al usuario
     const userRecintos = await loadUserRecintos(user.id);
     setSelectedRecintos(userRecintos);
-    
+
     setIsModalVisible(true);
   };
 
@@ -218,7 +220,7 @@ const Usuarios = () => {
   const handleSubmit = async (values) => {
     try {
       let userId;
-      
+
       if (editingUser) {
         // Actualizar usuario existente
         const { error } = await supabase
@@ -234,7 +236,7 @@ const Usuarios = () => {
           .eq('id', editingUser.id);
 
         if (error) throw error;
-        
+
         userId = editingUser.id;
         message.success('Usuario actualizado correctamente');
       } else {
@@ -250,7 +252,7 @@ const Usuarios = () => {
 
         // Obtener tenant_id para asignar al nuevo usuario
         const tenantId = getTenantId();
-        
+
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -265,7 +267,7 @@ const Usuarios = () => {
           });
 
         if (profileError) throw profileError;
-        
+
         userId = userResp.user.id;
         message.success('Usuario creado correctamente');
       }
@@ -286,11 +288,11 @@ const Usuarios = () => {
   };
 
   const getRoleInfo = (role) => {
-    return roles.find(r => r.value === role) || { 
-      value: role, 
-      label: role, 
-      color: 'default', 
-      icon: <UserOutlined /> 
+    return roles.find(r => r.value === role) || {
+      value: role,
+      label: role,
+      color: 'default',
+      icon: <UserOutlined />
     };
   };
 
@@ -331,9 +333,9 @@ const Usuarios = () => {
       title: 'Estado',
       key: 'status',
       render: (_, record) => (
-        <Badge 
-          status={record.isActive ? 'success' : 'error'} 
-          text={record.isActive ? 'Activo' : 'Inactivo'} 
+        <Badge
+          status={record.isActive ? 'success' : 'error'}
+          text={record.isActive ? 'Activo' : 'Inactivo'}
         />
       ),
     },
@@ -350,18 +352,18 @@ const Usuarios = () => {
         <Space>
           {hasPermission('editar_usuarios') && (
             <Tooltip title="Editar usuario">
-              <Button 
-                type="primary" 
-                icon={<EditOutlined />} 
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
                 size="small"
                 onClick={() => handleEditUser(record)}
               />
             </Tooltip>
           )}
-          
+
           {hasPermission('editar_usuarios') && (
             <Tooltip title={record.isActive ? 'Desactivar' : 'Activar'}>
-              <Button 
+              <Button
                 type={record.isActive ? 'default' : 'primary'}
                 icon={record.isActive ? <LockOutlined /> : <UnlockOutlined />}
                 size="small"
@@ -369,7 +371,7 @@ const Usuarios = () => {
               />
             </Tooltip>
           )}
-          
+
           {hasPermission('eliminar_usuarios') && (
             <Popconfirm
               title="¿Est¡s seguro de eliminar este usuario?"
@@ -378,10 +380,10 @@ const Usuarios = () => {
               cancelText="No"
             >
               <Tooltip title="Eliminar usuario">
-                <Button 
-                  type="primary" 
-                  danger 
-                  icon={<DeleteOutlined />} 
+                <Button
+                  type="primary"
+                  danger
+                  icon={<DeleteOutlined />}
                   size="small"
                 />
               </Tooltip>
@@ -413,8 +415,8 @@ const Usuarios = () => {
           </Col>
           <Col>
             {hasPermission('crear_usuarios') && (
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<PlusOutlined />}
                 onClick={handleCreateUser}
               >
@@ -431,9 +433,9 @@ const Usuarios = () => {
         <Row gutter={[16, 16]}>
           {roles.map(role => (
             <Col key={role.value} xs={24} sm={12} md={8} lg={6}>
-              <div style={{ 
-                padding: '12px', 
-                border: '1px solid #d9d9d9', 
+              <div style={{
+                padding: '12px',
+                border: '1px solid #d9d9d9',
                 borderRadius: '6px',
                 textAlign: 'center'
               }}>
@@ -463,7 +465,7 @@ const Usuarios = () => {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} de ${total} usuarios`
           }}
         />
@@ -540,9 +542,9 @@ const Usuarios = () => {
             label="Estado"
             valuePropName="checked"
           >
-            <Switch 
-              checkedChildren="Activo" 
-              unCheckedChildren="Inactivo" 
+            <Switch
+              checkedChildren="Activo"
+              unCheckedChildren="Inactivo"
             />
           </Form.Item>
 

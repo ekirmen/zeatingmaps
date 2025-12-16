@@ -30,7 +30,9 @@ const PaymentGatewayConfig = () => {
     loadPaymentStats();
   }, []);
 
-  
+  const loadCurrentTenant = async () => {
+    try {
+      const tenantData = localStorage.getItem('currentTenant');
       if (tenantData) {
         const tenant = JSON.parse(tenantData);
         setCurrentTenant(tenant);
@@ -66,7 +68,9 @@ const PaymentGatewayConfig = () => {
     }
   };
 
-  
+  const loadPaymentStats = async () => {
+    try {
+      const stats = await paymentGatewayService.getPaymentStats();
       setPaymentStats(stats);
     } catch (error) {
       console.error('Error loading payment stats:', error);
@@ -163,6 +167,8 @@ const PaymentGatewayConfig = () => {
     const icons = {
       stripe: 'ðŸ’³',
       paypal: 'ðŸ…¿ï¸'
+
+    };
 
     return icons[gateway] || 'ðŸ’³';
   };
@@ -343,7 +349,7 @@ const PaymentGatewayConfig = () => {
             <Badge
               status={statusConfig.color}
               text={statusConfig.status === 'active' ? 'Activo' :
-                    statusConfig.status === 'inactive' ? 'Inactivo' : 'No Configurado'}
+                statusConfig.status === 'inactive' ? 'Inactivo' : 'No Configurado'}
             />
           );
         },

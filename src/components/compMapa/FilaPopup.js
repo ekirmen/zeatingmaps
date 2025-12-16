@@ -1,6 +1,6 @@
 import React from 'react';
 
-
+export default function FilaPopup({ element, onChange = () => {}, onClose = () => {} }) {
   if (!element) return null;
 
   return (
@@ -19,6 +19,4 @@ import React from 'react';
       </div>
     </div>
   );
-};
-
-export default FilaPopup;
+}

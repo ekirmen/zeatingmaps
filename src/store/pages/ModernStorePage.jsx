@@ -78,7 +78,12 @@ const ModernStorePage = () => {
       }
     };
 
-    
+    const fetchEventsFromAPI = async () => {
+      try {
+        let query = supabase
+          .from('eventos')
+          .select('*, recintos(nombre)')
+          .eq('tenant_id', currentTenant.id);
 
         // Aplicar filtros
         if (statusFilter !== 'all') {

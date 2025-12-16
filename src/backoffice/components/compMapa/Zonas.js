@@ -3,6 +3,7 @@ import React from 'react';
 
 const Zonas = ({ zones, loadingZonas, selectedZone, onSelect, onAssign }) => {
 
+  if (loadingZonas) {
     return <p>Cargando...</p>;
   }
 

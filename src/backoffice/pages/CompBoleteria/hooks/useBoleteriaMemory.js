@@ -42,7 +42,7 @@ export const useBoleteriaMemory = () => {
 
   // Restaurar estado completo (sin carrito)
   const restoreState = (eventos, funciones, plantillas) => {
-
+    if (!lastState || !lastState.selectedEvent) {
       return null;
     }
 

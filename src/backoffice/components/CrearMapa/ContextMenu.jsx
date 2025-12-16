@@ -24,6 +24,7 @@ const ContextMenu = ({
   canPan = true,
   canZoom = true,
   canEdit = true
+}) => {
 
   if (!visible) return null;
 
@@ -84,7 +85,7 @@ const ContextMenu = ({
   // ===== ACCIONES DE ELEMENTOS (solo si hay elementos seleccionados) =====
   if (selectedElements.length > 0) {
     const selectedElement = selectedElements[0]; // Tomar el primer elemento seleccionado
-    
+
     menuItems.push({
       key: 'elements',
       type: 'group',
@@ -210,11 +211,11 @@ const ContextMenu = ({
           boxShadow: 'none'
         }}
       />
-      
+
       {/* ===== BOT“N DE CERRAR ===== */}
       <div style={{ padding: '8px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
-        <Button 
-          size="small" 
+        <Button
+          size="small"
           onClick={onClose}
           type="text"
         >

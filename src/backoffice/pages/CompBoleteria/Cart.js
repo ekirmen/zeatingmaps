@@ -4,6 +4,7 @@ import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
 import downloadTicket from '../../../utils/downloadTicket';
 
 const formatCurrency = value => {
+  const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue.toFixed(2) : '0.00';
 };
 
@@ -269,13 +270,13 @@ const Cart = ({
                   {`ðŸŽ­ Funci³n ${idx + 1}: `}
                   {group.fecha
                     ? new Date(group.fecha).toLocaleDateString('es-ES', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
                     : 'Fecha no disponible'}
                 </div>
                 {group.items.map(item => {

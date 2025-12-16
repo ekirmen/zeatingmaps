@@ -84,7 +84,8 @@ export const useTenant = (useCache = true) => {
 /**
  * Limpia el cache del tenant_id
  */
-export 
+export const clearTenantCache = () => {
+  tenantIdCache = null;
   tenantIdCacheTimestamp = null;
 };
 

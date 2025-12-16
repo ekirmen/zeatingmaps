@@ -4,8 +4,6 @@ const FALLBACK_TENANT_BY_HOST = {
 
 const readFromLocalStorage = (key) => {
 
-    return null;
-  }
   try {
     return window.localStorage.getItem(key);
   } catch (error) {
@@ -77,7 +75,6 @@ export const resolveTenantId = (preferredId = null) => {
   return null;
 };
 
-export 
-};
+
 
 export default resolveTenantId;

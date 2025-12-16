@@ -23,7 +23,7 @@ const SimpleCart = memo(() => {
     }
   }, [itemCount, total, seatsCount, productsCount]);
 
-
+  const handleCheckout = useCallback(() => {
     if (itemCount === 0) return;
     navigate('/store/cart');
   }, [itemCount, navigate]);

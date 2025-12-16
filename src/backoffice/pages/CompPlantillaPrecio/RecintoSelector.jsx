@@ -1,6 +1,6 @@
 import React from "react";
 
-
+const RecintoSelector = ({ recintos, recintoSeleccionado, onChange }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -13,8 +13,8 @@ import React from "react";
             <label className="text-sm font-medium text-gray-700 min-w-[80px]">
               Recinto:
             </label>
-            <select 
-              value={recintoSeleccionado} 
+            <select
+              value={recintoSeleccionado}
               onChange={e => onChange(e.target.value)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             >
@@ -27,7 +27,7 @@ import React from "react";
             </select>
           </div>
         </div>
-        
+
         {recintoSeleccionado && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div className="flex items-center gap-2">

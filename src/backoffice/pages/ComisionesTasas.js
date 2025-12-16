@@ -49,8 +49,8 @@ const ComisionesTasas = () => {
     loadComisiones();
   }, []);
 
-  
-
+  const loadComisiones = async () => {
+    try {
       // Cargar comisiones desde la base de datos
       const { data: comisionesData, error } = await supabase
         .from('comisiones_tasas')

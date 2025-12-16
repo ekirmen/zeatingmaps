@@ -2,16 +2,17 @@ import { useState } from 'react';
 import { message } from '../../../../utils/antdComponents';
 import { fetchDescuentoPorCodigo } from '../../../../store/services/apistore';
 
-export 
+const useDiscountCode = () => {
+  const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
 
-
+  const handleApplyDiscount = async () => {
     if (!discountCode.trim()) return;
     try {
       const data = await fetchDescuentoPorCodigo(encodeURIComponent(discountCode.trim()));
       const now = Date.now();
       if (data.fechaInicio && new Date(data.fechaInicio).getTime() > now) {
-        throw new Error('Descuento no disponible aºn');
+        throw new Error('Descuento no disponible aún');
       }
       if (data.fechaFinal && new Date(data.fechaFinal).getTime() < now) {
         throw new Error('Descuento expirado');
@@ -20,7 +21,7 @@ export
       message.success('Descuento aplicado');
     } catch (err) {
       setAppliedDiscount(null);
-      message.error(err.message || 'C³digo inv¡lido');
+      message.error(err.message || 'Código inválido');
     }
   };
 
@@ -50,5 +51,6 @@ export
     handleApplyDiscount,
     getPrecioConDescuento
   };
-}; 
+};
 
+export default useDiscountCode;

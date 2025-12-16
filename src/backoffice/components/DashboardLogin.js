@@ -15,7 +15,7 @@ const DashboardLogin = ({ onLogin }) => {
     try {
       setLoading(true);
       setError('');
-      
+
       if (!formData.email || !formData.password) {
         throw new Error('Por favor complete todos los campos');
       }
@@ -54,7 +54,7 @@ const DashboardLogin = ({ onLogin }) => {
 
   const handleCancel = () => {
     // No permitir cerrar el modal si no hay sesi³n
-
+    if (!localStorage.getItem('token')) {
       return;
     }
     setIsModalVisible(false);
@@ -87,7 +87,7 @@ const DashboardLogin = ({ onLogin }) => {
             {error}
           </div>
         )}
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Correo electr³nico
@@ -101,7 +101,7 @@ const DashboardLogin = ({ onLogin }) => {
             size="large"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Contrase±a
@@ -114,22 +114,22 @@ const DashboardLogin = ({ onLogin }) => {
             size="large"
           />
         </div>
-        
+
         <Button
           type="primary"
           size="large"
           block
           loading={loading}
           onClick={handleLogin}
-          style={{ 
-            backgroundColor: theme.primary, 
+          style={{
+            backgroundColor: theme.primary,
             borderColor: theme.primary,
             height: '44px'
           }}
         >
           {loading ? 'Iniciando sesi³n...' : 'Iniciar Sesi³n'}
         </Button>
-        
+
         <div className="text-center text-sm text-gray-500">
           Solo usuarios autorizados pueden acceder al panel de administraci³n
         </div>

@@ -31,8 +31,10 @@ export const ESTADO_VENTA = {
   }
 };
 
-
+export function getEstadoVenta(estado) {
   return ESTADO_VENTA[estado] || ESTADO_VENTA['a-la-venta'];
 }
+
+export default getEstadoVenta;
 
 

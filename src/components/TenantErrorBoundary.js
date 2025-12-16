@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, Button, Typography, Space, Divider } from '../utils/antdComponents';
-import { 
-  ExclamationCircleOutlined, 
-  PlusOutlined, 
+import {
+  ExclamationCircleOutlined,
+  PlusOutlined,
   SettingOutlined,
   HomeOutlined
 } from '@ant-design/icons';
@@ -13,25 +13,26 @@ const { Title, Text } = Typography;
 const TenantErrorBoundary = ({ error, subdomain, onRetry }) => {
   // Si no hay error específico, mostrar la página de bienvenida del dominio
 
+  if (!error) {
     return <DomainWelcome />;
   }
 
   // Si hay error, mostrar opciones de solución
   return (
-    <div style={{ 
-      padding: '40px 20px', 
-      maxWidth: '800px', 
+    <div style={{
+      padding: '40px 20px',
+      maxWidth: '800px',
       margin: '0 auto',
       textAlign: 'center'
     }}>
       <Card>
         <div style={{ marginBottom: '24px' }}>
-          <ExclamationCircleOutlined 
-            style={{ 
-              fontSize: '64px', 
+          <ExclamationCircleOutlined
+            style={{
+              fontSize: '64px',
               color: '#ff4d4f',
               marginBottom: '16px'
-            }} 
+            }}
           />
           <Title level={2} type="danger">
             No se pudo detectar la empresa
@@ -47,24 +48,24 @@ const TenantErrorBoundary = ({ error, subdomain, onRetry }) => {
           <div>
             <Title level={4}>🔧 Opciones de Solución</Title>
             <Space wrap size="middle">
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<PlusOutlined />}
                 size="large"
                 onClick={() => window.open('/dashboard/saas', '_blank')}
               >
                 Crear Nueva Empresa
               </Button>
-              
-              <Button 
+
+              <Button
                 icon={<SettingOutlined />}
                 size="large"
                 onClick={() => window.open('/dashboard', '_blank')}
               >
                 Ir al Panel SaaS
               </Button>
-              
-              <Button 
+
+              <Button
                 icon={<HomeOutlined />}
                 size="large"
                 onClick={() => window.location.reload()}

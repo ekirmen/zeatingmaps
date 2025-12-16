@@ -3,7 +3,7 @@ import { message } from '../../../../utils/antdComponents';
 import { useSeatLockStore } from '../../../../components/seatLockStore';
 import { fetchAbonoAvailableSeats } from '../../../../services/supabaseServices';
 
-export 
+const useSeatManagement = ({ selectedEvent, abonoMode, blockMode, setBlockMode }) => {
   const [tempBlocks, setTempBlocks] = useState([]);
   const [abonoSeats, setAbonoSeats] = useState([]);
   const [animatingSeats, setAnimatingSeats] = useState([]);
@@ -53,7 +53,7 @@ export
   useEffect(() => {
     const cleanupTemp = () => {
       tempBlocks.forEach(id => {
-        unlockSeatRef.current(id).catch(() => {});
+        unlockSeatRef.current(id).catch(() => { });
       });
     };
     window.addEventListener('beforeunload', cleanupTemp);
@@ -87,3 +87,4 @@ export
   };
 };
 
+export default useSeatManagement;

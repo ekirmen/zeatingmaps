@@ -6,7 +6,13 @@ import logger from '../utils/logger';
 const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
 
 // 🖼️ NUEVA FUNCIONALIDAD: Conectar con tablas galeria e imagenes
-export 
+export const fetchImagesFromDatabase = async (tenantId = null) => {
+  try {
+    // Cargar desde tabla galeria
+    let galeriaQuery = supabase
+      .from('galeria')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (tenantId) {
       galeriaQuery = galeriaQuery.eq('tenant_id', tenantId);
@@ -50,7 +56,7 @@ export
 };
 
 // 🖼️ FUNCIONALIDAD ORIGINAL (mantener compatibilidad)
-export 
+export const fetchGalleryImages = async (authHeader) => {
   const res = await fetch(`${API_BASE_URL_WITH_API}/galeria`, {
     headers: { Authorization: authHeader }
   });
@@ -58,10 +64,11 @@ export
   return res.json();
 };
 
-export 
+export const uploadGalleryImage = async (file, categoria, token) => {
+  const formData = new FormData();
   formData.append('image', file);
   formData.append('categoria', categoria);
-  
+
   const authHeader = token && !token.startsWith('Bearer ')
     ? `Bearer ${token}`
     : token;
@@ -74,7 +81,7 @@ export
   return res.json();
 };
 
-export 
+export const deleteGalleryImage = async (filename, authHeader) => {
   const res = await fetch(`${API_BASE_URL_WITH_API}/galeria/${filename}`, {
     method: 'DELETE',
     headers: { Authorization: authHeader }

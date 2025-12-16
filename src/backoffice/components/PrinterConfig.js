@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Select, 
-  Input, 
-  Switch, 
-  Alert, 
-  Space, 
+import {
+  Card,
+  Button,
+  Select,
+  Input,
+  Switch,
+  Alert,
+  Space,
   Typography,
   Row,
   Col,
@@ -15,15 +15,15 @@ import {
   message,
   Tag
 } from '../../utils/antdComponents';
-import { 
+import {
   PrinterOutlined,
   SettingOutlined,
   ExperimentOutlined,
   SaveOutlined
 } from '@ant-design/icons';
-import { 
-  bocaPrinterService, 
-  saveFormatConfig, 
+import {
+  bocaPrinterService,
+  saveFormatConfig,
   getFormatConfig,
   DEFAULT_FORMAT_CONFIG,
   applyBocaTemplate
@@ -58,7 +58,9 @@ const PrinterConfig = () => {
     loadFormatConfig();
   }, []);
 
-  
+  const loadFormatConfig = async () => {
+    try {
+      const config = await getFormatConfig();
       setFormatConfig(config);
     } catch (error) {
       console.error('Error loading format config:', error);
@@ -70,7 +72,7 @@ const PrinterConfig = () => {
       setDetecting(true);
       const detectedPrinters = await bocaPrinterService.detectPrinters();
       setPrinters(detectedPrinters);
-      
+
       if (detectedPrinters.length > 0) {
         message.success(`${detectedPrinters.length} impresora(s) detectada(s)`);
       } else {
@@ -88,12 +90,12 @@ const PrinterConfig = () => {
     try {
       setLoading(true);
       const success = await bocaPrinterService.connectToPrinter(device);
-      
+
       if (success) {
         setSelectedPrinter(device);
         setIsConnected(true);
         message.success('Impresora conectada exitosamente');
-        
+
         // Obtener estado de la impresora
         const status = await bocaPrinterService.getPrinterStatus();
         setPrinterStatus(status);
@@ -120,7 +122,7 @@ const PrinterConfig = () => {
     try {
       setLoading(true);
       const success = await bocaPrinterService.testConnection();
-      
+
       if (success) {
         message.success('Conexi³n de impresora exitosa');
       } else {
@@ -137,7 +139,7 @@ const PrinterConfig = () => {
   const printTestTicket = async () => {
     try {
       setLoading(true);
-      
+
       const testTicketData = {
         eventName: 'EVENTO DE PRUEBA',
         eventDate: new Date().toLocaleDateString(),
@@ -150,7 +152,7 @@ const PrinterConfig = () => {
       };
 
       const success = await bocaPrinterService.printTicket(testTicketData, formatConfig);
-      
+
       if (success) {
         message.success('Ticket de prueba impreso exitosamente');
       } else {
@@ -207,8 +209,8 @@ const PrinterConfig = () => {
       {/* Detecci³n de Impresoras */}
       <Card title="Detecci³n de Impresoras" className="mb-4">
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             onClick={detectPrinters}
             loading={detecting}
             icon={<SettingOutlined />}
@@ -223,8 +225,8 @@ const PrinterConfig = () => {
                 {printers.map((printer, index) => (
                   <div key={index} className="mb-2 p-2 border rounded">
                     <Text>{printer.productName || `Impresora ${index + 1}`}</Text>
-                    <Button 
-                      size="small" 
+                    <Button
+                      size="small"
                       onClick={() => connectToPrinter(printer)}
                       className="ml-2"
                     >
@@ -257,7 +259,7 @@ const PrinterConfig = () => {
         <Card title="Estado de la Impresora" className="mb-4">
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Button 
+              <Button
                 onClick={testPrinter}
                 loading={loading}
                 icon={<ExperimentOutlined />}
@@ -266,7 +268,7 @@ const PrinterConfig = () => {
               </Button>
             </Col>
             <Col span={12}>
-              <Button 
+              <Button
                 onClick={printTestTicket}
                 loading={loading}
                 icon={<PrinterOutlined />}
@@ -304,11 +306,11 @@ const PrinterConfig = () => {
           showIcon
           className="mb-4"
         />
-        
+
         <Row gutter={[16, 16]}>
           <Col span={8}>
-            <Card 
-              size="small" 
+            <Card
+              size="small"
               hoverable
               className="template-card"
               onClick={() => applyTemplate('default')}
@@ -322,8 +324,8 @@ const PrinterConfig = () => {
             </Card>
           </Col>
           <Col span={8}>
-            <Card 
-              size="small" 
+            <Card
+              size="small"
               hoverable
               className="template-card"
               onClick={() => applyTemplate('small')}
@@ -337,8 +339,8 @@ const PrinterConfig = () => {
             </Card>
           </Col>
           <Col span={8}>
-            <Card 
-              size="small" 
+            <Card
+              size="small"
               hoverable
               className="template-card"
               onClick={() => applyTemplate('premium')}
@@ -355,8 +357,8 @@ const PrinterConfig = () => {
       </Card>
 
       {/* Vista Previa */}
-      <TemplatePreview 
-        template={formatConfig} 
+      <TemplatePreview
+        template={formatConfig}
         ticketData={previewData}
       />
 
@@ -486,8 +488,8 @@ const PrinterConfig = () => {
         </Form>
 
         <div className="mt-4">
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             onClick={saveConfig}
             loading={loading}
             icon={<SaveOutlined />}
@@ -507,5 +509,5 @@ const PrinterConfig = () => {
   );
 };
 
-export default PrinterConfig; 
+export default PrinterConfig;
 

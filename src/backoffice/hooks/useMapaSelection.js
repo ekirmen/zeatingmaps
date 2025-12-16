@@ -1,13 +1,14 @@
 import { useEffect, useCallback, useRef } from 'react';
 
-export 
+const useMapaSelection = ({ elements, selectedIds, setSelectedIds, selectedElement, setSelectedElement, selectionRect, setSelectionRect, deleteSelectedElements }) => {
+  const elementsRef = useRef([]);
 
   useEffect(() => {
     elementsRef.current = elements;
   }, [elements]);
 
   // Función para seleccionar un elemento
-
+  const selectElement = (element) => {
     if (!element) return;
 
     setSelectedElement(element);
@@ -154,3 +155,5 @@ export
     handleMouseUp,
   };
 };
+
+export default useMapaSelection;

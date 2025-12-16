@@ -63,8 +63,8 @@ const SiteMap = ({ onClose }) => {
 
   const renderTreeItem = (item, level = 0) => {
     const paddingLeft = level * 20;
-    
 
+    if (item.type === 'folder') {
       return (
         <div key={item.name} style={{ paddingLeft }}>
           <div className="flex items-center gap-2 py-1 hover:bg-gray-100 rounded">
@@ -107,18 +107,18 @@ const SiteMap = ({ onClose }) => {
             </button>
           </div>
         </div>
-        
+
         <div className="p-6 overflow-y-auto h-full">
           <div className="mb-4">
             <p className="text-gray-600 mb-4">
               Esta es la estructura completa del sitio web. Aquí puedes ver todas las páginas organizadas por categorías.
             </p>
           </div>
-          
+
           <div className="space-y-2">
             {siteMapData.map(item => renderTreeItem(item))}
           </div>
-          
+
           <div className="mt-8 p-4 bg-blue-50 rounded-lg">
             <h4 className="font-medium text-blue-800 mb-2">Estadísticas del Sitio</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">

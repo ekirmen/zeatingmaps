@@ -1,14 +1,14 @@
 import React from 'react';
 
-const ZonesTable = ({ 
-  detallesPlantilla, 
-  zoneQuantities, 
-  handleQuantityChange, 
-  handleAddZoneToCart, 
+const ZonesTable = ({
+  detallesPlantilla,
+  zoneQuantities,
+  handleQuantityChange,
+  handleAddZoneToCart,
   handleSelectZoneForMap,
-  getPrecioConDescuento 
+  getPrecioConDescuento
 }) => {
-
+  if (!detallesPlantilla || detallesPlantilla.length === 0) {
     return (
       <div className="text-center py-8">
         <div className="text-gray-400 text-6xl mb-4">📋</div>

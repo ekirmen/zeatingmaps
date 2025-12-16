@@ -3,7 +3,7 @@ import React from 'react';
 
 function EventMapDisplay({ mapa, toggleSillaEnCarrito }) {
   // Add defensive checks before trying to access nested properties or map over arrays
-
+  if (!mapa || !mapa.contenido) {
     // You can render a loading spinner, a placeholder, or just return null
     return (
       <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg shadow-inner text-gray-600">
@@ -13,8 +13,8 @@ function EventMapDisplay({ mapa, toggleSillaEnCarrito }) {
   }
 
   // Handle new structure where contenido is an object with zonas property
-  const elementos = Array.isArray(mapa.contenido) 
-    ? mapa.contenido 
+  const elementos = Array.isArray(mapa.contenido)
+    ? mapa.contenido
     : mapa.contenido.zonas || [];
 
   return (

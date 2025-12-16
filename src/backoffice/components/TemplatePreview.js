@@ -6,6 +6,7 @@ const { Title } = Typography;
 
 const TemplatePreview = ({ template, ticketData }) => {
 
+  const generatePreviewText = () => {
     if (!template || !ticketData) return '';
 
     let preview = '';
@@ -49,7 +50,7 @@ const TemplatePreview = ({ template, ticketData }) => {
 
   return (
     <div className="template-preview">
-      <Card 
+      <Card
         title={
           <Space>
             <PrinterOutlined />
@@ -114,5 +115,5 @@ const TemplatePreview = ({ template, ticketData }) => {
   );
 };
 
-export default TemplatePreview; 
+export default TemplatePreview;
 

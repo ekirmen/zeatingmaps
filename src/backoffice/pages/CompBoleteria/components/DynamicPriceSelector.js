@@ -20,8 +20,7 @@ const DynamicPriceSelector = ({
 
   const loadPriceOptions = useCallback(async () => {
 
-      return;
-    }
+
 
     setLoading(true);
     try {
@@ -258,9 +257,8 @@ const DynamicPriceSelector = ({
                 {options.map((option) => (
                   <div
                     key={option.id}
-                    className={`px-3 py-2 text-xs flex items-center justify-between cursor-pointer hover:bg-purple-50 ${
-                      selectedPriceId === option.id ? 'bg-purple-50 ring-1 ring-purple-300' : ''
-                    }`}
+                    className={`px-3 py-2 text-xs flex items-center justify-between cursor-pointer hover:bg-purple-50 ${selectedPriceId === option.id ? 'bg-purple-50 ring-1 ring-purple-300' : ''
+                      }`}
                     onClick={() => handlePriceSelect(option)}
                   >
                     <div className="flex items-center gap-2">

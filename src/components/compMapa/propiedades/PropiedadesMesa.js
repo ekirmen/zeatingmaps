@@ -10,7 +10,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
   const [width, setWidth] = useState(mesa?.width || 120);
   const [height, setHeight] = useState(mesa?.height || 80);
   const [radius, setRadius] = useState(mesa?.radius || 60);
-  
+
   // Configuraci³n de sillas
   const [sillasConfig, setSillasConfig] = useState({
     rect: { top: 0, right: 0, bottom: 0, left: 0 },
@@ -27,7 +27,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
       setWidth(mesa.width || 120);
       setHeight(mesa.height || 80);
       setRadius(mesa.radius || 60);
-      
+
       // Cargar configuraci³n existente de sillas
       if (mesa.sillasConfig) {
         setSillasConfig(mesa.sillasConfig);
@@ -81,7 +81,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
 
   const getTotalSillas = () => {
     switch (mesa?.shape || mesa?.type) {
-
+      case 'rect':
         return Object.values(sillasConfig.rect).reduce((sum, val) => sum + (val || 0), 0);
       case 'circle':
         return sillasConfig.circle.cantidad || 0;
@@ -385,7 +385,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
         {/* Informaci³n adicional */}
         <div className="bg-gray-50 p-2 rounded text-xs">
           <Text type="secondary">
-            ðŸ’¡ <strong>ID:</strong> {mesa._id}<br/>
+            ðŸ’¡ <strong>ID:</strong> {mesa._id}<br />
             ðŸ’¡ <strong>Posici³n:</strong> X: {Math.round(mesa.posicion?.x || 0)}, Y: {Math.round(mesa.posicion?.y || 0)}
           </Text>
         </div>

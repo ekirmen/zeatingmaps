@@ -7,7 +7,7 @@ const BackgroundImage = ({ config, onLoadProgress }) => {
     let url = config.imageUrl || config.url || config.src || config.image?.url || config.image?.publicUrl || config.imageData || config.image?.data || '';
     if (url && !/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
       url = resolveImageUrl(url, 'productos') || url;
-
+    }
     return url;
   }, [config]);
 

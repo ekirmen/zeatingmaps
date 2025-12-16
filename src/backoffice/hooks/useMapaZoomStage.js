@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-export 
+const useMapaZoomStage = ({ zoom, setZoom }) => {
+  const stageRef = useRef(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -11,6 +12,7 @@ export
       });
     };
     updateSize();
+    window.addEventListener('resize', updateSize);
 
     return () => window.removeEventListener('resize', updateSize);
   }, []);
@@ -25,7 +27,7 @@ export
     const scaleBy = 1.05;
 
     const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
-    
+
     // Limitar el zoom entre 0.1 y 5
     const clampedScale = Math.max(0.1, Math.min(5, newScale));
     setZoom(clampedScale);
@@ -96,3 +98,5 @@ export
     centerView,
   };
 };
+
+export default useMapaZoomStage;

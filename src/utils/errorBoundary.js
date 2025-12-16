@@ -74,9 +74,7 @@ export const checkInitializationIssues = () => {
   }
 
 
-    return issues;
-  }
-  return [];
+  return issues;
 };
 
 // Función para limpiar problemas de inicialización

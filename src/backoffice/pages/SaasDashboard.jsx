@@ -427,7 +427,7 @@ const SaasDashboard = () => {
 
 
   const getStatusColor = (status) => {
-
+    switch (status) {
       case 'active': return 'green';
       case 'inactive': return 'red';
       case 'suspended': return 'orange';
@@ -496,9 +496,9 @@ const SaasDashboard = () => {
       render: (status) => (
         <Tag color={getStatusColor(status)}>
           {status === 'active' ? 'Activo' :
-           status === 'inactive' ? 'Inactivo' :
-           status === 'suspended' ? 'Suspendido' :
-           status === 'pending' ? 'Pendiente' : status}
+            status === 'inactive' ? 'Inactivo' :
+              status === 'suspended' ? 'Suspendido' :
+                status === 'pending' ? 'Pendiente' : status}
         </Tag>
       ),
     },
@@ -777,7 +777,7 @@ const SaasDashboard = () => {
             <Search
               placeholder="Buscar empresas..."
               value={filters.searchTerm}
-              onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
               onSearch={() => loadTenants()}
               allowClear
             />
@@ -786,7 +786,7 @@ const SaasDashboard = () => {
             <Select
               placeholder="Estado"
               value={filters.status}
-              onChange={(value) => setFilters({...filters, status: value})}
+              onChange={(value) => setFilters({ ...filters, status: value })}
               style={{ width: '100%' }}
             >
               <Option value="all">Todos los estados</Option>
@@ -800,7 +800,7 @@ const SaasDashboard = () => {
             <Select
               placeholder="Plan"
               value={filters.plan}
-              onChange={(value) => setFilters({...filters, plan: value})}
+              onChange={(value) => setFilters({ ...filters, plan: value })}
               style={{ width: '100%' }}
             >
               <Option value="all">Todos los planes</Option>
@@ -823,7 +823,7 @@ const SaasDashboard = () => {
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => {
-                  setFilters({status: 'all', plan: 'all', dateRange: null, searchTerm: ''});
+                  setFilters({ status: 'all', plan: 'all', dateRange: null, searchTerm: '' });
                   loadTenants();
                 }}
               >
@@ -1014,9 +1014,9 @@ const SaasDashboard = () => {
               <Descriptions.Item label="Estado">
                 <Tag color={getStatusColor(selectedTenant.status)}>
                   {selectedTenant.status === 'active' ? 'Activo' :
-                   selectedTenant.status === 'inactive' ? 'Inactivo' :
-                   selectedTenant.status === 'suspended' ? 'Suspendido' :
-                   selectedTenant.status === 'pending' ? 'Pendiente' : selectedTenant.status}
+                    selectedTenant.status === 'inactive' ? 'Inactivo' :
+                      selectedTenant.status === 'suspended' ? 'Suspendido' :
+                        selectedTenant.status === 'pending' ? 'Pendiente' : selectedTenant.status}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Fecha de Creaci³n">
@@ -1210,6 +1210,7 @@ const SaasDashboard = () => {
 
 // Componentes de soporte
 
+const ClientEventsViewer = ({ tenant, onAction }) => {
   const [loading, setLoading] = useState(true);
 
   const loadEvents = useCallback(async () => {
@@ -1274,6 +1275,7 @@ const SaasDashboard = () => {
 };
 
 
+const ClientUsersViewer = ({ tenant, onAction }) => {
   const [loading, setLoading] = useState(true);
 
   const loadUsers = useCallback(async () => {
@@ -1330,6 +1332,7 @@ const SaasDashboard = () => {
 };
 
 
+const ClientProductsViewer = ({ tenant, onAction }) => {
   const [loading, setLoading] = useState(true);
 
   const loadProducts = useCallback(async () => {
@@ -1386,10 +1389,11 @@ const SaasDashboard = () => {
 };
 
 
-};
+
 
 // Componente para ver datos del cliente
 
+const ClientDataViewer = ({ tenant, dataType, onAction }) => {
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -1447,7 +1451,7 @@ const SaasDashboard = () => {
     loadData();
   }, [loadData]);
 
-    const renderDataItem = (item) => {
+  const renderDataItem = (item) => {
     switch (dataType) {
       case 'events':
         return (

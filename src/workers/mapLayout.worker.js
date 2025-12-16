@@ -4,7 +4,7 @@ self.addEventListener('message', (e) => {
   const { mapElements = [], stageSize = {} } = e.data || {};
 
   try {
-
+    const processed = mapElements.map(elemento => {
       if (!elemento) return elemento;
 
       if (elemento.type === 'mesa' && Array.isArray(elemento.sillas)) {

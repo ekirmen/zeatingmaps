@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Image, Typography, Space, InputNumber, Input, Select, Tag, Badge, Tooltip, Alert } from '../../../../utils/antdComponents';
-import { 
-  ShoppingCartOutlined, 
-  PlusOutlined, 
-  MinusOutlined, 
-  SearchOutlined, 
+import {
+  ShoppingCartOutlined,
+  PlusOutlined,
+  MinusOutlined,
+  SearchOutlined,
   FilterOutlined,
   FireOutlined
 } from '@ant-design/icons';
@@ -27,9 +27,9 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
   const [showFilters, setShowFilters] = useState(false);
 
   // Fetch productos from Supabase
-
+  const fetchProductos = useCallback(async () => {
     if (!eventoId) return;
-    
+
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -46,7 +46,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
 
       setProductos(data || []);
       setFilteredProductos(data || []);
-      
+
       // Extract unique categories
       const uniqueCategories = [...new Set(data?.map(p => p.categoria).filter(Boolean) || [])];
       setCategories(uniqueCategories);
@@ -140,7 +140,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
     <div className="productos-widget">
       <div className="mb-4">
         <Title level={4}>Productos del Evento</Title>
-        
+
         {/* Search and Filters */}
         <Space direction="vertical" className="w-full">
           <Search
@@ -150,7 +150,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
             prefix={<SearchOutlined />}
             allowClear
           />
-          
+
           <Button
             type="link"
             icon={<FilterOutlined />}
@@ -158,7 +158,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
           >
             {showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
           </Button>
-          
+
           {showFilters && (
             <Space wrap>
               <Select
@@ -172,7 +172,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
                   <Option key={cat} value={cat}>{cat}</Option>
                 ))}
               </Select>
-              
+
               <Select
                 placeholder="Precio"
                 value={priceFilter}
@@ -185,7 +185,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
                 <Option value="500-1000">500-1000 VES</Option>
                 <Option value="1000">+1000 VES</Option>
               </Select>
-              
+
               <Select
                 placeholder="Stock"
                 value={stockFilter}
@@ -217,7 +217,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
           {filteredProductos.map(producto => {
             const stockStatus = getStockStatus(producto.stock);
             const quantity = quantities[producto.id] || 0;
-            
+
             return (
               <Card
                 key={producto.id}

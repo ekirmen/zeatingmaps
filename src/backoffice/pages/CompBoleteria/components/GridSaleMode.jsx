@@ -25,11 +25,7 @@ const GridSaleMode = ({
 
   // Cargar zonas y precios del evento
   useEffect(() => {
-
-      return;
-    }
-
-    // En modo Grid, no necesitamos funci³n espec­fica
+    // En modo Grid, no necesitamos función específica
     console.log('œ… [GridSaleMode] Loading zonas for evento (modo grid)');
     loadZonasAndPrecios();
   }, [evento?.id]);
@@ -154,7 +150,18 @@ const GridSaleMode = ({
   };
 
   // Columnas para la tabla de zonas
-  
+  const columns = [
+    {
+      title: 'Zona',
+      dataIndex: 'nombre',
+      key: 'nombre',
+    },
+    {
+      title: 'Precio',
+      dataIndex: 'id',
+      key: 'precio',
+      render: (zonaId) => {
+        const precio = precios[zonaId];
         return precio ? (
           <Text className="text-lg font-bold text-green-600">
             ${precio.precio.toLocaleString()}

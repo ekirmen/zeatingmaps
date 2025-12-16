@@ -2,8 +2,11 @@ const normalizeAddressField = (value) => value ?? '';
 
 const getAddressValue = (data = {}, keys = []) => {
   for (const key of keys) {
-
-      return data[key];
+    try {
+      const v = data[key];
+      if (v !== undefined && v !== null && v !== '') return v;
+    } catch (e) {
+      // ignore
     }
   }
   return '';

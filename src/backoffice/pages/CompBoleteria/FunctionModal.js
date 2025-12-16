@@ -9,6 +9,7 @@ const FunctionModal = ({
   onFunctionSelect,
 }) => {
   // Funci³n para limpiar/normalizar la funci³n antes de enviarla
+  const normalizeFunction = (funcion) => {
 
     return {
       ...funcion,
@@ -66,15 +67,15 @@ const FunctionModal = ({
         if (fechaCelebracion < now) {
           return <Tag color="red">Finalizada</Tag>;
         }
-        
+
         if (inicioVenta && now < inicioVenta) {
           return <Tag color="orange">Pr³ximamente</Tag>;
         }
-        
+
         if (finVenta && now > finVenta) {
           return <Tag color="red">Venta Cerrada</Tag>;
         }
-        
+
         return <Tag color="green">En Venta</Tag>;
       },
       width: 100,

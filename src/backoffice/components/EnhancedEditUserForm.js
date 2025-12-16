@@ -81,6 +81,7 @@ const normalizePermissions = (permisos) => {
       if (Object.prototype.hasOwnProperty.call(basePermissions, permission)) {
         basePermissions[permission] = true;
       }
+    });
 
     return basePermissions;
   }
@@ -165,9 +166,11 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
     loadVenues();
   }, [user]);
 
-
-
-  
+  const loadVenues = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('recintos')
+        .select('*');
 
       if (error) throw error;
       setVenues(data || []);
@@ -217,7 +220,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
   const handleVenueChange = (venueId, checked) => {
     setFormData(prev => ({
       ...prev,
-      recintos: checked 
+      recintos: checked
         ? [...prev.recintos, venueId]
         : prev.recintos.filter(id => id !== venueId)
     }));
@@ -460,7 +463,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
             </label>
           </div>
         </div>
-        
+
         {!hasSelectedChannels && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <div className="flex">
@@ -482,7 +485,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
       {/* Permissions Section */}
       <div className="border-t pt-6">
         <h4 className="text-lg font-medium text-gray-900 mb-4">Permisos</h4>
-        
+
         <div className="mb-4">
           <div className="flex items-center">
             <input
@@ -710,7 +713,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
       {/* Payment Methods Section */}
       <div className="border-t pt-6">
         <h4 className="text-lg font-medium text-gray-900 mb-4">Formas de pago</h4>
-        
+
         <div className="mb-4">
           <div className="flex items-center">
             <input
@@ -753,7 +756,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
       {/* Venues Section */}
       <div className="border-t pt-6">
         <h4 className="text-lg font-medium text-gray-900 mb-4">Recintos usuario</h4>
-        
+
         <div className="mb-4">
           <div className="flex items-center">
             <input

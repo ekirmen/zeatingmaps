@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Typography, Space, Tag, Select, Input, Modal, Form, message, Row, Col, Statistic, Drawer, Tabs, Badge, Avatar, Tooltip } from '../../utils/antdComponents';
-import { 
-  UserOutlined, 
-  TeamOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  UserOutlined,
+  TeamOutlined,
+  EditOutlined,
+  DeleteOutlined,
   PlusOutlined,
   SearchOutlined,
   FilterOutlined,
@@ -46,10 +46,10 @@ const UserManagement = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      
+
       // Primero obtener todos los usuarios de auth.users
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
+
       if (authError) throw authError;
 
       // Luego obtener la informaci³n de tenant para cada usuario
@@ -96,13 +96,13 @@ const UserManagement = () => {
       }
 
       if (filters.status !== 'all') {
-        filteredUsers = filteredUsers.filter(user => 
+        filteredUsers = filteredUsers.filter(user =>
           filters.status === 'active' ? user.is_active : !user.is_active
         );
       }
 
       if (filters.search) {
-        filteredUsers = filteredUsers.filter(user => 
+        filteredUsers = filteredUsers.filter(user =>
           user.users?.email?.toLowerCase().includes(filters.search.toLowerCase()) ||
           user.users?.user_metadata?.full_name?.toLowerCase().includes(filters.search.toLowerCase()) ||
           user.tenants?.name?.toLowerCase().includes(filters.search.toLowerCase())
@@ -110,8 +110,8 @@ const UserManagement = () => {
       }
 
       if (filters.role !== 'all') {
-        filteredUsers = filteredUsers.filter(user => 
-          user.tenant_roles?.some(tr => 
+        filteredUsers = filteredUsers.filter(user =>
+          user.tenant_roles?.some(tr =>
             tr.is_active && tr.custom_roles?.id === filters.role
           )
         );
@@ -126,8 +126,12 @@ const UserManagement = () => {
     }
   };
 
-  
-
+  const loadTenants = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('id, name, email')
+        .order('name');
       if (error) throw error;
       setTenants(data || []);
     } catch (error) {
@@ -135,8 +139,13 @@ const UserManagement = () => {
     }
   };
 
-  
-
+  const loadRoles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('custom_roles')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
       if (error) throw error;
       setRoles(data || []);
     } catch (error) {
@@ -144,8 +153,12 @@ const UserManagement = () => {
     }
   };
 
-  
-
+  const loadStats = async () => {
+    try {
+      // Obtener usuarios directamente de profiles para conteo r¡pido
+      const { data, error } = await supabase
+        .from('profiles') // O user_tenant_info dependiento de tu esquema
+        .select('*');
       if (error) throw error;
 
       const statsData = {
@@ -175,7 +188,7 @@ const UserManagement = () => {
   const handleSaveUser = async () => {
     try {
       const values = await form.validateFields();
-      
+
       // Actualizar informaci³n del usuario
       const { error: userError } = await supabase
         .from('user_tenant_info')
@@ -291,8 +304,8 @@ const UserManagement = () => {
       render: (_, record) => (
         <Space wrap>
           {record.tenant_roles?.filter(tr => tr.is_active).map(role => (
-            <Tag 
-              key={role.id} 
+            <Tag
+              key={role.id}
               color={getRoleColor(role.custom_roles?.name)}
               closable
               onClose={() => handleRemoveRole(record.user_id, record.tenant_id, role.custom_roles?.id)}

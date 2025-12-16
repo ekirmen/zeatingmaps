@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 
-export 
+export const useGridSale = () => {
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Validar venta antes de procesar
@@ -45,12 +46,12 @@ export
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          items, 
-          evento, 
-          funcion, 
-          cliente, 
-          paymentData 
+        body: JSON.stringify({
+          items,
+          evento,
+          funcion,
+          cliente,
+          paymentData
         })
       });
 
@@ -75,13 +76,13 @@ export
   const validateAndProcessSale = useCallback(async (items, evento, funcion, cliente, paymentData) => {
     try {
       const validation = await validateSale(items, evento, funcion);
-      
+
       if (!validation.summary.valid_items) {
         throw new Error('Algunos items no son válidos');
       }
 
       const result = await processSale(items, evento, funcion, cliente, paymentData);
-      
+
       return { validation, result };
 
     } catch (err) {

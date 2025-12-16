@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { verifyTenantAccess } from '../store/services/authService';
 
-export 
+export const useTenantAccess = () => {
+  const { user } = useAuth();
   const [accessStatus, setAccessStatus] = useState({
     hasAccess: false,
     loading: true,
@@ -17,6 +18,7 @@ export
         loading: false,
         reason: 'Usuario no autenticado',
         profile: null
+      });
 
       return;
     }

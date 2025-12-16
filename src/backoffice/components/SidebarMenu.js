@@ -35,6 +35,7 @@ const SidebarMenu = ({ collapsed }) => {
   const [temporaryExpandedTimeout, setTemporaryExpandedTimeout] = useState(null);
 
 
+  const isActive = (path) => {
     return location.pathname.includes(path);
   };
 
@@ -49,15 +50,15 @@ const SidebarMenu = ({ collapsed }) => {
       if (temporaryExpandedTimeout) {
         clearTimeout(temporaryExpandedTimeout);
       }
-      
+
       setTemporaryExpanded(true);
-      
+
       // Crear nuevo timeout
       const newTimeout = setTimeout(() => {
         setTemporaryExpanded(false);
         setTemporaryExpandedTimeout(null);
       }, 5000); // Aumentado a 5 segundos para más estabilidad
-      
+
       setTemporaryExpandedTimeout(newTimeout);
     }
   };
@@ -69,13 +70,13 @@ const SidebarMenu = ({ collapsed }) => {
       if (temporaryExpandedTimeout) {
         clearTimeout(temporaryExpandedTimeout);
       }
-      
+
       // Crear nuevo timeout
       const newTimeout = setTimeout(() => {
         setTemporaryExpanded(false);
         setTemporaryExpandedTimeout(null);
       }, 5000);
-      
+
       setTemporaryExpandedTimeout(newTimeout);
     }
   };
@@ -215,14 +216,14 @@ const SidebarMenu = ({ collapsed }) => {
       icon: faGlobe,
       type: 'submenu',
       submenuId: 'saas',
-        items: [
-          { title: 'Dashboard SaaS', path: '/dashboard/saas', icon: faChartBar },
-          { title: 'Facturación', path: '/dashboard/saas/billing', icon: faCreditCard },
-          { title: 'Pasarelas de Pago', path: '/dashboard/saas/payment-gateways', icon: faCreditCard },
-          { title: 'Roles y Permisos', path: '/dashboard/saas/roles', icon: faUsers },
-          { title: 'API Explorer', path: '/dashboard/saas/api-explorer', icon: faCode },
-          { title: 'Configuración', path: '/dashboard/saas/settings', icon: faCog }
-        ]
+      items: [
+        { title: 'Dashboard SaaS', path: '/dashboard/saas', icon: faChartBar },
+        { title: 'Facturación', path: '/dashboard/saas/billing', icon: faCreditCard },
+        { title: 'Pasarelas de Pago', path: '/dashboard/saas/payment-gateways', icon: faCreditCard },
+        { title: 'Roles y Permisos', path: '/dashboard/saas/roles', icon: faUsers },
+        { title: 'API Explorer', path: '/dashboard/saas/api-explorer', icon: faCode },
+        { title: 'Configuración', path: '/dashboard/saas/settings', icon: faCog }
+      ]
     }
   ];
 
@@ -232,9 +233,8 @@ const SidebarMenu = ({ collapsed }) => {
         <Link
           key={item.title}
           to={item.path}
-          className={`flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
-            isActive(item.path) ? 'bg-blue-100 text-blue-600 border-r-2 border-blue-600' : ''
-          }`}
+          className={`flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${isActive(item.path) ? 'bg-blue-100 text-blue-600 border-r-2 border-blue-600' : ''
+            }`}
           onClick={() => {
             handleTemporaryExpansion();
           }}
@@ -253,31 +253,29 @@ const SidebarMenu = ({ collapsed }) => {
               handleTemporaryExpansion();
               toggleSubmenu(item.submenuId);
             }}
-            className={`w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
-              activeSubmenu === item.submenuId ? 'bg-blue-100 text-blue-600' : ''
-            }`}
+            className={`w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${activeSubmenu === item.submenuId ? 'bg-blue-100 text-blue-600' : ''
+              }`}
           >
             <div className="flex items-center">
               <FontAwesomeIcon icon={item.icon} className="w-5 h-5 mr-3" />
               {(!collapsed || temporaryExpanded) && <span>{item.title}</span>}
             </div>
             {(!collapsed || temporaryExpanded) && (
-              <FontAwesomeIcon 
-                icon={activeSubmenu === item.submenuId ? 'chevron-down' : 'chevron-right'} 
+              <FontAwesomeIcon
+                icon={activeSubmenu === item.submenuId ? 'chevron-down' : 'chevron-right'}
                 className="w-4 h-4 transition-transform"
               />
             )}
           </button>
-          
+
           {activeSubmenu === item.submenuId && (!collapsed || temporaryExpanded) && (
             <div className="bg-gray-50">
               {item.items.map((subItem) => (
                 <Link
                   key={subItem.title}
                   to={subItem.path}
-                  className={`flex items-center px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
-                    isActive(subItem.path) ? 'bg-blue-100 text-blue-600' : ''
-                  }`}
+                  className={`flex items-center px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors ${isActive(subItem.path) ? 'bg-blue-100 text-blue-600' : ''
+                    }`}
                   onClick={() => {
                     handleTemporaryExpansion();
                   }}
@@ -299,7 +297,7 @@ const SidebarMenu = ({ collapsed }) => {
   const isBoleteriaActive = isActive('/dashboard/boleteria');
 
   return (
-    <div 
+    <div
       className={`bg-white shadow-lg ${(collapsed && !temporaryExpanded) ? 'w-16' : 'w-64'} transition-all duration-300`}
       onMouseEnter={keepExpanded}
       onMouseMove={keepExpanded}

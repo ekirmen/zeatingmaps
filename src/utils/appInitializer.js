@@ -4,11 +4,16 @@
  */
 
 // Función para esperar a que el DOM esté listo
-
+export const waitForDOM = () => {
   return new Promise((resolve) => {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', resolve);
-    } else {
+    try {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', resolve);
+      } else {
+        resolve();
+      }
+    } catch (e) {
+      // If document is not available, resolve immediately
       resolve();
     }
   });

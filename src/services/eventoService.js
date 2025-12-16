@@ -10,13 +10,26 @@ const EVENT_FOLDER = rawEventFolder.replace(/^\/+|\/+$/g, '');
 
 
 // Obtener todos los eventos
-export 
+export const getAllEventos = async () => {
+  const { data, error } = await supabase
+    .from('eventos')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-
+  if (error) throw new Error(`Error fetching events: ${error.message}`);
   return data;
 };
 
-export 
+export const getEventoById = async (id) => {
+  const { data, error } = await supabase
+    .from('eventos')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw new Error(`Error fetching event: ${error.message}`);
+  return data;
+};
 
 // Eliminar evento
 export const deleteEvento = async (id) => {
@@ -29,12 +42,18 @@ export const deleteEvento = async (id) => {
 };
 
 // Duplicar evento
-export 
+export const duplicateEvento = async (original) => {
+  // Primero obtenemos el evento original completo para asegurarnos de tener la data más reciente
+  const { data: fetchOriginal, error: fetchError } = await supabase
+    .from('eventos')
+    .select('*')
+    .eq('id', original.id)
+    .single();
 
   if (fetchError) throw new Error(`Error fetching original event: ${fetchError.message}`);
 
   // Remover campos que no se deben duplicar
-  const { id: _, created_at, updated_at, ...duplicatedData } = original;
+  const { id: _, created_at, updated_at, ...duplicatedData } = fetchOriginal;
 
   const { data: duplicated, error: insertError } = await supabase
     .from('eventos')
@@ -47,7 +66,9 @@ export
 };
 
 // Crear o actualizar evento (si tiene ID, lo actualiza)
-export 
+export const saveEvento = async (eventoData, files = {}) => {
+  const isExisting = !!eventoData.id;
+
   if (!isExisting) {
     // Generate an ID so uploaded images can go inside a folder named
     // after the event ID and so we can insert the record with this ID

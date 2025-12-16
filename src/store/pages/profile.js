@@ -128,6 +128,8 @@ const Profile = () => {
 
 
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Fecha no disponible';
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
@@ -466,20 +468,20 @@ const Profile = () => {
                           />
                         }
                         title={`Localizador ${purchase.locator}`}
-                      description={
-                        <Space direction="vertical" size="small">
-                          <div>
-                            <CalendarOutlined /> {formatDate(purchase.created_at)}
-                          </div>
-                          <div>
-                            <FileTextOutlined /> {purchase.seats?.length || 0} asientos
-                          </div>
-                          <div>
-                            <CreditCardOutlined /> {purchase.payment_method || 'M©todo de pago'}
-                          </div>
-                        </Space>
-                      }
-                    />
+                        description={
+                          <Space direction="vertical" size="small">
+                            <div>
+                              <CalendarOutlined /> {formatDate(purchase.created_at)}
+                            </div>
+                            <div>
+                              <FileTextOutlined /> {purchase.seats?.length || 0} asientos
+                            </div>
+                            <div>
+                              <CreditCardOutlined /> {purchase.payment_method || 'M©todo de pago'}
+                            </div>
+                          </Space>
+                        }
+                      />
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#52c41a' }}>
                           ${purchase.amount}

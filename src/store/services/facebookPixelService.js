@@ -1,15 +1,22 @@
 import { supabase } from '../../supabaseClient';
 
 // Facebook Pixel Events Constants
-export 
+// Facebook Pixel Events Constants
+export const FACEBOOK_EVENTS = {
+  VIEW_CONTENT: 'ViewContent',
+  ADD_TO_CART: 'AddToCart',
+  INITIATE_CHECKOUT: 'InitiateCheckout',
+  PURCHASE: 'Purchase',
+  LEAD: 'Lead',
+  SEARCH: 'Search'
+};
 
 /**
  * Get Facebook Pixel by event ID
 
  * @returns {Promise<object|null>} - Pixel data or null
  */
-export 
-
+export const getFacebookPixelByEvent = async (eventId) => {
   try {
     const { data, error } = await supabase
       .from('facebook_pixels')
@@ -20,7 +27,7 @@ export
 
     // Handle "no rows returned" error gracefully
     if (error && error.code !== 'PGRST116') throw error;
-    
+
     return data;
   } catch (error) {
     return null;
@@ -32,7 +39,13 @@ export
  * @param {object} pixelData - Pixel data
  * @returns {Promise<object>} - Created/updated pixel
  */
-export 
+export const saveFacebookPixel = async (pixelData) => {
+  try {
+    const { data, error } = await supabase
+      .from('facebook_pixels')
+      .upsert(pixelData)
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
@@ -46,7 +59,12 @@ export
  * @param {string} pixelId - Pixel ID
  * @returns {Promise<boolean>} - Success status
  */
-export 
+export const deleteFacebookPixel = async (pixelId) => {
+  try {
+    const { error } = await supabase
+      .from('facebook_pixels')
+      .delete()
+      .eq('id', pixelId);
 
     if (error) throw error;
     return true;
@@ -59,7 +77,12 @@ export
  * Get all Facebook Pixels with event data
  * @returns {Promise<Array>} - Array of pixels
  */
-export 
+export const getAllFacebookPixels = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('facebook_pixels')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];
@@ -74,13 +97,14 @@ export
  * @param {string} pageName - Page name to check
  * @returns {boolean} - Should track or not
  */
-export 
-  
+export const shouldTrackOnPage = (pixel, pageName) => {
+  if (!pixel || !pixel.tracking_pages) return false;
+
   try {
-    const trackingPages = typeof pixel.tracking_pages === 'string' 
-      ? JSON.parse(pixel.tracking_pages) 
+    const trackingPages = typeof pixel.tracking_pages === 'string'
+      ? JSON.parse(pixel.tracking_pages)
       : pixel.tracking_pages;
-    
+
     return !!trackingPages[pageName];
   } catch {
     return false;
@@ -91,7 +115,12 @@ export
  * Get active pixels for tracking
  * @returns {Promise<Array>} - Active pixels
  */
-export 
+export const getActiveFacebookPixels = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('facebook_pixels')
+      .select('*')
+      .eq('is_active', true);
 
     if (error) throw error;
     return data || [];
@@ -105,7 +134,8 @@ export
  * @param {string} pixelId - Facebook Pixel ID
  * @returns {boolean} - Is valid
  */
-export 
+export const isValidPixelId = (pixelId) => {
+  if (!pixelId) return false;
   // Facebook Pixel IDs are numeric, usually 15-16 digits
   return /^\d{15,16}$/.test(pixelId);
 };
@@ -115,10 +145,11 @@ export
  * @param {object} pixel - Pixel data
  * @returns {string} - Script HTML
  */
-export 
+export const getPixelScript = (pixel) => {
+  if (!pixel || !pixel.pixel_id) return '';
 
   const pixelId = pixel.pixel_id;
-  
+
   return `
 <!-- Facebook Pixel Code -->
 <script>
@@ -154,6 +185,8 @@ fbq('track', 'PageView');
  * @param {string} eventName - Event name
  * @param {object} parameters - Event parameters
  */
-export 
+export const trackCustomEvent = (eventName, parameters = {}) => {
+  if (typeof window.fbq === 'function') {
+    window.fbq('trackCustom', eventName, parameters);
   }
 };

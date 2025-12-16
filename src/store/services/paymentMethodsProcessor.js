@@ -9,7 +9,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 const generateUUID = () =>
   'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0;
-
+    const v = c === 'x' ? r : ((r & 0x3) | 0x8);
     return v.toString(16);
   });
 
@@ -604,23 +604,26 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
 
 
 
-  const processors = {
-    stripe: StripeMethodProcessor,
-    paypal: PayPalMethodProcessor,
-    apple_pay: ApplePayMethodProcessor,
-    google_pay: GooglePayMethodProcessor,
-    transferencia: TransferenciaMethodProcessor,
-    transferencia_bancaria: TransferenciaMethodProcessor,
-    pago_movil: PagoMovilMethodProcessor,
-    'pago_móvil': PagoMovilMethodProcessor,
-    'pago_movil': PagoMovilMethodProcessor,
-    'pago móvil': PagoMovilMethodProcessor,
-    efectivo_tienda: EfectivoTiendaMethodProcessor,
-    efectivo: EfectivoMethodProcessor,
-    cashea: CasheaMethodProcessor,
-  };
+const processors = {
+  stripe: StripeMethodProcessor,
+  paypal: PayPalMethodProcessor,
+  apple_pay: ApplePayMethodProcessor,
+  google_pay: GooglePayMethodProcessor,
+  transferencia: TransferenciaMethodProcessor,
+  transferencia_bancaria: TransferenciaMethodProcessor,
+  pago_movil: PagoMovilMethodProcessor,
+  'pago_móvil': PagoMovilMethodProcessor,
+  'pago_movil': PagoMovilMethodProcessor,
+  'pago móvil': PagoMovilMethodProcessor,
+  efectivo_tienda: EfectivoTiendaMethodProcessor,
+  efectivo: EfectivoMethodProcessor,
+  cashea: CasheaMethodProcessor,
+};
 
+const createPaymentProcessor = (method) => {
+  const normalizedMethodId = method.method_id?.toLowerCase().replace(/ /g, '_');
   const ProcessorClass = processors[normalizedMethodId] || processors[method.method_id];
+
   if (!ProcessorClass) {
     console.error('❌ [PAYMENT_PROCESSOR] Método no encontrado:', {
       original: method.method_id,
@@ -633,7 +636,9 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
   return new ProcessorClass(method);
 };
 
-export 
+export const processPaymentWithMethod = async (method, paymentData) => {
+  try {
+    const processor = createPaymentProcessor(method);
     const validation = await processor.validatePayment(paymentData);
 
     if (!validation.valid) {

@@ -13,7 +13,7 @@ const PlantillaPrecios = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [zonas, setZonas] = useState([]);
   const [entradas, setEntradas] = useState([]);
-    const [nombrePlantilla, setNombrePlantilla] = useState('');
+  const [nombrePlantilla, setNombrePlantilla] = useState('');
   const [detallesPrecios, setDetallesPrecios] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -45,7 +45,7 @@ const PlantillaPrecios = () => {
           .order('created_at', { ascending: false });
 
         if (plantillasError) {
-          
+
         }
 
         // Cargar plantillas de precios específicas
@@ -60,7 +60,7 @@ const PlantillaPrecios = () => {
           .order('created_at', { ascending: false });
 
         if (preciosError) {
-          
+
         }
 
         // Combinar datos
@@ -70,12 +70,12 @@ const PlantillaPrecios = () => {
           precios_detalle: (preciosData || []).filter(p => p.plantilla_id === plantilla.id)
         }));
 
-        
+
 
         setPlantillas(combinedPlantillas);
 
       } catch (error) {
-        
+
       }
     };
 
@@ -88,7 +88,7 @@ const PlantillaPrecios = () => {
   }, [recinto]);
 
   /* -------------------------- CARGAR ZONAS --------------------------- */
-
+  useEffect(() => {
     if (!sala) return;
     const fetchZonas = async () => {
       const { data, error } = await supabase.from('zonas').select('*').eq('sala_id', sala.id);
@@ -107,21 +107,21 @@ const PlantillaPrecios = () => {
           .from('entradas')
           .select('*')
           .eq('recinto', recinto.id);
-        
+
         if (error) {
-          
+
           setEntradas([]);
           return;
         }
-        
-        
+
+
         if (data && data.length > 0) {
-          
+
           // Si se usa en otro lugar, podríamos setearlo; por ahora mantenemos data original
         }
         setEntradas(data || []);
       } catch (error) {
-        
+
         setEntradas([]);
       }
     };
@@ -134,9 +134,9 @@ const PlantillaPrecios = () => {
       try {
         const canales = await fetchCanalesVenta();
         setCanalesVenta(canales);
-        
+
       } catch (error) {
-        
+
         setCanalesVenta([]);
       }
     };
@@ -154,13 +154,13 @@ const PlantillaPrecios = () => {
 
     const parsed = !error && Array.isArray(data)
       ? data.map(p => ({
-          ...p,
-          detalles: typeof p.detalles === 'string'
-            ? JSON.parse(p.detalles)
-            : Array.isArray(p.detalles)
+        ...p,
+        detalles: typeof p.detalles === 'string'
+          ? JSON.parse(p.detalles)
+          : Array.isArray(p.detalles)
             ? p.detalles
             : []
-        }))
+      }))
       : [];
 
     setPlantillas(parsed);
@@ -173,7 +173,7 @@ const PlantillaPrecios = () => {
   // Recargar entradas cuando se abre el modal de edición
   useEffect(() => {
     if (modalIsOpen && editingPlantilla && (!entradas.length || !zonas.length)) {
-      
+
       // Recargar entradas si no están disponibles
       if (!entradas.length && recinto) {
         const fetchEntradas = async () => {
@@ -195,15 +195,15 @@ const PlantillaPrecios = () => {
 
   /* -------------------- HANDLERS INPUTS DETALLE --------------------- */
   const handleInputChange = (zonaId, entradaId, field, value) => {
-    
-    
+
+
     const updated = [...detallesPrecios];
     const idx = updated.findIndex(d => d.zonaId === zonaId && d.entradaId === entradaId);
-    
+
     // Determinar el tipo de valor y convertirlo apropiadamente
     const numeric = ['precio', 'comision', 'precioGeneral', 'orden'];
     let v;
-    
+
     if (numeric.includes(field)) {
       // Para campos numéricos, convertir a número y establecer 0 si está vacío
       v = value === '' ? 0 : Number(value);
@@ -219,9 +219,9 @@ const PlantillaPrecios = () => {
       updated[idx] = { ...updated[idx], [field]: v };
     } else {
       // Crear nuevo registro
-      updated.push({ 
-        zonaId, 
-        entradaId, 
+      updated.push({
+        zonaId,
+        entradaId,
         [field]: v,
         // Establecer valores por defecto para campos numéricos
         precio: field === 'precio' ? v : 0,
@@ -232,17 +232,17 @@ const PlantillaPrecios = () => {
       });
     }
 
-    
+
     setDetallesPrecios(updated);
   };
 
   const handleCanalChange = (zonaId, entradaId, canalId, checked) => {
-    
-    
+
+
     setDetallesPrecios(prev => {
       const existing = prev.find(d => d.zonaId === zonaId && d.entradaId === entradaId);
       let canalesActuales = [];
-      
+
       if (existing?.canales) {
         // Si canales es un string, convertirlo a array
         if (typeof existing.canales === 'string') {
@@ -255,7 +255,7 @@ const PlantillaPrecios = () => {
           canalesActuales = [...existing.canales];
         }
       }
-      
+
       if (checked) {
         if (!canalesActuales.includes(canalId)) {
           canalesActuales.push(canalId);
@@ -263,7 +263,7 @@ const PlantillaPrecios = () => {
       } else {
         canalesActuales = canalesActuales.filter(id => id !== canalId);
       }
-      
+
       if (existing) {
         return prev.map(d => d.zonaId === zonaId && d.entradaId === entradaId ? { ...d, canales: canalesActuales } : d);
       } else {
@@ -275,7 +275,7 @@ const PlantillaPrecios = () => {
   /* ----------------------- SUBMIT PLANTILLA ------------------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validar que se haya ingresado un nombre
     if (!nombrePlantilla.trim()) {
       alert('Debe ingresar un nombre para la plantilla');
@@ -288,11 +288,11 @@ const PlantillaPrecios = () => {
       return;
     }
 
-    const detallesValidos = detallesPrecios.filter(d => 
-      d.precio !== undefined && 
-      d.precio !== null && 
-      d.precio !== '' && 
-      d.zonaId && 
+    const detallesValidos = detallesPrecios.filter(d =>
+      d.precio !== undefined &&
+      d.precio !== null &&
+      d.precio !== '' &&
+      d.zonaId &&
       d.entradaId
     );
 
@@ -315,7 +315,7 @@ const PlantillaPrecios = () => {
         } else if (Array.isArray(detalle.canales)) {
           canalesSeleccionados = detalle.canales;
         }
-        
+
         canalesSeleccionados.forEach(canalId => {
           const canal = canalesVenta.find(c => c.id === canalId);
           if (canal && !canal.activo) {
@@ -330,11 +330,10 @@ const PlantillaPrecios = () => {
     });
 
     if (canalesDeshabilitados.length > 0) {
-      const mensaje = `No se puede guardar la plantilla. Los siguientes canales están deshabilitados en el sistema:\n\n${
-        canalesDeshabilitados.map(item => 
-          `• ${item.zona} - ${item.entrada}: ${item.canal}`
-        ).join('\n')
-      }\n\nLos canales deshabilitados en el sistema tienen prioridad sobre la configuración de la plantilla.`;
+      const mensaje = `No se puede guardar la plantilla. Los siguientes canales están deshabilitados en el sistema:\n\n${canalesDeshabilitados.map(item =>
+        `• ${item.zona} - ${item.entrada}: ${item.canal}`
+      ).join('\n')
+        }\n\nLos canales deshabilitados en el sistema tienen prioridad sobre la configuración de la plantilla.`;
       alert(mensaje);
       return;
     }
@@ -351,7 +350,7 @@ const PlantillaPrecios = () => {
     try {
       let res;
       if (editingPlantilla) {
-        
+
         res = await supabase
           .from('plantillas')
           .update(payload)
@@ -359,7 +358,7 @@ const PlantillaPrecios = () => {
           .select()
           .single();
       } else {
-        
+
         res = await supabase
           .from('plantillas')
           .insert(payload)
@@ -368,17 +367,17 @@ const PlantillaPrecios = () => {
       }
 
       if (res.error) {
-        
+
         alert(`Error al guardar: ${res.error.message}`);
         return;
       }
 
-      
+
       alert(`${editingPlantilla ? 'Plantilla actualizada' : 'Plantilla creada'} exitosamente con ${detallesValidos.length} configuraciones de precio`);
       closeModal();
       cargarPlantillas();
     } catch (error) {
-      
+
       alert(`Error inesperado: ${error.message}`);
     }
   };
@@ -388,15 +387,15 @@ const PlantillaPrecios = () => {
     try {
       // Asegurar que tenemos las entradas cargadas antes de editar
       if (!entradas.length) {
-        
+
         const { data: entradasData, error: entradasError } = await supabase
           .from('entradas')
           .select('*')
           .eq('recinto', recinto.id);
-        
+
         if (!entradasError && entradasData) {
           setEntradas(entradasData);
-          
+
         }
       }
 
@@ -411,31 +410,31 @@ const PlantillaPrecios = () => {
       if (error) throw error;
 
       const plantilla = data || p;
-      
+
 
       setEditingPlantilla(plantilla);
       setNombrePlantilla(plantilla.nombre);
-      
+
       // Supabase puede retornar `null` si la plantilla no tiene detalles
       // También puede almacenarlos como texto JSON
       const parsedDetalles = typeof plantilla.detalles === 'string'
         ? JSON.parse(plantilla.detalles)
         : plantilla.detalles;
-      
-      
-      
+
+
+
       // Asegurar que tenemos los detalles como array
       const detallesArray = Array.isArray(parsedDetalles) ? parsedDetalles : [];
-      
+
       // Si estamos editando, inicializar con los detalles existentes
       // y agregar cualquier combinación zona-entrada que falte
       if (detallesArray.length > 0) {
         const existingDetalles = [...detallesArray];
-        
+
         // Agregar combinaciones faltantes para zonas y entradas actuales
         zonas.forEach(zona => {
           entradas.forEach(entrada => {
-            const exists = existingDetalles.find(d => 
+            const exists = existingDetalles.find(d =>
               d.zonaId === zona.id && d.entradaId === entrada.id
             );
             if (!exists) {
@@ -451,12 +450,12 @@ const PlantillaPrecios = () => {
             }
           });
         });
-        
-        
+
+
         setDetallesPrecios(existingDetalles);
       } else {
         // Si no hay detalles, inicializar con todas las combinaciones
-        const initialDetalles = zonas.flatMap(z => 
+        const initialDetalles = zonas.flatMap(z =>
           entradas.map(e => ({
             zonaId: z.id,
             entradaId: e.id,
@@ -467,13 +466,13 @@ const PlantillaPrecios = () => {
             orden: 0
           }))
         );
-        
+
         setDetallesPrecios(initialDetalles);
       }
-      
+
       setModalIsOpen(true);
     } catch (err) {
-      
+
     }
   };
 
@@ -484,11 +483,11 @@ const PlantillaPrecios = () => {
   };
 
   /* ------------------- UTILS PARA RENDER TABLA ---------------------- */
-  const combinedItems = zonas.flatMap(z => entradas.map(e => ({ 
-    zonaId: z.id, 
-    zona: z.nombre, 
-    entrada: e.producto, 
-    entradaId: e.id 
+  const combinedItems = zonas.flatMap(z => entradas.map(e => ({
+    zonaId: z.id,
+    zona: z.nombre,
+    entrada: e.producto,
+    entradaId: e.id
   })));
   const currentItems = combinedItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -501,7 +500,7 @@ const PlantillaPrecios = () => {
 
   const openModal = () => {
     // Inicializar detalles con valores por defecto para todas las combinaciones zona-entrada
-    const initialDetalles = zonas.flatMap(z => 
+    const initialDetalles = zonas.flatMap(z =>
       entradas.map(e => ({
         zonaId: z.id,
         entradaId: e.id,
@@ -520,14 +519,14 @@ const PlantillaPrecios = () => {
     if (!zonas.length || !entradas.length) return (
       <tr>
         <td colSpan="8" className="py-4 text-center">
-          {!zonas.length && !entradas.length ? 'Debes crear zonas y entradas' : 
-           !zonas.length ? 'Debes crear zonas' : 'Debes crear entradas'}
+          {!zonas.length && !entradas.length ? 'Debes crear zonas y entradas' :
+            !zonas.length ? 'Debes crear zonas' : 'Debes crear entradas'}
         </td>
       </tr>
     );
 
     // Debug: mostrar información de los datos
-    
+
 
     // Si no hay currentItems, mostrar un mensaje
     if (!currentItems.length) {
@@ -542,12 +541,12 @@ const PlantillaPrecios = () => {
 
     return currentItems.map((item, idx) => {
       const detalle = detallesPrecios.find(d => d.zonaId === item.zonaId && d.entradaId === item.entradaId) || {};
-      
+
       // Buscar la entrada correspondiente para mostrar el nombre
       const entrada = entradas.find(e => e.id === item.entradaId);
       const zona = zonas.find(z => z.id === item.zonaId);
-      
-      
+
+
       return (
         <tr key={idx} className="hover:bg-gray-50">
           <td className="px-6 py-3 font-medium">{zona?.nombre || item.zona || 'Zona no encontrada'}</td>
@@ -558,10 +557,10 @@ const PlantillaPrecios = () => {
           </td>
           {['precio', 'comision', 'precioGeneral'].map(f => (
             <td key={f} className="px-6 py-3">
-              <input 
-                type="number" 
-                className="w-full border px-2 py-1 rounded" 
-                value={detalle[f] ?? ''} 
+              <input
+                type="number"
+                className="w-full border px-2 py-1 rounded"
+                value={detalle[f] ?? ''}
                 onChange={e => handleInputChange(item.zonaId, item.entradaId, f, e.target.value)}
                 placeholder={f === 'precio' ? '0.00' : '0'}
                 min="0"
@@ -586,16 +585,16 @@ const PlantillaPrecios = () => {
                     isSeleccionadoEnPlantilla = detalle.canales.includes(canal.id);
                   }
                 }
-                
+
                 // VERIFICAR JERARQUÍA: Canal debe estar activo EN EL SISTEMA Y seleccionado EN LA PLANTILLA
                 const isActivoEnSistema = canal.activo === true;
                 const isActivo = isActivoEnSistema && isSeleccionadoEnPlantilla;
-                
+
                 // Debug: Log de la jerarquía de prioridades
                 if (detalle.zonaId && detalle.entradaId) {
                   // debug omitido
                 }
-                
+
                 // Determinar el color y estilo del botón según el estado
                 const getButtonStyle = (activo, activoEnSistema, seleccionadoEnPlantilla) => {
                   if (!activoEnSistema) {
@@ -612,7 +611,7 @@ const PlantillaPrecios = () => {
                     return "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-300";
                   }
                 };
-                
+
                 // Obtener el nombre corto del canal y el ícono
                 const getCanalInfo = (nombre) => {
                   if (nombre.toLowerCase().includes('store') || nombre.toLowerCase().includes('internet')) {
@@ -624,9 +623,9 @@ const PlantillaPrecios = () => {
                   }
                   return { short: nombre, icon: '🔗' };
                 };
-                
+
                 const canalInfo = getCanalInfo(canal.nombre);
-                
+
                 return (
                   <button
                     key={canal.id}
@@ -644,10 +643,10 @@ const PlantillaPrecios = () => {
                       }
                     })()}
                   >
-                      <span className="text-xs">{canalInfo.icon}</span>
-                      <span className="text-xs">
-                        {!isActivoEnSistema ? '🚫' : (isActivo ? '✓' : '○')}
-                      </span>
+                    <span className="text-xs">{canalInfo.icon}</span>
+                    <span className="text-xs">
+                      {!isActivoEnSistema ? '🚫' : (isActivo ? '✓' : '○')}
+                    </span>
                   </button>
                 );
               })}
@@ -659,12 +658,12 @@ const PlantillaPrecios = () => {
                 // Calcular el estado considerando la JERARQUÍA de prioridades
                 let canalesDisponibles = 0;
                 let canalesSeleccionados = 0;
-                
-                
+
+
                 // Contar canales activos en el sistema
                 const canalesActivosEnSistema = canalesVenta.filter(c => c.activo === true);
                 canalesDisponibles = canalesActivosEnSistema.length;
-                
+
                 // Contar canales seleccionados en la plantilla
                 if (detalle.canales) {
                   if (typeof detalle.canales === 'string') {
@@ -678,14 +677,14 @@ const PlantillaPrecios = () => {
                     canalesSeleccionados = detalle.canales.length;
                   }
                 }
-                
+
                 // Calcular porcentaje basado en canales DISPONIBLES (no total)
                 const porcentajeDisponibles = canalesDisponibles > 0 ? Math.round((canalesSeleccionados / canalesDisponibles) * 100) : 0;
-                
+
                 let estadoColor = 'bg-red-100 text-red-800 border-red-200';
                 let estadoTexto = 'Sin canales';
                 let estadoIcono = '🚫';
-                
+
                 if (canalesDisponibles === 0) {
                   // No hay canales activos en el sistema
                   estadoColor = 'bg-red-100 text-red-800 border-red-200';
@@ -712,7 +711,7 @@ const PlantillaPrecios = () => {
                   estadoTexto = '0% activos';
                   estadoIcono = '❌';
                 }
-                
+
                 return (
                   <div className="flex items-center gap-2">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${estadoColor}`}>
@@ -727,10 +726,10 @@ const PlantillaPrecios = () => {
             </div>
           </td>
           <td className="px-6 py-3">
-            <input 
-              type="number" 
-              className="w-full border px-2 py-1 rounded" 
-              value={detalle.orden ?? ''} 
+            <input
+              type="number"
+              className="w-full border px-2 py-1 rounded"
+              value={detalle.orden ?? ''}
               onChange={e => handleInputChange(item.zonaId, item.entradaId, 'orden', e.target.value)}
               placeholder="1"
               min="0"
@@ -787,7 +786,7 @@ const PlantillaPrecios = () => {
           <h2 className="text-xl font-bold mb-4">{editingPlantilla ? 'Editar' : 'Crear'} Plantilla</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <input type="text" className="border p-2 w-full" placeholder="Nombre" value={nombrePlantilla} onChange={e => setNombrePlantilla(e.target.value)} required />
-            
+
             {/* Información de debug y resumen de canales */}
             <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -804,12 +803,12 @@ const PlantillaPrecios = () => {
                   <span className="font-medium">Canales disponibles:</span> {canalesVenta.length}
                 </div>
               </div>
-              
+
               {/* Resumen de canales */}
               {canalesVenta.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <div className="font-medium mb-2">Resumen de canales:</div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     {canalesVenta.map(canal => {
                       const canalInfo = (() => {
@@ -822,13 +821,13 @@ const PlantillaPrecios = () => {
                         }
                         return { short: canal.nombre, icon: '🔗' };
                       })();
-                      
-                      const estadoColor = canal.activo 
-                        ? 'bg-green-50 text-green-700 border-green-200' 
+
+                      const estadoColor = canal.activo
+                        ? 'bg-green-50 text-green-700 border-green-200'
                         : 'bg-red-50 text-red-700 border-red-200';
                       const estadoIcono = canal.activo ? '✅' : '🚫';
                       const estadoTexto = canal.activo ? 'Activo' : 'Inactivo';
-                      
+
                       return (
                         <span key={canal.id} className={`flex items-center gap-1 px-2 py-1 rounded text-xs border ${estadoColor}`}>
                           <span>{canalInfo.icon}</span>
@@ -838,24 +837,24 @@ const PlantillaPrecios = () => {
                       );
                     })}
                   </div>
-                  
+
                   {/* Resumen de estado del sistema */}
                   <div className="mt-2 text-xs text-gray-600">
                     <span className="font-medium">Estado del sistema:</span> {
-                      canalesVenta.filter(c => c.activo).length === 0 
-                        ? '🚫 Sin canales activos' 
+                      canalesVenta.filter(c => c.activo).length === 0
+                        ? '🚫 Sin canales activos'
                         : `${canalesVenta.filter(c => c.activo).length}/${canalesVenta.length} canales activos`
                     }
                   </div>
                 </div>
               )}
             </div>
-            
+
             <div className="overflow-x-auto">
-                             <table className="min-w-full text-sm">
-                 <thead className="bg-gray-50">
-                   <tr>{['Zona','Entrada','Precio','Comisión','Precio Gen','Canales','Estado','Orden'].map(h => <th key={h} className="px-4 py-2 text-left">{h}</th>)}</tr>
-                 </thead>
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>{['Zona', 'Entrada', 'Precio', 'Comisión', 'Precio Gen', 'Canales', 'Estado', 'Orden'].map(h => <th key={h} className="px-4 py-2 text-left">{h}</th>)}</tr>
+                </thead>
                 <tbody>{renderTableRows()}</tbody>
               </table>
             </div>

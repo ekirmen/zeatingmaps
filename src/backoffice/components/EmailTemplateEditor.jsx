@@ -1,29 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Form, 
-  Input, 
-  Select, 
-  ColorPicker, 
-  Button, 
-  Space, 
-  Typography, 
-  Divider, 
-  Upload, 
-  Modal, 
-  message, 
+import {
+  Card,
+  Row,
+  Col,
+  Form,
+  Input,
+  Select,
+  ColorPicker,
+  Button,
+  Space,
+  Typography,
+  Divider,
+  Upload,
+  Modal,
+  message,
   Spin,
   Tabs,
   Switch,
   InputNumber,
   Collapse
 } from '../../utils/antdComponents';
-import { 
-  BgColorsOutlined, 
-  UploadOutlined, 
-  SaveOutlined, 
+import {
+  BgColorsOutlined,
+  UploadOutlined,
+  SaveOutlined,
   EyeOutlined,
   DeleteOutlined,
   PlusOutlined,
@@ -37,11 +37,11 @@ const { Option } = Select;
 const { TabPane } = Tabs;
 const { Panel } = Collapse;
 
-const EmailTemplateEditor = ({ 
-  templateId, 
-  reportType, 
-  onSave, 
-  onCancel 
+const EmailTemplateEditor = ({
+  templateId,
+  reportType,
+  onSave,
+  onCancel
 }) => {
   const { currentTenant } = useTenant();
   const [form] = Form.useForm();
@@ -109,7 +109,11 @@ const EmailTemplateEditor = ({
     }
   }, [templateId, reportType]);
 
-  
+
+  const loadTemplate = async () => {
+    try {
+      setLoading(true);
+
       const { data, error } = await supabase
         .from('email_templates')
         .select('*')
@@ -121,7 +125,7 @@ const EmailTemplateEditor = ({
 
       setTemplate(data);
       setDesignConfig(data.configuracion_diseno || designConfig);
-      
+
       form.setFieldsValue({
         nombre: data.nombre,
         tipo_reporte: data.tipo_reporte,
@@ -139,7 +143,7 @@ const EmailTemplateEditor = ({
   const handleSave = async (values) => {
     try {
       setLoading(true);
-      
+
       const templateData = {
         ...values,
         tenant_id: currentTenant?.id,
@@ -183,7 +187,7 @@ const EmailTemplateEditor = ({
     }));
   };
 
-
+  const generatePreview = () => {
     return `
       <div style="
         max-width: ${designConfig.layout.maxWidth};
@@ -268,7 +272,7 @@ const EmailTemplateEditor = ({
           {renderColorPicker(section, 'textColor', 'Color de Texto')}
         </Col>
       </Row>
-      
+
       {section === 'header' && (
         <>
           <Form.Item label="T­tulo">
@@ -292,7 +296,7 @@ const EmailTemplateEditor = ({
           </Form.Item>
         </>
       )}
-      
+
       {section === 'body' && (
         <>
           <Form.Item label="Fuente">
@@ -332,7 +336,7 @@ const EmailTemplateEditor = ({
           </Row>
         </>
       )}
-      
+
       {section === 'footer' && (
         <Form.Item label="Texto del Footer">
           <Input.TextArea
@@ -412,7 +416,7 @@ const EmailTemplateEditor = ({
             {renderDesignSection('Encabezado', 'header')}
             {renderDesignSection('Cuerpo', 'body')}
             {renderDesignSection('Pie de P¡gina', 'footer')}
-            
+
             <Panel header="Colores del Sistema" key="colors">
               <Row gutter={16}>
                 <Col span={8}>
@@ -488,15 +492,15 @@ const EmailTemplateEditor = ({
           <Divider />
 
           <Space>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              type="primary"
+              htmlType="submit"
               loading={loading}
               icon={<SaveOutlined />}
             >
               {templateId ? 'Actualizar' : 'Crear'} Plantilla
             </Button>
-            <Button 
+            <Button
               icon={<EyeOutlined />}
               onClick={() => setPreviewVisible(true)}
             >
@@ -517,10 +521,10 @@ const EmailTemplateEditor = ({
         footer={null}
         width={800}
       >
-        <div 
-          dangerouslySetInnerHTML={{ 
-            __html: generatePreview() 
-          }} 
+        <div
+          dangerouslySetInnerHTML={{
+            __html: generatePreview()
+          }}
         />
       </Modal>
     </div>

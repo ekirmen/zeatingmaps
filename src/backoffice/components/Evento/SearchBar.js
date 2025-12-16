@@ -1,6 +1,7 @@
 import React from 'react';
 
 
+const SearchBar = ({ searchTerm, handleSearch, searchResults, handleEdit }) => {
   return (
     <div className="relative flex-1 max-w-md">
       <div className="relative">

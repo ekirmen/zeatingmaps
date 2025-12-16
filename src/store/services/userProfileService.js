@@ -2,7 +2,14 @@
 import { supabase } from '../../supabaseClient';
 
 // Obtener perfil completo del usuario
-export 
+export const getUserProfile = async (userId) => {
+  try {
+    // Paso 1: perfil base
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
     if (profileError) throw profileError;
 
@@ -56,7 +63,13 @@ export
 };
 
 // Obtener compras del usuario (desde payment_transactions)
-export 
+export const getUserPurchases = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];
@@ -67,50 +80,46 @@ export
 };
 
 // Obtener compras con asientos del usuario
-export 
+export const getUserPurchasesWithSeats = async (userId) => {
+  try {
+    const transactions = await getUserPurchases(userId);
+    const transactionsWithSeats = await Promise.all(transactions.map(async (transaction) => {
+      try {
+        // Obtener asientos
+        const { data: seats, error: seatsError } = await supabase
+          .from('seat_locks')
+          .select('seat_id, table_id, status, locked_at, expires_at')
+          .eq('locator', transaction.locator);
 
-    if (error) throw error;
-
-    // Para cada transacción, obtener sus asientos y datos del evento
-    const transactionsWithSeats = await Promise.all(
-      (transactions || []).map(async (transaction) => {
-        try {
-          // Obtener asientos
-          const { data: seats, error: seatsError } = await supabase
-            .from('seat_locks')
-            .select('seat_id, table_id, status, locked_at, expires_at')
-            .eq('locator', transaction.locator);
-
-          if (seatsError) {
-          }
-
-          // Obtener datos del evento para verificar si wallet está habilitado
-          let eventData = null;
-          if (transaction.evento_id) {
-            try {
-              const { data: event, error: eventError } = await supabase
-                .from('eventos')
-                .select('id, datosBoleto, nombre')
-                .eq('id', transaction.evento_id)
-                .maybeSingle();
-
-              if (!eventError && event) {
-                eventData = event;
-              }
-            } catch (eventErr) {
-            }
-          }
-
-          return {
-            ...transaction,
-            seats: seats || [],
-            event: eventData
-          };
-        } catch (error) {
-          return { ...transaction, seats: [], event: null };
+        if (seatsError) {
         }
-      })
-    );
+
+        // Obtener datos del evento para verificar si wallet está habilitado
+        let eventData = null;
+        if (transaction.evento_id) {
+          try {
+            const { data: event, error: eventError } = await supabase
+              .from('eventos')
+              .select('id, datosBoleto, nombre')
+              .eq('id', transaction.evento_id)
+              .maybeSingle();
+
+            if (!eventError && event) {
+              eventData = event;
+            }
+          } catch (eventErr) {
+          }
+        }
+
+        return {
+          ...transaction,
+          seats: seats || [],
+          event: eventData
+        };
+      } catch (error) {
+        return { ...transaction, seats: [], event: null };
+      }
+    }));
 
     return transactionsWithSeats;
   } catch (error) {
@@ -120,7 +129,9 @@ export
 };
 
 // Obtener reservas del usuario
-export 
+export const getUserReservations = async (userId) => {
+  const tryFetch = (table) =>
+    supabase.from(table).select('*').eq('user_id', userId).order('created_at', { ascending: false });
 
   try {
     let { data, error } = await tryFetch('reservations');
@@ -136,7 +147,12 @@ export
 };
 
 // Obtener eventos favoritos del usuario
-export 
+export const getUserFavorites = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_favorites')
+      .select('*, evento:eventos(id, nombre, fecha, imagen_principal)')
+      .eq('user_id', userId);
 
     if (error) throw error;
     return data || [];
@@ -147,7 +163,14 @@ export
 };
 
 // Obtener historial de actividades del usuario
-export 
+export const getUserActivityHistory = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_activity')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20);
 
     if (error) throw error;
     return data || [];
@@ -158,7 +181,14 @@ export
 };
 
 // Actualizar perfil del usuario
-export 
+export const updateUserProfile = async (userId, updates) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
 
     if (error) throw error;
     if (!data) {
@@ -172,15 +202,16 @@ export
 };
 
 // Obtener estadísticas del usuario
-export 
-    let reservations = [];
+export const getUserStats = async (userId) => {
+  try {
+    let purchases = [];
     let favorites = [];
 
     try {
       // Usar payment_transactions en lugar de sales
       const res = await supabase.from('payment_transactions').select('amount,status').eq('user_id', userId);
       purchases = res.data || [];
-    } catch (_) {}
+    } catch (_) { }
 
     try {
       let res = await supabase.from('reservations').select('status').eq('user_id', userId);
@@ -188,12 +219,12 @@ export
         res = await supabase.from('reservas').select('status').eq('user_id', userId);
       }
       reservations = res.data || [];
-    } catch (_) {}
+    } catch (_) { }
 
     try {
       const res = await supabase.from('user_favorites').select('id').eq('user_id', userId);
       favorites = res.data || [];
-    } catch (_) {}
+    } catch (_) { }
 
     const totalSpent = purchases
       .filter(p => p.status === 'completed')

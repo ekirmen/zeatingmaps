@@ -4,8 +4,8 @@ import { updatePaymentTransactionStatus } from './paymentGatewaysService';
 /**
  * Manejador de webhooks para Stripe
  */
-export 
-
+export const handleStripeWebhook = async (type, data) => {
+  try {
     switch (type) {
       case 'payment_intent.succeeded':
         await handlePaymentSuccess(data.object);
@@ -29,8 +29,8 @@ export
 /**
  * Manejador de webhooks para PayPal
  */
-export 
-
+export const handlePayPalWebhook = async (event_type, resource) => {
+  try {
     switch (event_type) {
       case 'PAYMENT.CAPTURE.COMPLETED':
         await handlePaymentSuccess(resource);
@@ -54,8 +54,8 @@ export
 /**
  * Manejador de webhooks para MercadoPago
  */
-export 
-
+export const handleMercadoPagoWebhook = async (type, data) => {
+  try {
     switch (type) {
       case 'payment':
         const payment = data;
@@ -80,7 +80,12 @@ export
 /**
  * Manejar pago exitoso
  */
-
+const handlePaymentSuccess = async (paymentData) => {
+  try {
+    const { data: transactions, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('gateway_transaction_id', paymentData.id);
 
     if (error) throw error;
 
@@ -113,7 +118,12 @@ export
 /**
  * Manejar pago fallido
  */
-
+const handlePaymentFailure = async (paymentData) => {
+  try {
+    const { data: transactions, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('gateway_transaction_id', paymentData.id);
 
     if (error) throw error;
 
@@ -141,7 +151,12 @@ export
 /**
  * Manejar pago cancelado
  */
-
+const handlePaymentCanceled = async (paymentData) => {
+  try {
+    const { data: transactions, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('gateway_transaction_id', paymentData.id);
 
     if (error) throw error;
 
@@ -166,7 +181,14 @@ export
 /**
  * Actualizar estado de los asientos
  */
-
+const updateSeatsStatus = async (orderId, status) => {
+  try {
+    // Obtener orden y asientos
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('*, seats(*)')
+      .eq('id', orderId)
+      .single();
 
     if (orderError) throw orderError;
 
@@ -187,7 +209,10 @@ export
 /**
  * Enviar notificación de pago exitoso
  */
-
+const sendPaymentSuccessNotification = async (transaction) => {
+  try {
+    // Implementar lógica de notificación
+    console.log('Payment success notification sent for:', transaction.id);
   } catch (error) {
     console.error('Error sending payment success notification:', error);
   }
@@ -196,7 +221,10 @@ export
 /**
  * Enviar notificación de pago fallido
  */
-
+const sendPaymentFailureNotification = async (transaction) => {
+  try {
+    // Implementar lógica de notificación
+    console.log('Payment failure notification sent for:', transaction.id);
   } catch (error) {
     console.error('Error sending payment failure notification:', error);
   }
@@ -205,7 +233,12 @@ export
 /**
  * Actualizar inventario
  */
-
+const updateInventory = async (orderId) => {
+  try {
+    // Implementar lógica de inventario si aplica
+    console.log('Inventory updated for order:', orderId);
+  } catch (error) {
+    console.error('Error updating inventory:', error);
   }
 };
 

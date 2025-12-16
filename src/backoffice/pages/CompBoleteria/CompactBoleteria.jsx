@@ -55,8 +55,7 @@ const CompactBoleteria = ({
   // Calcular estad­sticas de asientos
   const calculateSeatStats = useCallback(() => {
 
-      return;
-    }
+
 
     let stats = {
       total: 0,
@@ -200,8 +199,7 @@ const CompactBoleteria = ({
 
   // Funci³n para manejar clic en asiento
   
-    }
-  };
+
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">

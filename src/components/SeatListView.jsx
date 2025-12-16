@@ -26,7 +26,7 @@ const SeatListView = ({
   // Convertir sortBy a formato del worker
   const workerSortBy = useMemo(() => {
     switch (sortBy) {
-
+      case 'precio':
         return 'precio-asc';
       case 'precio-desc':
         return 'precio-desc';
@@ -164,7 +164,7 @@ const SeatListView = ({
           prefix={<SearchOutlined />}
           allowClear
         />
-        
+
         <div className="flex gap-2 flex-wrap">
           <Select
             placeholder="Filtrar por zona"
@@ -180,7 +180,7 @@ const SeatListView = ({
               </Option>
             ))}
           </Select>
-          
+
           <Select
             placeholder="Ordenar por"
             value={sortBy}
@@ -197,7 +197,7 @@ const SeatListView = ({
       {/* Lista de asientos */}
       <div className="flex-1 overflow-auto p-4">
         {filteredAndSortedSeats.length === 0 ? (
-          <Empty 
+          <Empty
             description="No se encontraron asientos"
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
@@ -215,15 +215,13 @@ const SeatListView = ({
                   key={seatId}
                   hoverable
                   onClick={() => handleSeatClick(seat)}
-                  className={`seat-card cursor-pointer transition-all ${
-                    seatStatus.status === 'selected' 
-                      ? 'ring-2 ring-blue-500 border-blue-500' 
+                  className={`seat-card cursor-pointer transition-all ${seatStatus.status === 'selected'
+                      ? 'ring-2 ring-blue-500 border-blue-500'
                       : ''
-                  } ${
-                    seatStatus.status === 'locked' || seatStatus.status === 'sold'
+                    } ${seatStatus.status === 'locked' || seatStatus.status === 'sold'
                       ? 'opacity-60 cursor-not-allowed'
                       : ''
-                  }`}
+                    }`}
                   size="small"
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -231,12 +229,12 @@ const SeatListView = ({
                       <div className="font-semibold text-lg">{nombreAsiento}</div>
                       <div className="text-sm text-gray-500">{nombreZona}</div>
                     </div>
-                    <Badge 
-                      status={seatStatus.color} 
+                    <Badge
+                      status={seatStatus.color}
                       text={seatStatus.text}
                     />
                   </div>
-                  
+
                   <div className="flex justify-between items-center mt-3">
                     <span className="text-2xl font-bold text-blue-600">
                       ${precio.toFixed(2)}
@@ -260,7 +258,7 @@ const SeatListView = ({
       <div className="p-4 bg-white border-t">
         <div className="flex justify-between items-center">
           <span className="text-gray-600">
-            {filteredAndSortedSeats.length} asiento{filteredAndSortedSeats.length !== 1 ? 's' : ''} 
+            {filteredAndSortedSeats.length} asiento{filteredAndSortedSeats.length !== 1 ? 's' : ''}
             {selectedSeats.length > 0 && ` • ${selectedSeats.length} seleccionado${selectedSeats.length !== 1 ? 's' : ''}`}
           </span>
           {selectedSeats.length > 0 && (

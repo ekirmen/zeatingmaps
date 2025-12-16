@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  DatePicker, 
-  Select, 
-  Input, 
-  Typography, 
+import {
+  Card,
+  Table,
+  Button,
+  DatePicker,
+  Select,
+  Input,
+  Typography,
   Space,
   Tag,
   Modal,
@@ -19,7 +19,7 @@ import {
   Statistic,
   Alert
 } from '../../utils/antdComponents';
-import { 
+import {
   EyeOutlined,
   DownloadOutlined,
   FilterOutlined,
@@ -63,36 +63,36 @@ const AuditLogs = () => {
   const loadAuditLogs = async () => {
     try {
       setLoading(true);
-      
+
       // Construir filtros para el servicio de auditor­a
       const auditFilters = {};
-      
+
       if (filters.dateRange && filters.dateRange.length === 2) {
         auditFilters.startDate = filters.dateRange[0].toISOString();
         auditFilters.endDate = filters.dateRange[1].toISOString();
       }
-      
+
       if (filters.action && filters.action !== 'all') {
         auditFilters.action = filters.action;
       }
-      
+
       if (filters.user) {
         // Buscar por usuario (necesitar­amos obtener el ID del usuario)
         // Por ahora, buscar por acci³n que contenga el t©rmino
         auditFilters.action = filters.user;
       }
-      
+
       if (filters.severity && filters.severity !== 'all') {
         auditFilters.severity = filters.severity;
       }
-      
+
       if (filters.resourceType && filters.resourceType !== 'all') {
         auditFilters.resourceType = filters.resourceType;
       }
-      
+
       // Cargar logs desde el servicio de auditor­a
       const auditLogs = await auditService.getLogs(auditFilters, 100);
-      
+
       // Formatear logs para la tabla
       const formattedLogs = auditLogs.map(log => {
 
@@ -114,9 +114,9 @@ const AuditLogs = () => {
           referrer: log.referrer
         };
       });
-      
+
       setLogs(formattedLogs);
-      
+
       // Calcular estad­sticas
       setStats({
         total: formattedLogs.length,
@@ -125,11 +125,11 @@ const AuditLogs = () => {
         info: formattedLogs.filter(log => log.severity === 'info').length,
         critical: formattedLogs.filter(log => log.severity === 'critical').length
       });
-      
+
     } catch (error) {
       console.error('Error loading audit logs:', error);
       message.error('Error al cargar los logs de auditor­a');
-      
+
       // Cargar logs locales como fallback
       try {
         const localLogs = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
@@ -149,29 +149,30 @@ const AuditLogs = () => {
   };
 
   // Funci³n helper para obtener descripci³n de acci³n
-  
+  const getActionDescription = (log) => {
+    const action = log.action || '';
     const details = log.details ? (typeof log.details === 'string' ? JSON.parse(log.details) : log.details) : {};
-    
+
     if (action.startsWith('payment_')) {
       const status = action.replace('payment_', '');
       return `Pago ${status}: $${details.amount || 'N/A'} - ${details.paymentMethod || 'N/A'}`;
     }
-    
+
     if (action.startsWith('seat_')) {
       const seatAction = action.replace('seat_', '');
       return `Asiento ${seatAction}: ${details.seatId || 'N/A'} - Funci³n ${details.functionId || 'N/A'}`;
     }
-    
+
     if (action.startsWith('user_')) {
       const userAction = action.replace('user_', '');
       return `Usuario ${userAction}: ${details.email || details.userId || 'N/A'}`;
     }
-    
+
     if (action.startsWith('security_')) {
       const securityEvent = action.replace('security_', '');
       return `Evento de seguridad: ${securityEvent}`;
     }
-    
+
     return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -184,7 +185,7 @@ const AuditLogs = () => {
     try {
       const csvContent = [
         'Timestamp,User,Action,Severity,Description,IP,Resource Type,Resource ID',
-        ...logs.map(log => 
+        ...logs.map(log =>
           `${log.timestamp.toISOString()},"${log.user}","${log.action}","${log.severity || 'info'}","${log.description}","${log.ip}","${log.resourceType || ''}","${log.resourceId || ''}"`
         )
       ].join('\n');
@@ -228,18 +229,18 @@ const AuditLogs = () => {
     };
     return colors[severity] || 'default';
   };
-  
-   // Alias para compatibilidad
+
+  // Alias para compatibilidad
 
   const getActionIcon = (action) => {
     const icons = {
       login: <UserOutlined />,
       logout: <UserOutlined />,
-          payment_update: <CloudOutlined />,
-    ticket_purchase: <SafetyOutlined />,
-    user_delete: <SafetyOutlined />,
-    backup_created: <ClockCircleOutlined />,
-    system: <CloudOutlined />
+      payment_update: <CloudOutlined />,
+      ticket_purchase: <SafetyOutlined />,
+      user_delete: <SafetyOutlined />,
+      backup_created: <ClockCircleOutlined />,
+      system: <CloudOutlined />
     };
     return icons[action] || <ClockCircleOutlined />;
   };
@@ -302,8 +303,8 @@ const AuditLogs = () => {
       title: 'Acciones',
       key: 'actions',
       render: (_, record) => (
-        <Button 
-          type="link" 
+        <Button
+          type="link"
           icon={<EyeOutlined />}
           onClick={() => viewLogDetails(record)}
         >
@@ -376,22 +377,22 @@ const AuditLogs = () => {
         <Divider />
 
         <Space>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<FilterOutlined />}
             onClick={loadAuditLogs}
             loading={loading}
           >
             Aplicar Filtros
           </Button>
-          <Button 
+          <Button
             icon={<ReloadOutlined />}
             onClick={loadAuditLogs}
             loading={loading}
           >
             Actualizar
           </Button>
-          <Button 
+          <Button
             icon={<DownloadOutlined />}
             onClick={exportLogs}
           >
@@ -460,7 +461,7 @@ const AuditLogs = () => {
             pageSize: 20,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} de ${total} logs`
           }}
         />
@@ -555,5 +556,5 @@ const AuditLogs = () => {
   );
 };
 
-export default AuditLogs; 
+export default AuditLogs;
 

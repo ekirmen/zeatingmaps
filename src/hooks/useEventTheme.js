@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
  * @returns {Object} Colores del tema del evento o colores globales por defecto
  */
-export 
+export const useEventTheme = (eventId) => {
   const [eventTheme, setEventTheme] = useState(theme);
   const [loading, setLoading] = useState(false);
 

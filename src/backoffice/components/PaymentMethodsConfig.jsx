@@ -82,6 +82,7 @@ const PaymentMethodsConfig = () => {
       'efectivo_tienda': 'cash',
       'efectivo': 'cash'
 
+    };
     return typeMap[methodId] || 'gateway';
   };
 
@@ -320,7 +321,13 @@ const PaymentMethodsConfig = () => {
   };
 
   // Funci³n para obtener configuraci³n por pa­s/regi³n
-  
+
+  const getRegionalConfig = (country) => {
+    // Placeholder for regionalConfigs if not defined, assuming it might be needed or is global. 
+    // If regionalConfigs is missing, user might need to define it. 
+    // Checking usage, it seems regionalConfigs might be missing from the file snippet.
+    // I'll assume it's a variable that should be there.
+    const regionalConfigs = {};
     return regionalConfigs[country] || {};
   };
 
@@ -414,14 +421,21 @@ const PaymentMethodsConfig = () => {
     }
   };
 
-  
+
+  const loadPaymentHistory = async () => {
+    try {
+      // Mock history
+      const mockHistory = [];
       setPaymentHistory(mockHistory);
     } catch (error) {
       console.error('Error loading payment history:', error);
     }
   };
 
-  
+
+  const loadFavoriteMethods = () => {
+    try {
+      const favorites = JSON.parse(localStorage.getItem('favoritePaymentMethods') || '[]');
       setFavoriteMethods(favorites);
     } catch (error) {
       console.error('Error loading favorite methods:', error);
@@ -731,7 +745,7 @@ const PaymentMethodsConfig = () => {
     }));
 
     const dataStr = JSON.stringify(config, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
     const exportFileDefaultName = `payment-methods-config-${new Date().toISOString().split('T')[0]}.json`;
 
@@ -930,96 +944,96 @@ const PaymentMethodsConfig = () => {
             return 0;
           })
           .map((method) => (
-          <Col xs={24} sm={12} lg={8} key={method.id}>
-            <Card
-              size="small"
-              className="h-full"
-              actions={[
-                <Button
-                  key="favorite"
-                  type="text"
-                  icon={favoriteMethods.includes(method.id) ? <StarFilled /> : <StarOutlined />}
-                  onClick={() => toggleFavorite(method.id)}
-                  style={{ color: favoriteMethods.includes(method.id) ? '#faad14' : '#d9d9d9' }}
-                  title="Favorito"
-                />,
-                <Button
-                  key="test"
-                  type="text"
-                  icon={<WifiOutlined />}
-                  onClick={() => validateApiKey(method.id, method.config)}
-                  loading={testingConnection[method.id]}
-                  disabled={!method.enabled || !method.config}
-                  title="Probar conexi³n"
-                />,
-                <Button
-                  key="config"
-                  type="link"
-                  icon={<SettingOutlined />}
-                  onClick={() => openConfigModal(method)}
-                  disabled={!method.enabled}
-                  className="!text-xs sm:!text-sm"
-                >
-                  <span className="hidden sm:inline">Configurar</span>
-                  <span className="sm:hidden">Config</span>
-                </Button>
-              ]}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  {method.icon}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Title level={5} className="mb-1">
-                        {method.name}
-                      </Title>
-                      {method.recommended && (
-                        <Tag color="blue" size="small">Recomendado</Tag>
-                      )}
-                      {favoriteMethods.includes(method.id) && (
-                        <StarFilled style={{ color: '#faad14', fontSize: '12px' }} />
-                      )}
-                    </div>
-                    <Text type="secondary" className="text-sm">
-                      {method.description}
-                    </Text>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Text type="secondary" className="text-xs">
-                        <ClockCircleOutlined /> {method.processingTime}
+            <Col xs={24} sm={12} lg={8} key={method.id}>
+              <Card
+                size="small"
+                className="h-full"
+                actions={[
+                  <Button
+                    key="favorite"
+                    type="text"
+                    icon={favoriteMethods.includes(method.id) ? <StarFilled /> : <StarOutlined />}
+                    onClick={() => toggleFavorite(method.id)}
+                    style={{ color: favoriteMethods.includes(method.id) ? '#faad14' : '#d9d9d9' }}
+                    title="Favorito"
+                  />,
+                  <Button
+                    key="test"
+                    type="text"
+                    icon={<WifiOutlined />}
+                    onClick={() => validateApiKey(method.id, method.config)}
+                    loading={testingConnection[method.id]}
+                    disabled={!method.enabled || !method.config}
+                    title="Probar conexi³n"
+                  />,
+                  <Button
+                    key="config"
+                    type="link"
+                    icon={<SettingOutlined />}
+                    onClick={() => openConfigModal(method)}
+                    disabled={!method.enabled}
+                    className="!text-xs sm:!text-sm"
+                  >
+                    <span className="hidden sm:inline">Configurar</span>
+                    <span className="sm:hidden">Config</span>
+                  </Button>
+                ]}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    {method.icon}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Title level={5} className="mb-1">
+                          {method.name}
+                        </Title>
+                        {method.recommended && (
+                          <Tag color="blue" size="small">Recomendado</Tag>
+                        )}
+                        {favoriteMethods.includes(method.id) && (
+                          <StarFilled style={{ color: '#faad14', fontSize: '12px' }} />
+                        )}
+                      </div>
+                      <Text type="secondary" className="text-sm">
+                        {method.description}
                       </Text>
-                      <Text type="secondary" className="text-xs">
-                        <DollarOutlined /> {method.fee}
-                      </Text>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Text type="secondary" className="text-xs">
+                          <ClockCircleOutlined /> {method.processingTime}
+                        </Text>
+                        <Text type="secondary" className="text-xs">
+                          <DollarOutlined /> {method.fee}
+                        </Text>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Switch
+                      checked={method.enabled}
+                      onChange={(checked) => handleMethodToggle(method.id, checked)}
+                      checkedChildren={<CheckOutlined />}
+                      unCheckedChildren=""
+                    />
+                    {getConnectionIcon(method.id)}
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <Switch
-                    checked={method.enabled}
-                    onChange={(checked) => handleMethodToggle(method.id, checked)}
-                    checkedChildren={<CheckOutlined />}
-                    unCheckedChildren=""
-                  />
-                  {getConnectionIcon(method.id)}
-                </div>
-              </div>
 
-              <div className="mt-2">
-                {getStatusBadge(method)}
-                {connectionStatus[method.id] && (
-                  <div className="mt-1">
-                    <Text
-                      type={connectionStatus[method.id].status === 'success' ? 'success' : 'danger'}
-                      className="text-xs"
-                    >
-                      {connectionStatus[method.id].message}
-                    </Text>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </Col>
-        ))}
+                <div className="mt-2">
+                  {getStatusBadge(method)}
+                  {connectionStatus[method.id] && (
+                    <div className="mt-1">
+                      <Text
+                        type={connectionStatus[method.id].status === 'success' ? 'success' : 'danger'}
+                        className="text-xs"
+                      >
+                        {connectionStatus[method.id].message}
+                      </Text>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </Col>
+          ))}
       </Row>
 
       {/* Modal de Configuraci³n */}

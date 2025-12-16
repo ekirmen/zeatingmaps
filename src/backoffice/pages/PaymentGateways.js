@@ -4,7 +4,7 @@ import PaymentMethodsConfig from '../components/PaymentMethodsConfig';
 
 const { Title, Text } = Typography;
 
-
+const PaymentGateways = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -19,5 +19,5 @@ const { Title, Text } = Typography;
   );
 };
 
-export default PaymentGateways; 
+export default PaymentGateways;
 

@@ -21,9 +21,9 @@ export const Mesa = ({
   const strokeColor = isSelected
     ? '#0066FF'
     : getBorderColor({
-        seatColor: fillColor,
-        zona: typeof zonaId === 'object' ? zonaId : null,
-      });
+      seatColor: fillColor,
+      zona: typeof zonaId === 'object' ? zonaId : null,
+    });
 
   return (
     <Group
@@ -43,7 +43,7 @@ export const Mesa = ({
         strokeWidth={isSelected ? 3 : 2}
         cornerRadius={5}
       />
-      
+
       <Text
         x={0}
         y={-25}
@@ -76,7 +76,14 @@ export const Mesa = ({
   );
 };
 
-export 
+export const Silla = ({
+  silla,
+  isSelected,
+  onClick,
+  onDragEnd,
+  getBorderColor,
+}) => {
+  const { x, y, width, height, numero, fila, estado, shape, zonaId } = silla;
 
   // Colores basados en el estado del asiento
   const seatColors = {
@@ -92,9 +99,9 @@ export
   const strokeColor = isSelected
     ? '#0066FF'
     : getBorderColor({
-        seatColor: fillColor,
-        zona: typeof zonaId === 'object' ? zonaId : null,
-      });
+      seatColor: fillColor,
+      zona: typeof zonaId === 'object' ? zonaId : null,
+    });
 
   return (
     <Group

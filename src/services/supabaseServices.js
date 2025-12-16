@@ -10,7 +10,6 @@ const logger = (typeof window !== 'undefined' && window.logger)
 // ✅ fetchMapa SIN usar relaciones automáticas
 export const fetchMapa = async (salaId) => {
   if (!salaId) {
-
     return null;
   }
 
@@ -48,17 +47,35 @@ export const fetchMapa = async (salaId) => {
   }
 };
 
-export 
+export const fetchAsientosOcupados = async (funcionId) => {
+  // TODO: Implement query logic
+  const { data, error } = await supabase
+    .from('asientos_ocupados') // Assuming table name
+    .select('*')
+    .eq('funcion_id', funcionId);
+
   if (error) throw error;
   return data;
 };
 
-export 
+export const fetchAsientosReservados = async (funcionId) => {
+  // TODO: Implement query logic
+  const { data, error } = await supabase
+    .from('seat_locks')
+    .select('seat_id')
+    .eq('funcion_id', funcionId);
+
   if (error) throw error;
   return data.map(a => a.seat_id);
 };
 
-export 
+export const fetchBloqueos = async (salaId) => {
+  // TODO: Implement query logic
+  const { data, error } = await supabase
+    .from('bloqueos')
+    .select('*')
+    .eq('sala_id', salaId);
+
   if (error) throw error;
   return data;
 };
@@ -72,7 +89,13 @@ export const fetchPlantillaPorFuncion = async (funcionId) => {
   return data?.[0] ?? null;
 };
 
-export 
+export const fetchUserAbonos = async (userId) => {
+  // TODO: Implement query logic
+  const { data, error } = await supabase
+    .from('abonos')
+    .select('*, users:usuario_id(*)')
+    .eq('usuario_id', userId);
+
   if (error) throw error;
   return data.map(a => ({ ...a, user: a.users }));
 };

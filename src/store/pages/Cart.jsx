@@ -30,6 +30,7 @@ const TicketDownloadButton = ({ seat, locator, isPaid }) => {
     const [downloading, setDownloading] = useState(false);
 
 
+    const handleDownload = async () => {
         if (!locator || !isPaid) return;
 
         setDownloading(true);
@@ -179,15 +180,15 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
 
     // Si hay selectedFunctionId, filtrar items de esa funci³n
     const filteredItems = selectedFunctionId
-      ? items.filter(item => {
-          const itemFunctionId = item.functionId || item.funcionId;
-          const matches = String(itemFunctionId) === String(selectedFunctionId);
-          // Debug: log si hay items que no coinciden
-          if (!matches && itemFunctionId) {
-          }
-          return matches;
+        ? items.filter(item => {
+            const itemFunctionId = item.functionId || item.funcionId;
+            const matches = String(itemFunctionId) === String(selectedFunctionId);
+            // Debug: log si hay items que no coinciden
+            if (!matches && itemFunctionId) {
+            }
+            return matches;
         })
-      : items;
+        : items;
 
     // State to track paid seats
     const [paidSeatsSet, setPaidSeatsSet] = useState(new Set());
@@ -201,8 +202,8 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
 
     // Debug: verificar itemCount y hideCheckoutButton
     useEffect(() => {
-      if (itemCount > 0) {
-      }
+        if (itemCount > 0) {
+        }
     }, [itemCount, hideCheckoutButton, filteredItems.length, items.length]);
 
     // Format price helper
@@ -212,22 +213,22 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
 
     // Calculate totals
     const subtotal = (filteredItems && Array.isArray(filteredItems) ? filteredItems.reduce((sum, item) => sum + (item.precio || 0), 0) : 0) +
-                    (products && Array.isArray(products) ? products.reduce((sum, product) => sum + (product.price || 0), 0) : 0);
+        (products && Array.isArray(products) ? products.reduce((sum, product) => sum + (product.price || 0), 0) : 0);
 
     // Formatear tiempo restante
     const formatTime = (seconds) => {
-      if (!seconds || seconds <= 0) return '00:00';
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = seconds % 60;
-      return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        if (!seconds || seconds <= 0) return '00:00';
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
     // Obtener color del temporizador
     const getTimerColor = () => {
-      if (!timeLeft || timeLeft <= 0) return '#999';
-      if (timeLeft <= 60) return '#ff4d4f'; // Rojo ºltimos 60 segundos
-      if (timeLeft <= 300) return '#faad14'; // Amarillo ºltimos 5 minutos
-      return '#52c41a'; // Verde por defecto
+        if (!timeLeft || timeLeft <= 0) return '#999';
+        if (timeLeft <= 60) return '#ff4d4f'; // Rojo ºltimos 60 segundos
+        if (timeLeft <= 300) return '#faad14'; // Amarillo ºltimos 5 minutos
+        return '#52c41a'; // Verde por defecto
     };
 
 
@@ -417,47 +418,47 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
             <FacebookPixel />
 
             <div className="store-card-header" style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              borderBottom: '1px solid var(--store-gray-200)',
-              paddingBottom: '16px'
-            }}>
-              <div style={{
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <h1 className="store-text-xl md:store-text-2xl store-font-bold">
-                  Carrito de Compras
-                  {itemCount > 0 && (
-                    <span className="store-ml-2 store-text-base store-font-normal store-text-gray-500">
-                      ({itemCount})
-                    </span>
-                  )}
-                </h1>
-              </div>
-              {/* Timer arriba */}
-              {showTimer && Number(timeLeft) > 0 && (
+                flexDirection: 'column',
+                gap: '12px',
+                borderBottom: '1px solid var(--store-gray-200)',
+                paddingBottom: '16px'
+            }}>
                 <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  gap: '6px',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  background: timeLeft <= 60 ? '#fff1f0' : '#f0f7ff',
-                  border: timeLeft <= 60 ? '2px solid #ff4d4f' : '1px solid #1890ff',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: getTimerColor(),
-                  width: 'fit-content',
-                  animation: timeLeft <= 60 ? 'pulse 2s infinite' : 'none'
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
                 }}>
-                  <ClockCircleOutlined />
-                  <span>Tiempo restante: {formatTime(timeLeft)}</span>
+                    <h1 className="store-text-xl md:store-text-2xl store-font-bold">
+                        Carrito de Compras
+                        {itemCount > 0 && (
+                            <span className="store-ml-2 store-text-base store-font-normal store-text-gray-500">
+                                ({itemCount})
+                            </span>
+                        )}
+                    </h1>
                 </div>
-              )}
+                {/* Timer arriba */}
+                {showTimer && Number(timeLeft) > 0 && (
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        gap: '6px',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        background: timeLeft <= 60 ? '#fff1f0' : '#f0f7ff',
+                        border: timeLeft <= 60 ? '2px solid #ff4d4f' : '1px solid #1890ff',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: getTimerColor(),
+                        width: 'fit-content',
+                        animation: timeLeft <= 60 ? 'pulse 2s infinite' : 'none'
+                    }}>
+                        <ClockCircleOutlined />
+                        <span>Tiempo restante: {formatTime(timeLeft)}</span>
+                    </div>
+                )}
             </div>
 
             <div className="store-card-body" style={{ flex: '1 1 auto', overflow: 'auto' }}>
@@ -483,7 +484,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             <p className="store-text-sm store-text-gray-400 mt-2">A±ade asientos al carrito</p>
                         </div>
                     ) : (
-                    <>
+                        <>
                             {/* Locator Seats Section */}
                             {currentLocator && locatorSeats.length > 0 && (
                                 <div className="store-space-y-4">
@@ -549,108 +550,108 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                             </div>
                                         )}
                                     </div>
-                            </div>
-                        )}
+                                </div>
+                            )}
 
-                        {/* Current Cart Seats Section */}
-                        {filteredItems && Array.isArray(filteredItems) && filteredItems.length > 0 && (
-                            <div className="mb-6">
-                                <Title level={5} className="mb-2">
-                                    <UserOutlined className="mr-2" />
-                                    Asientos Seleccionados ({(filteredItems && Array.isArray(filteredItems) ? filteredItems.length : 0)})
-                                </Title>
-                                {(filteredItems && Array.isArray(filteredItems) ? filteredItems.map((item) => {
-                                    const seatId = item.sillaId || item._id || item.id;
-                                    const isPaid = paidSeatsSet.has(seatId);
+                            {/* Current Cart Seats Section */}
+                            {filteredItems && Array.isArray(filteredItems) && filteredItems.length > 0 && (
+                                <div className="mb-6">
+                                    <Title level={5} className="mb-2">
+                                        <UserOutlined className="mr-2" />
+                                        Asientos Seleccionados ({(filteredItems && Array.isArray(filteredItems) ? filteredItems.length : 0)})
+                                    </Title>
+                                    {(filteredItems && Array.isArray(filteredItems) ? filteredItems.map((item) => {
+                                        const seatId = item.sillaId || item._id || item.id;
+                                        const isPaid = paidSeatsSet.has(seatId);
 
-                                    return (
+                                        return (
+                                            <Card
+                                                key={item.sillaId}
+                                                size="small"
+                                                className="mb-2"
+                                                actions={[
+                                                    <Button
+                                                        type="text"
+                                                        icon={<DeleteOutlined />}
+                                                        onClick={() => removeFromCart(seatId)}
+                                                        size="small"
+                                                        disabled={isPaid}
+                                                        className={isPaid ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"}
+                                                    >
+                                                        {isPaid ? 'Pagado' : 'Eliminar'}
+                                                    </Button>
+                                                ]}
+                                            >
+                                                <div className="flex justify-between items-center">
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-sm">
+                                                            {item.nombre || `Asiento ${item.sillaId || item.id || item._id}`}
+                                                        </div>
+                                                        <div className="text-xs text-gray-600" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                            {item.nombreZona && (
+                                                                <div>Zona: {item.nombreZona}</div>
+                                                            )}
+                                                            {item.nombreMesa && (
+                                                                <div>Mesa: {item.nombreMesa}</div>
+                                                            )}
+                                                            {!item.nombreZona && !item.nombreMesa && (
+                                                                <div>General</div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="font-bold text-sm">
+                                                            ${formatPrice(item.precio || 0)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        );
+                                    }) : null)}
+                                </div>
+                            )}
+
+                            {/* Products Section */}
+                            {products && Array.isArray(products) && products.length > 0 && (
+                                <div>
+                                    <Title level={5} className="mb-2">
+                                        <ShoppingCartOutlined className="mr-2" />
+                                        Productos ({(products && Array.isArray(products) ? products.length : 0)})
+                                    </Title>
+                                    {(products && Array.isArray(products) ? products.map((product) => (
                                         <Card
-                                            key={item.sillaId}
+                                            key={product.id}
                                             size="small"
                                             className="mb-2"
                                             actions={[
                                                 <Button
                                                     type="text"
                                                     icon={<DeleteOutlined />}
-                                                    onClick={() => removeFromCart(seatId)}
+                                                    onClick={() => removeProduct(product.id)}
                                                     size="small"
-                                                    disabled={isPaid}
-                                                    className={isPaid ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"}
+                                                    className="text-gray-600 hover:text-gray-900"
                                                 >
-                                                    {isPaid ? 'Pagado' : 'Eliminar'}
+                                                    Eliminar
                                                 </Button>
                                             ]}
                                         >
-                                        <div className="flex justify-between items-center">
-                                            <div className="flex-1">
-                                                <div className="font-medium text-sm">
-                                                    {item.nombre || `Asiento ${item.sillaId || item.id || item._id}`}
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <Text strong>{product.name}</Text>
+                                                    <br />
+                                                    <Text type="secondary">
+                                                        Cantidad: {product.quantity}
+                                                    </Text>
                                                 </div>
-                                                <div className="text-xs text-gray-600" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                    {item.nombreZona && (
-                                                      <div>Zona: {item.nombreZona}</div>
-                                                    )}
-                                                    {item.nombreMesa && (
-                                                      <div>Mesa: {item.nombreMesa}</div>
-                                                    )}
-                                                    {!item.nombreZona && !item.nombreMesa && (
-                                                      <div>General</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="font-bold text-sm">
-                                                    ${formatPrice(item.precio || 0)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                    );
-                                }) : null)}
-                            </div>
-                        )}
-
-                        {/* Products Section */}
-                        {products && Array.isArray(products) && products.length > 0 && (
-                            <div>
-                                <Title level={5} className="mb-2">
-                                    <ShoppingCartOutlined className="mr-2" />
-                                    Productos ({(products && Array.isArray(products) ? products.length : 0)})
-                                </Title>
-                                {(products && Array.isArray(products) ? products.map((product) => (
-                                    <Card
-                                        key={product.id}
-                                        size="small"
-                                        className="mb-2"
-                                        actions={[
-                                            <Button
-                                                type="text"
-                                                icon={<DeleteOutlined />}
-                                                onClick={() => removeProduct(product.id)}
-                                                size="small"
-                                                className="text-gray-600 hover:text-gray-900"
-                                            >
-                                                Eliminar
-                                            </Button>
-                                        ]}
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <Text strong>{product.name}</Text>
-                                                <br />
-                                                <Text type="secondary">
-                                                    Cantidad: {product.quantity}
+                                                <Text strong className="text-lg">
+                                                    ${formatPrice(product.price * product.quantity)}
                                                 </Text>
                                             </div>
-                                            <Text strong className="text-lg">
-                                                ${formatPrice(product.price * product.quantity)}
-                                            </Text>
-                                        </div>
-                                    </Card>
-                                )) : null)}
-                            </div>
-                        )}
-                    </>
+                                        </Card>
+                                    )) : null)}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 

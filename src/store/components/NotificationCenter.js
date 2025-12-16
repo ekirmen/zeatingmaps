@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Badge, 
-  Popover, 
-  List, 
-  Button, 
-  Typography, 
+import {
+  Badge,
+  Popover,
+  List,
+  Button,
+  Typography,
   Space,
   Avatar,
   Tag,
   Empty,
   Spin
 } from '../../utils/antdComponents';
-import { 
-  BellOutlined, 
+import {
+  BellOutlined,
   CheckCircleOutlined,
   CloseOutlined,
   CreditCardOutlined,
@@ -34,9 +34,12 @@ const NotificationCenter = () => {
     subscribeToNotifications();
   }, []);
 
-  
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (user) {
         const { data, error } = await supabase
           .from('notifications')
@@ -57,8 +60,11 @@ const NotificationCenter = () => {
     }
   };
 
-  
-    
+
+
+  const subscribeToNotifications = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+
     if (user) {
       const subscription = supabase
         .channel('notifications')
@@ -90,8 +96,8 @@ const NotificationCenter = () => {
 
       if (error) throw error;
 
-      setNotifications(prev => 
-        prev.map(n => 
+      setNotifications(prev =>
+        prev.map(n =>
           n.id === notificationId ? { ...n, read: true } : n
         )
       );
@@ -104,7 +110,7 @@ const NotificationCenter = () => {
   const markAllAsRead = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (user) {
         const { error } = await supabase
           .from('notifications')
@@ -114,7 +120,7 @@ const NotificationCenter = () => {
 
         if (error) throw error;
 
-        setNotifications(prev => 
+        setNotifications(prev =>
           prev.map(n => ({ ...n, read: true }))
         );
         setUnreadCount(0);
@@ -158,8 +164,8 @@ const NotificationCenter = () => {
       <div className="flex justify-between items-center mb-4">
         <Text strong>Notificaciones</Text>
         {unreadCount > 0 && (
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             size="small"
             onClick={markAllAsRead}
           >
@@ -183,14 +189,13 @@ const NotificationCenter = () => {
           dataSource={notifications}
           renderItem={(notification) => (
             <List.Item
-              className={`cursor-pointer hover:bg-gray-50 p-2 rounded ${
-                !notification.read ? 'bg-blue-50' : ''
-              }`}
+              className={`cursor-pointer hover:bg-gray-50 p-2 rounded ${!notification.read ? 'bg-blue-50' : ''
+                }`}
               onClick={() => markAsRead(notification.id)}
             >
               <List.Item.Meta
                 avatar={
-                  <Avatar 
+                  <Avatar
                     icon={getNotificationIcon(notification.type)}
                     size="small"
                   />
@@ -200,8 +205,8 @@ const NotificationCenter = () => {
                     <Text strong={!notification.read}>
                       {notification.title}
                     </Text>
-                    <Tag 
-                      color={getNotificationColor(notification.type)} 
+                    <Tag
+                      color={getNotificationColor(notification.type)}
                       size="small"
                     >
                       {notification.type}
@@ -261,5 +266,5 @@ const NotificationCenter = () => {
   );
 };
 
-export default NotificationCenter; 
+export default NotificationCenter;
 

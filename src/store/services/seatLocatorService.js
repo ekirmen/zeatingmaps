@@ -3,6 +3,7 @@ import { supabase } from '../../supabaseClient';
 /**
  * Normaliza un arreglo de asientos asegurando una estructura consistente
  */
+const normalizeSeats = (seats) => {
 
   if (!Array.isArray(seats)) return [];
 
@@ -413,10 +414,10 @@ class SeatLocatorService {
     const primarySeat = normalizedSeats[0];
     const zoneInfo = primarySeat
       ? {
-          zona_id: primarySeat.zonaId,
-          zona_nombre: primarySeat.zonaNombre,
-          precio: primarySeat.precio,
-        }
+        zona_id: primarySeat.zonaId,
+        zona_nombre: primarySeat.zonaNombre,
+        precio: primarySeat.precio,
+      }
       : null;
 
     return this.updateSeatsWithLocator(seatIds, locator, userId, {

@@ -15,7 +15,7 @@ const stripInvisibleCharacters = (value) =>
   typeof value === 'string' ? value.replace(/[\u200B-\u200D\uFEFF]/g, '') : value;
 
 const resolvePaymentTable = async (client = supabase) => {
-
+  if (paymentTableCache.has(client)) {
     return paymentTableCache.get(client);
   }
 
@@ -100,7 +100,9 @@ const setCachedFeeProfile = (gatewayId, profile) => {
   feeCache.set(gatewayId, { profile, timestamp: Date.now() });
 };
 
-export 
+export const clearFeeCache = (gatewayId = null) => {
+  if (gatewayId) {
+    feeCache.delete(gatewayId);
     return;
   }
   feeCache.clear();
@@ -136,7 +138,12 @@ const sanitizeUuid = (rawValue, { fieldName, required = false } = {}) => {
 /**
  * Obtiene todas las pasarelas de pago activas
  */
-export 
+/**
+ * Obtiene todas las pasarelas de pago activas
+ */
+export const getActivePaymentGateways = async () => {
+  try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
       .from(paymentTable)
       .select('*')
@@ -155,7 +162,12 @@ export
 /**
  * Obtiene todas las pasarelas de pago (activas e inactivas)
  */
-export 
+/**
+ * Obtiene todas las pasarelas de pago (activas e inactivas)
+ */
+export const getAllPaymentGateways = async () => {
+  try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
       .from(paymentTable)
       .select('*')
@@ -173,7 +185,12 @@ export
 /**
  * Obtiene la configuración de una pasarela específica
  */
-export 
+/**
+ * Obtiene la configuración de una pasarela específica
+ */
+export const getGatewayConfig = async (gatewayId) => {
+  try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
       .from(paymentTable)
       .select('id, config, fee_structure, supported_currencies')
@@ -243,9 +260,17 @@ const getGatewayFeeProfile = async (gatewayId, { forceRefresh = false } = {}) =>
 /**
  * Calcula el precio con comisiones de una pasarela
  */
-export 
-
-  if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
+/**
+ * Calcula el precio con comisiones de una pasarela
+ */
+export const calculatePriceWithFees = async (
+  gatewayId,
+  basePrice,
+  currency = 'USD',
+  { allowCurrencyFallback = true, forceRefresh = false } = {}
+) => {
+  const normalizedPrice = Number(basePrice);
+  if (isNaN(normalizedPrice) || normalizedPrice < 0) {
     throw new Error('basePrice debe ser un número válido y no negativo');
   }
 
@@ -297,7 +322,14 @@ export
 /**
  * Obtiene las tasas de todas las pasarelas activas
  */
-export 
+/**
+ * Obtiene las tasas de todas las pasarelas activas
+ */
+export const getAllGatewaysFees = async (gateways) => {
+  try {
+    if (!gateways || !Array.isArray(gateways)) {
+      return [];
+    }
     const feesPromises = gateways.map(async (gateway) => {
       const fees = await getGatewayFees(gateway.id);
       return {
@@ -316,7 +348,21 @@ export
 /**
  * Valida la configuración de una pasarela
  */
-export 
+/**
+ * Valida la configuración de una pasarela
+ */
+export const validateGatewayConfig = (gateway) => {
+  const validations = {
+    stripe: ['secret_key', 'public_key'],
+    paypal: ['client_id', 'client_secret'],
+    zelle: ['email'],
+    pago_movil: ['phone', 'bank_code', 'id_number'],
+    // Agregar más validaciones según tipos
+  };
+
+  if (!gateway || !gateway.type) {
+    return { valid: false, missingFields: [], message: 'Tipo de pasarela requerido' };
+  }
 
   const requiredFields = validations[gateway.type] || [];
   const missingFields = [];
@@ -340,7 +386,12 @@ export
 /**
  * Crea una nueva pasarela de pago
  */
-export 
+/**
+ * Crea una nueva pasarela de pago
+ */
+export const createPaymentGateway = async (gatewayData) => {
+  try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
       .from(paymentTable)
       .insert([gatewayData])
@@ -358,7 +409,12 @@ export
 /**
  * Actualiza una pasarela de pago existente
  */
-export 
+/**
+ * Actualiza una pasarela de pago existente
+ */
+export const updatePaymentGateway = async (gatewayId, updates) => {
+  try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
       .from(paymentTable)
       .update(updates)
@@ -377,7 +433,12 @@ export
 /**
  * Elimina una pasarela de pago
  */
-export 
+/**
+ * Elimina una pasarela de pago
+ */
+export const deletePaymentGateway = async (gatewayId) => {
+  try {
+    const paymentTable = await resolvePaymentTable();
     const { error } = await supabase
       .from(paymentTable)
       .delete()
@@ -394,7 +455,12 @@ export
 /**
  * Obtiene una pasarela específica por tipo
  */
-export 
+/**
+ * Obtiene una pasarela específica por tipo
+ */
+export const getPaymentGatewayByType = async (type) => {
+  try {
+    const paymentTable = await resolvePaymentTable();
     const { data, error } = await supabase
       .from(paymentTable)
       .select('*')
@@ -414,8 +480,15 @@ export
 /**
  * Valida los datos de pago antes de crear la transacción
  */
-export 
+/**
+ * Valida los datos de pago antes de crear la transacción
+ */
+export const validatePaymentData = (paymentData) => {
+  const errors = [];
 
+  if (!paymentData) {
+    return { isValid: false, errors: ['Datos de pago requeridos'] };
+  }
   if (!paymentData.orderId) {
     errors.push('orderId es requerido');
   }
@@ -451,7 +524,11 @@ export
 /**
  * Crea una transacción de pago con validación
  */
-export 
+/**
+ * Crea una transacción de pago con validación
+ */
+export const createPaymentTransactionWithValidation = async (paymentData) => {
+  const validation = validatePaymentData(paymentData);
   if (!validation.isValid) {
     throw new Error(`Datos de pago inválidos: ${validation.errors.join(', ')}`);
   }
@@ -596,11 +673,11 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
 
         return fallbackId
           ? {
-              id: fallbackId,
-              user_id: fallbackId,
-              userId: fallbackId,
-              raw: value,
-            }
+            id: fallbackId,
+            user_id: fallbackId,
+            userId: fallbackId,
+            raw: value,
+          }
           : { raw: value };
       }
 
@@ -658,7 +735,7 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
         }
 
         if (error) {
-          
+
           // Si falló por permisos u otra razón inesperada, asumimos que la BD podrá validar el FK
           return { exists: true, verified: false };
         }
@@ -786,63 +863,63 @@ export const createPaymentTransaction = async (transactionData, options = {}) =>
     const rawSeats = transactionData.seats || transactionData.items || [];
     const normalizedSeats = Array.isArray(rawSeats)
       ? rawSeats
-          .map((s) => {
-            const seatIdRaw =
-              s.seat_id ||
-              s.id ||
-              s._id ||
-              s.sillaId ||
-              s.seatId ||
-              s.seat ||
-              s.tableSeatId ||
-              s.table_seat_id;
+        .map((s) => {
+          const seatIdRaw =
+            s.seat_id ||
+            s.id ||
+            s._id ||
+            s.sillaId ||
+            s.seatId ||
+            s.seat ||
+            s.tableSeatId ||
+            s.table_seat_id;
 
-            const seatId = typeof seatIdRaw === 'number' ? seatIdRaw.toString() : seatIdRaw?.toString().trim();
+          const seatId = typeof seatIdRaw === 'number' ? seatIdRaw.toString() : seatIdRaw?.toString().trim();
 
-            if (!seatId) {
-              return null;
-            }
+          if (!seatId) {
+            return null;
+          }
 
-            return {
-              id: seatId,
-              _id: s._id || seatId,
-              seat_id: seatId,
-              seatId: s.seatId || seatId,
-              name: s.name || s.nombre || `Asiento ${seatId}`,
-              price: Number(s.price ?? s.precio ?? 0),
-              zona: s.zona || s.zonaId || s.nombreZona || null,
-              mesa: s.mesa || s.mesaId || null,
-            };
-          })
-          .filter(Boolean)
+          return {
+            id: seatId,
+            _id: s._id || seatId,
+            seat_id: seatId,
+            seatId: s.seatId || seatId,
+            name: s.name || s.nombre || `Asiento ${seatId}`,
+            price: Number(s.price ?? s.precio ?? 0),
+            zona: s.zona || s.zonaId || s.nombreZona || null,
+            mesa: s.mesa || s.mesaId || null,
+          };
+        })
+        .filter(Boolean)
       : [];
 
     const computedPayments = transactionData.payments && Array.isArray(transactionData.payments)
       ? transactionData.payments.map((payment) => {
-          const normalizedAmount = Number(payment.amount);
-          const amountValue = Number.isFinite(normalizedAmount) ? normalizedAmount : 0;
-          const referenceValue =
-            typeof payment.reference === 'string'
-              ? stripInvisibleCharacters(payment.reference).trim()
-              : payment.reference || null;
+        const normalizedAmount = Number(payment.amount);
+        const amountValue = Number.isFinite(normalizedAmount) ? normalizedAmount : 0;
+        const referenceValue =
+          typeof payment.reference === 'string'
+            ? stripInvisibleCharacters(payment.reference).trim()
+            : payment.reference || null;
 
-          return {
-            method: payment.method || transactionData.paymentMethod || transactionData.method || gatewayName || 'manual',
-            amount: amountValue,
-            metadata: payment.metadata || null,
-            reference: referenceValue,
-            status: payment.status || transactionData.status || 'completed',
-          };
-        })
+        return {
+          method: payment.method || transactionData.paymentMethod || transactionData.method || gatewayName || 'manual',
+          amount: amountValue,
+          metadata: payment.metadata || null,
+          reference: referenceValue,
+          status: payment.status || transactionData.status || 'completed',
+        };
+      })
       : [
-          {
-            method: transactionData.paymentMethod || transactionData.method || gatewayName || 'manual',
-            amount,
-            metadata: transactionData.metadata || null,
-            reference: orderId || null,
-            status: transactionData.status || 'completed',
-          },
-        ];
+        {
+          method: transactionData.paymentMethod || transactionData.method || gatewayName || 'manual',
+          amount,
+          metadata: transactionData.metadata || null,
+          reference: orderId || null,
+          status: transactionData.status || 'completed',
+        },
+      ];
 
     const insertData = {
       order_id: orderId,
@@ -1011,7 +1088,7 @@ export const updatePaymentTransactionStatus = async (
     const previousStatus = currentTransaction?.status;
     const newStatus = status;
     const statusChangedToCompleted = (previousStatus !== 'completed' && previousStatus !== 'pagado') &&
-                                     (newStatus === 'completed' || newStatus === 'pagado');
+      (newStatus === 'completed' || newStatus === 'pagado');
 
     if (statusChangedToCompleted && data.locator && data.user_id) {
       try {
@@ -1046,7 +1123,11 @@ export const updatePaymentTransactionStatus = async (
   }
 };
 
-export 
+export const processPaymentNotification = async (notificationData) => {
+  const { locator, transactionId, status, gatewayResponse, seatStatusHint } = notificationData;
+
+  if (!locator && !transactionId) {
+    throw new Error('Locator o transactionId requeridos para procesar notificación');
   }
 
   let transaction = null;
@@ -1082,7 +1163,16 @@ export
 /**
  * Obtiene las transacciones de un pedido
  */
-export 
+/**
+ * Obtiene las transacciones de un pedido
+ */
+export const getPaymentTransactionsByOrder = async (orderId) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('order_id', orderId)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Form, 
-  InputNumber, 
-  Button, 
-  Typography, 
+import {
+  Card,
+  Row,
+  Col,
+  Form,
+  InputNumber,
+  Button,
+  Typography,
   Space,
   Alert,
   Divider,
@@ -16,7 +16,7 @@ import {
   Spin,
   Tooltip
 } from '../../utils/antdComponents';
-import { 
+import {
   ClockCircleOutlined,
   SaveOutlined,
   ReloadOutlined,
@@ -27,7 +27,7 @@ import { supabase } from '../../supabaseClient';
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
-
+const clampValue = (value, fallback, min = 0, max = Infinity) => {
   if (!Number.isFinite(value)) return fallback;
   return Math.min(max, Math.max(min, value));
 };
@@ -86,7 +86,7 @@ const SeatSettings = () => {
 
       setCurrentSettings(settings);
       form.setFieldsValue(settings);
-      
+
     } catch (error) {
       console.error('Error loading seat settings:', error);
       message.error('Error al cargar configuraciones');
@@ -98,7 +98,7 @@ const SeatSettings = () => {
   const saveSettings = async (values) => {
     try {
       setSaving(true);
-      
+
       // Guardar en localStorage (temporal - despu©s se migrar¡ a base de datos)
       const sanitizedLock = clampValue(values.lockExpirationMinutes, currentSettings.lockExpirationMinutes);
       const sanitizedMobile = clampValue(
@@ -140,7 +140,7 @@ const SeatSettings = () => {
       setCurrentSettings(sanitizedValues);
       form.setFieldsValue(sanitizedValues);
       message.success('Configuraciones guardadas exitosamente');
-      
+
     } catch (error) {
       console.error('Error saving seat settings:', error);
       message.error('Error al guardar configuraciones');
@@ -160,7 +160,7 @@ const SeatSettings = () => {
       enableNotifications: true,
       enableRestoration: true
     };
-    
+
     form.setFieldsValue(defaultSettings);
     setCurrentSettings(defaultSettings);
     localStorage.setItem('cart_lock_minutes', '15');
@@ -397,14 +397,14 @@ const SeatSettings = () => {
           {/* Botones de Acci³n */}
           <div className="flex justify-between items-center">
             <Space>
-              <Button 
+              <Button
                 icon={<ReloadOutlined />}
                 onClick={handleReset}
                 disabled={saving}
               >
                 Restablecer
               </Button>
-              <Button 
+              <Button
                 icon={<ReloadOutlined />}
                 onClick={loadSettings}
                 disabled={saving}
@@ -413,7 +413,7 @@ const SeatSettings = () => {
               </Button>
             </Space>
 
-            <Button 
+            <Button
               type="primary"
               icon={<SaveOutlined />}
               htmlType="submit"
@@ -437,15 +437,15 @@ const SeatSettings = () => {
           tablets, permiti©ndote ajustar reservas m¡s cortas o largas segºn tu estrategia.
         </Paragraph>
         <Paragraph>
-          <strong>Tiempo de Preservaci³n:</strong> Durante este tiempo, si el usuario regresa a la p¡gina, 
+          <strong>Tiempo de Preservaci³n:</strong> Durante este tiempo, si el usuario regresa a la p¡gina,
           sus asientos se restauran autom¡ticamente.
         </Paragraph>
         <Paragraph>
-          <strong>Tiempo de Advertencia:</strong> Antes de que expiren los asientos, se muestra una 
+          <strong>Tiempo de Advertencia:</strong> Antes de que expiren los asientos, se muestra una
           advertencia al usuario para que complete su compra.
         </Paragraph>
         <Paragraph>
-          <strong>Limpieza Autom¡tica:</strong> Sistema que elimina asientos abandonados y notifica 
+          <strong>Limpieza Autom¡tica:</strong> Sistema que elimina asientos abandonados y notifica
           a los usuarios sobre el estado de sus selecciones.
         </Paragraph>
       </Card>

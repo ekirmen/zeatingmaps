@@ -3,14 +3,16 @@
  * Esto permite que otros usuarios vean inmediatamente cuando un asiento está seleccionado
  */
 
-export 
+export const updateSeatStateInMapa = (mapa, seatId, newState) => {
+  if (!mapa || !mapa.contenido) {
+    return mapa;
   }
 
   const updatedMapa = {
     ...mapa,
     contenido: mapa.contenido.map(elemento => {
       // Caso 1: Mesa con sillas
-
+      if (elemento.sillas && Array.isArray(elemento.sillas)) {
         return {
           ...elemento,
           sillas: elemento.sillas.map(silla => {
@@ -43,7 +45,9 @@ export
 /**
  * Función para obtener el estado actual de un asiento en el mapa
  */
-export 
+export const getSeatState = (mapa, seatId) => {
+  if (!mapa || !mapa.contenido) {
+    return null;
   }
 
   for (const elemento of mapa.contenido) {
@@ -67,6 +71,6 @@ export
 /**
  * Función para verificar si un asiento está disponible en el mapa
  */
-export 
+export const isSeatAvailable = (estado) => {
   return estado === 'disponible';
 };

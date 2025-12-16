@@ -7,8 +7,9 @@ const FeaturedEventsWidget = ({ maxEvents = 6, showStatus = true, showVenue = tr
   const { events, loading, error } = useEventsList();
 
 
-    if (!event.imagenes) return {};
-    
+  const getEventImages = (event) => {
+    if (!event?.imagenes) return {};
+
     try {
       if (typeof event.imagenes === 'string') {
         return JSON.parse(event.imagenes);
@@ -22,7 +23,7 @@ const FeaturedEventsWidget = ({ maxEvents = 6, showStatus = true, showVenue = tr
 
   const formatEventDate = (dateString) => {
     if (!dateString) return 'Fecha no disponible';
-    
+
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('es-ES', {
@@ -103,7 +104,7 @@ const FeaturedEventsWidget = ({ maxEvents = 6, showStatus = true, showVenue = tr
           {featuredEvents.map((event) => {
             const images = getEventImages(event);
             let displayImageUrl = `https://placehold.co/400x300/E0F2F7/000?text=${event.nombre?.charAt(0) || 'E'}`;
-            
+
             if (images) {
               displayImageUrl = images.obraImagen || images.portada || images.banner || displayImageUrl;
             }
@@ -126,17 +127,16 @@ const FeaturedEventsWidget = ({ maxEvents = 6, showStatus = true, showVenue = tr
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  
+
                   {/* Event Status Badge */}
                   {showStatus && event.estadoVenta && (
                     <div className="absolute top-3 right-3">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        event.estadoVenta === 'a-la-venta' 
-                          ? 'bg-green-100 text-green-800' 
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${event.estadoVenta === 'a-la-venta'
+                          ? 'bg-green-100 text-green-800'
                           : event.estadoVenta === 'agotado'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {event.estadoVenta.replace(/-/g, ' ')}
                       </span>
                     </div>
@@ -166,10 +166,10 @@ const FeaturedEventsWidget = ({ maxEvents = 6, showStatus = true, showVenue = tr
                   {/* Event Description Preview */}
                   {event.descripcionHTML && (
                     <div className="text-sm text-gray-600 mb-4 line-clamp-3">
-                      <div 
-                        dangerouslySetInnerHTML={{ 
-                          __html: event.descripcionHTML.replace(/<[^>]*>/g, '').substring(0, 100) + '...' 
-                        }} 
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: event.descripcionHTML.replace(/<[^>]*>/g, '').substring(0, 100) + '...'
+                        }}
                       />
                     </div>
                   )}

@@ -1,17 +1,22 @@
 import API_BASE_URL from '../utils/apiBase';
 
-const AutoWrapped_9lswhp = (props) => {
-  const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
+const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
 
-  export 
+export const getEmailTemplates = async (authHeader) => {
+  try {
     const res = await fetch(`${API_BASE_URL_WITH_API}/email-templates`, {
       headers: { Authorization: authHeader }
     });
-
+    if (!res.ok) throw new Error('Error fetching templates');
     return res.json();
-  };
+  } catch (error) {
+    console.error('Error getEmailTemplates:', error);
+    throw error;
+  }
+};
 
-  export 
+export const updateEmailTemplate = async (type, data, authHeader) => {
+  try {
     const res = await fetch(`${API_BASE_URL_WITH_API}/email-templates/${type}`, {
       method: 'PUT',
       headers: {
@@ -22,8 +27,8 @@ const AutoWrapped_9lswhp = (props) => {
     });
     if (!res.ok) throw new Error('Error saving template');
     return res.json();
-  };
-
+  } catch (error) {
+    console.error('Error updateEmailTemplate:', error);
+    throw error;
+  }
 };
-
-export default AutoWrapped_9lswhp;

@@ -8,13 +8,13 @@ const ProtectedRoute = ({ children, permission, requiredRole = null }) => {
   const location = useLocation();
 
   // Mostrar loading mientras se cargan los permisos
-
+  if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
       }}>
         <div>Cargando permisos...</div>
       </div>

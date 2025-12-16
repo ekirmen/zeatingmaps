@@ -30,6 +30,7 @@ const BuyEvent = () => {
   }, [id]);
 
 
+  if (loading) {
     return <div>Cargando detalles del evento para la compra...</div>;
   }
 

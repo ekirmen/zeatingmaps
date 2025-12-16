@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Steps, Button, Typography, Space, Tag, Progress, Modal, List, Avatar, Checkbox } from '../../utils/antdComponents';
-import { 
-  PlayCircleOutlined, 
-  CheckCircleOutlined, 
+import {
+  PlayCircleOutlined,
+  CheckCircleOutlined,
   ClockCircleOutlined,
   UserOutlined,
   BookOutlined,
@@ -38,7 +38,11 @@ const InteractiveTutorials = () => {
     loadUserProgress();
   }, []);
 
-  
+  const loadTutorials = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
       const { data, error } = await supabase
         .from('interactive_tutorials')
         .select('*')
@@ -54,7 +58,9 @@ const InteractiveTutorials = () => {
     }
   };
 
-
+  const loadUserProgress = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -110,7 +116,9 @@ const InteractiveTutorials = () => {
     }
   };
 
-  
+  const completeTutorial = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       await supabase
@@ -145,7 +153,9 @@ const InteractiveTutorials = () => {
     }
   };
 
-  
+  const saveProgress = async (completedSteps, currentStepIndex) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       await supabase
@@ -181,7 +191,7 @@ const InteractiveTutorials = () => {
   const renderTutorialCard = (tutorial) => {
     const progress = getProgressPercentage(tutorial.id);
     const status = getTutorialStatus(tutorial.id);
-    
+
 
     return (
       <Card
@@ -236,9 +246,9 @@ const InteractiveTutorials = () => {
               {status === 'in_progress' && (
                 <div style={{ marginTop: '8px' }}>
                   <Text type="secondary">Progreso: {progress}%</Text>
-                  <Progress 
-                    percent={progress} 
-                    size="small" 
+                  <Progress
+                    percent={progress}
+                    size="small"
                     style={{ marginTop: '4px' }}
                   />
                 </div>
@@ -276,7 +286,7 @@ const InteractiveTutorials = () => {
               dataSource={step.tasks}
               renderItem={(task, index) => (
                 <List.Item>
-                  <Checkbox 
+                  <Checkbox
                     checked={isCompleted}
                     disabled
                   >
@@ -356,8 +366,8 @@ const InteractiveTutorials = () => {
               current={currentStep}
               items={currentTutorial.steps.map((step, index) => ({
                 title: step.title,
-                status: completedSteps.includes(index) ? 'finish' : 
-                       index === currentStep ? 'process' : 'wait'
+                status: completedSteps.includes(index) ? 'finish' :
+                  index === currentStep ? 'process' : 'wait'
               }))}
               style={{ marginBottom: '24px' }}
             />

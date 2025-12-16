@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Modal, 
-  Form, 
-  Slider, 
-  Switch, 
-  Button, 
-  Space, 
-  Typography, 
-  Row, 
-  Col, 
+import {
+  Modal,
+  Form,
+  Slider,
+  Switch,
+  Button,
+  Space,
+  Typography,
+  Row,
+  Col,
   Card,
   Divider
 } from '../../utils/antdComponents';
@@ -96,7 +96,7 @@ const BackgroundFilterMenu = ({
       [filterKey]: value
     };
     setLocalFilters(newFilters);
-    
+
     if (onFiltersChange) {
       onFiltersChange(newFilters);
     }
@@ -108,7 +108,7 @@ const BackgroundFilterMenu = ({
       [filterKey]: enabled ? localFilters[filterKey] || 0 : null
     };
     setLocalFilters(newFilters);
-    
+
     if (onFiltersChange) {
       onFiltersChange(newFilters);
     }
@@ -119,10 +119,10 @@ const BackgroundFilterMenu = ({
     availableFilters.forEach(filter => {
       resetFilters[filter.key] = null;
     });
-    
+
     setLocalFilters(resetFilters);
     form.resetFields();
-    
+
     if (onResetFilters) {
       onResetFilters(resetFilters);
     }
@@ -137,6 +137,7 @@ const BackgroundFilterMenu = ({
 
   // ===== RENDERIZADO =====
 
+  if (!visible) {
     return null;
   }
 
@@ -197,7 +198,7 @@ const BackgroundFilterMenu = ({
                   onChange={(checked) => handleFilterToggle(filter.key, checked)}
                 />
               </div>
-              
+
               {localFilters[filter.key] !== null && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -210,7 +211,7 @@ const BackgroundFilterMenu = ({
                       Reset
                     </Button>
                   </div>
-                  
+
                   <Slider
                     min={filter.min}
                     max={filter.max}
@@ -230,8 +231,8 @@ const BackgroundFilterMenu = ({
         {/* ===== INFORMACI“N ADICIONAL ===== */}
         <Card size="small" title="Informaci³n">
           <Text type="secondary" className="text-sm">
-            Los filtros se aplican en tiempo real. Puedes combinar mºltiples filtros 
-            para crear efectos ºnicos. Usa el bot³n "Restablecer" para volver a la 
+            Los filtros se aplican en tiempo real. Puedes combinar mºltiples filtros
+            para crear efectos ºnicos. Usa el bot³n "Restablecer" para volver a la
             imagen original.
           </Text>
         </Card>

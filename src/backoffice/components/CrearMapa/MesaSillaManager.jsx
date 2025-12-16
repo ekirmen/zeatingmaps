@@ -5,12 +5,12 @@ import { PlusOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-const MesaSillaManager = ({ 
-  visible, 
-  onClose, 
-  mesa, 
+const MesaSillaManager = ({
+  visible,
+  onClose,
+  mesa,
   onAddSillas,
-  onRemoveSillas 
+  onRemoveSillas
 }) => {
   const [sillasConfig, setSillasConfig] = useState({
     rect: { top: 0, right: 0, bottom: 0, left: 0 },
@@ -31,6 +31,7 @@ const MesaSillaManager = ({
   const getSillaConfigForType = (type) => {
     switch (type) {
 
+      case 'rect':
         return (
           <div className="space-y-4">
             <Title level={5}>Sillas por lado</Title>
@@ -243,18 +244,18 @@ const MesaSillaManager = ({
         <Button key="cancel" onClick={onClose}>
           Cancelar
         </Button>,
-        <Button 
-          key="remove" 
-          danger 
+        <Button
+          key="remove"
+          danger
           onClick={handleRemoveSillas}
           disabled={getTotalSillas() === 0}
         >
           <DeleteOutlined />
           Remover Sillas
         </Button>,
-        <Button 
-          key="add" 
-          type="primary" 
+        <Button
+          key="add"
+          type="primary"
           onClick={handleAddSillas}
           disabled={getTotalSillas() === 0}
         >

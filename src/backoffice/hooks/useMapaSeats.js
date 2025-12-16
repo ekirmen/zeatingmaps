@@ -1,7 +1,7 @@
 // Hook para manejar creación y gestión de asientos
 import { v4 as uuidv4 } from 'uuid';
 
-export 
+const useMapaSeats = ({ elements, setElements, selectedZone, numSillas, precisePositioning }) => {
 
   const crearSilla = ({ mesaId, x, y, numero, sillaShape, zonaId }) => {
     const TAMAÑO_SILLA = 20;
@@ -51,15 +51,15 @@ export
 
       if (mesa.shape === 'circle') {
         const radioSillas = mesaRadius + MARGEN_SILLA + TAMAÑO_SILLA / 2;
-        
+
         for (let i = 0; i < cantidad; i++) {
           const angulo = (i * 2 * Math.PI) / cantidad - Math.PI / 2;
           const x = mesaX + radioSillas * Math.cos(angulo) - TAMAÑO_SILLA / 2;
           const y = mesaY + radioSillas * Math.sin(angulo) - TAMAÑO_SILLA / 2;
-          
+
           nuevasSillas.push(crearSilla({
-            mesaId, 
-            x: precisePositioning.round(x), 
+            mesaId,
+            x: precisePositioning.round(x),
             y: precisePositioning.round(y),
             numero: i + 1,
             sillaShape,
@@ -77,16 +77,16 @@ export
 
         for (const side of sides) {
           if (colocadas >= cantidad) break;
-          
+
           const sillasEnLado = Math.min(
             Math.floor(side.len / (TAMAÑO_SILLA + 5)),
             cantidad - colocadas
           );
-          
+
           for (let i = 0; i < sillasEnLado; i++) {
             const x = side.startX + (side.hor ? i * (TAMAÑO_SILLA + 5) : 0);
             const y = side.startY + (side.hor ? 0 : i * (TAMAÑO_SILLA + 5));
-            
+
             nuevasSillas.push(crearSilla({
               mesaId,
               x: precisePositioning.round(x),
@@ -107,7 +107,7 @@ export
   const limpiarSillasDuplicadas = () => {
     setElements(prev => {
       const sillas = prev.filter(el => el.type === 'silla');
-      
+
       const sillasPorMesa = {};
       sillas.forEach(silla => {
         if (!sillasPorMesa[silla.parentId]) {
@@ -115,7 +115,7 @@ export
         }
         sillasPorMesa[silla.parentId].push(silla);
       });
-      
+
       const sillasUnicas = [];
       Object.entries(sillasPorMesa).forEach(([mesaId, sillasMesa]) => {
         const posiciones = new Set();
@@ -127,7 +127,7 @@ export
           }
         });
       });
-      
+
       const elementosNoSillas = prev.filter(el => el.type !== 'silla');
       return [...elementosNoSillas, ...sillasUnicas];
     });
@@ -139,3 +139,5 @@ export
     crearSilla
   };
 };
+
+export default useMapaSeats;

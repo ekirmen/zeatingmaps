@@ -1,26 +1,26 @@
 import React from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, Tooltip, Badge } from '../../../../utils/antdComponents';
-import { 
-  UserOutlined, 
-  LockOutlined, 
-  CheckCircleOutlined, 
+import {
+  UserOutlined,
+  LockOutlined,
+  CheckCircleOutlined,
   CloseCircleOutlined,
   DollarOutlined,
   EyeOutlined
 } from '@ant-design/icons';
 
-const ZoneStatsPanel = ({ 
-  zonas, 
-  zoneStats, 
-  selectedZona, 
-  onZonaSelect, 
+const ZoneStatsPanel = ({
+  zonas,
+  zoneStats,
+  selectedZona,
+  onZonaSelect,
   showPrices = true,
   showOccupancy = true,
-  compact = false 
+  compact = false
 }) => {
   const getStatusColor = (status) => {
     switch (status) {
-
+      case 'disponible':
         return '#52c41a';
       case 'seleccionado':
         return '#ffd700';
@@ -56,14 +56,13 @@ const ZoneStatsPanel = ({
           const stats = zoneStats[zona.id] || { total: 0, disponibles: 0, precio: 0 };
           const ocupacion = stats.total > 0 ? Math.round(((stats.total - stats.disponibles) / stats.total) * 100) : 0;
           const isSelected = selectedZona?.id === zona.id;
-          
+
           return (
             <Card
               key={zona.id}
               size="small"
-              className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
-              }`}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                }`}
               onClick={() => onZonaSelect(zona)}
             >
               <div className="flex justify-between items-center">
@@ -101,24 +100,23 @@ const ZoneStatsPanel = ({
   return (
     <div className="space-y-4">
       {zonas.map(zona => {
-        const stats = zoneStats[zona.id] || { 
-          total: 0, 
-          disponibles: 0, 
-          seleccionados: 0, 
-          vendidos: 0, 
-          reservados: 0, 
-          bloqueados: 0, 
-          precio: 0 
+        const stats = zoneStats[zona.id] || {
+          total: 0,
+          disponibles: 0,
+          seleccionados: 0,
+          vendidos: 0,
+          reservados: 0,
+          bloqueados: 0,
+          precio: 0
         };
         const ocupacion = stats.total > 0 ? Math.round(((stats.total - stats.disponibles) / stats.total) * 100) : 0;
         const isSelected = selectedZona?.id === zona.id;
-        
+
         return (
           <Card
             key={zona.id}
-            className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-              isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
-            }`}
+            className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+              }`}
             onClick={() => onZonaSelect(zona)}
           >
             <div className="space-y-3">
@@ -171,7 +169,7 @@ const ZoneStatsPanel = ({
                   <Statistic
                     title="Disponibles"
                     value={stats.disponibles}
-                    valueStyle={{ 
+                    valueStyle={{
                       color: getStatusColor('disponible'),
                       fontSize: '16px'
                     }}
@@ -182,7 +180,7 @@ const ZoneStatsPanel = ({
                   <Statistic
                     title="Seleccionados"
                     value={stats.seleccionados}
-                    valueStyle={{ 
+                    valueStyle={{
                       color: getStatusColor('seleccionado'),
                       fontSize: '16px'
                     }}
@@ -193,7 +191,7 @@ const ZoneStatsPanel = ({
                   <Statistic
                     title="Vendidos"
                     value={stats.vendidos}
-                    valueStyle={{ 
+                    valueStyle={{
                       color: getStatusColor('vendido'),
                       fontSize: '16px'
                     }}

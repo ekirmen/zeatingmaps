@@ -2,10 +2,12 @@ const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
 const ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 /**
-
  * Only active events are returned.
  */
-export 
+export const getActiveEventsPublic = async () => {
+  if (!SUPABASE_URL || !ANON_KEY) {
+    console.error('Missing Supabase configuration');
+    return [];
   }
 
   const url = `${SUPABASE_URL}/rest/v1/eventos?select=*&activo=eq.true`;
@@ -22,4 +24,3 @@ export
 
   return res.json();
 };
-

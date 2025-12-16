@@ -52,16 +52,44 @@ const sendToAnalytics = (metric) => {
 /**
  * Obtiene el rating de una métrica
  */
+const VITAL_THRESHOLDS = {
+  LCP: { good: 2500, needsImprovement: 4000 },
+  FCP: { good: 1000, needsImprovement: 2500 },
+  TTFB: { good: 200, needsImprovement: 500 },
+  INP: { good: 200, needsImprovement: 500 },
+  CLS: { good: 0.1, needsImprovement: 0.25 }
+};
 
+const getMetricRating = (metric) => {
+  const name = (metric.name || '').toUpperCase();
+  const thresholds = VITAL_THRESHOLDS[name];
+  const value = metric.value;
+  if (!thresholds || value === undefined || value === null) return 'unknown';
+  if (value <= thresholds.good) return 'good';
   if (value <= thresholds.needsImprovement) return 'needs-improvement';
   return 'poor';
 };
 
-/**
- * Thresholds de Core Web Vitals
- */
-export 
+// Attach rating before sending
+const safeSendToAnalytics = (metric) => {
+  try {
+    const rating = getMetricRating(metric);
+    const payload = {
+      name: metric.name,
+      value: metric.value,
+      id: metric.id,
+      rating,
+      delta: metric.delta
+    };
 
-export { reportWebVitals, sendToAnalytics };
+    if (typeof window !== 'undefined' && window.va) {
+      window.va('track', 'Web Vitals', payload);
+    }
+  } catch (e) {
+    // noop
+  }
+};
+
+export { reportWebVitals, sendToAnalytics, getMetricRating, VITAL_THRESHOLDS };
 export default reportWebVitals;
 

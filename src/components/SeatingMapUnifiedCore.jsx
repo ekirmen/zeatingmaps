@@ -27,12 +27,17 @@ const backgroundImageCache = new Map();
 let progressCallbacks = new Set();
 
 // Registrar callback de progreso
-
+export const registerProgressCallback = (callback) => {
+  progressCallbacks.add(callback);
   return () => progressCallbacks.delete(callback);
 };
 
 // Reportar progreso
 
+export const reportProgress = (progress) => {
+  progressCallbacks.forEach(callback => {
+    try {
+      callback(progress);
     } catch (err) {
       console.error('Error en callback de progreso:', err);
     }
@@ -202,23 +207,23 @@ const BackgroundImage = React.memo(({ config, onLoadProgress }) => {
     let cancelled = false;
     const loadImage = () => {
       if (cancelled) return;
-      
+
       preloadBackgroundImage(rawUrl, (progress) => {
         if (!cancelled && onLoadProgress) {
           onLoadProgress(progress);
         }
       })
-      .then((image) => {
-        if (!cancelled && image) {
-          setBgImg(image);
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          logger.error('Error cargando imagen de fondo:', error);
-          setBgImg(null);
-        }
-      });
+        .then((image) => {
+          if (!cancelled && image) {
+            setBgImg(image);
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            logger.error('Error cargando imagen de fondo:', error);
+            setBgImg(null);
+          }
+        });
     };
 
     // Deferir carga de imágenes de fondo para no bloquear FCP
@@ -660,7 +665,7 @@ const SeatingMapUnified = ({
       const id = window.requestIdleCallback(initImageLoading, { timeout: 500 });
       return () => {
         cancelled = true;
-        try { window.cancelIdleCallback && window.cancelIdleCallback(id); } catch (e) {}
+        try { window.cancelIdleCallback && window.cancelIdleCallback(id); } catch (e) { }
       };
     }
 
@@ -708,8 +713,8 @@ const SeatingMapUnified = ({
             const errorMessage = seat.estado === 'vendido'
               ? 'Este asiento ya está vendido.'
               : seat.estado === 'reservado'
-              ? 'Este asiento está reservado.'
-              : 'Este asiento no está disponible.';
+                ? 'Este asiento está reservado.'
+                : 'Este asiento no está disponible.';
             onSeatError(errorMessage);
           }
           return;
@@ -1052,14 +1057,14 @@ const SeatingMapUnified = ({
     );
   }
 
-   if (seatsError) {
-     logger.error('[SYNC] Error en sincronización:', seatsError);
-     return <div className="text-center p-4 text-red-600">Error al cargar asientos</div>;
-   }
+  if (seatsError) {
+    logger.error('[SYNC] Error en sincronización:', seatsError);
+    return <div className="text-center p-4 text-red-600">Error al cargar asientos</div>;
+  }
 
-   if (validatedSeats.length === 0) {
-     return <div className="text-center p-4">No hay asientos disponibles en este mapa</div>;
-   }
+  if (validatedSeats.length === 0) {
+    return <div className="text-center p-4">No hay asientos disponibles en este mapa</div>;
+  }
 
   if (validatedMesas.length === 0) {
     logger.warn('No valid tables found in the map');

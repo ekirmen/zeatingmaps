@@ -1,11 +1,11 @@
 import React from 'react';
 
-const DiscountCodeInput = ({ 
-  discountCode, 
-  setDiscountCode, 
-  handleApplyDiscount, 
-  appliedDiscount 
-
+const DiscountCodeInput = ({
+  discountCode,
+  setDiscountCode,
+  handleApplyDiscount,
+  appliedDiscount
+}) => {
   return (
     <div className="flex gap-2 items-center">
       <input

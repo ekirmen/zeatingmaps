@@ -27,7 +27,17 @@ const MailChimpIntegration = ({ eventId }) => {
     loadConfig();
   }, [eventId]);
 
-  
+
+
+  const loadConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('mailchimp_configs')
+        .select('*')
+        .eq('event_id', eventId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
         setConfig(data);
@@ -99,11 +109,13 @@ const MailChimpIntegration = ({ eventId }) => {
       message.success('Configuraci³n guardada correctamente');
     } catch (error) {
       console.error('Error saving config:', error);
-      message.error('Error al guardar la configuraci³n');
+      message.error('Error al guardar la configuración');
     }
   };
 
-  
+  const subscribeCustomer = async (customerData) => {
+    if (!config.enabled || !config.apiKey || !config.listId) {
+      return;
     }
 
     try {
@@ -124,6 +136,7 @@ const MailChimpIntegration = ({ eventId }) => {
       const result = await response.json();
 
       if (result.success) {
+        message.success('Cliente suscrito correctamente');
       } else {
         console.error('Error subscribing customer:', result.error);
       }

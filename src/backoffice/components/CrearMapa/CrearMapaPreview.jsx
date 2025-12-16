@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Circle, Rect, Text as KonvaText, Line, Image, Group } from 'react-konva';
-import { 
-  Card, 
-  Button, 
-  Space, 
-  Typography, 
-  Row, 
-  Col, 
-  Statistic, 
-  Tag, 
+import {
+  Card,
+  Button,
+  Space,
+  Typography,
+  Row,
+  Col,
+  Statistic,
+  Tag,
   Divider,
   Tooltip,
   Badge,
@@ -40,18 +40,18 @@ const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;
 const { TabPane } = Tabs;
 
-const CrearMapaPreview = ({ 
-  mapa, 
-  onEdit, 
+const CrearMapaPreview = ({
+  mapa,
+  onEdit,
   onNext,
-  isModal = false 
+  isModal = false
 }) => {
   // ===== ESTADOS =====
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState('visual');
   const [showFullscreen, setShowFullscreen] = useState(false);
-  
+
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
   const containerRef = useRef(null);
@@ -63,14 +63,14 @@ const CrearMapaPreview = ({
       const container = containerRef.current;
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
-      
+
       // Calcular escala para ajustar el mapa al contenedor
       const scaleX = containerWidth / width;
       const scaleY = containerHeight / height;
       const newScale = Math.min(scaleX, scaleY, 1); // No escalar m¡s all¡ del 100%
-      
+
       setScale(newScale);
-      
+
       // Centrar el mapa
       const newX = (containerWidth - width * newScale) / 2;
       const newY = (containerHeight - height * newScale) / 2;
@@ -78,9 +78,9 @@ const CrearMapaPreview = ({
     }
   }, [mapa, containerRef.current]);
 
-  // Verificar que el mapa tenga dimensiones v¡lidas
+  // Verificar que el mapa tenga dimensiones válidas
   const getMapDimensions = () => {
-
+    if (mapa?.contenido?.configuracion?.dimensions) {
       return mapa.contenido.configuracion.dimensions;
     }
     // Valores por defecto si no hay dimensiones
@@ -102,13 +102,13 @@ const CrearMapaPreview = ({
       const container = containerRef.current;
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
-      
+
       const scaleX = containerWidth / width;
       const scaleY = containerHeight / height;
       const newScale = Math.min(scaleX, scaleY, 1);
-      
+
       setScale(newScale);
-      
+
       const newX = (containerWidth - width * newScale) / 2;
       const newY = (containerHeight - height * newScale) / 2;
       setPosition({ x: newX, y: newY });
@@ -126,7 +126,7 @@ const CrearMapaPreview = ({
         pixelRatio: 2,
         mimeType: 'image/png'
       });
-      
+
       const link = document.createElement('a');
       link.download = `${mapa.nombre || 'mapa'}.png`;
       link.href = dataURL;
@@ -142,7 +142,7 @@ const CrearMapaPreview = ({
         pixelRatio: 2,
         mimeType: 'image/png'
       });
-      
+
       const printWindow = window.open('', '_blank');
       printWindow.document.write(`
         <html>
@@ -254,7 +254,7 @@ const CrearMapaPreview = ({
         const startSeat = mapa.contenido.elementos.find(el => el._id === element.startSeatId);
         const endSeat = mapa.contenido.elementos.find(el => el._id === element.endSeatId);
         if (!startSeat || !endSeat) return null;
-        
+
         return (
           <Line
             key={element._id}
@@ -294,13 +294,13 @@ const CrearMapaPreview = ({
   // ===== ESTADSTICAS DEL MAPA =====
   const getMapaStats = () => {
     if (!mapa?.contenido?.elementos) return {};
-    
+
     const elementos = mapa.contenido.elementos;
     const mesas = elementos.filter(el => el.type === 'mesa');
     const sillas = elementos.filter(el => el.type === 'silla');
     const conexiones = elementos.filter(el => el.type === 'conexion');
     const zonas = mapa.contenido.zonas || [];
-    
+
     return {
       totalElementos: elementos.length,
       mesas: mesas.length,
@@ -328,32 +328,32 @@ const CrearMapaPreview = ({
               {mapa?.descripcion || 'Revisa c³mo se ver¡ tu mapa antes de publicarlo'}
             </Text>
           </Col>
-          
+
           <Col>
             <Space>
-              <Button 
-                icon={<ZoomOutOutlined />} 
+              <Button
+                icon={<ZoomOutOutlined />}
                 onClick={zoomOut}
                 title="Zoom out"
               />
-              <Button 
-                icon={<ZoomInOutlined />} 
+              <Button
+                icon={<ZoomInOutlined />}
                 onClick={zoomIn}
                 title="Zoom in"
               />
-              <Button 
-                                 icon={<UndoOutlined />} 
+              <Button
+                icon={<UndoOutlined />}
                 onClick={resetZoom}
                 title="Reset zoom"
               />
-              <Button 
+              <Button
                 icon={showFullscreen ? <CompressOutlined /> : <FullscreenOutlined />}
                 onClick={toggleFullscreen}
                 title={showFullscreen ? 'Salir pantalla completa' : 'Pantalla completa'}
               />
               {onEdit && (
-                <Button 
-                  icon={<EditOutlined />} 
+                <Button
+                  icon={<EditOutlined />}
                   onClick={onEdit}
                   type="primary"
                 >
@@ -369,13 +369,13 @@ const CrearMapaPreview = ({
       <div className="flex-1 flex overflow-hidden">
         {/* ===== PANEL IZQUIERDO - INFORMACI“N ===== */}
         <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
-          <Tabs 
-            activeKey={activeTab} 
+          <Tabs
+            activeKey={activeTab}
             onChange={setActiveTab}
             className="h-full"
           >
-            <TabPane 
-              tab={<span><InfoCircleOutlined />Informaci³n</span>} 
+            <TabPane
+              tab={<span><InfoCircleOutlined />Informaci³n</span>}
               key="info"
             >
               <div className="p-4">
@@ -398,8 +398,8 @@ const CrearMapaPreview = ({
                     {mapa?.metadata?.version || '1.0.0'}
                   </Descriptions.Item>
                   <Descriptions.Item label="Creado">
-                    {mapa?.metadata?.created_at ? 
-                      new Date(mapa.metadata.created_at).toLocaleDateString() : 
+                    {mapa?.metadata?.created_at ?
+                      new Date(mapa.metadata.created_at).toLocaleDateString() :
                       'N/A'
                     }
                   </Descriptions.Item>
@@ -465,13 +465,13 @@ const CrearMapaPreview = ({
               </div>
             </TabPane>
 
-            <TabPane 
-              tab={<span><TableOutlined />Elementos</span>} 
+            <TabPane
+              tab={<span><TableOutlined />Elementos</span>}
               key="elements"
             >
               <div className="p-4">
                 <Title level={5}>Lista de Elementos</Title>
-                
+
                 <List
                   size="small"
                   dataSource={mapa?.contenido?.elementos || []}
@@ -480,32 +480,32 @@ const CrearMapaPreview = ({
                       <div className="w-full">
                         <div className="flex justify-between items-center">
                           <Text strong>
-                            {element.type === 'mesa' ? 'Mesa' : 
-                             element.type === 'silla' ? 'Silla' : 
-                             element.type === 'conexion' ? 'Conexi³n' : 
-                             element.type}
+                            {element.type === 'mesa' ? 'Mesa' :
+                              element.type === 'silla' ? 'Silla' :
+                                element.type === 'conexion' ? 'Conexi³n' :
+                                  element.type}
                           </Text>
                           <Tag color={
-                            element.type === 'mesa' ? 'blue' : 
-                            element.type === 'silla' ? 'green' : 
-                            element.type === 'conexion' ? 'purple' : 'default'
+                            element.type === 'mesa' ? 'blue' :
+                              element.type === 'silla' ? 'green' :
+                                element.type === 'conexion' ? 'purple' : 'default'
                           }>
                             {index + 1}
                           </Tag>
                         </div>
-                        
+
                         {element.nombre && (
                           <Text className="text-sm text-gray-600 block">
                             {element.nombre}
                           </Text>
                         )}
-                        
+
                         {element.numero && (
                           <Text className="text-sm text-gray-600 block">
                             Nºmero: {element.numero}
                           </Text>
                         )}
-                        
+
                         <Text className="text-xs text-gray-500 block">
                           Posici³n: ({element.posicion?.x || 0}, {element.posicion?.y || 0})
                         </Text>
@@ -516,13 +516,13 @@ const CrearMapaPreview = ({
               </div>
             </TabPane>
 
-            <TabPane 
-              tab={<span><SettingOutlined />Configuraci³n</span>} 
+            <TabPane
+              tab={<span><SettingOutlined />Configuraci³n</span>}
               key="config"
             >
               <div className="p-4">
                 <Title level={5}>Configuraci³n del Mapa</Title>
-                
+
                 <Collapse defaultActiveKey={['grid', 'background']}>
                   <Panel header="Cuadr­cula" key="grid">
                     <Descriptions column={1} size="small">
@@ -537,12 +537,12 @@ const CrearMapaPreview = ({
                       </Descriptions.Item>
                     </Descriptions>
                   </Panel>
-                  
+
                   <Panel header="Fondo" key="background">
                     {mapa?.contenido?.configuracion?.background ? (
                       <div>
-                        <img 
-                          src={mapa.contenido.configuracion.background.image} 
+                        <img
+                          src={mapa.contenido.configuracion.background.image}
                           alt="Fondo del mapa"
                           className="w-full h-32 object-cover rounded mb-2"
                         />
@@ -578,30 +578,30 @@ const CrearMapaPreview = ({
                   Zoom: {Math.round(scale * 100)}%
                 </Text>
               </div>
-              
+
               <Space>
-                <Button 
-                  icon={<FileImageOutlined />} 
+                <Button
+                  icon={<FileImageOutlined />}
                   onClick={exportAsImage}
                   size="small"
                 >
                   Exportar Imagen
                 </Button>
-                <Button 
-                  icon={<PrinterOutlined />} 
+                <Button
+                  icon={<PrinterOutlined />}
                   onClick={printMapa}
                   size="small"
                 >
                   Imprimir
                 </Button>
-                <Button 
-                  icon={<DownloadOutlined />} 
+                <Button
+                  icon={<DownloadOutlined />}
                   size="small"
                 >
                   Descargar
                 </Button>
-                <Button 
-                  icon={<ShareAltOutlined />} 
+                <Button
+                  icon={<ShareAltOutlined />}
                   size="small"
                 >
                   Compartir
@@ -611,8 +611,8 @@ const CrearMapaPreview = ({
           </div>
 
           {/* ===== CANVAS DEL MAPA ===== */}
-          <div 
-            className="flex-1 bg-gray-50 overflow-hidden" 
+          <div
+            className="flex-1 bg-gray-50 overflow-hidden"
             ref={containerRef}
           >
             {mapa?.contenido?.elementos ? (
@@ -632,7 +632,7 @@ const CrearMapaPreview = ({
                     height={getMapDimensions().height}
                     fill="#ffffff"
                   />
-                  
+
                   {/* Imagen de fondo */}
                   {mapa.contenido.configuracion?.background && (
                     <Image
@@ -645,7 +645,7 @@ const CrearMapaPreview = ({
                       listening={false}
                     />
                   )}
-                  
+
                   {/* Elementos del mapa */}
                   {mapa.contenido.elementos.map(renderElement)}
                 </Layer>
@@ -671,8 +671,8 @@ const CrearMapaPreview = ({
       {!isModal && onNext && (
         <div className="bg-white border-t border-gray-200 p-4">
           <div className="text-center">
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               size="large"
               onClick={onNext}
             >

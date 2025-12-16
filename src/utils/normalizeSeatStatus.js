@@ -10,6 +10,8 @@ const STATUS_MAP = {
   blocked: "blocked",
 };
 
-
+export function normalizeSeatStatus(status) {
   return STATUS_MAP[status] || status;
 }
+
+export default normalizeSeatStatus;

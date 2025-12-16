@@ -1,7 +1,15 @@
 import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid'; // Assuming you use uuid for unique IDs
 
-export 
+const useMapaGraphicalElements = ({ setElements, selectedZone, numSillas, sillaShape }) => {
+  const addElement = useCallback((type, props = {}) => {
+    const newElement = {
+      _id: uuidv4(),
+      type,
+      posicion: { x: 100, y: 100 },
+      zonaId: selectedZone?.id || null,
+      ...props
+    };
     setElements(prevElements => [...prevElements, newElement]);
   }, [setElements, selectedZone]); // Dependencies for addElement
 
@@ -90,3 +98,5 @@ export
     addChairRow,
   };
 };
+
+export default useMapaGraphicalElements;

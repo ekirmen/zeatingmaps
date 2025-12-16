@@ -18,12 +18,12 @@ const { Title, Text, Paragraph } = Typography;
 
 const ONBOARDING_STORAGE_KEY = 'seat_map_onboarding_completed';
 
-const SeatMapOnboarding = ({ 
-  visible, 
-  onComplete, 
+const SeatMapOnboarding = ({
+  visible,
+  onComplete,
   onSkip,
   stageRef,
-  onHighlightElement 
+  onHighlightElement
 }) => {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
@@ -38,7 +38,7 @@ const SeatMapOnboarding = ({
         <div>
           <Title level={4}>{t('onboarding.welcome.heading', '¡Bienvenido al Selector de Asientos!')}</Title>
           <Paragraph>
-            {t('onboarding.welcome.text', 
+            {t('onboarding.welcome.text',
               'Esta guía rápida te ayudará a entender cómo funciona nuestro sistema de selección de asientos. ' +
               'Te mostraremos las funcionalidades principales en solo unos pasos.'
             )}
@@ -74,7 +74,7 @@ const SeatMapOnboarding = ({
         <div>
           <Title level={4}>{t('onboarding.seats.heading', 'Cómo Seleccionar Asientos')}</Title>
           <Paragraph>
-            {t('onboarding.seats.text', 
+            {t('onboarding.seats.text',
               'Los asientos disponibles se muestran en verde. Haz clic en cualquier asiento disponible para seleccionarlo. ' +
               'Los asientos seleccionados aparecerán en amarillo.'
             )}
@@ -108,7 +108,7 @@ const SeatMapOnboarding = ({
         <div>
           <Title level={4}>{t('onboarding.cart.heading', 'Carrito de Compra')}</Title>
           <Paragraph>
-            {t('onboarding.cart.text', 
+            {t('onboarding.cart.text',
               'Todos los asientos que selecciones aparecerán en tu carrito. Puedes ver el precio total ' +
               'y eliminar asientos antes de proceder al pago.'
             )}
@@ -144,7 +144,7 @@ const SeatMapOnboarding = ({
         <div>
           <Title level={4}>{t('onboarding.zoom.heading', 'Navegar por el Mapa')}</Title>
           <Paragraph>
-            {t('onboarding.zoom.text', 
+            {t('onboarding.zoom.text',
               'Puedes hacer zoom con la rueda del mouse o los botones de zoom. También puedes arrastrar el mapa ' +
               'para moverte por diferentes áreas. Usa la vista de mapa completo (minimap) para navegación rápida.'
             )}
@@ -178,7 +178,7 @@ const SeatMapOnboarding = ({
           <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a', marginBottom: 16 }} />
           <Title level={4}>{t('onboarding.complete.heading', '¡Todo Listo!')}</Title>
           <Paragraph>
-            {t('onboarding.complete.text', 
+            {t('onboarding.complete.text',
               'Ahora ya sabes cómo seleccionar asientos. ¡Explora el mapa y encuentra tus asientos favoritos! ' +
               'Recuerda que los asientos seleccionados se reservan temporalmente por 15 minutos.'
             )}
@@ -187,7 +187,7 @@ const SeatMapOnboarding = ({
             <Card size="small" style={{ backgroundColor: '#e6f7ff', border: '1px solid #91d5ff' }}>
               <Text>
                 💡 <strong>{t('onboarding.complete.tip', 'Consejo')}:</strong>{' '}
-                {t('onboarding.complete.tip_text', 
+                {t('onboarding.complete.tip_text',
                   'Puedes pasar el mouse sobre un asiento para ver su precio y detalles'
                 )}
               </Text>
@@ -211,7 +211,9 @@ const SeatMapOnboarding = ({
     setCurrentStep(currentStep - 1);
   };
 
-  
+  const handleComplete = () => {
+    // Marcar el onboarding como completado
+    localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
     if (onComplete) {
       onComplete();
     }
@@ -226,9 +228,9 @@ const SeatMapOnboarding = ({
   };
 
   // Efecto para resaltar elementos según el paso actual
-
+  useEffect(() => {
     if (!visible) return;
-    
+
     const step = steps[currentStep];
     if (step.highlightSelector && onHighlightElement) {
       onHighlightElement(step.highlightSelector);
@@ -254,8 +256,8 @@ const SeatMapOnboarding = ({
           {t('onboarding.previous', 'Anterior')}
         </Button>,
         <Button key="next" type="primary" onClick={next}>
-          {currentStep === steps.length - 1 
-            ? t('onboarding.finish', 'Finalizar') 
+          {currentStep === steps.length - 1
+            ? t('onboarding.finish', 'Finalizar')
             : t('onboarding.next', 'Siguiente')
           }
         </Button>
@@ -277,11 +279,13 @@ const SeatMapOnboarding = ({
 };
 
 // Función helper para verificar si el onboarding ya fue completado
-export 
+export const isOnboardingCompleted = () => {
+  return localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true';
 };
 
 // Función helper para resetear el onboarding (útil para testing)
-export 
+export const resetOnboarding = () => {
+  localStorage.removeItem(ONBOARDING_STORAGE_KEY);
 };
 
 export default SeatMapOnboarding;

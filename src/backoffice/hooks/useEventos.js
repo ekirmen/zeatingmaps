@@ -2,8 +2,10 @@
 import { useCallback } from 'react';
 import { supabase } from '../../supabaseClient';
 
-export 
-
+const useEventos = ({ navigate, setEventos, setEventosFiltrados }) => {
+  const fetchEventos = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.from('eventos').select('*');
       if (error) throw error;
       setEventos(data);
       setEventosFiltrados(data); // opcional
@@ -67,3 +69,5 @@ export
     handleSave
   };
 };
+
+export default useEventos;

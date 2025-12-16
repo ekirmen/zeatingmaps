@@ -3,7 +3,7 @@ import { useRecinto } from '../contexts/RecintoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faThLarge, faList } from '@fortawesome/free-solid-svg-icons';
 import DatosBasicos from '../components/Evento/DatosBasicos';
-import DisenoEspectaculo from '../components/Evento//DisenoEspectaculo';
+import DisenoEspectaculo from '../components/Evento/DisenoEspectaculo';
 import ConfiguracionVenta from '../components/Evento/ConfiguracionVenta';
 import ConfiguracionBoletas from '../components/Evento/ConfiguracionBoletas';
 import OpcionesAvanzadas from '../components/Evento/OpcionesAvanzadas';
@@ -29,7 +29,7 @@ const Evento = () => {
   const [activeTab, setActiveTab] = useState('datosBasicos');
   const [isUploading, setIsUploading] = useState(false);
 
-
+  const filtrarEventos = useCallback(() => {
     if (!recintoSeleccionado || !salaSeleccionada) return;
     const filtrados = eventos.filter(
       (evento) =>
@@ -42,33 +42,33 @@ const Evento = () => {
     if (!recintoSeleccionado || !salaSeleccionada) {
       return;
     }
-  
+
     try {
-      
-      
+
+
       let query = supabase
         .from('eventos')
         .select('*')
         .eq('recinto', recintoSeleccionado.id)
         .eq('sala', salaSeleccionada.id);
-      
+
       // Filtrar por tenant_id si está disponible
       if (currentTenant?.id) {
         query = query.eq('tenant_id', currentTenant.id);
       }
-      
+
       const { data, error } = await query.order('created_at', { ascending: false });
-  
+
       if (error) { throw error; }
-      
-      
-      
+
+
+
       // Limpiar campos JSON corruptos en todos los eventos cargados
       const eventosLimpios = cleanEventosArray(data || []);
       setEventos(eventosLimpios);
     } catch (error) { setEventos([]); }
   }, [recintoSeleccionado, salaSeleccionada, currentTenant]);
-  
+
 
   useEffect(() => { fetchEventos(); }, [fetchEventos]);
   useEffect(() => { filtrarEventos(); }, [filtrarEventos]);
@@ -85,7 +85,9 @@ const Evento = () => {
     [recintos, setRecintoSeleccionado, setSalaSeleccionada]
   );
 
-  
+  const handleSalaChange = useCallback(
+    (e) => {
+      const salaId = e.target.value;
       const sala =
         recintoSeleccionado?.salas?.find((s) => String(s.id) === String(salaId)) ||
         null;
@@ -208,7 +210,7 @@ const Evento = () => {
       const { id: _, ...duplicatedData } = data;
       duplicatedData.nombre += ' (copia)';
       duplicatedData.created_at = new Date().toISOString();
-      
+
       // Asegurar tenant_id en el evento duplicado
       if (currentTenant?.id) {
         duplicatedData.tenant_id = currentTenant.id;
@@ -227,11 +229,11 @@ const Evento = () => {
   const handleToggleEventStatus = useCallback(async (eventoId, evento) => {
     try {
       const currentActivo = evento.activo === true || evento.activo === 'true';
-      
-      
+
+
       const newActivo = !currentActivo;
       const newDesactivado = !newActivo;
-      
+
       const { error } = await supabase
         .from('eventos')
         .update({
@@ -245,14 +247,14 @@ const Evento = () => {
       }
 
       // Actualizar el estado local
-      setEventos(prev => prev.map(e => 
-        e.id === eventoId 
+      setEventos(prev => prev.map(e =>
+        e.id === eventoId
           ? { ...e, activo: newActivo, desactivado: newDesactivado }
           : e
       ));
-      
-      setEventosFiltrados(prev => prev.map(e => 
-        e.id === eventoId 
+
+      setEventosFiltrados(prev => prev.map(e =>
+        e.id === eventoId
           ? { ...e, activo: newActivo, desactivado: newDesactivado }
           : e
       ));
@@ -271,18 +273,13 @@ const Evento = () => {
     } catch (error) { alert('Error al cambiar el estado del evento: ' + error.message); }
   }, [eventoData]);
 
-
-
-
-
-
   const handleSave = useCallback(async () => {
     if (!eventoData) return;
 
     try {
       setIsUploading(true);
       const isExisting = !!eventoData.id;
-      
+
       // Detectar si el evento se está activando (estadoVenta cambia a 'a-la-venta')
       let wasActivated = false;
       if (isExisting && eventoData.estadoVenta === 'a-la-venta') {
@@ -292,7 +289,7 @@ const Evento = () => {
           .select('estadoVenta')
           .eq('id', eventoData.id)
           .single();
-        
+
         if (previousEvent && previousEvent.estadoVenta !== 'a-la-venta') {
           wasActivated = true;
         }
@@ -300,13 +297,13 @@ const Evento = () => {
         // Si es un evento nuevo y ya está a la venta, también activar notificación
         wasActivated = true;
       }
-      
+
       // Limpiar datos antes de enviar
       const cleanData = { ...eventoData };
       delete cleanData.__v;
       delete cleanData.createdAt;
       delete cleanData.updatedAt;
-      
+
       // Mapear fecha -> fecha_evento (timestamp)
       if (cleanData.fecha && typeof cleanData.fecha === 'string' && cleanData.fecha.trim() !== '') {
         // Mantener como ISO o YYYY-MM-DD; la columna es timestamp
@@ -317,7 +314,7 @@ const Evento = () => {
       // Validar y limpiar campos JSON ANTES de guardar para prevenir corrupción
       const cleanDataValidated = cleanEventoJsonFields(cleanData);
       Object.assign(cleanData, cleanDataValidated);
-      
+
 
       // Asegurar tenant_id
       if (currentTenant?.id) { cleanData.tenant_id = currentTenant.id; }
@@ -337,11 +334,11 @@ const Evento = () => {
       }
 
       if (response.error) throw response.error;
-      
+
       // NOTA: Las notificaciones push ahora se envían cuando se crea una función en canal internet
       // No se envían cuando se activa un evento, solo cuando se crea la función
       // Esto se maneja en src/backoffice/pages/Funciones.js
-      
+
       setIsSaved(true);
       setMenuVisible(false);
       fetchEventos();
@@ -350,7 +347,7 @@ const Evento = () => {
       setIsUploading(false);
     }
   }, [eventoData, fetchEventos, currentTenant]);
-  
+
 
   const handleSearch = (term) => {
     setSearchTerm(term);
@@ -372,7 +369,7 @@ const Evento = () => {
     { id: 'configuracionBoletas', label: 'Configuración de Boletas', Component: ConfiguracionBoletas },
     { id: 'opcionesAvanzadas', label: 'Opciones Avanzadas', Component: OpcionesAvanzadas }
   ];
-    const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.Component || null;
+  const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.Component || null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -386,7 +383,7 @@ const Evento = () => {
                 <p className="text-lg text-gray-600">
                   Crea y administra eventos para tus recintos y salas
                 </p>
-                
+
               </div>
             </div>
           </div>
@@ -398,7 +395,24 @@ const Evento = () => {
           recintoSeleccionado={recintoSeleccionado}
           handleRecintoChange={handleRecintoChange}
           salaSeleccionada={salaSeleccionada}
-          setSalaSeleccionada={setSalaSeleccionada}
+          setSalaSeleccionada={setSalaSeleccionada} // Pass standard setter if VenueSelectors expects it, but we handle logic upstream if needed. Actually, VenueSelectors probably just needs setSalaSeleccionada or similar.
+          // Wait, we need to pass handleSalaChange or just setSalaSeleccionada.
+          // VenueSelectors typically takes handleSalaChange. 
+          // Checking the props in original code:
+          // salaSeleccionada={salaSeleccionada}
+          // setSalaSeleccionada={setSalaSeleccionada} 
+          // It seems it was passed setSalaSeleccionada directly? 
+          // But lines 89-95 in original code seemed to be handleSalaChange logic...
+          // Ah, checking lines 89-95:
+          // 89: const sala = ...
+          // 92: setSalaSeleccionada(sala);
+          // That looked like the body of a handleSalaChange function.
+          // But it wasn't named. It started with "const sala =".
+          // And line 76 was handleRecintoChange.
+          // So the block 89-95 was likely `handleSalaChange`.
+          // I'll assume VenueSelectors takes handleSalaChange or similar. 
+          // Let's pass handleSalaChange which wraps the setSalaSeleccionada with logic.
+          handleSalaChange={handleSalaChange}
           rightContent={recintoSeleccionado && salaSeleccionada && (
             <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
               <div className="hidden lg:block min-w-[320px] flex-1 sm:flex-initial">
@@ -410,24 +424,22 @@ const Evento = () => {
                 />
               </div>
               <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1 flex-shrink-0">
-                <button 
-                  onClick={() => toggleView('grid')} 
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'grid' 
-                      ? 'bg-white text-blue-600 shadow-sm' 
+                <button
+                  onClick={() => toggleView('grid')}
+                  className={`p-2 rounded-md transition-colors ${viewMode === 'grid'
+                      ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                    }`}
                   title="Vista de cuadrícula"
                 >
                   <FontAwesomeIcon icon={faThLarge} />
                 </button>
-                <button 
-                  onClick={() => toggleView('list')} 
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'list' 
-                      ? 'bg-white text-blue-600 shadow-sm' 
+                <button
+                  onClick={() => toggleView('list')}
+                  className={`p-2 rounded-md transition-colors ${viewMode === 'list'
+                      ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                    }`}
                   title="Vista de lista"
                 >
                   <FontAwesomeIcon icon={faList} />
@@ -472,21 +484,20 @@ const Evento = () => {
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900">Configuración de Evento</h2>
-                      
+
                       {/* Estado del evento y botón de activación/desactivación */}
                       {eventoData?.id && (
                         <div className="mt-3 flex items-center gap-3">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-700">Estado:</span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              eventoData?.activo && !eventoData?.desactivado 
-                                ? 'bg-green-100 text-green-800' 
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${eventoData?.activo && !eventoData?.desactivado
+                                ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
-                            }`}>
+                              }`}>
                               {eventoData?.activo && !eventoData?.desactivado ? 'Activo' : 'Inactivo'}
                             </span>
                           </div>
-                          
+
                           <button
                             onClick={() => {
                               const newActivo = !eventoData?.activo;
@@ -497,11 +508,10 @@ const Evento = () => {
                                 desactivado: newDesactivado
                               }));
                             }}
-                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                              eventoData?.activo && !eventoData?.desactivado
+                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${eventoData?.activo && !eventoData?.desactivado
                                 ? 'bg-red-500 hover:bg-red-600 text-white'
                                 : 'bg-green-500 hover:bg-green-600 text-white'
-                            }`}
+                              }`}
                           >
                             {eventoData?.activo && !eventoData?.desactivado ? 'Desactivar' : 'Activar'}
                           </button>
@@ -528,17 +538,15 @@ const Evento = () => {
                     <div key={tab.id} className="border border-gray-200 rounded-lg overflow-hidden">
                       <button
                         onClick={() => setActiveTab(activeTab === tab.id ? null : tab.id)}
-                        className={`w-full px-4 py-3 text-left text-sm font-semibold rounded-lg transition-all duration-300 flex items-center justify-between ${
-                          activeTab === tab.id
+                        className={`w-full px-4 py-3 text-left text-sm font-semibold rounded-lg transition-all duration-300 flex items-center justify-between ${activeTab === tab.id
                             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
                             : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80 hover:shadow-sm bg-white'
-                        }`}
+                          }`}
                       >
                         <span>{tab.label}</span>
                         <svg
-                          className={`w-5 h-5 transition-transform duration-300 ${
-                            activeTab === tab.id ? 'rotate-180' : ''
-                          }`}
+                          className={`w-5 h-5 transition-transform duration-300 ${activeTab === tab.id ? 'rotate-180' : ''
+                            }`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -560,18 +568,17 @@ const Evento = () => {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Desktop: Diseño Horizontal (como estaba antes) */}
                 <div className="hidden md:flex md:flex-wrap md:gap-2 md:items-center md:justify-start">
                   {tabs.map(tab => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
-                        activeTab === tab.id
+                      className={`px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
                           ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30'
                           : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 bg-white border border-gray-200'
-                      }`}
+                        }`}
                     >
                       {tab.label}
                     </button>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Tag, Typography, Space, Button, Badge, Alert, Statistic, Row, Col, Timeline, Select, DatePicker, Drawer } from '../../utils/antdComponents';
-import { 
-  SecurityScanOutlined, 
+import {
+  SecurityScanOutlined,
   ExclamationCircleOutlined,
   WarningOutlined,
   CheckCircleOutlined,
@@ -85,8 +85,16 @@ const SecurityMonitoring = () => {
     }
   };
 
-  
-
+  const loadSecurityAlerts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('security_alerts')
+        .select(`
+          *,
+          tenants:tenant_id(name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(20);
       if (error) throw error;
       setSecurityAlerts(data || []);
     } catch (error) {
@@ -106,6 +114,7 @@ const SecurityMonitoring = () => {
       'file_upload_attack': 'Ataque de carga de archivos',
       'sql_injection_attempt': 'Intento de inyecci³n SQL',
       'xss_attempt': 'Intento de XSS'
+    };
 
     return labels[eventType] || eventType;
   };
@@ -393,7 +402,7 @@ const SecurityMonitoring = () => {
                 <Title level={4}>Informaci³n General</Title>
                 <Space direction="vertical">
                   <Text><strong>Tipo:</strong> {getEventTypeLabel(selectedEvent.event_type)}</Text>
-                  <Text><strong>Severidad:</strong> 
+                  <Text><strong>Severidad:</strong>
                     <Tag color={severityColors[selectedEvent.severity]} style={{ marginLeft: 8 }}>
                       {selectedEvent.severity.toUpperCase()}
                     </Tag>
@@ -416,9 +425,9 @@ const SecurityMonitoring = () => {
               {selectedEvent.metadata && (
                 <div>
                   <Title level={4}>Metadatos</Title>
-                  <pre style={{ 
-                    background: '#f5f5f5', 
-                    padding: '12px', 
+                  <pre style={{
+                    background: '#f5f5f5',
+                    padding: '12px',
                     borderRadius: '4px',
                     fontSize: '12px',
                     overflow: 'auto'

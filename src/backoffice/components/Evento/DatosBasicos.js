@@ -8,6 +8,7 @@ const MAX_TAGS = 3;
 const DatosBasicos = ({ eventoData, setEventoData }) => {
   // Función para normalizar el campo tags
 
+  const normalizeTags = (tags) => {
     if (!tags) return [];
     if (Array.isArray(tags)) return tags;
     if (typeof tags === 'string') {
@@ -168,11 +169,10 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
             ].map(s => (
               <div
                 key={s.id}
-                className={`contenedor-sector cursor-pointer p-4 border-2 rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:shadow-md ${
-                  form.sector === s.label
+                className={`contenedor-sector cursor-pointer p-4 border-2 rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:shadow-md ${form.sector === s.label
                     ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-blue-600 shadow-lg'
                     : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
                 onClick={() => handleSectorSelect(s.label)}
               >
                 <div className="obj-sector mb-2">

@@ -1,10 +1,10 @@
 import React from 'react';
 
-
+const ZonasDropdown = ({ selectedZoneId, onChange, zonas = [], zoneSeatCounts = {} }) => {
   return (
     <div className="space-y-2">
-      <select 
-        value={selectedZoneId || ''} 
+      <select
+        value={selectedZoneId || ''}
         onChange={(e) => onChange(e.target.value)}
         className="w-full p-2 border border-gray-300 rounded-md text-sm"
       >
@@ -15,7 +15,7 @@ import React from 'react';
           </option>
         ))}
       </select>
-      
+
       {/* Información sobre tipos de zona */}
       <div className="text-xs text-gray-600 space-y-1">
         <div className="flex items-center space-x-2">

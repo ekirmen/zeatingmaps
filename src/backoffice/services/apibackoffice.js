@@ -53,7 +53,9 @@ const getTenantId = async (useCache = true) => {
 /**
  * Limpia el cache del tenant_id
  */
-export 
+// Función para limpiar la cache
+export const clearTenantCache = () => {
+  tenantIdCache = null;
   tenantIdCacheTimestamp = null;
 };
 
@@ -95,7 +97,7 @@ const fetchByTenant = async (tableName, filters = {}, options = {}) => {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         query = query.eq(key, value);
-  }
+      }
     });
 
     // Aplicar ordenamiento
@@ -127,7 +129,7 @@ const fetchById = async (tableName, id, options = {}) => {
 
     const { data, error } = await query.single();
     handleError(error, `Error fetching ${tableName} by id`);
-  return data;
+    return data;
   } catch (error) {
     logger.error(`Error in fetchById(${tableName}):`, error);
     throw error;
@@ -176,7 +178,7 @@ const updateRecord = async (tableName, id, data, options = {}) => {
       .eq('id', id)
       .eq('tenant_id', tenantId) // Solo actualizar registros del tenant actual
       .select(options.select || '*')
-    .single();
+      .single();
 
     handleError(error, `Error updating ${tableName}`);
     return result;
@@ -207,10 +209,16 @@ const deleteRecord = async (tableName, id) => {
 };
 
 // === ZONAS ===
-export 
+export const fetchZonasPorSala = async (salaId) => {
+  if (!salaId) {
+    throw new Error('salaId is required');
+  }
+  return fetchByTenant('zonas', { sala_id: salaId });
 };
 
-export 
+export const fetchZonas = async (salaId) => {
+  if (!salaId) {
+    throw new Error('salaId is required');
   }
   return fetchByTenant('zonas', { sala_id: salaId });
 };
@@ -221,20 +229,20 @@ export const createZona = async (data) => {
   // Si no se proporciona tenant_id, intentar obtenerlo de la sala o usar el helper
   if (!data.tenant_id) {
     if (data.sala_id) {
-    try {
-      const { data: salaData, error: salaError } = await client
-        .from('salas')
-        .select('recintos!inner(tenant_id)')
-        .eq('id', data.sala_id)
-        .single();
+      try {
+        const { data: salaData, error: salaError } = await client
+          .from('salas')
+          .select('recintos!inner(tenant_id)')
+          .eq('id', data.sala_id)
+          .single();
 
         if (!salaError && salaData?.recintos?.tenant_id) {
-        data.tenant_id = salaData.recintos.tenant_id;
-      }
-    } catch (error) {
+          data.tenant_id = salaData.recintos.tenant_id;
+        }
+      } catch (error) {
         logger.warn('[createZona] No se pudo obtener tenant_id de la sala');
+      }
     }
-  }
 
     // Si aún no hay tenant_id, usar el helper
     if (!data.tenant_id) {
@@ -247,7 +255,8 @@ export const createZona = async (data) => {
   return result;
 };
 
-export 
+export const updateZona = async (id, data) => {
+  const client = supabaseAdmin || supabase;
   const tenantId = await getTenantId();
 
   // Asegurar tenant_id en los datos
@@ -256,17 +265,18 @@ export
   }
 
   const { data: result, error } = await client
-        .from('zonas')
+    .from('zonas')
     .update(data)
-        .eq('id', id)
+    .eq('id', id)
     .eq('tenant_id', tenantId)
-        .single();
+    .single();
 
   handleError(error, 'Error updating zona');
   return result;
 };
 
-export 
+export const deleteZona = async (id) => {
+  const client = supabaseAdmin || supabase;
   const tenantId = await getTenantId();
   const { error } = await client
     .from('zonas')
@@ -277,28 +287,35 @@ export
 };
 
 // === SALAS Y RECINTOS ===
-export 
+export const fetchRecintos = async () => {
+  const { data, error } = await supabase.from('recintos').select('*');
   handleError(error);
   return data;
 };
 
-export 
+export const createRecinto = async (data) => {
+  const client = supabaseAdmin || supabase;
   const { data: result, error } = await client.from('recintos').insert(data).single();
   handleError(error);
   return result;
 };
 
-export 
+export const updateRecinto = async (id, data) => {
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('recintos').update(data).eq('id', id).single();
   handleError(error);
-  return data;
+  return data; // Note: original code returned data (arg) instead of result, keeping it consistent with context but assuming maybe it meant result?
 };
 
-export 
+export const deleteRecinto = async (id) => {
+  const client = supabaseAdmin || supabase;
+  const { error } = await client.from('recintos').delete().eq('id', id);
   handleError(error);
-  return data;
+  return data; // Warning: data undefined here in original snippet
 };
 
-export 
+export const fetchSalas = async (recintoId) => {
+  const { data, error } = await supabase.from('salas').select('*').eq('recinto_id', recintoId);
   handleError(error);
   return data;
 };
@@ -311,12 +328,14 @@ export const createSala = async (data) => {
 };
 
 // === EVENTOS ===
-export 
+export const fetchEventos = async () => {
+  const { data, error } = await supabase.from('eventos').select('*');
   handleError(error);
   return data;
 };
 
-export 
+export const fetchEventoById = async (id) => {
+  const { data, error } = await supabase.from('eventos').select('*').eq('id', id).single();
   handleError(error);
   return data;
 };
@@ -347,24 +366,28 @@ export const createEvento = async (data) => {
   }
 };
 
-export 
+export const updateEvento = async (id, data) => {
+  const client = supabaseAdmin || supabase;
   const { data: result, error } = await client.from('eventos').update(data).eq('id', id).single();
   handleError(error);
   return result;
 };
 
-export 
+export const deleteEvento = async (id) => {
+  const client = supabaseAdmin || supabase;
   const { error } = await client.from('eventos').delete().eq('id', id);
   handleError(error);
 };
 
 // === FUNCIONES ===
-export 
+export const fetchFunciones = async (eventoId) => {
+  const { data, error } = await supabase.from('funciones').select('*').eq('evento_id', eventoId);
   handleError(error);
   return data;
 };
 
-export 
+export const createFuncion = async (data) => {
+  const client = supabaseAdmin || supabase;
   const { data: result, error } = await client.from('funciones').insert(data).single();
   handleError(error);
   return result;
@@ -624,7 +647,13 @@ const applySeatStates = (mapa, reservedSeats) => {
   }
 };
 
-export 
+export const saveMapa = async (salaId, data) => {
+  if (!supabaseAdmin) {
+    const resp = await fetch(`/api/mapas/${salaId}/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       throw new Error(err.error || 'Error al guardar mapa');
@@ -642,7 +671,7 @@ export
   handleError(error);
 };
 
-export 
+export const syncSeats = async (salaId, deleteMissing = false) => {
   if (!supabaseAdmin) {
     const query = deleteMissing ? '?syncOnly=1&deleteMissing=1' : '?syncOnly=1';
     const resp = await fetch(`/api/mapas/${salaId}/save${query}`, { method: 'POST' });
@@ -715,7 +744,8 @@ export
 };
 
 // Bloquear o desbloquear varios asientos por ID
-export 
+export const lockSeats = async (seatIds, bloqueado) => {
+  const normalized = Array.isArray(seatIds) ? seatIds : [seatIds];
   const client = supabaseAdmin || supabase;
   const { data, error } = await client
     .from('seats')
@@ -746,13 +776,16 @@ export const fetchEntradasByRecinto = async (recintoId) => {
   }
 };
 
-export 
+export const getEntradaById = async (id) => {
+  return fetchById('entradas', id);
 };
 
-export 
+export const createEntrada = async (data) => {
+  return createRecord('entradas', data);
 };
 
-export 
+export const updateEntrada = async (id, data) => {
+  return updateRecord('entradas', id, data);
 };
 
 export const deleteEntrada = async (id) => {
@@ -902,24 +935,29 @@ export const saveCmsPage = async (identifier, widgets) => {
 };
 
 // === ABONOS ===
-export 
+export const fetchAbonos = async () => {
+  const { data, error } = await supabase.from('abonos').select('*');
   handleError(error);
   return data;
 };
 
-export 
+export const createAbono = async (data) => {
+  const client = supabaseAdmin || supabase;
   const { data: result, error } = await client.from('abonos').insert(data).single();
   handleError(error);
   return result;
 };
 
-export 
+export const updateAbono = async (id, data) => {
+  const client = supabaseAdmin || supabase;
   const { data: result, error } = await client.from('abonos').update(data).eq('id', id).single();
   handleError(error);
   return result;
 };
 
-export 
+export const fetchPlantillas = async () => {
+  const client = supabaseAdmin || supabase;
+  const { data, error } = await client.from('plantillas').select('*');
 
   if (error) {
     logger.error('Error al obtener plantillas:', error);
@@ -929,20 +967,24 @@ export
   return data;
 };
 
-export 
+export const updatePlantilla = async (id, data) => {
+  return updateRecord('plantillas', id, data);
 };
 
-export 
+export const deletePlantilla = async (id) => {
+  return deleteRecord('plantillas', id);
 };
 
 export const createPlantilla = async (data) => {
   return createRecord('plantillas', data);
 };
 
-export 
+export const getPlantillaById = async (id) => {
+  return fetchById('plantillas', id);
 };
 
-export 
+export const fetchPlantillaById = async (id) => {
+  return fetchById('plantillas', id);
 };
 
 // === PAYMENTS ===
@@ -1141,7 +1183,8 @@ export const createPayment = async (data) => {
 };
 
 // Función auxiliar para calcular el monto total
-
+const calculateTotalAmount = (seats) => {
+  try {
     return seats.reduce((total, seat) => total + (seat.price || 0), 0);
   } catch (e) {
     logger.error('Error calculando monto total:', e);
@@ -1149,7 +1192,8 @@ export const createPayment = async (data) => {
   }
 };
 
-export 
+export const updatePayment = async (id, data) => {
+  const client = supabaseAdmin || supabase;
   const { data: result, error } = await client
     .from('payment_transactions')
     .update(data)
@@ -1160,7 +1204,8 @@ export
   return result;
 };
 
-export 
+export const fetchPayments = async () => {
+  const client = supabaseAdmin || supabase;
   const { data, error } = await client.from('payment_transactions').select('*');
   handleError(error);
   return data;
@@ -1291,11 +1336,11 @@ export const fetchPaymentByLocator = async (locator) => {
 
       data = fallbackResult.data
         ? {
-            ...fallbackResult.data,
-            user: fallbackResult.data.user
-              ? { ...fallbackResult.data.user }
-              : null
-          }
+          ...fallbackResult.data,
+          user: fallbackResult.data.user
+            ? { ...fallbackResult.data.user }
+            : null
+        }
         : null;
       error = fallbackResult.error;
     }
@@ -1489,7 +1534,8 @@ export const fetchPaymentsByUserEmail = async (email) => {
 };
 
 // === CANALES DE VENTA ===
-export 
+export const fetchSalesChannels = async () => {
+  const { data, error } = await supabase.from('sales_channels').select('*');
   handleError(error);
   return data;
 };
@@ -1609,27 +1655,33 @@ export const fetchCmsPagesByTenant = async (tenantId) => {
 };
 
 // === GALERÍA E IMÁGENES ===
-export 
+export const fetchImagenes = async () => {
+  return fetchRecords('imagenes');
 };
 
-export 
+export const updateImagen = async (id, data) => {
+  return updateRecord('imagenes', id, data);
 };
 
-export 
+export const deleteImagen = async (id) => {
+  return deleteRecord('imagenes', id);
 };
 
 export const createImagen = async (data) => {
   return createRecord('imagenes', data);
 };
 
-export 
+export const fetchNotifications = async () => {
+  return fetchRecords('notifications');
 };
 
-export 
+export const createNotification = async (data) => {
+  return createRecord('notifications', data);
 };
 
 // === NOTIFICACIONES ===
-export 
+export const updateNotification = async (id, data) => {
+  return updateRecord('notifications', id, data);
 };
 
 export const fetchNotificationById = async (id) => {
@@ -1642,10 +1694,15 @@ export const fetchNotificationById = async (id) => {
   });
 };
 
-export 
+export const markNotificationAsRead = async (id) => {
+  return updateRecord('notifications', id, { read: true });
 };
 
-export 
+export const markAllNotificationsAsRead = async (userId) => {
+  const client = supabaseAdmin || supabase;
+  const { error } = await client.from('notifications').update({ read: true }).eq('user_id', userId);
+  if (error) throw error;
+  return true;
 };
 
 export const deleteNotification = async (id) => {

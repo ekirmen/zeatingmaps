@@ -25,12 +25,12 @@ import { TicketEmailService } from '../services/ticketEmailService';
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
-const SendTicketEmail = ({ 
-  visible, 
-  onClose, 
-  tickets, 
-  eventData, 
-  onSuccess 
+const SendTicketEmail = ({
+  visible,
+  onClose,
+  tickets,
+  eventData,
+  onSuccess
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -44,7 +44,8 @@ const SendTicketEmail = ({
     }
   }, [visible]);
 
-  
+  const checkEmailConfig = async () => {
+    try {
       const hasConfig = await TicketEmailService.hasEmailConfig();
       setHasEmailConfig(hasConfig);
       setEmailConfigStatus(hasConfig ? 'configured' : 'not-configured');
@@ -71,7 +72,7 @@ const SendTicketEmail = ({
       message.success('Tickets enviados por correo correctamente');
       onSuccess?.();
       onClose();
-      
+
     } catch (error) {
       console.error('Error enviando tickets por correo:', error);
       message.error('Error enviando tickets por correo: ' + error.message);
@@ -103,7 +104,21 @@ const SendTicketEmail = ({
     await Promise.all(promises);
   };
 
-  
+  const sendMultipleTickets = async (email, customMessage) => {
+    const ticketsData = tickets.map(ticket => ({
+      eventName: eventData.nombre,
+      eventDate: eventData.fecha,
+      eventTime: eventData.hora,
+      venueName: eventData.recinto?.nombre || 'Sin especificar',
+      venueAddress: eventData.recinto?.direccion || 'Sin especificar',
+      ticketNumber: ticket.numero || ticket.id,
+      seatInfo: ticket.asiento || ticket.fila,
+      zoneName: ticket.zona?.nombre || 'General',
+      price: ticket.precio || '0',
+      companyName: eventData.empresa?.nombre || 'Tu Empresa',
+      supportEmail: eventData.empresa?.email || 'soporte@tuempresa.com',
+      customMessage
+    }));
 
     await TicketEmailService.sendMultipleTicketsEmail(ticketsData, email);
   };
@@ -119,7 +134,7 @@ const SendTicketEmail = ({
             className="mb-4"
           />
         );
-      
+
       case 'configured':
         return (
           <Alert
@@ -130,7 +145,7 @@ const SendTicketEmail = ({
             className="mb-4"
           />
         );
-      
+
       case 'not-configured':
         return (
           <Alert
@@ -146,7 +161,7 @@ const SendTicketEmail = ({
             }
           />
         );
-      
+
       case 'error':
         return (
           <Alert
@@ -157,7 +172,7 @@ const SendTicketEmail = ({
             className="mb-4"
           />
         );
-      
+
       default:
         return null;
     }
@@ -169,7 +184,7 @@ const SendTicketEmail = ({
         <CheckCircleOutlined className="mr-2 text-green-600" />
         Resumen de Tickets
       </Title>
-      
+
       <List
         size="small"
         dataSource={tickets}
@@ -199,9 +214,9 @@ const SendTicketEmail = ({
           </List.Item>
         )}
       />
-      
+
       <Divider />
-      
+
       <div className="flex justify-between items-center">
         <Text strong>Total de tickets: {tickets.length}</Text>
         <Text strong>
@@ -225,7 +240,7 @@ const SendTicketEmail = ({
         width={600}
       >
         {renderEmailConfigStatus()}
-        
+
         <div className="text-center py-8">
           <ExclamationCircleOutlined style={{ fontSize: '48px', color: '#faad14' }} />
           <Title level={4} className="mt-4">
@@ -234,8 +249,8 @@ const SendTicketEmail = ({
           <Paragraph>
             Para enviar tickets por correo, primero debes configurar el servidor SMTP de tu empresa.
           </Paragraph>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             size="large"
             href="/backoffice/email-config"
             className="mt-4"
@@ -261,7 +276,7 @@ const SendTicketEmail = ({
       width={700}
     >
       {renderEmailConfigStatus()}
-      
+
       {renderTicketsSummary()}
 
       <Form
@@ -280,8 +295,8 @@ const SendTicketEmail = ({
             { type: 'email', message: 'Formato de email inv¡lido' }
           ]}
         >
-          <Input 
-            placeholder="cliente@email.com" 
+          <Input
+            placeholder="cliente@email.com"
             prefix={<MailOutlined />}
             size="large"
           />
@@ -321,7 +336,7 @@ const SendTicketEmail = ({
           <Button onClick={onClose}>
             Cancelar
           </Button>
-          
+
           <Button
             type="primary"
             icon={<SendOutlined />}

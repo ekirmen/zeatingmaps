@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, List, Input, Button, Typography, Space, Tag, Avatar, Badge, Drawer, Select, message, Upload } from '../../utils/antdComponents';
-import { 
-  MessageOutlined, 
-  SendOutlined, 
-  UserOutlined, 
+import {
+  MessageOutlined,
+  SendOutlined,
+  UserOutlined,
   CustomerServiceOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
@@ -56,11 +56,11 @@ const TenantMessaging = () => {
 
     // Cargar conversaciones
     loadConversations();
-    
+
     // Suscribirse a nuevos mensajes
     const subscription = supabase
       .channel('tenant_messaging')
-      .on('postgres_changes', 
+      .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'tenant_messages' },
         (payload) => {
           if (payload.new.sender_type === 'saas') {
@@ -80,7 +80,8 @@ const TenantMessaging = () => {
     scrollToBottom();
   }, [messages]);
 
-  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const loadConversations = async () => {
@@ -204,7 +205,7 @@ const TenantMessaging = () => {
 
   const renderMessage = (message) => {
     const isTenant = message.sender_type === 'tenant';
-    
+
     return (
       <div
         key={message.id}

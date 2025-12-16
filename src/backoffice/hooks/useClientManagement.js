@@ -4,7 +4,7 @@ import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from '../../supabaseClient';
 import useSelectedSeatsStore from '../../stores/useSelectedSeatsStore';
 
-export 
+const useClientManagement = () => {
 
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -23,6 +23,7 @@ export
       if (error) {
         console.error('Search error:', error);
         throw error;
+      }
 
       return (data || []).map((p) => ({
         id: p.id,
@@ -208,3 +209,4 @@ export
 };
 
 
+export default useClientManagement;

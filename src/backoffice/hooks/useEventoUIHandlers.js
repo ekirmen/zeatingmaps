@@ -1,5 +1,8 @@
 // hooks/useEventoUIHandlers.js
-export 
+const useEventoUIHandlers = ({ setMenuVisible, setEventoData }) => {
+  const handleCreateEventClick = () => {
+    if (setEventoData && setMenuVisible) {
+      setEventoData(null);
       setMenuVisible(true);
     } else {
       alert('Por favor, selecciona un recinto y una sala');
@@ -21,3 +24,5 @@ export
     handleEdit,
   };
 };
+
+export default useEventoUIHandlers;

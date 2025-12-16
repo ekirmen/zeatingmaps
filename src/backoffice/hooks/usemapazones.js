@@ -1,7 +1,9 @@
 import React from 'react';
 
-const AutoWrapped_4lznyx = (props) => {
-  export 
+const usemapazones = ({ selectedZone, selectedIds, setElements }) => {
+  const assignZoneToSillas = () => {
+    if (!selectedZone || selectedIds.length === 0) {
+      return;
     }
 
     setElements(prev => {
@@ -32,39 +34,37 @@ const AutoWrapped_4lznyx = (props) => {
     });
   };
 
-   // 🔁 Aplica la zona a todos los elementos seleccionados (mesas, sillas, textos, etc.)
-    const assignZoneToSelected = () => {
-      if (!selectedZone || selectedIds.length === 0) {
-        return;
-      }
+  // 🔁 Aplica la zona a todos los elementos seleccionados (mesas, sillas, textos, etc.)
+  const assignZoneToSelected = () => {
+    if (!selectedZone || selectedIds.length === 0) {
+      return;
+    }
 
-      setElements(prev => {
-        const selectedMesaIds = prev
-          .filter(el => el.type === 'mesa' && selectedIds.includes(el._id))
-          .map(mesa => mesa._id);
+    setElements(prev => {
+      const selectedMesaIds = prev
+        .filter(el => el.type === 'mesa' && selectedIds.includes(el._id))
+        .map(mesa => mesa._id);
 
-        return prev.map(el => {
-          const isSelected = selectedIds.includes(el._id);
-          const isChildOfSelectedMesa = el.type === 'silla' && selectedMesaIds.includes(el.parentId);
+      return prev.map(el => {
+        const isSelected = selectedIds.includes(el._id);
+        const isChildOfSelectedMesa = el.type === 'silla' && selectedMesaIds.includes(el.parentId);
 
-          if (isSelected || isChildOfSelectedMesa) {
-            return {
-              ...el,
-              zonaId: selectedZone.id,
-            };
-          }
+        if (isSelected || isChildOfSelectedMesa) {
+          return {
+            ...el,
+            zonaId: selectedZone.id,
+          };
+        }
 
-          return el;
-        });
+        return el;
       });
-    };
-
-    return {
-      assignZoneToSillas,
-      assignZoneToSelected,
-    };
+    });
   };
 
+  return {
+    assignZoneToSillas,
+    assignZoneToSelected,
+  };
 };
 
-export default AutoWrapped_4lznyx;
+export default usemapazones;

@@ -1,7 +1,7 @@
 // Hook para manejar imagen de fondo del mapa
 import { message } from '../../utils/antdComponents';
 
-export 
+const useMapaBackground = ({ backgroundSystem, setElements }) => {
 
   const setBackgroundImage = (imageUrl, options = {}) => {
     const backgroundElement = {
@@ -16,7 +16,7 @@ export
     };
 
     setElements(prev => {
-
+      const sinFondo = prev.filter(el => el.type !== 'background');
       return [...sinFondo, backgroundElement];
     });
 
@@ -46,3 +46,4 @@ export
 };
 
 
+export default useMapaBackground;

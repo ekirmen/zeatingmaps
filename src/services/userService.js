@@ -6,15 +6,15 @@ import { supabase } from '../supabaseClient';
  * This helper uses the authenticated supabase client so it
  * respects row level security policies defined in the project.
  */
+export const getAllUsers = async () => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-const AutoWrapped_m2rqwa = (props) => {
-  export 
-
-
-    return data;
-  };
-
-
+  if (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
+  return data;
 };
-
-export default AutoWrapped_m2rqwa;

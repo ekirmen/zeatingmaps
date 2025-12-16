@@ -91,7 +91,7 @@ const StoreApp = () => {
 
   useEffect(() => restoreTimer(), [restoreTimer]);
 
-
+  useEffect(() => {
     if (DEBUG) return;
     const analyticsConfig = currentTenant?.analytics || domainConfig?.analytics;
     if (!analyticsConfig?.enabled) return;

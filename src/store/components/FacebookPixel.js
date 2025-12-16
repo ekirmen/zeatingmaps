@@ -6,6 +6,7 @@ const FacebookPixel = ({ pixelId, pixelScript, eventName, eventData = {} }) => {
   const loadedRef = useRef(false);
 
 
+  useEffect(() => {
     if (!pixelId && !pixelScript) return;
 
     const doLoad = () => {

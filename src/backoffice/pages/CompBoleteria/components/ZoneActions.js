@@ -1,6 +1,14 @@
 import { message } from '../../../../utils/antdComponents';
 
-export 
+export const useZoneActions = ({
+  detallesPlantilla,
+  appliedDiscount,
+  selectedFuncion,
+  carrito,
+  setCarrito,
+  setZoneQuantities
+}) => {
+  const handleAddZoneToCart = (detalle, qty, zonaId) => {
 
     if (!qty || qty <= 0) return;
 
@@ -94,5 +102,5 @@ export
     handleAddZoneToCart,
     handleAddSingleZoneTicket
   };
-}; 
+};
 

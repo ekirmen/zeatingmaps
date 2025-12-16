@@ -28,6 +28,7 @@ class SeatPaymentChecker {
   }
 
 
+  disableRpc(reason) {
     if (!this.rpcAvailable) return;
 
     this.rpcAvailable = false;

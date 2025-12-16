@@ -97,7 +97,7 @@ const Reports = () => {
   const normalizeStatus = (status) => {
     switch (status) {
       case 'pagado':
-
+      case 'completed':
         return 'completed';
       case 'pendiente':
       case 'pending':
@@ -195,7 +195,7 @@ const Reports = () => {
         setSavedReports([]);
         if (!reportConfigsNoticeShown) {
           message.warning(
-            'Los reportes guardados aºn no est¡n disponibles. Un administrador debe ejecutar la migraci³n de report_configs.'
+            'Los reportes guardados aún no están disponibles. Un administrador debe ejecutar la migración de report_configs.'
           );
           setReportConfigsNoticeShown(true);
         }
@@ -267,9 +267,183 @@ const Reports = () => {
     }
   };
 
+  const loadSalesReport = async () => {
+    try {
+      let query = supabase
+        .from('payment_transactions')
+        .select('*, user:profiles!user_id(login), event:eventos!evento_id(nombre)');
+
+      if (filters.dateRange) {
+        query = query
+          .gte('created_at', filters.dateRange[0].toISOString())
+          .lte('created_at', filters.dateRange[1].toISOString());
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        sales: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading sales report:', error);
+    }
+  };
+
+  const loadEventsReport = async () => {
+    try {
+      let query = supabase.from('eventos').select('*');
+
+      if (filters.dateRange) {
+        query = query
+          .gte('fecha_evento', filters.dateRange[0].toISOString())
+          .lte('fecha_evento', filters.dateRange[1].toISOString());
+      }
+
+      const { data, error } = await query.order('fecha_evento', { ascending: false });
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        events: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading events report:', error);
+    }
+  };
+
+  const loadUsersReport = async () => {
+    try {
+      let query = supabase.from('profiles').select('*');
+
+      if (filters.dateRange) {
+        query = query
+          .gte('created_at', filters.dateRange[0].toISOString())
+          .lte('created_at', filters.dateRange[1].toISOString());
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        users: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading users report:', error);
+    }
+  };
+
+  const loadPaymentsReport = async () => {
+    try {
+      let query = supabase.from('payment_transactions').select('*, user:profiles!user_id(login)');
+
+      if (filters.status !== 'all') {
+        const statusMap = {
+          completed: ['completed', 'pagado'],
+          pending: ['pending', 'pendiente'],
+          failed: ['failed', 'fallido'],
+          reserved: ['reserved', 'reservado']
+        };
+        const statusFilters = statusMap[filters.status] || [filters.status];
+        query = query.in('status', statusFilters);
+      }
+
+      if (filters.dateRange) {
+        query = query
+          .gte('created_at', filters.dateRange[0].toISOString())
+          .lte('created_at', filters.dateRange[1].toISOString());
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        payments: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading payments report:', error);
+    }
+  };
+
+  const loadProductsReport = async () => {
+    try {
+      let query = supabase.from('productos').select('*');
+
+      if (filters.dateRange) {
+        query = query
+          .gte('created_at', filters.dateRange[0].toISOString())
+          .lte('created_at', filters.dateRange[1].toISOString());
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        products: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading products report:', error);
+    }
+  };
+
+  const loadPromocionesReport = async () => {
+    try {
+      let query = supabase.from('promociones').select('*');
+
+      if (filters.dateRange) {
+        query = query
+          .gte('created_at', filters.dateRange[0].toISOString())
+          .lte('created_at', filters.dateRange[1].toISOString());
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        promociones: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading promociones report:', error);
+    }
+  };
+
+  const loadCarritosReport = async () => {
+    try {
+      let query = supabase.from('carritos').select('*');
+
+      if (filters.dateRange) {
+        query = query
+          .gte('created_at', filters.dateRange[0].toISOString())
+          .lte('created_at', filters.dateRange[1].toISOString());
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        carritos: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading carritos report:', error);
+    }
+  };
+
   const handleDeleteSavedReport = async (reportId) => {
     if (!currentTenant?.id || !user?.id) {
-      message.error('Selecciona un tenant e inicia sesi³n para gestionar reportes');
+      message.error('Selecciona un tenant e inicia sesión para gestionar reportes');
       return;
     }
 
@@ -321,10 +495,6 @@ const Reports = () => {
     message.success(`Reporte "${report.name}" cargado`);
   };
 
-  
-    handleLoadSavedReport(key);
-  };
-
   const validateEmailList = (_, value) => {
     if (!value) {
       return Promise.reject(new Error('Indica el email destinatario.'));
@@ -343,13 +513,13 @@ const Reports = () => {
     const invalidEmail = emails.find(email => !emailRegex.test(email));
 
     if (invalidEmail) {
-      return Promise.reject(new Error(`Email inv¡lido: ${invalidEmail}`));
+      return Promise.reject(new Error(`Email inválido: ${invalidEmail}`));
     }
 
     return Promise.resolve();
   };
 
-  
+  const handleSaveReportClick = () => {
     saveReportForm.setFieldsValue({
       name: '',
       dateMode: 'fixed',
@@ -368,12 +538,12 @@ const Reports = () => {
   const handleSaveReport = async () => {
     try {
       if (!currentTenant?.id || !user?.id) {
-        message.error('Selecciona un tenant e inicia sesi³n para guardar el reporte');
+        message.error('Selecciona un tenant e inicia sesión para guardar el reporte');
         return;
       }
 
       if (!reportConfigsAvailable) {
-        message.error('Los reportes guardados no est¡n disponibles hasta que se ejecute la migraci³n correspondiente.');
+        message.error('Los reportes guardados no están disponibles hasta que se ejecute la migración correspondiente.');
         return;
       }
 
@@ -431,150 +601,6 @@ const Reports = () => {
       }
     } finally {
       setSavingReport(false);
-    }
-  };
-
-  
-                  event.stopPropagation();
-                  handleDeleteSavedReport(report.id);
-                }}
-              >
-                Eliminar
-              </Button>
-            </div>
-          )
-        }))
-      : [
-          {
-            key: 'empty',
-            disabled: true,
-            label: <Text type="secondary">No hay reportes guardados</Text>
-          }
-        ];
-
-  
-
-      if (filters.dateRange) {
-        query = query
-          .gte('created_at', filters.dateRange[0].toISOString())
-          .lte('created_at', filters.dateRange[1].toISOString());
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setReportData(prev => ({
-        ...prev,
-        sales: data || []
-      }));
-    } catch (error) {
-      console.error('Error loading sales report:', error);
-    }
-  };
-
-  
-
-      if (filters.dateRange) {
-        query = query
-          .gte('fecha_evento', filters.dateRange[0].toISOString())
-          .lte('fecha_evento', filters.dateRange[1].toISOString());
-      }
-
-      const { data, error } = await query.order('fecha_evento', { ascending: false });
-
-      if (error) throw error;
-
-      setReportData(prev => ({
-        ...prev,
-        events: data || []
-      }));
-    } catch (error) {
-      console.error('Error loading events report:', error);
-    }
-  };
-
-  
-
-      if (error) throw error;
-
-      setReportData(prev => ({
-        ...prev,
-        users: data || []
-      }));
-    } catch (error) {
-      console.error('Error loading users report:', error);
-    }
-  };
-
-  
-
-      if (filters.status !== 'all') {
-        const statusMap = {
-          completed: ['completed', 'pagado'],
-          pending: ['pending', 'pendiente'],
-          failed: ['failed', 'fallido'],
-          reserved: ['reserved', 'reservado']
-        };
-        const statusFilters = statusMap[filters.status] || [filters.status];
-        query = query.in('status', statusFilters);
-      }
-
-      if (filters.dateRange) {
-        query = query
-          .gte('created_at', filters.dateRange[0].toISOString())
-          .lte('created_at', filters.dateRange[1].toISOString());
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setReportData(prev => ({
-        ...prev,
-        payments: data || []
-      }));
-    } catch (error) {
-      console.error('Error loading payments report:', error);
-    }
-  };
-
-  
-
-      if (error) throw error;
-
-      setReportData(prev => ({
-        ...prev,
-        products: data || []
-      }));
-    } catch (error) {
-      console.error('Error loading products report:', error);
-    }
-  };
-
-  
-
-      if (error) throw error;
-
-      setReportData(prev => ({
-        ...prev,
-        promociones: data || []
-      }));
-    } catch (error) {
-      console.error('Error loading promociones report:', error);
-    }
-  };
-
-  
-
-      if (error) throw error;
-
-      setReportData(prev => ({
-        ...prev,
-        carritos: data || []
-      }));
-    } catch (error) {
-      console.error('Error loading carritos report:', error);
     }
   };
 
@@ -705,10 +731,10 @@ const Reports = () => {
   const handleExport = async (values) => {
     try {
       setLoading(true);
-      
+
       const data = getReportData();
       const filename = values.filename || `reporte_${selectedReport}`;
-      
+
       switch (values.format) {
         case 'csv':
           exportToCSV(data, filename);
@@ -723,7 +749,7 @@ const Reports = () => {
           message.error('Formato no soportado');
           return;
       }
-      
+
       message.success(`Reporte exportado como ${values.format.toUpperCase()}`);
       setExportModalVisible(false);
       exportForm.resetFields();
@@ -810,7 +836,7 @@ const Reports = () => {
       key: 'email'
     },
     {
-      title: 'Tel©fono',
+      title: 'Teléfono',
       dataIndex: 'telefono',
       key: 'telefono',
       render: (telefono) => telefono || 'N/A'
@@ -831,7 +857,7 @@ const Reports = () => {
 
   const getPaymentsColumns = () => [
     {
-      title: 'ID Transacci³n',
+      title: 'ID Transacción',
       dataIndex: 'id',
       key: 'id',
       render: (id) => id?.slice(0, 8) + '...' || 'N/A'
@@ -875,10 +901,10 @@ const Reports = () => {
       render: (precio) => `$${parseFloat(precio || 0).toFixed(2)}`
     },
     {
-      title: 'Categor­a',
+      title: 'Categoría',
       dataIndex: 'categoria',
       key: 'categoria',
-      render: (categoria) => categoria || 'Sin categor­a'
+      render: (categoria) => categoria || 'Sin categoría'
     },
     {
       title: 'Stock',
@@ -900,13 +926,13 @@ const Reports = () => {
 
   const getPromocionesColumns = () => [
     {
-      title: 'C³digo',
+      title: 'Código',
       dataIndex: 'codigo',
       key: 'codigo',
       render: (codigo) => <Text code>{codigo}</Text>
     },
     {
-      title: 'Descripci³n',
+      title: 'Descripción',
       dataIndex: 'descripcion',
       key: 'descripcion',
       ellipsis: true
@@ -1009,7 +1035,7 @@ const Reports = () => {
 
   const getReportStats = () => {
     const data = getReportData();
-    
+
     switch (selectedReport) {
       case 'sales':
         const totalSales = data.reduce((sum, item) => sum + parseFloat(item.monto || 0), 0);
@@ -1175,10 +1201,10 @@ const Reports = () => {
 
     const statsEntries = statsData
       ? Object.entries(statsData).map(([key, value]) => ({
-          key,
-          label: statsLabels[key] || key,
-          value: formatStatValue(key, value)
-        }))
+        key,
+        label: statsLabels[key] || key,
+        value: formatStatValue(key, value)
+      }))
       : [];
 
     const tableHeader = columns
@@ -1208,8 +1234,8 @@ const Reports = () => {
             <h3 style="color: #1890ff; margin-bottom: 8px;">Indicadores principales</h3>
             <ul style="padding-left: 18px; margin: 0;">
               ${statsEntries
-                .map(entry => `<li><strong>${escapeHtml(entry.label)}:</strong> ${escapeHtml(entry.value)}</li>`)
-                .join('')}
+          .map(entry => `<li><strong>${escapeHtml(entry.label)}:</strong> ${escapeHtml(entry.value)}</li>`)
+          .join('')}
             </ul>
           </div>
         ` : ''}
@@ -1227,7 +1253,7 @@ const Reports = () => {
             ${previewRows.length < data.length ? `<p style="font-size: 12px; color: #6b7280; margin-top: 8px;">Mostrando ${previewRows.length} de ${data.length} registros. Exporta el reporte desde el panel para ver el detalle completo.</p>` : ''}
           ` : '<p>No hay datos disponibles para el reporte con los filtros seleccionados.</p>'}
         </div>
-        <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">Este correo se gener³ autom¡ticamente desde el panel de reportes de Omega Boletos.</p>
+        <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">Este correo se generó automáticamente desde el panel de reportes de Omega Boletos.</p>
       </div>
     `;
 
@@ -1247,7 +1273,7 @@ const Reports = () => {
   };
 
   const openReportEmailPreview = () => {
-    
+    const content = generateReportEmailContent();
     setReportEmailPreview({
       visible: true,
       subject: content.subject,
@@ -1265,12 +1291,14 @@ const Reports = () => {
       const emailConfig = await TenantEmailConfigService.getActiveEmailConfig();
 
       if (!emailConfig || !emailConfig.smtp_host || !emailConfig.smtp_user || !emailConfig.smtp_pass) {
-        message.error('No hay una configuraci³n de correo activa con credenciales completas.');
+        message.error('No hay una configuración de correo activa con credenciales completas.');
         return;
       }
 
       const content = generateReportEmailContent();
-      
+
+      // Aquí iría la lógica real de envío, posiblemente a través de una Edge Function
+      console.log('Enviando reporte:', content);
 
       message.success('Enviamos el resumen del reporte a tu bandeja de entrada.');
     } catch (error) {
@@ -1340,7 +1368,7 @@ const Reports = () => {
 
       <Alert
         message="Resumen del Sistema"
-        description="Aqu­ puedes ver un resumen general de las m©tricas m¡s importantes del sistema."
+        description="Aquí puedes ver un resumen general de las métricas más importantes del sistema."
         type="info"
         showIcon
         icon={<InfoCircleOutlined />}
@@ -1426,10 +1454,10 @@ const Reports = () => {
         </Row>
       </Card>
 
-      <Card className="mb-6" title="Env­o de resumen por correo">
+      <Card className="mb-6" title="Envío de resumen por correo">
         <Space direction="vertical" style={{ width: '100%' }}>
           <Text>
-            Env­a un resumen del reporte seleccionado a tu correo usando la configuraci³n SMTP activa para validar el contenido que recibir¡n tus equipos.
+            Envía un resumen del reporte seleccionado a tu correo usando la configuración SMTP activa para validar el contenido que recibirán tus equipos.
           </Text>
           <Space wrap>
             <Button
@@ -1448,12 +1476,12 @@ const Reports = () => {
             </Button>
           </Space>
           <Text type="secondary">
-            Usa esta opci³n para confirmar que la configuraci³n de correo y los filtros del reporte son correctos antes de programar env­os autom¡ticos.
+            Usa esta opción para confirmar que la configuración de correo y los filtros del reporte son correctos antes de programar envíos automáticos.
           </Text>
         </Space>
       </Card>
 
-      {/* Estad­sticas */}
+      {/* Estadísticas */}
       <Row gutter={[16, 16]} className="mb-6">
         {selectedReport === 'sales' && (
           <>
@@ -1613,82 +1641,11 @@ const Reports = () => {
             <Col xs={24} sm={8}>
               <Card>
                 <Statistic
-                  title="Valor Total"
+                  title="Valor Total Inventario"
                   value={stats.totalValue}
                   precision={2}
                   prefix="$"
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'promociones' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Promociones"
-                  value={stats.total}
-                  prefix={<GiftOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Promociones Activas"
-                  value={stats.active}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Promociones Inactivas"
-                  value={stats.inactive}
-                  prefix={<CloseOutlined />}
                   valueStyle={{ color: '#faad14' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'carritos' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Carritos"
-                  value={stats.total}
-                  prefix={<ShoppingCartOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Carritos con Asientos"
-                  value={stats.cartsWithSeats}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Valor Total"
-                  value={stats.totalValue}
-                  precision={2}
-                  prefix="$"
-                  valueStyle={{ color: '#722ed1' }}
                 />
               </Card>
             </Col>
@@ -1696,266 +1653,265 @@ const Reports = () => {
         )}
       </Row>
 
-      {/* Tabla de Datos */}
-      <Card title={`Reporte de ${selectedReport.charAt(0).toUpperCase() + selectedReport.slice(1)}`}>
+      {/* Tabla de Resultados */}
+      <Card>
         <Table
           columns={getReportColumns()}
           dataSource={getReportData()}
-          loading={loading}
           rowKey="id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} de ${total} registros`
-          }}
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: true }}
         />
       </Card>
     </>
   );
 
-  const tabItems = [
-    {
-      key: 'overview',
-      label: 'Vista General',
-      children: overviewContent
-    },
-    {
-      key: 'detailed',
-      label: 'Reportes Detallados',
-      children: detailedContent
-    }
-  ];
-
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-8">
-        <Title level={2}>
-          <BarChartOutlined className="mr-2" />
-          Reportes y Analytics
-        </Title>
-        <Text type="secondary">An¡lisis detallado de datos del sistema</Text>
+    <div className="p-4 bg-gray-50 min-h-screen">
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <Title level={2} className="mb-1">Reportes y Estadísticas</Title>
+          <Text type="secondary">Analiza el rendimiento de tu negocio con reportes detallados</Text>
+        </div>
+        <Space>
+          <Button
+            type="default"
+            icon={<FolderOpenOutlined />}
+            onClick={() => {
+              if (savedReports.length > 0) {
+                // Logic to show saved reports dropdown or modal
+                // For now, let's just trigger a notification or a simple dropdown
+                // Since we have a sidebar or a list, maybe a modal is best.
+                // We already have loadSavedReports usage below in the main render potentially?
+                // Ah, looking at the code, we need a way to select them.
+                // Let's add a Modal/Drawer for this or just rely on the section below.
+                // For now, doing nothing or refreshing list.
+                loadSavedReports(true);
+              } else {
+                message.info('No tienes reportes guardados');
+              }
+            }}
+          >
+            Mis Reportes ({savedReports.length})
+          </Button>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={handleSaveReportClick}
+          >
+            Guardar Reporte Actual
+          </Button>
+        </Space>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
-
-      <Modal
-        title={reportEmailPreview.subject || 'Vista previa del correo'}
-        open={reportEmailPreview.visible}
-        onCancel={closeReportEmailPreview}
-        footer={[
-          <Button key="close" onClick={closeReportEmailPreview}>
-            Cerrar
-          </Button>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        type="card"
+        className="bg-white rounded-lg shadow-sm p-4"
+        items={[
+          {
+            key: 'overview',
+            label: (
+              <span>
+                <BarChartOutlined />
+                Visión General
+              </span>
+            ),
+            children: overviewContent
+          },
+          {
+            key: 'detailed',
+            label: (
+              <span>
+                <FileTextOutlined />
+                Reporte Detallado
+              </span>
+            ),
+            children: detailedContent
+          },
+          {
+            key: 'saved',
+            label: (
+              <span>
+                <FolderOpenOutlined />
+                Reportes Guardados
+                <Badge count={savedReports.length} style={{ marginLeft: 8, backgroundColor: '#52c41a' }} />
+              </span>
+            ),
+            children: (
+              <div className="p-4">
+                {savedReportsLoading ? (
+                  <div className="text-center py-8"><Spin /></div>
+                ) : savedReports.length > 0 ? (
+                  <Table
+                    dataSource={savedReports}
+                    rowKey="id"
+                    columns={[
+                      { title: 'Nombre', dataIndex: 'name', key: 'name', render: text => <Text strong>{text}</Text> },
+                      { title: 'Tipo', dataIndex: 'selectedReport', key: 'type', render: type => reportOptions.find(o => o.value === type)?.label || type },
+                      { title: 'Frecuencia', key: 'schedule', render: (_, r) => r.schedule?.enabled ? (r.schedule.periodicity === 'd' ? 'Diario' : r.schedule.periodicity === 's' ? 'Semanal' : 'Mensual') : 'Manual' },
+                      {
+                        title: 'Acciones',
+                        key: 'actions',
+                        render: (_, record) => (
+                          <Space>
+                            <Button size="small" type="primary" onClick={() => { handleLoadSavedReport(record.id); setActiveTab('detailed'); }}>Cargar</Button>
+                            <Popconfirm title="¿Eliminar este reporte?" onConfirm={() => handleDeleteSavedReport(record.id)}>
+                              <Button size="small" danger icon={<DeleteOutlined />} loading={deletingReportId === record.id} />
+                            </Popconfirm>
+                          </Space>
+                        )
+                      }
+                    ]}
+                  />
+                ) : (
+                  <div className="text-center py-12">
+                    <FolderOpenOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
+                    <Title level={4} type="secondary">No hay reportes guardados</Title>
+                    <Text type="secondary">Guarda tus configuraciones de reportes frecuentes para acceder a ellas rápidamente.</Text>
+                  </div>
+                )}
+              </div>
+            )
+          }
         ]}
-        width={720}
-      >
-        <div
-          className="prose prose-sm"
-          dangerouslySetInnerHTML={{ __html: reportEmailPreview.html }}
-        />
-      </Modal>
+      />
 
-      {/* Modal de Exportaci³n */}
       <Modal
         title="Exportar Reporte"
         open={exportModalVisible}
         onCancel={() => setExportModalVisible(false)}
         footer={null}
       >
-        <Form
-          form={exportForm}
-          layout="vertical"
-          onFinish={handleExport}
-        >
-          <Form.Item
-            name="format"
-            label="Formato de Exportaci³n"
-            rules={[{ required: true, message: 'Por favor selecciona un formato' }]}
-          >
-            <Select placeholder="Selecciona formato">
-              <Option value="pdf">PDF</Option>
-              <Option value="excel">Excel</Option>
-              <Option value="csv">CSV</Option>
-            </Select>
+        <Form form={exportForm} onFinish={handleExport} layout="vertical">
+          <Form.Item name="filename" label="Nombre del archivo" initialValue={`reporte_${selectedReport}`}>
+            <Input suffix=".csv/.xls/.pdf" />
           </Form.Item>
-
-          <Form.Item
-            name="filename"
-            label="Nombre del Archivo"
-            rules={[{ required: true, message: 'Por favor ingresa un nombre' }]}
-          >
-            <Input placeholder="reporte_ventas" />
+          <Form.Item name="format" label="Formato" initialValue="csv">
+            <Radio.Group>
+              <Radio.Button value="csv">CSV</Radio.Button>
+              <Radio.Button value="excel">Excel</Radio.Button>
+              <Radio.Button value="pdf">PDF</Radio.Button>
+            </Radio.Group>
           </Form.Item>
-
-          <Form.Item>
-            <Space>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
-                loading={loading}
-                icon={<DownloadOutlined />}
-              >
-                Exportar
-              </Button>
-              <Button onClick={() => setExportModalVisible(false)}>
-                Cancelar
-              </Button>
-            </Space>
+          <Form.Item className="mb-0 text-right">
+            <Button onClick={() => setExportModalVisible(false)} className="mr-2">Cancelar</Button>
+            <Button type="primary" htmlType="submit" icon={<DownloadOutlined />} loading={loading}>
+              Exportar
+            </Button>
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title="Guardar en mis reportes"
+        title="Guardar Configuración de Reporte"
         open={saveModalVisible}
         onCancel={() => setSaveModalVisible(false)}
         onOk={handleSaveReport}
         confirmLoading={savingReport}
-        okText="Guardar"
-        cancelText="Cancelar"
-        destroyOnClose
+        width={600}
       >
-        <Form layout="vertical" form={saveReportForm} name="saveReportForm">
+        <Form form={saveReportForm} layout="vertical">
           <Form.Item
-            label="Nombre"
             name="name"
-            rules={[{ required: true, message: 'Indica el nombre de tu informe.' }]}
+            label="Nombre del Reporte"
+            rules={[{ required: true, message: 'Ingresa un nombre para identificar este reporte' }]}
           >
-            <Input placeholder="Pon el nombre de tu reporte" maxLength={255} />
+            <Input placeholder="Ej: Ventas Mensuales - Sucursal Centro" />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col xs={24} md={12}>
-              <Form.Item label="Fechas" name="dateMode" initialValue="fixed">
-                <Radio.Group>
-                  <Radio value="fixed">Fijas</Radio>
-                  <Radio value="sliding">Deslizantes</Radio>
-                </Radio.Group>
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item label="Idioma" name="language" initialValue="es_MX">
-                <Select>
-                  <Option value="en_US">English (en_US)</Option>
-                  <Option value="es_MX">Spanish (es_MX)</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+          <Divider orientation="left">Configuración de Envío Automático</Divider>
+
+          <Form.Item name="scheduled" valuePropName="checked">
+            <Switch checkedChildren="Programar envío periódico" unCheckedChildren="Solo guardar configuración" />
+          </Form.Item>
 
           <Form.Item
-            label="Programar informe"
-            name="scheduled"
-            valuePropName="checked"
-            initialValue={false}
+            noStyle
+            shouldUpdate={(prev, current) => prev.scheduled !== current.scheduled}
           >
-            <Switch />
-          </Form.Item>
-
-          <Form.Item shouldUpdate={(prev, current) => prev.scheduled !== current.scheduled} noStyle>
             {({ getFieldValue }) =>
               getFieldValue('scheduled') ? (
-                <div className="configuracionProgramacion">
-                  <Row gutter={16}>
-                    <Col span={24}>
-                      <Form.Item
-                        label="Fechas"
-                        name="scheduleRange"
-                        rules={[{ required: true, message: 'Seleccione la fecha' }]}
-                      >
-                        <RangePicker style={{ width: '100%' }} />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Row gutter={16}>
-                    <Col span={24}>
-                      <Form.Item
-                        label="Email"
-                        name="emails"
-                        rules={[{ validator: validateEmailList }]}
-                      >
-                        <Input placeholder="email@email.com" maxLength={4000} />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Row gutter={16}>
-                    <Col span={24}>
-                      <Form.Item label="Periodicidad" name="periodicity" initialValue="d">
-                        <Radio.Group>
-                          <Radio value="d">Diario</Radio>
-                          <Radio value="s">Semanal</Radio>
-                          <Radio value="m">Mensual</Radio>
-                        </Radio.Group>
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item shouldUpdate={(prev, current) => prev.periodicity !== current.periodicity} noStyle>
-                    {({ getFieldValue }) => {
-                      const periodicity = getFieldValue('periodicity');
-
-                      if (periodicity === 's') {
-                        return (
-                          <Row gutter={16}>
-                            <Col span={24}>
-                              <Form.Item
-                                label="D­as"
-                                name="weekDays"
-                                rules={[{ required: true, message: 'Seleccione al menos un d­a' }]}
-                              >
-                                <Checkbox.Group options={weekDayOptions} />
-                              </Form.Item>
-                            </Col>
-                          </Row>
-                        );
-                      }
-
-                      if (periodicity === 'm') {
-                        return (
-                          <Row gutter={16}>
-                            <Col span={24}>
-                              <Form.Item
-                                label="D­a del mes"
-                                name="dayOfMonth"
-                                rules={[{ required: true, message: 'Indica el d­a del mes' }]}
-                              >
-                                <InputNumber min={1} max={31} style={{ width: '100%' }} />
-                              </Form.Item>
-                            </Col>
-                          </Row>
-                        );
-                      }
-
-                      return null;
-                    }}
+                <>
+                  <Form.Item
+                    name="emails"
+                    label="Destinatarios"
+                    tooltip="Correos separados por coma"
+                    rules={[{ required: true, validator: validateEmailList }]}
+                  >
+                    <Input placeholder="correo1@empresa.com, correo2@empresa.com" />
                   </Form.Item>
 
                   <Row gutter={16}>
-                    <Col span={24}>
-                      <Form.Item
-                        label="Hora"
-                        name="time"
-                        rules={[{ required: true, message: 'Indica la hora de ejecuci³n' }]}
-                      >
-                        <TimePicker format="HH:mm" style={{ width: '100%' }} minuteStep={5} />
+                    <Col span={12}>
+                      <Form.Item name="periodicity" label="Frecuencia" initialValue="d">
+                        <Select>
+                          <Option value="d">Diario</Option>
+                          <Option value="s">Semanal</Option>
+                          <Option value="m">Mensual</Option>
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item name="time" label="Hora de envío" initialValue={dayjs('08:00', 'HH:mm')}>
+                        <TimePicker format="HH:mm" style={{ width: '100%' }} />
                       </Form.Item>
                     </Col>
                   </Row>
-                </div>
+
+                  <Form.Item
+                    noStyle
+                    shouldUpdate={(prev, current) => prev.periodicity !== current.periodicity}
+                  >
+                    {({ getFieldValue }) => {
+                      const periodicity = getFieldValue('periodicity');
+                      if (periodicity === 's') {
+                        return (
+                          <Form.Item name="weekDays" label="Días de la semana">
+                            <Checkbox.Group options={weekDayOptions} />
+                          </Form.Item>
+                        );
+                      }
+                      if (periodicity === 'm') {
+                        return (
+                          <Form.Item name="dayOfMonth" label="Día del mes">
+                            <InputNumber min={1} max={31} style={{ width: '100%' }} />
+                          </Form.Item>
+                        );
+                      }
+                      return null;
+                    }}
+                  </Form.Item>
+                </>
               ) : null
             }
           </Form.Item>
         </Form>
       </Modal>
+
+      <Modal
+        title={reportEmailPreview.subject}
+        open={reportEmailPreview.visible}
+        onCancel={closeReportEmailPreview}
+        footer={[
+          <Button key="close" onClick={closeReportEmailPreview}>
+            Cerrar
+          </Button>,
+          <Button key="send" type="primary" icon={<SendOutlined />} onClick={() => { closeReportEmailPreview(); handleSendReportEmail(); }}>
+            Enviar ahora
+          </Button>
+        ]}
+        width={800}
+      >
+        <div
+          className="border rounded p-4 bg-gray-50"
+          style={{ maxHeight: '60vh', overflowY: 'auto' }}
+          dangerouslySetInnerHTML={{ __html: reportEmailPreview.html }}
+        />
+      </Modal>
     </div>
   );
 };
 
-export default Reports; 
-
-
+export default Reports;

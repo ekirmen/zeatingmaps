@@ -1,6 +1,7 @@
 import { supabase } from '../../supabaseClient';
 
 
+const isNotificationsTableMissing = (error) => {
   if (!error) return false;
 
   const status = error.status ?? error?.response?.status;
@@ -31,7 +32,22 @@ const handleNotificationError = (context, error) => {
 /**
  * Suscribirse a cambios de transacciones en tiempo real
  */
-export 
+/**
+ * Suscribirse a cambios de transacciones en tiempo real
+ */
+export const subscribeToPaymentTransactions = (callback, tenantId = null) => {
+  const subscription = supabase
+    .channel('payment_transactions_changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'payment_transactions',
+        filter: tenantId ? `tenant_id=eq.${tenantId}` : undefined,
+      },
+      (payload) => {
+        callback(payload);
       }
     )
     .subscribe();
@@ -133,8 +149,10 @@ export const sendPaymentConfirmationSMS = async (phoneNumber, transaction) => {
 /**
  * Crear notificación de pago exitoso
  */
-export 
-
+/**
+ * Crear notificación de pago exitoso
+ */
+export const createPaymentSuccessNotification = async (transaction, notification = {}) => {
   try {
     const targetUserId = transaction.user_id ?? transaction.user?.id ?? null;
     const tenantId = transaction.tenant_id ?? transaction.tenant?.id ?? null;
@@ -163,8 +181,10 @@ export
 /**
  * Crear notificación de pago fallido
  */
-export 
-
+/**
+ * Crear notificación de pago fallido
+ */
+export const createPaymentFailureNotification = async (transaction, notification = {}) => {
   try {
     await sendPushNotification(transaction.user_id, notification);
   } catch (error) {
@@ -177,8 +197,10 @@ export
 /**
  * Crear notificación de reembolso
  */
-export 
-
+/**
+ * Crear notificación de reembolso
+ */
+export const createRefundNotification = async (refund, notification = {}) => {
   try {
     await sendPushNotification(refund.requested_by, notification);
   } catch (error) {
@@ -191,7 +213,15 @@ export
 /**
  * Sistema de alertas para administradores
  */
-export 
+/**
+ * Sistema de alertas para administradores
+ */
+export const createAdminAlert = async (alert) => {
+  try {
+    const { data: admins, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('permisos->role', 'admin');
 
     if (error) throw error;
 
@@ -210,8 +240,10 @@ export
 /**
  * Notificación de pago pendiente
  */
-export 
-
+/**
+ * Notificación de pago pendiente
+ */
+export const createPaymentPendingNotification = async (transaction, notification = {}) => {
   try {
     await sendPushNotification(transaction.user_id, notification);
   } catch (error) {
@@ -224,8 +256,10 @@ export
 /**
  * Notificación de reserva expirada
  */
-export 
-
+/**
+ * Notificación de reserva expirada
+ */
+export const createReservationExpiredNotification = async (reservation, notification = {}) => {
   try {
     await sendPushNotification(reservation.user_id, notification);
   } catch (error) {

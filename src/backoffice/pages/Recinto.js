@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input, Modal, message, Pagination, Empty, Spin } from '../../utils/antdComponents';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   SearchOutlined,
   EnvironmentOutlined,
   HomeOutlined,
@@ -67,22 +67,22 @@ const Recinto = () => {
         .insert([newRecinto])
         .select()
         .single();
-  
+
       if (errorRecinto) throw errorRecinto;
-  
+
       const salaInicial = {
         nombre: 'Sala Principal',
         recinto_id: recinto.id,
       };
-  
+
       const { data: sala, error: errorSala } = await supabase
         .from('salas')
         .insert([salaInicial])
         .select()
         .single();
-  
+
       if (errorSala) throw errorSala;
-  
+
       setRecintos((prev) => [...prev, { ...recinto, salas: [sala] }]);
       message.success('Recinto y sala creados con ©xito');
       setIsCreating(false);
@@ -111,9 +111,9 @@ const Recinto = () => {
         .insert([{ ...newSala, recinto_id: currentRecinto.id }])
         .select()
         .single();
-  
+
       if (error) throw error;
-  
+
       setRecintos((prev) =>
         prev.map((r) =>
           r.id === currentRecinto.id
@@ -121,7 +121,7 @@ const Recinto = () => {
             : r
         )
       );
-  
+
       message.success('Sala agregada con ©xito');
       setIsAddingSala(false);
       setCurrentRecinto(null);
@@ -211,6 +211,7 @@ const Recinto = () => {
   const totalPages = Math.ceil(filteredRecintos.length / recordsPerPage);
 
 
+  if (loading) {
     return (
       <div className="dashboard-loading">
         <Spin size="large" />
@@ -235,7 +236,7 @@ const Recinto = () => {
               Gestiona tus recintos y salas
             </p>
           </div>
-          
+
           <div style={{
             display: 'flex',
             flexDirection: isMobile ? 'column' : 'row',
@@ -292,13 +293,13 @@ const Recinto = () => {
         width={isMobile ? '90%' : 600}
         style={{ top: isMobile ? 20 : 50 }}
       >
-        <EditRecintoForm 
-          recinto={currentRecinto} 
-          onEditRecinto={handleEditRecinto} 
+        <EditRecintoForm
+          recinto={currentRecinto}
+          onEditRecinto={handleEditRecinto}
           onCancel={() => {
             setIsEditing(false);
             setCurrentRecinto(null);
-          }} 
+          }}
         />
       </Modal>
 
@@ -314,13 +315,13 @@ const Recinto = () => {
         width={isMobile ? '90%' : 500}
         style={{ top: isMobile ? 20 : 50 }}
       >
-        <AddSalaForm 
-          recinto={currentRecinto} 
-          onAddSala={handleAddSala} 
+        <AddSalaForm
+          recinto={currentRecinto}
+          onAddSala={handleAddSala}
           onCancel={() => {
             setIsAddingSala(false);
             setCurrentRecinto(null);
-          }} 
+          }}
         />
       </Modal>
 
@@ -482,7 +483,7 @@ const Recinto = () => {
                       icon={<DeleteOutlined />}
                       onClick={() => handleDeleteRecinto(recinto.id)}
                       className="dashboard-button"
-                      style={{ 
+                      style={{
                         width: isMobile ? '100%' : 'auto',
                         background: 'var(--dashboard-error)',
                         color: 'white',
@@ -513,7 +514,7 @@ const Recinto = () => {
                       <HomeOutlined style={{ color: 'var(--dashboard-primary)' }} />
                       Salas del Recinto ({recinto.salas?.length || 0})
                     </h3>
-                    
+
                     {(!recinto.salas || recinto.salas.length === 0) ? (
                       <Empty
                         description="No hay salas configuradas"
@@ -609,7 +610,7 @@ const Recinto = () => {
                 pageSize={recordsPerPage}
                 onChange={(page) => setCurrentPage(page)}
                 showSizeChanger={false}
-                showTotal={(total, range) => 
+                showTotal={(total, range) =>
                   `${range[0]}-${range[1]} de ${total} recintos`
                 }
                 size={isMobile ? 'small' : 'default'}

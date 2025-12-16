@@ -4,15 +4,15 @@ import { buildPaymentTransactionPayload } from '../utils/normalizeTransactionPay
 /**
  * Crea una transacción de pago
  */
-export 
-
+export const createPaymentTransaction = async (payload) => {
+  try {
     const { data, error } = await supabase
       .from('payment_transactions')
       .insert([payload])
       .select()
       .single();
 
-
+    if (error) throw error;
     return data;
   } catch (error) {
     console.error('Error creating payment transaction:', error);
@@ -23,9 +23,19 @@ export
 /**
  * Actualiza el estado de una transacción
  */
-export 
+export const updatePaymentTransactionStatus = async (transactionId, status, gatewayResponse, currentTransaction = null) => {
+  try {
+    // Si no se proporciona la transacción actual, buscarla
+    if (!currentTransaction) {
+      const { data: fetchTransaction, error: fetchError } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .eq('id', transactionId)
+        .single();
 
-    if (fetchError) {
+      if (!fetchError) {
+        currentTransaction = fetchTransaction;
+      }
     }
 
     const { data, error } = await supabase
@@ -45,7 +55,7 @@ export
     const previousStatus = currentTransaction?.status;
     const newStatus = status;
     const statusChangedToCompleted = (previousStatus !== 'completed' && previousStatus !== 'pagado') &&
-                                     (newStatus === 'completed' || newStatus === 'pagado');
+      (newStatus === 'completed' || newStatus === 'pagado');
 
     if (statusChangedToCompleted && data.locator && data.user_id) {
       try {
@@ -79,7 +89,14 @@ export
 /**
  * Oculta una transacción de pago
  */
-export 
+export const hidePaymentTransaction = async (transactionId) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_transactions')
+      .update({ is_hidden: true })
+      .eq('id', transactionId)
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
@@ -92,7 +109,14 @@ export
 /**
  * Muestra una transacción previamente oculta
  */
-export 
+export const unhidePaymentTransaction = async (transactionId) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_transactions')
+      .update({ is_hidden: false })
+      .eq('id', transactionId)
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
@@ -105,7 +129,12 @@ export
 /**
  * Elimina una transacción de pago
  */
-export 
+export const deletePaymentTransaction = async (transactionId) => {
+  try {
+    const { error } = await supabase
+      .from('payment_transactions')
+      .delete()
+      .eq('id', transactionId);
 
     if (error) throw error;
     return true;
@@ -118,7 +147,13 @@ export
 /**
  * Busca una transacción por localizador
  */
-export 
+export const getPaymentTransactionByLocator = async (locator) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('locator', locator)
+      .single();
 
     if (error) throw error;
     return data;
@@ -131,7 +166,13 @@ export
 /**
  * Obtiene todas las transacciones de un usuario
  */
-export 
+export const getPaymentTransactionsByUser = async (userId, tenantId = null) => {
+  try {
+    let query = supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
     if (tenantId) {
       query = query.eq('tenant_id', tenantId);
@@ -150,7 +191,11 @@ export
 /**
  * Obtiene estadísticas de transacciones
  */
-export 
+export const getPaymentTransactionStats = async (tenantId = null, dateRange = null) => {
+  try {
+    let query = supabase
+      .from('payment_transactions')
+      .select('*');
 
     if (tenantId) {
       query = query.eq('tenant_id', tenantId);

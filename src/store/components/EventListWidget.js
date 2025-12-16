@@ -16,6 +16,8 @@ function EventListWidget({ events, loading = false }) {
   };
 
 
+  // Función para obtener imágenes del evento
+  const getEventImages = (event) => {
     if (!event.imagenes) return {};
 
     try {
@@ -70,7 +72,7 @@ function EventListWidget({ events, loading = false }) {
     if (!events || events.length === 0) return [];
     return events.map(event => {
       const images = getEventImages(event);
-      
+
       const eventName = event.name || event.nombre || 'E';
       const displayImageUrl = rawImage ? getImageUrl(rawImage) : null;
 
@@ -124,7 +126,7 @@ function EventListWidget({ events, loading = false }) {
           const images = getEventImages(event);
           const rawImage = images.obraImagen || images.portada || images.banner;
           const eventName = event.name || event.nombre || 'E';
-          
+
 
           // Debug info para desarrollo
           if (process.env.NODE_ENV === 'development') {
@@ -148,13 +150,12 @@ function EventListWidget({ events, loading = false }) {
                 {/* Event Status Badge */}
                 {event.estadoVenta && (
                   <div className="absolute top-3 right-3">
-                    <span className={`store-badge ${
-                      event.estadoVenta === 'a-la-venta'
+                    <span className={`store-badge ${event.estadoVenta === 'a-la-venta'
                         ? 'store-badge-success'
                         : event.estadoVenta === 'agotado'
-                        ? 'store-badge-error'
-                        : 'store-badge-warning'
-                    }`}>
+                          ? 'store-badge-error'
+                          : 'store-badge-warning'
+                      }`}>
                       {event.estadoVenta.replace(/-/g, ' ')}
                     </span>
                   </div>

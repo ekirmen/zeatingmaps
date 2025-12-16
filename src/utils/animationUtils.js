@@ -5,25 +5,28 @@
 /**
  * Detecta si el dispositivo es móvil o tiene recursos limitados
  */
-
+export const isLowPerformanceDevice = () => {
   if (typeof window === 'undefined') return false;
-  
-  // Verificar si el usuario prefiere movimiento reducido
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    return true;
+  try {
+    // Verificar si el usuario prefiere movimiento reducido
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return true;
+    }
+
+    // Verificar si es móvil por ancho
+    if (window.innerWidth && window.innerWidth <= 768) {
+      return true;
+    }
+
+    // Verificar hardware (número de cores)
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) {
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    return false;
   }
-  
-  // Verificar si es móvil
-  if (window.innerWidth <= 768) {
-    return true;
-  }
-  
-  // Verificar hardware (número de cores, memoria)
-  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) {
-    return true;
-  }
-  
-  return false;
 };
 
 /**

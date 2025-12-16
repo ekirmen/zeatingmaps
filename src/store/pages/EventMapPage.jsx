@@ -14,6 +14,7 @@ const EventMapPage = () => {
   const funcionParam = searchParams.get('funcion');
 
 
+  const funcionId = useMemo(() => {
     if (!funcionParam) return null;
     const parsed = parseInt(funcionParam, 10);
     if (!Number.isFinite(parsed) || parsed <= 0) {

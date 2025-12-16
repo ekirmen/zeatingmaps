@@ -1,12 +1,12 @@
 import React from 'react';
-import { 
-  Card, 
-  Button, 
-  List, 
-  Typography, 
-  Space, 
-  Divider, 
-  Tag, 
+import {
+  Card,
+  Button,
+  List,
+  Typography,
+  Space,
+  Divider,
+  Tag,
   Popconfirm,
   Tooltip,
   Badge,
@@ -14,10 +14,10 @@ import {
   Col,
   Statistic
 } from '../../../../utils/antdComponents';
-import { 
-  ShoppingCartOutlined, 
-  DeleteOutlined, 
-  DollarOutlined, 
+import {
+  ShoppingCartOutlined,
+  DeleteOutlined,
+  DollarOutlined,
   UserOutlined,
   CalendarOutlined,
   TagOutlined,
@@ -27,10 +27,10 @@ import {
 
 const { Text, Title } = Typography;
 
-const AdvancedCart = ({ 
-  carrito, 
-  setCarrito, 
-  selectedClient, 
+const AdvancedCart = ({
+  carrito,
+  setCarrito,
+  selectedClient,
   selectedFuncion,
   onPayment,
   onClientSelect,
@@ -46,9 +46,11 @@ const AdvancedCart = ({
     setCarrito(newCarrito);
   };
 
-  
+
+  const handleUpdateQuantity = (index, delta) => {
+    const newCarrito = [...carrito];
     const item = newCarrito[index];
-    
+
     if (delta > 0) {
       // Agregar m¡s del mismo asiento (si es posible)
       const newItem = { ...item, _id: `${item._id}_${Date.now()}` };
@@ -57,11 +59,11 @@ const AdvancedCart = ({
       // Remover el asiento
       newCarrito.splice(index, 1);
     }
-    
+
     setCarrito(newCarrito);
   };
 
-
+  const getSeatStatusColor = (item) => {
     if (item.tipoPrecio === 'descuento') return 'green';
     if (item.tipoPrecio === 'promocion') return 'blue';
     return 'default';
@@ -75,7 +77,7 @@ const AdvancedCart = ({
 
   if (compact) {
     return (
-      <Card 
+      <Card
         title={
           <div className="flex items-center justify-between">
             <span>Carrito</span>
@@ -97,22 +99,22 @@ const AdvancedCart = ({
                 <div className="text-right">
                   <Text strong className="text-sm">${item.precio}</Text>
                   <br />
-                  <Button 
-                    size="small" 
-                    type="link" 
+                  <Button
+                    size="small"
+                    type="link"
                     icon={<DeleteOutlined />}
                     onClick={() => handleRemoveItem(index)}
                   />
                 </div>
               </div>
             ))}
-            
+
             <Divider className="my-2" />
-            
+
             <div className="flex justify-between items-center">
               <Text strong>Total: ${total}</Text>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 size="small"
                 onClick={onPayment}
                 disabled={!selectedClient}
@@ -133,7 +135,7 @@ const AdvancedCart = ({
   }
 
   return (
-    <Card 
+    <Card
       title={
         <div className="flex items-center justify-between">
           <span>Carrito de Compras</span>
@@ -158,8 +160,8 @@ const AdvancedCart = ({
                     </Text>
                   </div>
                 </div>
-                <Button 
-                  size="small" 
+                <Button
+                  size="small"
                   onClick={onClientSelect}
                   disabled={!!selectedClient}
                 >
@@ -192,9 +194,9 @@ const AdvancedCart = ({
               <List.Item
                 actions={[
                   <Tooltip title="Remover asiento">
-                    <Button 
-                      size="small" 
-                      type="text" 
+                    <Button
+                      size="small"
+                      type="text"
                       icon={<DeleteOutlined />}
                       onClick={() => handleRemoveItem(index)}
                     />
@@ -266,7 +268,7 @@ const AdvancedCart = ({
             >
               {selectedClient ? 'Proceder al Pago' : 'Selecciona un cliente primero'}
             </Button>
-            
+
             {!selectedClient && (
               <Button
                 size="large"

@@ -93,16 +93,16 @@ const VirtualizedList = ({
       const scrollTop = container.scrollTop;
       const containerHeight = container.clientHeight;
       const itemCount = items.length;
-      
+
       // Calcular qué items son visibles
       const start = Math.max(0, Math.floor(scrollTop / itemHeight) - overscanCount);
       const end = Math.min(
         itemCount,
         Math.ceil((scrollTop + containerHeight) / itemHeight) + overscanCount
       );
-      
+
       setVisibleRange({ start, end });
-      
+
       if (onScroll) {
         onScroll({ target: container });
       }
@@ -110,7 +110,7 @@ const VirtualizedList = ({
 
     container.addEventListener('scroll', handleScroll);
     handleScroll(); // Inicial
-    
+
     return () => {
       container.removeEventListener('scroll', handleScroll);
     };
@@ -145,7 +145,7 @@ const VirtualizedList = ({
     >
       {/* Spacer superior para items no visibles */}
       <div style={{ height: offsetTop, flexShrink: 0 }} />
-      
+
       {/* Items visibles */}
       {visibleItems.map((item, idx) => {
         const actualIndex = visibleRange.start + idx;
@@ -157,7 +157,7 @@ const VirtualizedList = ({
           </div>
         );
       })}
-      
+
       {/* Spacer inferior para items no visibles */}
       <div style={{ height: bottomSpacerHeight, flexShrink: 0 }} />
     </div>
@@ -167,7 +167,7 @@ const VirtualizedList = ({
 /**
  * Hook para usar lista virtualizada con auto-sizing
  */
-export 
+export const useVirtualizedList = (defaultItemHeight = 50, minItemHeight = 30, maxItemHeight = 200) => {
 
   const [itemHeights, setItemHeights] = useState(new Map());
   const listRef = useRef(null);
@@ -178,7 +178,7 @@ export
 
   const setItemSize = (index, height) => {
     const clampedHeight = Math.max(minItemHeight, Math.min(maxItemHeight, height));
-    
+
     setItemHeights(prev => {
       const newMap = new Map(prev);
       if (newMap.get(index) !== clampedHeight) {

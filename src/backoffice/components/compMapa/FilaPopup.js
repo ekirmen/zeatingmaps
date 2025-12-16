@@ -1,6 +1,7 @@
 import React from 'react';
 
 
+const FilaPopup = ({ element, onChange, onClose }) => {
   if (!element) return null;
 
   return (

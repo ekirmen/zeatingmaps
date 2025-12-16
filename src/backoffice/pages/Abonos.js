@@ -19,7 +19,7 @@ const Abonos = () => {
   const [selectedFuncionId, setSelectedFuncionId] = useState('');
   const [seatError, setSeatError] = useState('');
 
-
+  const selectedEvent = useMemo(() => {
     return eventos.find(e => `${e.id}` === `${selectedEventId}`) || null;
   }, [eventos, selectedEventId]);
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getSupabaseClient } from '../../config/supabase';
 
 
+const normalizeEventData = (event) => {
   if (!event) return null;
 
   let displayImageUrl = `https://placehold.co/80x80/E0F2F7/000?text=${event.nombre ? event.nombre.charAt(0) : 'E'}`;
@@ -24,7 +25,7 @@ import { getSupabaseClient } from '../../config/supabase';
   };
 };
 
-export 
+export const useEventsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -36,7 +37,7 @@ export
       if (!supabase) {
         throw new Error('Cliente de Supabase no disponible');
       }
-      
+
       const { data, error: supabaseError } = await supabase
         .from('eventos')
         .select(`
@@ -87,7 +88,7 @@ export
             created_at
           `)
           .eq('activo', true);
-        
+
         if (!errFallback && Array.isArray(dataFallback)) {
           rows = dataFallback;
         }
@@ -98,14 +99,14 @@ export
         ...(rows || []).map(e => e.recinto).filter(Boolean),
         ...(rows || []).map(e => e.recinto_id).filter(Boolean)
       ])];
-      
+
       let recintosData = {};
       if (recintoIds.length > 0) {
         const { data: recintos, error: recintosError } = await supabase
           .from('recintos')
           .select('id, nombre, direccion, ciudad, pais')
           .in('id', recintoIds);
-        
+
         if (!recintosError && recintos) {
           recintosData = recintos.reduce((acc, recinto) => {
             acc[recinto.id] = recinto;
@@ -118,7 +119,7 @@ export
       const formattedEvents = rows.map(event => {
         const recintoId = event.recinto || event.recinto_id;
         const recintoInfo = recintosData[recintoId];
-        
+
         return {
           ...normalizeEventData(event),
           venue: recintoInfo ? recintoInfo.nombre : null,

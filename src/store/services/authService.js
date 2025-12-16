@@ -9,9 +9,8 @@ const TENANT_STORAGE_KEY = 'zeatingmaps::tenant-context:v1';
 // Función helper para obtener el tenant actual del contexto
 const getCurrentTenantId = () => {
   try {
-
-      return null;
-    }
+    const contextTenant = paymentTableCache?.get('currentTenantId');
+    if (contextTenant) return contextTenant;
 
     // 1. Intentar obtener el tenant del localStorage (clave directa)
     const tenantId = window.localStorage.getItem('currentTenantId');
@@ -55,7 +54,12 @@ const getCurrentTenantId = () => {
 };
 
 // Función para obtener todos los tenants del usuario
-export 
+export const getAllUserTenants = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_tenants')
+      .select('*, tenants(*)')
+      .eq('user_id', userId);
 
     if (error) throw error;
     return data || [];
@@ -66,7 +70,14 @@ export
 };
 
 // Función para cambiar el tenant activo del usuario
-export 
+export const changeActiveTenant = async (userId, newTenantId) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ tenant_id: newTenantId })
+      .eq('id', userId)
+      .select()
+      .single();
 
     if (error) throw error;
 
@@ -84,7 +95,11 @@ export
 };
 
 // Función para agregar un usuario a un tenant
-export 
+export const addUserToTenant = async (userId, tenantId, role = 'usuario') => {
+  try {
+    const { data, error } = await supabase
+      .from('user_tenants')
+      .insert({ user_id: userId, tenant_id: tenantId, role });
 
     if (error) throw error;
     return data;
@@ -95,7 +110,8 @@ export
 };
 
 // Registro (sign up) con creación de perfil
-export 
+export const registerUser = async ({ email, password, phone, ...metadata }) => {
+  let user = null;
   let session = null;
 
   if (password) {
@@ -178,13 +194,7 @@ export
 };
 
 // Inicio de sesión (sign in)
-export 
-    if (error) {
-      throw await createAuthError({ error, email, supabaseClient: supabase });
-    }
-    return { user: null, session: null };
-  }
-
+export const loginUser = async ({ email, password }) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -209,20 +219,21 @@ export
         .single();
 
       if (profileError) {
+        console.error('Error al verificar perfil:', profileError);
       } else {
         // Verificar que el usuario tenga un tenant_id válido
         if (!profile.tenant_id) {
-          // En producción, esto podría ser un error crítico
+          console.warn('Usuario sin tenant asignado');
         }
 
         // Verificar que el usuario tenga acceso al tenant actual
         const currentTenantId = getCurrentTenantId();
         if (currentTenantId && profile.tenant_id && profile.tenant_id !== currentTenantId) {
-          // En producción, esto debería ser un error de acceso denegado
-          // throw new Error('No tienes acceso a esta empresa');
+          console.warn('Usuario logueado en tenant incorrecto', { expected: currentTenantId, actual: profile.tenant_id });
         }
       }
     } catch (error) {
+      console.error('Error verificando tenant:', error);
     }
   }
 
@@ -230,7 +241,8 @@ export
 };
 
 // Función para verificar el acceso del usuario al tenant actual
-export 
+export const verifyUserTenantAccess = async (userId, currentTenantId) => {
+  try {
     if (!currentTenantId) {
       return { hasAccess: false, reason: 'No se pudo determinar la empresa' };
     }
@@ -267,14 +279,16 @@ export
 };
 
 // Cierre de sesión
-export 
+export const logoutUser = async () => {
+  const { error } = await supabase.auth.signOut();
   if (error) {
     throw new Error(error.message);
   }
 };
 
 // Obtener usuario actual
-export 
+export const getCurrentUser = async () => {
+  const { data, error } = await supabase.auth.getUser();
   if (error) throw new Error(error.message);
   return data.user;
 };

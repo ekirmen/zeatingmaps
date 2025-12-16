@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, List, Input, Select, Typography, Space, Tag, Button, Drawer, Divider, Steps, Collapse } from '../../utils/antdComponents';
-import { 
-  BookOutlined, 
-  SearchOutlined, 
+import {
+  BookOutlined,
+  SearchOutlined,
   FileTextOutlined,
   PlayCircleOutlined,
   CheckCircleOutlined,
@@ -47,7 +47,10 @@ const DocumentationCenter = () => {
     loadTutorials();
   }, []);
 
-  
+
+  const loadDocumentation = async () => {
+    try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('documentation')
         .select('*')
@@ -63,7 +66,15 @@ const DocumentationCenter = () => {
     }
   };
 
-  
+
+
+  const loadTutorials = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('interactive_tutorials')
+        .select('*')
+        .eq('is_published', true)
+        .order('category, order_index');
 
       if (error) throw error;
       setTutorials(data || []);
@@ -74,14 +85,14 @@ const DocumentationCenter = () => {
 
   const filteredDocs = documentation.filter(doc => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.content.toLowerCase().includes(searchTerm.toLowerCase());
+      doc.content.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesSearch && matchesCategory;
   });
 
   const filteredTutorials = tutorials.filter(tutorial => {
     const matchesSearch = tutorial.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tutorial.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      tutorial.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || tutorial.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -95,8 +106,8 @@ const DocumentationCenter = () => {
     <List.Item
       key={doc.id}
       actions={[
-        <Button 
-          type="link" 
+        <Button
+          type="link"
           icon={<FileTextOutlined />}
           onClick={() => openDocument(doc)}
         >
@@ -131,8 +142,8 @@ const DocumentationCenter = () => {
     <List.Item
       key={tutorial.id}
       actions={[
-        <Button 
-          type="primary" 
+        <Button
+          type="primary"
           icon={<PlayCircleOutlined />}
           onClick={() => openDocument(tutorial)}
         >
@@ -289,9 +300,9 @@ const DocumentationCenter = () => {
             <Paragraph>
               {selectedDoc.description}
             </Paragraph>
-            
+
             <Divider />
-            
+
             {selectedDoc.steps ? (
               <div>
                 <Title level={4}>Pasos del tutorial:</Title>

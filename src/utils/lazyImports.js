@@ -1,40 +1,49 @@
 // Utility para manejar imports lazy y evitar dependencias circulares
-// que pueden causar el error "Cannot access 'R' before initialization"
+// Provee funciones conservadoras que intentan cargar dinámicamente
+// módulos relacionados (si existen) pero no lanzan errores si no están.
 
 let supabaseClient = null;
 let supabaseAdminClient = null;
 
-// Función para obtener el cliente Supabase de forma lazy
-export 
-      supabaseClient = supabase;
-    } catch (error) {
-      console.error('❌ [lazyImports] Error loading Supabase client:', error);
-      throw error;
-    }
-
+export const getSupabaseClient = async () => {
+  if (supabaseClient) return supabaseClient;
+  try {
+    const mod = await import('../supabaseClient');
+    // Try common export shapes
+    supabaseClient = mod.default || mod.supabase || mod.getSupabaseClient || mod.createClient || null;
+  } catch (error) {
+    console.error('❌ [lazyImports] Error loading Supabase client:', error);
+  }
   return supabaseClient;
 };
 
-// Función para obtener el cliente admin de Supabase de forma lazy
-export 
-      supabaseAdminClient = supabaseAdmin;
-    } catch (error) {
-      console.error('❌ [lazyImports] Error loading Supabase admin client:', error);
-      throw error;
-    }
+export const getSupabaseAdminClient = async () => {
+  if (supabaseAdminClient) return supabaseAdminClient;
+  try {
+    const mod = await import('../supabaseClient');
+    supabaseAdminClient = mod.admin || mod.supabaseAdmin || null;
+  } catch (error) {
+    console.error('❌ [lazyImports] Error loading Supabase admin client:', error);
   }
   return supabaseAdminClient;
 };
 
-// Función para limpiar los clientes (útil para testing)
-export 
+export const resetLazyClients = () => {
+  supabaseClient = null;
   supabaseAdminClient = null;
 };
 
-// Función para verificar si los clientes están cargados
-export 
-};
+export const hasLazyClients = () => !!supabaseClient || !!supabaseAdminClient;
 
-// Función para obtener información de debug
-export 
+export const getLazyDebugInfo = () => ({
+  supabaseClientLoaded: !!supabaseClient,
+  supabaseAdminClientLoaded: !!supabaseAdminClient
+});
+
+export default {
+  getSupabaseClient,
+  getSupabaseAdminClient,
+  resetLazyClients,
+  hasLazyClients,
+  getLazyDebugInfo
 };

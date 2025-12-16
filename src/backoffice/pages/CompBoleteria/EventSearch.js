@@ -2,10 +2,10 @@ import React from 'react';
 import { Select, Table, Button, Empty } from '../../../utils/antdComponents';
 const { Option } = Select;
 
-const EventSearch = ({ 
-  eventos = [], 
-  onEventSelect 
-
+const EventSearch = ({
+  eventos = [],
+  onEventSelect
+}) => {
   return (
     <div className="event-search">
       <div className="search-filters">

@@ -6,7 +6,7 @@ import { Layer, Text, Line, Circle, Rect } from 'react-konva';
  * Memoizado para evitar re-renders innecesarios
  */
 const MapElementsLayer = memo(({ mapa }) => {
-
+  const renderedElements = useMemo(() => {
     if (!mapa?.contenido) return null;
 
     const elementos = Array.isArray(mapa.contenido)
@@ -19,17 +19,17 @@ const MapElementsLayer = memo(({ mapa }) => {
         if (elemento.type === 'mesa' || elemento.shape === 'circle' || elemento.shape === 'rect') {
           return false;
         }
-        
+
         // Filtrar elementos de fondo que no deberían ser clickeables
         if (elemento._id && (
-          elemento._id.startsWith('bg_') || 
-          elemento._id.startsWith('txt_') || 
+          elemento._id.startsWith('bg_') ||
+          elemento._id.startsWith('txt_') ||
           elemento.type === 'background' ||
           elemento.type === 'text'
         )) {
           return false;
         }
-        
+
         return true;
       })
       .map((elemento, index) => {
@@ -47,7 +47,7 @@ const MapElementsLayer = memo(({ mapa }) => {
             />
           );
         }
-        
+
         // Renderizar líneas
         if (elemento.type === 'Line' || elemento.points) {
           return (
@@ -59,7 +59,7 @@ const MapElementsLayer = memo(({ mapa }) => {
             />
           );
         }
-        
+
         // Renderizar formas geométricas
         if (elemento._id && elemento._id.startsWith('shape_')) {
           // Círculo
@@ -78,7 +78,7 @@ const MapElementsLayer = memo(({ mapa }) => {
               />
             );
           }
-          
+
           // Rectángulo
           if (elemento.type === 'Rect' || elemento.shape === 'rect' || elemento.shape === 'square') {
             return (
@@ -96,17 +96,17 @@ const MapElementsLayer = memo(({ mapa }) => {
               />
             );
           }
-          
+
           // Triángulo
           if (elemento.shape === 'triangle') {
             const x = elemento.x || elemento.posicion?.x || 0;
             const y = elemento.y || elemento.posicion?.y || 0;
             const size = elemento.width || 40;
             const points = [
-              x, y - size/2,
-              x - size/2, y + size/2,
-              x + size/2, y + size/2,
-              x, y - size/2
+              x, y - size / 2,
+              x - size / 2, y + size / 2,
+              x + size / 2, y + size / 2,
+              x, y - size / 2
             ];
             return (
               <Line
@@ -122,7 +122,7 @@ const MapElementsLayer = memo(({ mapa }) => {
             );
           }
         }
-        
+
         // Renderizar círculos genéricos
         if (elemento.type === 'Circle' && !elemento.shape) {
           return (
@@ -137,7 +137,7 @@ const MapElementsLayer = memo(({ mapa }) => {
             />
           );
         }
-        
+
         // Renderizar rectángulos genéricos
         if (elemento.type === 'Rect' && !elemento.shape) {
           return (
@@ -153,7 +153,7 @@ const MapElementsLayer = memo(({ mapa }) => {
             />
           );
         }
-        
+
         return null;
       });
   }, [mapa]);

@@ -10,7 +10,7 @@ import {
 const EmailWidgetRenderer = ({ widgetType, config = {}, onConfigChange }) => {
   const renderWidget = () => {
     switch (widgetType) {
-
+      case 'Botón':
         return (
           <ButtonWidget
             config={config}
@@ -104,4 +104,4 @@ const EmailWidgetRenderer = ({ widgetType, config = {}, onConfigChange }) => {
   );
 };
 
-  export default EmailWidgetRenderer;
+export default EmailWidgetRenderer;

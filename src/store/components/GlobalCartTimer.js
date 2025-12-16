@@ -20,10 +20,10 @@ const GlobalCartTimer = () => {
   const total = calculateTotal();
 
   // P¡ginas donde NO mostrar el carrito flotante (ya tienen su propio carrito o est¡n en proceso de pago)
-  const isSeatSelectionPage = location.pathname.includes('/map') || 
-                               location.pathname.includes('/seat-selection') || 
-                               location.pathname === '/store/cart' ||
-                               location.pathname === '/store/payment';
+  const isSeatSelectionPage = location.pathname.includes('/map') ||
+    location.pathname.includes('/seat-selection') ||
+    location.pathname === '/store/cart' ||
+    location.pathname === '/store/payment';
 
   // Mostrar el carrito flotante si hay items y no estamos en p¡gina de selecci³n o pago
   useEffect(() => {
@@ -32,6 +32,8 @@ const GlobalCartTimer = () => {
 
   // Verificar expiraci³n del carrito
 
+  // Verificar expiraci³n del carrito
+  useEffect(() => {
     if (!cartExpiration) return;
 
     const checkExpiration = async () => {
@@ -66,11 +68,7 @@ const GlobalCartTimer = () => {
   };
 
   // Manejar el click en el temporizador
-  
-    } else {
-      navigate('/store/cart');
-    }
-  };
+
 
   // Manejar el login
   const handleLogin = () => {
@@ -102,12 +100,12 @@ const GlobalCartTimer = () => {
       message.warning('El carrito est¡ vac­o');
       return;
     }
-    
+
     if (!user) {
       setShowLoginModal(true);
       return;
     }
-    
+
     navigate('/store/payment');
   };
 
@@ -115,7 +113,7 @@ const GlobalCartTimer = () => {
     <>
       {/* Carrito flotante - Solo mostrar si hay items y no estamos en p¡gina de selecci³n */}
       {showTimer && (
-        <div 
+        <div
           className="fixed bottom-6 right-6 z-50"
           style={{
             maxWidth: '320px',
@@ -244,10 +242,10 @@ const GlobalCartTimer = () => {
           <ShoppingCartOutlined className="text-4xl text-blue-500 mb-4" />
           <h3 className="text-lg font-semibold mb-2">Tu carrito est¡ esperando</h3>
           <p className="text-gray-600 mb-4">
-            Tienes {formatTime(timeLeft)} para completar tu compra. 
+            Tienes {formatTime(timeLeft)} para completar tu compra.
             Inicia sesi³n o reg­strate para continuar.
           </p>
-          
+
           <div className="bg-blue-50 p-3 rounded mb-4">
             <div className="text-sm">
               <div className="flex justify-between">

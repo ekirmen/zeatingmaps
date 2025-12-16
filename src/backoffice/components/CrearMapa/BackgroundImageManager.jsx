@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Button, 
-  Upload, 
-  message, 
-  Image, 
-  Space, 
-  Typography, 
-  Modal, 
-  List, 
-  Input, 
+import {
+  Button,
+  Upload,
+  message,
+  Image,
+  Space,
+  Typography,
+  Modal,
+  List,
+  Input,
   Tabs,
   Spin,
   Empty,
   Card
 } from '../../../utils/antdComponents';
-import { 
-  UploadOutlined, 
-  DeleteOutlined, 
+import {
+  UploadOutlined,
+  DeleteOutlined,
   PictureOutlined,
   SearchOutlined,
   FolderOpenOutlined
@@ -27,9 +27,9 @@ const { Text, Title } = Typography;
 const { Search } = Input;
 const { TabPane } = Tabs;
 
-const BackgroundImageManager = ({ 
-  onImageSelect, 
-  currentImage, 
+const BackgroundImageManager = ({
+  onImageSelect,
+  currentImage,
   onImageRemove,
   title = "Gestor de Im¡genes de Fondo",
   description = "Sube nuevas im¡genes o selecciona existentes del repositorio"
@@ -47,8 +47,12 @@ const BackgroundImageManager = ({
     }
   }, [modalVisible]);
 
-  
-      
+
+
+  const loadExistingImages = async () => {
+    try {
+      setLoadingImages(true);
+
       // Listar im¡genes del bucket de productos en la carpeta mapas
       const { data, error } = await supabase.storage
         .from('productos')
@@ -61,7 +65,7 @@ const BackgroundImageManager = ({
       if (error) throw error;
 
       // Filtrar solo archivos de imagen
-      const imageFiles = data.filter(file => 
+      const imageFiles = data.filter(file =>
         file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)
       );
 
@@ -88,13 +92,13 @@ const BackgroundImageManager = ({
   const handleImageUpload = async (file) => {
     try {
       setUploading(true);
-      
+
       // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
 
         return false;
       }
-      
+
       // Validar tama±o (10MB m¡ximo para mapas)
       if (file.size > 10 * 1024 * 1024) {
         message.error('La imagen debe pesar 10MB o menos');
@@ -142,7 +146,7 @@ const BackgroundImageManager = ({
     message.success('Imagen de fondo removida');
   };
 
-  const filteredImages = existingImages.filter(img => 
+  const filteredImages = existingImages.filter(img =>
     img.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -205,7 +209,7 @@ const BackgroundImageManager = ({
       )}
 
       <Space className="w-full">
-        <Button 
+        <Button
           icon={<UploadOutlined />}
           onClick={() => {
             setSelectedTab('upload');
@@ -215,7 +219,7 @@ const BackgroundImageManager = ({
         >
           Subir Nueva Imagen
         </Button>
-        <Button 
+        <Button
           icon={<FolderOpenOutlined />}
           onClick={() => {
             setSelectedTab('existing');
@@ -243,8 +247,8 @@ const BackgroundImageManager = ({
                 showUploadList={false}
                 accept="image/*"
               >
-                <Button 
-                  icon={<UploadOutlined />} 
+                <Button
+                  icon={<UploadOutlined />}
                   loading={uploading}
                   disabled={uploading}
                   className="w-full"
@@ -253,7 +257,7 @@ const BackgroundImageManager = ({
                   {uploading ? 'Subiendo...' : 'Seleccionar y Subir Imagen'}
                 </Button>
               </Upload>
-              
+
               <div className="text-xs text-gray-500 space-y-1">
                 <div>-¢ Formatos soportados: JPG, PNG, GIF, WebP</div>
                 <div>-¢ Tama±o m¡ximo: 10MB</div>
@@ -261,7 +265,7 @@ const BackgroundImageManager = ({
               </div>
             </div>
           </TabPane>
-          
+
           <TabPane tab="Im¡genes Existentes" key="existing">
             <div className="space-y-4">
               <Search
@@ -270,14 +274,14 @@ const BackgroundImageManager = ({
                 onChange={(e) => setSearchTerm(e.target.value)}
                 prefix={<SearchOutlined />}
               />
-              
+
               {loadingImages ? (
                 <div className="text-center py-8">
                   <Spin size="large" />
                   <Text className="block mt-2">Cargando im¡genes...</Text>
                 </div>
               ) : filteredImages.length === 0 ? (
-                <Empty 
+                <Empty
                   description="No se encontraron im¡genes"
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                 />
@@ -300,8 +304,8 @@ const BackgroundImageManager = ({
                           />
                         }
                         actions={[
-                          <Button 
-                            type="primary" 
+                          <Button
+                            type="primary"
                             size="small"
                             onClick={() => handleImageSelect(image.url)}
                           >

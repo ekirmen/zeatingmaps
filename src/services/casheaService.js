@@ -1,14 +1,9 @@
 import { supabase } from '../supabaseClient';
 
 const encodeBase64 = (value) => {
-
-    return '';
-  }
-
   if (typeof window === 'undefined') {
     return Buffer.from(value, 'utf8').toString('base64');
   }
-
   return window.btoa(value);
 };
 
@@ -106,11 +101,11 @@ export const getCasheaConfig = async (tenantId) => {
 const buildRequestPayload = ({ amount, currency, description, customer = {}, items = [], metadata = {}, config = {} }) => {
   const normalizedItems = Array.isArray(items)
     ? items.map((item) => ({
-        id: item.id || item._id || item.sillaId || item.seat_id || item.seatId || `item-${Math.random().toString(36).slice(2)}`,
-        name: item.name || item.nombre || 'Asiento',
-        price: Number(item.price ?? item.precio ?? amount ?? 0),
-        quantity: Number(item.quantity || 1),
-      }))
+      id: item.id || item._id || item.sillaId || item.seat_id || item.seatId || `item-${Math.random().toString(36).slice(2)}`,
+      name: item.name || item.nombre || 'Asiento',
+      price: Number(item.price ?? item.precio ?? amount ?? 0),
+      quantity: Number(item.quantity || 1),
+    }))
     : [];
 
   const normalizedCustomer = {

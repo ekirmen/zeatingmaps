@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Space, Tag, Modal, message, Image, Avatar } from '../../utils/antdComponents';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   EyeOutlined,
   CalendarOutlined,
   UserOutlined,
@@ -23,13 +23,13 @@ const EventosPage = () => {
   const [eventToDelete, setEventToDelete] = useState(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-  
+
   // Hook optimizado para obtener eventos
   const { data: eventos, loading, error, refetch } = useSupabaseQuery('eventos', {
     orderBy: 'created_at',
     ascending: false
   });
-  
+
   // Hook optimizado para operaciones CRUD
   const { create, update, remove, loading: mutationLoading } = useSupabaseMutation('eventos');
 
@@ -51,7 +51,7 @@ const EventosPage = () => {
     }
   };
 
-  // Manejar creaci³n/edici³n de eventos
+  // Manejar creación/edición de eventos
   const handleCreateEvent = () => {
     setEditingEvent(null);
     setShowEventForm(true);
@@ -89,7 +89,7 @@ const EventosPage = () => {
   };
 
   const getStatusColor = (status) => {
-
+    switch (status) {
       case 'active': return 'green';
       case 'draft': return 'orange';
       case 'completed': return 'default';
@@ -116,11 +116,15 @@ const EventosPage = () => {
         let imageUrl = null;
         if (record.imagenes) {
           try {
-            const images = typeof record.imagenes === 'string' 
-              ? JSON.parse(record.imagenes) 
+            const images = typeof record.imagenes === 'string'
+              ? JSON.parse(record.imagenes)
               : record.imagenes;
-            imageUrl = resolveEventImageWithTenant(record, 'banner', currentTenant?.id) ||
-                      resolveEventImageWithTenant(record, 'portada', currentTenant?.id);
+            // Assumes currentTenant is available in scope or passed as prop. 
+            // Since it was missing in original snippet, I'll mock it or try to use a context if available.
+            // For now, safeguarding against undefined.
+            const tenantId = record.tenant_id;
+            imageUrl = resolveEventImageWithTenant(record, 'banner', tenantId) ||
+              resolveEventImageWithTenant(record, 'portada', tenantId);
           } catch (error) {
             console.error('Error parsing event images:', error);
           }
@@ -146,7 +150,7 @@ const EventosPage = () => {
             <div>
               <div style={{ fontWeight: '500' }}>{text}</div>
               <div style={{ fontSize: '12px', color: '#666' }}>
-                {record.fecha_evento} -¢ {record.ubicacion}
+                {record.fecha_evento} • {record.ubicacion}
               </div>
             </div>
           </div>
@@ -174,23 +178,23 @@ const EventosPage = () => {
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button 
-            type="link" 
-            icon={<EyeOutlined />} 
+          <Button
+            type="link"
+            icon={<EyeOutlined />}
             onClick={() => setSelectedEvent(record)}
           >
             Ver
           </Button>
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             icon={<EditOutlined />}
             onClick={() => handleEditEvent(record)}
           >
             Editar
           </Button>
-          <Button 
-            type="link" 
-            danger 
+          <Button
+            type="link"
+            danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
           >
@@ -203,7 +207,7 @@ const EventosPage = () => {
 
   return (
     <DashboardLayout
-      title="Gesti³n de Eventos"
+      title="Gestión de Eventos"
       subtitle="Administra todos los eventos del sistema"
     >
       <DataTable
@@ -233,11 +237,13 @@ const EventosPage = () => {
               let imageUrl = null;
               if (selectedEvent.imagenes) {
                 try {
-                  const images = typeof selectedEvent.imagenes === 'string' 
-                    ? JSON.parse(selectedEvent.imagenes) 
+                  const images = typeof selectedEvent.imagenes === 'string'
+                    ? JSON.parse(selectedEvent.imagenes)
                     : selectedEvent.imagenes;
-                  imageUrl = resolveEventImageWithTenant(selectedEvent, 'banner') ||
-                            resolveEventImageWithTenant(selectedEvent, 'portada');
+                  // Use tenant_id from record if available
+                  const tenantId = selectedEvent.tenant_id;
+                  imageUrl = resolveEventImageWithTenant(selectedEvent, 'banner', tenantId) ||
+                    resolveEventImageWithTenant(selectedEvent, 'portada', tenantId);
                 } catch (error) {
                   console.error('Error parsing event images:', error);
                 }
@@ -257,19 +263,19 @@ const EventosPage = () => {
               <strong>Nombre:</strong> {selectedEvent.nombre}
             </div>
             <div style={{ marginBottom: '8px' }}>
-              <strong>Descripci³n:</strong> {selectedEvent.descripcion}
+              <strong>Descripción:</strong> {selectedEvent.descripcion}
             </div>
             <div style={{ marginBottom: '8px' }}>
               <strong>Fecha:</strong> {selectedEvent.fecha_evento}
             </div>
             <div style={{ marginBottom: '8px' }}>
-              <strong>Ubicaci³n:</strong> {selectedEvent.ubicacion}
+              <strong>Ubicación:</strong> {selectedEvent.ubicacion}
             </div>
             <div style={{ marginBottom: '8px' }}>
               <strong>Precio:</strong> {selectedEvent.precio ? `$${selectedEvent.precio}` : 'Gratis'}
             </div>
             <div style={{ marginBottom: '8px' }}>
-              <strong>Estado:</strong> 
+              <strong>Estado:</strong>
               <Tag color={getStatusColor(selectedEvent.estado)} style={{ marginLeft: '8px' }}>
                 {getStatusText(selectedEvent.estado)}
               </Tag>
@@ -278,9 +284,9 @@ const EventosPage = () => {
         )}
       </Modal>
 
-      {/* Modal de confirmaci³n de eliminaci³n */}
+      {/* Modal de confirmación de eliminación */}
       <Modal
-        title="Confirmar Eliminaci³n"
+        title="Confirmar Eliminación"
         visible={deleteModalVisible}
         onOk={confirmDelete}
         onCancel={() => {
@@ -291,8 +297,8 @@ const EventosPage = () => {
         cancelText="Cancelar"
         okButtonProps={{ danger: true }}
       >
-        <p>¿Est¡s seguro de que quieres eliminar el evento "{eventToDelete?.nombre}"?</p>
-        <p>Esta acci³n no se puede deshacer.</p>
+        <p>¿Estás seguro de que quieres eliminar el evento "{eventToDelete?.nombre}"?</p>
+        <p>Esta acción no se puede deshacer.</p>
       </Modal>
 
       {/* Modal para crear/editar evento */}
@@ -316,5 +322,3 @@ const EventosPage = () => {
 };
 
 export default EventosPage;
-
-

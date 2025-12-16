@@ -1,7 +1,7 @@
 import React from "react";
 
 const TicketsList = ({ tickets, onEdit, onDelete }) => {
-
+  if (!tickets || tickets.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

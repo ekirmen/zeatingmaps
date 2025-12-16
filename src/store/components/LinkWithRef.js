@@ -6,8 +6,7 @@ const LinkWithRef = ({ to, ...props }) => {
   const { refParam } = useRefParam();
 
 
-    return <Link to={to} {...props} />;
-  }
+
 
   const appendRef = (target) => {
     if (typeof target === 'string') {

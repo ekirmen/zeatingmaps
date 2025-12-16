@@ -8,7 +8,7 @@ import { useMapaBackground } from './useMapaBackground';
 import { useMapaConnections } from './useMapaConnections';
 import { useMapaSeats } from './useMapaSeats';
 
-export 
+const useMapaElementsSimplified = ({ elements, setElements, selectedZone, numSillas, selectedIds }) => {
   const { changeSeatState, seatStates } = useMapaSeatStates(elements, setElements);
   const { precisePositioning, snapToCustomGrid, snapToGrid } = useMapaPositioning(elements, setElements);
   const { setBackgroundImage, updateBackground, removeBackground, backgroundSystem } = useMapaBackground(elements, setElements);
@@ -39,14 +39,14 @@ export
   // Asignar zona a elementos seleccionados
   const assignZoneToSelected = (zoneId) => {
     if (!zoneId) return;
-    
+
     setElements(prev => prev.map(el => {
       if (selectedIds.includes(el._id)) {
         return { ...el, zonaId: zoneId };
       }
       return el;
     }));
-    
+
     message.success('Zona asignada a elementos seleccionados');
   };
 
@@ -64,7 +64,7 @@ export
             y: precisePositioning.round(value.y)
           };
         }
-        
+
         return { ...el, [property]: value };
       }
       return el;
@@ -85,8 +85,8 @@ export
     setElements(prev => prev.filter(el => {
       if (selectedIds.includes(el._id)) return false;
       if (el.type === 'silla' && selectedIds.includes(el.parentId)) return false;
-      if (el.type === 'conexion' && 
-          (selectedIds.includes(el.startSeatId) || selectedIds.includes(el.endSeatId))) return false;
+      if (el.type === 'conexion' &&
+        (selectedIds.includes(el.startSeatId) || selectedIds.includes(el.endSeatId))) return false;
       return true;
     }));
   };
@@ -101,23 +101,23 @@ export
     limpiarSillasDuplicadas,
     snapToGrid,
     assignZoneToSelected,
-    
+
     // Funciones de escalado
     scaleElement,
     scaleSystem,
-    
+
     // Funciones de estados de asientos
     changeSeatState,
     seatStates,
-    
+
     // Funciones de conexiones
     autoConnectSeats,
     connectionThreshold,
-    
+
     // Funciones de coordenadas precisas
     precisePositioning,
     snapToCustomGrid,
-    
+
     // Funciones de fondo
     setBackgroundImage,
     updateBackground,
@@ -126,4 +126,4 @@ export
   };
 };
 
-
+export default useMapaElementsSimplified;

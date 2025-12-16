@@ -21,6 +21,7 @@ const DataTable = ({
   showRefresh = true,
   extra,
   ...tableProps
+}) => {
 
   return (
     <Card
@@ -84,7 +85,7 @@ const DataTable = ({
         pagination={{
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total, range) => 
+          showTotal: (total, range) =>
             `${range[0]}-${range[1]} de ${total} registros`,
           ...pagination,
         }}

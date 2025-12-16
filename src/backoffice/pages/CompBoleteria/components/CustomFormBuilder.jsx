@@ -85,7 +85,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
   const updateField = (fieldId, updates) => {
     setFormConfig(prev => ({
       ...prev,
-      fields: prev.fields.map(field => 
+      fields: prev.fields.map(field =>
         field.id === fieldId ? { ...field, ...updates } : field
       )
     }));
@@ -105,7 +105,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
     if (active.id !== over.id) {
       setFormConfig(prev => ({
         ...prev,
-        fields: arrayMove(prev.fields, 
+        fields: arrayMove(prev.fields,
           prev.fields.findIndex(field => field.id === active.id),
           prev.fields.findIndex(field => field.id === over.id)
         )
@@ -114,6 +114,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
   };
 
 
+  const renderFieldEditor = (field) => {
     if (!field) return null;
 
     return (
@@ -125,21 +126,21 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
             value={field.label}
             onChange={(e) => updateField(field.id, { label: e.target.value })}
           />
-          
+
           <Input
             label="Placeholder"
             placeholder="Texto de ayuda"
             value={field.placeholder}
             onChange={(e) => updateField(field.id, { placeholder: e.target.value })}
           />
-          
+
           <Switch
             checked={field.required}
             onChange={(checked) => updateField(field.id, { required: checked })}
             checkedChildren="Requerido"
             unCheckedChildren="Opcional"
           />
-          
+
           {(field.type === 'select' || field.type === 'radio') && (
             <div>
               <Text strong>Opciones:</Text>
@@ -155,8 +156,8 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
                   style={{ marginBottom: 8 }}
                 />
               ))}
-              <Button 
-                size="small" 
+              <Button
+                size="small"
                 icon={<PlusOutlined />}
                 onClick={() => {
                   const newOptions = [...field.options, `Opci³n ${field.options.length + 1}`];
@@ -254,7 +255,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
       <div className="flex justify-between items-center">
         <Title level={3}>Constructor de Formularios</Title>
         <Space>
-          <Button 
+          <Button
             icon={<EyeOutlined />}
             onClick={() => setPreviewMode(!previewMode)}
           >
@@ -299,7 +300,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
                 value={formConfig.name}
                 onChange={(e) => setFormConfig(prev => ({ ...prev, name: e.target.value }))}
               />
-              
+
               <Input.TextArea
                 placeholder="Descripci³n del formulario"
                 value={formConfig.description}

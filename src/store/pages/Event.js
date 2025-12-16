@@ -17,8 +17,8 @@ import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
 
 function EventPage() {
-    useCartRestore();
-    useSeatCleanup(); // Activar sistema de limpieza automática
+  useCartRestore();
+  useSeatCleanup(); // Activar sistema de limpieza automática
   const { eventSlug } = useParams();
   const [searchParams] = useSearchParams();
   const funcionParam = searchParams.get('funcion');
@@ -44,6 +44,7 @@ function EventPage() {
 
   // Suscribirse a función
 
+  useEffect(() => {
     if (!selectedFunctionId) return;
     subscribeToFunction(selectedFunctionId);
     return () => unsubscribe();
@@ -230,7 +231,7 @@ function EventPage() {
               onTableToggle={(table) => {
                 // Manejar clic en mesa - por ahora solo mostrar info
               }}
-              onSeatInfo={() => {}}
+              onSeatInfo={() => { }}
               selectedSeats={cartItems.map(item => item.sillaId || item.id || item._id)}
             />
           ) : (

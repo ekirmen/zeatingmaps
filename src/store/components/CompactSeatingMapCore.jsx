@@ -33,12 +33,12 @@ const CompactSeatingMap = ({
   const syncedSeats = useMapaSeatsSync(mapa);
 
   // Load map image
-
+  useEffect(() => {
     if (!mapa?.imagen_fondo) return setImageLoaded(true);
     const img = new window.Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => { setMapImage(img); setImageLoaded(true); };
-    img.onerror = () => {  setImageLoaded(true); };
+    img.onerror = () => { setImageLoaded(true); };
     img.src = resolveImageUrl(mapa.imagen_fondo);
   }, [mapa?.imagen_fondo]);
 
@@ -56,7 +56,7 @@ const CompactSeatingMap = ({
     });
   }, []);
 
-  const resetZoom = useCallback(() => { setStageScale(1); setStagePosition({ x:0, y:0 }); }, []);
+  const resetZoom = useCallback(() => { setStageScale(1); setStagePosition({ x: 0, y: 0 }); }, []);
   const toggleFullscreen = useCallback(() => setIsFullscreen(prev => !prev), []);
 
   const handleSeatClick = useCallback((seat, event) => {
@@ -127,7 +127,7 @@ const CompactSeatingMap = ({
     );
   }, [selectedSeats, foundSeats, onTableToggle]);
 
-  const renderMapElements = useCallback(() => syncedSeats?.map((el,i) => el.type==='mesa'? renderTable(el,i): renderSeat(el,i)), [syncedSeats, renderTable, renderSeat]);
+  const renderMapElements = useCallback(() => syncedSeats?.map((el, i) => el.type === 'mesa' ? renderTable(el, i) : renderSeat(el, i)), [syncedSeats, renderTable, renderSeat]);
 
   if (!imageLoaded) return <div>Cargando mapa...</div>;
 
@@ -147,7 +147,7 @@ const CompactSeatingMap = ({
       </div>
 
       {/* Stage */}
-      <div ref={containerRef} className={`map-container ${isFullscreen?'fullscreen':''}`} style={{ width:'100%', height:isFullscreen?'100vh':'70vh' }}>
+      <div ref={containerRef} className={`map-container ${isFullscreen ? 'fullscreen' : ''}`} style={{ width: '100%', height: isFullscreen ? '100vh' : '70vh' }}>
         <Stage ref={stageRef} width={mapDimensions.width} height={mapDimensions.height} scaleX={stageScale} scaleY={stageScale} x={stagePosition.x} y={stagePosition.y} draggable onDragEnd={e => setStagePosition({ x: e.target.x(), y: e.target.y() })}>
           <Layer>
             {mapImage && <Image image={mapImage} x={0} y={0} width={mapDimensions.width} height={mapDimensions.height} opacity={0.3} />}
@@ -162,7 +162,7 @@ const CompactSeatingMap = ({
           <Card size="small">
             <div className="flex justify-between items-center mb-3">
               <div>
-                <AntText strong>Asiento: {selectedSeatInfo.nombre || selectedSeatInfo._id}</AntText><br/>
+                <AntText strong>Asiento: {selectedSeatInfo.nombre || selectedSeatInfo._id}</AntText><br />
                 <AntText type="secondary">Estado: {selectedSeatInfo.estado}</AntText>
               </div>
               <div><AntText strong className="text-lg">${selectedSeatInfo.precio || 0}</AntText></div>
@@ -170,7 +170,7 @@ const CompactSeatingMap = ({
             <Divider />
             <Space>
               <Button onClick={() => setShowSeatDetails(false)}>Cancelar</Button>
-              <Button type="primary" onClick={handleAddToCart} disabled={['vendido','bloqueado'].includes(selectedSeatInfo.estado)}>Agregar al Carrito</Button>
+              <Button type="primary" onClick={handleAddToCart} disabled={['vendido', 'bloqueado'].includes(selectedSeatInfo.estado)}>Agregar al Carrito</Button>
             </Space>
           </Card>
         )}
@@ -179,23 +179,23 @@ const CompactSeatingMap = ({
       {/* Cart Drawer */}
       <Drawer title="Carrito de Compras" placement="right" open={showCartDrawer} onClose={() => setShowCartDrawer(false)} width={300}>
         {cartItems.length === 0 ? (
-          <div className="text-center py-8 text-gray-500"><ShoppingCartOutlined className="text-4xl mb-2"/><p>Carrito vac­o</p></div>
+          <div className="text-center py-8 text-gray-500"><ShoppingCartOutlined className="text-4xl mb-2" /><p>Carrito vac­o</p></div>
         ) : (
           <div className="space-y-2">
-            {cartItems.map((item,i)=>(
+            {cartItems.map((item, i) => (
               <Card key={i} size="small">
                 <div className="flex justify-between items-center">
                   <div>
-                    <AntText strong>{item.nombre || item._id}</AntText><br/>
+                    <AntText strong>{item.nombre || item._id}</AntText><br />
                     <AntText type="secondary">${item.precio || 0}</AntText>
                   </div>
-                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => VisualNotifications.show('cartUpdated','Asiento eliminado del carrito')} />
+                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => VisualNotifications.show('cartUpdated', 'Asiento eliminado del carrito')} />
                 </div>
               </Card>
             ))}
             <Divider />
             <div className="text-center">
-              <AntText strong className="text-lg">Total: ${cartItems.reduce((sum,item)=>sum+(item.precio||0),0)}</AntText>
+              <AntText strong className="text-lg">Total: ${cartItems.reduce((sum, item) => sum + (item.precio || 0), 0)}</AntText>
               <Button type="primary" className="w-full mt-2">Proceder al Pago</Button>
             </div>
           </div>

@@ -140,8 +140,12 @@ const UserManagementSimple = () => {
     }
   };
 
-  
-
+  const loadTenants = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('id, company_name, email')
+        .order('company_name');
       if (error) throw error;
       setTenants(data || []);
     } catch (error) {
@@ -149,8 +153,13 @@ const UserManagementSimple = () => {
     }
   };
 
-  
-
+  const loadRoles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('custom_roles')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
       if (error) throw error;
       setRoles(data || []);
     } catch (error) {
@@ -158,8 +167,11 @@ const UserManagementSimple = () => {
     }
   };
 
-  
-
+  const loadStats = async () => {
+    try {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
       if (profilesError) throw profilesError;
 
       // Obtener informaci³n adicional de user_tenant_info si existe

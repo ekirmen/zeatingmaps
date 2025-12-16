@@ -10,7 +10,7 @@ export const useRole = () => {
   const context = useContext(RoleContext);
   if (!context) {
     throw new Error('useRole must be used within a RoleProvider');
-
+  }
   return context;
 };
 
@@ -138,7 +138,8 @@ export const RoleProvider = ({ children }) => {
   };
 
   // Definir permisos por rol
-  
+  const getRolePermissions = (role) => {
+    const permissions = {};
 
     switch (role) {
       // ROLES DEL SISTEMA SAAS
@@ -436,8 +437,13 @@ export const RoleProvider = ({ children }) => {
   // Funci³n para verificar si es administrador
   const isAdmin = () => userRole === 'admin' || userRole === 'gerente';
 
-  // Funci³n para cargar tenants asignados
-  
+  // Función para cargar tenants asignados
+  const loadAssignedTenants = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_tenant_assignments')
+        .select('*, tenants(*)')
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -496,7 +502,8 @@ export const RoleProvider = ({ children }) => {
 };
 
 // Componente para proteger rutas
-export 
+export const ProtectedRoute = ({ permission, children, fallback = null }) => {
+  const { hasPermission, loading } = useRole();
 
   if (loading) {
     return <div>Cargando...</div>;
@@ -510,10 +517,12 @@ export
 };
 
 // Componente para mostrar contenido condicionalmente
-export 
+export const ProtectedContent = ({ permission, children, fallback = null }) => {
+  const { hasPermission } = useRole();
   return hasPermission(permission) ? children : fallback;
 };
 
 export default RoleProvider;
+
 
 

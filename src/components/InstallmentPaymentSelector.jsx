@@ -22,6 +22,7 @@ const InstallmentPaymentSelector = ({
   const { t } = useTranslation();
 
 
+  if (!cantidadCuotas || cantidadCuotas <= 1 || total <= 0) {
     return null;
   }
 
@@ -29,13 +30,13 @@ const InstallmentPaymentSelector = ({
   const calcularFechasVencimiento = () => {
     const fechas = [];
     const fechaBase = fechaInicio ? new Date(fechaInicio) : new Date();
-    
+
     for (let i = 0; i < cantidadCuotas; i++) {
       const fechaVencimiento = new Date(fechaBase);
       fechaVencimiento.setDate(fechaVencimiento.getDate() + (i * diasEntrePagos));
       fechas.push(fechaVencimiento);
     }
-    
+
     return fechas;
   };
 
@@ -99,7 +100,7 @@ const InstallmentPaymentSelector = ({
           {cuotasCalculadas.map((cuota, index) => {
             const fechaVencimiento = fechasVencimiento[index];
             const esUltima = index === cuotasCalculadas.length - 1;
-            
+
             return (
               <Radio.Button
                 key={cuota.numero}
@@ -131,7 +132,7 @@ const InstallmentPaymentSelector = ({
                       ${cuota.monto.toFixed(2)}
                     </Tag>
                   </Space>
-                  
+
                   <Space direction="vertical" size={0} style={{ width: '100%' }}>
                     <Text type="secondary" style={{ fontSize: '12px' }}>
                       {t('installments.due_date', 'Vence: {date}', {

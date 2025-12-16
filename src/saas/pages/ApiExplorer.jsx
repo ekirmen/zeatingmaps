@@ -158,7 +158,7 @@ const ApiExplorer = () => {
   const executeEndpoint = async (endpoint) => {
     setLoading(true);
     setSelectedEndpoint(endpoint.name);
-    
+
     try {
       const url = `https://sistema.veneventos.com${endpoint.url}`;
       const options = {
@@ -235,13 +235,13 @@ const ApiExplorer = () => {
   const executeAllEndpoints = async () => {
     setLoading(true);
     setResults([]);
-    
+
     for (const endpoint of endpoints) {
       await executeEndpoint(endpoint);
       // Peque±a pausa entre requests
       await new Promise(resolve => setTimeout(resolve, 500));
     }
-    
+
     setLoading(false);
     message.success('ðŸŽ‰ Todos los endpoints han sido ejecutados');
   };
@@ -254,6 +254,7 @@ const ApiExplorer = () => {
 
   // Funci³n para formatear JSON
 
+  const formatJson = (obj) => {
     return JSON.stringify(obj, null, 2);
   };
 

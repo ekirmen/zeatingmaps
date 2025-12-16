@@ -25,39 +25,15 @@ const CrearMapaPage = () => {
 
   // Establecer isMounted inmediatamente
   useEffect(() => {
-
+    setIsMounted(true);
     return () => {
       setIsMounted(false);
     };
   }, []);
 
-  // Inicializaci³n del componente
-  useEffect(() => {
-    if (isMounted && salaId) {
-      loadSalaInfo();
-      testDatabaseAccess();
-
-      // Timeout de seguridad para asegurar que loading se establezca a false
-      const safetyTimeout = setTimeout(() => {
-        if (loading) {
-          safeSetState(setLoading, false);
-        }
-      }, 10000); // 10 segundos
-
-      return () => clearTimeout(safetyTimeout);
-    }
-  }, [isMounted, salaId]); // Remover loading como dependencia para evitar re-renderizados infinitos
-
-  // Manejar caso cuando no hay salaId
-  useEffect(() => {
-    if (isMounted && !salaId) {
-      setLoading(false);
-    }
-  }, [isMounted, salaId]);
-
   // Solo ejecutar operaciones si el componente est¡ montado
   const safeSetState = useCallback((setter, value) => {
-    const setterName = setter.name || setter.toString().slice(0, 50);
+    // const setterName = setter.name || setter.toString().slice(0, 50);
     if (isMounted) {
       try {
         setter(value);
@@ -66,6 +42,13 @@ const CrearMapaPage = () => {
         setError(err.message);
       }
     } else {
+    }
+  }, [isMounted]);
+
+  // Manejar caso cuando no hay salaId
+  useEffect(() => {
+    if (isMounted && !salaId) {
+      setLoading(false);
     }
   }, [isMounted, salaId]);
 
@@ -107,23 +90,9 @@ const CrearMapaPage = () => {
 
   // Log adicional para verificar re-renderizados
   useEffect(() => {
-    console.log('[DEBUG] Componente re-renderizado, timestamp:', Date.now());
+    // console.log('[DEBUG] Componente re-renderizado, timestamp:', Date.now());
   });
 
-  // Si hay error, mostrar mensaje de error
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">Error en el componente</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => setError(null)} type="primary">
-            Reintentar
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   // Verificar y crear campos faltantes inmediatamente
   const handleMissingFieldsError = async (error) => {
@@ -328,8 +297,8 @@ const CrearMapaPage = () => {
   };
 
   // Cargar informaci³n de la sala
-  
-
+  const loadSalaInfo = useCallback(async () => {
+    try {
       // Obtener informaci³n de la sala
       const { data: salaData, error: salaError } = await supabase
         .from('salas')
@@ -427,21 +396,30 @@ const CrearMapaPage = () => {
       // Establecer loading a false tambi©n en caso de error
       safeSetState(setLoading, false);
     }
-  };
+  }, [salaId, checkTableExists, createMapasTable, handleMissingFieldsError, safeSetState]);
 
-  
+  const testDatabaseAccess = useCallback(async () => {
+    try {
+      // Test 1: Check if we can access the salas table (already done in loadSalaInfo but good for debug)
+      try {
+        const { error: mapasError } = await supabase
+          .from('salas')
+          .select('id')
+          .limit(1);
 
         if (mapasError) {
           if (mapasError.code === 'PGRST116') {
           }
-        } else {
         }
       } catch (mapasError) {
       }
 
       // Test 2: Check tenant context
       try {
-        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Just verifying we can get user
+        }
       } catch (tenantError) {
       }
 
@@ -460,9 +438,26 @@ const CrearMapaPage = () => {
 
     } catch (error) {
       console.error('[DEBUG] Database access test failed:', error);
-      // No propagar el error, solo log
     }
-  };
+  }, []);
+
+  // Inicializaci³n del componente
+  useEffect(() => {
+    if (isMounted && salaId) {
+      loadSalaInfo();
+      testDatabaseAccess();
+
+      // Timeout de seguridad para asegurar que loading se establezca a false
+      const safetyTimeout = setTimeout(() => {
+        if (loading) {
+          safeSetState(setLoading, false);
+        }
+      }, 10000); // 10 segundos
+
+      return () => clearTimeout(safetyTimeout);
+    }
+  }, [isMounted, salaId, loadSalaInfo, testDatabaseAccess, loading, safeSetState]); // Remover loading como dependencia para evitar re-renderizados infinitos
+
 
   // Valida que el tenant_id exista realmente en la tabla tenants; si no, retorna null
   const ensureValidTenantId = async (maybeTenantId) => {
@@ -496,12 +491,12 @@ const CrearMapaPage = () => {
       if (!profileError && profile?.tenant_id) {
         return profile.tenant_id;
       }
-    } catch (_) {}
+    } catch (_) { }
     // 2) Intentar desde el hook
     try {
       const fromHook = addTenantToInsert({});
       if (fromHook?.tenant_id) return fromHook.tenant_id;
-    } catch (_) {}
+    } catch (_) { }
     throw new Error('No se pudo determinar el tenant del usuario.');
   };
 
@@ -708,8 +703,8 @@ const CrearMapaPage = () => {
                   contenido: Array.isArray(mapa?.contenido)
                     ? mapa.contenido
                     : Array.isArray(mapa?.contenido?.elementos)
-                    ? mapa.contenido.elementos
-                    : []
+                      ? mapa.contenido.elementos
+                      : []
                 }
                 : null
             }
@@ -735,5 +730,3 @@ const CrearMapaPage = () => {
 };
 
 export default CrearMapaPage;
-
-

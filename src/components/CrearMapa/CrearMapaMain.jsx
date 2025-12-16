@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Space, 
-  Typography, 
-  Steps, 
-  message, 
-  Modal, 
-  Form, 
-  Input, 
-  Select, 
+import {
+  Card,
+  Button,
+  Space,
+  Typography,
+  Steps,
+  message,
+  Modal,
+  Form,
+  Input,
+  Select,
   Divider,
   Row,
   Col,
@@ -44,12 +44,12 @@ const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
-const CrearMapaMain = ({ 
-  salaId, 
-  onSave, 
+const CrearMapaMain = ({
+  salaId,
+  onSave,
   onCancel,
   initialMapa = null,
-  isEditMode = false 
+  isEditMode = false
 }) => {
   // ===== ESTADOS PRINCIPALES =====
   const [currentStep, setCurrentStep] = useState(0);
@@ -84,30 +84,29 @@ const CrearMapaMain = ({
 
     // Si hay un mapa inicial, fusionarlo con el por defecto
 
-      return {
-        ...defaultMapa,
-        ...initialMapa,
-        contenido: {
-          ...defaultMapa.contenido,
-          ...(initialMapa.contenido || {}),
-          elementos: Array.isArray(initialMapa.contenido?.elementos) ? initialMapa.contenido.elementos : [],
-          zonas: Array.isArray(initialMapa.contenido?.zonas) ? initialMapa.contenido.zonas : [],
-          configuracion: {
-            ...defaultMapa.contenido.configuracion,
-            ...(initialMapa.contenido?.configuracion || {})
-          }
+    return {
+      ...defaultMapa,
+      ...initialMapa,
+      contenido: {
+        ...defaultMapa.contenido,
+        ...(initialMapa.contenido || {}),
+        elementos: Array.isArray(initialMapa.contenido?.elementos) ? initialMapa.contenido.elementos : [],
+        zonas: Array.isArray(initialMapa.contenido?.zonas) ? initialMapa.contenido.zonas : [],
+        configuracion: {
+          ...defaultMapa.contenido.configuracion,
+          ...(initialMapa.contenido?.configuracion || {})
         }
-      };
-    }
+      }
+    };
+  }
 
-    return defaultMapa;
-  });
+  );
 
   const [showEditor, setShowEditor] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
-  
+
   // ===== ESTADOS DE VALIDACI“N =====
   const [validationResults, setValidationResults] = useState({
     isValid: false,
@@ -115,7 +114,7 @@ const CrearMapaMain = ({
     warnings: [],
     suggestions: []
   });
-  
+
   // ===== ESTADOS DE PROGRESO =====
   const [progress, setProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -165,11 +164,11 @@ const CrearMapaMain = ({
   useEffect(() => {
     // Calcular progreso basado en el paso actual y validaci³n
     let progressValue = (currentStep / (steps.length - 1)) * 100;
-    
+
     if (currentStep >= 2 && validationResults.isValid) {
       progressValue += 20; // Bonus por validaci³n exitosa
     }
-    
+
     setProgress(Math.min(progressValue, 100));
   }, [currentStep, validationResults.isValid, steps.length]);
 
@@ -194,17 +193,17 @@ const CrearMapaMain = ({
   const validateMapa = async () => {
     setIsProcessing(true);
     setProgress(0);
-    
+
     try {
       // Simular proceso de validaci³n
       for (let i = 0; i <= 100; i += 20) {
         setProgress(i);
         await new Promise(resolve => setTimeout(resolve, 200));
       }
-      
+
       const results = await CrearMapaValidation.validate(mapa);
       setValidationResults(results);
-      
+
       if (results.isValid) {
         message.success('Mapa validado exitosamente');
         nextStep();
@@ -230,14 +229,14 @@ const CrearMapaMain = ({
           version: mapaData.metadata.version || '1.0.0'
         }
       };
-      
+
       if (onSave) {
         await onSave(mapaToSave);
       }
-      
+
       setMapa(mapaToSave);
       message.success('Mapa guardado exitosamente');
-      
+
       // Ir al siguiente paso si no es el ºltimo
       if (currentStep < steps.length - 1) {
         nextStep();
@@ -259,11 +258,11 @@ const CrearMapaMain = ({
           published_at: new Date().toISOString()
         }
       };
-      
+
       if (onSave) {
         await onSave(finalMapa);
       }
-      
+
       message.success('Mapa publicado exitosamente');
       onCancel(); // Cerrar el editor
     } catch (error) {
@@ -283,7 +282,7 @@ const CrearMapaMain = ({
             onNext={nextStep}
           />
         );
-      
+
       case 'editor':
         return (
           <CrearMapaEditor
@@ -294,7 +293,7 @@ const CrearMapaMain = ({
             isEditMode={isEditMode}
           />
         );
-      
+
       case 'validation':
         return (
           <CrearMapaValidation
@@ -306,7 +305,7 @@ const CrearMapaMain = ({
             progress={progress}
           />
         );
-      
+
       case 'preview':
         return (
           <CrearMapaPreview
@@ -315,7 +314,7 @@ const CrearMapaMain = ({
             onNext={nextStep}
           />
         );
-      
+
       case 'settings':
         return (
           <CrearMapaSettings
@@ -325,7 +324,7 @@ const CrearMapaMain = ({
             onBack={() => setCurrentStep(currentStep - 1)}
           />
         );
-      
+
       default:
         return null;
     }
@@ -353,10 +352,10 @@ const CrearMapaMain = ({
                 </div>
               </div>
             </Col>
-            
+
             <Col>
               <Space size="middle">
-                <Button 
+                <Button
                   icon={<EyeOutlined />}
                   onClick={() => setShowPreview(true)}
                   title="Vista previa r¡pida"
@@ -365,7 +364,7 @@ const CrearMapaMain = ({
                 >
                   Vista Previa
                 </Button>
-                <Button 
+                <Button
                   icon={<SettingOutlined />}
                   onClick={() => setShowSettings(true)}
                   title="Configuraci³n avanzada"
@@ -374,7 +373,7 @@ const CrearMapaMain = ({
                 >
                   Configuraci³n
                 </Button>
-                <Button 
+                <Button
                   onClick={onCancel}
                   size="large"
                   className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
@@ -414,8 +413,8 @@ const CrearMapaMain = ({
               </Text>
             </div>
           </div>
-          <Progress 
-            percent={progress} 
+          <Progress
+            percent={progress}
             status={progress === 100 ? 'success' : 'active'}
             strokeColor={{
               '0%': '#3b82f6',
@@ -440,8 +439,8 @@ const CrearMapaMain = ({
               Sigue estos pasos para crear un mapa completo y profesional
             </Text>
           </div>
-          <Steps 
-            current={currentStep} 
+          <Steps
+            current={currentStep}
             onChange={goToStep}
             items={steps}
             progressDot
@@ -464,7 +463,7 @@ const CrearMapaMain = ({
           <div className="flex justify-between items-center">
             <div>
               {currentStep > 0 && (
-                <Button 
+                <Button
                   onClick={prevStep}
                   size="large"
                   className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 px-6"
@@ -473,7 +472,7 @@ const CrearMapaMain = ({
                 </Button>
               )}
             </div>
-            
+
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                 {validationResults.isValid && (
@@ -497,20 +496,20 @@ const CrearMapaMain = ({
                   </Tag>
                 )}
               </div>
-              
+
               {currentStep < steps.length - 1 ? (
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   onClick={nextStep}
-                                         disabled={currentStep === 1 && !(mapa?.contenido?.elementos && Array.isArray(mapa.contenido.elementos) && mapa.contenido.elementos.length > 0)}
+                  disabled={currentStep === 1 && !(mapa?.contenido?.elementos && Array.isArray(mapa.contenido.elementos) && mapa.contenido.elementos.length > 0)}
                   size="large"
                   className="btn-gradient-primary shadow-custom hover-lift px-8 py-2 h-12 text-base font-semibold"
                 >
                   Siguiente †’
                 </Button>
               ) : (
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<SaveOutlined />}
                   onClick={handleFinalSave}
                   disabled={!validationResults.isValid}
@@ -562,7 +561,15 @@ const CrearMapaMain = ({
 
 // ===== COMPONENTES AUXILIARES =====
 
+const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
+  const [form] = Form.useForm();
 
+  // Actualizar formulario cuando mapa cambia
+  useEffect(() => {
+    if (mapa) {
+      form.setFieldsValue(mapa);
+    }
+  }, [mapa, form]);
 
   const handleFinish = (values) => {
     onUpdate({
@@ -592,7 +599,7 @@ const CrearMapaMain = ({
           Comienza creando tu mapa de asientos personalizado. Define la informaci³n fundamental y luego pasa al editor visual donde podr¡s dise±ar la distribuci³n perfecta.
         </Text>
       </div>
-      
+
       <Form
         form={form}
         layout="vertical"
@@ -610,7 +617,7 @@ const CrearMapaMain = ({
               <Input placeholder="Ej: Mapa Principal - Sala A" />
             </Form.Item>
           </Col>
-          
+
           <Col span={12}>
             <Form.Item
               name="estado"
@@ -630,8 +637,8 @@ const CrearMapaMain = ({
           name="descripcion"
           label="Descripci³n"
         >
-          <TextArea 
-            rows={4} 
+          <TextArea
+            rows={4}
             placeholder="Describe el prop³sito y caracter­sticas del mapa..."
           />
         </Form.Item>
@@ -646,7 +653,7 @@ const CrearMapaMain = ({
               <Input type="number" min={400} max={2000} />
             </Form.Item>
           </Col>
-          
+
           <Col span={12}>
             <Form.Item
               name={['contenido', 'configuracion', 'dimensions', 'height']}
@@ -673,16 +680,16 @@ const CrearMapaMain = ({
           name={['metadata', 'notes']}
           label="Notas"
         >
-          <TextArea 
-            rows={3} 
+          <TextArea
+            rows={3}
             placeholder="Notas adicionales sobre el mapa..."
           />
         </Form.Item>
 
         <div className="text-center pt-6">
-          <Button 
-            type="primary" 
-            size="large" 
+          <Button
+            type="primary"
+            size="large"
             htmlType="submit"
             className="btn-gradient-primary shadow-custom hover-lift px-12 py-3 h-14 text-lg font-semibold"
           >

@@ -1,14 +1,14 @@
 import React from 'react';
 import resolveImageUrl from '../../../../utils/resolveImageUrl';
 
-const EventSelector = ({ 
-  eventos = [], 
-  selectedEvent, 
-  onEventSelect, 
-  funciones = [], 
-  onShowFunctions, 
-  selectedFuncion 
-
+const EventSelector = ({
+  eventos = [],
+  selectedEvent,
+  onEventSelect,
+  funciones = [],
+  onShowFunctions,
+  selectedFuncion
+}) => {
   return (
     <>
       <div className="flex items-center gap-2">

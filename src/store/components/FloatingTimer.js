@@ -43,9 +43,7 @@ const FloatingTimer = () => {
   };
 
   // Manejar el login
-  
-    setShowRegisterModal(true);
-  };
+
 
   // Manejar el registro
   const handleRegister = () => {
@@ -104,7 +102,7 @@ const FloatingTimer = () => {
     <>
       {/* Temporizador flotante */}
       <div className="fixed top-1/2 right-4 transform -translate-y-1/2 z-50">
-        <Tooltip 
+        <Tooltip
           title={
             <div className="text-center">
               <div className="font-bold mb-2">Tu carrito expira en {formatTime(timeLeft)}</div>
@@ -143,7 +141,7 @@ const FloatingTimer = () => {
         </Tooltip>
 
         {/* Texto del tiempo restante */}
-        <div 
+        <div
           className="absolute -top-8 right-0 bg-white px-2 py-1 rounded shadow-md text-sm font-bold whitespace-nowrap"
           style={{ color: getTimerColor() }}
         >
@@ -163,10 +161,10 @@ const FloatingTimer = () => {
           <ShoppingCartOutlined className="text-4xl text-blue-500 mb-4" />
           <h3 className="text-lg font-semibold mb-2">Tu carrito est¡ esperando</h3>
           <p className="text-gray-600 mb-4">
-            Tienes {formatTime(timeLeft)} para completar tu compra. 
+            Tienes {formatTime(timeLeft)} para completar tu compra.
             Inicia sesi³n para continuar.
           </p>
-          
+
           <div className="bg-blue-50 p-3 rounded mb-4">
             <div className="text-sm">
               <div className="flex justify-between">
@@ -214,20 +212,20 @@ const FloatingTimer = () => {
             </Form.Item>
 
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={() => setShowLoginModal(false)}
                 className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button 
+              <Button
                 onClick={handleRegister}
                 className="flex-1"
               >
                 Crear Cuenta
               </Button>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 htmlType="submit"
                 loading={loading}
                 className="flex-1"
@@ -340,13 +338,13 @@ const FloatingTimer = () => {
             </Form.Item>
 
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={() => setShowRegisterModal(false)}
                 className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   setShowRegisterModal(false);
                   setShowLoginModal(true);
@@ -355,8 +353,8 @@ const FloatingTimer = () => {
               >
                 Ya tengo cuenta
               </Button>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 htmlType="submit"
                 loading={loading}
                 className="flex-1"

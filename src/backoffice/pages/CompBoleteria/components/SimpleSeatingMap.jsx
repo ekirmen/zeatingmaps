@@ -1,17 +1,14 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Button,
-  Badge,
   message,
   Tooltip,
-  Typography,
 } from '../../../../utils/antdComponents';
 import { supabase } from '../../../../supabaseClient';
 import resolveImageUrl from '../../../../utils/resolveImageUrl';
 import { useSeatColors } from '../../../../hooks/useSeatColors';
 
-const { Text, Title } = Typography;
 
 const SimpleSeatingMap = ({
   selectedFuncion,

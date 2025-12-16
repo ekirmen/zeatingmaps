@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Modal, 
-  Form, 
-  Input, 
-  Select, 
-  Switch, 
-  message, 
-  Tag, 
-  Space, 
+import {
+  Card,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Switch,
+  message,
+  Tag,
+  Space,
   Popconfirm,
   Row,
   Col,
@@ -21,10 +21,10 @@ import {
   Transfer,
   Tabs
 } from '../../utils/antdComponents';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   UserOutlined,
   LockOutlined,
   UnlockOutlined,
@@ -51,42 +51,42 @@ const SaasUserManagementSimple = () => {
 
   // Definir roles del sistema SaaS
   const saasRoles = [
-    { 
-      value: 'super_admin', 
-      label: 'Super Administrador', 
-      color: 'red', 
+    {
+      value: 'super_admin',
+      label: 'Super Administrador',
+      color: 'red',
       icon: <CrownOutlined />,
       level: 100,
       description: 'Acceso completo al sistema SaaS'
     },
-    { 
-      value: 'admin_sistema', 
-      label: 'Administrador Sistema', 
-      color: 'orange', 
+    {
+      value: 'admin_sistema',
+      label: 'Administrador Sistema',
+      color: 'orange',
       icon: <SettingOutlined />,
       level: 80,
       description: 'Administraci³n completa de tenants'
     },
-    { 
-      value: 'gerente_sistema', 
-      label: 'Gerente Sistema', 
-      color: 'blue', 
+    {
+      value: 'gerente_sistema',
+      label: 'Gerente Sistema',
+      color: 'blue',
       icon: <SettingOutlined />,
       level: 60,
       description: 'Gesti³n de tenants y soporte'
     },
-    { 
-      value: 'soporte_sistema', 
-      label: 'Soporte Sistema', 
-      color: 'green', 
+    {
+      value: 'soporte_sistema',
+      label: 'Soporte Sistema',
+      color: 'green',
       icon: <TeamOutlined />,
       level: 40,
       description: 'Solo soporte t©cnico'
     },
-    { 
-      value: 'visualizador_sistema', 
-      label: 'Visualizador Sistema', 
-      color: 'purple', 
+    {
+      value: 'visualizador_sistema',
+      label: 'Visualizador Sistema',
+      color: 'purple',
       icon: <EyeOutlined />,
       level: 20,
       description: 'Solo lectura de informaci³n'
@@ -98,7 +98,10 @@ const SaasUserManagementSimple = () => {
     loadTenants();
   }, []);
 
-  
+
+  const loadUsuarios = async () => {
+    try {
+      setLoading(true);
       // Simular carga de usuarios
       setUsuarios([]);
     } catch (error) {
@@ -109,7 +112,12 @@ const SaasUserManagementSimple = () => {
     }
   };
 
-  
+
+  const loadTenants = async () => {
+    try {
+      const tenantOptions = [
+        { key: 'tenant1', title: 'Tenant 1' },
+      ];
       setTenants(tenantOptions);
     } catch (error) {
       console.error('Error loading tenants:', error);
@@ -150,10 +158,11 @@ const SaasUserManagementSimple = () => {
   };
 
 
-    return saasRoles.find(r => r.value === role) || { 
-      value: role, 
-      label: role, 
-      color: 'default', 
+  const getRoleInfo = (role) => {
+    return saasRoles.find(r => r.value === role) || {
+      value: role,
+      label: role,
+      color: 'default',
       icon: <UserOutlined />,
       level: 0,
       description: 'Rol no definido'
@@ -196,9 +205,9 @@ const SaasUserManagementSimple = () => {
       title: 'Estado',
       key: 'status',
       render: (_, record) => (
-        <Badge 
-          status={record.isActive ? 'success' : 'error'} 
-          text={record.isActive ? 'Activo' : 'Inactivo'} 
+        <Badge
+          status={record.isActive ? 'success' : 'error'}
+          text={record.isActive ? 'Activo' : 'Inactivo'}
         />
       ),
     },
@@ -208,9 +217,9 @@ const SaasUserManagementSimple = () => {
       render: (_, record) => (
         <Space>
           <Tooltip title="Editar usuario">
-            <Button 
-              type="primary" 
-              icon={<EditOutlined />} 
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
               size="small"
               onClick={() => handleEditUser(record)}
             />
@@ -240,8 +249,8 @@ const SaasUserManagementSimple = () => {
             <Text type="secondary">Administra los usuarios del sistema SaaS y sus asignaciones de tenants</Text>
           </Col>
           <Col>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<PlusOutlined />}
               onClick={handleCreateUser}
             >
@@ -257,9 +266,9 @@ const SaasUserManagementSimple = () => {
         <Row gutter={[16, 16]}>
           {saasRoles.map(role => (
             <Col key={role.value} xs={24} sm={12} md={8} lg={6}>
-              <div style={{ 
-                padding: '16px', 
-                border: '1px solid #d9d9d9', 
+              <div style={{
+                padding: '16px',
+                border: '1px solid #d9d9d9',
                 borderRadius: '8px',
                 textAlign: 'center',
                 background: role.level >= 80 ? '#fff2e8' : role.level >= 60 ? '#e6f7ff' : '#f6ffed'
@@ -293,7 +302,7 @@ const SaasUserManagementSimple = () => {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} de ${total} usuarios del sistema`
           }}
         />
@@ -376,9 +385,9 @@ const SaasUserManagementSimple = () => {
                 label="Estado"
                 valuePropName="checked"
               >
-                <Switch 
-                  checkedChildren="Activo" 
-                  unCheckedChildren="Inactivo" 
+                <Switch
+                  checkedChildren="Activo"
+                  unCheckedChildren="Inactivo"
                 />
               </Form.Item>
             </Form>

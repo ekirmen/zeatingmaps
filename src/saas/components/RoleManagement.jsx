@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Input, Button, Select, message, Alert, Space, Typography, Row, Col, Table, Modal, Badge, Tag, Tabs, Statistic } from '../../utils/antdComponents';
-import { 
-  TeamOutlined, 
-  SettingOutlined, 
-  UserOutlined, 
-  LockOutlined, 
+import {
+  TeamOutlined,
+  SettingOutlined,
+  UserOutlined,
+  LockOutlined,
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -89,6 +89,7 @@ const RoleManagement = () => {
   };
 
 
+  const getRoleLevelColor = (level) => {
     if (level >= 80) return 'red';
     if (level >= 60) return 'orange';
     if (level >= 40) return 'blue';
@@ -99,8 +100,8 @@ const RoleManagement = () => {
   const getRoleBadge = (role) => {
     const stats = roleStats[role.id] || 0;
     return (
-      <Badge 
-        count={stats} 
+      <Badge
+        count={stats}
         style={{ backgroundColor: getRoleLevelColor(role.level) }}
       />
     );
@@ -174,17 +175,17 @@ const RoleManagement = () => {
         key: 'actions',
         render: (_, record) => (
           <Space>
-            <Button 
-              size="small" 
+            <Button
+              size="small"
               icon={<EditOutlined />}
               onClick={() => handleRoleSelect(record)}
             >
               Ver Usuarios
             </Button>
             {!record.is_system && (
-              <Button 
-                size="small" 
-                danger 
+              <Button
+                size="small"
+                danger
                 icon={<DeleteOutlined />}
                 onClick={() => message.warning('Funci³n de eliminaci³n no implementada')}
               >
@@ -362,25 +363,25 @@ const RoleManagement = () => {
 
       <Card>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane 
+          <TabPane
             tab={
               <Space>
                 <TeamOutlined />
                 <span>Roles</span>
               </Space>
-            } 
+            }
             key="roles"
           >
             <div style={{ marginBottom: '16px' }}>
               <Space>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<PlusOutlined />}
                   onClick={() => setRoleModalVisible(true)}
                 >
                   Crear Rol Personalizado
                 </Button>
-                <Button 
+                <Button
                   icon={<SecurityScanOutlined />}
                   onClick={() => message.info('Funci³n de exportaci³n no implementada')}
                 >
@@ -391,13 +392,13 @@ const RoleManagement = () => {
             {renderRolesTable()}
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <Space>
                 <UserOutlined />
                 <span>Asignar Roles</span>
               </Space>
-            } 
+            }
             key="assign"
           >
             <Alert
@@ -409,8 +410,8 @@ const RoleManagement = () => {
             />
             {renderAssignRoleForm()}
             <div style={{ marginTop: '16px', textAlign: 'right' }}>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<CheckCircleOutlined />}
                 onClick={() => form.submit()}
                 loading={loading}
@@ -420,7 +421,7 @@ const RoleManagement = () => {
             </div>
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <Space>
                 <LockOutlined />
@@ -429,7 +430,7 @@ const RoleManagement = () => {
                   <Badge count={users.length} style={{ backgroundColor: '#52c41a' }} />
                 )}
               </Space>
-            } 
+            }
             key="users"
           >
             {selectedRole ? (
@@ -453,13 +454,13 @@ const RoleManagement = () => {
             )}
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <Space>
                 <SettingOutlined />
                 <span>Estad­sticas</span>
               </Space>
-            } 
+            }
             key="stats"
           >
             <Title level={4}>Distribuci³n de Usuarios por Rol</Title>
@@ -482,8 +483,8 @@ const RoleManagement = () => {
             <Button onClick={() => setRoleModalVisible(false)}>
               Cancelar
             </Button>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<CheckCircleOutlined />}
               onClick={() => roleForm.submit()}
               loading={loading}

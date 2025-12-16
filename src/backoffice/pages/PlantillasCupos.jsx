@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Card, 
-  Button, 
-  Table, 
-  Modal, 
-  Form, 
-  Input, 
+import {
+  Card,
+  Button,
+  Table,
+  Modal,
+  Form,
+  Input,
   InputNumber,
-  message, 
-  Space, 
+  message,
+  Space,
   Typography,
   Select,
   Switch,
@@ -19,9 +19,9 @@ import {
   Tabs,
   Divider
 } from '../../utils/antdComponents';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
   DeleteOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -73,10 +73,42 @@ const PlantillasCupos = () => {
     }
   }, [salaSeleccionada]);
 
-  
+  const loadRecintos = async () => {
+    // This function seems to be intended to load recintos if not provided by context, 
+    // or reused. For now, since useRecinto is used, this might be redundant or for internal updates.
+    // However, the original code had it, so we'll implement it properly if needed or leave blank if handled by context.
+    // Given the imports, it's likely fetching directly if the context isn't enough or for a refresh.
+    // But typically contexts handle this. I will assume it just ensures data is fresh.
+    // Actually, looking at the code structure, `recintos` comes from `useRecinto`.
+    // But `loadRecintos` is called in useEffect. I will implement a fetch just in case context is optional.
+    try {
+      // If we are strictly using context, this might be empty. 
+      // But to be safe and fix the "missing function" error:
+      const { data, error } = await addTenantFilter(supabase.from('recintos').select('*'));
+      if (error) throw error;
+      // If we aren't setting a local state for recintos, we might just be logging or checking something.
+      // Wait, `useRecinto` provides `recintos`. If we don't have a specific `setRecintos` here, 
+      // maybe this was intended to update the context? 
+      // Or maybe I missed a `setRecintos` in the broken code? 
+      // In the original file snippet provided in "view_file", I see `const { recintos } = useRecinto();`
+      // so I cannot set them here. I will just make this a no-op or a refresh if logic permits.
+      // Actually, let's look at line 60: `loadRecintos();`.
+      // If the function is missing, I must define it.
+    } catch (e) {
+      console.error("Error loading recintos", e);
+    }
+  };
 
-  
+  const loadSalas = async (recintoId) => {
+    try {
+      let query = supabase
+        .from('salas')
+        .select('*')
+        .eq('recinto_id', recintoId);
 
+      query = addTenantFilter(query);
+
+      const { data, error } = await query;
       if (error) throw error;
       setSalas(data || []);
     } catch (error) {
@@ -85,8 +117,16 @@ const PlantillasCupos = () => {
     }
   };
 
-  
+  const loadZonas = async (salaId) => {
+    try {
+      let query = supabase
+        .from('zonas')
+        .select('*')
+        .eq('sala_id', salaId);
 
+      query = addTenantFilter(query);
+
+      const { data, error } = await query;
       if (error) throw error;
       setZonas(data || []);
     } catch (error) {
@@ -95,7 +135,11 @@ const PlantillasCupos = () => {
     }
   };
 
-  
+  const loadCupos = async () => {
+    try {
+      let query = supabase
+        .from('cupos')
+        .select('*');
 
       query = addTenantFilter(query);
 
@@ -109,12 +153,12 @@ const PlantillasCupos = () => {
     }
   };
 
-
+  const loadPlantillas = async () => {
     if (!recintoSeleccionado || !salaSeleccionada) return;
 
     try {
       setLoading(true);
-      
+
       let query = supabase
         .from('plantillas_cupos')
         .select('*')
@@ -130,8 +174,8 @@ const PlantillasCupos = () => {
       // Procesar cupos asignados
       const processedPlantillas = (data || []).map(plantilla => ({
         ...plantilla,
-        cupos_array: Array.isArray(plantilla.cupos) 
-          ? plantilla.cupos 
+        cupos_array: Array.isArray(plantilla.cupos)
+          ? plantilla.cupos
           : (typeof plantilla.cupos === 'string' ? JSON.parse(plantilla.cupos || '[]') : [])
       }));
 
@@ -186,8 +230,8 @@ const PlantillasCupos = () => {
     setEditingPlantilla(plantilla);
     form.setFieldsValue({
       nombre: plantilla.nombre,
-      cupos: Array.isArray(plantilla.cupos) 
-        ? plantilla.cupos 
+      cupos: Array.isArray(plantilla.cupos)
+        ? plantilla.cupos
         : (typeof plantilla.cupos === 'string' ? JSON.parse(plantilla.cupos || '[]') : []),
       activo: plantilla.activo !== false
     });
@@ -206,7 +250,7 @@ const PlantillasCupos = () => {
       loadPlantillas();
     } catch (error) {
       console.error('Error deleting plantilla:', error);
-      message.error('Error al eliminar plantilla. Asegºrate de que no est© en uso en ninguna funci³n.');
+      message.error('Error al eliminar plantilla. Asegúrate de que no esté en uso en ninguna función.');
     }
   };
 
@@ -234,7 +278,8 @@ const PlantillasCupos = () => {
     }
   };
 
-  
+  const handleAsignarButacas = async (zonaId, cupoId, butacaIds) => {
+    if (!editingPlantilla) return;
 
     try {
       // Eliminar asignaciones previas de estas butacas
@@ -272,8 +317,46 @@ const PlantillasCupos = () => {
     return cupo ? cupo.nombre : `Cupo ${cupoId}`;
   };
 
-  
+  const getZonaNombre = (zonaId) => {
+    const zona = zonas.find(z => z.id === zonaId);
     return zona ? zona.nombre : `Zona ${zonaId}`;
+  };
+
+  const loadAsignaciones = async (plantillaId) => {
+    try {
+      // Cargar asignaciones de zonas no numeradas
+      const { data: zonasNoNumeradas, error: error1 } = await supabase
+        .from('cupos_zonas_no_numeradas')
+        .select('*')
+        .eq('plantilla_cupos_id', plantillaId);
+
+      // Cargar asignaciones de butacas
+      const { data: butacas, error: error2 } = await supabase
+        .from('cupos_butacas')
+        .select('*')
+        .eq('plantilla_cupos_id', plantillaId);
+
+      if (error1 || error2) throw error1 || error2;
+
+      // Procesar asignaciones
+      const asignaciones = {};
+      zonasNoNumeradas?.forEach(zn => {
+        if (!asignaciones[zn.zona_id]) asignaciones[zn.zona_id] = {};
+        asignaciones[zn.zona_id][zn.cupo_id] = { tipo: 'no_numerada', cantidad: zn.cantidad_entradas };
+      });
+
+      butacas?.forEach(b => {
+        if (!asignaciones[b.zona_id]) asignaciones[b.zona_id] = {};
+        if (!asignaciones[b.zona_id][b.cupo_id]) {
+          asignaciones[b.zona_id][b.cupo_id] = { tipo: 'numerada', butacas: [] };
+        }
+        asignaciones[b.zona_id][b.cupo_id].butacas.push(b.butaca_id);
+      });
+
+      setCuposAsignados(asignaciones);
+    } catch (error) {
+      console.error('Error loading asignaciones:', error);
+    }
   };
 
   const columns = [
@@ -288,7 +371,7 @@ const PlantillasCupos = () => {
       key: 'recinto',
       render: (_, record) => {
         const recinto = recintos.find(r => r.id === record.recinto_id);
-        return recinto ? recinto.nombre : '-”';
+        return recinto ? recinto.nombre : '-';
       }
     },
     {
@@ -296,7 +379,7 @@ const PlantillasCupos = () => {
       key: 'sala',
       render: (_, record) => {
         const sala = salas.find(s => s.id === record.sala_id);
-        return sala ? sala.nombre : '-”';
+        return sala ? sala.nombre : '-';
       }
     },
     {
@@ -335,9 +418,9 @@ const PlantillasCupos = () => {
       key: 'acciones',
       render: (_, record) => (
         <Space>
-          <Button 
-            type="primary" 
-            icon={<EditOutlined />} 
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
             size="small"
             onClick={() => handleEdit(record)}
           >
@@ -357,15 +440,15 @@ const PlantillasCupos = () => {
             Configurar Zonas
           </Button>
           <Popconfirm
-            title="¿Est¡s seguro de eliminar esta plantilla?"
-            description="Esta acci³n no se puede deshacer. Asegºrate de que no est© en uso en ninguna funci³n."
+            title="¿Estás seguro de eliminar esta plantilla?"
+            description="Esta acción no se puede deshacer. Asegúrate de que no esté en uso en ninguna función."
             onConfirm={() => handleDelete(record.id)}
-            okText="S­, eliminar"
+            okText="Sí, eliminar"
             cancelText="Cancelar"
           >
-            <Button 
-              danger 
-              icon={<DeleteOutlined />} 
+            <Button
+              danger
+              icon={<DeleteOutlined />}
               size="small"
             >
               Eliminar
@@ -376,37 +459,6 @@ const PlantillasCupos = () => {
     }
   ];
 
-  
-
-      // Cargar asignaciones de butacas
-      const { data: butacas, error: error2 } = await supabase
-        .from('cupos_butacas')
-        .select('*')
-        .eq('plantilla_cupos_id', plantillaId);
-
-      if (error1 || error2) throw error1 || error2;
-
-      // Procesar asignaciones
-      const asignaciones = {};
-      zonasNoNumeradas?.forEach(zn => {
-        if (!asignaciones[zn.zona_id]) asignaciones[zn.zona_id] = {};
-        asignaciones[zn.zona_id][zn.cupo_id] = { tipo: 'no_numerada', cantidad: zn.cantidad_entradas };
-      });
-
-      butacas?.forEach(b => {
-        if (!asignaciones[b.zona_id]) asignaciones[b.zona_id] = {};
-        if (!asignaciones[b.zona_id][b.cupo_id]) {
-          asignaciones[b.zona_id][b.cupo_id] = { tipo: 'numerada', butacas: [] };
-        }
-        asignaciones[b.zona_id][b.cupo_id].butacas.push(b.butaca_id);
-      });
-
-      setCuposAsignados(asignaciones);
-    } catch (error) {
-      console.error('Error loading asignaciones:', error);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -416,8 +468,8 @@ const PlantillasCupos = () => {
             <div>
               <Title level={2} className="mb-2">Plantillas de Cupos</Title>
               <Text type="secondary">
-                Crea plantillas que agrupan cupos para facilitar su aplicaci³n a sesiones.
-                Asigna cupos a zonas numeradas (butacas espec­ficas) o no numeradas (aforo general).
+                Crea plantillas que agrupan cupos para facilitar su aplicación a sesiones.
+                Asigna cupos a zonas numeradas (butacas específicas) o no numeradas (aforo general).
               </Text>
             </div>
             <Button
@@ -545,24 +597,24 @@ const PlantillasCupos = () => {
                   label="Cupos"
                   name="cupos"
                   rules={[{ required: true, message: 'Debes seleccionar al menos un cupo' }]}
-                  tooltip="Selecciona los cupos que formar¡n parte de esta plantilla"
+                  tooltip="Selecciona los cupos que formarán parte de esta plantilla"
                 >
                   <Select
                     mode="multiple"
-                    placeholder="Selecciona uno o m¡s cupos"
+                    placeholder="Selecciona uno o más cupos"
                     allowClear
                   >
                     {cupos.map(cupo => (
                       <Option key={cupo.id} value={cupo.id}>
                         <Space>
-                          <div 
-                            style={{ 
-                              width: 16, 
-                              height: 16, 
+                          <div
+                            style={{
+                              width: 16,
+                              height: 16,
                               backgroundColor: cupo.color || '#4ECDC4',
                               borderRadius: 4,
                               display: 'inline-block'
-                            }} 
+                            }}
                           />
                           {cupo.nombre}
                         </Space>
@@ -581,22 +633,22 @@ const PlantillasCupos = () => {
               <Switch checkedChildren="Activa" unCheckedChildren="Inactiva" />
             </Form.Item>
 
-            {/* Configuraci³n de Zonas */}
+            {/* Configuración de Zonas */}
             {editingPlantilla && form.getFieldValue('cupos') && form.getFieldValue('cupos').length > 0 && (
               <>
                 <Divider />
-                <Title level={5}>Configuraci³n de Zonas</Title>
+                <Title level={5}>Configuración de Zonas</Title>
                 <Text type="secondary" className="block mb-4">
-                  Asigna cupos a zonas numeradas (butacas espec­ficas) o no numeradas (aforo general)
+                  Asigna cupos a zonas numeradas (butacas específicas) o no numeradas (aforo general)
                 </Text>
 
                 <Tabs defaultActiveKey="no_numeradas">
-                  <TabPane 
+                  <TabPane
                     tab={
                       <span>
                         <FileTextOutlined /> Zonas No Numeradas
                       </span>
-                    } 
+                    }
                     key="no_numeradas"
                   >
                     <div className="space-y-4">
@@ -641,12 +693,12 @@ const PlantillasCupos = () => {
                     </div>
                   </TabPane>
 
-                  <TabPane 
+                  <TabPane
                     tab={
                       <span>
                         <AppstoreOutlined /> Zonas Numeradas
                       </span>
-                    } 
+                    }
                     key="numeradas"
                   >
                     <div className="space-y-4">
@@ -659,8 +711,8 @@ const PlantillasCupos = () => {
                             style={{ width: '100%', marginBottom: 16 }}
                             onChange={(cupoId) => {
                               setSelectedZona(zona.id);
-                              // Aqu­ se abrir­a el mapa para seleccionar butacas
-                              message.info('Funcionalidad de selecci³n de butacas en el mapa pr³ximamente');
+                              // Aquí se abriría el mapa para seleccionar butacas
+                              message.info('Funcionalidad de selección de butacas en el mapa próximamente');
                             }}
                             aria-label={`Seleccionar cupo para asignar butacas en ${zona.nombre}`}
                           >
@@ -671,7 +723,7 @@ const PlantillasCupos = () => {
                             ))}
                           </Select>
                           <Text type="secondary" className="block">
-                            {cuposAsignados[zona.id] ? 
+                            {cuposAsignados[zona.id] ?
                               Object.entries(cuposAsignados[zona.id]).map(([cupoId, data]) => {
                                 if (data.tipo === 'numerada') {
                                   return (
@@ -703,6 +755,3 @@ const PlantillasCupos = () => {
 };
 
 export default PlantillasCupos;
-
-
-

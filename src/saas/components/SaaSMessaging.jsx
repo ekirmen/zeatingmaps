@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, List, Input, Button, Typography, Space, Tag, Avatar, Badge, Drawer, Select, message, Table, Row, Col, Statistic } from '../../utils/antdComponents';
-import { 
-  MessageOutlined, 
-  SendOutlined, 
-  UserOutlined, 
+import {
+  MessageOutlined,
+  SendOutlined,
+  UserOutlined,
   CustomerServiceOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
@@ -57,11 +57,11 @@ const SaaSMessaging = () => {
     // Cargar conversaciones
     loadConversations();
     loadStats();
-    
+
     // Suscribirse a nuevos mensajes
     const subscription = supabase
       .channel('saas_messaging')
-      .on('postgres_changes', 
+      .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'tenant_messages' },
         (payload) => {
           if (payload.new.sender_type === 'tenant') {
@@ -81,7 +81,8 @@ const SaaSMessaging = () => {
     scrollToBottom();
   }, [messages]);
 
-  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const loadConversations = async () => {
@@ -124,8 +125,11 @@ const SaaSMessaging = () => {
     }
   };
 
-  
-
+  const loadStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tenant_conversations')
+        .select('*');
       if (error) throw error;
 
       const statsData = {
@@ -207,8 +211,12 @@ const SaaSMessaging = () => {
     }
   };
 
-  
-
+  const updateStatus = async (conversationId, status) => {
+    try {
+      const { error } = await supabase
+        .from('tenant_conversations')
+        .update({ status })
+        .eq('id', conversationId);
       if (error) throw error;
 
       message.success('Estado actualizado exitosamente');
@@ -232,7 +240,7 @@ const SaaSMessaging = () => {
 
   const renderMessage = (message) => {
     const isSaaS = message.sender_type === 'saas';
-    
+
     return (
       <div
         key={message.id}

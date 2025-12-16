@@ -6,9 +6,11 @@ const { Title, Text } = Typography;
 // Lazy load del componente SimpleSeatingMap para evitar problemas de hoisting
 const SimpleSeatingMapLazy = React.lazy(() => import('./components/SimpleSeatingMap'));
 
+const LazySimpleSeatingMap = (props) => {
+
 
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <Card>
           <div style={{ textAlign: 'center', padding: '20px' }}>

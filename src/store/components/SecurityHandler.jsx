@@ -18,7 +18,7 @@ const SecurityHandler = ({ children }) => {
     const sensitiveParams = ['email', 'password', 'key', 'secret'];
 
     // Par¡metros de autenticaci³n que pueden estar en la URL (no remover)
-    
+
 
     // Verificar solo par¡metros realmente sensibles
     const hasSensitiveData = sensitiveParams.some(param => urlParams.has(param));
@@ -50,6 +50,7 @@ const SecurityHandler = ({ children }) => {
   }, [location, navigate]);
 
 
+  useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const { hash, pathname } = location;

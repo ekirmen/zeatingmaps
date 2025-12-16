@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Table, 
-  Modal, 
-  Form, 
-  Input, 
-  message, 
-  Space, 
+import {
+  Card,
+  Button,
+  Table,
+  Modal,
+  Form,
+  Input,
+  message,
+  Space,
   Typography,
   Select,
   Switch,
@@ -17,9 +17,9 @@ import {
   Popconfirm,
   ColorPicker
 } from '../../utils/antdComponents';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
   DeleteOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined
@@ -48,7 +48,7 @@ const Cupos = () => {
   const loadCupos = async () => {
     try {
       setLoading(true);
-      
+
       let query = supabase
         .from('cupos')
         .select('*')
@@ -63,8 +63,8 @@ const Cupos = () => {
       // Procesar cupos para mostrar canales
       const processedCupos = (data || []).map(cupo => ({
         ...cupo,
-        canales_array: Array.isArray(cupo.canales_venta) 
-          ? cupo.canales_venta 
+        canales_array: Array.isArray(cupo.canales_venta)
+          ? cupo.canales_venta
           : (typeof cupo.canales_venta === 'string' ? JSON.parse(cupo.canales_venta || '[]') : [])
       }));
 
@@ -77,7 +77,9 @@ const Cupos = () => {
     }
   };
 
-  
+  const loadCanalesVenta = async () => {
+    try {
+      const canales = await fetchCanalesVenta();
       setCanalesVenta(canales || []);
     } catch (error) {
       console.error('Error loading canales venta:', error);
@@ -128,8 +130,8 @@ const Cupos = () => {
       nombre: cupo.nombre,
       color: cupo.color || '#4ECDC4',
       descripcion: cupo.descripcion || '',
-      canales_venta: Array.isArray(cupo.canales_venta) 
-        ? cupo.canales_venta 
+      canales_venta: Array.isArray(cupo.canales_venta)
+        ? cupo.canales_venta
         : (typeof cupo.canales_venta === 'string' ? JSON.parse(cupo.canales_venta || '[]') : []),
       activo: cupo.activo !== false
     });
@@ -153,7 +155,7 @@ const Cupos = () => {
   };
 
   const getCanalNombre = (canalId) => {
-
+    const canal = canalesVenta.find(c => c.id === canalId);
     return canal ? canal.nombre : `Canal ${canalId}`;
   };
 
@@ -164,14 +166,14 @@ const Cupos = () => {
       key: 'nombre',
       render: (text, record) => (
         <Space>
-          <div 
-            style={{ 
-              width: 20, 
-              height: 20, 
+          <div
+            style={{
+              width: 20,
+              height: 20,
               backgroundColor: record.color || '#4ECDC4',
               borderRadius: 4,
               display: 'inline-block'
-            }} 
+            }}
           />
           <Text strong>{text}</Text>
         </Space>
@@ -216,9 +218,9 @@ const Cupos = () => {
       key: 'acciones',
       render: (_, record) => (
         <Space>
-          <Button 
-            type="primary" 
-            icon={<EditOutlined />} 
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
             size="small"
             onClick={() => handleEdit(record)}
           >
@@ -231,9 +233,9 @@ const Cupos = () => {
             okText="S­, eliminar"
             cancelText="Cancelar"
           >
-            <Button 
-              danger 
-              icon={<DeleteOutlined />} 
+            <Button
+              danger
+              icon={<DeleteOutlined />}
               size="small"
             >
               Eliminar
@@ -323,8 +325,8 @@ const Cupos = () => {
               name="color"
               rules={[{ required: true, message: 'El color es obligatorio' }]}
             >
-              <Input 
-                type="color" 
+              <Input
+                type="color"
                 style={{ width: 100, height: 40 }}
                 placeholder="#4ECDC4"
               />
@@ -334,8 +336,8 @@ const Cupos = () => {
               label="Descripci³n"
               name="descripcion"
             >
-              <Input.TextArea 
-                rows={3} 
+              <Input.TextArea
+                rows={3}
                 placeholder="Descripci³n opcional del cupo..."
               />
             </Form.Item>

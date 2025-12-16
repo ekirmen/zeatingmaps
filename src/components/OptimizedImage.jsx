@@ -31,37 +31,38 @@ const OptimizedImage = ({
 
   // Generar srcSet automáticamente si no se proporciona
 
+  const generatedSrcSet = useMemo(() => {
     if (srcSet) return srcSet;
     if (!src || typeof src !== 'string') return undefined;
-    
+
     // Si la URL contiene parámetros de Supabase, generar srcSet con diferentes tamaños
     if (src.includes('supabase.co')) {
       const baseUrl = src.split('?')[0];
-      
-      
-      
+
+
+
       // Generar diferentes tamaños
       const sizes = [400, 800, 1200, 1600];
       return sizes
         .map(size => `${baseUrl}?width=${size}&quality=80 ${size}w`)
         .join(', ');
     }
-    
+
     return undefined;
   }, [src, srcSet]);
 
   // Intersection Observer para lazy loading
   useEffect(() => {
     if (priority || isInView) return; // No necesitamos observer si es priority o ya está en view
-    
+
     if (!imgRef.current) return;
-    
+
     // Si el navegador no soporta Intersection Observer, cargar inmediatamente
     if (!('IntersectionObserver' in window)) {
       setIsInView(true);
       return;
     }
-    
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -78,9 +79,9 @@ const OptimizedImage = ({
         threshold: 0.01,
       }
     );
-    
+
     observerRef.current.observe(imgRef.current);
-    
+
     return () => {
       if (observerRef.current && imgRef.current) {
         observerRef.current.unobserve(imgRef.current);
@@ -100,7 +101,7 @@ const OptimizedImage = ({
         link.imageSizes = sizes;
       }
       document.head.appendChild(link);
-      
+
       return () => {
         if (document.head.contains(link)) {
           document.head.removeChild(link);
@@ -125,21 +126,21 @@ const OptimizedImage = ({
       objectFit,
       ...props.style,
     };
-    
+
     // Si tenemos dimensiones, establecerlas para evitar CLS
     if (width) style.width = typeof width === 'number' ? `${width}px` : width;
     if (height) style.height = typeof height === 'number' ? `${height}px` : height;
-    
+
     // Aspect ratio para mantener proporciones
     if (width && height) {
-      const aspectRatio = typeof width === 'number' && typeof height === 'number' 
-        ? width / height 
+      const aspectRatio = typeof width === 'number' && typeof height === 'number'
+        ? width / height
         : null;
       if (aspectRatio) {
         style.aspectRatio = aspectRatio;
       }
     }
-    
+
     return style;
   }, [width, height, objectFit, props.style]);
 

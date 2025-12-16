@@ -13,7 +13,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   // Update initial state with existing images
   const getPreview = (img, imageType) => {
     // Si es un objeto con publicUrl (de Supabase)
-
+    if (img && img.publicUrl) {
       return img.publicUrl;
     }
 

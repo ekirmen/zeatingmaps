@@ -14,8 +14,9 @@ const zonaColors = [
   '#009688', // Verde azulado
 ];
 
-
-  return zonaColors[index % zonaColors.length];
+export const getZonaColor = (index = 0) => {
+  const idx = Number.isInteger(index) ? index : 0;
+  return zonaColors[idx % zonaColors.length];
 };
 
 export default getZonaColor;

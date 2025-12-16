@@ -112,7 +112,12 @@ export const decryptDataFromTransit = async (data, sensitiveFields = []) => {
 /**
  * Interceptor para fetch que encripta automáticamente datos sensibles
  */
-export 
+export const createEncryptedFetch = (originalFetch = fetch) => {
+  return async (url, options = {}) => {
+    if (options && options.body) {
+      if (typeof options.body === 'string') {
+        try {
+          const bodyData = JSON.parse(options.body);
 
           // Encriptar datos sensibles
           const encryptedBody = await encryptDataForTransit(bodyData);

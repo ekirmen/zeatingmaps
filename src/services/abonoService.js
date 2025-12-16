@@ -1,14 +1,17 @@
 import { supabase } from '../supabaseClient';
 
 
-const AutoWrapped_7svrk4 = (props) => {
-  export 
-
+export const getAbonosByUser = async (userId) => {
+  try {
     const { data, error } = await supabase
       .from('abonos')
       .select('*')
       .eq('usuario_id', userId);
 
+    if (error) {
+      console.error('Error fetching abonos:', error);
+      return [];
+    }
 
     return data.map((a) => ({
       ...a,
@@ -18,20 +21,41 @@ const AutoWrapped_7svrk4 = (props) => {
       startDate: a.start_date,
       endDate: a.end_date,
     }));
-  };
+  } catch (error) {
+    console.error('Error in getAbonosByUser:', error);
+    return [];
+  }
+};
 
-  export 
+export const createAbono = async (abonoData) => {
+  try {
+    const { data, error } = await supabase
+      .from('abonos')
+      .insert([abonoData])
+      .select()
+      .single();
 
     if (error) throw new Error(`Error al crear abono: ${error.message}`);
     return data;
-  };
+  } catch (error) {
+    console.error('Error creating abono:', error);
+    throw error;
+  }
+};
 
-  export 
+export const renewAbono = async (abonoId, renewalData) => {
+  try {
+    const { data, error } = await supabase
+      .from('abonos')
+      .update(renewalData)
+      .eq('id', abonoId)
+      .select()
+      .single();
 
     if (error) throw new Error(`Error al renovar abono: ${error.message}`);
     return data;
-  };
-
+  } catch (error) {
+    console.error('Error renewing abono:', error);
+    throw error;
+  }
 };
-
-export default AutoWrapped_7svrk4;

@@ -96,6 +96,7 @@ const ModernEventPage = () => {
 
   // Preparar asientos para la vista de lista
 
+  const seatsForList = useMemo(() => {
     if (!syncedSeats || syncedSeats.length === 0) return [];
 
     // Si usamos el worker, usar los asientos procesados
@@ -575,8 +576,7 @@ const ModernEventPage = () => {
     return parseJsonField(evento.analytics) || {};
   };
 
-  // 
-  // };
+
 
   // const getDatosComprador = () => {
   //   return parseJsonField(evento.datosComprador) || {};
@@ -728,7 +728,7 @@ const ModernEventPage = () => {
                       const mm = String(d.getMinutes()).padStart(2, '0');
                       return `${hh}:${mm}`;
                     }
-                  } catch (_) {}
+                  } catch (_) { }
                 }
                 return '--:--';
               })();
@@ -851,7 +851,7 @@ const ModernEventPage = () => {
                           isAnySeatInTableLocked={isAnySeatInTableLocked}
                           areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
                           onTableToggle={handleTableToggle}
-                          // lockedSeats se obtiene autom¡ticamente del useSeatLockStore
+                        // lockedSeats se obtiene autom¡ticamente del useSeatLockStore
                         />
                       )}
                     </div>
@@ -893,49 +893,50 @@ const ModernEventPage = () => {
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 store-event-page">
-      {/* Hero Section */}
-      <div className="relative h-64 md:h-80 overflow-hidden">
-        <EventImage
-          event={evento}
-          imageType="logoHorizontal"
-          className="w-full h-full object-cover"
-          showDebug={DEBUG}
-        />
+        {/* Hero Section */}
+        <div className="relative h-64 md:h-80 overflow-hidden">
+          <EventImage
+            event={evento}
+            imageType="logoHorizontal"
+            className="w-full h-full object-cover"
+            showDebug={DEBUG}
+          />
 
-        {/* Overlay con gradiente */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+          {/* Overlay con gradiente */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
 
-        {/* Contenido del hero - Solo t­tulo */}
-        <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-4 pb-6">
-            <div className="max-w-7xl mx-auto w-full">
-              <div className="text-white">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                  <div>
-                    <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-                      {evento.nombre}
-                    </h1>
-                  </div>
-                  <div className="flex flex-col items-stretch gap-3">
-                    <div className="flex items-center gap-3 justify-end">
-                      <Badge status={eventStatus.status} text={<span className="text-white">{eventStatus.text}</span>} className="text-white" />
-                      <Tag color={modoVenta.color} className="text-sm">{modoVenta.text}</Tag>
-                      {evento.estadoVenta === 'proximamente-countdown' && countdownTarget && cd.remaining > 0 && (
-                        <Tag color="geekblue" className="text-sm">ðŸ“… {formatCountdown(cd)}</Tag>
-                      )}
+          {/* Contenido del hero - Solo t­tulo */}
+          <div className="absolute inset-0 flex items-end">
+            <div className="w-full px-4 pb-6">
+              <div className="max-w-7xl mx-auto w-full">
+                <div className="text-white">
+                  <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                    <div>
+                      <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+                        {evento.nombre}
+                      </h1>
                     </div>
-                    <div className="flex items-center gap-3 justify-end">
-                      <Button
-                        type="primary"
-                        size="large"
-                        icon={<ShareAltOutlined />}
-                        onClick={() => {
-                          navigator.clipboard.writeText(window.location.href);
-                          message.success('Enlace copiado al portapapeles');
-                        }}
-                      >
-                        Compartir
-                      </Button>
+                    <div className="flex flex-col items-stretch gap-3">
+                      <div className="flex items-center gap-3 justify-end">
+                        <Badge status={eventStatus.status} text={<span className="text-white">{eventStatus.text}</span>} className="text-white" />
+                        <Tag color={modoVenta.color} className="text-sm">{modoVenta.text}</Tag>
+                        {evento.estadoVenta === 'proximamente-countdown' && countdownTarget && cd.remaining > 0 && (
+                          <Tag color="geekblue" className="text-sm">ðŸ“… {formatCountdown(cd)}</Tag>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 justify-end">
+                        <Button
+                          type="primary"
+                          size="large"
+                          icon={<ShareAltOutlined />}
+                          onClick={() => {
+                            navigator.clipboard.writeText(window.location.href);
+                            message.success('Enlace copiado al portapapeles');
+                          }}
+                        >
+                          Compartir
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -943,416 +944,414 @@ const ModernEventPage = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8 lg:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Contenido principal */}
-          <div className="lg:col-span-2">
-            {/* Informaci³n del evento (fecha, lugar, tags) - Movido desde el hero */}
-            <Card className="mb-6 shadow-sm border border-gray-200 rounded-xl">
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center bg-blue-50 rounded-lg px-4 py-2">
-                    <CalendarOutlined className="text-blue-600 mr-2" />
-                    <span className="font-medium text-gray-800">{formatDateString(evento.fecha_evento)}</span>
-                  </div>
-                  {selectedFunctionId && funciones.find(f => f.id === selectedFunctionId) && (
-                    <div className="flex items-center bg-green-50 rounded-lg px-4 py-2">
-                      <ClockCircleOutlined className="text-green-600 mr-2" />
-                      <span className="font-medium text-gray-800">{funciones.find(f => f.id === selectedFunctionId).hora}</span>
-                    </div>
-                  )}
-                  {venueInfo && (
-                    <div className="flex items-center bg-purple-50 rounded-lg px-4 py-2">
-                      <EnvironmentOutlined className="text-purple-600 mr-2" />
-                      <span className="font-medium text-gray-800">{venueInfo.nombre}</span>
-                    </div>
-                  )}
-                  {venueInfo && (venueInfo.direccion || venueAddress) && (
-                    <div className="flex items-center bg-gray-50 rounded-lg px-4 py-2">
-                      <EnvironmentOutlined className="text-gray-600 mr-2" />
-                      <span className="font-medium text-gray-800 text-sm">{venueInfo.direccion || venueAddress}</span>
-                    </div>
-                  )}
-                  {evento.sector && (
-                    <div className="flex items-center bg-orange-50 rounded-lg px-4 py-2">
-                      <TeamOutlined className="text-orange-600 mr-2" />
-                      <span className="font-medium text-gray-800">{evento.sector}</span>
-                    </div>
-                  )}
-                </div>
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
-                    {tags.map((tag, index) => (
-                      <Tag key={index} color="blue" className="text-sm py-1">
-                        {tag}
-                      </Tag>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {/* Descripci³n del evento */}
-            {evento.descripcion && (
+        {/* Contenido principal */}
+        <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8 lg:py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Contenido principal */}
+            <div className="lg:col-span-2">
+              {/* Informaci³n del evento (fecha, lugar, tags) - Movido desde el hero */}
               <Card className="mb-6 shadow-sm border border-gray-200 rounded-xl">
-                <div className="prose max-w-none">
-                  <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-                    {evento.descripcion}
-                  </p>
-                </div>
-              </Card>
-            )}
-
-            {/* Informaci³n b¡sica del evento - solo admin (estilo tickera) */}
-            {isTenantAdmin && (
-              <Card
-                title={
-                  <div className="flex items-center">
-                    <InfoCircleOutlined className="text-blue-500 mr-2" />
-                    <span className="text-xl font-semibold">Informaci³n del Evento</span>
-                  </div>
-                }
-                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
-              >
-                <Descriptions column={2} bordered size="small">
-                  <Descriptions.Item label="Nombre" span={2}>
-                    <strong>{evento.nombre}</strong>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Fecha del Evento">
-                    {formatDateString(evento.fecha_evento)}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Recinto">
-                    {venueInfo ? venueInfo.nombre : `ID: ${evento.recinto}`}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Sala">
-                    {evento.sala ? `ID: ${evento.sala}` : 'No especificada'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Sector">
-                    {evento.sector || 'No especificado'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Estado de Venta">
-                    <Badge status={eventStatus.status} text={eventStatus.text} />
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Modo de Venta">
-                    <Tag color={modoVenta.color}>{modoVenta.text}</Tag>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Activo">
-                    <Badge
-                      status={evento.activo ? 'success' : 'error'}
-                      text={evento.activo ? 'S­' : 'No'}
-                    />
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Oculto">
-                    <Badge
-                      status={evento.oculto ? 'error' : 'success'}
-                      text={evento.oculto ? 'S­' : 'No'}
-                    />
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Desactivado">
-                    <Badge
-                      status={evento.desactivado ? 'error' : 'success'}
-                      text={evento.desactivado ? 'S­' : 'No'}
-                    />
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Creado">
-                    {formatDateString(evento.created_at)}
-                  </Descriptions.Item>
-                </Descriptions>
-              </Card>
-            )}
-
-            {/* Descripci³n HTML */}
-            {evento.descripcionHTML && (
-              <Card
-                title={
-                  <div className="flex items-center">
-                    <FileTextOutlined className="text-green-500 mr-2" />
-                    <span className="text-xl font-semibold">Descripci³n del Evento</span>
-                  </div>
-                }
-                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
-              >
-                <div
-                  className="prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
-                />
-              </Card>
-            )}
-
-
-            {/* Funciones disponibles */}
-            <Card
-              title={
-                <div className="flex items-center">
-                  <CalendarOutlined className="text-blue-500 mr-2" />
-                  <span className="text-xl font-semibold">Funciones Disponibles</span>
-                </div>
-              }
-              className="mb-6 shadow-sm border border-gray-200 rounded-xl"
-            >
-              {funciones.length === 0 ? (
-                <Alert
-                  message="No hay funciones disponibles"
-                  description="Este evento no tiene funciones programadas."
-                  type="warning"
-                  showIcon
-                />
-              ) : (
                 <div className="space-y-4">
-                  {funciones.map((funcion) => (
-                    <div
-                      key={funcion.id || funcion._id}
-                      className={`p-4 md:p-6 border-2 rounded-xl transition-all duration-200 ${
-                        selectedFunctionId === (funcion.id || funcion._id)
-                          ? 'border-blue-500 bg-blue-50 shadow-md'
-                          : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
-                      }`}
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div className="flex items-start md:items-center space-x-4 flex-1">
-                          <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-base md:text-lg flex-shrink-0">
-                            {(() => { try { const d = new Date(funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha); return isNaN(d.getTime()) ? '' : d.getDate(); } catch(_) { return ''; } })()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-1">
-                              {formatDateString(funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha)}
-                            </h3>
-                            <div className="flex flex-wrap gap-3 text-sm text-gray-600">
-                              <div className="flex items-center">
-                                <ClockCircleOutlined className="mr-1 text-green-600" />
-                                <span>{(() => { if (funcion.hora) return funcion.hora; const raw = funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha; if (!raw) return '--:--'; try { const d = new Date(raw); if (isNaN(d.getTime())) return '--:--'; const hh = String(d.getHours()).padStart(2,'0'); const mm = String(d.getMinutes()).padStart(2,'0'); return `${hh}:${mm}`; } catch(_) { return '--:--'; } })()}</span>
-                              </div>
-                              {venueInfo && (
-                                <div className="flex items-center">
-                                  <EnvironmentOutlined className="mr-1 text-purple-600" />
-                                  <span className="truncate">{venueInfo.nombre}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        {/* Bot³n Continuar */}
-                        <div className="flex-shrink-0 w-full md:w-auto">
-                          <Button
-                            type="primary"
-                            size="large"
-                            block={isMobile}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleFunctionSelect(funcion.id || funcion._id);
-                              const fid = funcion.id || funcion._id;
-                              const url = fid
-                                ? `/store/eventos/${eventSlug}/map?funcion=${fid}`
-                                : `/store/eventos/${eventSlug}/map`;
-                              navigate(url);
-                            }}
-                            className="md:min-w-[120px]"
-                          >
-                            Continuar
-                          </Button>
-                        </div>
+                  <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center bg-blue-50 rounded-lg px-4 py-2">
+                      <CalendarOutlined className="text-blue-600 mr-2" />
+                      <span className="font-medium text-gray-800">{formatDateString(evento.fecha_evento)}</span>
+                    </div>
+                    {selectedFunctionId && funciones.find(f => f.id === selectedFunctionId) && (
+                      <div className="flex items-center bg-green-50 rounded-lg px-4 py-2">
+                        <ClockCircleOutlined className="text-green-600 mr-2" />
+                        <span className="font-medium text-gray-800">{funciones.find(f => f.id === selectedFunctionId).hora}</span>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-
-            {/* Configuraci³n del Comprador eliminada */}
-
-            {/* Otras opciones - solo admin */}
-            {isTenantAdmin && Object.keys(getOtrasOpciones()).length > 0 && (
-              <Card
-                title={
-                  <div className="flex items-center">
-                    <SettingOutlined className="text-gray-500 mr-2" />
-                    <span className="text-xl font-semibold">Otras Opciones</span>
-                  </div>
-                }
-                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
-              >
-                <Descriptions column={2} bordered size="small">
-                  {Object.entries(getOtrasOpciones()).map(([key, value]) => (
-                    <Descriptions.Item key={key} label={key}>
-                      {typeof value === 'boolean' ? (
-                        <Badge status={value ? 'success' : 'error'} text={value ? 'S­' : 'No'} />
-                      ) : typeof value === 'object' ? (
-                        <pre className="text-xs bg-gray-100 p-2 rounded">
-                          {JSON.stringify(value, null, 2)}
-                        </pre>
-                      ) : (
-                        String(value)
-                      )}
-                    </Descriptions.Item>
-                  ))}
-                </Descriptions>
-              </Card>
-            )}
-
-            {/* Analytics - solo admin */}
-            {isTenantAdmin && Object.keys(analytics).length > 0 && (
-              <Card
-                title={
-                  <div className="flex items-center">
-                    <BarChartOutlined className="text-green-500 mr-2" />
-                    <span className="text-xl font-semibold">Analytics</span>
-                  </div>
-                }
-                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
-              >
-                <Descriptions column={2} bordered size="small">
-                  {Object.entries(analytics).map(([key, value]) => (
-                    <Descriptions.Item key={key} label={key}>
-                      {typeof value === 'boolean' ? (
-                        <Badge status={value ? 'success' : 'error'} text={value ? 'S­' : 'No'} />
-                      ) : (
-                        String(value)
-                      )}
-                    </Descriptions.Item>
-                  ))}
-                </Descriptions>
-              </Card>
-            )}
-          </div>
-
-          {/* Panel lateral */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8 space-y-6">
-              {/* Estad­sticas del evento - solo admin */}
-              {isTenantAdmin && (
-                <Card
-                  title={
-                    <div className="flex items-center">
-                      <TrophyOutlined className="text-yellow-500 mr-2" />
-                      <span className="font-semibold">Estad­sticas</span>
-                    </div>
-                  }
-                  className="shadow-sm border border-gray-200 rounded-xl"
-                >
-                  <div className="space-y-4">
-                    <Statistic
-                      title="Funciones"
-                      value={funciones.length}
-                      prefix={<CalendarOutlined />}
-                    />
-                    <Statistic
-                      title="Estado"
-                      value={eventStatus.text}
-                      prefix={eventStatus.icon}
-                    />
+                    )}
                     {venueInfo && (
-                      <Statistic
-                        title="Recinto"
-                        value={venueInfo.nombre}
-                        prefix={<EnvironmentOutlined />}
-                      />
+                      <div className="flex items-center bg-purple-50 rounded-lg px-4 py-2">
+                        <EnvironmentOutlined className="text-purple-600 mr-2" />
+                        <span className="font-medium text-gray-800">{venueInfo.nombre}</span>
+                      </div>
+                    )}
+                    {venueInfo && (venueInfo.direccion || venueAddress) && (
+                      <div className="flex items-center bg-gray-50 rounded-lg px-4 py-2">
+                        <EnvironmentOutlined className="text-gray-600 mr-2" />
+                        <span className="font-medium text-gray-800 text-sm">{venueInfo.direccion || venueAddress}</span>
+                      </div>
+                    )}
+                    {evento.sector && (
+                      <div className="flex items-center bg-orange-50 rounded-lg px-4 py-2">
+                        <TeamOutlined className="text-orange-600 mr-2" />
+                        <span className="font-medium text-gray-800">{evento.sector}</span>
+                      </div>
                     )}
                   </div>
-                </Card>
-              )}
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                      {tags.map((tag, index) => (
+                        <Tag key={index} color="blue" className="text-sm py-1">
+                          {tag}
+                        </Tag>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Card>
 
-
-              {/* Informaci³n t©cnica - solo admin */}
-              {isTenantAdmin && (
-                <Card
-                  title={
-                    <div className="flex items-center">
-                      <InfoCircleOutlined className="text-gray-500 mr-2" />
-                      <span className="font-semibold">Informaci³n T©cnica</span>
-                    </div>
-                  }
-                  className="shadow-sm border border-gray-200 rounded-xl"
-                >
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">ID del Evento:</span>
-                      <code className="text-xs">{evento.id}</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Slug:</span>
-                      <code className="text-xs">{evento.slug}</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Tenant ID:</span>
-                      <code className="text-xs">{evento.tenant_id}</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Usuario ID:</span>
-                      <code className="text-xs">{evento.usuario_id}</code>
-                    </div>
+              {/* Descripci³n del evento */}
+              {evento.descripcion && (
+                <Card className="mb-6 shadow-sm border border-gray-200 rounded-xl">
+                  <div className="prose max-w-none">
+                    <p className="text-base md:text-lg text-gray-700 leading-relaxed">
+                      {evento.descripcion}
+                    </p>
                   </div>
                 </Card>
               )}
 
-              {/* Video de YouTube */}
-              {evento.url_video && (
+              {/* Informaci³n b¡sica del evento - solo admin (estilo tickera) */}
+              {isTenantAdmin && (
                 <Card
                   title={
                     <div className="flex items-center">
-                      <span className="text-xl font-semibold">Video del Evento</span>
+                      <InfoCircleOutlined className="text-blue-500 mr-2" />
+                      <span className="text-xl font-semibold">Informaci³n del Evento</span>
                     </div>
                   }
                   className="mb-6 shadow-sm border border-gray-200 rounded-xl"
                 >
-                  <div className="aspect-video w-full">
-                    <iframe
-                      src={evento.url_video}
-                      title="Video del Evento"
-                      className="w-full h-full rounded-lg"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="Nombre" span={2}>
+                      <strong>{evento.nombre}</strong>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Fecha del Evento">
+                      {formatDateString(evento.fecha_evento)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Recinto">
+                      {venueInfo ? venueInfo.nombre : `ID: ${evento.recinto}`}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Sala">
+                      {evento.sala ? `ID: ${evento.sala}` : 'No especificada'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Sector">
+                      {evento.sector || 'No especificado'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Estado de Venta">
+                      <Badge status={eventStatus.status} text={eventStatus.text} />
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Modo de Venta">
+                      <Tag color={modoVenta.color}>{modoVenta.text}</Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Activo">
+                      <Badge
+                        status={evento.activo ? 'success' : 'error'}
+                        text={evento.activo ? 'S­' : 'No'}
+                      />
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Oculto">
+                      <Badge
+                        status={evento.oculto ? 'error' : 'success'}
+                        text={evento.oculto ? 'S­' : 'No'}
+                      />
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Desactivado">
+                      <Badge
+                        status={evento.desactivado ? 'error' : 'success'}
+                        text={evento.desactivado ? 'S­' : 'No'}
+                      />
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Creado">
+                      {formatDateString(evento.created_at)}
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
+              )}
+
+              {/* Descripci³n HTML */}
+              {evento.descripcionHTML && (
+                <Card
+                  title={
+                    <div className="flex items-center">
+                      <FileTextOutlined className="text-green-500 mr-2" />
+                      <span className="text-xl font-semibold">Descripci³n del Evento</span>
+                    </div>
+                  }
+                  className="mb-6 shadow-sm border border-gray-200 rounded-xl"
+                >
+                  <div
+                    className="prose max-w-none"
+                    dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
+                  />
+                </Card>
+              )}
+
+
+              {/* Funciones disponibles */}
+              <Card
+                title={
+                  <div className="flex items-center">
+                    <CalendarOutlined className="text-blue-500 mr-2" />
+                    <span className="text-xl font-semibold">Funciones Disponibles</span>
                   </div>
+                }
+                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
+              >
+                {funciones.length === 0 ? (
+                  <Alert
+                    message="No hay funciones disponibles"
+                    description="Este evento no tiene funciones programadas."
+                    type="warning"
+                    showIcon
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {funciones.map((funcion) => (
+                      <div
+                        key={funcion.id || funcion._id}
+                        className={`p-4 md:p-6 border-2 rounded-xl transition-all duration-200 ${selectedFunctionId === (funcion.id || funcion._id)
+                            ? 'border-blue-500 bg-blue-50 shadow-md'
+                            : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                          }`}
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div className="flex items-start md:items-center space-x-4 flex-1">
+                            <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-base md:text-lg flex-shrink-0">
+                              {(() => { try { const d = new Date(funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha); return isNaN(d.getTime()) ? '' : d.getDate(); } catch (_) { return ''; } })()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-1">
+                                {formatDateString(funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha)}
+                              </h3>
+                              <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                                <div className="flex items-center">
+                                  <ClockCircleOutlined className="mr-1 text-green-600" />
+                                  <span>{(() => { if (funcion.hora) return funcion.hora; const raw = funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha; if (!raw) return '--:--'; try { const d = new Date(raw); if (isNaN(d.getTime())) return '--:--'; const hh = String(d.getHours()).padStart(2, '0'); const mm = String(d.getMinutes()).padStart(2, '0'); return `${hh}:${mm}`; } catch (_) { return '--:--'; } })()}</span>
+                                </div>
+                                {venueInfo && (
+                                  <div className="flex items-center">
+                                    <EnvironmentOutlined className="mr-1 text-purple-600" />
+                                    <span className="truncate">{venueInfo.nombre}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {/* Bot³n Continuar */}
+                          <div className="flex-shrink-0 w-full md:w-auto">
+                            <Button
+                              type="primary"
+                              size="large"
+                              block={isMobile}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFunctionSelect(funcion.id || funcion._id);
+                                const fid = funcion.id || funcion._id;
+                                const url = fid
+                                  ? `/store/eventos/${eventSlug}/map?funcion=${fid}`
+                                  : `/store/eventos/${eventSlug}/map`;
+                                navigate(url);
+                              }}
+                              className="md:min-w-[120px]"
+                            >
+                              Continuar
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+
+              {/* Configuraci³n del Comprador eliminada */}
+
+              {/* Otras opciones - solo admin */}
+              {isTenantAdmin && Object.keys(getOtrasOpciones()).length > 0 && (
+                <Card
+                  title={
+                    <div className="flex items-center">
+                      <SettingOutlined className="text-gray-500 mr-2" />
+                      <span className="text-xl font-semibold">Otras Opciones</span>
+                    </div>
+                  }
+                  className="mb-6 shadow-sm border border-gray-200 rounded-xl"
+                >
+                  <Descriptions column={2} bordered size="small">
+                    {Object.entries(getOtrasOpciones()).map(([key, value]) => (
+                      <Descriptions.Item key={key} label={key}>
+                        {typeof value === 'boolean' ? (
+                          <Badge status={value ? 'success' : 'error'} text={value ? 'S­' : 'No'} />
+                        ) : typeof value === 'object' ? (
+                          <pre className="text-xs bg-gray-100 p-2 rounded">
+                            {JSON.stringify(value, null, 2)}
+                          </pre>
+                        ) : (
+                          String(value)
+                        )}
+                      </Descriptions.Item>
+                    ))}
+                  </Descriptions>
+                </Card>
+              )}
+
+              {/* Analytics - solo admin */}
+              {isTenantAdmin && Object.keys(analytics).length > 0 && (
+                <Card
+                  title={
+                    <div className="flex items-center">
+                      <BarChartOutlined className="text-green-500 mr-2" />
+                      <span className="text-xl font-semibold">Analytics</span>
+                    </div>
+                  }
+                  className="mb-6 shadow-sm border border-gray-200 rounded-xl"
+                >
+                  <Descriptions column={2} bordered size="small">
+                    {Object.entries(analytics).map(([key, value]) => (
+                      <Descriptions.Item key={key} label={key}>
+                        {typeof value === 'boolean' ? (
+                          <Badge status={value ? 'success' : 'error'} text={value ? 'S­' : 'No'} />
+                        ) : (
+                          String(value)
+                        )}
+                      </Descriptions.Item>
+                    ))}
+                  </Descriptions>
                 </Card>
               )}
             </div>
-          </div>
-        </div>
-      </div>
-      {venueMapUrl && (
-        <section className="bg-gray-50 border-t border-gray-200">
-          <div className="max-w-6xl mx-auto px-4 py-10">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4 text-center">
-              ¿D³nde ser¡ el evento?
-            </h2>
-            <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
-              <iframe
-                width="100%"
-                height="360"
-                frameBorder="0"
-                scrolling="no"
-                marginHeight="0"
-                marginWidth="0"
-                title="Ubicaci³n del recinto"
-                src={venueMapUrl}
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-              />
-            </div>
-            {(venueAddress || venueDirections) && (
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
-                {venueAddress && (
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                    <h3 className="text-base font-semibold text-gray-900 mb-2">Direcci³n</h3>
-                    <p className="leading-relaxed">{venueAddress}</p>
-                  </div>
+
+            {/* Panel lateral */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-8 space-y-6">
+                {/* Estad­sticas del evento - solo admin */}
+                {isTenantAdmin && (
+                  <Card
+                    title={
+                      <div className="flex items-center">
+                        <TrophyOutlined className="text-yellow-500 mr-2" />
+                        <span className="font-semibold">Estad­sticas</span>
+                      </div>
+                    }
+                    className="shadow-sm border border-gray-200 rounded-xl"
+                  >
+                    <div className="space-y-4">
+                      <Statistic
+                        title="Funciones"
+                        value={funciones.length}
+                        prefix={<CalendarOutlined />}
+                      />
+                      <Statistic
+                        title="Estado"
+                        value={eventStatus.text}
+                        prefix={eventStatus.icon}
+                      />
+                      {venueInfo && (
+                        <Statistic
+                          title="Recinto"
+                          value={venueInfo.nombre}
+                          prefix={<EnvironmentOutlined />}
+                        />
+                      )}
+                    </div>
+                  </Card>
                 )}
-                {venueDirections && (
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                    <h3 className="text-base font-semibold text-gray-900 mb-2">C³mo llegar</h3>
-                    <p className="leading-relaxed">{venueDirections}</p>
-                  </div>
+
+
+                {/* Informaci³n t©cnica - solo admin */}
+                {isTenantAdmin && (
+                  <Card
+                    title={
+                      <div className="flex items-center">
+                        <InfoCircleOutlined className="text-gray-500 mr-2" />
+                        <span className="font-semibold">Informaci³n T©cnica</span>
+                      </div>
+                    }
+                    className="shadow-sm border border-gray-200 rounded-xl"
+                  >
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">ID del Evento:</span>
+                        <code className="text-xs">{evento.id}</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Slug:</span>
+                        <code className="text-xs">{evento.slug}</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Tenant ID:</span>
+                        <code className="text-xs">{evento.tenant_id}</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Usuario ID:</span>
+                        <code className="text-xs">{evento.usuario_id}</code>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Video de YouTube */}
+                {evento.url_video && (
+                  <Card
+                    title={
+                      <div className="flex items-center">
+                        <span className="text-xl font-semibold">Video del Evento</span>
+                      </div>
+                    }
+                    className="mb-6 shadow-sm border border-gray-200 rounded-xl"
+                  >
+                    <div className="aspect-video w-full">
+                      <iframe
+                        src={evento.url_video}
+                        title="Video del Evento"
+                        className="w-full h-full rounded-lg"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </Card>
                 )}
               </div>
-            )}
+            </div>
           </div>
-        </section>
-      )}
+        </div>
+        {venueMapUrl && (
+          <section className="bg-gray-50 border-t border-gray-200">
+            <div className="max-w-6xl mx-auto px-4 py-10">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 text-center">
+                ¿D³nde ser¡ el evento?
+              </h2>
+              <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+                <iframe
+                  width="100%"
+                  height="360"
+                  frameBorder="0"
+                  scrolling="no"
+                  marginHeight="0"
+                  marginWidth="0"
+                  title="Ubicaci³n del recinto"
+                  src={venueMapUrl}
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+              {(venueAddress || venueDirections) && (
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
+                  {venueAddress && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                      <h3 className="text-base font-semibold text-gray-900 mb-2">Direcci³n</h3>
+                      <p className="leading-relaxed">{venueAddress}</p>
+                    </div>
+                  )}
+                  {venueDirections && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                      <h3 className="text-base font-semibold text-gray-900 mb-2">C³mo llegar</h3>
+                      <p className="leading-relaxed">{venueDirections}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
       </div>
     </>
   );

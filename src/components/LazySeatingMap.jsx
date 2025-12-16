@@ -5,7 +5,7 @@ import LoadOnVisible from './LoadOnVisible';
 // Use LoadOnVisible so the heavy SeatingMapUnified bundle is only requested
 // when the map placeholder enters the viewport.
 // Reducir rootMargin para cargar más rápido cuando está visible
-
+const LazySeatingMap = (props) => {
   return (
     <LoadOnVisible
       loader={() => import('./SeatingMapUnified')}

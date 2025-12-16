@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/react';
 const VercelAnalytics = () => {
   // Solo renderizar en producción para evitar ruido en desarrollo
 
+  if (process.env.NODE_ENV !== 'production') {
     return null;
   }
   return <Analytics />;

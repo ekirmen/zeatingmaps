@@ -1,6 +1,6 @@
 import React from 'react';
 
-
+export default function EditPopup({ element, zoom = 1, onNameChange = () => {}, onSizeChange = () => {}, onDelete = () => {}, onClose = () => {} }) {
   if (!element) return null;
 
   const posX = element.posicion?.x || 0;
@@ -58,6 +58,4 @@ import React from 'react';
       </div>
     </div>
   );
-};
-
-export default EditPopup;
+}

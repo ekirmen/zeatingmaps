@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Button, Dropdown, Menu, Modal, Form, Input, message, Avatar, Badge } from '../utils/antdComponents';
-import { 
-  UserOutlined, 
-  SettingOutlined, 
-  LogoutOutlined, 
+import {
+  UserOutlined,
+  SettingOutlined,
+  LogoutOutlined,
   DownOutlined,
   CrownOutlined,
   TeamOutlined,
@@ -19,21 +19,22 @@ export const UserMenu = () => {
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  
-  const { 
-    user, 
-    userProfile, 
-    signOut, 
-    updateProfile, 
-    isSuperAdmin, 
+
+  const {
+    user,
+    userProfile,
+    signOut,
+    updateProfile,
+    isSuperAdmin,
     isTenantAdmin,
-    isAdmin 
+    isAdmin
   } = useAuth();
 
   // Obtener rol legible
 
+  const getReadableRole = () => {
     if (!userProfile?.role) return 'Usuario';
-    
+
     const roleMap = {
       'super_admin': 'Super Administrador',
       'tenant_admin': 'Administrador de Tenant',
@@ -46,7 +47,7 @@ export const UserMenu = () => {
       'finance': 'Finance',
       'technical': 'Technical'
     };
-    
+
     return roleMap[userProfile.role] || userProfile.role;
   };
 
@@ -68,14 +69,14 @@ export const UserMenu = () => {
   const handleProfileUpdate = async (values) => {
     try {
       setLoading(true);
-      
+
       const updates = {
         first_name: values.first_name,
         last_name: values.last_name,
         phone: values.phone,
         updated_at: new Date().toISOString()
       };
-      
+
       await updateProfile(updates);
       message.success('Perfil actualizado exitosamente');
       setIsProfileModalVisible(false);
@@ -91,11 +92,11 @@ export const UserMenu = () => {
   const handlePasswordChange = async (values) => {
     try {
       setLoading(true);
-      
+
       // Aquí implementarías la lógica para cambiar contraseña
       // Por ahora solo simulamos el proceso
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       message.success('Contraseña actualizada exitosamente');
       setIsPasswordModalVisible(false);
       passwordForm.resetFields();
@@ -168,8 +169,8 @@ export const UserMenu = () => {
             gap: '8px'
           }}
         >
-          <Avatar 
-            size="small" 
+          <Avatar
+            size="small"
             icon={<UserOutlined />}
             style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
           />
@@ -182,8 +183,8 @@ export const UserMenu = () => {
       <div className="user-info" style={{ marginLeft: '12px', fontSize: '12px', color: '#666' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           {getRoleIcon()}
-          <Badge 
-            color={getRoleColor()} 
+          <Badge
+            color={getRoleColor()}
             text={getReadableRole()}
             style={{ fontSize: '11px' }}
           />
@@ -218,7 +219,7 @@ export const UserMenu = () => {
           >
             <Input disabled />
           </Form.Item>
-          
+
           <Form.Item
             label="Nombre"
             name="first_name"
@@ -226,7 +227,7 @@ export const UserMenu = () => {
           >
             <Input placeholder="Su nombre" />
           </Form.Item>
-          
+
           <Form.Item
             label="Apellido"
             name="last_name"
@@ -234,18 +235,18 @@ export const UserMenu = () => {
           >
             <Input placeholder="Su apellido" />
           </Form.Item>
-          
+
           <Form.Item
             label="Teléfono"
             name="phone"
           >
             <Input placeholder="Su teléfono" />
           </Form.Item>
-          
+
           <Form.Item>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              type="primary"
+              htmlType="submit"
               loading={loading}
               style={{ marginRight: '8px' }}
             >
@@ -278,7 +279,7 @@ export const UserMenu = () => {
           >
             <Input.Password placeholder="Contraseña actual" />
           </Form.Item>
-          
+
           <Form.Item
             label="Nueva Contraseña"
             name="newPassword"
@@ -289,7 +290,7 @@ export const UserMenu = () => {
           >
             <Input.Password placeholder="Nueva contraseña" />
           </Form.Item>
-          
+
           <Form.Item
             label="Confirmar Nueva Contraseña"
             name="confirmPassword"
@@ -307,11 +308,11 @@ export const UserMenu = () => {
           >
             <Input.Password placeholder="Confirmar nueva contraseña" />
           </Form.Item>
-          
+
           <Form.Item>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              type="primary"
+              htmlType="submit"
               loading={loading}
               style={{ marginRight: '8px' }}
             >

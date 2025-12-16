@@ -9,6 +9,7 @@ const TenantAccessGuard = ({ children, fallback, showAlert = true }) => {
 
   // Si está cargando, mostrar loading
 
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -32,14 +33,14 @@ const TenantAccessGuard = ({ children, fallback, showAlert = true }) => {
           title="Acceso Denegado"
           subTitle={reason || 'No tienes acceso a esta empresa'}
           extra={[
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               key="home"
               onClick={() => navigate('/store')}
             >
               Volver al Store
             </Button>,
-            <Button 
+            <Button
               key="logout"
               onClick={() => {
                 localStorage.removeItem('token');

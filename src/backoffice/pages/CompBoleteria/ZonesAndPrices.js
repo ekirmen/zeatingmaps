@@ -31,35 +31,35 @@ const ZonesAndPrices = ({
   // Hooks personalizados - TODO: Implementar cuando sea necesario
   // Por ahora se usan valores por defecto
   const mapa = null;
-  const setMapa = () => {};
+  const setMapa = () => { };
   const zonas = [];
-  
+
   const discountCode = '';
-  const setDiscountCode = () => {};
+  const setDiscountCode = () => { };
   const appliedDiscount = null;
-  const handleApplyDiscount = () => {};
-  
+  const handleApplyDiscount = () => { };
+
   const blockMode = false;
-  const setBlockMode = () => {};
+  const setBlockMode = () => { };
   const tempBlocks = [];
-  const setTempBlocks = () => {};
+  const setTempBlocks = () => { };
   const abonoSeats = [];
   const animatingSeats = [];
-  
-  
-  
+
+
+
   const isSeatLockedByMe = () => false;
-  
-  const handleAnimationComplete = () => {};
+
+  const handleAnimationComplete = () => { };
   const selectedZonaId = null;
-  const setSelectedZonaId = () => {};
+  const setSelectedZonaId = () => { };
   const detallesPlantilla = null;
   const zonePriceRanges = [];
-  const handleClearZoneSelection = () => {};
-  
+  const handleClearZoneSelection = () => { };
+
   const restoreState = () => null;
-  const clearState = () => {};
-  
+  const clearState = () => { };
+
   // Restaurar estado guardado cuando se carguen los datos
   useEffect(() => {
     if (eventos.length > 0 && !selectedEvent && !selectedFuncion) {
@@ -69,7 +69,7 @@ const ZonesAndPrices = ({
       }
     }
   }, [eventos, funciones, selectedEvent, selectedFuncion, restoreState, onEventSelect]);
-  
+
   // Limpiar carrito al cargar la p¡gina
   useEffect(() => {
     if (setCarrito) {
@@ -80,21 +80,22 @@ const ZonesAndPrices = ({
 
   // TODO: Implementar seatHandlers completo cuando sea necesario
   const seatHandlers = {
-    handleSeatClick: () => {},
-    handleSelectCompleteTable: () => {}
+    handleSeatClick: () => { },
+    handleSelectCompleteTable: () => { }
   };
 
   // Callbacks
   const onSeatsUpdated = useCallback((ids, estado) => {
+    setMapa(prev => {
 
       if (!prev) return prev;
       const blocked = estado === 'bloqueado';
-      
+
       // Handle new structure where contenido is an object with elementos property
-      const elementos = Array.isArray(prev.contenido) 
-        ? prev.contenido 
+      const elementos = Array.isArray(prev.contenido)
+        ? prev.contenido
         : prev.contenido.elementos || [];
-      
+
       return {
         ...prev,
         contenido: elementos.map((mesa) => ({
@@ -162,7 +163,7 @@ const ZonesAndPrices = ({
   }), [zonas, selectedZonaId, setSelectedZonaId, handleClearZoneSelection, zonePriceRanges, detallesPlantilla]);
 
   // Memoizar la zona seleccionada
-  const selectedZona = useMemo(() => 
+  const selectedZona = useMemo(() =>
     zonas.find(z => (z.id || z._id) === selectedZonaId) || null,
     [zonas, selectedZonaId]
   );
@@ -245,7 +246,7 @@ const ZonesAndPrices = ({
 
         {/* Zone Selector */}
         {/* <ZoneSelector {...zoneSelectorProps} /> */}
-        
+
         {/* Bot³n para limpiar estado guardado */}
         <div className="flex justify-end">
           <button

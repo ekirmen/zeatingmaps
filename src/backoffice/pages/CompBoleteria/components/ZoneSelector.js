@@ -1,13 +1,13 @@
 import React from 'react';
 
-const ZoneSelector = ({ 
-  zonas, 
-  selectedZonaId, 
-  setSelectedZonaId, 
+const ZoneSelector = ({
+  zonas,
+  selectedZonaId,
+  setSelectedZonaId,
   handleClearZoneSelection,
   zonePriceRanges,
-  detallesPlantilla 
-
+  detallesPlantilla
+}) => {
   if (zonas.length === 0) return null;
 
   // Agrupar detalles por zona y tipo de entrada
@@ -17,7 +17,7 @@ const ZoneSelector = ({
     const tipoEntrada = detalle.tipoEntrada || 'regular';
     const precio = detalle.precio || 0;
     const comision = detalle.comision || 0;
-    
+
     if (!zoneDetails[zonaId]) {
       zoneDetails[zonaId] = {};
     }
@@ -48,21 +48,20 @@ const ZoneSelector = ({
             const id = z.id || z._id;
             const isSelected = selectedZonaId === id;
             const zonaDetalles = zoneDetails[id] || {};
-            
+
             return (
               <div key={id} className="w-full">
                 <button
                   type="button"
                   onClick={() => setSelectedZonaId(isSelected ? null : id)}
-                  className={`w-full px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
-                    isSelected 
-                      ? 'bg-blue-600 text-white shadow-md' 
+                  className={`w-full px-3 py-2 text-sm rounded-lg font-medium transition-colors ${isSelected
+                      ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+                    }`}
                 >
                   {z.nombre}
                 </button>
-                
+
                 {/* Mostrar tipos de entrada disponibles para esta zona */}
                 {Object.keys(zonaDetalles).length > 0 && (
                   <div className="mt-2 ml-2 space-y-1">

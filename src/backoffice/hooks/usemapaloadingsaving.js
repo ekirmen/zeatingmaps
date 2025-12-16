@@ -6,7 +6,7 @@ import { saveMapa, fetchMapa } from '../services/apibackoffice';
 import { syncSeatsForSala } from '../services/apibackoffice';
 import { useTenant } from '../../contexts/TenantContext';
 
-export 
+const usemapaloadingsaving = ({ salaId }) => {
   const { currentTenant } = useTenant();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -14,7 +14,7 @@ export
   const lastSavedElements = useRef(null); // Referencia para evitar recargas innecesarias
 
   // Configurar Realtime usando Edge Functions
-
+  useEffect(() => {
     if (!salaId) return;
 
     if (process.env.NODE_ENV === 'development') {
@@ -347,4 +347,4 @@ export
   };
 };
 
-
+export default usemapaloadingsaving;

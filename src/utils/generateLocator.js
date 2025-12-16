@@ -1,22 +1,16 @@
-import React from 'react';
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-const AutoWrapped_19ytr9 = (props) => {
-  const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+export function generateLocator(length = 8) {
+  const n = Number.isInteger(length) && length > 0 ? length : 8;
+  return Array.from({ length: n }).map(() => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join('');
+}
 
+export function generateSimpleLocator() {
+  return generateLocator(8);
+}
 
-    return Array.from({ length }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join('');
-  }
+export function generatePrefixedLocator(prefix = 'TKT') {
+  return `${prefix}-${generateLocator(8)}`;
+}
 
-  // Función para generar localizador simple de 8 caracteres (números y letras)
-  export function generateSimpleLocator() {
-    return generateLocator(8);
-  }
-
-  // Función para generar localizador con prefijo (ej: "TKT-ABC12345")
-  export function generatePrefixedLocator(prefix = 'TKT') {
-    return `${prefix}-${generateLocator(8)}`;
-  }
-
-};
-
-export default AutoWrapped_19ytr9;
+export default generateLocator;

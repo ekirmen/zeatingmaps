@@ -43,14 +43,14 @@ const Header = ({ onLogin, onLogout }) => {
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('token');
   });
   const [passwordVisibility, setPasswordVisibility] = useState({ login: false, register: false });
   const [isSubmitting, setIsSubmitting] = useState({ login: false, register: false, forgot: false });
   const [postLoginRedirect, setPostLoginRedirect] = useState(null);
-  
+
   // Close mobile drawer automatically on desktop viewport
   useEffect(() => {
     const handler = () => {
@@ -63,7 +63,7 @@ const Header = ({ onLogin, onLogout }) => {
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
-    
+
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       const current = data.session?.user;
@@ -251,20 +251,20 @@ const Header = ({ onLogin, onLogout }) => {
       if (passwordData.newPassword.length < 6)
         throw new Error('La contrase±a debe tener al menos 6 caracteres');
 
-    const { data, error } = await supabase.auth.updateUser({
-      password: passwordData.newPassword.trim(),
-      data: { password_set: true }
-    });
-    if (error) throw error;
-    const session = await supabase.auth.getSession();
-    const token = session.data.session?.access_token;
-    if (token) localStorage.setItem('token', token);
-    setIsPasswordModalVisible(false);
-    setPasswordData({ newPassword: '', confirmPassword: '' });
-    onLogin?.({ token, user: data.user });
-    setIsAuthenticated(!!token);
-    message.success(t('password.updated'));
-    navigate(refParam ? `/store?ref=${refParam}` : '/store');
+      const { data, error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword.trim(),
+        data: { password_set: true }
+      });
+      if (error) throw error;
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (token) localStorage.setItem('token', token);
+      setIsPasswordModalVisible(false);
+      setPasswordData({ newPassword: '', confirmPassword: '' });
+      onLogin?.({ token, user: data.user });
+      setIsAuthenticated(!!token);
+      message.success(t('password.updated'));
+      navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
       message.error(error.message || 'Error al guardar contrase±a');
     }
@@ -277,7 +277,7 @@ const Header = ({ onLogin, onLogout }) => {
         redirectTo = null,
         prefill = null
       } = options;
-      
+
       // Primero actualizar el estado del modal
       setAccountMode(mode);
       setFormData({ email: prefill?.email || '', password: '' });
@@ -286,7 +286,7 @@ const Header = ({ onLogin, onLogout }) => {
       setError('');
       setPasswordVisibility({ login: false, register: false });
       setPostLoginRedirect(redirectTo);
-      
+
       // Para iOS Safari: usar requestAnimationFrame para asegurar que el render no bloquee el UI
       // Esto es m¡s confiable que setTimeout en iOS
       if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
@@ -340,7 +340,7 @@ const Header = ({ onLogin, onLogout }) => {
       const redirectTarget =
         detail.redirectTo || detail.redirect_to || detail.redirect || null;
       setPostLoginRedirect(redirectTarget);
-      
+
       // Usar setTimeout para iOS Safari
       setTimeout(() => {
         setIsAccountModalVisible(true);
@@ -350,7 +350,7 @@ const Header = ({ onLogin, onLogout }) => {
     // Registrar listener con opciones para mejor compatibilidad en iOS (fallback)
     const eventOptions = { passive: true, capture: false };
     window.addEventListener('store:open-account-modal', handleExternalModalOpen, eventOptions);
-    
+
     // Tambi©n escuchar eventos en el document para mejor compatibilidad
     document.addEventListener('store:open-account-modal', handleExternalModalOpen, eventOptions);
 
@@ -395,10 +395,10 @@ const Header = ({ onLogin, onLogout }) => {
     }
   };
 
-  
-  
-  
-  
+
+
+
+
   return (
     <header className="store-header">
       <div className="store-container">
@@ -424,9 +424,9 @@ const Header = ({ onLogin, onLogout }) => {
 
           {/* Desktop Language Selector */}
           <div className="hidden md:flex items-center gap-3">
-            <select 
-              value={i18n.language} 
-              onChange={e => i18n.changeLanguage(e.target.value)} 
+            <select
+              value={i18n.language}
+              onChange={e => i18n.changeLanguage(e.target.value)}
               className="store-header language-selector"
               style={{
                 padding: '8px 12px',
@@ -480,9 +480,9 @@ const Header = ({ onLogin, onLogout }) => {
             <LinkWithRef to="/store/cart" className="store-header mobile-action-btn">
               <ShoppingCartOutlined />
             </LinkWithRef>
-            
+
             {/* Mobile Menu Toggle */}
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="store-header mobile-action-btn"
             >
@@ -496,9 +496,9 @@ const Header = ({ onLogin, onLogout }) => {
       {/* Mobile Menu Drawer */}
       <Drawer
         title={
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
             gap: '8px',
             color: '#1f2937',
             fontWeight: '600'
@@ -532,8 +532,8 @@ const Header = ({ onLogin, onLogout }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Navigation Links */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <LinkWithRef 
-              to="/store" 
+            <LinkWithRef
+              to="/store"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -557,9 +557,9 @@ const Header = ({ onLogin, onLogout }) => {
               <HomeOutlined style={{ marginRight: '8px', fontSize: '16px' }} />
               {t('header.home')}
             </LinkWithRef>
-            
-            <LinkWithRef 
-              to="/store/cart" 
+
+            <LinkWithRef
+              to="/store/cart"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -583,7 +583,7 @@ const Header = ({ onLogin, onLogout }) => {
               <ShoppingCartOutlined style={{ marginRight: '8px', fontSize: '16px' }} />
               {t('header.cart')}
             </LinkWithRef>
-            
+
             {isAuthenticated && (
               <LinkWithRef
                 to="/store/perfil"
@@ -615,18 +615,18 @@ const Header = ({ onLogin, onLogout }) => {
 
           {/* Language Selector */}
           <div style={{ paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '14px', 
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
               fontWeight: '500',
               marginBottom: '8px',
               color: '#374151'
             }}>
               Idioma
             </label>
-            <select 
-              value={i18n.language} 
-              onChange={e => i18n.changeLanguage(e.target.value)} 
+            <select
+              value={i18n.language}
+              onChange={e => i18n.changeLanguage(e.target.value)}
               style={{
                 width: '100%',
                 padding: '8px 12px',
@@ -674,11 +674,11 @@ const Header = ({ onLogin, onLogout }) => {
                 {t('header.logout')}
               </button>
             ) : (
-              <button 
+              <button
                 onClick={() => {
                   openAccountModal();
                   setIsMobileMenuOpen(false);
-                }} 
+                }}
                 style={{
                   width: '100%',
                   padding: '10px 16px',
@@ -706,7 +706,7 @@ const Header = ({ onLogin, onLogout }) => {
       </Drawer>
 
       {/* Modal Cuenta */}
-      
+
       <Modal
         title={null}
         open={isAccountModalVisible}
@@ -773,15 +773,15 @@ const Header = ({ onLogin, onLogout }) => {
               {accountMode === 'login'
                 ? 'Iniciar Sesi³n'
                 : accountMode === 'register'
-                ? 'Crear Cuenta'
-                : 'Recuperar Contrase±a'}
+                  ? 'Crear Cuenta'
+                  : 'Recuperar Contrase±a'}
             </h2>
             <div className={`account-mode-pill account-mode-pill-${accountMode}`}>
               {accountMode === 'login'
                 ? 'Est¡s en modo de inicio de sesi³n'
                 : accountMode === 'register'
-                ? 'Est¡s creando una cuenta nueva'
-                : 'Est¡s recuperando tu acceso'}
+                  ? 'Est¡s creando una cuenta nueva'
+                  : 'Est¡s recuperando tu acceso'}
             </div>
             {accountMode !== 'login' && (
               <p className="account-modal-subtitle">

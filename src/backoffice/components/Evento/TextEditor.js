@@ -5,8 +5,8 @@ import { stateToHTML } from 'draft-js-export-html'; // Para convertir Draft.js a
 import 'draft-js/dist/Draft.css'; // Importar estilos de Draft.js
 import './TextEditor.css'; // Tus estilos personalizados
 
-const TextEditor = ({ 
-  editorState, 
+const TextEditor = ({
+  editorState,
   setEditorState,
   initialValue = '',
   onChange,
@@ -24,7 +24,7 @@ const TextEditor = ({
           const contentState = stateFromHTML(initialValue);
           const newEditorState = EditorState.createWithContent(contentState);
           setEditorState(newEditorState);
-          
+
           // También establecer el HTML
           setHtmlContent(initialValue);
         } else {
@@ -88,6 +88,7 @@ const TextEditor = ({
 
   // Obtener texto plano del editor
 
+  const getPlainText = () => {
     return editorState.getCurrentContent().getPlainText();
   };
 
@@ -106,19 +107,19 @@ const TextEditor = ({
   return (
     <div className="text-editor-container">
       <div className="editor-toolbar">
-        <button 
+        <button
           type="button"
-          onClick={toggleHtmlMode} 
+          onClick={toggleHtmlMode}
           className={`toggle-html-button ${isHtmlMode ? 'active' : ''}`}
         >
           {isHtmlMode ? '↩️ Volver al Editor' : '🔧 Modo HTML'}
         </button>
-        
+
         <div className="editor-info">
           <span className="char-count">
             Caracteres: {getPlainText().length}
           </span>
-          <button 
+          <button
             type="button"
             onClick={clearEditor}
             className="clear-button"
@@ -143,7 +144,7 @@ const TextEditor = ({
               <small>Tip: Puedes usar etiquetas HTML como &lt;strong&gt;, &lt;em&gt;, &lt;a&gt;, &lt;ul&gt;, etc.</small>
             </div>
           </div>
-          
+
           <div className="html-preview-section">
             <label className="section-label">Vista Previa</label>
             <div className="preview-content">
@@ -167,7 +168,7 @@ const TextEditor = ({
               placeholder={placeholder}
             />
           </div>
-          
+
           <div className="draft-preview">
             <label className="section-label">Texto Plano</label>
             <div className="plain-text-preview">
@@ -179,7 +180,7 @@ const TextEditor = ({
 
       <div className="editor-export">
         <div className="export-options">
-          <button 
+          <button
             type="button"
             className="export-button"
             onClick={() => {
@@ -190,8 +191,8 @@ const TextEditor = ({
           >
             Copiar HTML
           </button>
-          
-          <button 
+
+          <button
             type="button"
             className="export-button"
             onClick={() => {

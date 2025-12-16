@@ -79,7 +79,7 @@ const Paquetes = () => {
   const [templateForm] = Form.useForm();
   const [editingTemplate, setEditingTemplate] = useState(null);
 
-
+  const filtroDescripcion = useMemo(() => {
     if (selectedEvento) return 'Evento';
     if (selectedSala) return 'Sala';
     if (selectedRecinto) return 'Recinto';
@@ -111,7 +111,14 @@ const Paquetes = () => {
     loadPlantillas();
   }, [selectedRecinto, selectedSala, selectedEvento]);
 
-  
+  const loadRecintos = async () => {
+    try {
+      let query = supabase.from('recintos').select(`
+        *,
+        salas (*)
+      `);
+      query = addTenantFilter(query);
+      const { data, error } = await query;
       if (error) throw error;
       setRecintos(data || []);
     } catch (err) {
@@ -120,7 +127,9 @@ const Paquetes = () => {
     }
   };
 
-  
+  const loadEventos = async () => {
+    try {
+      let query = supabase.from('eventos').select('*');
       const { data, error } = await addTenantFilter(query);
       if (error) throw error;
       let filtered = data || [];
@@ -136,7 +145,11 @@ const Paquetes = () => {
     }
   };
 
-  
+  const loadProductos = async () => {
+    try {
+      let query = supabase.from('productos').select('*').eq('activo', true);
+      query = addTenantFilter(query);
+      const { data, error } = await query;
       if (error) throw error;
       setProductos(data || []);
     } catch (err) {
@@ -235,7 +248,7 @@ const Paquetes = () => {
   const handleDelete = async (paqueteId) => {
     Modal.confirm({
       title: '¿Eliminar paquete?',
-      content: 'Esta acci³n no se puede deshacer.',
+      content: 'Esta acción no se puede deshacer.',
       okText: 'Eliminar',
       okButtonProps: { danger: true },
       cancelText: 'Cancelar',
@@ -345,7 +358,7 @@ const Paquetes = () => {
       render: (text, record) => (
         <Space direction="vertical" size={0}>
           <Text strong>{text}</Text>
-          <Text type="secondary">{record.descripcion || 'Sin descripci³n'}</Text>
+          <Text type="secondary">{record.descripcion || 'Sin descripción'}</Text>
         </Space>
       ),
     },
@@ -391,7 +404,7 @@ const Paquetes = () => {
       <div className="mb-4">
         <Title level={2} className="mb-1">Paquetes</Title>
         <Text type="secondary">
-          Crea paquetes con productos y plantillas de precios espec­ficas por recinto, sala y evento
+          Crea paquetes con productos y plantillas de precios específicas por recinto, sala y evento
         </Text>
       </div>
 
@@ -485,7 +498,7 @@ const Paquetes = () => {
                     <div className="flex items-start justify-between">
                       <div>
                         <Text strong>{plantilla.nombre}</Text>
-                        <div className="text-sm text-gray-500">{plantilla.descripcion || 'Sin descripci³n'}</div>
+                        <div className="text-sm text-gray-500">{plantilla.descripcion || 'Sin descripción'}</div>
                         <div className="text-sm text-gray-600 mt-1">Precio base: ${Number(plantilla.precio || 0).toFixed(2)}</div>
                       </div>
                       <Space>
@@ -502,9 +515,9 @@ const Paquetes = () => {
           <Divider />
 
           <Card>
-            <Title level={5}>C³mo funciona</Title>
+            <Title level={5}>Cómo funciona</Title>
             <ul className="list-disc pl-4 text-sm text-gray-600 space-y-1">
-              <li>Busca por recinto, sala y evento para ver los paquetes espec­ficos.</li>
+              <li>Busca por recinto, sala y evento para ver los paquetes específicos.</li>
               <li>Crea paquetes combinando productos existentes y define stock disponible.</li>
               <li>Las plantillas de precios permiten reutilizar configuraciones entre funciones.</li>
             </ul>
@@ -552,7 +565,7 @@ const Paquetes = () => {
             </Col>
           </Row>
 
-          <Form.Item name="descripcion" label="Descripci³n">
+          <Form.Item name="descripcion" label="Descripción">
             <Input.TextArea rows={3} placeholder="Describe el paquete" />
           </Form.Item>
 
@@ -639,13 +652,13 @@ const Paquetes = () => {
             <Input placeholder="Ej: Paquete familiar" />
           </Form.Item>
 
-          <Form.Item name="descripcion" label="Descripci³n">
+          <Form.Item name="descripcion" label="Descripción">
             <Input.TextArea rows={2} placeholder="Describe el objetivo de la plantilla" />
           </Form.Item>
 
           <Row gutter={12}>
             <Col span={12}>
-              <Form.Item name="precio" label="Precio sugerido" rules={[{ type: 'number', min: 0 }]}> 
+              <Form.Item name="precio" label="Precio sugerido" rules={[{ type: 'number', min: 0 }]}>
                 <InputNumber prefix="$" min={0} className="w-full" />
               </Form.Item>
             </Col>
@@ -696,5 +709,3 @@ const Paquetes = () => {
 };
 
 export default Paquetes;
-
-

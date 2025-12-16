@@ -86,8 +86,13 @@ export const cleanEventoJsonFields = (evento) => {
  * @param {Array} eventos - Array de eventos a limpiar
  * @returns {Array} - Array de eventos con campos JSON limpios
  */
-export 
-
+/**
+ * Valida que un campo JSON sea válido sin corromperse
+ * @param {any} value - El valor a validar
+ * @returns {boolean} - true si el campo es válido, false si está corrupto
+ */
+export const cleanEventos = (eventos = []) => {
+  if (!Array.isArray(eventos)) return eventos;
   return eventos.map(evento => cleanEventoJsonFields(evento));
 };
 
@@ -96,8 +101,8 @@ export
  * @param {any} value - El valor a validar
  * @returns {boolean} - true si el campo es válido, false si está corrupto
  */
-export 
-
+export const isValidJsonField = (value) => {
+  try {
     if (typeof value === 'string') {
       const parsed = JSON.parse(value);
       return !Object.keys(parsed).some(key => !isNaN(parseInt(key)));

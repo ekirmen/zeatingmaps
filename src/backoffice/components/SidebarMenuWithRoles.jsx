@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Menu, 
-  Layout, 
-  Tooltip, 
+import {
+  Menu,
+  Layout,
+  Tooltip,
   Badge,
   Typography,
   Space,
@@ -54,7 +54,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasPermission, getRole, isStoreUser } = useRole();
-  
+
   // Handler para cuando se hace click en un item del menº
   const handleMenuClick = (path) => {
     navigate(path);
@@ -72,13 +72,13 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       if (temporaryExpandedTimeout) {
         clearTimeout(temporaryExpandedTimeout);
       }
-      
+
       // Crear nuevo timeout
       const newTimeout = setTimeout(() => {
         setTemporaryExpanded(false);
         setTemporaryExpandedTimeout(null);
       }, 5000);
-      
+
       setTemporaryExpandedTimeout(newTimeout);
     }
   };
@@ -90,19 +90,19 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       if (temporaryExpandedTimeout) {
         clearTimeout(temporaryExpandedTimeout);
       }
-      
+
       // Crear nuevo timeout
       const newTimeout = setTimeout(() => {
         setTemporaryExpanded(false);
         setTemporaryExpandedTimeout(null);
       }, 5000);
-      
+
       setTemporaryExpandedTimeout(newTimeout);
     }
   };
 
   // Limpiar timeout al desmontar el componente
-
+  useEffect(() => {
     return () => {
       if (temporaryExpandedTimeout) {
         clearTimeout(temporaryExpandedTimeout);
@@ -124,10 +124,10 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
 
     // Si es un submenu, filtrar los elementos que el usuario puede ver
     if (item.type === 'submenu' && item.items) {
-      const visibleItems = item.items.filter(subItem => 
+      const visibleItems = item.items.filter(subItem =>
         !subItem.permission || hasPermission(subItem.permission)
       );
-      
+
       if (visibleItems.length === 0) {
         return null; // No mostrar el submenu si no hay elementos visibles
       }
@@ -156,21 +156,21 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       submenuId: 'admin',
       permission: 'usuarios', // Mostrar si tiene al menos uno de los permisos de admin
       items: [
-        { 
-          title: 'Recintos', 
-          path: '/dashboard/recintos', 
+        {
+          title: 'Recintos',
+          path: '/dashboard/recintos',
           icon: faBuilding,
           permission: 'recintos'
         },
-        { 
-          title: 'Plano', 
-          path: '/dashboard/plano', 
+        {
+          title: 'Plano',
+          path: '/dashboard/plano',
           icon: faMap,
           permission: 'recintos'
         },
-        { 
-          title: 'Usuarios', 
-          path: '/dashboard/usuarios', 
+        {
+          title: 'Usuarios',
+          path: '/dashboard/usuarios',
           icon: faUsers,
           permission: 'usuarios'
         },
@@ -189,21 +189,21 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       submenuId: 'programming',
       permission: 'eventos', // Mostrar si tiene al menos uno de los permisos de programaci³n
       items: [
-        { 
-          title: 'Entradas', 
-          path: '/dashboard/entradas', 
+        {
+          title: 'Entradas',
+          path: '/dashboard/entradas',
           icon: faTicketAlt,
           permission: 'entradas'
         },
-        { 
-          title: 'Productos', 
-          path: '/dashboard/productos', 
+        {
+          title: 'Productos',
+          path: '/dashboard/productos',
           icon: faBox,
           permission: 'productos'
         },
-        { 
-          title: 'Plantillas Productos', 
-          path: '/dashboard/plantillas-productos', 
+        {
+          title: 'Plantillas Productos',
+          path: '/dashboard/plantillas-productos',
           icon: faGift,
           permission: 'plantillas_productos'
         },
@@ -213,9 +213,9 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         //   icon: faGift,
         //   permission: 'entradas'
         // },
-        { 
-          title: 'Comisiones', 
-          path: '/dashboard/comisiones', 
+        {
+          title: 'Comisiones',
+          path: '/dashboard/comisiones',
           icon: faPercent,
           permission: 'comisiones'
         },
@@ -231,27 +231,27 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         //   icon: faTruck,
         //   permission: 'envio'
         // },
-        { 
-          title: 'Eventos', 
-          path: '/dashboard/eventos', 
+        {
+          title: 'Eventos',
+          path: '/dashboard/eventos',
           icon: faCalendarAlt,
           permission: 'eventos'
         },
-        { 
-          title: 'Plantillas Precios', 
-          path: '/dashboard/plantillas-precios', 
+        {
+          title: 'Plantillas Precios',
+          path: '/dashboard/plantillas-precios',
           icon: faChartLine,
           permission: 'plantillas_precios'
         },
-        { 
-          title: 'Funciones', 
-          path: '/dashboard/funciones', 
+        {
+          title: 'Funciones',
+          path: '/dashboard/funciones',
           icon: faTrophy,
           permission: 'funciones'
         },
-        { 
-          title: 'Cupos', 
-          path: '/dashboard/cupos', 
+        {
+          title: 'Cupos',
+          path: '/dashboard/cupos',
           icon: faLayerGroup,
           permission: 'funciones'
         },
@@ -285,21 +285,21 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         //   icon: faTicketAlt,
         //   permission: 'multipase'
         // },
-        { 
-          title: 'Abonos', 
-          path: '/dashboard/abonos', 
+        {
+          title: 'Abonos',
+          path: '/dashboard/abonos',
           icon: faFileInvoice,
           permission: 'abonos'
         },
-        { 
-          title: 'Afiliados', 
-          path: '/dashboard/afiliados', 
+        {
+          title: 'Afiliados',
+          path: '/dashboard/afiliados',
           icon: faUsers,
           permission: 'afiliados'
         },
-        { 
-          title: 'IVA', 
-          path: '/dashboard/iva', 
+        {
+          title: 'IVA',
+          path: '/dashboard/iva',
           icon: faCoins,
           permission: 'iva'
         }
@@ -345,21 +345,21 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
             }
           ]
         },
-        { 
-          title: 'CRM', 
-          path: '/dashboard/crm', 
+        {
+          title: 'CRM',
+          path: '/dashboard/crm',
           icon: faUsers,
           permission: 'crm'
         },
-        { 
-          title: 'Tags', 
-          path: '/dashboard/tags', 
+        {
+          title: 'Tags',
+          path: '/dashboard/tags',
           icon: faTags,
           permission: 'tags'
         },
-        { 
-          title: 'Comunicaci³n Masiva', 
-          path: '/dashboard/email-campaigns', 
+        {
+          title: 'Comunicaci³n Masiva',
+          path: '/dashboard/email-campaigns',
           icon: faEnvelope,
           permission: 'email_campaigns'
         }
@@ -372,51 +372,51 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       submenuId: 'config',
       permission: 'settings', // Mostrar si tiene al menos uno de los permisos de configuraci³n
       items: [
-        { 
-          title: 'Configuraci³n', 
-          path: '/dashboard/settings', 
+        {
+          title: 'Configuraci³n',
+          path: '/dashboard/settings',
           icon: faCog,
           permission: 'settings'
         },
-        { 
-          title: 'Configuraci³n Asientos', 
-          path: '/dashboard/seat-settings', 
+        {
+          title: 'Configuraci³n Asientos',
+          path: '/dashboard/seat-settings',
           icon: faCog,
           permission: 'seat_settings'
         },
-        { 
-          title: 'Configuraci³n Impresora', 
-          path: '/dashboard/printer-settings', 
+        {
+          title: 'Configuraci³n Impresora',
+          path: '/dashboard/printer-settings',
           icon: faPrint,
           permission: 'printer_settings'
         },
-        { 
-          title: 'Configuraci³n Email', 
-          path: '/dashboard/email-config', 
+        {
+          title: 'Configuraci³n Email',
+          path: '/dashboard/email-config',
           icon: faEnvelope,
           permission: 'email_config'
         },
-        { 
-          title: 'Logs de Auditor­a', 
-          path: '/dashboard/audit-logs', 
+        {
+          title: 'Logs de Auditor­a',
+          path: '/dashboard/audit-logs',
           icon: faFileAlt,
           permission: 'audit_logs'
         },
-        { 
-          title: 'Gesti³n Reembolsos', 
-          path: '/dashboard/refund-management', 
+        {
+          title: 'Gesti³n Reembolsos',
+          path: '/dashboard/refund-management',
           icon: faUndo,
           permission: 'refund_management'
         },
-        { 
-          title: 'Analytics de Pagos', 
-          path: '/dashboard/payment-analytics', 
+        {
+          title: 'Analytics de Pagos',
+          path: '/dashboard/payment-analytics',
           icon: faChartBar,
           permission: 'payment_analytics'
         },
-        { 
-          title: 'Pasarelas de Pago', 
-          path: '/dashboard/payment-gateways', 
+        {
+          title: 'Pasarelas de Pago',
+          path: '/dashboard/payment-gateways',
           icon: faCreditCard,
           permission: 'payment_gateways'
         }
@@ -429,45 +429,45 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       submenuId: 'personalization',
       permission: 'personalizacion',
       items: [
-        { 
-          title: 'Formatos de entrada', 
-          path: '/dashboard/formato-entrada', 
+        {
+          title: 'Formatos de entrada',
+          path: '/dashboard/formato-entrada',
           icon: faTicketAlt,
           permission: 'formato_entrada'
         },
-        { 
-          title: 'Textos legales', 
-          path: '/dashboard/legal-texts', 
+        {
+          title: 'Textos legales',
+          path: '/dashboard/legal-texts',
           icon: faFileAlt,
           permission: 'legal_texts'
         },
-        { 
-          title: 'Web Studio', 
-          path: '/dashboard/webstudio', 
+        {
+          title: 'Web Studio',
+          path: '/dashboard/webstudio',
           icon: faCog,
           permission: 'webstudio'
         },
-        { 
-          title: 'Configuraci³n de Asientos', 
-          path: '/dashboard/seat-settings', 
+        {
+          title: 'Configuraci³n de Asientos',
+          path: '/dashboard/seat-settings',
           icon: faCog,
           permission: 'seat_settings'
         },
-        { 
-          title: 'Configuraci³n de Correo', 
-          path: '/dashboard/email-config', 
+        {
+          title: 'Configuraci³n de Correo',
+          path: '/dashboard/email-config',
           icon: faEnvelope,
           permission: 'email_config'
         },
-        { 
-          title: 'P¡ginas', 
-          path: '/dashboard/pages', 
+        {
+          title: 'P¡ginas',
+          path: '/dashboard/pages',
           icon: faFileAlt,
           permission: 'pages'
         },
-        { 
-          title: 'Colores Web', 
-          path: '/dashboard/webcolors', 
+        {
+          title: 'Colores Web',
+          path: '/dashboard/webcolors',
           icon: faCog,
           permission: 'webcolors'
         }
@@ -491,45 +491,45 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       submenuId: 'saas',
       permission: 'saas',
       items: [
-        { 
-          title: 'Dashboard SaaS', 
-          path: '/dashboard/saas', 
+        {
+          title: 'Dashboard SaaS',
+          path: '/dashboard/saas',
           icon: faChartPie,
           permission: 'saas'
         },
-        { 
-          title: 'Usuarios del Sistema', 
-          path: '/dashboard/saas/users', 
+        {
+          title: 'Usuarios del Sistema',
+          path: '/dashboard/saas/users',
           icon: faUsers,
           permission: 'saas_roles'
         },
-        { 
-          title: 'Configuraci³n', 
-          path: '/dashboard/saas/settings', 
+        {
+          title: 'Configuraci³n',
+          path: '/dashboard/saas/settings',
           icon: faCog,
           permission: 'saas_settings'
         },
-        { 
-          title: 'Facturaci³n', 
-          path: '/dashboard/saas/billing', 
+        {
+          title: 'Facturaci³n',
+          path: '/dashboard/saas/billing',
           icon: faMoneyBillWave,
           permission: 'saas_billing'
         },
-        { 
-          title: 'Pasarelas de Pago', 
-          path: '/dashboard/saas/payment-gateways', 
+        {
+          title: 'Pasarelas de Pago',
+          path: '/dashboard/saas/payment-gateways',
           icon: faCreditCard,
           permission: 'saas_payment_gateways'
         },
-        { 
-          title: 'Gesti³n de Roles', 
-          path: '/dashboard/saas/roles', 
+        {
+          title: 'Gesti³n de Roles',
+          path: '/dashboard/saas/roles',
           icon: faUserShield,
           permission: 'saas_roles'
         },
-        { 
-          title: 'API Explorer', 
-          path: '/dashboard/saas/api-explorer', 
+        {
+          title: 'API Explorer',
+          path: '/dashboard/saas/api-explorer',
           icon: faCode,
           permission: 'saas_api_explorer'
         }
@@ -562,7 +562,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
   });
 
   const menuItems = transformToMenuItems(filteredMenuItems);
-  
+
   // Handler para clicks en el menº (para Drawer)
   const findMenuItemByKey = (items, key) => {
     for (const item of items) {

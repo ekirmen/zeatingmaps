@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 
+const normalizeHex = (color) => {
   if (typeof color !== 'string') return null;
   const trimmed = color.trim();
   if (!trimmed.startsWith('#')) return null;
@@ -80,18 +81,18 @@ export const useSeatColors = (eventId = null) => {
   const getSeatColor = (seat, zona, isSelected, selectedSeats = [], lockedSeats = [], seatStates = null) => {
     const seatId = seat._id || seat.id;
     const isSelectedByMe = selectedSeats.includes(seatId);
-    
+
     // Obtener el session_id actual
     const currentSessionId = localStorage.getItem('anonSessionId') || 'unknown';
-    
+
     // Verificar si hay un estado actualizado en el store (tiempo real) - PRIORIDAD MÁXIMA
     // seatStates puede ser un Map o un objeto
-    const storeState = seatStates instanceof Map 
-      ? seatStates.get(seatId) 
+    const storeState = seatStates instanceof Map
+      ? seatStates.get(seatId)
       : seatStates?.[seatId];
     if (storeState) {
       // Usando estado del store para asiento
-      
+
       // Usar el estado del store para determinar el color
       switch (storeState) {
         case 'vendido':
@@ -118,10 +119,10 @@ export const useSeatColors = (eventId = null) => {
           return '#4CAF50'; // Verde para disponible
       }
     }
-    
+
     // Si no hay estado en el store, conservar el estado original del asiento en lugar de forzar disponible
     // Esto evita que asientos 'reservado' o 'vendido' se muestren como disponibles por falta de seatStates
-    const hasStateInStore = seatStates instanceof Map 
+    const hasStateInStore = seatStates instanceof Map
       ? seatStates.has(seatId)
       : seatStates && seatId in seatStates;
     if (seatStates && !hasStateInStore) {
@@ -141,18 +142,18 @@ export const useSeatColors = (eventId = null) => {
       // Si no hay estado persistente, usar disponible
       return '#4CAF50';
     }
-    
+
     // Fallback a la lógica original si no hay estado en el store
     // Verificar si está bloqueado/seleccionado por otro usuario
     const lockInfo = Array.isArray(lockedSeats) ? lockedSeats.find(lock => lock.seat_id === seatId) : null;
     const isLockedByOther = lockInfo && lockInfo.session_id !== currentSessionId;
-    
+
     // Distinguir entre locked permanente y seleccionado temporal
     const isPermanentlyLocked = lockInfo && lockInfo.status === 'locked';
-    
-    const isSelectedByOther = lockInfo && lockInfo.session_id !== currentSessionId && 
-                             (lockInfo.status === 'seleccionado' || lockInfo.status === 'selected');
-    
+
+    const isSelectedByOther = lockInfo && lockInfo.session_id !== currentSessionId &&
+      (lockInfo.status === 'seleccionado' || lockInfo.status === 'selected');
+
     // SISTEMA DE COLORES UNIFICADO - PRIORIDAD CORRECTA
     // 1. VENDIDO (máxima prioridad) - desde seat_locks o estado del asiento
     if (lockInfo?.status === 'vendido' || seat.estado === 'vendido' || seat.estado === 'pagado' || lockInfo?.status === 'completed') {
@@ -162,37 +163,37 @@ export const useSeatColors = (eventId = null) => {
       }
       return eventTheme.seatSold || '#2d3748'; // Negro para vendido por otros
     }
-    
+
     // 2. RESERVADO - desde seat_locks o estado del asiento
     if (lockInfo?.status === 'reservado' || seat.estado === 'reservado') {
       return eventTheme.seatReserved || '#805ad5'; // Púrpura para reservado
     }
-    
+
     // 3. ANULADO - desde seat_locks o estado del asiento
     if (lockInfo?.status === 'anulado' || seat.estado === 'anulado') {
       return eventTheme.seatCancelled || '#e53e3e'; // Rojo para anulado
     }
-    
+
     // 4. BLOQUEADO PERMANENTEMENTE (desde boleteria)
     if (isPermanentlyLocked || seat.estado === 'locked' || lockInfo?.status === 'locked') {
       return eventTheme.seatBlocked || '#f56565'; // Rojo para asientos bloqueados permanentemente
     }
-    
+
     // 5. SELECCIONADO POR OTRO USUARIO (temporal) - PRIORIDAD ALTA
     if (isSelectedByOther && !isPermanentlyLocked) {
       return eventTheme.seatSelectedOther || '#2196F3'; // Azul para seleccionado por otro
     }
-    
+
     // 6. BLOQUEADO POR OTRO USUARIO (temporal) - PRIORIDAD BAJA
     if (isLockedByOther && !isPermanentlyLocked && !isSelectedByOther) {
       return eventTheme.seatBlocked || '#f56565'; // Rojo claro para bloqueado
     }
-    
+
     // 7. SELECCIONADO POR MÍ (temporal)
     if (isSelectedByMe && !isPermanentlyLocked) {
       return eventTheme.seatSelectedMe || '#ffd700'; // Amarillo para seleccionado por mí
     }
-    
+
     // 8. DISPONIBLE (por defecto) - SIEMPRE VERDE
     const defaultColor = '#4CAF50'; // Verde para asientos disponibles
     return defaultColor;
@@ -203,7 +204,7 @@ export const useSeatColors = (eventId = null) => {
     if (zona?.color) {
       return zona.color;
     }
-    
+
     // Colores por defecto si no hay color definido
     const defaultColors = [
       '#4CAF50', // Verde
@@ -215,7 +216,7 @@ export const useSeatColors = (eventId = null) => {
       '#ffd700', // Amarillo
       '#795548', // Marrón
     ];
-    
+
     return defaultColors[index % defaultColors.length];
   };
 

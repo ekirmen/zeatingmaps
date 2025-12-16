@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Alert, message, Tooltip } from '../../utils/antdComponents';
-import { 
-  DollarOutlined, 
-  CreditCardOutlined, 
-  CheckCircleOutlined, 
+import {
+  DollarOutlined,
+  CreditCardOutlined,
+  CheckCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
   EyeOutlined,
@@ -89,7 +89,7 @@ const BillingDashboard = () => {
   };
 
   const getStatusColor = (status) => {
-
+    switch (status) {
       case 'active': return 'green';
       case 'cancelled': return 'red';
       case 'payment_failed': return 'orange';
@@ -156,16 +156,16 @@ const BillingDashboard = () => {
       render: (_, record) => (
         <Space>
           <Tooltip title="Ver Detalles">
-            <Button 
-              icon={<EyeOutlined />} 
+            <Button
+              icon={<EyeOutlined />}
               size="small"
               onClick={() => setSelectedSubscription(record)}
             />
           </Tooltip>
           {record.status === 'active' && (
             <Tooltip title="Cancelar Suscripci³n">
-              <Button 
-                icon={<StopOutlined />} 
+              <Button
+                icon={<StopOutlined />}
                 size="small"
                 danger
                 onClick={() => handleCancelSubscription(record.id)}
@@ -174,8 +174,8 @@ const BillingDashboard = () => {
           )}
           {record.status === 'cancelled' && (
             <Tooltip title="Reanudar Suscripci³n">
-              <Button 
-                icon={<PlayCircleOutlined />} 
+              <Button
+                icon={<PlayCircleOutlined />}
                 size="small"
                 onClick={() => handleResumeSubscription(record.id)}
               />
@@ -258,15 +258,15 @@ const BillingDashboard = () => {
         title="Suscripciones"
         extra={
           <Space>
-            <Button 
-              icon={<ReloadOutlined />} 
+            <Button
+              icon={<ReloadOutlined />}
               onClick={loadData}
             >
               Actualizar
             </Button>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
               onClick={() => setModalVisible(true)}
             >
               Nueva Suscripci³n

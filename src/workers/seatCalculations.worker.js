@@ -7,7 +7,7 @@
  */
 
 // Manejar mensajes del hilo principal
-self.onmessage = function(e) {
+self.onmessage = function (e) {
   const { type, payload } = e.data;
 
   try {
@@ -17,23 +17,23 @@ self.onmessage = function(e) {
       case 'CALCULATE_DISTANCES':
         result = calculateDistances(payload.seats, payload.referencePoint);
         break;
-      
+
       case 'PROCESS_SEATS_DATA':
         result = processSeatsData(payload.seats, payload.options);
         break;
-      
+
       case 'CALCULATE_ZONES':
         result = calculateZones(payload.seats);
         break;
-      
+
       case 'FILTER_AND_SORT_SEATS':
         result = filterAndSortSeats(payload.seats, payload.filters, payload.sortBy);
         break;
-      
+
       case 'CALCULATE_SEAT_GROUPS':
         result = calculateSeatGroups(payload.seats, payload.groupSize);
         break;
-      
+
       default:
         throw new Error(`Unknown calculation type: ${type}`);
     }
@@ -59,8 +59,7 @@ self.onmessage = function(e) {
  */
 function calculateDistances(seats, referencePoint) {
 
-    return [];
-  }
+
 
   return seats.map(seat => {
     const distance = calculateDistance(
@@ -160,7 +159,7 @@ function calculateSeatsBounds(seats) {
  */
 function groupSeatsByZone(seats) {
   const grouped = {};
-  
+
   seats.forEach(seat => {
     const zoneId = seat.zonaId || 'general';
     if (!grouped[zoneId]) {
@@ -246,7 +245,7 @@ function filterAndSortSeats(seats, filters = {}, sortBy = null) {
   }
 
   if (filters.zonaId) {
-    filtered = filtered.filter(seat => 
+    filtered = filtered.filter(seat =>
       seat.zonaId === filters.zonaId || seat.zona?.id === filters.zonaId
     );
   }
@@ -296,7 +295,7 @@ function sortSeats(seats, sortBy) {
         return precioA - precioB;
       });
       break;
-    
+
     case 'precio-desc':
       sorted.sort((a, b) => {
         const precioA = parseFloat(a.precio) || 0;
@@ -304,7 +303,7 @@ function sortSeats(seats, sortBy) {
         return precioB - precioA;
       });
       break;
-    
+
     case 'nombre-asc':
       sorted.sort((a, b) => {
         const nombreA = (a.nombre || a.numero || '').toLowerCase();
@@ -312,7 +311,7 @@ function sortSeats(seats, sortBy) {
         return nombreA.localeCompare(nombreB);
       });
       break;
-    
+
     case 'zona-asc':
       sorted.sort((a, b) => {
         const zonaA = (a.nombreZona || a.zona?.nombre || '').toLowerCase();
@@ -320,7 +319,7 @@ function sortSeats(seats, sortBy) {
         return zonaA.localeCompare(zonaB);
       });
       break;
-    
+
     default:
       // Sin ordenamiento
       break;
@@ -338,7 +337,7 @@ function calculateSeatGroups(seats, groupSize) {
   }
 
   // Filtrar solo asientos disponibles
-  const availableSeats = seats.filter(seat => 
+  const availableSeats = seats.filter(seat =>
     !seat.vendido && !seat.reservado && seat.disponible !== false
   );
 
@@ -373,7 +372,7 @@ function calculateSeatGroups(seats, groupSize) {
       // Verificar que los asientos estén en la misma fila (misma y, x consecutivos)
       const firstY = group[0].y || 0;
       const allSameRow = group.every(seat => Math.abs((seat.y || 0) - firstY) < 10);
-      
+
       if (allSameRow) {
         groups.push({
           zoneId,

@@ -68,6 +68,7 @@ const EmailWidgetMenu = ({ onSelectWidget }) => {
       'pie-email': 'Pie email',
       'pie-email-notificacion': 'Pie email notificación',
       'codigo-html': 'Código HTML'
+    };
 
     return widgetMap[widgetId] || widgetId;
   };
@@ -92,7 +93,7 @@ const EmailWidgetMenu = ({ onSelectWidget }) => {
                 {category.name}
               </h4>
             </div>
-            
+
             <div className="grid grid-cols-1 gap-2">
               {category.widgets.map((widget) => (
                 <button

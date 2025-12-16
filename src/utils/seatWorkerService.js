@@ -14,10 +14,6 @@ class SeatWorkerService {
    * Inicializar el Web Worker
    */
   initWorker() {
-
-      return;
-    }
-
     try {
       // Crear worker - Compatible con Create React App
       // El worker debe estar en public/ para que funcione correctamente

@@ -8,13 +8,16 @@
 /**
  * Detecta si el navegador soporta WebP
  */
-
+export const supportsWebP = () => {
   if (typeof window === 'undefined') return false;
-  
-  const canvas = document.createElement('canvas');
-  canvas.width = 1;
-  canvas.height = 1;
-  return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+  } catch (e) {
+    return false;
+  }
 };
 
 /**

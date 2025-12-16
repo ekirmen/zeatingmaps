@@ -11,7 +11,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   // Update the image preview handling for new bucket structure
   const getPreview = (img, imageType) => {
     // Si es un objeto con publicUrl (de Supabase)
-
+    if (img && img.publicUrl) {
       return img.publicUrl;
     }
 
@@ -245,7 +245,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   };
 
   
-  };
+
 
   const handleSummaryChange = (e) => {
     setEventoData(prev => ({ ...prev, resumenDescripcion: e.target.value }));

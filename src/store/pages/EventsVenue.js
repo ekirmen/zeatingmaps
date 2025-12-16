@@ -35,6 +35,7 @@ const EventsVenue = ({ groupByTags = true }) => {
   const renderWidget = (widget) => {
     switch (widget.type) {
 
+      case 'Lista de eventos':
         return <EventListWidget events={events} loading={loading} />;
       case 'Preguntas frecuentes':
         return <FaqWidget />;
@@ -42,15 +43,15 @@ const EventsVenue = ({ groupByTags = true }) => {
         return null;
     }
   };
-  
+
   if (loading && !widgets) {
     return <PageSkeleton rows={4} />;
   }
 
   const content = widgets?.content?.length
     ? widgets.content.map((w, idx) => (
-        <React.Fragment key={idx}>{renderWidget(w)}</React.Fragment>
-      ))
+      <React.Fragment key={idx}>{renderWidget(w)}</React.Fragment>
+    ))
     : null;
 
   return <div className="event-container">{content}</div>;

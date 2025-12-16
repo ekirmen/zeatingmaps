@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Form, 
-  Switch, 
-  Input, 
-  Button, 
-  Select, 
-  Typography, 
+import {
+  Card,
+  Row,
+  Col,
+  Form,
+  Switch,
+  Input,
+  Button,
+  Select,
+  Typography,
   Space,
   Alert,
   Divider,
@@ -18,7 +18,7 @@ import {
   message,
   Spin
 } from '../../utils/antdComponents';
-import { 
+import {
   SettingOutlined,
   UploadOutlined,
   DownloadOutlined,
@@ -64,8 +64,11 @@ const SystemSettings = () => {
     loadBackupHistory();
   }, []);
 
-  
-      
+
+
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
       // Cargar configuraciones desde Supabase
       const { data, error } = await supabase
         .from('system_settings')
@@ -84,7 +87,10 @@ const SystemSettings = () => {
     }
   };
 
-  
+
+  const loadBackupHistory = async () => {
+    try {
+      const history = []; // Mock
       setBackupHistory(history);
     } catch (error) {
       console.error('Error loading backup history:', error);
@@ -94,7 +100,7 @@ const SystemSettings = () => {
   const saveSettings = async (values) => {
     try {
       setLoading(true);
-      
+
       const updatedSettings = {
         ...settings,
         ...values
@@ -124,10 +130,10 @@ const SystemSettings = () => {
   const createBackup = async (values) => {
     try {
       setLoading(true);
-      
+
       // Simular creaci³n de backup
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
+
       const newBackup = {
         id: Date.now(),
         date: new Date(),
@@ -153,10 +159,10 @@ const SystemSettings = () => {
   const restoreBackup = async (backupId) => {
     try {
       setLoading(true);
-      
+
       // Simular restauraci³n
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       message.success('Backup restaurado correctamente');
     } catch (error) {
       console.error('Error restoring backup:', error);
@@ -171,6 +177,7 @@ const SystemSettings = () => {
       completed: 'green',
       failed: 'red',
       in_progress: 'orange'
+    };
 
     return colors[status] || 'blue';
   };
@@ -248,14 +255,14 @@ const SystemSettings = () => {
           <Divider />
 
           <Space>
-            <Button 
-              type="primary" 
-                              icon={<UploadOutlined />}
+            <Button
+              type="primary"
+              icon={<UploadOutlined />}
               onClick={() => setShowBackupModal(true)}
             >
               Crear Backup Manual
             </Button>
-            <Button 
+            <Button
               icon={<DownloadOutlined />}
               onClick={() => message.info('Descargando ºltimo backup...')}
             >
@@ -366,9 +373,9 @@ const SystemSettings = () => {
         </Card>
 
         <Form.Item>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
+          <Button
+            type="primary"
+            htmlType="submit"
             loading={loading}
             icon={<SettingOutlined />}
             size="large"
@@ -385,17 +392,17 @@ const SystemSettings = () => {
           renderItem={(backup) => (
             <List.Item
               actions={[
-                <Button 
-                  key="restore" 
+                <Button
+                  key="restore"
                   size="small"
                   onClick={() => restoreBackup(backup.id)}
                   disabled={backup.status !== 'completed'}
                 >
                   Restaurar
                 </Button>,
-                <Button 
-                  key="download" 
-                  size="small" 
+                <Button
+                  key="download"
+                  size="small"
                   icon={<DownloadOutlined />}
                   disabled={backup.status !== 'completed'}
                 >
@@ -457,9 +464,9 @@ const SystemSettings = () => {
 
           <Form.Item>
             <Space>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
+              <Button
+                type="primary"
+                htmlType="submit"
                 loading={loading}
                 icon={<UploadOutlined />}
               >
@@ -476,5 +483,5 @@ const SystemSettings = () => {
   );
 };
 
-export default SystemSettings; 
+export default SystemSettings;
 

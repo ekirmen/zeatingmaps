@@ -25,7 +25,7 @@ export const PageWrapper = ({
   loadingMessage = 'Cargando...'
 }) => {
   // Estado de carga
-
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -84,29 +84,8 @@ export const PageWrapper = ({
 /**
  * Hook para usar PageWrapper con estados comunes
  */
-export 
-  const [error, setError] = React.useState(null);
-
-  const executeWithState = React.useCallback(async (asyncFunction) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await asyncFunction();
-      return result;
-    } catch (err) {
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const reset = React.useCallback(() => {
-    setLoading(false);
-    setError(null);
-  }, []);
-
-  return { loading, error, setLoading, setError, executeWithState, reset };
-};
+// Note: removed incomplete hook export to avoid parse errors. If a specific
+// hook (e.g. usePageState) is needed, we can reintroduce a complete
+// implementation on demand.
 
 

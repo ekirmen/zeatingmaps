@@ -52,6 +52,7 @@ const RealTimeValidation = {
     try {
       const savedSettings = localStorage.getItem('validationSettings');
       if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
         return { ...RealTimeValidation.defaultRules, ...parsedSettings };
       }
     } catch (error) {
@@ -166,14 +167,14 @@ const RealTimeValidation = {
     } else if (paymentData.amount > 2000) {
       warnings.push(
         'Transacci³n de alto valor ($' +
-          paymentData.amount.toFixed(2) +
-          '), se requiere documentaci³n adicional'
+        paymentData.amount.toFixed(2) +
+        '), se requiere documentaci³n adicional'
       );
     } else if (paymentData.amount > 1000) {
       warnings.push(
         'Transacci³n de valor medio ($' +
-          paymentData.amount.toFixed(2) +
-          '), verificar documentaci³n'
+        paymentData.amount.toFixed(2) +
+        '), verificar documentaci³n'
       );
     }
 

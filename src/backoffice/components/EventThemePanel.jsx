@@ -148,19 +148,20 @@ const EventThemePanel = () => {
   };
 
 
+  const getEventTheme = (eventId) => {
     return eventThemes.find(et => et.event_id === eventId);
   };
 
   const ColorPreview = ({ color, label }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <div 
-        style={{ 
-          width: '16px', 
-          height: '16px', 
-          borderRadius: '50%', 
+      <div
+        style={{
+          width: '16px',
+          height: '16px',
+          borderRadius: '50%',
           backgroundColor: color,
           border: '1px solid #d9d9d9'
-        }} 
+        }}
       />
       <span style={{ fontSize: '12px' }}>{label}</span>
     </div>
@@ -190,12 +191,12 @@ const EventThemePanel = () => {
           {events.map(event => {
             const eventTheme = getEventTheme(event.id);
             const hasCustomTheme = !!eventTheme;
-            
+
             return (
-              <Card 
-                key={event.id} 
+              <Card
+                key={event.id}
                 size="small"
-                style={{ 
+                style={{
                   border: hasCustomTheme ? '2px solid #1890ff' : '1px solid #d9d9d9',
                   backgroundColor: hasCustomTheme ? '#f0f8ff' : 'white'
                 }}
@@ -203,15 +204,15 @@ const EventThemePanel = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <Checkbox 
+                      <Checkbox
                         checked={selectedEvent === event.id}
                         onChange={(e) => handleEventSelect(event.id, e.target.checked)}
                       />
                       <strong>{event.nombre}</strong>
                       {hasCustomTheme && (
-                        <span style={{ 
-                          fontSize: '12px', 
-                          color: '#1890ff', 
+                        <span style={{
+                          fontSize: '12px',
+                          color: '#1890ff',
                           backgroundColor: '#e6f7ff',
                           padding: '2px 6px',
                           borderRadius: '4px'
@@ -220,7 +221,7 @@ const EventThemePanel = () => {
                         </span>
                       )}
                     </div>
-                    
+
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
                       {event.fecha_evento ? (
                         `Fecha del evento: ${new Date(event.fecha_evento).toLocaleDateString()}`
@@ -243,35 +244,35 @@ const EventThemePanel = () => {
 
                   <Space>
                     {!hasCustomTheme && selectedEvent === event.id && (
-                      <Button 
-                        type="primary" 
-                        size="small" 
+                      <Button
+                        type="primary"
+                        size="small"
                         icon={<PlusOutlined />}
                         onClick={() => handleCreateTheme(event)}
                       >
                         Crear Tema
                       </Button>
                     )}
-                    
+
                     {hasCustomTheme && (
                       <>
-                        <Button 
-                          size="small" 
+                        <Button
+                          size="small"
                           icon={<EditOutlined />}
                           onClick={() => handleEditTheme(eventTheme)}
                         >
                           Editar
                         </Button>
-                        <Button 
-                          size="small" 
+                        <Button
+                          size="small"
                           icon={<DeleteOutlined />}
                           danger
                           onClick={() => handleDeleteTheme(event.id)}
                         >
                           Eliminar
                         </Button>
-                        <Button 
-                          size="small" 
+                        <Button
+                          size="small"
                           icon={<EyeOutlined />}
                           onClick={() => handleResetToGlobal(event.id)}
                         >

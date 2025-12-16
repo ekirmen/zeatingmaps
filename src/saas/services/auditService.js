@@ -9,6 +9,7 @@ class AuditService {
   }
 
 
+  isAuthError(error) {
     if (!error) return false;
 
     const message = (error.message || '').toLowerCase();
@@ -161,14 +162,14 @@ class AuditService {
         try {
           const existing = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
           localStorage.setItem('audit_logs_backup', JSON.stringify(existing.concat(toSend).slice(-500)));
-        } catch (e) {}
+        } catch (e) { }
       }
     } catch (err) {
       // network error or abort — stash locally
       try {
         const existing = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
         localStorage.setItem('audit_logs_backup', JSON.stringify(existing.concat(toSend).slice(-500)));
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
@@ -386,7 +387,7 @@ class AuditService {
       });
 
       return Object.entries(actionCounts)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, limit)
         .map(([action, count]) => ({ action, count }));
     } catch (error) {

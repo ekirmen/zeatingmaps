@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, Timeline, Descriptions, Statistic } from '../../utils/antdComponents';
-import { 
-  BankOutlined, 
-  DollarOutlined, 
-  EditOutlined, 
+import {
+  BankOutlined,
+  DollarOutlined,
+  EditOutlined,
   EyeOutlined,
   SettingOutlined,
   GlobalOutlined,
@@ -139,7 +139,7 @@ const TenantDetail = () => {
   };
 
   const getStatusColor = (status) => {
-
+    switch (status) {
       case 'active': return 'green';
       case 'suspended': return 'orange';
       case 'cancelled': return 'red';
@@ -251,14 +251,14 @@ const TenantDetail = () => {
     <div style={{ padding: '24px' }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <Button 
-          icon={<GlobalOutlined />} 
+        <Button
+          icon={<GlobalOutlined />}
           onClick={() => navigate('/saas')}
           style={{ marginBottom: '16px' }}
         >
           Volver al Panel SaaS
         </Button>
-        
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <Title level={2}>
@@ -298,9 +298,9 @@ const TenantDetail = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Estado">
                 <Tag color={getStatusColor(tenant.status)}>
-                  {tenant.status === 'active' ? 'Activo' : 
-                   tenant.status === 'suspended' ? 'Suspendido' : 
-                   tenant.status === 'cancelled' ? 'Cancelado' : tenant.status}
+                  {tenant.status === 'active' ? 'Activo' :
+                    tenant.status === 'suspended' ? 'Suspendido' :
+                      tenant.status === 'cancelled' ? 'Cancelado' : tenant.status}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Creado">
@@ -315,26 +315,26 @@ const TenantDetail = () => {
               <Descriptions.Item label="Colores Personalizados" span={3}>
                 <Space>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div 
-                      style={{ 
-                        width: '20px', 
-                        height: '20px', 
+                    <div
+                      style={{
+                        width: '20px',
+                        height: '20px',
                         backgroundColor: tenant.primary_color || '#1890ff',
                         borderRadius: '4px',
                         marginRight: '8px'
-                      }} 
+                      }}
                     />
                     <span>Primario: {tenant.primary_color || '#1890ff'}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div 
-                      style={{ 
-                        width: '20px', 
-                        height: '20px', 
+                    <div
+                      style={{
+                        width: '20px',
+                        height: '20px',
                         backgroundColor: tenant.secondary_color || '#52c41a',
                         borderRadius: '4px',
                         marginRight: '8px'
-                      }} 
+                      }}
                     />
                     <span>Secundario: {tenant.secondary_color || '#52c41a'}</span>
                   </div>
@@ -393,13 +393,13 @@ const TenantDetail = () => {
       {/* Tabs con informaci³n detallada */}
       <Card>
         <Tabs defaultActiveKey="billing">
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <CreditCardOutlined />
                 Facturaci³n
               </span>
-            } 
+            }
             key="billing"
           >
             <div style={{ marginBottom: '16px' }}>
@@ -419,13 +419,13 @@ const TenantDetail = () => {
             />
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <BarChartOutlined />
                 M©tricas de Uso
               </span>
-            } 
+            }
             key="metrics"
           >
             <Table
@@ -440,13 +440,13 @@ const TenantDetail = () => {
             />
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <SettingOutlined />
                 Configuraci³n
               </span>
-            } 
+            }
             key="settings"
           >
             <Row gutter={[16, 16]}>
@@ -460,13 +460,13 @@ const TenantDetail = () => {
                     </Descriptions.Item>
                     <Descriptions.Item label="L­mite de Eventos">
                       {tenant.plan_type === 'basic' ? '5 eventos' :
-                       tenant.plan_type === 'pro' ? '50 eventos' :
-                       tenant.plan_type === 'enterprise' ? 'Sin l­mite' : '5 eventos'}
+                        tenant.plan_type === 'pro' ? '50 eventos' :
+                          tenant.plan_type === 'enterprise' ? 'Sin l­mite' : '5 eventos'}
                     </Descriptions.Item>
                     <Descriptions.Item label="L­mite de Usuarios">
                       {tenant.plan_type === 'basic' ? '100 usuarios' :
-                       tenant.plan_type === 'pro' ? '1000 usuarios' :
-                       tenant.plan_type === 'enterprise' ? 'Sin l­mite' : '100 usuarios'}
+                        tenant.plan_type === 'pro' ? '1000 usuarios' :
+                          tenant.plan_type === 'enterprise' ? 'Sin l­mite' : '100 usuarios'}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
@@ -489,13 +489,13 @@ const TenantDetail = () => {
             </Row>
           </TabPane>
 
-          <TabPane 
+          <TabPane
             tab={
               <span>
                 <BellOutlined />
                 Actividad Reciente
               </span>
-            } 
+            }
             key="activity"
           >
             <Timeline>
@@ -539,7 +539,7 @@ const TenantDetail = () => {
                   { pattern: /^[a-z0-9-]+$/, message: 'Solo letras minºsculas, nºmeros y guiones' }
                 ]}
               >
-                <Input 
+                <Input
                   addonAfter=".ticketera.com"
                   placeholder="miempresa"
                 />

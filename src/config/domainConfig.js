@@ -89,9 +89,7 @@ const DEFAULT_DOMAIN_CONFIG = {
 const LOCALHOST_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
 const normalizeHostnameInternal = (hostname = '') => {
-
-    return 'localhost';
-  }
+  if (!hostname) return 'localhost';
 
   return String(hostname)
     .trim()
@@ -149,11 +147,11 @@ const previewSubdomainCandidate = (subdomain) => {
   return firstSegment || null;
 };
 
-export 
+export const getEnvironment = () => process.env.NODE_ENV || 'development';
 
-export 
+export const isProduction = () => getEnvironment() === 'production';
 
-export 
+export const isDevelopment = () => getEnvironment() === 'development';
 
 export const getCurrentDomainConfig = () => {
   try {
@@ -166,15 +164,15 @@ export const getCurrentDomainConfig = () => {
   return buildStaticDomainConfig('localhost');
 };
 
-export 
+export const getApiUrl = () => process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-export 
+export const getSupabaseUrl = () => process.env.REACT_APP_SUPABASE_URL;
 
-export 
+export const getSupabaseAnonKey = () => process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 export const getDomainTheme = () => getCurrentDomainConfig().theme;
 
-export 
+export const getAppVersion = () => process.env.REACT_APP_VERSION || '1.0.0';
 
 export const isMainDomain = () => {
   try {
@@ -220,7 +218,9 @@ export const buildConfigFromTenant = (tenant) => {
   };
 };
 
-export 
+export const fetchTenantByHostname = async (hostname, supabase) => {
+  if (!hostname) {
+    return null;
   }
 
   const { normalizedHostname, apexDomain, subdomain } = extractDomainParts(hostname);
@@ -279,7 +279,10 @@ export
   return tenant;
 };
 
-export 
+export const getDynamicConfig = async (hostname) => {
+  try {
+    const supabase = require('../supabaseClient').supabase;
+    const tenant = await fetchTenantByHostname(hostname, supabase);
     return buildConfigFromTenant(tenant);
   } catch (error) {
     console.error('Error obteniendo configuración dinámica:', error);
@@ -287,7 +290,7 @@ export
   }
 };
 
-export 
+export const resolveDomainConfig = async (hostname, tenant = null) => {
   if (tenant) {
     return {
       tenant,
@@ -301,7 +304,10 @@ export
   };
 };
 
-export 
+export const initializeDomainConfig = async () => {
+  const finalize = async () => {
+    // Initialization logic
+  };
 
   if (typeof document !== 'undefined' && document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', finalize, { once: true });
@@ -309,6 +315,7 @@ export
   }
 
   finalize();
-});
+};
 
-export 
+
+export default getCurrentDomainConfig; 

@@ -17,7 +17,7 @@ const EventWidget = ({ config = {}, onConfigChange, type = 'evento' }) => {
 
   const getDescription = () => {
     switch (type) {
-
+      case 'informacion-evento':
         return 'ID del evento que se mostrará en el email';
       case 'banner-grande':
         return 'ID del evento para el banner grande';

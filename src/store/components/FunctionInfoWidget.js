@@ -15,7 +15,7 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
     const fetchFunctionData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch function with related data
         const { data: functionInfo, error: functionError } = await supabase
           .from('funciones')
@@ -50,7 +50,7 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
           .single();
 
         if (functionError) throw functionError;
-        
+
         setFunctionData(functionInfo);
         setEventData(functionInfo.evento);
         setVenueData(functionInfo.sala?.recinto);
@@ -68,8 +68,9 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
   }, [functionId]);
 
 
+  const getEventImages = () => {
     if (!eventData?.imagenes) return {};
-    
+
     try {
       if (typeof eventData.imagenes === 'string') {
         return JSON.parse(eventData.imagenes);
@@ -83,12 +84,12 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
 
   const getPricingDetails = () => {
     if (!functionData?.plantilla?.detalles) return [];
-    
+
     try {
-      const detalles = typeof functionData.plantilla.detalles === 'string' 
+      const detalles = typeof functionData.plantilla.detalles === 'string'
         ? JSON.parse(functionData.plantilla.detalles)
         : functionData.plantilla.detalles;
-      
+
       return Array.isArray(detalles) ? detalles : [];
     } catch (e) {
       console.error('Error parsing pricing details:', e);
@@ -305,13 +306,12 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Estado de Venta</h3>
             <div className="flex items-center">
-              <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                eventData.estadoVenta === 'a-la-venta' 
-                  ? 'bg-green-100 text-green-800' 
+              <span className={`px-3 py-1 text-sm font-medium rounded-full ${eventData.estadoVenta === 'a-la-venta'
+                  ? 'bg-green-100 text-green-800'
                   : eventData.estadoVenta === 'agotado'
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-yellow-100 text-yellow-800'
-              }`}>
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}>
                 {eventData.estadoVenta.replace(/-/g, ' ')}
               </span>
             </div>
@@ -325,8 +325,8 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
             disabled={eventData?.estadoVenta === 'agotado' || (eventData && (!eventData.activo || eventData.desactivado))}
             className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            {eventData && (!eventData.activo || eventData.desactivado) 
-              ? 'Evento Desactivado' 
+            {eventData && (!eventData.activo || eventData.desactivado)
+              ? 'Evento Desactivado'
               : (eventData?.estadoVenta === 'agotado' ? 'Agotado' : 'Seleccionar Asientos')
             }
           </button>

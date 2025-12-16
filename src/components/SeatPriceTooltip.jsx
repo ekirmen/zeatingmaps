@@ -5,20 +5,21 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 /**
  * Componente que muestra un tooltip con el precio desglosado al hacer hover sobre un asiento
  */
-export const SeatPriceTooltip = ({ 
-  seat, 
-  funcionId, 
+export const SeatPriceTooltip = ({
+  seat,
+  funcionId,
   children,
-  showDetails = true 
+  showDetails = true
 }) => {
 
+  if (!showDetails) {
     return children;
   }
 
   const precio = typeof seat.precio === 'number' ? seat.precio : parseFloat(seat.precio) || 0;
   const nombreZona = seat.nombreZona || seat.zona?.nombre || 'General';
   const nombreAsiento = seat.nombre || seat.numero || `Asiento ${seat._id || seat.id}`;
-  
+
   // Calcular posibles descuentos o impuestos (esto puede venir del contexto)
   const subtotal = precio;
   const descuento = 0; // TODO: Calcular desde descuentos aplicados
@@ -29,7 +30,7 @@ export const SeatPriceTooltip = ({
     <div className="min-w-[200px]">
       <div className="font-semibold text-white mb-2">{nombreAsiento}</div>
       <Divider style={{ margin: '8px 0', borderColor: 'rgba(255,255,255,0.2)' }} />
-      
+
       {showDetails && (
         <>
           <div className="space-y-1 text-sm">
@@ -57,7 +58,7 @@ export const SeatPriceTooltip = ({
           <Divider style={{ margin: '8px 0', borderColor: 'rgba(255,255,255,0.2)' }} />
         </>
       )}
-      
+
       <div className="flex justify-between items-center mt-2">
         <span className="text-white font-semibold">Total:</span>
         <span className="text-white text-lg font-bold">${total.toFixed(2)}</span>
@@ -85,13 +86,14 @@ export const SeatPriceTooltip = ({
 /**
  * Hook para obtener precio desglosado de un asiento
  */
-export 
+export const useSeatPrice = (seat) => {
+  const precio = React.useMemo(() => {
     return typeof seat.precio === 'number' ? seat.precio : parseFloat(seat.precio) || 0;
   }, [seat?.precio]);
 
   const precioDesglosado = React.useMemo(() => {
     if (!precio) return null;
-    
+
     // TODO: Calcular desde descuentos, impuestos, etc.
     return {
       precioBase: precio,

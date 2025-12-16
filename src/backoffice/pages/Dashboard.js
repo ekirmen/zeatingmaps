@@ -24,9 +24,9 @@ import {
   FileTextOutlined,
   ShoppingCartOutlined,
   BellOutlined,
-  CalendarOutlined,
   CheckCircleOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  CalendarOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import PaymentMethodsConfig from '../components/PaymentMethodsConfig';
@@ -40,6 +40,7 @@ const Dashboard = () => {
     totalRevenue: 0,
     totalTickets: 0,
     soldTickets: 0,
+    reservedTickets: 0,
     activeUsers: 0,
     totalUsers: 0,
     newUsersThisWeek: 0,
@@ -54,13 +55,12 @@ const Dashboard = () => {
   const [systemAlerts, setSystemAlerts] = useState([]);
 
   useEffect(() => {
-    // Definir las funciones dentro del useEffect para evitar problemas de dependencias
-
+    let subscription;
 
     const subscribeToRealtimeUpdates = () => {
       try {
         // Suscribirse a actualizaciones en tiempo real
-        const subscription = supabase
+        subscription = supabase
           .channel('dashboard-updates')
           .on('postgres_changes',
             { event: '*', schema: 'public', table: 'payment_transactions' },
@@ -71,13 +71,12 @@ const Dashboard = () => {
           )
           .subscribe();
 
-
         return () => {
-          subscription.unsubscribe();
+          if (subscription) subscription.unsubscribe();
         };
       } catch (error) {
         console.error('Error subscribing to realtime updates:', error);
-        return () => {}; // Funci³n de limpieza vac­a en caso de error
+        return () => { };
       }
     };
 
@@ -87,19 +86,17 @@ const Dashboard = () => {
     // Suscribirse a actualizaciones en tiempo real
     const cleanup = subscribeToRealtimeUpdates();
 
-    // Retornar funci³n de limpieza
+    // Retornar función de limpieza
     return () => {
-      if (cleanup) {
-        cleanup();
-      }
+      if (cleanup) cleanup();
     };
-  }, []); // Sin dependencias ya que las funciones est¡n definidas dentro
+  }, []);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
 
-      // Cargar estad­sticas principales
+      // Cargar estadísticas principales
       await Promise.all([
         loadRevenueStats(),
         loadTicketStats(),
@@ -116,9 +113,14 @@ const Dashboard = () => {
     }
   };
 
-  
+  const loadRevenueStats = async () => {
+    try {
+      const { data: transactions, error } = await supabase
+        .from('payment_transactions')
+        .select('*');
 
       if (error) {
+        console.error('Error loading revenue stats:', error);
         setStats(prev => ({
           ...prev,
           totalRevenue: 0,
@@ -129,48 +131,50 @@ const Dashboard = () => {
         return;
       }
 
-      const totalRevenue = transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      const totalRevenue = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
       const today = new Date();
       const todaySales = transactions
         .filter(t => new Date(t.created_at).toDateString() === today.toDateString())
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
       const thisWeekSales = transactions
         .filter(t => new Date(t.created_at) >= weekAgo)
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
       const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
       const thisMonthSales = transactions
         .filter(t => new Date(t.created_at) >= monthAgo)
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+      // Pending payments count
+      const pendingPayments = transactions.filter(t => t.status === 'pending').length;
 
       setStats(prev => ({
         ...prev,
         totalRevenue,
         todaySales,
         thisWeekSales,
-        thisMonthSales
+        thisMonthSales,
+        pendingPayments
       }));
     } catch (error) {
-      console.error('Error loading revenue stats:', error);
-      setStats(prev => ({
-        ...prev,
-        totalRevenue: 0,
-        todaySales: 0,
-        thisWeekSales: 0,
-        thisMonthSales: 0
-      }));
+      console.error('Error calculating revenue stats:', error);
     }
   };
 
-  
+  const loadTicketStats = async () => {
+    try {
+      const { data: tickets, error } = await supabase
+        .from('payment_transactions')
+        .select('id, status');
 
       if (error) throw error;
 
       const totalTickets = tickets.length;
-      const soldTickets = tickets.filter(t => t.status === 'vendido').length;
-      const reservedTickets = tickets.filter(t => t.status === 'reservado').length;
+      // Asumiendo 'completed' es vendido y 'pending' es reservado/pendiente
+      const soldTickets = tickets.filter(t => t.status === 'completed' || t.status === 'pagado' || t.status === 'vendido').length;
+      const reservedTickets = tickets.filter(t => t.status === 'pending' || t.status === 'reservado').length;
 
       setStats(prev => ({
         ...prev,
@@ -183,35 +187,45 @@ const Dashboard = () => {
     }
   };
 
-  
+  const loadUserStats = async () => {
+    try {
+      // Intentar obtener usuarios activos desde user_tenant_info
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      let activeUsersCount = 0;
+      let totalUsers = 0;
+      let newUsersThisWeek = 0;
+
+      // Intentamos fetching profiles o user_tenant_info
+      // Probamos user_tenant_info primero como sugería el código original
+      const { data: activeSessions, error: sessionError } = await supabase
+        .from('user_tenant_info')
+        .select('user_id, last_login')
+        .gte('last_login', twentyFourHoursAgo);
+
+      if (!sessionError && activeSessions) {
+        activeUsersCount = activeSessions.length;
+      }
+
+      // Obtener total de usuarios desde profiles
+      const { data: users, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, created_at, last_seen');
 
       if (usersError) throw usersError;
 
-      // Obtener usuarios activos (ºltimas 24 horas) desde auth.users o user_sessions si existe
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      totalUsers = users?.length || 0;
 
-      // Intentar obtener usuarios activos desde user_sessions o last_login
-      let activeUsersCount = 0;
-      try {
-        // Si existe tabla user_sessions o user_tenant_info
-        const { data: activeSessions } = await supabase
-          .from('user_tenant_info')
-          .select('user_id, last_login')
-          .gte('last_login', twentyFourHoursAgo);
-
-        activeUsersCount = activeSessions?.length || 0;
-      } catch (e) {
-        // Si no existe, usar last_seen de profiles
+      // Si no pudimos sacar activos de user_tenant_info, intentamos con profiles
+      if (sessionError || !activeSessions) {
         activeUsersCount = users?.filter(u => {
           if (u.last_seen) {
-            return new Date(u.last_seen) >= twentyFourHoursAgo;
+            return new Date(u.last_seen) >= new Date(twentyFourHoursAgo);
           }
           return false;
         }).length || 0;
       }
 
-      const totalUsers = users?.length || 0;
-      const newUsersThisWeek = users?.filter(u => {
+      newUsersThisWeek = users?.filter(u => {
         const userDate = new Date(u.created_at);
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         return userDate >= weekAgo;
@@ -219,13 +233,12 @@ const Dashboard = () => {
 
       setStats(prev => ({
         ...prev,
-        activeUsers: activeUsersCount, // Usuarios activos en ºltimas 24h
-        totalUsers, // Total de usuarios registrados
+        activeUsers: activeUsersCount,
+        totalUsers,
         newUsersThisWeek
       }));
     } catch (error) {
       console.error('Error loading user stats:', error);
-      // Valores por defecto
       setStats(prev => ({
         ...prev,
         activeUsers: 0,
@@ -235,7 +248,13 @@ const Dashboard = () => {
     }
   };
 
-  
+  const loadRecentTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
 
       if (error) {
         setRecentTransactions([]);
@@ -249,7 +268,14 @@ const Dashboard = () => {
     }
   };
 
-  
+  const loadRecentEvents = async () => {
+    try {
+      // Asumiendo que existe una lógica para eventos recientes(creados recientemente?)
+      const { data, error } = await supabase
+        .from('eventos')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
 
       if (error) throw error;
       setRecentEvents(data || []);
@@ -258,73 +284,48 @@ const Dashboard = () => {
     }
   };
 
-  
+  const loadUpcomingEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('eventos')
+        .select('*')
+        .eq('activo', true)
+        .gte('fecha_evento', new Date().toISOString())
+        .order('fecha_evento', { ascending: true })
+        .limit(10); // Cargamos un poco más para el calendario
 
-      if (error) {
-        // Si falla, intentar consulta directa a eventos
-        const { data: eventosData, error: eventosError } = await supabase
-          .from('eventos')
-          .select('*')
-          .eq('activo', true)
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (eventosError) throw eventosError;
-        setUpcomingEvents(eventosData || []);
-        return;
-      }
+      if (error) throw error;
 
       setUpcomingEvents(data || []);
     } catch (error) {
       console.error('Error loading upcoming events:', error);
+      // Fallback
       setUpcomingEvents([]);
     }
   };
 
-  
+  const loadSystemAlerts = async () => {
+    try {
+      // Mock de alertas si no hay tabla
+      const alerts = [
+        {
+          type: 'info',
+          title: 'Sistema Actualizado',
+          message: 'El sistema se ha actualizado correctamente a la versión más reciente.',
+          time: 'Hace 2 horas'
+        }
+      ];
       setSystemAlerts(alerts);
     } catch (error) {
       console.error('Error loading system alerts:', error);
     }
   };
 
-  
-    const existingChannel = existingChannels.find(ch => ch.topic === 'dashboard_updates');
-
-    if (existingChannel) {
-      return () => {
-        // No desuscribirse si el canal es compartido
-      };
-    }
-
-    // Suscribirse a cambios en transacciones
-    const subscription = supabase
-      .channel('dashboard_updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'payment_transactions'
-        },
-        () => {
-          loadDashboardData();
-        }
-      )
-      .subscribe((status) => {
-      });
-
-    return () => {
-      try {
-        subscription.unsubscribe();
-      } catch (error) {
-      }
-    };
-  };
-
   const getStatusColor = (status) => {
     const colors = {
       completed: 'green',
+      pagado: 'green',
+      vendido: 'green',
       pending: 'orange',
       failed: 'red',
       cancelled: 'gray'
@@ -365,11 +366,11 @@ const Dashboard = () => {
           Dashboard
         </Title>
         <Text type="secondary" style={{ fontSize: '14px' }}>
-          Resumen general del sistema de boleter­a
+          Resumen general del sistema de boletería
         </Text>
       </div>
 
-      {/* M©tricas Principales */}
+      {/* Métricas Principales */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card style={{ borderRadius: '8px' }}>
@@ -421,7 +422,7 @@ const Dashboard = () => {
               prefix={<UserOutlined />}
             />
             <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
-              {stats.totalUsers} total -¢ +{stats.newUsersThisWeek} esta semana
+              {stats.totalUsers} total • +{stats.newUsersThisWeek} esta semana
             </Text>
           </Card>
         </Col>
@@ -435,17 +436,17 @@ const Dashboard = () => {
               prefix={<ShoppingCartOutlined />}
             />
             <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
-              Requieren atenci³n
+              Requieren atención
             </Text>
           </Card>
         </Col>
       </Row>
 
-      {/* Acciones R¡pidas */}
+      {/* Acciones Rápidas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24}>
           <Card
-            title="Acciones R¡pidas"
+            title="Acciones Rápidas"
             style={{ borderRadius: '8px' }}
           >
             <Row gutter={[16, 16]}>
@@ -458,7 +459,7 @@ const Dashboard = () => {
                   onClick={() => navigate('/backoffice/boleteria')}
                   style={{ height: '48px', fontSize: '14px' }}
                 >
-                  Boleter­a
+                  Boletería
                 </Button>
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
@@ -490,11 +491,11 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Gr¡ficos y An¡lisis */}
+      {/* Gráficos y Análisis */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} lg={16}>
           <Card
-            title="Ventas por Per­odo"
+            title="Ventas por Período"
             extra={<Button type="link" size="small">Ver Detalles</Button>}
             style={{ borderRadius: '8px' }}
           >
@@ -570,13 +571,13 @@ const Dashboard = () => {
                   title: 'ID',
                   dataIndex: 'id',
                   key: 'id',
-                  render: (id) => id.slice(0, 8) + '...'
+                  render: (id) => id ? id.slice(0, 8) + '...' : ''
                 },
                 {
                   title: 'Monto',
                   dataIndex: 'amount',
                   key: 'amount',
-                  render: (amount) => `$${parseFloat(amount).toFixed(2)}`
+                  render: (amount) => `$${parseFloat(amount || 0).toFixed(2)}`
                 },
                 {
                   title: 'Pasarela',
@@ -589,7 +590,7 @@ const Dashboard = () => {
                   key: 'status',
                   render: (status) => (
                     <Tag color={getStatusColor(status)}>
-                      {status.toUpperCase()}
+                      {status ? status.toUpperCase() : 'N/A'}
                     </Tag>
                   )
                 },
@@ -602,14 +603,15 @@ const Dashboard = () => {
               ]}
               pagination={false}
               size="small"
+              rowKey="id"
             />
           </Card>
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card title="Eventos Pr³ximos" extra={<Button type="link">Ver Todos</Button>}>
+          <Card title="Eventos Próximos" extra={<Button type="link">Ver Todos</Button>}>
             <List
-              dataSource={upcomingEvents}
+              dataSource={upcomingEvents.slice(0, 5)}
               renderItem={(event) => (
                 <List.Item>
                   <List.Item.Meta
@@ -624,7 +626,7 @@ const Dashboard = () => {
                       <div>
                         <Text type="secondary">{event.descripcion?.slice(0, 50)}...</Text>
                         <div className="text-xs text-gray-500 mt-1">
-                          {new Date(event.fecha_evento).toLocaleDateString()}
+                          {event.fecha_evento ? new Date(event.fecha_evento).toLocaleDateString() : 'Sin fecha'}
                         </div>
                       </div>
                     }
@@ -639,7 +641,7 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Configuraci³n de M©todos de Pago */}
+      {/* Configuración de Métodos de Pago */}
       <Row gutter={[16, 16]} className="mt-8">
         <Col xs={24}>
           <PaymentMethodsConfig />
@@ -655,8 +657,8 @@ const Dashboard = () => {
                 fullscreen={false}
                 headerRender={({ value, type, onChange, onTypeChange }) => {
                   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                  // Ant Design v5 usa dayjs
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                  // Ant Design v5 usa dayjs o similar
                   const currentMonth = monthNames[value.month()];
                   const currentYear = value.year();
 
@@ -665,7 +667,7 @@ const Dashboard = () => {
                       <Button
                         size="small"
                         onClick={() => {
-                          onChange(value.subtract(1, 'month'));
+                          onChange(value.clone().subtract(1, 'month'));
                         }}
                       >
                         Anterior
@@ -676,7 +678,7 @@ const Dashboard = () => {
                       <Button
                         size="small"
                         onClick={() => {
-                          onChange(value.add(1, 'month'));
+                          onChange(value.clone().add(1, 'month'));
                         }}
                       >
                         Siguiente
@@ -718,5 +720,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-

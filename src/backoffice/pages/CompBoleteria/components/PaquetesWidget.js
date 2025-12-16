@@ -13,6 +13,7 @@ const PaquetesWidget = ({ eventoId, onPackageAdded }) => {
   const [search, setSearch] = useState('');
 
 
+  const loadPaquetes = useCallback(async () => {
     if (!eventoId) return;
     setLoading(true);
     try {

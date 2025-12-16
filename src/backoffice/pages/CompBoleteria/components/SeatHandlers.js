@@ -1,6 +1,24 @@
 import { message } from '../../../../utils/antdComponents';
 
-export 
+export const useSeatHandlers = ({
+  currentFuncId,
+  zonas,
+  blockMode,
+  carrito,
+  setCarrito,
+  selectedFuncion,
+  abonoMode,
+  detallesPlantilla,
+  appliedDiscount,
+  abonoSeats,
+  selectedFuncionEventId,
+  isSeatLocked,
+  isSeatLockedByMe,
+  lockSeat,
+  unlockSeat,
+  handleSeatAnimation
+}) => {
+  const handleSeatClick = async (seat, table) => {
     const currentFuncIdNum = typeof currentFuncId === 'object'
       ? (currentFuncId?.id || currentFuncId?._id)
       : currentFuncId;
@@ -124,13 +142,13 @@ export
       if (abonoMode) {
         const groupId = `abono-${seat._id}`;
         setCarrito(carrito.filter(i => i.abonoGroup !== groupId));
-        } else {
-          setCarrito(
-            carrito.filter(
-              (i) => !(i._id === seat._id && i.funcionId === currentFuncIdNum)
-            )
-          );
-        }
+      } else {
+        setCarrito(
+          carrito.filter(
+            (i) => !(i._id === seat._id && i.funcionId === currentFuncIdNum)
+          )
+        );
+      }
     } else {
       if (abonoMode) {
         const groupId = `abono-${seat._id}`;
@@ -141,9 +159,9 @@ export
 
         const abonoFunciones = Array.isArray(funciones)
           ? funciones.filter((f) => {
-              const funcionEventId = f.evento_id || f.evento || f.eventoId;
-              return currentEventId ? funcionEventId === currentEventId : true;
-            })
+            const funcionEventId = f.evento_id || f.evento || f.eventoId;
+            return currentEventId ? funcionEventId === currentEventId : true;
+          })
           : [];
 
         const targetFunciones = abonoFunciones.length > 0 ? abonoFunciones : funciones;

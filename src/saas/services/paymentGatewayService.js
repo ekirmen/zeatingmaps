@@ -47,7 +47,7 @@ class PaymentGatewayService {
       if (error && error.code !== 'PGRST116') throw error;
 
       // Mapear a formato compatible con el componente (mantener compatibilidad)
-
+      if (data) {
         return {
           id: data.id,
           gateway_name: data.method_id,

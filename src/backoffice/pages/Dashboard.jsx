@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Card, Typography, Space, Button, Progress, List, Avatar, Tag, Pagination } from '../../utils/antdComponents';
-import { 
-  CalendarOutlined, 
-  UserOutlined, 
-  DollarOutlined, 
+import {
+  CalendarOutlined,
+  UserOutlined,
+  DollarOutlined,
   ShoppingOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
@@ -116,7 +116,7 @@ const Dashboard = () => {
   );
 
   const getEventStatusColor = (status) => {
-
+    switch (status) {
       case 'active': return '#10b981';
       case 'draft': return '#f59e0b';
       case 'completed': return '#6b7280';
@@ -139,8 +139,8 @@ const Dashboard = () => {
       subtitle="Resumen general de tu ticketera"
       actions={
         <Space>
-          <Button 
-            icon={<ReloadOutlined />} 
+          <Button
+            icon={<ReloadOutlined />}
             onClick={handleRefresh}
             loading={refreshing}
             title="Refrescar datos"
@@ -174,7 +174,7 @@ const Dashboard = () => {
             <span>vs mes anterior</span>
           </div>
         </div>
-        
+
         <div className="dashboard-stat-card">
           <div className="dashboard-stat-card-header">
             <h3 className="dashboard-stat-card-title">Total Usuarios</h3>
@@ -191,7 +191,7 @@ const Dashboard = () => {
             <span>vs mes anterior</span>
           </div>
         </div>
-        
+
         <div className="dashboard-stat-card">
           <div className="dashboard-stat-card-header">
             <h3 className="dashboard-stat-card-title">Ingresos Totales</h3>
@@ -208,7 +208,7 @@ const Dashboard = () => {
             <span>vs mes anterior</span>
           </div>
         </div>
-        
+
         <div className="dashboard-stat-card">
           <div className="dashboard-stat-card-header">
             <h3 className="dashboard-stat-card-title">Total Productos</h3>
@@ -241,32 +241,32 @@ const Dashboard = () => {
                 <List
                   dataSource={paginatedEvents}
                   renderItem={(event) => (
-                  <List.Item
-                    style={{ padding: '16px 0', borderBottom: '1px solid var(--dashboard-gray-200)' }}
-                    actions={[
-                      <Button type="link" icon={<EyeOutlined />} size="small">
-                        Ver
-                      </Button>,
-                      <Button type="link" icon={<EditOutlined />} size="small">
-                        Editar
-                      </Button>
-                    ]}
-                  >
-                    <List.Item.Meta
-                      avatar={<Avatar icon={<CalendarOutlined />} style={{ backgroundColor: 'var(--dashboard-primary)' }} />}
-                      title={<span style={{ fontWeight: 600 }}>{event.nombre}</span>}
-                      description={
-                        <Space direction="vertical" size="small" style={{ marginTop: '8px' }}>
-                          <Text type="secondary" style={{ fontSize: '12px' }}>
-                            {event.fecha} -¢ {event.ubicacion}
-                          </Text>
-                          <Tag color={getEventStatusColor(event.estado)} style={{ margin: 0 }}>
-                            {getEventStatusText(event.estado)}
-                          </Tag>
-                        </Space>
-                      }
-                    />
-                  </List.Item>
+                    <List.Item
+                      style={{ padding: '16px 0', borderBottom: '1px solid var(--dashboard-gray-200)' }}
+                      actions={[
+                        <Button type="link" icon={<EyeOutlined />} size="small">
+                          Ver
+                        </Button>,
+                        <Button type="link" icon={<EditOutlined />} size="small">
+                          Editar
+                        </Button>
+                      ]}
+                    >
+                      <List.Item.Meta
+                        avatar={<Avatar icon={<CalendarOutlined />} style={{ backgroundColor: 'var(--dashboard-primary)' }} />}
+                        title={<span style={{ fontWeight: 600 }}>{event.nombre}</span>}
+                        description={
+                          <Space direction="vertical" size="small" style={{ marginTop: '8px' }}>
+                            <Text type="secondary" style={{ fontSize: '12px' }}>
+                              {event.fecha} -¢ {event.ubicacion}
+                            </Text>
+                            <Tag color={getEventStatusColor(event.estado)} style={{ margin: 0 }}>
+                              {getEventStatusText(event.estado)}
+                            </Tag>
+                          </Space>
+                        }
+                      />
+                    </List.Item>
                   )}
                 />
                 {recentEvents.length > pageSize && (
@@ -286,7 +286,7 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-        
+
         <div className="dashboard-card">
           <div className="dashboard-card-header">
             <h3 className="dashboard-card-title">Progreso de Metas</h3>

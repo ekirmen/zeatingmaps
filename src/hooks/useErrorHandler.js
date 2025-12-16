@@ -1,14 +1,16 @@
-import { message } from '../utils/antdComponents';
+import { message as antdMessage } from '../utils/antdComponents';
 import { useCallback } from 'react';
 
 /**
  * Hook para manejo consistente de errores en toda la aplicación
  */
-export 
-    
+export default function useErrorHandler() {
+  const handleSeatError = useCallback((error = {}, context = {}) => {
+    console.error('🚨 [SEAT_ERROR]', error, context);
+
     let errorMessage = 'Error al seleccionar el asiento';
     let shouldClearCart = false;
-    
+
     if (error.message?.includes('already_locked')) {
       errorMessage = 'Este asiento ya está siendo seleccionado por otro usuario. Por favor, elige otro asiento.';
     } else if (error.message?.includes('not_available')) {
@@ -22,10 +24,9 @@ export
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    message.error(errorMessage);
-    
-    // Limpiar carrito si es necesario
+
+    antdMessage.error(errorMessage);
+
     if (shouldClearCart && context.clearCart) {
       context.clearCart();
     }
@@ -37,16 +38,13 @@ export
     };
   }, []);
 
-  /**
-   * Maneja errores de pago
-   */
-  const handlePaymentError = useCallback((error, context = {}) => {
+  const handlePaymentError = useCallback((error = {}, context = {}) => {
     console.error('🚨 [PAYMENT_ERROR]', error, context);
-    
+
     let errorMessage = 'Error al procesar el pago';
     let shouldClearCart = false;
     let shouldRetry = false;
-    
+
     if (error.message?.includes('already_locked')) {
       errorMessage = 'Uno o más asientos ya fueron seleccionados por otro usuario. Por favor, actualiza tu selección.';
       shouldClearCart = true;
@@ -68,14 +66,13 @@ export
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    message.error(errorMessage);
-    
-    // Limpiar carrito si es necesario
+
+    antdMessage.error(errorMessage);
+
     if (shouldClearCart && context.clearCart) {
       context.clearCart();
     }
-    
+
     return {
       handled: true,
       message: errorMessage,
@@ -84,14 +81,11 @@ export
     };
   }, []);
 
-  /**
-   * Maneja errores de validación
-   */
-  const handleValidationError = useCallback((error, context = {}) => {
+  const handleValidationError = useCallback((error = {}, context = {}) => {
     console.error('🚨 [VALIDATION_ERROR]', error, context);
-    
+
     let errorMessage = 'Error de validación';
-    
+
     if (error.message?.includes('required')) {
       errorMessage = 'Faltan campos requeridos. Por favor, completa todos los datos.';
     } else if (error.message?.includes('invalid_email')) {
@@ -103,24 +97,21 @@ export
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    message.error(errorMessage);
-    
+
+    antdMessage.error(errorMessage);
+
     return {
       handled: true,
       message: errorMessage
     };
   }, []);
 
-  /**
-   * Maneja errores de red/conexión
-   */
-  const handleNetworkError = useCallback((error, context = {}) => {
+  const handleNetworkError = useCallback((error = {}, context = {}) => {
     console.error('🚨 [NETWORK_ERROR]', error, context);
-    
+
     let errorMessage = 'Error de conexión';
     let shouldRetry = true;
-    
+
     if (error.message?.includes('timeout')) {
       errorMessage = 'La operación tardó demasiado. Por favor, inténtalo de nuevo.';
     } else if (error.message?.includes('offline')) {
@@ -132,9 +123,9 @@ export
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    message.error(errorMessage);
-    
+
+    antdMessage.error(errorMessage);
+
     return {
       handled: true,
       message: errorMessage,
@@ -142,28 +133,20 @@ export
     };
   }, []);
 
-  /**
-   * Maneja errores genéricos
-   */
-  const handleGenericError = useCallback((error, context = {}) => {
+  const handleGenericError = useCallback((error = {}, context = {}) => {
     console.error('🚨 [GENERIC_ERROR]', error, context);
-    
+
     const errorMessage = error.message || 'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.';
-    
-    message.error(errorMessage);
-    
+
+    antdMessage.error(errorMessage);
+
     return {
       handled: true,
       message: errorMessage
     };
   }, []);
 
-  /**
-   * Maneja errores de forma inteligente basándose en el tipo
-   */
   const handleError = useCallback((error, type = 'generic', context = {}) => {
-    console.error('🚨 [ERROR_HANDLER]', { error, type, context });
-    
     switch (type) {
       case 'seat':
         return handleSeatError(error, context);
@@ -178,25 +161,16 @@ export
     }
   }, [handleSeatError, handlePaymentError, handleValidationError, handleNetworkError, handleGenericError]);
 
-  /**
-   * Muestra mensaje de éxito
-   */
-  const showSuccess = useCallback((message, duration = 3) => {
-    message.success(message, duration);
+  const showSuccess = useCallback((msg, duration = 3) => {
+    antdMessage.success(msg, duration);
   }, []);
 
-  /**
-   * Muestra mensaje de advertencia
-   */
-  const showWarning = useCallback((message, duration = 4) => {
-    message.warning(message, duration);
+  const showWarning = useCallback((msg, duration = 4) => {
+    antdMessage.warning(msg, duration);
   }, []);
 
-  /**
-   * Muestra mensaje informativo
-   */
-  const showInfo = useCallback((message, duration = 3) => {
-    message.info(message, duration);
+  const showInfo = useCallback((msg, duration = 3) => {
+    antdMessage.info(msg, duration);
   }, []);
 
   return {
@@ -210,5 +184,5 @@ export
     showWarning,
     showInfo
   };
-};
+}
 

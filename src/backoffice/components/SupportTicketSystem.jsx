@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Modal, 
-  Form, 
-  Input, 
-  Select, 
-  Tag, 
-  Space, 
-  Typography, 
-  Badge, 
-  Timeline, 
-  Avatar, 
-  Tooltip, 
+import {
+  Card,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Tag,
+  Space,
+  Typography,
+  Badge,
+  Timeline,
+  Avatar,
+  Tooltip,
   message,
   Drawer,
   List,
@@ -22,11 +22,11 @@ import {
   Alert,
   Checkbox
 } from '../../utils/antdComponents';
-import { 
-  CustomerServiceOutlined, 
-  PlusOutlined, 
-  EditOutlined, 
-  EyeOutlined, 
+import {
+  CustomerServiceOutlined,
+  PlusOutlined,
+  EditOutlined,
+  EyeOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   ExclamationCircleOutlined,
@@ -182,7 +182,7 @@ const SupportTicketSystem = () => {
   };
 
   const getStatusColor = (status) => {
-
+    switch (status) {
       case 'open': return 'red';
       case 'in_progress': return 'orange';
       case 'resolved': return 'green';
@@ -328,22 +328,22 @@ const SupportTicketSystem = () => {
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button 
-            size="small" 
+          <Button
+            size="small"
             icon={<EyeOutlined />}
             onClick={() => handleViewTicket(record)}
           >
             Ver
           </Button>
-          <Button 
-            size="small" 
+          <Button
+            size="small"
             icon={<EditOutlined />}
             onClick={() => handleEditTicket(record)}
           >
             Editar
           </Button>
-          <Button 
-            size="small" 
+          <Button
+            size="small"
             icon={<MessageOutlined />}
             onClick={() => {
               setSelectedTicket(record);
@@ -371,7 +371,7 @@ const SupportTicketSystem = () => {
             <Select
               placeholder="Estado"
               value={filters.status}
-              onChange={(value) => setFilters({...filters, status: value})}
+              onChange={(value) => setFilters({ ...filters, status: value })}
               style={{ width: 120 }}
             >
               <Option value="all">Todos</Option>
@@ -383,7 +383,7 @@ const SupportTicketSystem = () => {
             <Select
               placeholder="Prioridad"
               value={filters.priority}
-              onChange={(value) => setFilters({...filters, priority: value})}
+              onChange={(value) => setFilters({ ...filters, priority: value })}
               style={{ width: 120 }}
             >
               <Option value="all">Todas</Option>
@@ -526,7 +526,7 @@ const SupportTicketSystem = () => {
             <Title level={5}>Respuestas</Title>
             <Timeline>
               {selectedTicket.responses?.map((response, index) => (
-                <Timeline.Item 
+                <Timeline.Item
                   key={response.id}
                   dot={response.is_internal ? <ExclamationCircleOutlined /> : <MessageOutlined />}
                 >
@@ -547,8 +547,8 @@ const SupportTicketSystem = () => {
 
             <Divider />
 
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<MessageOutlined />}
               onClick={() => {
                 setDetailDrawerVisible(false);

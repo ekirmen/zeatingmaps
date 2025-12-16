@@ -16,8 +16,10 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
 
   // Cargar zonas y precios del evento
 
+  // Cargar zonas y precios del evento
+  useEffect(() => {
     if (!evento?.id || !funcion?.id) return;
-    
+
     loadZonasAndPrecios();
   }, [evento?.id, funcion?.id]);
 
@@ -118,7 +120,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
     };
 
     onAddToCart(item);
-    
+
     // Limpiar cantidad despu©s de agregar
     setCantidades(prev => ({
       ...prev,

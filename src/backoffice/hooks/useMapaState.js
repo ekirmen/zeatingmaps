@@ -1,6 +1,9 @@
 import { useState } from 'react';
 
-export 
+// Conservative implementation: provide a hook that returns common mapa state.
+// This keeps API stable for callers while avoiding parse errors from corrupted file.
+export default function useMapaState(initialElements = []) {
+  const [elements, setElements] = useState(initialElements);
   const [selectedIds, setSelectedIds] = useState([]);
   const [zones, setZones] = useState([]);
   const [showZones, setShowZones] = useState(false);
@@ -12,15 +15,25 @@ export
   const [sillaShape, setSillaShape] = useState('rect');
 
   return {
-    elements, setElements,
-    selectedIds, setSelectedIds,
-    zones, setZones,
-    showZones, setShowZones,
-    selectedZone, setSelectedZone,
-    selectedElement, setSelectedElement,
-    numSillas, setNumSillas,
-    zoom, setZoom,
-    selectionRect, setSelectionRect,
-    sillaShape, setSillaShape,
+    elements,
+    setElements,
+    selectedIds,
+    setSelectedIds,
+    zones,
+    setZones,
+    showZones,
+    setShowZones,
+    selectedZone,
+    setSelectedZone,
+    selectedElement,
+    setSelectedElement,
+    numSillas,
+    setNumSillas,
+    zoom,
+    setZoom,
+    selectionRect,
+    setSelectionRect,
+    sillaShape,
+    setSillaShape,
   };
-};
+}

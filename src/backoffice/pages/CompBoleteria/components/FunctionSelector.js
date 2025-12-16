@@ -2,6 +2,7 @@ import React from 'react';
 import formatDateString from '../../../../utils/formatDateString';
 
 
+const FunctionSelector = ({ selectedFuncion, onShowFunctions }) => {
   if (!selectedFuncion) return null;
 
   return (

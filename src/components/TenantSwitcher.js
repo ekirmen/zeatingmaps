@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Select, Button, Tooltip, Avatar, Dropdown, Menu } from '../utils/antdComponents';
 import { useMultiTenant } from '../hooks/useMultiTenant';
-import { 
-  BankOutlined, 
-  SwapOutlined, 
+import {
+  BankOutlined,
+  SwapOutlined,
   PlusOutlined,
   CheckCircleOutlined,
   UserOutlined
@@ -11,31 +11,32 @@ import {
 
 const { Option } = Select;
 
-const TenantSwitcher = ({ 
-  showLabel = true, 
-  size = 'middle', 
+const TenantSwitcher = ({
+  showLabel = true,
+  size = 'middle',
   style = {},
-  onTenantChange = null 
+  onTenantChange = null
 }) => {
-  const { 
-    userTenants, 
-    activeTenant, 
-    loading, 
+  const {
+    userTenants,
+    activeTenant,
+    loading,
     canSwitchTenants,
     switchToTenant,
-    totalTenants 
+    totalTenants
   } = useMultiTenant();
-  
+
   const [switching, setSwitching] = useState(false);
 
   // Si no hay múltiples tenants, no mostrar nada
 
+  if (loading || !userTenants || userTenants.length === 0) {
     return null;
   }
 
   const handleTenantChange = async (tenantId) => {
     if (tenantId === activeTenant?.tenant_id) return;
-    
+
     setSwitching(true);
     try {
       const success = await switchToTenant(tenantId);
@@ -69,10 +70,10 @@ const TenantSwitcher = ({
     return (
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', ...style }}>
         {showLabel && <span style={{ fontSize: '12px', color: '#666' }}>Empresa:</span>}
-        
+
         {userTenants.map((tenant) => (
-          <Tooltip 
-            key={tenant.tenant_id} 
+          <Tooltip
+            key={tenant.tenant_id}
             title={`Cambiar a ${getTenantDisplayName(tenant)}`}
           >
             <Button
@@ -132,7 +133,7 @@ const TenantSwitcher = ({
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', ...style }}>
       {showLabel && <span style={{ fontSize: '12px', color: '#666' }}>Empresa:</span>}
-      
+
       <Dropdown overlay={menu} trigger={['click']} placement="bottomRight">
         <Button
           size={size}
@@ -149,7 +150,7 @@ const TenantSwitcher = ({
           </span>
         </Button>
       </Dropdown>
-      
+
       <span style={{ fontSize: '11px', color: '#999' }}>
         ({totalTenants})
       </span>

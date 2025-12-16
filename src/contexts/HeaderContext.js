@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useHeader } from '../contexts/HeaderContext';
+const HeaderContext = () => {
+  const { configureHeader } = useHeader();
 
 
 
@@ -41,3 +41,5 @@ import { useHeader } from '../contexts/HeaderContext';
     </div>
   );
 };
+
+export default HeaderContext;
