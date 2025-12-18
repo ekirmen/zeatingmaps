@@ -313,12 +313,6 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       permission: 'boleteria', // Mostrar si tiene al menos uno de los permisos de ventas
       items: [
         {
-          title: 'Boletería',
-          path: '/dashboard/boleteria',
-          icon: faTicketAlt,
-          permission: 'boleteria'
-        },
-        {
           title: 'Transacciones',
           path: '/dashboard/transacciones',
           icon: faCreditCard,

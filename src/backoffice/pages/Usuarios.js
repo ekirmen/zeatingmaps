@@ -29,7 +29,7 @@ const Usuarios = () => {
       // 👥 CARGAR USUARIOS DESDE PROFILES CON FILTRO DE TENANT
       let query = supabase
         .from('profiles')
-        .select('id, nombre, apellido, email, login, telefono, created_at, role, activo, tenant_id, avatar_url')
+        .select('id, nombre, apellido, login, telefono, created_at, role, activo, tenant_id, avatar_url')
         .order('created_at', { ascending: false });
 
       // Aplicar filtro de tenant para multiempresas

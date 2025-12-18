@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Statistic, 
-  Table, 
-  DatePicker, 
-  Select, 
-  Button, 
-  Typography, 
-  Space, 
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Table,
+  DatePicker,
+  Select,
+  Button,
+  Typography,
+  Space,
   Tag,
   Spin,
   Empty
 } from '../../utils/antdComponents';
-import { 
-  DollarOutlined, 
-  CreditCardOutlined, 
-  BankOutlined, 
-  MobileOutlined, 
-  RiseOutlined, 
+import {
+  DollarOutlined,
+  CreditCardOutlined,
+  BankOutlined,
+  MobileOutlined,
+  RiseOutlined,
   BarChartOutlined,
   LineChartOutlined,
   PieChartOutlined
@@ -33,15 +33,15 @@ const { Option } = Select;
 // Componente simple para gr¡ficos b¡sicos usando divs y CSS
 const SimpleBarChart = ({ data, dataKey, color = '#1890ff', height = 200 }) => {
   const maxValue = Math.max(...data.map(d => d[dataKey])) || 1;
-  
+
   return (
     <div style={{ height: `${height}px`, display: 'flex', alignItems: 'flex-end', gap: '8px', padding: '16px 0' }}>
       {data.map((item, index) => {
         const value = item[dataKey] || 0;
         const heightPercent = (value / maxValue) * 80;
-        
+
         return (
-          <div 
+          <div
             key={index}
             style={{
               flex: 1,
@@ -75,7 +75,7 @@ const SimpleBarChart = ({ data, dataKey, color = '#1890ff', height = 200 }) => {
 
 const SimplePieChart = ({ data, height = 200 }) => {
   const total = data.reduce((sum, item) => sum + (item.amount || 0), 0);
-  
+
   return (
     <div style={{ height: `${height}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {total === 0 ? (
@@ -84,9 +84,9 @@ const SimplePieChart = ({ data, height = 200 }) => {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxWidth: '300px' }}>
           {data.map((item, index) => {
             const percentage = total > 0 ? ((item.amount || 0) / total) * 100 : 0;
-            
+
             return (
-              <div 
+              <div
                 key={index}
                 style={{
                   display: 'flex',
@@ -137,14 +137,14 @@ const PaymentAnalytics = () => {
   const loadAnalyticsData = async () => {
     try {
       setLoading(true);
-      
+
       // Carga solo datos esenciales primero
       await Promise.all([
         loadTransactionData(),
         loadGatewayStats()
       ]);
-      
-      // Carga datos pesados despu©s
+
+      // Carga datos pesados después
       setTimeout(async () => {
         await Promise.all([
           loadDailySales(),
@@ -263,7 +263,7 @@ const PaymentAnalytics = () => {
       const monthlyData = data.reduce((acc, transaction) => {
         const date = new Date(transaction.created_at);
         const monthKey = date.toLocaleDateString('es-ES', { month: 'short' });
-        
+
         if (!acc[monthKey]) {
           acc[monthKey] = { month: monthKey, revenue: 0 };
         }
@@ -343,7 +343,7 @@ const PaymentAnalytics = () => {
   const totalRevenue = analyticsData.transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   const totalTransactions = analyticsData.transactions.length;
   const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
-  
+
   const statusBreakdown = useMemo(() => {
     const summary = {
       completed: 0,
@@ -375,8 +375,8 @@ const PaymentAnalytics = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <Title level={2}>An¡lisis de Pagos</Title>
-        <Text type="secondary">M©tricas detalladas y tendencias de transacciones</Text>
+        <Title level={2}>Análisis de Pagos</Title>
+        <Text type="secondary">Métricas detalladas y tendencias de transacciones</Text>
       </div>
 
       {/* Filtros */}
@@ -406,8 +406,8 @@ const PaymentAnalytics = () => {
             </Select>
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<BarChartOutlined />}
               onClick={loadAnalyticsData}
               loading={loading}
@@ -418,7 +418,7 @@ const PaymentAnalytics = () => {
         </Row>
       </Card>
 
-      {/* M©tricas Principales */}
+      {/* Métricas Principales */}
       <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24} sm={8}>
           <Card>
@@ -458,7 +458,7 @@ const PaymentAnalytics = () => {
       <Row gutter={[16, 16]} className="mb-8">
         {/* Ventas Diarias */}
         <Col xs={24} lg={12}>
-          <Card 
+          <Card
             title={
               <Space>
                 <LineChartOutlined />
@@ -467,9 +467,9 @@ const PaymentAnalytics = () => {
             }
           >
             {analyticsData.dailySales.length > 0 ? (
-              <SimpleBarChart 
-                data={analyticsData.dailySales} 
-                dataKey="sales" 
+              <SimpleBarChart
+                data={analyticsData.dailySales}
+                dataKey="sales"
                 color="#1890ff"
               />
             ) : (
@@ -478,13 +478,13 @@ const PaymentAnalytics = () => {
           </Card>
         </Col>
 
-        {/* Distribuci³n por Pasarela */}
+        {/* Distribución por Pasarela */}
         <Col xs={24} lg={12}>
-          <Card 
+          <Card
             title={
               <Space>
                 <PieChartOutlined />
-                Distribuci³n por Pasarela
+                Distribución por Pasarela
               </Space>
             }
           >
@@ -496,7 +496,7 @@ const PaymentAnalytics = () => {
       {/* Tendencias Mensuales */}
       <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24}>
-          <Card 
+          <Card
             title={
               <Space>
                 <BarChartOutlined />
@@ -505,9 +505,9 @@ const PaymentAnalytics = () => {
             }
           >
             {analyticsData.monthlyTrends.length > 0 ? (
-              <SimpleBarChart 
-                data={analyticsData.monthlyTrends} 
-                dataKey="revenue" 
+              <SimpleBarChart
+                data={analyticsData.monthlyTrends}
+                dataKey="revenue"
                 color="#3f8600"
                 height={250}
               />

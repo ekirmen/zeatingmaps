@@ -796,12 +796,8 @@ const SalesTransactions = () => {
       <Row justify="space-between" align="middle">
         <Col>
           <Space direction="vertical" size={4}>
-            <Title level={3} style={{ margin: 0 }}>
-              Gesti³n de Transacciones
-            </Title>
-            <Text type="secondary">
-              Visualiza y administra las transacciones de tus ventas en l­nea y boleter­a.
-            </Text>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Gestión de Transacciones</h1>
+            <p className="text-gray-600">Visualiza y administra las transacciones de tus ventas en línea y boletería.</p>
           </Space>
         </Col>
         <Col>

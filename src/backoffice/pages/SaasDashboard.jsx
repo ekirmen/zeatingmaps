@@ -496,9 +496,9 @@ const SaasDashboard = () => {
       render: (status) => (
         <Tag color={getStatusColor(status)}>
           {status === 'active' ? 'Activo' :
-           status === 'inactive' ? 'Inactivo' :
-           status === 'suspended' ? 'Suspendido' :
-           status === 'pending' ? 'Pendiente' : status}
+            status === 'inactive' ? 'Inactivo' :
+              status === 'suspended' ? 'Suspendido' :
+                status === 'pending' ? 'Pendiente' : status}
         </Tag>
       ),
     },
@@ -522,7 +522,7 @@ const SaasDashboard = () => {
                 Crear Backup
               </Menu.Item>
               <Menu.Item key="audit" icon={<AuditOutlined />} onClick={() => message.info(`Ver logs de ${record.company_name}`)}>
-                Ver Auditor­a
+                Ver Auditoría
               </Menu.Item>
               <Menu.Item key="templates" icon={<FileTextOutlined />} onClick={() => message.info(`Templates para ${record.company_name}`)}>
                 Templates
@@ -549,7 +549,7 @@ const SaasDashboard = () => {
         <Col span={18}>
           <Title level={2}>
             <BankOutlined style={{ marginRight: '8px' }} />
-            Panel de Administraci³n SaaS
+            Panel de Administración SaaS
           </Title>
         </Col>
         <Col span={6} style={{ textAlign: 'right' }}>
@@ -581,13 +581,13 @@ const SaasDashboard = () => {
                   Tickets de Soporte ({stats.pendingSupportTickets})
                 </Menu.Item>
                 <Menu.Item key="alerts" icon={<ExclamationCircleOutlined />}>
-                  Alertas Cr­ticas ({stats.criticalAlerts})
+                  Alertas Críticas ({stats.criticalAlerts})
                 </Menu.Item>
                 <Menu.Item key="audit" icon={<AuditOutlined />}>
-                  Logs de Auditor­a
+                  Logs de Auditoría
                 </Menu.Item>
                 <Menu.Item key="backup" icon={<CloudUploadOutlined />}>
-                  Gesti³n de Backups
+                  Gestión de Backups
                 </Menu.Item>
               </Menu>
             }>
@@ -613,7 +613,7 @@ const SaasDashboard = () => {
         />
       )}
 
-      {/* Estad­sticas */}
+      {/* Estadísticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -657,7 +657,7 @@ const SaasDashboard = () => {
         </Col>
       </Row>
 
-      {/* Estad­sticas adicionales */}
+      {/* Estadísticas adicionales */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -701,7 +701,7 @@ const SaasDashboard = () => {
         </Col>
       </Row>
 
-      {/* M©tricas avanzadas */}
+      {/* Métricas avanzadas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -777,7 +777,7 @@ const SaasDashboard = () => {
             <Search
               placeholder="Buscar empresas..."
               value={filters.searchTerm}
-              onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
               onSearch={() => loadTenants()}
               allowClear
             />
@@ -786,7 +786,7 @@ const SaasDashboard = () => {
             <Select
               placeholder="Estado"
               value={filters.status}
-              onChange={(value) => setFilters({...filters, status: value})}
+              onChange={(value) => setFilters({ ...filters, status: value })}
               style={{ width: '100%' }}
             >
               <Option value="all">Todos los estados</Option>
@@ -800,11 +800,11 @@ const SaasDashboard = () => {
             <Select
               placeholder="Plan"
               value={filters.plan}
-              onChange={(value) => setFilters({...filters, plan: value})}
+              onChange={(value) => setFilters({ ...filters, plan: value })}
               style={{ width: '100%' }}
             >
               <Option value="all">Todos los planes</Option>
-              <Option value="basic">B¡sico</Option>
+              <Option value="basic">Básico</Option>
               <Option value="pro">Profesional</Option>
               <Option value="enterprise">Empresarial</Option>
             </Select>
@@ -823,7 +823,7 @@ const SaasDashboard = () => {
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => {
-                  setFilters({status: 'all', plan: 'all', dateRange: null, searchTerm: ''});
+                  setFilters({ status: 'all', plan: 'all', dateRange: null, searchTerm: '' });
                   loadTenants();
                 }}
               >
@@ -842,13 +842,13 @@ const SaasDashboard = () => {
 
       {/* Tabla de Empresas */}
       <Card
-        title="Gesti³n de Empresas"
+        title="Gestión de Empresas"
         extra={
           <Space>
             <Button icon={<AuditOutlined />} onClick={() => message.info('Ver logs de auditor­a')}>
-              Auditor­a
+              Auditoría
             </Button>
-            <Button icon={<CloudUploadOutlined />} onClick={() => message.info('Gesti³n de backups')}>
+            <Button icon={<CloudUploadOutlined />} onClick={() => message.info('Gestión de backups')}>
               Backups
             </Button>
             <Button icon={<FileTextOutlined />} onClick={() => message.info('Templates de soporte')}>
@@ -902,7 +902,7 @@ const SaasDashboard = () => {
               <Form.Item
                 name="contact_email"
                 label="Email de Contacto"
-                rules={[{ required: true, type: 'email', message: 'Email v¡lido requerido' }]}
+                rules={[{ required: true, type: 'email', message: 'Email válido requerido' }]}
               >
                 <Input />
               </Form.Item>
@@ -917,7 +917,7 @@ const SaasDashboard = () => {
                 rules={[{ required: true, message: 'Plan requerido' }]}
               >
                 <Select>
-                  <Option value="basic">B¡sico</Option>
+                  <Option value="basic">Básico</Option>
                   <Option value="pro">Profesional</Option>
                   <Option value="enterprise">Empresarial</Option>
                 </Select>
@@ -963,7 +963,7 @@ const SaasDashboard = () => {
             <Col span={12}>
               <Form.Item
                 name="max_users"
-                label="Usuarios M¡ximos"
+                label="Usuarios Máximos"
               >
                 <Input type="number" />
               </Form.Item>
@@ -971,7 +971,7 @@ const SaasDashboard = () => {
             <Col span={12}>
               <Form.Item
                 name="max_events"
-                label="Eventos M¡ximos"
+                label="Eventos Máximos"
               >
                 <Input type="number" />
               </Form.Item>
@@ -1005,7 +1005,7 @@ const SaasDashboard = () => {
               <Descriptions.Item label="Empresa">{selectedTenant.company_name}</Descriptions.Item>
               <Descriptions.Item label="Subdominio">{selectedTenant.full_url || `${selectedTenant.subdomain}.${selectedTenant.domain || 'veneventos.com'}`}</Descriptions.Item>
               <Descriptions.Item label="Email">{selectedTenant.contact_email}</Descriptions.Item>
-              <Descriptions.Item label="Tel©fono">{selectedTenant.contact_phone}</Descriptions.Item>
+              <Descriptions.Item label="Teléfono">{selectedTenant.contact_phone}</Descriptions.Item>
               <Descriptions.Item label="Plan">
                 <Tag color={getPlanColor(selectedTenant.plan_type)}>
                   {selectedTenant.plan_type?.toUpperCase()}
@@ -1014,15 +1014,15 @@ const SaasDashboard = () => {
               <Descriptions.Item label="Estado">
                 <Tag color={getStatusColor(selectedTenant.status)}>
                   {selectedTenant.status === 'active' ? 'Activo' :
-                   selectedTenant.status === 'inactive' ? 'Inactivo' :
-                   selectedTenant.status === 'suspended' ? 'Suspendido' :
-                   selectedTenant.status === 'pending' ? 'Pendiente' : selectedTenant.status}
+                    selectedTenant.status === 'inactive' ? 'Inactivo' :
+                      selectedTenant.status === 'suspended' ? 'Suspendido' :
+                        selectedTenant.status === 'pending' ? 'Pendiente' : selectedTenant.status}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Fecha de Creaci³n">
                 {new Date(selectedTenant.created_at).toLocaleDateString()}
               </Descriptions.Item>
-              <Descriptions.Item label="šltima Actualizaci³n">
+              <Descriptions.Item label="Última Actualización">
                 {new Date(selectedTenant.updated_at).toLocaleDateString()}
               </Descriptions.Item>
             </Descriptions>
@@ -1136,7 +1136,7 @@ const SaasDashboard = () => {
                   onClick={() => handleViewClientData(selectedTenant, 'customization')}
                   block
                 >
-                  Ver Personalizaci³n del Cliente
+                  Ver Personalización del Cliente
                 </Button>
               </Col>
               <Col span={12}>
@@ -1181,7 +1181,7 @@ const SaasDashboard = () => {
             <TabPane tab="Productos" key="products">
               <TenantProductsSupport tenant={selectedTenant} onAction={handleSupportAction} />
             </TabPane>
-            <TabPane tab="Configuraci³n" key="config">
+            <TabPane tab="Configuración" key="config">
               <TenantConfigSupport tenant={selectedTenant} onAction={handleSupportAction} />
             </TabPane>
           </Tabs>
@@ -1392,7 +1392,7 @@ const TenantConfigSupport = ({ tenant, onAction }) => {
   return (
     <div>
       <Alert
-        message="Configuraci³n del Tenant"
+        message="Configuración del Tenant"
         description="Aqu­ puedes modificar la configuraci³n general del cliente"
         type="info"
         showIcon
@@ -1406,7 +1406,7 @@ const TenantConfigSupport = ({ tenant, onAction }) => {
             description="Actualizar el plan del cliente"
           />
           <Select defaultValue={tenant.plan_type} style={{ width: 120 }}>
-            <Option value="basic">B¡sico</Option>
+            <Option value="basic">Básico</Option>
             <Option value="pro">Profesional</Option>
             <Option value="enterprise">Empresarial</Option>
           </Select>
@@ -1488,7 +1488,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
     loadData();
   }, [loadData]);
 
-    const renderDataItem = (item) => {
+  const renderDataItem = (item) => {
     switch (dataType) {
       case 'events':
         return (
@@ -1650,7 +1650,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
             ]}
           >
             <List.Item.Meta
-              title={`Personalizaci³n ${item.id}`}
+              title={`Personalización ${item.id}`}
               description={`Tema: ${item.tema} - Color: ${item.color_principal} - Estado: ${item.estado}`}
             />
           </List.Item>

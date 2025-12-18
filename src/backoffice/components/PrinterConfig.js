@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Select, 
-  Input, 
-  Switch, 
-  Alert, 
-  Space, 
+import {
+  Card,
+  Button,
+  Select,
+  Input,
+  Switch,
+  Alert,
+  Space,
   Typography,
   Row,
   Col,
@@ -15,15 +15,15 @@ import {
   message,
   Tag
 } from '../../utils/antdComponents';
-import { 
+import {
   PrinterOutlined,
   SettingOutlined,
   ExperimentOutlined,
   SaveOutlined
 } from '@ant-design/icons';
-import { 
-  bocaPrinterService, 
-  saveFormatConfig, 
+import {
+  bocaPrinterService,
+  saveFormatConfig,
   getFormatConfig,
   DEFAULT_FORMAT_CONFIG,
   applyBocaTemplate
@@ -72,7 +72,7 @@ const PrinterConfig = () => {
       setDetecting(true);
       const detectedPrinters = await bocaPrinterService.detectPrinters();
       setPrinters(detectedPrinters);
-      
+
       if (detectedPrinters.length > 0) {
         message.success(`${detectedPrinters.length} impresora(s) detectada(s)`);
       } else {
@@ -90,12 +90,12 @@ const PrinterConfig = () => {
     try {
       setLoading(true);
       const success = await bocaPrinterService.connectToPrinter(device);
-      
+
       if (success) {
         setSelectedPrinter(device);
         setIsConnected(true);
         message.success('Impresora conectada exitosamente');
-        
+
         // Obtener estado de la impresora
         const status = await bocaPrinterService.getPrinterStatus();
         setPrinterStatus(status);
@@ -122,9 +122,9 @@ const PrinterConfig = () => {
     try {
       setLoading(true);
       const success = await bocaPrinterService.testConnection();
-      
+
       if (success) {
-        message.success('Conexi³n de impresora exitosa');
+        message.success('Conexión de impresora exitosa');
       } else {
         message.error('Error en la conexi³n de impresora');
       }
@@ -139,7 +139,7 @@ const PrinterConfig = () => {
   const printTestTicket = async () => {
     try {
       setLoading(true);
-      
+
       const testTicketData = {
         eventName: 'EVENTO DE PRUEBA',
         eventDate: new Date().toLocaleDateString(),
@@ -152,7 +152,7 @@ const PrinterConfig = () => {
       };
 
       const success = await bocaPrinterService.printTicket(testTicketData, formatConfig);
-      
+
       if (success) {
         message.success('Ticket de prueba impreso exitosamente');
       } else {
@@ -170,7 +170,7 @@ const PrinterConfig = () => {
     try {
       setLoading(true);
       await saveFormatConfig(formatConfig);
-      message.success('Configuraci³n guardada exitosamente');
+      message.success('Configuración guardada exitosamente');
     } catch (error) {
       console.error('Error saving config:', error);
       message.error('Error al guardar la configuraci³n');
@@ -203,14 +203,14 @@ const PrinterConfig = () => {
   return (
     <div className="printer-config">
       <Title level={2}>
-        <PrinterOutlined /> Configuraci³n de Impresora Boca
+        <PrinterOutlined /> Configuración de Impresora Boca
       </Title>
 
-      {/* Detecci³n de Impresoras */}
-      <Card title="Detecci³n de Impresoras" className="mb-4">
+      {/* Detección de Impresoras */}
+      <Card title="Detección de Impresoras" className="mb-4">
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             onClick={detectPrinters}
             loading={detecting}
             icon={<SettingOutlined />}
@@ -225,8 +225,8 @@ const PrinterConfig = () => {
                 {printers.map((printer, index) => (
                   <div key={index} className="mb-2 p-2 border rounded">
                     <Text>{printer.productName || `Impresora ${index + 1}`}</Text>
-                    <Button 
-                      size="small" 
+                    <Button
+                      size="small"
                       onClick={() => connectToPrinter(printer)}
                       className="ml-2"
                     >
@@ -259,16 +259,16 @@ const PrinterConfig = () => {
         <Card title="Estado de la Impresora" className="mb-4">
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Button 
+              <Button
                 onClick={testPrinter}
                 loading={loading}
                 icon={<ExperimentOutlined />}
               >
-                Probar Conexi³n
+                Probar Conexión
               </Button>
             </Col>
             <Col span={12}>
-              <Button 
+              <Button
                 onClick={printTestTicket}
                 loading={loading}
                 icon={<PrinterOutlined />}
@@ -301,22 +301,22 @@ const PrinterConfig = () => {
       <Card title="Plantillas Predefinidas" className="mb-4">
         <Alert
           message="Plantillas Listas para Boca"
-          description="Selecciona una plantilla predefinida optimizada para impresoras Boca. Estas plantillas est¡n configuradas con los mejores ajustes para cada tipo de evento."
+          description="Selecciona una plantilla predefinida optimizada para impresoras Boca. Estas plantillas están configuradas con los mejores ajustes para cada tipo de evento."
           type="info"
           showIcon
           className="mb-4"
         />
-        
+
         <Row gutter={[16, 16]}>
           <Col span={8}>
-            <Card 
-              size="small" 
+            <Card
+              size="small"
               hoverable
               className="template-card"
               onClick={() => applyTemplate('default')}
             >
               <div className="text-center">
-                <Title level={5}>ðŸŽ­ Est¡ndar</Title>
+                <Title level={5}>ðŸŽ­ Estándar</Title>
                 <Text type="secondary">80mm - Eventos normales</Text>
                 <br />
                 <Text type="secondary">Formato profesional</Text>
@@ -324,23 +324,23 @@ const PrinterConfig = () => {
             </Card>
           </Col>
           <Col span={8}>
-            <Card 
-              size="small" 
+            <Card
+              size="small"
               hoverable
               className="template-card"
               onClick={() => applyTemplate('small')}
             >
               <div className="text-center">
-                <Title level={5}>ðŸ“± Peque±o</Title>
+                <Title level={5}>ðŸ“± Pequeño</Title>
                 <Text type="secondary">58mm - Eventos peque±os</Text>
                 <br />
-                <Text type="secondary">Compacto y econ³mico</Text>
+                <Text type="secondary">Compacto y económico</Text>
               </div>
             </Card>
           </Col>
           <Col span={8}>
-            <Card 
-              size="small" 
+            <Card
+              size="small"
               hoverable
               className="template-card"
               onClick={() => applyTemplate('premium')}
@@ -349,7 +349,7 @@ const PrinterConfig = () => {
                 <Title level={5}>­ Premium</Title>
                 <Text type="secondary">112mm - Eventos premium</Text>
                 <br />
-                <Text type="secondary">M¡xima calidad</Text>
+                <Text type="secondary">Máxima calidad</Text>
               </div>
             </Card>
           </Col>
@@ -357,13 +357,13 @@ const PrinterConfig = () => {
       </Card>
 
       {/* Vista Previa */}
-      <TemplatePreview 
-        template={formatConfig} 
+      <TemplatePreview
+        template={formatConfig}
         ticketData={previewData}
       />
 
-      {/* Configuraci³n de Formato */}
-      <Card title="Configuraci³n de Formato" className="mb-4">
+      {/* Configuración de Formato */}
+      <Card title="Configuración de Formato" className="mb-4">
         <Form layout="vertical">
           <Row gutter={[16, 16]}>
             <Col span={12}>
@@ -423,7 +423,7 @@ const PrinterConfig = () => {
 
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Form.Item label="Tama±o de Fuente">
+              <Form.Item label="Tamaño de Fuente">
                 <Select
                   value={formatConfig.fontSize}
                   onChange={(value) => handleFormatChange('fontSize', value)}
@@ -431,12 +431,12 @@ const PrinterConfig = () => {
                   <Option value="00">Normal</Option>
                   <Option value="01">Doble Alto</Option>
                   <Option value="02">Doble Ancho</Option>
-                  <Option value="03">Doble Tama±o</Option>
+                  <Option value="03">Doble Tamaño</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Alineaci³n">
+              <Form.Item label="Alineación">
                 <Select
                   value={formatConfig.alignment}
                   onChange={(value) => handleFormatChange('alignment', value)}
@@ -463,13 +463,13 @@ const PrinterConfig = () => {
               value={formatConfig.footer}
               onChange={(e) => handleFormatChange('footer', e.target.value)}
               rows={3}
-              placeholder="Texto del pie de p¡gina del ticket"
+              placeholder="Texto del pie de página del ticket"
             />
           </Form.Item>
 
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Form.Item label="Mostrar C³digo QR">
+              <Form.Item label="Mostrar Código QR">
                 <Switch
                   checked={formatConfig.showQRCode}
                   onChange={(checked) => handleFormatChange('showQRCode', checked)}
@@ -477,7 +477,7 @@ const PrinterConfig = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Mostrar C³digo de Barras">
+              <Form.Item label="Mostrar Código de Barras">
                 <Switch
                   checked={formatConfig.showBarcode}
                   onChange={(checked) => handleFormatChange('showBarcode', checked)}
@@ -488,20 +488,20 @@ const PrinterConfig = () => {
         </Form>
 
         <div className="mt-4">
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             onClick={saveConfig}
             loading={loading}
             icon={<SaveOutlined />}
           >
-            Guardar Configuraci³n
+            Guardar Configuración
           </Button>
         </div>
       </Card>
 
       <Alert
-        message="Informaci³n Importante"
-        description="Asegºrate de que la impresora Boca est© conectada y encendida antes de realizar las pruebas. El sistema detectar¡ autom¡ticamente las impresoras Boca conectadas."
+        message="Información Importante"
+        description="Asegºrate de que la impresora Boca esté conectada y encendida antes de realizar las pruebas. El sistema detectar¡ automáticamente las impresoras Boca conectadas."
         type="info"
         showIcon
       />
@@ -509,5 +509,5 @@ const PrinterConfig = () => {
   );
 };
 
-export default PrinterConfig; 
+export default PrinterConfig;
 

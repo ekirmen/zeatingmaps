@@ -195,7 +195,7 @@ const Reports = () => {
         setSavedReports([]);
         if (!reportConfigsNoticeShown) {
           message.warning(
-            'Los reportes guardados aºn no est¡n disponibles. Un administrador debe ejecutar la migraci³n de report_configs.'
+            'Los reportes guardados aún no están disponibles. Un administrador debe ejecutar la migración de report_configs.'
           );
           setReportConfigsNoticeShown(true);
         }

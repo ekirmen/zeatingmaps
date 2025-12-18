@@ -19,5 +19,5 @@ const PaymentGateways = () => {
   );
 };
 
-export default PaymentGateways; 
+export default PaymentGateways;
 

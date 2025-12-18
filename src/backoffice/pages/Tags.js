@@ -25,12 +25,12 @@ const Tags = () => {
   const loadTags = async () => {
     try {
       setLoading(true);
-      
+
       if (!currentTenant?.id) {
         message.warning('No hay tenant configurado');
         return;
       }
-      
+
       // Cargar tags de eventos
       const { data: eventData, error: eventError } = await supabase
         .from('tags')
@@ -39,12 +39,12 @@ const Tags = () => {
         .order('name', { ascending: true });
 
       if (eventError) {
-        
+
       } else {
         setEventTags(eventData || []);
       }
 
-      // Cargar tags de usuarios (simplificado para evitar errores de relaci³n)
+      // Cargar tags de usuarios (simplificado para evitar errores de relación)
       const { data: userData, error: userError } = await supabase
         .from('user_tags')
         .select('*')
@@ -112,39 +112,39 @@ const Tags = () => {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      
+
       if (!currentTenant?.id) {
         message.error('No hay tenant configurado');
         return;
       }
-      
-      // Validar que el tenant_id sea v¡lido
+
+      // Validar que el tenant_id sea válido
       if (!currentTenant.id) {
-        message.error('No se puede crear tags sin un tenant v¡lido.');
+        message.error('No se puede crear tags sin un tenant válido.');
         return;
       }
-      
+
       if (activeTab === 'event') {
         // Guardar tag de evento
         if (editingTag) {
           const { error } = await supabase
             .from('tags')
-            .update({ 
+            .update({
               name: values.name,
-              tenant_id: currentTenant.id 
+              tenant_id: currentTenant.id
             })
             .eq('id', editingTag.id);
-          
+
           if (error) throw error;
           message.success('Tag de evento actualizado correctamente');
         } else {
           const { error } = await supabase
             .from('tags')
-            .insert([{ 
+            .insert([{
               name: values.name,
-              tenant_id: currentTenant.id 
+              tenant_id: currentTenant.id
             }]);
-          
+
           if (error) throw error;
           message.success('Tag de evento creado correctamente');
         }
@@ -153,26 +153,26 @@ const Tags = () => {
         if (editingTag) {
           const { error } = await supabase
             .from('user_tags')
-            .update({ 
-              name: values.name, 
+            .update({
+              name: values.name,
               description: values.description,
               color: values.color,
-              tenant_id: currentTenant.id 
+              tenant_id: currentTenant.id
             })
             .eq('id', editingTag.id);
-          
+
           if (error) throw error;
           message.success('Tag de usuario actualizado correctamente');
         } else {
           const { error } = await supabase
             .from('user_tags')
-            .insert([{ 
-              name: values.name, 
+            .insert([{
+              name: values.name,
               description: values.description,
               color: values.color,
-              tenant_id: currentTenant.id 
+              tenant_id: currentTenant.id
             }]);
-          
+
           if (error) throw error;
           message.success('Tag de usuario creado correctamente');
         }
@@ -206,17 +206,17 @@ const Tags = () => {
           .from('tags')
           .delete()
           .eq('id', tag.id);
-        
+
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('user_tags')
           .delete()
           .eq('id', tag.id);
-        
+
         if (error) throw error;
       }
-      
+
       message.success('Tag eliminado correctamente');
       loadTags();
     } catch (error) {
@@ -231,8 +231,8 @@ const Tags = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               {type === 'user' && (
-                <div 
-                  className="w-4 h-4 rounded-full" 
+                <div
+                  className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: tag.color || '#1890ff' }}
                 />
               )}
@@ -269,25 +269,25 @@ const Tags = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Gesti³n de Tags</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Gestión de Tags</h1>
         <p className="text-gray-600 mb-4">Administra tags para eventos y usuarios</p>
       </div>
-      
+
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <CalendarOutlined />
               Tags de Eventos
             </span>
-          } 
+          }
           key="event"
         >
-          <Card 
-            title="Tags de Eventos" 
+          <Card
+            title="Tags de Eventos"
             extra={
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => {
                   setEditingTag(null);
@@ -303,20 +303,20 @@ const Tags = () => {
           </Card>
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <UserOutlined />
               Tags de Usuarios
             </span>
-          } 
+          }
           key="user"
         >
-          <Card 
-            title="Tags de Usuarios" 
+          <Card
+            title="Tags de Usuarios"
             extra={
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => {
                   setEditingTag(null);
@@ -360,11 +360,11 @@ const Tags = () => {
             <>
               <Form.Item
                 name="description"
-                label="Descripci³n"
+                label="Descripción"
               >
-                <Input.TextArea 
-                  rows={3} 
-                  placeholder="Descripci³n opcional del tag"
+                <Input.TextArea
+                  rows={3}
+                  placeholder="Descripción opcional del tag"
                 />
               </Form.Item>
 

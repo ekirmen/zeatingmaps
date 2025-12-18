@@ -61,10 +61,10 @@ const Productos = () => {
           return;
         }
 
-        // Procesar datos: obtener la fecha m¡s pr³xima de las funciones activas para cada evento
+        // Procesar datos: obtener la fecha más próxima de las funciones activas para cada evento
         const eventosWithFecha = await Promise.all(
           (data || []).map(async (evento) => {
-            // Obtener la primera funci³n activa para este evento
+            // Obtener la primera función activa para este evento
             const { data: funcionData } = await supabase
               .from('funciones')
               .select('fecha_celebracion')
@@ -105,7 +105,7 @@ const Productos = () => {
 
     setLoading(true);
     try {
-      // ðŸ›ï¸ CARGAR PRODUCTOS DESDE MšLTIPLES TABLAS
+      // 🛒 CARGAR PRODUCTOS DESDE MÚLTIPLES TABLAS
       // Plantillas de productos (tabla principal)
       let plantillasQuery = supabase
         .from('plantillas_productos')
@@ -125,7 +125,7 @@ const Productos = () => {
 
       productosQuery = addTenantFilter(productosQuery);
 
-      // Productos espec­ficos del evento (si la tabla existe, con manejo de errores)
+      // Productos específicos del evento (si la tabla existe, con manejo de errores)
       // Nota: La tabla productos_eventos puede no existir, por eso usamos manejo de errores
       let productosEventosQuery = supabase
         .from('productos_eventos')
@@ -139,7 +139,7 @@ const Productos = () => {
 
       productosEventosQuery = addTenantFilter(productosEventosQuery);
 
-      // Tambi©n consultar productos directamente que tengan evento_id
+      // También consultar productos directamente que tengan evento_id
       let productosConEventoQuery = supabase
         .from('productos')
         .select('id, nombre, descripcion, precio, categoria, activo, imagen_url, evento_id')
@@ -183,22 +183,22 @@ const Productos = () => {
       const productosData = productosResult.status === 'fulfilled'
         ? productosResult.value
         : shouldIgnoreError(productosResult.reason)
-          ? { data: [], error: null } // Ignorar errores de autenticaci³n o tabla no existente
+          ? { data: [], error: null } // Ignorar errores de autenticación o tabla no existente
           : { data: null, error: productosResult.reason };
 
       const productosEventosData = productosEventosResult.status === 'fulfilled'
         ? productosEventosResult.value
         : shouldIgnoreError(productosEventosResult.reason)
-          ? { data: [], error: null } // Ignorar errores de autenticaci³n o tabla no existente
+          ? { data: [], error: null } // Ignorar errores de autenticación o tabla no existente
           : { data: null, error: productosEventosResult.reason };
 
       const productosConEventoData = productosConEventoResult.status === 'fulfilled'
         ? productosConEventoResult.value
         : shouldIgnoreError(productosConEventoResult.reason)
-          ? { data: [], error: null } // Ignorar errores de autenticaci³n o tabla no existente
+          ? { data: [], error: null } // Ignorar errores de autenticación o tabla no existente
           : { data: null, error: productosConEventoResult.reason };
 
-      // œ… COMBINAR PRODUCTOS DE TODAS LAS FUENTES
+      // ✅ COMBINAR PRODUCTOS DE TODAS LAS FUENTES
       let allProductos = [];
 
       // Agregar plantillas de productos (tabla principal)
@@ -210,7 +210,7 @@ const Productos = () => {
         }));
         allProductos = [...allProductos, ...plantillasWithSource];
       } else if (plantillasData.error) {
-        console.error('Œ Error cargando plantillas_productos:', plantillasData.error);
+        console.error('❌ Error cargando plantillas_productos:', plantillasData.error);
       }
 
       // Agregar productos generales (si la tabla existe y no hay error)
@@ -226,7 +226,7 @@ const Productos = () => {
         }));
         allProductos = [...allProductos, ...productosWithSource];
       } else if (productosData.error) {
-        // Detectar errores de autenticaci³n o tabla no existente
+        // Detectar errores de autenticación o tabla no existente
         const error = productosData.error;
         const errorMessage = error.message?.toLowerCase() || '';
         const errorHint = error.hint?.toLowerCase() || '';
@@ -240,34 +240,34 @@ const Productos = () => {
           errorHint.includes('no `apikey`') ||
           errorHint.includes('api key');
 
-        // Solo mostrar advertencia si no es un error de autenticaci³n o tabla no existente
+        // Solo mostrar advertencia si no es un error de autenticación o tabla no existente
         if (!isAuthError) {
         }
-        // Ignorar silenciosamente errores de autenticaci³n o tabla no existente
+        // Ignorar silenciosamente errores de autenticación o tabla no existente
       }
 
-      // Agregar productos espec­ficos del evento desde productos_eventos (si la tabla existe)
+      // Agregar productos específicos del evento desde productos_eventos (si la tabla existe)
       if (productosEventosData.data && !productosEventosData.error) {
         const productosEventosWithSource = productosEventosData.data.map(p => ({
           ...p,
           source: 'productos_eventos',
           tipo: 'producto_evento',
-          // Usar datos del producto relacionado si est¡ disponible
+          // Usar datos del producto relacionado si está disponible
           nombre: p.productos?.nombre || p.nombre,
           descripcion: p.productos?.descripcion || p.descripcion,
           precio: p.productos?.precio || p.precio || p.precio_base || 0, // productos tiene 'precio', no 'precio_base'
           categoria: p.productos?.categoria || p.categoria
         }));
         allProductos = [...allProductos, ...productosEventosWithSource];
-        console.log('œ… Productos del evento (productos_eventos) cargados:', productosEventosWithSource.length);
+        console.log('✅ Productos del evento (productos_eventos) cargados:', productosEventosWithSource.length);
       } else if (productosEventosData.error) {
-        // Detectar errores de autenticaci³n, tabla no existente, o relaci³n no encontrada
+        // Detectar errores de autenticación, tabla no existente, o relación no encontrada
         const error = productosEventosData.error;
         const errorMessage = error.message?.toLowerCase() || '';
         const errorHint = error.hint?.toLowerCase() || '';
         const isIgnorableError =
           error.code === 'PGRST116' || // Tabla no existe
-          error.code === 'PGRST200' || // Relaci³n no encontrada (tabla productos_eventos no existe o no tiene relaci³n)
+          error.code === 'PGRST200' || // Relación no encontrada (tabla productos_eventos no existe o no tiene relación)
           error.status === 401 ||
           error.status === 403 ||
           errorMessage.includes('no api key found') ||
@@ -284,7 +284,7 @@ const Productos = () => {
         } else {
           // Log silencioso para debugging (solo en desarrollo)
           if (process.env.NODE_ENV === 'development') {
-            console.log('„¹ï¸ productos_eventos no disponible (tabla o relaci³n no existe), usando productos directos');
+            console.log('ℹ️ productos_eventos no disponible (tabla o relación no existe), usando productos directos');
           }
         }
         // Ignorar silenciosamente errores esperados
@@ -300,7 +300,7 @@ const Productos = () => {
         }));
         allProductos = [...allProductos, ...productosConEventoWithSource];
       } else if (productosConEventoData.error) {
-        // Detectar errores de autenticaci³n
+        // Detectar errores de autenticación
         const error = productosConEventoData.error;
         const errorMessage = error.message?.toLowerCase() || '';
         const errorHint = error.hint?.toLowerCase() || '';
@@ -313,7 +313,7 @@ const Productos = () => {
           errorHint.includes('no `apikey`') ||
           errorHint.includes('api key');
 
-        // Solo mostrar advertencia si no es un error de autenticaci³n
+        // Solo mostrar advertencia si no es un error de autenticación
         if (!isAuthError) {
         }
       }
@@ -351,9 +351,9 @@ const Productos = () => {
         } else if (parsed.url) {
           imagenUrl = parsed.url;
         }
-        // Si no se puede extraer, mantener el valor original (puede ser una URL v¡lida)
+        // Si no se puede extraer, mantener el valor original (puede ser una URL válida)
       } catch (e) {
-        // Si no se puede parsear, asumir que es una URL v¡lida o null
+        // Si no se puede parsear, asumir que es una URL válida o null
       }
     }
 
@@ -413,10 +413,10 @@ const Productos = () => {
               imagenUrl = null;
             }
           } catch (e) {
-            // Si no se puede parsear, asumir que puede ser una URL v¡lida que empieza con '{'
-            // Pero es m¡s seguro establecerlo como null si no parece una URL
+            // Si no se puede parsear, asumir que puede ser una URL válida que empieza con '{'
+            // Pero es más seguro establecerlo como null si no parece una URL
             if (imagenUrl.startsWith('http://') || imagenUrl.startsWith('https://')) {
-              // Es una URL v¡lida que casualmente empieza con '{'
+              // Es una URL válida que casualmente empieza con '{'
               // Mantener el valor
             } else {
               imagenUrl = null;
@@ -438,22 +438,22 @@ const Productos = () => {
             imagenUrl = null;
           }
         }
-        // Caso 3: Es una URL string v¡lida (no JSON)
-        // Verificar que sea una URL v¡lida
+        // Caso 3: Es una URL string válida (no JSON)
+        // Verificar que sea una URL válida
         else if (typeof imagenUrl === 'string') {
-          // Si no empieza con http:// o https://, podr­a no ser una URL v¡lida
+          // Si no empieza con http:// o https://, podría no ser una URL válida
           if (!imagenUrl.startsWith('http://') && !imagenUrl.startsWith('https://') && !imagenUrl.startsWith('/')) {
             // Si no parece una URL, establecer como null
             imagenUrl = null;
           }
-          // Si es una URL v¡lida, mantenerla
+          // Si es una URL válida, mantenerla
         }
         // Caso 4: Cualquier otro tipo (number, boolean, etc.) -> null
         else {
           imagenUrl = null;
         }
       } else {
-        // Si imagenUrl es null, undefined, o vac­o, establecer como null
+        // Si imagenUrl es null, undefined, o vacío, establecer como null
         imagenUrl = null;
       }
 
@@ -519,7 +519,7 @@ const Productos = () => {
       render: (text) => <strong>{text}</strong>,
     },
     {
-      title: 'Descripci³n',
+      title: 'Descripción',
       dataIndex: 'descripcion',
       key: 'descripcion',
       ellipsis: true,
@@ -539,11 +539,11 @@ const Productos = () => {
       },
     },
     {
-      title: 'Categor­a',
+      title: 'Categoría',
       dataIndex: 'categoria',
       key: 'categoria',
       render: (categoria) => (
-        <Tag color="blue">{categoria || 'Sin categor­a'}</Tag>
+        <Tag color="blue">{categoria || 'Sin categoría'}</Tag>
       ),
     },
     {
@@ -588,7 +588,7 @@ const Productos = () => {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Gesti³n de Productos
+            Gestión de Productos
           </h1>
           <p className="text-gray-600">
             Crea y gestiona productos para tus eventos
@@ -701,7 +701,7 @@ const Productos = () => {
 
             <Form.Item
               name="descripcion"
-              label="Descripci³n"
+              label="Descripción"
               rules={[{ required: true, message: 'Por favor ingresa la descripci³n' }]}
             >
               <TextArea
@@ -760,7 +760,7 @@ const Productos = () => {
 
             <Form.Item
               name="categoria"
-              label="Categor­a"
+              label="Categoría"
             >
               <Select placeholder="Selecciona una categor­a">
                 <Option value="merchandising">Merchandising</Option>
