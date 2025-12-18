@@ -21,7 +21,7 @@ const defaultColors = {
 
 const ThemeContext = createContext({
   theme: defaultColors,
-  updateTheme: () => {}
+  updateTheme: () => { }
 });
 
 export const ThemeProvider = ({ children }) => {
@@ -108,3 +108,5 @@ export const ThemeProvider = ({ children }) => {
 };
 
 export const useTheme = () => useContext(ThemeContext);
+
+export default ThemeProvider;
