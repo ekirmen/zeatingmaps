@@ -83,7 +83,7 @@ const ModernStorePage = () => {
         let query = supabase
           .from('eventos')
           .select(`
-            *,
+            id, slug, nombre, descripcion, created_at, estadoVenta, modoVenta, activo, oculto, tags, sector, imagenes, recinto_id, tenant_id,
             recintos!recinto_id (
               id,
               nombre,

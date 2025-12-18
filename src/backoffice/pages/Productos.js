@@ -109,7 +109,7 @@ const Productos = () => {
       // Plantillas de productos (tabla principal)
       let plantillasQuery = supabase
         .from('plantillas_productos')
-        .select('*')
+        .select('id, nombre, descripcion, precio_base, categoria, activo, imagen_url, evento_id')
         .eq('evento_id', eventoSeleccionado)
         .eq('activo', true)
         .order('nombre', { ascending: true });
@@ -119,7 +119,7 @@ const Productos = () => {
       // Productos generales (si la tabla existe, con manejo de errores)
       let productosQuery = supabase
         .from('productos')
-        .select('*')
+        .select('id, nombre, descripcion, precio, categoria, activo, imagen_url, evento_id')
         .eq('activo', true)
         .order('nombre', { ascending: true });
 
@@ -142,7 +142,7 @@ const Productos = () => {
       // Tambi©n consultar productos directamente que tengan evento_id
       let productosConEventoQuery = supabase
         .from('productos')
-        .select('*')
+        .select('id, nombre, descripcion, precio, categoria, activo, imagen_url, evento_id')
         .eq('evento_id', eventoSeleccionado)
         .eq('activo', true)
         .order('created_at', { ascending: false });

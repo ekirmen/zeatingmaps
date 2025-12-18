@@ -24,7 +24,7 @@ const EventInfo = () => {
         const query = supabase
           .from('eventos')
           .select(`
-            *,
+            id, slug, nombre, fecha_evento, recinto_id, recinto, estadoVenta, modoVenta, desactivado, activo, imagenes, descripcion, tags, analytics, otrasOpciones, sector,
             recintos!recinto_id (
               id,
               nombre,
@@ -32,7 +32,7 @@ const EventInfo = () => {
               capacidad
             )
           `);
-        
+
         const { data, error } = await (
           isUuid(eventParam)
             ? query.eq('id', eventParam)
@@ -40,7 +40,7 @@ const EventInfo = () => {
               ? query.eq('id', parseInt(eventParam, 10))
               : query.ilike('slug', eventParam)
         ).maybeSingle();
-        
+
         if (error) throw error;
         setEvento(data);
         setVenueInfo(data?.recintos);
@@ -81,7 +81,7 @@ const EventInfo = () => {
 
   const getEventImages = () => {
     if (!evento?.imagenes) return {};
-    
+
     try {
       if (typeof evento.imagenes === 'string') {
         return JSON.parse(evento.imagenes);
@@ -184,7 +184,7 @@ const EventInfo = () => {
             {/* Functions Selection */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Funciones Disponibles</h2>
-              
+
               {/* Mostrar mensaje si el evento está desactivado */}
               {evento && (!evento.activo || evento.desactivado) && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -199,7 +199,7 @@ const EventInfo = () => {
                   </div>
                 </div>
               )}
-              
+
               {funciones.length > 0 ? (
                 <div className="space-y-3">
                   {funciones.map((f) => (
@@ -291,8 +291,8 @@ const EventInfo = () => {
                 disabled={!selectedFunctionId || (evento && (!evento.activo || evento.desactivado))}
                 className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                {evento && (!evento.activo || evento.desactivado) 
-                  ? 'Evento Desactivado' 
+                {evento && (!evento.activo || evento.desactivado)
+                  ? 'Evento Desactivado'
                   : (selectedFunctionId ? 'Seleccionar Asientos' : 'Selecciona una función')
                 }
               </button>

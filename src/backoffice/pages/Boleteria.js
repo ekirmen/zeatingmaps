@@ -40,7 +40,7 @@ const Boleteria = () => {
     eventosCount: eventos?.length,
     funcionesCount: funciones?.length
   }), [selectedEvent?.id, selectedFuncion?.id, eventos?.length, funciones?.length]);
-  
+
   useEffect(() => {
     logger.log('Ã°Å¸Å½Â« [Boleteria] Estado actual:', debugState);
   }, [debugState]);
@@ -79,7 +79,7 @@ const Boleteria = () => {
   const subscriptionFuncionId = useRef(null);
   useEffect(() => {
     const currentFuncionId = selectedFuncion?.id;
-    
+
     // Solo suscribirse si cambiÂ³ la funciÂ³n
     if (currentFuncionId && currentFuncionId !== subscriptionFuncionId.current && subscribeToFunction) {
       // Desuscribirse de la funciÂ³n anterior si existe
@@ -87,7 +87,7 @@ const Boleteria = () => {
         logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de funciÂ³n anterior:', subscriptionFuncionId.current);
         unsubscribe();
       }
-      
+
       logger.log('Ã°Å¸â€â€ [Boleteria] SuscribiÂ©ndose a funciÂ³n:', currentFuncionId);
       subscribeToFunction(currentFuncionId);
       subscriptionFuncionId.current = currentFuncionId;
@@ -110,7 +110,7 @@ const Boleteria = () => {
   const [seatPayment, setSeatPayment] = useState(null);
   const [isSeatModalVisible, setIsSeatModalVisible] = useState(false);
   const [permanentLocks, setPermanentLocks] = useState([]);
-  
+
   // Estados para gestiÂ³n de precios y entradas
   const [entradas, setEntradas] = useState([]);
   const [selectedEntradaId, setSelectedEntradaId] = useState(null);
@@ -123,22 +123,22 @@ const Boleteria = () => {
   // useEffect para cargar entradas y opciones de precio (optimizado - solo cuando cambian funcion o evento)
   const prevFuncionId = useRef(null);
   const prevEventId = useRef(null);
-  
+
   useEffect(() => {
     const currentFuncionId = selectedFuncion?.id;
     const currentEventId = selectedEvent?.id;
-    
+
     // Solo cargar si cambiÂ³ la funciÂ³n o el evento
     if (!selectedFuncion || !selectedEvent) return;
     if (currentFuncionId === prevFuncionId.current && currentEventId === prevEventId.current) return;
-    
+
     prevFuncionId.current = currentFuncionId;
     prevEventId.current = currentEventId;
-    
+
     const loadEntradasAndPrices = async () => {
       try {
         logger.log('Ã°Å¸Å½Â« [Boleteria] Cargando entradas y precios...');
-        
+
         // Cargar entradas del recinto
         const recintoId = selectedEvent.recinto || selectedEvent.recinto_id;
         if (!recintoId) {
@@ -148,7 +148,7 @@ const Boleteria = () => {
 
         const { data: entradasData, error: entradasError } = await supabase
           .from('entradas')
-          .select('*')
+          .select('id, nombre_entrada, tipo_producto, precio_base, recinto')
           .eq('recinto', recintoId);
 
         if (entradasError) {
@@ -666,20 +666,20 @@ const Boleteria = () => {
           detalle = [];
         }
       }
-      
+
       // Buscar el precio basado en la zona Y el tipo de entrada seleccionado
       const detalleZona = Array.isArray(detalle)
-        ? detalle.find(d => 
-            (d.zonaId || d.zona?.id || d.zona) === zonaId && 
-            (d.entradaId || d.productoId) === selectedEntradaId
-          )
+        ? detalle.find(d =>
+          (d.zonaId || d.zona?.id || d.zona) === zonaId &&
+          (d.entradaId || d.productoId) === selectedEntradaId
+        )
         : null;
-      
+
       // Si no se encuentra con el tipo de entrada seleccionado, usar el primer precio de la zona
       const detalleZonaFallback = Array.isArray(detalle)
         ? detalle.find(d => (d.zonaId || d.zona?.id || d.zona) === zonaId)
         : null;
-      
+
       const detalleFinal = detalleZona || detalleZonaFallback;
       const precio = Number(detalleFinal?.precio) || 0;
 
@@ -714,7 +714,7 @@ const Boleteria = () => {
 
       // Verificar si el asiento ya estÂ¡ en el carrito
       const exists = carrito.some(item => item.sillaId === sillaId);
-      
+
       if (exists) {
         // Deseleccionar: quitar del carrito y desbloquear en BD
         await toggleSeat(cartItem);
@@ -787,10 +787,10 @@ const Boleteria = () => {
     setSeatPayment,
     setSelectedEvent
   }), [
-    selectedClient, 
-    setCarrito, 
-    setSelectedClient, 
-    handleFunctionSelect, 
+    selectedClient,
+    setCarrito,
+    setSelectedClient,
+    handleFunctionSelect,
     setSelectedEvent,
     handleEventSelect,
     selectedEvent,
@@ -910,15 +910,15 @@ const Boleteria = () => {
     selectedClient,
     setSelectedClient,
     showCreateUser: false,
-    setShowCreateUser: () => {},
+    setShowCreateUser: () => { },
     newUserData: {},
-    setNewUserData: () => {},
+    setNewUserData: () => { },
     userSearchValue: '',
-    setUserSearchValue: () => {},
+    setUserSearchValue: () => { },
     userSearchResults: [],
-    setUserSearchResults: () => {},
+    setUserSearchResults: () => { },
     userSearchLoading: false,
-    setUserSearchLoading: () => {}
+    setUserSearchLoading: () => { }
   }), [isSearchModalVisible, setIsSearchModalVisible, searchResults, paymentResults, searchLoading, handleAddClient, handleUnifiedSearch, clearSearchResults, handleLocatorSearch, selectedClient, setSelectedClient]);
 
   const functionModalProps = useMemo(() => ({
@@ -1021,7 +1021,7 @@ const Boleteria = () => {
               <div className="flex items-center gap-2 flex-1">
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-500">Evento:</span>
-                  <select 
+                  <select
                     className="text-xs border border-gray-300 rounded px-1 py-0.5 min-w-0 flex-1"
                     value={selectedEvent?.id || ''}
                     onChange={(e) => {
@@ -1041,7 +1041,7 @@ const Boleteria = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-500">FunciÂ³n:</span>
-                  <select 
+                  <select
                     className="text-xs border border-gray-300 rounded px-1 py-0.5 min-w-0 flex-1"
                     value={selectedFuncion?.id || ''}
                     onChange={(e) => {
@@ -1055,7 +1055,7 @@ const Boleteria = () => {
                     <option value="">Selecciona funciÂ³n</option>
                     {funciones?.filter(func => func.evento_id === selectedEvent?.id).map(funcion => (
                       <option key={funcion.id} value={funcion.id}>
-                        {new Date(funcion.fecha_celebracion).toLocaleDateString()} {new Date(funcion.fecha_celebracion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        {new Date(funcion.fecha_celebracion).toLocaleDateString()} {new Date(funcion.fecha_celebracion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </option>
                     ))}
                   </select>
@@ -1068,11 +1068,11 @@ const Boleteria = () => {
           </div>
 
           {/* NavegaciÂ³n ultra compacta con botones estilo tabs */}
-        <div className="bg-white border-b border-gray-200 sticky top-14 md:static z-10 shadow-sm md:shadow-none">
+          <div className="bg-white border-b border-gray-200 sticky top-14 md:static z-10 shadow-sm md:shadow-none">
             <div className="flex items-center justify-between px-2 py-1">
               {/* BotÂ³n para abrir panel lateral */}
               <div className="flex items-center">
-                <button 
+                <button
                   className="p-1 hover:bg-gray-100 rounded transition-colors"
                   title="Abrir panel"
                 >
@@ -1094,7 +1094,7 @@ const Boleteria = () => {
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
                   Å¡â„¢Ã¯Â¸Â Otros
                 </button>
-        </div>
+              </div>
 
               {/* Botones secundarios */}
               <div className="flex items-center space-x-1">
@@ -1112,55 +1112,53 @@ const Boleteria = () => {
           </div>
 
           {/* SecciÂ³n ultra compacta de precios dinÂ¡micos con selecciÂ³n de entrada */}
-                  <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
-                    <div className="flex items-center gap-3 px-1 py-1">
-                      <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={searchAllSeats}
-                          onChange={(e) => setSearchAllSeats(e.target.checked)}
-                        />
-                        Buscar
-                      </label>
-                      <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
-                        <span className="text-[11px] text-gray-600">Bloqueo:</span>
-                        <button
-                          type="button"
-                          onClick={() => handleBlockActionToggle('block')}
-                          className={`px-2 py-1 rounded border text-[11px] font-semibold ${
-                            blockMode && blockAction === 'block'
-                              ? 'bg-red-100 border-red-400 text-red-700'
-                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          Bloquear
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleBlockActionToggle('unlock')}
-                          className={`px-2 py-1 rounded border text-[11px] font-semibold ${
-                            blockMode && blockAction === 'unlock'
-                              ? 'bg-green-100 border-green-400 text-green-700'
-                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          Desbloquear
-                        </button>
-                      </div>
-                      {searchAllSeatsLoading && (
-                        <span className="text-[11px] text-blue-600">Buscando asientos vendidos/reservados...</span>
-                      )}
-                    </div>
-                    <div className="flex space-x-2 overflow-x-auto">
-                      {priceOptions && priceOptions.length > 0 ? (
-                        priceOptions.map((option, index) => {
+          <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
+            <div className="flex items-center gap-3 px-1 py-1">
+              <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={searchAllSeats}
+                  onChange={(e) => setSearchAllSeats(e.target.checked)}
+                />
+                Buscar
+              </label>
+              <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                <span className="text-[11px] text-gray-600">Bloqueo:</span>
+                <button
+                  type="button"
+                  onClick={() => handleBlockActionToggle('block')}
+                  className={`px-2 py-1 rounded border text-[11px] font-semibold ${blockMode && blockAction === 'block'
+                      ? 'bg-red-100 border-red-400 text-red-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                    }`}
+                >
+                  Bloquear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBlockActionToggle('unlock')}
+                  className={`px-2 py-1 rounded border text-[11px] font-semibold ${blockMode && blockAction === 'unlock'
+                      ? 'bg-green-100 border-green-400 text-green-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                    }`}
+                >
+                  Desbloquear
+                </button>
+              </div>
+              {searchAllSeatsLoading && (
+                <span className="text-[11px] text-blue-600">Buscando asientos vendidos/reservados...</span>
+              )}
+            </div>
+            <div className="flex space-x-2 overflow-x-auto">
+              {priceOptions && priceOptions.length > 0 ? (
+                priceOptions.map((option, index) => {
                   const isActive = selectedEntradaId === option.entradaId;
                   const minPrecio = Number.isFinite(option.minPrecio) ? option.minPrecio : 0;
                   const maxPrecio = Number.isFinite(option.maxPrecio) ? option.maxPrecio : minPrecio;
                   const precioDisplay = minPrecio === maxPrecio
                     ? `$${minPrecio.toFixed(2)}`
                     : `$${minPrecio.toFixed(2)}-$${maxPrecio.toFixed(2)}`;
-                  
+
                   // Determinar color segÂºn tipo de producto
                   let bgColor = 'bg-gray-200 text-gray-700';
                   if (isActive) {
@@ -1170,19 +1168,18 @@ const Boleteria = () => {
                   } else if (option.tipo === 'Reducido') {
                     bgColor = 'bg-blue-200 text-blue-800';
                   }
-                  
+
                   return (
-                    <button 
+                    <button
                       key={option.entradaId}
                       onClick={() => {
                         logger.log('Ã°Å¸Å½Â« Entrada seleccionada:', option);
                         setSelectedEntradaId(option.entradaId);
                       }}
-                      className={`flex-shrink-0 px-2 py-1 rounded font-medium text-xs ${
-                        isActive 
-                          ? 'bg-purple-600 text-white' 
+                      className={`flex-shrink-0 px-2 py-1 rounded font-medium text-xs ${isActive
+                          ? 'bg-purple-600 text-white'
                           : bgColor + ' hover:opacity-80'
-                      } transition-colors`}
+                        } transition-colors`}
                       title={`${option.nombre} - ${option.tipo}`}
                     >
                       <div className="text-xs font-medium">
@@ -1199,8 +1196,8 @@ const Boleteria = () => {
                   {selectedFuncion ? 'Cargando precios...' : 'Selecciona una funciÂ³n para ver precios'}
                 </div>
               )}
-                </div>
-              </div>
+            </div>
+          </div>
 
           {/* Mapa de asientos ultra compacto */}
           <div className="flex-1 bg-white overflow-hidden relative">

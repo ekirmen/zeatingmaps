@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 export const fetchEventos = async () => {
   const { data, error } = await supabase
     .from('eventos')
-    .select('*')
+    .select('id, nombre, sala, sala_id, created_at')
     .order('created_at', { ascending: true });
   if (error) throw error;
   return data;

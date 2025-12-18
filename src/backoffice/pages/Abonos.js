@@ -57,7 +57,7 @@ const Abonos = () => {
       try {
         const { data, error } = await supabase
           .from('funciones')
-          .select('*')
+          .select('id, fecha_celebracion, sala, sala_id, evento_id')
           .eq('evento_id', selectedEventId)
           .order('fecha_celebracion', { ascending: true });
 

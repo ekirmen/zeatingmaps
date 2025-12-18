@@ -106,7 +106,7 @@ const SalesTransactions = () => {
         console.warn('š ï¸ [SalesTransactions] Error cargando funciones, usando fallback select("*"):', error);
         let fallbackQuery = supabase
           .from('funciones')
-          .select('*');
+          .select('id, nombre, fecha, hora, fecha_celebracion, evento_id, tenant_id');
 
         if (isMultiTenant) {
           fallbackQuery = fallbackQuery.eq('tenant_id', currentTenant.id);
@@ -218,7 +218,7 @@ const SalesTransactions = () => {
 
       let query = supabase
         .from('payment_transactions')
-        .select('*')
+        .select('id, locator, order_id, amount, currency, gateway_name, gateway_id, payment_method, status, created_at, user_id, processed_by, channel, source, sales_channel, is_hidden, hidden_at, evento_id, funcion_id, event_id, function_id, tenant_id')
         .order('created_at', { ascending: false })
         .limit(recordLimit);
 
@@ -392,14 +392,14 @@ const SalesTransactions = () => {
           venueId: venueId ? String(venueId) : null,
           matchesSearch: normalizedSearch
             ? [
-                transaction?.locator,
-                transaction?.order_id,
-                transaction?.gateway_transaction_id,
-                buyer?.name,
-                buyer?.email,
-                seller?.name,
-                seller?.email
-              ]
+              transaction?.locator,
+              transaction?.order_id,
+              transaction?.gateway_transaction_id,
+              buyer?.name,
+              buyer?.email,
+              seller?.name,
+              seller?.email
+            ]
               .filter(Boolean)
               .some(value => String(value).toLowerCase().includes(normalizedSearch))
             : true

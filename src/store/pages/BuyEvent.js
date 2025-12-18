@@ -14,7 +14,7 @@ const BuyEvent = () => {
       try {
         const { data, error } = await supabase
           .from('eventos')
-          .select('*')
+          .select('id, nombre, sector, recinto, sala')
           .eq('id', id)
           .single();
         if (error) throw error;

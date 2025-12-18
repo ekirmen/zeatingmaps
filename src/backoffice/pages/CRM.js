@@ -30,26 +30,26 @@ const CRM = () => {
         // Eventos
         supabase
           .from('eventos_con_funciones_activas')
-          .select('*')
+          .select('id, nombre, descripcion, fecha_evento') // Select specific fields
           .order('created_at', { ascending: false }),
 
         // Funciones
         supabase
           .from('funciones')
-          .select('*')
+          .select('id, fecha, hora, evento_id') // Select specific fields
           .order('fecha', { ascending: false }),
 
         // Usuarios (profiles)
         supabase
           .from('profiles')
-          .select('*')
+          .select('id, login, email, nombre, apellido, empresa, telefono, activo') // Select specific fields
           .order('created_at', { ascending: false }),
 
         // Notificaciones
         supabase
           .from('notifications')
           .select(`
-            *,
+            id, titulo, mensaje, tipo, evento_id, funcion_id, usuarios_destinatarios, estado, created_at,
             eventos:evento_id(nombre),
             funciones:funcion_id(fecha, hora)
           `)

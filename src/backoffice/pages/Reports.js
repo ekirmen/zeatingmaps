@@ -438,58 +438,54 @@ const Reports = () => {
 
   const savedReportsMenuItems = savedReportsLoading
     ? [
-        {
-          key: 'loading',
-          disabled: true,
-          label: (
-            <Space size="small">
-              <Spin size="small" />
-              <Text type="secondary">Cargando reportes...</Text>
-            </Space>
-          )
-        }
-      ]
+      {
+        key: 'loading',
+        disabled: true,
+        label: (
+          <Space size="small">
+            <Spin size="small" />
+            <Text type="secondary">Cargando reportes...</Text>
+          </Space>
+        )
+      }
+    ]
     : savedReports.length
       ? savedReports.map(report => ({
-          key: report.id,
-          label: (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span>{report.name}</span>
-              <Button
-                type="link"
-                danger
-                size="small"
-                icon={<DeleteOutlined />}
-                loading={deletingReportId === report.id}
-                disabled={savedReportsLoading}
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  handleDeleteSavedReport(report.id);
-                }}
-              >
-                Eliminar
-              </Button>
-            </div>
-          )
-        }))
+        key: report.id,
+        label: (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>{report.name}</span>
+            <Button
+              type="link"
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              loading={deletingReportId === report.id}
+              disabled={savedReportsLoading}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                handleDeleteSavedReport(report.id);
+              }}
+            >
+              Eliminar
+            </Button>
+          </div>
+        )
+      }))
       : [
-          {
-            key: 'empty',
-            disabled: true,
-            label: <Text type="secondary">No hay reportes guardados</Text>
-          }
-        ];
+        {
+          key: 'empty',
+          disabled: true,
+          label: <Text type="secondary">No hay reportes guardados</Text>
+        }
+      ];
 
   const loadSalesReport = async () => {
     try {
       let query = supabase
         .from('payment_transactions')
-        .select(`
-          *,
-          user:profiles!user_id(*),
-          event:eventos(*)
-        `)
+        .select('id, created_at, monto, status, user_id, evento_id, user:profiles!user_id(login), event:eventos(nombre)')
         .in('status', ['pagado', 'completed']);
 
       if (filters.dateRange) {
@@ -516,9 +512,9 @@ const Reports = () => {
       let query = supabase
         .from('eventos')
         .select(`
-          *,
-          funciones (*),
-          entradas (*)
+          id, nombre, fecha_evento, activo,
+          funciones(id),
+          entradas(id)
         `);
 
       if (filters.dateRange) {
@@ -544,7 +540,7 @@ const Reports = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, login, email, nombre, apellido, empresa, telefono, created_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -562,11 +558,7 @@ const Reports = () => {
     try {
       let query = supabase
         .from('payment_transactions')
-        .select(`
-          *,
-          user:profiles!user_id(*),
-          event:eventos(*)
-        `);
+        .select('id, monto, status, created_at, user_id, user:profiles!user_id(login)')
 
       if (filters.status !== 'all') {
         const statusMap = {
@@ -779,10 +771,10 @@ const Reports = () => {
   const handleExport = async (values) => {
     try {
       setLoading(true);
-      
+
       const data = getReportData();
       const filename = values.filename || `reporte_${selectedReport}`;
-      
+
       switch (values.format) {
         case 'csv':
           exportToCSV(data, filename);
@@ -797,7 +789,7 @@ const Reports = () => {
           message.error('Formato no soportado');
           return;
       }
-      
+
       message.success(`Reporte exportado como ${values.format.toUpperCase()}`);
       setExportModalVisible(false);
       exportForm.resetFields();
@@ -809,7 +801,7 @@ const Reports = () => {
     }
   };
 
-  const getSalesColumns = () => [
+  const getSalesColumns = React.useMemo(() => [
     {
       title: 'Fecha',
       dataIndex: 'created_at',
@@ -840,9 +832,9 @@ const Reports = () => {
       key: 'status',
       render: (status) => <Tag color={getStatusColor(status)}>{getStatusLabel(status)}</Tag>
     }
-  ];
+  ], []);
 
-  const getEventsColumns = () => [
+  const getEventsColumns = React.useMemo(() => [
     {
       title: 'Evento',
       dataIndex: 'nombre',
@@ -870,9 +862,9 @@ const Reports = () => {
         </Tag>
       )
     }
-  ];
+  ], []);
 
-  const getUsersColumns = () => [
+  const getUsersColumns = React.useMemo(() => [
     {
       title: 'Usuario',
       dataIndex: 'login',
@@ -901,7 +893,7 @@ const Reports = () => {
       key: 'created_at',
       render: (date) => new Date(date).toLocaleDateString()
     }
-  ];
+  ], []);
 
   const getPaymentsColumns = () => [
     {
@@ -1059,11 +1051,11 @@ const Reports = () => {
   const getReportColumns = () => {
     switch (selectedReport) {
       case 'sales':
-        return getSalesColumns();
+        return getSalesColumns;
       case 'events':
-        return getEventsColumns();
+        return getEventsColumns;
       case 'users':
-        return getUsersColumns();
+        return getUsersColumns;
       case 'payments':
         return getPaymentsColumns();
       case 'products':
@@ -1083,7 +1075,7 @@ const Reports = () => {
 
   const getReportStats = () => {
     const data = getReportData();
-    
+
     switch (selectedReport) {
       case 'sales':
         const totalSales = data.reduce((sum, item) => sum + parseFloat(item.monto || 0), 0);
@@ -1145,7 +1137,7 @@ const Reports = () => {
     }
   };
 
-  const stats = getReportStats();
+  const stats = React.useMemo(() => getReportStats(), [reportData, selectedReport]);
 
   const statsLabels = {
     total: 'Total de registros',
@@ -1249,10 +1241,10 @@ const Reports = () => {
 
     const statsEntries = statsData
       ? Object.entries(statsData).map(([key, value]) => ({
-          key,
-          label: statsLabels[key] || key,
-          value: formatStatValue(key, value)
-        }))
+        key,
+        label: statsLabels[key] || key,
+        value: formatStatValue(key, value)
+      }))
       : [];
 
     const tableHeader = columns
@@ -1282,8 +1274,8 @@ const Reports = () => {
             <h3 style="color: #1890ff; margin-bottom: 8px;">Indicadores principales</h3>
             <ul style="padding-left: 18px; margin: 0;">
               ${statsEntries
-                .map(entry => `<li><strong>${escapeHtml(entry.label)}:</strong> ${escapeHtml(entry.value)}</li>`)
-                .join('')}
+          .map(entry => `<li><strong>${escapeHtml(entry.label)}:</strong> ${escapeHtml(entry.value)}</li>`)
+          .join('')}
             </ul>
           </div>
         ` : ''}
@@ -1869,9 +1861,9 @@ const Reports = () => {
 
           <Form.Item>
             <Space>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
+              <Button
+                type="primary"
+                htmlType="submit"
                 loading={loading}
                 icon={<DownloadOutlined />}
               >
@@ -2033,6 +2025,6 @@ const Reports = () => {
   );
 };
 
-export default Reports; 
+export default Reports;
 
 

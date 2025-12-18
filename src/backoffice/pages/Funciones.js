@@ -608,9 +608,9 @@ const Funciones = () => {
           creadopor,
           created_at,
           updated_at,
-          eventos!evento_id(*),
-          salas!sala_id(*),
-          plantillas!plantilla_entradas(*)
+          eventos!evento_id(id, nombre),
+          salas!sala_id(id, nombre),
+          plantillas!plantilla_entradas(id, nombre)
         `)
         .eq('sala_id', salaSeleccionada.id)
         .order('fecha_celebracion', { ascending: true });
@@ -1140,7 +1140,7 @@ const Funciones = () => {
         if (encontradaSala) setSalaSeleccionada(encontradaSala);
         const eventoSel = eventos.find(ev => String(ev.id) === String(f.evento_id));
         if (eventoSel) setEventoSeleccionado(eventoSel);
-      } catch (_) {}
+      } catch (_) { }
 
       setModalIsOpen(true);
     } catch (e) {
@@ -1264,11 +1264,10 @@ const Funciones = () => {
                   setModalIsOpen(true);
                 }}
                 disabled={!recintoSeleccionado || !salaSeleccionada || !eventoSeleccionado}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                  recintoSeleccionado && salaSeleccionada && eventoSeleccionado
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${recintoSeleccionado && salaSeleccionada && eventoSeleccionado
                     ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 Nueva Función
               </button>
@@ -1325,11 +1324,10 @@ const Funciones = () => {
                   funciones.map((funcion, index) => (
                     <tr
                       key={funcion.id}
-                      className={`border-b transition-colors ${
-                        index % 2 === 0
+                      className={`border-b transition-colors ${index % 2 === 0
                           ? 'bg-white hover:bg-blue-50'
                           : 'bg-gray-50 hover:bg-blue-100'
-                      }`}
+                        }`}
                     >
                       <td className="px-3 py-2 text-xs font-medium text-gray-900 whitespace-nowrap">
                         {formatFecha(funcion.fechaCelebracion)}
@@ -1338,38 +1336,34 @@ const Funciones = () => {
                         {getEventoNombre(funcion.evento_id) || '—'}
                       </td>
                       <td className="px-3 py-2 text-xs text-gray-900">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          funcion.sala?.nombre
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${funcion.sala?.nombre
                             ? 'bg-green-100 text-green-800'
                             : 'bg-gray-100 text-gray-600'
-                        }`}>
+                          }`}>
                           {funcion.sala?.nombre || 'Sin sala'}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-xs">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          getPlantillaNombre(funcion.plantilla_entradas) !== 'Sin plantilla'
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPlantillaNombre(funcion.plantilla_entradas) !== 'Sin plantilla'
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-gray-100 text-gray-600'
-                        }`}>
+                          }`}>
                           {getPlantillaNombre(funcion.plantilla_entradas)}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-xs">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          getPlantillaComisionesNombre(funcion.plantilla_comisiones) !== 'Sin plantilla'
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPlantillaComisionesNombre(funcion.plantilla_comisiones) !== 'Sin plantilla'
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-gray-100 text-gray-600'
-                        }`}>
+                          }`}>
                           {getPlantillaComisionesNombre(funcion.plantilla_comisiones)}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-xs">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          getPlantillaProductoNombre(funcion.plantilla_producto) !== 'Sin plantilla'
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPlantillaProductoNombre(funcion.plantilla_producto) !== 'Sin plantilla'
                             ? 'bg-orange-100 text-orange-800'
                             : 'bg-gray-100 text-gray-600'
-                        }`}>
+                          }`}>
                           {getPlantillaProductoNombre(funcion.plantilla_producto)}
                         </span>
                       </td>
@@ -1998,7 +1992,7 @@ const Funciones = () => {
                   </div>
 
                   {/* Tabla de canales */}
-                                    <div className="overflow-x-auto">
+                  <div className="overflow-x-auto">
                     <table className="min-w-full border border-gray-300">
                       <thead>
                         <tr className="bg-gray-50">
@@ -2085,46 +2079,46 @@ const Funciones = () => {
                                   canales: {
                                     ...nuevaFuncion.canales,
                                     internet: { ...nuevaFuncion.canales.internet, activo: e.target.checked }
+                                  }
+                                })}
+                              />
+                              <span>Internet</span>
+                            </div>
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <input
+                              type="datetime-local"
+                              className="border p-2 w-full rounded"
+                              value={nuevaFuncion.canales.internet.inicio}
+                              onChange={(e) => setNuevaFuncion({
+                                ...nuevaFuncion,
+                                canales: {
+                                  ...nuevaFuncion.canales,
+                                  internet: { ...nuevaFuncion.canales.internet, inicio: e.target.value }
                                 }
                               })}
+                              disabled={!nuevaFuncion.canales.internet.activo || nuevaFuncion.mismaFechaCanales}
                             />
-                            <span>Internet</span>
-                          </div>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <input
-                            type="datetime-local"
-                            className="border p-2 w-full rounded"
-                            value={nuevaFuncion.canales.internet.inicio}
-                            onChange={(e) => setNuevaFuncion({
-                              ...nuevaFuncion,
-                              canales: {
-                                ...nuevaFuncion.canales,
-                                internet: { ...nuevaFuncion.canales.internet, inicio: e.target.value }
-                              }
-                            })}
-                            disabled={!nuevaFuncion.canales.internet.activo || nuevaFuncion.mismaFechaCanales}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <input
-                            type="datetime-local"
-                            className="border p-2 w-full rounded"
-                            value={nuevaFuncion.canales.internet.fin}
-                            onChange={(e) => setNuevaFuncion({
-                              ...nuevaFuncion,
-                              canales: {
-                                ...nuevaFuncion.canales,
-                                internet: { ...nuevaFuncion.canales.internet, fin: e.target.value }
-                              }
-                            })}
-                            disabled={!nuevaFuncion.canales.internet.activo || nuevaFuncion.mismaFechaCanales}
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <input
+                              type="datetime-local"
+                              className="border p-2 w-full rounded"
+                              value={nuevaFuncion.canales.internet.fin}
+                              onChange={(e) => setNuevaFuncion({
+                                ...nuevaFuncion,
+                                canales: {
+                                  ...nuevaFuncion.canales,
+                                  internet: { ...nuevaFuncion.canales.internet, fin: e.target.value }
+                                }
+                              })}
+                              disabled={!nuevaFuncion.canales.internet.activo || nuevaFuncion.mismaFechaCanales}
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
@@ -2269,9 +2263,9 @@ const Funciones = () => {
             </form>
           </div>
         </div>
-        </Modal>
-      </div>
-    );
-  };
+      </Modal>
+    </div>
+  );
+};
 
-  export default Funciones;
+export default Funciones;

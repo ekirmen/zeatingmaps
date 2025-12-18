@@ -178,11 +178,11 @@ export const getFunciones = async (eventId) => {
 export const getFuncion = async (functionId) => {
   try {
     // Primero obtener la función para obtener su tenant_id
-      const { data: funcionData, error: funcionError } = await supabase
-        .from('funciones')
-        .select('tenant_id, evento_id')
-        .eq('id', functionId)
-        .single();
+    const { data: funcionData, error: funcionError } = await supabase
+      .from('funciones')
+      .select('tenant_id, evento_id')
+      .eq('id', functionId)
+      .single();
 
     if (funcionError && funcionError.code !== 'PGRST116') {
       console.error('Error fetching funcion tenant:', funcionError.message);
@@ -193,10 +193,10 @@ export const getFuncion = async (functionId) => {
       return null;
     }
 
-      // Ahora obtener la función completa filtrando por tenant_id
-      let { data, error } = await supabase
-        .from('funciones')
-        .select(`
+    // Ahora obtener la función completa filtrando por tenant_id
+    let { data, error } = await supabase
+      .from('funciones')
+      .select(`
           id,
           fecha_celebracion,
           evento_id,
@@ -206,15 +206,15 @@ export const getFuncion = async (functionId) => {
             nombre
           )
         `)
-        .eq('id', functionId)
-        .eq('tenant_id', funcionData.tenant_id)
-        .single();
+      .eq('id', functionId)
+      .eq('tenant_id', funcionData.tenant_id)
+      .single();
 
-      // Fallback para esquemas antiguos
-      if (error && /evento_id/.test(error.message)) {
-        ({ data, error } = await supabase
-          .from('funciones')
-          .select(`
+    // Fallback para esquemas antiguos
+    if (error && /evento_id/.test(error.message)) {
+      ({ data, error } = await supabase
+        .from('funciones')
+        .select(`
             id,
             fecha_celebracion,
             evento,
@@ -224,10 +224,10 @@ export const getFuncion = async (functionId) => {
               nombre
             )
           `)
-          .eq('id', functionId)
-          .eq('tenant_id', funcionData.tenant_id)
-          .single());
-      }
+        .eq('id', functionId)
+        .eq('tenant_id', funcionData.tenant_id)
+        .single());
+    }
 
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching single function:', error.message);
@@ -237,22 +237,22 @@ export const getFuncion = async (functionId) => {
     if (!data) return null;
 
     // Transformar datos al formato esperado por el frontend
-      const salaId = data.sala_id ?? data.sala;
-      const transformedData = {
-        id: data.id,
-        fecha_celebracion: data.fecha_celebracion,
-        evento: data.evento_id ?? data.evento,
-        sala: salaId,
-        sala_nombre: data.salas?.nombre || 'Sala sin nombre',
-        // Crear un objeto plantilla básico si no existe
-        plantilla: {
-          id: null,
-          nombre: 'Plantilla Básica',
-          detalles: []
-        }
-      };
+    const salaId = data.sala_id ?? data.sala;
+    const transformedData = {
+      id: data.id,
+      fecha_celebracion: data.fecha_celebracion,
+      evento: data.evento_id ?? data.evento,
+      sala: salaId,
+      sala_nombre: data.salas?.nombre || 'Sala sin nombre',
+      // Crear un objeto plantilla básico si no existe
+      plantilla: {
+        id: null,
+        nombre: 'Plantilla Básica',
+        detalles: []
+      }
+    };
 
-      return transformedData;
+    return transformedData;
   } catch (error) {
     console.error('Unexpected error in getFuncion:', error);
     throw error;
@@ -513,7 +513,7 @@ export const fetchEventoBySlug = async (slug) => {
   try {
     const { data, error } = await supabase
       .from('eventos')
-      .select('*')
+      .select('id, slug, nombre, fecha_evento, recinto_id, recinto, estadoVenta, modoVenta, desactivado, activo, imagenes, descripcion, tags, analytics, otrasOpciones, sector, precio_base, tenant_id')
       .eq('slug', slug)
       .single();
 

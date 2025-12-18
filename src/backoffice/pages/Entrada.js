@@ -73,7 +73,7 @@ const Entrada = () => {
       const { data, error } = await supabase
         .from("entradas")
         .select(`
-          *,
+          id, nombre_entrada, min, max, quantity_step, activo_boleteria, activo_store, tipo_producto, precio_base, iva, recinto,
           recintos:recinto(id, nombre, direccion),
           ivas:iva(id, porcentaje, nombre)
         `)
@@ -140,7 +140,7 @@ const Entrada = () => {
 
     const { error } = await supabase
       .from("entradas")
-      .insert([ datosAInsertar ]);  // insert espera un array
+      .insert([datosAInsertar]);  // insert espera un array
 
     if (error) {
       console.error("Error al guardar datos:", error.message);

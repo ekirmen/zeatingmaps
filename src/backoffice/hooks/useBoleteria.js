@@ -13,12 +13,12 @@ const SELECTED_SEATS_KEY = 'boleteriaSelectedSeats';
 export const useBoleteria = () => {
   // Usar ref para evitar renders mºltiples
   const isInitialized = useRef(false);
-  
+
   if (!isInitialized.current) {
     logger.log('ðŸš€ [useBoleteria] Hook initialized');
     isInitialized.current = true;
   }
-  
+
   // Usar el store unificado para selectedFuncion y selectedEvent
   const {
     selectedFuncion,
@@ -39,7 +39,7 @@ export const useBoleteria = () => {
     isSeatSelected,
     syncWithSeatLocks
   } = useSelectedSeatsStore();
-  
+
   const [eventos, setEventos] = useState([]);
   const [funciones, setFunciones] = useState([]);
   const [selectedPlantilla, setSelectedPlantilla] = useState(null);
@@ -164,7 +164,7 @@ export const useBoleteria = () => {
     setLoading(true);
     setError(null);
     setDebugInfo({ step: 'handleFunctionSelect', functionId });
-    
+
     setSelectedFuncion(null);
     setSelectedPlantilla(null);
     setMapa(null);
@@ -181,7 +181,7 @@ export const useBoleteria = () => {
     if (typeof functionId === 'object' && functionId !== null) {
       functionId = functionId._id || functionId.id || null;
     }
-  
+
     try {
       const { data: funcionData, error: funcionError } = await supabase
         .from('funciones')
@@ -191,7 +191,7 @@ export const useBoleteria = () => {
         `)
         .eq('id', functionId)
         .single();
-  
+
       if (funcionError) throw funcionError;
       if (!funcionData) {
         message.warning('Funci³n no encontrada.');
@@ -204,7 +204,7 @@ export const useBoleteria = () => {
         message.error('Datos de funci³n inv¡lidos');
         return false;
       }
-  
+
       // Mapear los campos para que coincidan con lo que espera el frontend
       const salaField = funcionData.sala;
       const mappedSala = typeof salaField === 'object' && salaField !== null
@@ -220,10 +220,10 @@ export const useBoleteria = () => {
         pagoAPlazos: funcionData.pago_a_plazos,
         permitirReservasWeb: funcionData.permitir_reservas_web
       };
-  
+
       setSelectedFuncion(funcionMapeada);
       localStorage.setItem(FUNC_KEY, functionId);
-      
+
       logger.log('œ… [useBoleteria] Funci³n seleccionada:', funcionMapeada);
       logger.log('ðŸ“‹ [useBoleteria] Plantilla de la funci³n:', funcionData.plantilla);
       logger.log('ðŸ” [useBoleteria] Estructura completa de funcionData:', {
@@ -232,7 +232,7 @@ export const useBoleteria = () => {
         sala: funcionData.sala,
         evento_id: funcionData.evento_id
       });
-  
+
       // Cargar plantilla de precios si existe
       if (funcionData.plantilla) {
         logger.log('œ… Plantilla encontrada:', funcionData.plantilla);
@@ -244,7 +244,7 @@ export const useBoleteria = () => {
       } else {
         logger.log('Œ No hay plantilla de precios para esta funci³n');
         logger.log('ðŸ” Buscando en plantilla_entradas...');
-        
+
         // Intentar cargar plantilla desde plantilla_entradas
         if (funcionData.plantilla_entradas) {
           try {
@@ -253,7 +253,7 @@ export const useBoleteria = () => {
               .select('*')
               .eq('id', funcionData.plantilla_entradas)
               .single();
-            
+
             if (plantillaError) {
               logger.error('Œ Error cargando plantilla desde plantilla_entradas:', plantillaError);
             } else if (plantillaData) {
@@ -267,21 +267,21 @@ export const useBoleteria = () => {
             logger.error('Œ Error en fallback de plantilla:', e);
           }
         }
-        
+
         setSelectedPlantilla(null);
       }
-  
+
       // Cargar mapa y zonas usando salaId robusto
       const salaId = mappedSala?.id || mappedSala?._id || salaField || funcionData.sala_id || null;
       logger.log('ðŸ” [useBoleteria] DEBUG - mappedSala:', mappedSala);
       logger.log('ðŸ” [useBoleteria] DEBUG - salaField:', salaField);
       logger.log('ðŸ” [useBoleteria] DEBUG - funcionData.sala_id:', funcionData.sala_id);
       logger.log('ðŸ” [useBoleteria] DEBUG - salaId calculado:', salaId);
-      
+
       if (salaId) {
         logger.log('ðŸ” [useBoleteria] Cargando mapa para sala:', salaId);
         logger.log('ðŸ” [useBoleteria] Tipo de salaId:', typeof salaId);
-        
+
         try {
           logger.log('ðŸ” [useBoleteria] Llamando a fetchMapa con salaId:', salaId, 'y funcionId:', funcionData.id);
           const mapData = await fetchMapa(salaId, funcionData.id);
@@ -289,12 +289,12 @@ export const useBoleteria = () => {
           logger.log('ðŸ“Š [useBoleteria] Tipo de mapData:', typeof mapData);
           logger.log('ðŸ“Š [useBoleteria] mapData es null?', mapData === null);
           logger.log('ðŸ“Š [useBoleteria] mapData.contenido:', mapData?.contenido);
-          
+
           if (!mapData) {
             logger.error('Œ [useBoleteria] fetchMapa retorn³ null/undefined');
             logger.error('Œ [useBoleteria] Verificar RLS policies para mapas');
           }
-          
+
           setMapa(mapData);
           logger.log('œ… [useBoleteria] Mapa estado actualizado con setMapa');
 
@@ -302,7 +302,7 @@ export const useBoleteria = () => {
           const zonasData = await fetchZonasPorSala(salaId);
           logger.log('ðŸ·ï¸ [useBoleteria] Zonas cargadas:', zonasData);
           setZonas(zonasData);
-          
+
           // Calcular estad­sticas del evento basadas en el mapa cargado
           if (mapData && mapData.contenido) {
             logger.log('ðŸ“Š [useBoleteria] Calculando estad­sticas desde el mapa cargado');
@@ -310,32 +310,51 @@ export const useBoleteria = () => {
             let availableSeats = 0;
             let soldSeats = 0;
             let reservedSeats = 0;
-            
+
             // Si el contenido es un array, procesarlo directamente
             // Si es un objeto, buscar la propiedad 'elementos'
-            const elementos = Array.isArray(mapData.contenido) 
-              ? mapData.contenido 
+            const elementos = Array.isArray(mapData.contenido)
+              ? mapData.contenido
               : mapData.contenido.elementos || [];
-            
+
             if (Array.isArray(elementos)) {
               elementos.forEach(elemento => {
-              // Validar que elemento no sea null/undefined
-              if (!elemento || typeof elemento !== 'object') {
-                logger.warn('š ï¸ [useBoleteria] Elemento inv¡lido en mapa:', elemento);
-                return;
-              }
-              
-              if (elemento.sillas && Array.isArray(elemento.sillas)) {
-                totalSeats += elemento.sillas.length;
-                
-                elemento.sillas.forEach(silla => {
-                  // Validar que silla no sea null/undefined
-                  if (!silla || typeof silla !== 'object') {
-                    logger.warn('š ï¸ [useBoleteria] Silla inv¡lida en elemento:', silla);
-                    return;
-                  }
-                  
-                  switch (silla.estado) {
+                // Validar que elemento no sea null/undefined
+                if (!elemento || typeof elemento !== 'object') {
+                  logger.warn('š ï¸ [useBoleteria] Elemento inv¡lido en mapa:', elemento);
+                  return;
+                }
+
+                if (elemento.sillas && Array.isArray(elemento.sillas)) {
+                  totalSeats += elemento.sillas.length;
+
+                  elemento.sillas.forEach(silla => {
+                    // Validar que silla no sea null/undefined
+                    if (!silla || typeof silla !== 'object') {
+                      logger.warn('š ï¸ [useBoleteria] Silla inv¡lida en elemento:', silla);
+                      return;
+                    }
+
+                    switch (silla.estado) {
+                      case 'pagado':
+                      case 'vendido':
+                        soldSeats++;
+                        break;
+                      case 'reservado':
+                        reservedSeats++;
+                        break;
+                      case 'disponible':
+                      default:
+                        availableSeats++;
+                        break;
+                    }
+                  });
+                }
+
+                // Tambi©n contar asientos individuales (type: 'silla')
+                if (elemento.type === 'silla') {
+                  totalSeats++;
+                  switch (elemento.estado) {
                     case 'pagado':
                     case 'vendido':
                       soldSeats++;
@@ -348,27 +367,8 @@ export const useBoleteria = () => {
                       availableSeats++;
                       break;
                   }
-                });
-              }
-              
-              // Tambi©n contar asientos individuales (type: 'silla')
-              if (elemento.type === 'silla') {
-                totalSeats++;
-                switch (elemento.estado) {
-                  case 'pagado':
-                  case 'vendido':
-                    soldSeats++;
-                    break;
-                  case 'reservado':
-                    reservedSeats++;
-                    break;
-                  case 'disponible':
-                  default:
-                    availableSeats++;
-                    break;
                 }
-              }
-            });
+              });
             } else {
               logger.warn('š ï¸ [useBoleteria] Mapa cargado pero sin contenido v¡lido o no es array', {
                 mapData: mapData,
@@ -378,14 +378,14 @@ export const useBoleteria = () => {
                 esElementosArray: Array.isArray(elementos)
               });
             }
-            
+
             // Si no hay asientos en el formato esperado, intentar con el formato de zonas
             if (totalSeats === 0 && mapData.contenido.zonas && Array.isArray(mapData.contenido.zonas)) {
               logger.log('ðŸ” [useBoleteria] Intentando calcular estad­sticas desde zonas');
               mapData.contenido.zonas.forEach(zona => {
                 if (zona.asientos && Array.isArray(zona.asientos)) {
                   totalSeats += zona.asientos.length;
-                  
+
                   zona.asientos.forEach(silla => {
                     switch (silla.estado) {
                       case 'pagado':
@@ -404,14 +404,14 @@ export const useBoleteria = () => {
                 }
               });
             }
-            
+
             logger.log('œ… [useBoleteria] Estad­sticas calculadas:', {
               totalSeats,
               availableSeats,
               soldSeats,
               reservedSeats
             });
-            
+
             // Solo mostrar mensajes si realmente hay asientos y hay problemas de disponibilidad
             if (totalSeats > 0) {
               if (availableSeats <= 5 && availableSeats > 0) {
@@ -442,9 +442,9 @@ export const useBoleteria = () => {
         setMapa(null);
         setZonas([]);
       }
-  
+
       return true;
-  
+
     } catch (err) {
       logger.error("Error al seleccionar funci³n:", err);
       message.error(`Error al seleccionar funci³n: ${err.message}`);
@@ -461,7 +461,7 @@ export const useBoleteria = () => {
     setLoading(true);
     setError(null);
     setDebugInfo({ step: 'handleEventSelect', eventoId });
-    
+
     setSelectedEvent(null);
     setSelectedFuncion(null);
     setSelectedPlantilla(null);
@@ -522,41 +522,41 @@ export const useBoleteria = () => {
   const returnValue = useMemo(() => {
     try {
       return {
-    eventos,
-    funciones,
-    selectedFuncion,
-    selectedEvent,
-    selectedPlantilla,
-    setSelectedPlantilla,
-    mapa,
-    zonas,
-    carrito,
-    loading,
-    error,
-    debugInfo,
-    setDebugInfo,
-    setCarrito: setCarritoMemo,
-    addToCarrito,
-    removeFromCarrito,
-    clearCarrito,
-    handleEventSelect,
-    handleFunctionSelect,
-    setSelectedEvent: setSelectedEventMemo,
-    setSelectedFuncion,
-    // Variables del store unificado
-    selectedClient,
-    setSelectedClient,
-    selectedAffiliate,
-    setSelectedAffiliate,
-    selectedSeats,
-    setSelectedSeats,
-    addSeat,
-    removeSeat,
-    clearSeats,
-    getSeatCount,
-    getTotalPrice,
-    isSeatSelected,
-    syncWithSeatLocks
+        eventos,
+        funciones,
+        selectedFuncion,
+        selectedEvent,
+        selectedPlantilla,
+        setSelectedPlantilla,
+        mapa,
+        zonas,
+        carrito,
+        loading,
+        error,
+        debugInfo,
+        setDebugInfo,
+        setCarrito: setCarritoMemo,
+        addToCarrito,
+        removeFromCarrito,
+        clearCarrito,
+        handleEventSelect,
+        handleFunctionSelect,
+        setSelectedEvent: setSelectedEventMemo,
+        setSelectedFuncion,
+        // Variables del store unificado
+        selectedClient,
+        setSelectedClient,
+        selectedAffiliate,
+        setSelectedAffiliate,
+        selectedSeats,
+        setSelectedSeats,
+        addSeat,
+        removeSeat,
+        clearSeats,
+        getSeatCount,
+        getTotalPrice,
+        isSeatSelected,
+        syncWithSeatLocks
       };
     } catch (error) {
       logger.error('Error en useMemo de useBoleteria:', error);
@@ -566,35 +566,35 @@ export const useBoleteria = () => {
         selectedFuncion: null,
         selectedEvent: null,
         selectedPlantilla: null,
-        setSelectedPlantilla: () => {},
+        setSelectedPlantilla: () => { },
         mapa: null,
         zonas: [],
         carrito: [],
         loading: false,
         error: 'Error de inicializaci³n',
         debugInfo: {},
-        setDebugInfo: () => {},
-        setCarrito: () => {},
-        addToCarrito: () => {},
-        removeFromCarrito: () => {},
-        clearCarrito: () => {},
-        handleEventSelect: () => {},
-        handleFunctionSelect: () => {},
-        setSelectedEvent: () => {},
-        setSelectedFuncion: () => {},
+        setDebugInfo: () => { },
+        setCarrito: () => { },
+        addToCarrito: () => { },
+        removeFromCarrito: () => { },
+        clearCarrito: () => { },
+        handleEventSelect: () => { },
+        handleFunctionSelect: () => { },
+        setSelectedEvent: () => { },
+        setSelectedFuncion: () => { },
         selectedClient: null,
-        setSelectedClient: () => {},
+        setSelectedClient: () => { },
         selectedAffiliate: null,
-        setSelectedAffiliate: () => {},
+        setSelectedAffiliate: () => { },
         selectedSeats: [],
-        setSelectedSeats: () => {},
-        addSeat: () => {},
-        removeSeat: () => {},
-        clearSeats: () => {},
+        setSelectedSeats: () => { },
+        addSeat: () => { },
+        removeSeat: () => { },
+        clearSeats: () => { },
         getSeatCount: () => 0,
         getTotalPrice: () => 0,
         isSeatSelected: () => false,
-        syncWithSeatLocks: () => {}
+        syncWithSeatLocks: () => { }
       };
     }
   }, [
@@ -639,9 +639,9 @@ export const useBoleteria = () => {
   const hasLoadedEventos = useRef(false);
   useEffect(() => {
     if (hasLoadedEventos.current) return;
-    
+
     logger.log('ðŸ”„ [useBoleteria] useEffect for initial data loading triggered');
-    
+
     const fetchEventos = async () => {
       hasLoadedEventos.current = true;
       logger.log('ðŸ”„ [useBoleteria] Starting to fetch eventos');
@@ -656,12 +656,11 @@ export const useBoleteria = () => {
           setLoading(false);
           return;
         }
-        
+
         logger.log('œ… [useBoleteria] Usuario autenticado:', user.id);
-        
+
         const { data, error } = await supabase
-          .from('eventos')
-          .select('*')
+          .select('id, nombre, recinto, sala') // Optimized selection
           .eq('activo', true)
           .order('nombre', { ascending: true });
 
@@ -685,7 +684,7 @@ export const useBoleteria = () => {
           logger.log('ðŸ”„ [useBoleteria] No hay evento guardado, seleccionando el primero disponible');
           await handleEventSelect(data[0].id);
         }
-        
+
         // Si hay un evento guardado en localStorage, tambi©n verificar si hay funci³n guardada
         const storedFunctionId = localStorage.getItem(FUNC_KEY);
         if (storedFunctionId) {
