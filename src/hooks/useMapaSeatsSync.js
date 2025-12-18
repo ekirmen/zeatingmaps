@@ -55,7 +55,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
               allSeats.push(seatData);
             }
           });
-        // Caso 2: Asiento individual suelto (no dentro de una mesa)
+          // Caso 2: Asiento individual suelto (no dentro de una mesa)
         } else if (elemento._id && (elemento.type === 'silla' || elemento.type === 'circle' || elemento.type === 'rect')) {
           // Procesando asiento individual
 
@@ -101,7 +101,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
           };
           allSeats.push(seatData);
           // Asiento agregado
-        // Caso 3: Elemento que puede ser un asiento pero no tiene el tipo correcto
+          // Caso 3: Elemento que puede ser un asiento pero no tiene el tipo correcto
         } else if (elemento._id && elemento.nombre && (elemento.x !== undefined || elemento.posicion)) {
           // Procesando elemento como asiento potencial
 
@@ -139,7 +139,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
           );
 
           if (isNonSeatElement) {
-            console.log(`🚫 [useMapaSeatsSync] Elemento ignorado (no es asiento):`, elemento._id);
+            // console.log(`🚫 [useMapaSeatsSync] Elemento ignorado (no es asiento):`, elemento._id);
             return; // Saltar este elemento
           }
 
@@ -193,8 +193,8 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
 
     // Si ya procesamos estos datos exactos, devolver el cache
     if (lastProcessed.mapaId === currentMapaId &&
-        lastProcessed.funcionId === funcionId &&
-        seatsDataRef.current) {
+      lastProcessed.funcionId === funcionId &&
+      seatsDataRef.current) {
       return seatsDataRef.current;
     }
 

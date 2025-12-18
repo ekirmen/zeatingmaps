@@ -171,6 +171,16 @@ class AuditService {
         return null;
       }
 
+      // Evitar error 401: Si no hay usuario autenticado (es anónimo), no intentar insertar en audit_logs
+      // ya que RLS probablemente lo rechazará.
+      if (!this.currentUser) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AUDIT] Usuario anónimo, saltando insert remoto para evitar 401.');
+        }
+        await this.storeLocally(auditData);
+        return null;
+      }
+
       // Insertar en la base de datos
       // Usar try-catch para manejar errores de permisos silenciosamente
       try {
