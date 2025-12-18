@@ -438,17 +438,27 @@ export const useSeatLockStore = create((set, get) => ({
 
     // Check for reload loop
     try {
+      // Bloquear recargas si es por error de auth (403/invalid claim)
+      // Recargar no soluciona un token inválido, solo limpiar el storage lo hace (ya manejado en config/supabase.js)
+      if (reason && (reason.includes('403') || reason.includes('AuthApiError') || reason.includes('claim'))) {
+        console.error('🛑 [SEAT_LOCK_STORE] Error de autenticación detectado. Deteniendo recarga automática para evitar bucle.');
+        // Opcional: forzar logout o limpiar storage aquí también si es necesario
+        return;
+      }
+
       const lastReload = sessionStorage.getItem('last_seat_lock_reload');
       const reloadCount = parseInt(sessionStorage.getItem('seat_lock_reload_count') || '0');
       const now = Date.now();
 
-      if (lastReload && (now - parseInt(lastReload) < 10000)) {
-        if (reloadCount > 3) {
-          console.error('🛑 [SEAT_LOCK_STORE] Deteniendo bucle de recarga. Por favor verifique su conexión.');
+      // Aumentar cooldown a 10 segundos y max reintentos a 3
+      if (lastReload && (now - parseInt(lastReload) < 15000)) {
+        if (reloadCount > 2) {
+          console.error('🛑 [SEAT_LOCK_STORE] Deteniendo bucle de recarga. Por favor verifique su conexión o inicie sesión nuevamente.');
           return;
         }
         sessionStorage.setItem('seat_lock_reload_count', (reloadCount + 1).toString());
       } else {
+        // Reset counter si pasó suficiente tiempo
         sessionStorage.setItem('seat_lock_reload_count', '1');
       }
       sessionStorage.setItem('last_seat_lock_reload', now.toString());
@@ -456,17 +466,20 @@ export const useSeatLockStore = create((set, get) => ({
       // Ignore storage errors
     }
 
-    console.warn(`🔄 [SEAT_LOCK_STORE] Recarga solicitada (motivo: ${reason}) - Bloqueada para evitar bucles`);
-    // window.setTimeout(() => {
-    //   try {
-    //     window.location.reload();
-    //   } catch (error) {
-    //     console.error('❌ [SEAT_LOCK_STORE] Error al intentar recargar la página:', error);
-    //   }
-    // }, 2000); 
+    console.warn(`🔄 [SEAT_LOCK_STORE] Recarga solicitada (motivo: ${reason})`);
 
-    // Solo limpiar el timeout pendiente
-    set({ pendingReloadTimeout: null });
+    // Usar timeout para permitir que logs se guarden
+    if (typeof window !== 'undefined') {
+      const timeoutId = window.setTimeout(() => {
+        try {
+          window.location.reload();
+        } catch (error) {
+          console.error('❌ [SEAT_LOCK_STORE] Error al intentar recargar la página:', error);
+        }
+      }, 2000);
+
+      set({ pendingReloadTimeout: timeoutId });
+    }
   },
 
   handleRealtimeChannelIssue: (reason, funcionId = null) => {

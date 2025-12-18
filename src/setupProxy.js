@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 
-module.exports = function(app) {
+module.exports = function (app) {
   // Crear una instancia de Express para manejar las rutas de API
   const apiRouter = express.Router();
 
@@ -109,6 +109,23 @@ module.exports = function(app) {
     }
   });
 
+
+
+  // Endpoint para logs de auditoría (local mock)
+  apiRouter.post('/audit/create', (req, res) => {
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API LOCAL] Audit Log Received:', req.body.logs ? `Batch of ${req.body.logs.length}` : 'Single log');
+      }
+      return res.status(200).json({
+        success: true,
+        data: [{ id: `local-log-${Date.now()}`, created_at: new Date().toISOString() }]
+      });
+    } catch (error) {
+      console.error('[API LOCAL] Error in audit-create:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  });
 
   // Usar el router de API en la ruta /api
   app.use('/api', apiRouter);

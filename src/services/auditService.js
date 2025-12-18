@@ -183,59 +183,42 @@ class AuditService {
 
       // Insertar en la base de datos
       // Usar try-catch para manejar errores de permisos silenciosamente
+      // Insertar en la base de datos usando el API endpoint seguro
+      // Esto evita el error 401 al intentar insertar directamente en una tabla protegida por RLS
       try {
-        const { data, error } = await supabase
-          .from('audit_logs')
-          .insert([auditData])
-          .select()
-          .single();
+        const response = await fetch('/api/audit/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // Opcional: enviar token para validacion adicional si el endpoint lo requiere
+            'Authorization': session?.access_token ? `Bearer ${session.access_token}` : ''
+          },
+          body: JSON.stringify(auditData)
+        });
 
-        if (error) {
-          // Detectar errores relacionados con API key, autenticación o permisos
-          const errorMessage = error.message?.toLowerCase() || '';
-          const errorHint = error.hint?.toLowerCase() || '';
-          const isAuthError =
-            error.code === '42501' ||
-            error.code === 'PGRST301' ||
-            error.status === 401 ||
-            error.status === 403 ||
-            errorMessage.includes('permission denied') ||
-            errorMessage.includes('no api key found') ||
-            errorMessage.includes('apikey') ||
-            errorMessage.includes('unauthorized') ||
-            errorMessage.includes('forbidden') ||
-            errorHint.includes('no `apikey`') ||
-            errorHint.includes('api key');
-
-          if (isAuthError) {
-            // Solo loggear en desarrollo para errores de permisos/autenticación
-            if (process.env.NODE_ENV === 'development') {
-              console.warn('[AUDIT] No se pudo registrar acción (permisos/autenticación):', action, error.message || error.hint);
-            }
-            // Fallback: almacenar localmente si falla la inserción por permisos
-            // NO reintentar remotamente para evitar bucles de errores 401
-            this.remoteFetchDisabled = true;
-            await this.storeLocally(auditData);
-            return null;
-          }
-
-          // Para otros errores, solo loggear en desarrollo
-          if (process.env.NODE_ENV === 'development') {
-            console.error('[AUDIT] Error registrando acción:', error);
-          }
-          await this.storeLocally(auditData);
-          return null;
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
 
+        const result = await response.json();
+        const data = result.data ? result.data[0] : null;
+
         if (process.env.NODE_ENV === 'development') {
+          // Success logging if needed
         }
         return data;
+
       } catch (dbError) {
-        // Manejar errores inesperados (como problemas de conexión)
+        // Manejar errores de red o del endpoint
         // Solo loggear en desarrollo
         if (process.env.NODE_ENV === 'development') {
-          console.error('[AUDIT] Error inesperado en logAction:', dbError);
+          console.error('[AUDIT] Error registrando acción vía API:', dbError);
         }
+        if (this.isAuthError(dbError) || dbError.message.includes('401')) {
+          this.remoteFetchDisabled = true;
+        }
+
         await this.storeLocally(auditData);
         return null;
       }

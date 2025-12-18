@@ -26,6 +26,44 @@ if (!supabaseUrl || !supabaseAnonKey) {
   });
 }
 
+// Función auxiliar para validar JWT sin decodificar completamente
+const isValidJwtStructure = (token) => {
+  if (!token) return false;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(atob(parts[1]));
+    return !!payload.sub; // Debe tener 'sub' claim
+  } catch (e) {
+    return false;
+  }
+};
+
+// Limpieza proactiva de tokens corruptos
+if (typeof window !== 'undefined' && window.localStorage) {
+  try {
+    const storageKeys = Object.keys(window.localStorage);
+    storageKeys.forEach(key => {
+      if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        const item = window.localStorage.getItem(key);
+        if (item) {
+          try {
+            const parsed = JSON.parse(item);
+            if (parsed.access_token && !isValidJwtStructure(parsed.access_token)) {
+              console.warn('[SUPABASE CONFIG] Token corrupto detectado (missing sub), limpiando sesión:', key);
+              window.localStorage.removeItem(key);
+            }
+          } catch (e) {
+            // Ignorar errores de parsing
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('[SUPABASE CONFIG] Error limpiando tokens:', error);
+  }
+}
+
 // Función para crear cliente con configuración optimizada
 const createOptimizedClient = (url, key, options = {}) => {
   if (!url || !key) {
