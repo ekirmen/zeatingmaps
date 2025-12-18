@@ -39,16 +39,18 @@ export default async function handler(req, res) {
       }
       contenido = Array.isArray(req.body.contenido) ? req.body.contenido : [];
 
-      // Extraer tenant_id del body si está disponible
+      // Extraer tenant_id e imagen_fondo del body si está disponible
       const tenantId = req.body?.tenant_id;
+      const imagen_fondo = req.body?.imagen_fondo; // Nueva optimización
       console.log('[mapas save] Guardando mapa con tenant_id:', tenantId);
-      
+
       const { error: upsertErr } = await admin
         .from('mapas')
-        .upsert({ 
-          sala_id: salaId, 
+        .upsert({
+          sala_id: salaId,
           contenido,
-          tenant_id: tenantId 
+          tenant_id: tenantId,
+          imagen_fondo: imagen_fondo // Add imagen_fondo
         }, { onConflict: 'sala_id' });
       if (upsertErr) throw upsertErr;
     }

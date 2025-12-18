@@ -484,16 +484,32 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     let isMounted = true;
 
     const applyInitialBackground = async () => {
-      if (!initialMapa?.contenido) {
+      if (!initialMapa) return;
+
+      let bgElement = initialMapa.contenido?.find(el => el.type === 'background');
+      let source = null;
+
+      // 1. Try column persistence first (Optimization)
+      if (initialMapa.imagen_fondo) {
+        source = initialMapa.imagen_fondo;
+        // If a light background element exists, use its metadata
+        if (!bgElement) {
+          // Create one if it doesn't exist but we have an image
+          bgElement = {
+            _id: `bg_${Date.now()}`,
+            type: 'background',
+            scale: 1, opacity: 1, x: 0, y: 0
+          };
+        }
+      } else if (bgElement) {
+        // 2. Fallback to embedded data
+        source = resolveBackgroundSource(bgElement);
+      }
+
+      if (!source && !bgElement) {
         return;
       }
 
-      const bgElement = initialMapa.contenido.find(el => el.type === 'background');
-      if (!bgElement) {
-        return;
-      }
-
-      const source = resolveBackgroundSource(bgElement);
       if (source) {
         try {
           const img = await loadImageFromSource(source);
@@ -505,23 +521,17 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         }
       }
 
-      setBackgroundImageElement(prev => {
-        const imageDataValue = bgElement.imageData
-          || (source && source.startsWith('data:')
-            ? source
-            : (prev?.imageData ?? null));
-        const imageUrlValue = bgElement.imageUrl
-          || (source && !source.startsWith('data:')
-            ? source
-            : (prev?.imageUrl ?? null));
-
-        return {
-          ...prev,
-          ...bgElement,
-          imageData: imageDataValue,
-          imageUrl: imageUrlValue
-        };
-      });
+      if (bgElement && source) {
+        setBackgroundImageElement(prev => {
+          return {
+            ...prev,
+            ...bgElement,
+            imageData: source.startsWith('data:') ? source : (bgElement.imageData || null),
+            imageUrl: !source.startsWith('data:') ? source : (bgElement.imageUrl || null),
+            image: null
+          };
+        });
+      }
     };
 
     applyInitialBackground();
@@ -640,8 +650,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     const silla = seatShape === 'circle'
       ? { ...sillaBase, radius: 10 }
       : seatShape === 'rect'
-      ? { ...sillaBase, width: 20, height: 20 }
-      : { ...sillaBase, width: 18, height: 14 }; // butaca
+        ? { ...sillaBase, width: 20, height: 20 }
+        : { ...sillaBase, width: 18, height: 14 }; // butaca
     setElements(prev => {
       const newElements = [...prev, silla];
       saveToHistory(newElements);
@@ -1361,7 +1371,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         <Group {...commonProps}>
           <Rect width={w} height={h} fill={element.fill || '#f0f0f0'} stroke={zoneStroke} strokeWidth={isSelected ? 3 : 2} rotation={element.rotation || 0} />
           {showTableLabels && (
-            <KonvaText text={element.nombre || 'Mesa'} fontSize={element.labelSize || 14} fill={element.labelColor || '#333'} offsetX={((element.nombre || 'Mesa').length * (element.labelSize || 14)) / 4} x={w/2} y={h/2 - (element.labelSize || 14)/2} />
+            <KonvaText text={element.nombre || 'Mesa'} fontSize={element.labelSize || 14} fill={element.labelColor || '#333'} offsetX={((element.nombre || 'Mesa').length * (element.labelSize || 14)) / 4} x={w / 2} y={h / 2 - (element.labelSize || 14) / 2} />
           )}
           {isSelected && (
             <>
@@ -1501,12 +1511,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                 </div>
                 <div className="flex items-center gap-2">
                   <label htmlFor="seat-shape-select">Forma silla:</label>
-                  <Select 
+                  <Select
                     id="seat-shape-select"
-                    value={seatShape} 
-                    onChange={setSeatShape} 
-                    options={[{value:'circle',label:'Redonda'},{value:'rect',label:'Cuadrada'},{value:'butaca',label:'Butaca'}]} 
-                    size="small" 
+                    value={seatShape}
+                    onChange={setSeatShape}
+                    options={[{ value: 'circle', label: 'Redonda' }, { value: 'rect', label: 'Cuadrada' }, { value: 'butaca', label: 'Butaca' }]}
+                    size="small"
                     style={{ width: 100 }}
                     aria-label="Seleccionar forma de silla"
                   />
@@ -1651,7 +1661,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                   {(() => {
                     const dx = rowPreview.end.x - rowPreview.start.x;
                     const dy = rowPreview.end.y - rowPreview.start.y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const dist = Math.sqrt(dx * dx + dy * dy);
                     const label = `${Math.round(dist)} px | ${rowCount} sillas`;
                     const lx = (rowPreview.start.x + rowPreview.end.x) / 2;
                     const ly = (rowPreview.start.y + rowPreview.end.y) / 2;
@@ -1876,7 +1886,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                       <Select
                         value={circleArc}
                         onChange={setCircleArc}
-                        options={[{value:'top',label:'Arriba'},{value:'right',label:'Derecha'},{value:'bottom',label:'Abajo'},{value:'left',label:'Izquierda'}]}
+                        options={[{ value: 'top', label: 'Arriba' }, { value: 'right', label: 'Derecha' }, { value: 'bottom', label: 'Abajo' }, { value: 'left', label: 'Izquierda' }]}
                         size="small"
                         style={{ width: 80 }}
                       />

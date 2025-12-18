@@ -35,6 +35,7 @@ export const useMapaLoadingSaving = () => {
   }, [salaId]);
 
   const transformarParaGuardar = (elements, zones = []) => {
+    console.log('[transformarParaGuardar] Inicio. Elementos:', elements?.length);
     if (!elements || !Array.isArray(elements)) {
       return { contenido: [], zonas: zones || [], tenant_id: currentTenant?.id };
     }
@@ -43,9 +44,11 @@ export const useMapaLoadingSaving = () => {
     let imagen_fondo = null;
     const backgroundElement = elements.find(el => el && el.type === 'background');
 
+    console.log('[transformarParaGuardar] Background encontrado:', backgroundElement ? 'SÍ' : 'NO');
     if (backgroundElement) {
       // Extract the heavy image data
       imagen_fondo = backgroundElement.imageData || backgroundElement.imageUrl || null;
+      console.log('[transformarParaGuardar] Imagen fondo extraída:', imagen_fondo ? 'PRESENTE' : 'NULL');
       // We keep the background element in the JSON but WITHOUT the heavy image data
     }
 
@@ -103,12 +106,14 @@ export const useMapaLoadingSaving = () => {
       contenido.unshift(lightBackground);
     }
 
-    return {
+    const payload = {
       contenido: contenido,
       zonas: zones || [],
       tenant_id: currentTenant?.id,
       imagen_fondo: imagen_fondo
     };
+    console.log('[transformarParaGuardar] Payload final generated with imagen_fondo:', !!imagen_fondo, payload);
+    return payload;
   };
 
   const loadMapa = useCallback(async (salaId, setElements, setZones) => {

@@ -159,6 +159,9 @@ const CrearMapaPage = () => {
         if (missingFields.includes('estado')) {
           alterSQL += 'ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT \'draft\'; ';
         }
+        if (missingFields.includes('imagen_fondo')) {
+          alterSQL += 'ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS imagen_fondo TEXT; ';
+        }
         if (missingFields.includes('created_at')) {
           alterSQL += 'ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(); ';
         }
@@ -505,12 +508,12 @@ const CrearMapaPage = () => {
       if (!profileError && profile?.tenant_id) {
         return profile.tenant_id;
       }
-    } catch (_) {}
+    } catch (_) { }
     // 2) Intentar desde el hook
     try {
       const fromHook = addTenantToInsert({});
       if (fromHook?.tenant_id) return fromHook.tenant_id;
-    } catch (_) {}
+    } catch (_) { }
     throw new Error('No se pudo determinar el tenant del usuario.');
   };
 
@@ -531,13 +534,38 @@ const CrearMapaPage = () => {
         throw new Error('Tu cuenta no tiene un tenant v¡lido asociado.');
       }
 
+      // --- OPTIMIZATION START ---
+      // Logica local para extraer imagen de fondo (similar a transformarParaGuardar)
+      let finalContenido = mapaData.contenido || [];
+      let finalImagenFondo = null;
+
+      if (Array.isArray(finalContenido)) {
+        const bgElement = finalContenido.find(el => el.type === 'background');
+        if (bgElement) {
+          // Extract data
+          finalImagenFondo = bgElement.imageData || bgElement.imageUrl || null;
+
+          // Replace with light version in JSON
+          const lightBg = {
+            ...bgElement,
+            imageData: null,
+            imageUrl: null,
+            _isBackgroundRef: true
+          };
+
+          finalContenido = finalContenido.map(el => el.type === 'background' ? lightBg : el);
+        }
+      }
+      // --- OPTIMIZATION END ---
+
       // Prepare base data
       const baseData = {
         nombre: mapaData.nombre || 'Mapa de Sala',
         descripcion: mapaData.descripcion || '',
-        contenido: mapaData.contenido || [],
+        contenido: finalContenido,
         estado: mapaData.estado || 'activo',
-        tenant_id: validTenantId
+        tenant_id: validTenantId,
+        imagen_fondo: finalImagenFondo // Save to column
       };
 
       // Ensure required fields are present
@@ -556,7 +584,7 @@ const CrearMapaPage = () => {
           updated_at: new Date().toISOString()
         };
 
-        console.log('[DEBUG] Update data (final):', updateData);
+        console.log('[DEBUG] Update data (final) with imagen_fondo:', !!updateData.imagen_fondo);
 
         const { error } = await supabase
           .from('mapas')
@@ -568,6 +596,10 @@ const CrearMapaPage = () => {
           throw error;
         }
         message.success('Mapa actualizado exitosamente');
+
+        // Update local state to reflect change immediately (including new optimization)
+        setMapa(prev => ({ ...prev, ...updateData }));
+
       } else {
         // Crear nuevo mapa
         const insertData = {
@@ -575,7 +607,7 @@ const CrearMapaPage = () => {
           sala_id: salaId
         };
 
-        console.log('[DEBUG] Insert data (pre-ejecuci³n):', insertData);
+        console.log('[DEBUG] Insert data (pre-ejecuci³n) with imagen_fondo:', !!insertData.imagen_fondo);
 
         const { data, error } = await supabase
           .from('mapas')
@@ -717,8 +749,8 @@ const CrearMapaPage = () => {
                   contenido: Array.isArray(mapa?.contenido)
                     ? mapa.contenido
                     : Array.isArray(mapa?.contenido?.elementos)
-                    ? mapa.contenido.elementos
-                    : []
+                      ? mapa.contenido.elementos
+                      : []
                 }
                 : null
             }
