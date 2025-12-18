@@ -63,7 +63,7 @@ export const getSeatLocksByLocator = async (locator) => {
   try {
     const { data, error } = await supabase
       .from('seat_locks')
-      .select('*')
+      .select('id, seat_id, funcion_id, locked_at, expires_at, status, locator, user_id, zona_id, table_id')
       .eq('locator', locator);
 
     if (error) throw error;
@@ -81,7 +81,7 @@ export const getSeatLocksByUser = async (userId, funcionId = null) => {
   try {
     let query = supabase
       .from('seat_locks')
-      .select('*')
+      .select('id, seat_id, funcion_id, locked_at, expires_at, status, locator, user_id, zona_id, table_id')
       .eq('user_id', userId);
 
     if (funcionId) {
@@ -103,22 +103,22 @@ export const getSeatLocksByUser = async (userId, funcionId = null) => {
  */
 export const updateSeatsWithLocator = async (seatIds, locator, userId, zoneInfo = null) => {
   try {
-    const updateData = { 
+    const updateData = {
       locator: locator,
       user_id: userId
     };
-    
+
     if (zoneInfo) {
       updateData.zona_id = zoneInfo.zona_id || 'ORO';
     }
-    
+
     const { data, error } = await supabase
       .from('seat_locks')
       .update(updateData)
       .in('seat_id', seatIds)
       .eq('user_id', userId)
       .select();
-    
+
     if (error) throw error;
     return data;
   } catch (error) {

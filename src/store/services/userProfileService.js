@@ -7,7 +7,7 @@ export const getUserProfile = async (userId) => {
     // Paso 1: perfil básico sin joins
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, login, telefono, tenant_id, created_at, updated_at')
       .eq('id', userId)
       .maybeSingle();
 
@@ -232,7 +232,7 @@ export const getUserStats = async (userId) => {
       // Usar payment_transactions en lugar de sales
       const res = await supabase.from('payment_transactions').select('amount,status').eq('user_id', userId);
       purchases = res.data || [];
-    } catch (_) {}
+    } catch (_) { }
 
     try {
       let res = await supabase.from('reservations').select('status').eq('user_id', userId);
@@ -240,12 +240,12 @@ export const getUserStats = async (userId) => {
         res = await supabase.from('reservas').select('status').eq('user_id', userId);
       }
       reservations = res.data || [];
-    } catch (_) {}
+    } catch (_) { }
 
     try {
       const res = await supabase.from('user_favorites').select('id').eq('user_id', userId);
       favorites = res.data || [];
-    } catch (_) {}
+    } catch (_) { }
 
     const totalSpent = purchases
       .filter(p => p.status === 'completed')
