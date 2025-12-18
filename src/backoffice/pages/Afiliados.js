@@ -1,14 +1,14 @@
 /**
  * Sistema de Afiliados - Replanteado desde Abonos
- * Gestiona programas de afiliados con links ºnicos, comisiones y dashboard
+ * Gestiona programas de afiliados con links únicos, comisiones y dashboard
  */
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Modal, Form, Input, InputNumber, Tag, Space, message, Tooltip, Statistic, Row, Col, Tabs, Badge, Switch, Typography } from '../../utils/antdComponents';
-import { 
-  UserAddOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
-  CopyOutlined, 
+import {
+  UserAddOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CopyOutlined,
   LinkOutlined,
   DollarOutlined,
   BarChartOutlined,
@@ -60,6 +60,8 @@ const Afiliados = () => {
   };
 
   const loadStats = async () => {
+    if (!currentTenant?.id) return;
+
     try {
       const { data: ventas, error } = await supabase
         .from('transacciones')
@@ -84,7 +86,7 @@ const Afiliados = () => {
         ventasMes
       });
     } catch (error) {
-      console.error('Error cargando estad­sticas:', error);
+      console.error('Error cargando estadísticas:', error);
     }
   };
 
@@ -108,7 +110,7 @@ const Afiliados = () => {
   const handleDelete = async (id) => {
     Modal.confirm({
       title: '¿Eliminar afiliado?',
-      content: 'Esta acci³n no se puede deshacer.',
+      content: 'Esta acción no se puede deshacer.',
       onOk: async () => {
         try {
           const { error } = await supabase
@@ -183,7 +185,7 @@ const Afiliados = () => {
       key: 'email'
     },
     {
-      title: 'Comisi³n (%)',
+      title: 'Comisión (%)',
       dataIndex: 'comision_porcentaje',
       key: 'comision_porcentaje',
       render: (value) => `${value || 0}%`
@@ -194,8 +196,8 @@ const Afiliados = () => {
       render: (_, record) => (
         <Space>
           <Tooltip title={generateAffiliateLink(record.id)}>
-            <Text 
-              copyable={{ 
+            <Text
+              copyable={{
                 text: generateAffiliateLink(record.id),
                 onCopy: () => handleCopyLink(record.id)
               }}
@@ -223,24 +225,24 @@ const Afiliados = () => {
       render: (_, record) => (
         <Space>
           <Tooltip title="Editar">
-            <Button 
-              type="link" 
-              icon={<EditOutlined />} 
+            <Button
+              type="link"
+              icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
             />
           </Tooltip>
           <Tooltip title="Copiar Link">
-            <Button 
-              type="link" 
-              icon={<CopyOutlined />} 
+            <Button
+              type="link"
+              icon={<CopyOutlined />}
               onClick={() => handleCopyLink(record.id)}
             />
           </Tooltip>
           <Tooltip title="Eliminar">
-            <Button 
-              type="link" 
-              danger 
-              icon={<DeleteOutlined />} 
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
               onClick={() => handleDelete(record.id)}
             />
           </Tooltip>
@@ -302,8 +304,8 @@ const Afiliados = () => {
       <Card
         title="Afiliados"
         extra={
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<UserAddOutlined />}
             onClick={handleCreate}
           >
@@ -349,7 +351,7 @@ const Afiliados = () => {
             label="Email"
             rules={[
               { required: true, message: 'Ingresa el email' },
-              { type: 'email', message: 'Email inv¡lido' }
+              { type: 'email', message: 'Email inválido' }
             ]}
           >
             <Input placeholder="email@ejemplo.com" />
@@ -357,7 +359,7 @@ const Afiliados = () => {
 
           <Form.Item
             name="comision_porcentaje"
-            label="Comisi³n (%)"
+            label="Comisión (%)"
             rules={[
               { required: true, message: 'Ingresa el porcentaje de comisi³n' },
               { type: 'number', min: 0, max: 100, message: 'Debe estar entre 0 y 100' }
@@ -374,11 +376,11 @@ const Afiliados = () => {
 
           <Form.Item
             name="descripcion"
-            label="Descripci³n"
+            label="Descripción"
           >
-            <TextArea 
-              rows={3} 
-              placeholder="Descripci³n del afiliado (opcional)"
+            <TextArea
+              rows={3}
+              placeholder="Descripción del afiliado (opcional)"
             />
           </Form.Item>
 

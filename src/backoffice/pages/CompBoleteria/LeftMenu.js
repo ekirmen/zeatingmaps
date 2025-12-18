@@ -35,9 +35,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleTicketSearch = async (locator) => {
     setSearchLoading(true);
     try {
-        const { data: payment, error } = await supabase
-          .from('payment_transactions')
-          .select(`*,
+      const { data: payment, error } = await supabase
+        .from('payment_transactions')
+        .select(`*,
             user:profiles!user_id(*),
             seats,
             event:eventos(*),
@@ -48,8 +48,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               sala_id,
               plantilla
             )`)
-          .eq('locator', locator)
-          .single();
+        .eq('locator', locator)
+        .single();
 
       if (error) {
         console.error(`[Boleteria] Error searching ticket for locator ${locator}:`, error);
@@ -149,7 +149,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
 
     if (ticketData.funcion && typeof onFunctionSelect === 'function') {
-      // Pasar un par¡metro para indicar que no se debe limpiar el carrito
+      // Pasar un parámetro para indicar que no se debe limpiar el carrito
       await onFunctionSelect(ticketData.funcion, { preserveCart: true });
     }
 
@@ -189,7 +189,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       const payments = data || [];
 
-      // Si falta informaci³n de evento, intentar completarla a partir de la funci³n
+      // Si falta información de evento, intentar completarla a partir de la función
       for (const payment of payments) {
         if (!payment.event && payment.funcion?.evento_id) {
           await supabase
@@ -231,7 +231,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       const cleanTerm = term.trim();
       if (!cleanTerm) {
         setAccountSearchResults([]);
-        message.info('Usuario no encontrado y/o campo vac­o');
+        message.info('Usuario no encontrado y/o campo vacío');
         return;
       }
 
@@ -241,7 +241,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       if (userError || !userResp || !userResp.user) {
         setAccountSearchResults([]);
-        message.info('Usuario no encontrado y/o campo vac­o');
+        message.info('Usuario no encontrado y/o campo vacío');
         return;
       }
 
@@ -274,7 +274,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       if (!profileData) {
         setAccountSearchResults([]);
-        message.info('Usuario no encontrado y/o campo vac­o');
+        message.info('Usuario no encontrado y/o campo vacío');
         return;
       }
 
@@ -346,21 +346,20 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
   return (
     <div className="relative h-full">
-      {/* Bot³n para mostrar/ocultar menº */}
+      {/* Bot³n para mostrar/ocultar menú */}
       <div className="absolute top-0 right-0 z-10">
         <Button
           type="text"
           icon={isMenuCollapsed ? <AiOutlineDown /> : <AiOutlineUp />}
           onClick={toggleMenu}
           className="bg-white shadow-md rounded-full w-8 h-8 flex items-center justify-center"
-          title={isMenuCollapsed ? "Mostrar menº" : "Ocultar menº"}
+          title={isMenuCollapsed ? "Mostrar menú" : "Ocultar menú"}
         />
       </div>
 
       {/* Menº colapsible */}
-      <div className={`transition-all duration-300 ease-in-out ${
-        isMenuCollapsed ? 'h-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
-      }`}>
+      <div className={`transition-all duration-300 ease-in-out ${isMenuCollapsed ? 'h-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
+        }`}>
         <div className="p-4 space-y-4 bg-white shadow rounded">
           <Button icon={<AiOutlineSearch />} onClick={() => setIsSearchModalVisible(true)} block>
             Buscar Tickets
@@ -371,7 +370,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             onClick={() => setIsAccountModalVisible(true)}
             block
           >
-            Buscar/A±adir Cuenta
+            Buscar/Añadir Cuenta
           </Button>
 
           <Button
@@ -379,7 +378,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             onClick={() => setIsConfigModalVisible(true)}
             block
           >
-            Configuraci³n
+            Configuración
           </Button>
 
           {userData && (
@@ -401,7 +400,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         </div>
       </div>
 
-      {/* MODAL bºsqueda */}
+      {/* MODAL búsqueda */}
       <Modal
         open={isSearchModalVisible}
         title="Buscar Tickets"
@@ -436,7 +435,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             )}
             {ticketData.funcion && (
               <div>
-                <strong>Funci³n:</strong>{' '}
+                <strong>Función:</strong>{' '}
                 {ticketData.funcion.fecha_celebracion ? new Date(ticketData.funcion.fecha_celebracion).toLocaleString() : 'Fecha no disponible'}
               </div>
             )}
@@ -525,14 +524,14 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               { title: 'Localizador', dataIndex: 'locator' },
               { title: 'Evento', dataIndex: 'event_name' },
               {
-                title: 'Funci³n',
+                title: 'Función',
                 dataIndex: 'funcion_fecha',
                 render: (date) => (date ? new Date(date).toLocaleString() : '-')
               },
               { title: 'Estado', dataIndex: 'status' },
               { title: 'Fecha', dataIndex: 'created_at', render: (date) => new Date(date).toLocaleDateString() },
               {
-                title: 'Acci³n',
+                title: 'Acción',
                 render: (_, record) => (
                   <Button type="link" onClick={() => handleTicketSearch(record.locator)}>
                     Ver
@@ -564,7 +563,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="telefono" label="Tel©fono">
+            <Form.Item name="telefono" label="Teléfono">
               <Input />
             </Form.Item>
             <Button htmlType="submit" block>
@@ -593,7 +592,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                   { title: 'Nombre', dataIndex: 'login' },
                   { title: 'Email', dataIndex: 'email' },
                   {
-                    title: 'Acci³n',
+                    title: 'Acción',
                     render: (_, record) => (
                       <Button type="link" onClick={() => {
                         setSelectedClient(record);
@@ -658,7 +657,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 name="automaticTicketPrint"
                 valuePropName="checked"
               >
-                <Checkbox>Impresi³n autom¡tica de tickets</Checkbox>
+                <Checkbox>Impresión automática de tickets</Checkbox>
               </Form.Item>
             </div>
 
@@ -677,7 +676,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 name="automaticReceiptPrint"
                 valuePropName="checked"
               >
-                <Checkbox>Impresi³n autom¡tica de recibos</Checkbox>
+                <Checkbox>Impresión automática de recibos</Checkbox>
               </Form.Item>
             </div>
           </div>

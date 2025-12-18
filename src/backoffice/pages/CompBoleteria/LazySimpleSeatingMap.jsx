@@ -8,7 +8,7 @@ const SimpleSeatingMapLazy = React.lazy(() => import('./components/SimpleSeating
 
 const LazySimpleSeatingMap = (props) => {
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <Card>
           <div style={{ textAlign: 'center', padding: '20px' }}>
@@ -17,7 +17,7 @@ const LazySimpleSeatingMap = (props) => {
               Cargando mapa de asientos...
             </Title>
             <Text type="secondary">
-              Preparando la visualizaci³n del mapa
+              Preparando la visualización del mapa
             </Text>
           </div>
         </Card>

@@ -150,7 +150,7 @@ const SimpleSeatingMap = ({
       status: lock.status
     }));
 
-    // Obtener informaci³n de zona
+    // Obtener información de zona
     const zonaInfo = getZoneInfo(seat);
 
     // Usar el hook unificado que maneja todos los casos
@@ -182,9 +182,9 @@ const SimpleSeatingMap = ({
 
   const handleSeatClick = async (seat, mesa = null) => {
     try {
-      // IMPORTANTE: Verificar si el asiento est¡ vendido o reservado ANTES de cualquier otra l³gica
+      // IMPORTANTE: Verificar si el asiento está vendido o reservado ANTES de cualquier otra lógica
       if (seat.estado === 'pagado' || seat.estado === 'reservado') {
-        message.warning('Este asiento ya est¡ vendido o reservado y no se puede seleccionar');
+        message.warning('Este asiento ya está vendido o reservado y no se puede seleccionar');
         return;
       }
 
@@ -194,18 +194,18 @@ const SimpleSeatingMap = ({
         return;
       }
 
-      // Verificar si ya est¡ seleccionado por el usuario actual
+      // Verificar si ya está seleccionado por el usuario actual
       const sessionId = localStorage.getItem('anonSessionId') || crypto.randomUUID();
       if (!localStorage.getItem('anonSessionId')) {
         localStorage.setItem('anonSessionId', sessionId);
       }
 
-      // Usar lockedSeats para determinar si el asiento ya est¡ seleccionado por el usuario actual
+      // Usar lockedSeats para determinar si el asiento ya está seleccionado por el usuario actual
       const isAlreadySelected = Array.isArray(lockedSeats) ? lockedSeats.some(ls =>
         ls.seat_id === seat._id && ls.session_id === sessionId
       ) : false;
 
-      // Debug mejorado con informaci³n de estados
+      // Debug mejorado con información de estados
       const currentLock = Array.isArray(lockedSeats) ? lockedSeats.find(ls => ls.seat_id === seat._id) : null;
       console.log('ðŸ” [SimpleSeatingMap] Estado del asiento:', {
         seatId: seat._id,
@@ -227,7 +227,7 @@ const SimpleSeatingMap = ({
         isTemporary: currentLock?.status === 'seleccionado'
       });
 
-      // Si ya est¡ seleccionado, deseleccionarlo
+      // Si ya está seleccionado, deseleccionarlo
       if (isAlreadySelected) {
         // Desbloquear el asiento en la base de datos
         const { error: unlockError } = await supabase
@@ -251,7 +251,7 @@ const SimpleSeatingMap = ({
         }
 
         // Llamar al callback del padre para deseleccionar
-        // Buscar el asiento en selectedSeats para obtener la informaci³n de precio
+        // Buscar el asiento en selectedSeats para obtener la información de precio
         const selectedSeatWithPrice = Array.isArray(selectedSeats) ? selectedSeats.find(s => s._id === seat._id) : null;
         if (selectedSeatWithPrice) {
           onSeatClick(selectedSeatWithPrice, mesa);
@@ -274,26 +274,26 @@ const SimpleSeatingMap = ({
       const priceValue = Number(rawPrice);
 
       if (!Number.isFinite(priceValue)) {
-        message.error('El precio seleccionado no es v¡lido');
+        message.error('El precio seleccionado no es válido');
         return;
       }
 
-      // Restringir a la zona activa si est¡ definida
+      // Restringir a la zona activa si está definida
       const seatZonaId = String(seat?.zona?.id || seat?.zonaId || seat?.zona || '');
       if (selectedZonaId && seatZonaId && String(selectedZonaId) !== seatZonaId) {
         message.info('La zona seleccionada no coincide con este asiento');
         return;
       }
 
-      // Verificar si el asiento est¡ disponible
+      // Verificar si el asiento está disponible
       if (seat.estado === 'pagado' || seat.estado === 'reservado') {
-        message.warning('Este asiento ya est¡ vendido o reservado');
+        message.warning('Este asiento ya está vendido o reservado');
         return;
       }
 
       // Verificar que tenemos los datos necesarios
       if (!selectedFuncion?.id) {
-        message.error('No hay funci³n seleccionada');
+        message.error('No hay función seleccionada');
         return;
       }
 
@@ -302,7 +302,7 @@ const SimpleSeatingMap = ({
         return;
       }
 
-      // Verificar si est¡ bloqueado por otro usuario
+      // Verificar si está bloqueado por otro usuario
       const blockingStatuses = ['locked', 'seleccionado', 'seleccionado_por_otro', 'reservado', 'vendido'];
       const isLockedByOther = lockedSeats.some(ls => {
         if (ls.seat_id !== seat._id) {
@@ -312,7 +312,7 @@ const SimpleSeatingMap = ({
       });
 
       if (isLockedByOther) {
-        message.warning('Este asiento est¡ bloqueado por otro usuario');
+        message.warning('Este asiento está bloqueado por otro usuario');
         return;
       }
 
@@ -348,7 +348,7 @@ const SimpleSeatingMap = ({
         locked_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutos
         status: 'seleccionado',
-        lock_type: 'seat', // Agregar el tipo de bloqueo requerido por las pol­ticas
+        lock_type: 'seat', // Agregar el tipo de bloqueo requerido por las políticas
         locator: generateTempLocator() // Agregar locator temporal
       };
 
@@ -389,7 +389,7 @@ const SimpleSeatingMap = ({
 
       onSeatClick(seatWithPrice);
 
-      // Crear mensaje m¡s informativo
+      // Crear mensaje más informativo
       let seatInfo = '';
       if (mesa) {
         seatInfo = `Mesa ${mesa.nombre} - ${seat.nombre || 'Asiento'}`;
@@ -404,7 +404,7 @@ const SimpleSeatingMap = ({
       message.success(`ðŸŽ« ${seatInfo} seleccionado - ${entradaInfo} - ${zonaInfo} - $${precioInfo}`);
 
     } catch (error) {
-      console.error('Error al manejar selecci³n de asiento:', error);
+      console.error('Error al manejar selección de asiento:', error);
       message.error('Error al seleccionar el asiento');
     }
   };
@@ -426,7 +426,7 @@ const SimpleSeatingMap = ({
         <div className="text-gray-500">
           {!mapa ? 'Esperando mapa...' : 'Mapa sin contenido configurado'}
         </div>
-        {!mapa && <div className="text-xs text-gray-400 mt-2">El mapa se cargar¡ autom¡ticamente</div>}
+        {!mapa && <div className="text-xs text-gray-400 mt-2">El mapa se cargar¡ automáticamente</div>}
       </Card>
     );
   }
@@ -478,7 +478,7 @@ const SimpleSeatingMap = ({
               {/* Mesa */}
               {elemento.type === 'mesa' && (() => {
                 // Detectar si la mesa contiene sillas de la zona activa
-                // NOTA: Los textos de las mesas ahora est¡n perfectamente centrados usando transform: translate(-50%, -50%)
+                // NOTA: Los textos de las mesas ahora están perfectamente centrados usando transform: translate(-50%, -50%)
                 const mesaTieneZonaActiva = Array.isArray(elemento.sillas) && elemento.sillas.some(s => {
                   const zid = String(s?.zona?.id || s?.zonaId || s?.zona || '');
                   return selectedZonaId && zid && String(selectedZonaId) === zid;
@@ -524,7 +524,7 @@ const SimpleSeatingMap = ({
                 );
               })()}
 
-              {/* Formas gen©ricas (rect/circle) que no son mesas */}
+              {/* Formas genéricas (rect/circle) que no son mesas */}
               {!elemento.type && elemento.shape === 'rect' && (
                 <div
                   className="absolute border border-gray-300 rounded"
@@ -577,9 +577,9 @@ const SimpleSeatingMap = ({
                 // Si hay una mesa circular padre, centrar los asientos correctamente
                 // NOTA: Para mesas circulares, las coordenadas de las sillas son relativas al centro de la mesa
                 const isCircleTable = elemento?.type === 'mesa' && elemento?.shape === 'circle';
-                const chairDiameter = 20; // Di¡metro del asiento (coincide con width/height)
+                const chairDiameter = 20; // Diámetro del asiento (coincide con width/height)
 
-                // Calcular posici³n relativa a la mesa si es circular
+                // Calcular posición relativa a la mesa si es circular
                 let adjustedLeft, adjustedTop;
 
                 if (isCircleTable) {
@@ -588,7 +588,7 @@ const SimpleSeatingMap = ({
                   const mesaCenterY = (elemento.posicion?.y ?? elemento.y ?? 0);
                   const mesaRadius = elemento.radius ?? (elemento.width ?? 0) / 2;
 
-                  // Calcular posici³n absoluta de la silla
+                  // Calcular posición absoluta de la silla
                   const absoluteX = mesaCenterX + (sx || 0);
                   const absoluteY = mesaCenterY + (sy || 0);
 
@@ -660,7 +660,7 @@ const SimpleSeatingMap = ({
                         transition: 'all 0.3s ease-in-out'
                       }}
                       onClick={() => {
-                        // Solo permitir click si NO est¡ vendido o reservado
+                        // Solo permitir click si NO está vendido o reservado
                         if (silla.estado !== 'pagado' && silla.estado !== 'reservado') {
                           handleSeatClick(silla, elemento);
                         }
@@ -733,7 +733,7 @@ const SimpleSeatingMap = ({
                         transition: 'all 0.3s ease-in-out'
                       }}
                       onClick={() => {
-                        // Solo permitir click si NO est¡ vendido o reservado
+                        // Solo permitir click si NO está vendido o reservado
                         if (silla.estado !== 'pagado' && silla.estado !== 'reservado') {
                           handleSeatClick(silla);
                         }
@@ -789,7 +789,7 @@ const SimpleSeatingMap = ({
                         boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none'
                       }}
                       onClick={() => {
-                        // Solo permitir click si NO est¡ vendido o reservado
+                        // Solo permitir click si NO está vendido o reservado
                         if (silla.estado !== 'pagado' && silla.estado !== 'reservado') {
                           handleSeatClick(silla);
                         }

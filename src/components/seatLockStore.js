@@ -107,7 +107,7 @@ function normalizeSessionId(sessionId) {
 
 // Función auxiliar para generar UUID si crypto.randomUUID no está disponible
 function generateUuidFallback() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
@@ -436,6 +436,26 @@ export const useSeatLockStore = create((set, get) => ({
       return;
     }
 
+    // Check for reload loop
+    try {
+      const lastReload = sessionStorage.getItem('last_seat_lock_reload');
+      const reloadCount = parseInt(sessionStorage.getItem('seat_lock_reload_count') || '0');
+      const now = Date.now();
+
+      if (lastReload && (now - parseInt(lastReload) < 10000)) {
+        if (reloadCount > 3) {
+          console.error('🛑 [SEAT_LOCK_STORE] Deteniendo bucle de recarga. Por favor verifique su conexión.');
+          return;
+        }
+        sessionStorage.setItem('seat_lock_reload_count', (reloadCount + 1).toString());
+      } else {
+        sessionStorage.setItem('seat_lock_reload_count', '1');
+      }
+      sessionStorage.setItem('last_seat_lock_reload', now.toString());
+    } catch (e) {
+      // Ignore storage errors
+    }
+
     console.warn(`🔄 [SEAT_LOCK_STORE] Recargando página automáticamente (motivo: ${reason})`);
     const timeoutId = window.setTimeout(() => {
       try {
@@ -443,7 +463,7 @@ export const useSeatLockStore = create((set, get) => ({
       } catch (error) {
         console.error('❌ [SEAT_LOCK_STORE] Error al intentar recargar la página:', error);
       }
-    }, 800);
+    }, 2000); // Increased delay to 2s
 
     set({ pendingReloadTimeout: timeoutId });
   },
@@ -868,49 +888,49 @@ export const useSeatLockStore = create((set, get) => ({
             const newSeatStates = new Map(state.seatStates);
 
             updates.forEach(({ eventType, lock, normalizedSeatId }) => {
-            if (eventType === 'DELETE') {
-              if (lock.lock_type === 'table') {
-                currentTables = currentTables.filter(l => l.table_id !== lock.table_id);
-              } else {
-                currentSeats = currentSeats.filter(l => l.seat_id !== normalizedSeatId);
-                newSeatStates.delete(normalizedSeatId);
-              }
-            } else if (eventType === 'INSERT' || eventType === 'UPDATE') {
-              if (lock.lock_type === 'table') {
-                currentTables = [
-                  ...currentTables.filter(l => l.table_id !== lock.table_id),
-                  lock,
-                ];
-              } else {
-                currentSeats = [
-                  ...currentSeats.filter(l => l.seat_id !== normalizedSeatId),
-                  { ...lock, seat_id: normalizedSeatId },
-                ];
-
-                let visualState = 'seleccionado_por_otro';
-
-                if (lock.status === 'pagado' || lock.status === 'vendido') {
-                  visualState = 'vendido';
-                } else if (lock.status === 'reservado') {
-                  visualState = 'reservado';
-                } else if (lock.status === 'locked') {
-                  visualState = 'locked';
-                } else if (lock.status === 'seleccionado') {
-                  const currentSessionIdRaw = localStorage.getItem('anonSessionId');
-                  const currentSessionId = normalizeSessionId(currentSessionIdRaw);
-                  const lockSessionId = normalizeSessionId(lock.session_id?.toString() || '');
-
-                  if (currentSessionId && lockSessionId && currentSessionId === lockSessionId) {
-                    visualState = 'seleccionado';
-                  } else {
-                    visualState = 'seleccionado_por_otro';
-                  }
+              if (eventType === 'DELETE') {
+                if (lock.lock_type === 'table') {
+                  currentTables = currentTables.filter(l => l.table_id !== lock.table_id);
+                } else {
+                  currentSeats = currentSeats.filter(l => l.seat_id !== normalizedSeatId);
+                  newSeatStates.delete(normalizedSeatId);
                 }
+              } else if (eventType === 'INSERT' || eventType === 'UPDATE') {
+                if (lock.lock_type === 'table') {
+                  currentTables = [
+                    ...currentTables.filter(l => l.table_id !== lock.table_id),
+                    lock,
+                  ];
+                } else {
+                  currentSeats = [
+                    ...currentSeats.filter(l => l.seat_id !== normalizedSeatId),
+                    { ...lock, seat_id: normalizedSeatId },
+                  ];
 
-                newSeatStates.set(normalizedSeatId, visualState);
+                  let visualState = 'seleccionado_por_otro';
+
+                  if (lock.status === 'pagado' || lock.status === 'vendido') {
+                    visualState = 'vendido';
+                  } else if (lock.status === 'reservado') {
+                    visualState = 'reservado';
+                  } else if (lock.status === 'locked') {
+                    visualState = 'locked';
+                  } else if (lock.status === 'seleccionado') {
+                    const currentSessionIdRaw = localStorage.getItem('anonSessionId');
+                    const currentSessionId = normalizeSessionId(currentSessionIdRaw);
+                    const lockSessionId = normalizeSessionId(lock.session_id?.toString() || '');
+
+                    if (currentSessionId && lockSessionId && currentSessionId === lockSessionId) {
+                      visualState = 'seleccionado';
+                    } else {
+                      visualState = 'seleccionado_por_otro';
+                    }
+                  }
+
+                  newSeatStates.set(normalizedSeatId, visualState);
+                }
               }
-            }
-          });
+            });
             return {
               lockedSeats: currentSeats,
               lockedTables: currentTables,
@@ -1584,63 +1604,63 @@ export const useSeatLockStore = create((set, get) => ({
     }
   },
 
-      // Verificar si un asiento está bloqueado por el usuario actual
-      isSeatLockedByMe: async (seatId, functionId = null, sessionId = null) => {
-        const { lockedSeats } = get();
-        const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
+  // Verificar si un asiento está bloqueado por el usuario actual
+  isSeatLockedByMe: async (seatId, functionId = null, sessionId = null) => {
+    const { lockedSeats } = get();
+    const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
 
-        // Validar que functionId no sea null
-        if (!functionId) {
-          // Solo verificar en estado local
-          const currentSessionId = sessionId || localStorage.getItem('anonSessionId');
-          const isLockedByMe = seats.some((s) =>
-            s.seat_id === seatId &&
-            s.session_id === currentSessionId
-          );
-          return isLockedByMe;
-        }
+    // Validar que functionId no sea null
+    if (!functionId) {
+      // Solo verificar en estado local
+      const currentSessionId = sessionId || localStorage.getItem('anonSessionId');
+      const isLockedByMe = seats.some((s) =>
+        s.seat_id === seatId &&
+        s.session_id === currentSessionId
+      );
+      return isLockedByMe;
+    }
 
-        // Verificar en estado local primero
-        const currentSessionId = sessionId || localStorage.getItem('anonSessionId');
-        const isLockedByMe = seats.some((s) =>
-          s.seat_id === seatId &&
-          s.funcion_id === functionId &&
-          s.session_id === currentSessionId
-        );
+    // Verificar en estado local primero
+    const currentSessionId = sessionId || localStorage.getItem('anonSessionId');
+    const isLockedByMe = seats.some((s) =>
+      s.seat_id === seatId &&
+      s.funcion_id === functionId &&
+      s.session_id === currentSessionId
+    );
 
-        if (isLockedByMe) {
-          // Asiento bloqueado por el usuario actual
-          return true;
-        }
+    if (isLockedByMe) {
+      // Asiento bloqueado por el usuario actual
+      return true;
+    }
 
-        // Verificar en BD si no está en estado local
-        try {
-          // Validar que currentSessionId no sea null o vacío
-          if (!currentSessionId || currentSessionId.trim() === '') {
-            return false;
-          }
+    // Verificar en BD si no está en estado local
+    try {
+      // Validar que currentSessionId no sea null o vacío
+      if (!currentSessionId || currentSessionId.trim() === '') {
+        return false;
+      }
 
-          // Usar maybeSingle() en lugar de single() para evitar errores 406
-          const { data, error } = await supabase
-            .from('seat_locks')
-            .select('*')
-            .eq('seat_id', seatId)
-            .eq('funcion_id', functionId)
-            .eq('session_id', currentSessionId)
-            .maybeSingle();
+      // Usar maybeSingle() en lugar de single() para evitar errores 406
+      const { data, error } = await supabase
+        .from('seat_locks')
+        .select('*')
+        .eq('seat_id', seatId)
+        .eq('funcion_id', functionId)
+        .eq('session_id', currentSessionId)
+        .maybeSingle();
 
-          if (error) {
-            return false;
-          }
+      if (error) {
+        return false;
+      }
 
-          return !!data;
-        } catch (error) {
-          return false;
-        }
-      },
+      return !!data;
+    } catch (error) {
+      return false;
+    }
+  },
 
-      // Verificar si un asiento está bloqueado (con cache inteligente)
-      isSeatLocked: async (seatId, functionId = null) => {
+  // Verificar si un asiento está bloqueado (con cache inteligente)
+  isSeatLocked: async (seatId, functionId = null) => {
     const { lockedSeats } = get();
     const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
 
@@ -1709,7 +1729,7 @@ export const useSeatLockStore = create((set, get) => ({
 
     // Solo consultar BD si no hay cache válido
     try {
-        // Confirmando en BD para asiento (bloqueado localmente)
+      // Confirmando en BD para asiento (bloqueado localmente)
       const { data, error } = await supabase
         .from('seat_locks')
         .select('*')
