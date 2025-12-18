@@ -315,6 +315,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const removeBackground = useCallback(() => {
     setBackgroundImage(null);
     setBackgroundImageElement(null);
+    setElements(prev => prev.filter(el => el.type !== 'background')); // Fix: Remove from elements too
     message.success('Fondo removido');
   }, []);
 
@@ -804,6 +805,9 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         throw new Error('El contenido del mapa debe ser un array');
       }
       let listWithMeta = upsertMetaConfig(elements);
+
+      // Ensure no stale background exists in elements
+      listWithMeta = listWithMeta.filter(el => el.type !== 'background');
 
       // A±adir el fondo al contenido si existe
       if (backgroundImageElement) {

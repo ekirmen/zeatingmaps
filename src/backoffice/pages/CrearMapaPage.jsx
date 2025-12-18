@@ -746,6 +746,7 @@ const CrearMapaPage = () => {
             initialMapa={
               mapa
                 ? {
+                  imagen_fondo: mapa.imagen_fondo, // Pass optimized column
                   contenido: Array.isArray(mapa?.contenido)
                     ? mapa.contenido
                     : Array.isArray(mapa?.contenido?.elementos)
