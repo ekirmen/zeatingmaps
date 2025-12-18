@@ -173,7 +173,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         // Iniciar ambas operaciones en paralelo (no esperamos preloadModules)
         const funcionResult = await funcionQuery;
-        preloadModules.catch(() => {}); // Precargar en segundo plano
+        preloadModules.catch(() => { }); // Precargar en segundo plano
 
         setMapLoadProgress(30);
 
@@ -201,17 +201,17 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         // Cargar mapa y plantilla en paralelo
         const mapaQuery = supabase
           .from('mapas')
-          .select('*')
+          .select('id, sala_id, nombre, contenido, zonas, estado, settings')
           .eq('sala_id', funcion.sala_id)
           .eq('estado', 'active')
           .single();
 
         const plantillaQuery = funcion.plantilla && typeof funcion.plantilla === 'number'
           ? supabase
-              .from('plantillas')
-              .select('*')
-              .eq('id', funcion.plantilla)
-              .maybeSingle()
+            .from('plantillas')
+            .select('id, nombre, detalles')
+            .eq('id', funcion.plantilla)
+            .maybeSingle()
           : Promise.resolve({ data: funcion.plantilla || null, error: null });
 
         // Cargar mapa y plantilla en paralelo para reducir tiempo total
@@ -274,8 +274,8 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
     // Obtener zona del asiento (simplificado para m³vil)
     const zona = mapa?.zonas?.find(z => z.asientos?.some(a => a._id === seatId)) ||
-                 mapa?.contenido?.find(el => el.sillas?.some(a => a._id === seatId) && (el.zona || el.zonaId)) ||
-                 seat.zona || {};
+      mapa?.contenido?.find(el => el.sillas?.some(a => a._id === seatId) && (el.zona || el.zonaId)) ||
+      seat.zona || {};
 
     const zonaId = zona?.id || zona?.zonaId || seat.zonaId;
     const nombreZona = zona?.nombre || seat.nombreZona || seat.zona?.nombre || 'Zona';
@@ -375,7 +375,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           marginBottom: '20px',
           animation: 'pulse 1.5s ease-in-out infinite'
         }} />
-        
+
         {/* Skeleton del mapa - placeholder grande para LCP */}
         <div style={{
           flex: 1,

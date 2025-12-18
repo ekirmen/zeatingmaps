@@ -1,0 +1,65 @@
+--- Top 50 Assets by Size ---
+static/js/8396.2e5fca37.chunk.js: 0.1618 MB
+static/js/commons~ef7d455c.8ba4f98f.chunk.js: 0.1516 MB
+static/js/react-vendor.0f831c82.js: 0.1352 MB
+static/js/6106.905b54d3.chunk.js: 0.1268 MB
+static/js/vendors~40b9bced.881f6580.chunk.js: 0.1187 MB
+static/js/vendors~bcc0128f.c6686de0.chunk.js: 0.1186 MB
+static/js/7540.8450a100.chunk.js: 0.1173 MB
+static/js/vendors~1338e340.bdb39429.chunk.js: 0.1149 MB
+static/js/vendors~7d0ccfb8.96226683.chunk.js: 0.1018 MB
+static/js/3704.950e1d2b.chunk.js: 0.0992 MB
+static/js/vendors~bae6937c.5d610b20.chunk.js: 0.0889 MB
+static/js/9250.1d001cef.chunk.js: 0.0886 MB
+static/js/vendors~19ba600e.7d55b27c.chunk.js: 0.0880 MB
+static/js/4481.85021440.chunk.js: 0.0746 MB
+static/js/vendors~e7ea808b.afa43596.chunk.js: 0.0744 MB
+static/js/vendors~536eaa00.21264331.chunk.js: 0.0727 MB
+static/js/vendors~5a94f17d.08753e94.chunk.js: 0.0726 MB
+static/js/9589.b681ded5.chunk.js: 0.0726 MB
+static/js/vendors~5e9864d4.9c44cb7b.chunk.js: 0.0712 MB
+static/js/vendors~f2c7a136.53336dd7.chunk.js: 0.0690 MB
+static/js/vendors~3edac98d.de5049f6.chunk.js: 0.0666 MB
+static/js/vendors~f82e0cd2.6bbe9691.chunk.js: 0.0650 MB
+static/js/vendors~bee776a1.4ca40d94.chunk.js: 0.0641 MB
+static/js/5149.b7baf9f6.js: 0.0637 MB
+static/css/main.9b353ce4.css: 0.0633 MB
+static/js/vendors~e5f2f9f5.508a38bb.chunk.js: 0.0628 MB
+static/js/9210.f8a4b3e8.chunk.js: 0.0621 MB
+static/js/vendors~924ce0bc.ea618a5a.chunk.js: 0.0602 MB
+static/js/1641.fbb68f84.js: 0.0590 MB
+static/js/4553.0306803e.js: 0.0579 MB
+static/js/3295.68024ac6.chunk.js: 0.0578 MB
+static/js/5378.480c9f2d.chunk.js: 0.0568 MB
+static/js/vendors~a4b773fc.4832a1c7.chunk.js: 0.0558 MB
+static/js/main.d9795192.js: 0.0547 MB
+static/js/8371.b68db967.chunk.js: 0.0547 MB
+static/js/vendors~b38587c7.c7655a6f.chunk.js: 0.0518 MB
+static/js/vendors~d28a3908.ed4d32b9.chunk.js: 0.0514 MB
+static/js/4126.2687ff8c.chunk.js: 0.0510 MB
+static/js/7917.a5a41d9d.js: 0.0494 MB
+static/js/vendors~e81862ca.b08c45d4.chunk.js: 0.0484 MB
+static/js/9716.f7943345.chunk.js: 0.0482 MB
+static/js/vendors~cdd60c62.e6005c41.chunk.js: 0.0477 MB
+static/js/6222.44d56608.chunk.js: 0.0434 MB
+static/js/commons~31743c5a.fa3fbc02.chunk.js: 0.0428 MB
+static/js/8610.05683a6d.chunk.js: 0.0380 MB
+static/js/vendors~df18c960.5fbd5be6.chunk.js: 0.0369 MB
+static/css/8371.473806b0.chunk.css: 0.0347 MB
+static/js/2233.5e29f3c9.chunk.js: 0.0334 MB
+static/js/5208.2e2deb4f.chunk.js: 0.0291 MB
+static/js/vendors~6c9a8ce3.6987706e.chunk.js: 0.0280 MB
+
+--- Entrypoints ---
+main:
+  - static/js/runtime.d712f579.js (7.94 KB)
+  - static/js/react-vendor.0f831c82.js (138.42 KB)
+  - static/js/1641.fbb68f84.js (60.42 KB)
+  - static/js/7917.a5a41d9d.js (50.60 KB)
+  - static/js/7418.7c6047f8.js (9.21 KB)
+  - static/js/8993.be8f9b58.js (28.19 KB)
+  - static/js/1018.be61c2aa.js (8.96 KB)
+  - static/js/5149.b7baf9f6.js (65.25 KB)
+  - static/js/4553.0306803e.js (59.32 KB)
+  - static/css/main.9b353ce4.css (64.83 KB)
+  - static/js/main.d9795192.js (56.05 KB)
