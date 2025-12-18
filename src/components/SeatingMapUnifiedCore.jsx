@@ -576,11 +576,45 @@ const SeatingMapUnified = ({
 
   // Background images - memoized to prevent unnecessary re-renders
   // Usar solo el ID del mapa para evitar re-renders cuando cambia el contenido
+  // Background images - memoized to prevent unnecessary re-renders
+  // Usar solo el ID del mapa para evitar re-renders cuando cambia el contenido
   const backgroundElements = useMemo(() => {
     if (!mapa) return [];
-    return Array.isArray(mapa?.contenido)
+
+    // Existing elements from content
+    const existing = Array.isArray(mapa?.contenido)
       ? mapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
       : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
+
+    // Optimization: Inject background from column if available
+    if (mapa.imagen_fondo) {
+      // Check if we already have a background element with data
+      const hasHeavyData = existing.some(el => el.imageData || el.imageUrl || el.src || el.url);
+
+      if (!hasHeavyData) {
+        // If we have a placeholder ref (light version), enrich it
+        const placeholder = existing.find(el => el._isBackgroundRef);
+
+        if (placeholder) {
+          return [{
+            ...placeholder,
+            imageUrl: mapa.imagen_fondo, // Inject the data
+            imageData: null // Prefer URL
+          }];
+        } else {
+          // No element at all? Create a default one
+          return [{
+            _id: 'bg_optimized_column',
+            type: 'background',
+            imageUrl: mapa.imagen_fondo,
+            x: 0, y: 0, scale: 1, opacity: 1,
+            showInWeb: true
+          }, ...existing]; // Prepend or append? Usually background is first.
+        }
+      }
+    }
+
+    return existing;
   }, [mapa]); // Mantener dependencia completa para evitar warnings
 
   // Estado para rastrear el progreso de carga de imágenes
