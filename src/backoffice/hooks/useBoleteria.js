@@ -660,6 +660,7 @@ export const useBoleteria = () => {
         logger.log('œ… [useBoleteria] Usuario autenticado:', user.id);
 
         const { data, error } = await supabase
+          .from('eventos')
           .select('id, nombre, recinto, sala') // Optimized selection
           .eq('activo', true)
           .order('nombre', { ascending: true });
