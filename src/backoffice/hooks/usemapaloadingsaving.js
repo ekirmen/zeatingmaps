@@ -39,6 +39,16 @@ export const useMapaLoadingSaving = () => {
       return { contenido: [], zonas: zones || [], tenant_id: currentTenant?.id };
     }
 
+    // 1. Extract Background Image
+    let imagen_fondo = null;
+    const backgroundElement = elements.find(el => el && el.type === 'background');
+
+    if (backgroundElement) {
+      // Extract the heavy image data
+      imagen_fondo = backgroundElement.imageData || backgroundElement.imageUrl || null;
+      // We keep the background element in the JSON but WITHOUT the heavy image data
+    }
+
     const mesas = elements.filter(el => el && el.type === 'mesa');
     const contenido = mesas.map(mesa => {
       if (!mesa || !mesa._id) {
@@ -51,17 +61,24 @@ export const useMapaLoadingSaving = () => {
             return null;
           }
 
+          // Optimized: Only save zonaId
+          const zonaId = silla.zonaId || (silla.zona && typeof silla.zona === 'object' ? silla.zona.id : silla.zona);
+
           return {
             _id: silla._id,
             nombre: silla.nombre || '',
             posicion: silla.posicion || { x: 0, y: 0 },
             width: silla.width || 20,
             height: silla.height || 20,
-            zona: silla.zonaId || silla.zona?.id || null,
+            zona: zonaId || null,
             estado: silla.estado || 'disponible'
           };
         })
-        .filter(silla => silla !== null); // Filtrar sillas inv¡lidas
+        .filter(silla => silla !== null);
+
+      // Optimized: Only save zonaId
+      const zonaId = mesa.zonaId || (mesa.zona && typeof mesa.zona === 'object' ? mesa.zona.id : mesa.zona);
+
       return {
         _id: mesa._id,
         nombre: mesa.nombre || '',
@@ -70,15 +87,27 @@ export const useMapaLoadingSaving = () => {
         height: mesa.height || 100,
         radius: mesa.radius || null,
         shape: mesa.shape || 'rect',
-        zona: mesa.zonaId || mesa.zona?.id || null,
+        zona: zonaId || null,
         sillas: sillas
       };
-    }).filter(mesa => mesa !== null); // Filtrar mesas inv¡lidas
-    // Retornar objeto con contenido, zonas y tenant_id como espera la API local
+    }).filter(mesa => mesa !== null);
+
+    // Add back the lightweight background element if it existed
+    if (backgroundElement) {
+      const lightBackground = {
+        ...backgroundElement,
+        imageData: null,
+        imageUrl: null,
+        _isBackgroundRef: true
+      };
+      contenido.unshift(lightBackground);
+    }
+
     return {
       contenido: contenido,
       zonas: zones || [],
-      tenant_id: currentTenant?.id
+      tenant_id: currentTenant?.id,
+      imagen_fondo: imagen_fondo
     };
   };
 
@@ -100,25 +129,10 @@ export const useMapaLoadingSaving = () => {
         // Crear elementos de prueba para verificar que el renderizado funciona
         const elementosPrueba = [
           {
-            _id: 'mesa_prueba_1',
-            type: 'mesa',
-            shape: 'rect',
-            posicion: { x: 100, y: 100 },
-            width: 120,
-            height: 80,
-            nombre: 'Mesa de Prueba 1',
-            zonaId: null,
-            sillas: []
+            _id: 'mesa_prueba_1', type: 'mesa', shape: 'rect', posicion: { x: 100, y: 100 }, width: 120, height: 80, nombre: 'Mesa de Prueba 1', zonaId: null, sillas: []
           },
           {
-            _id: 'mesa_prueba_2',
-            type: 'mesa',
-            shape: 'circle',
-            posicion: { x: 300, y: 100 },
-            radius: 60,
-            nombre: 'Mesa de Prueba 2',
-            zonaId: null,
-            sillas: []
+            _id: 'mesa_prueba_2', type: 'mesa', shape: 'circle', posicion: { x: 300, y: 100 }, radius: 60, nombre: 'Mesa de Prueba 2', zonaId: null, sillas: []
           }
         ];
         setElements(elementosPrueba);
@@ -126,7 +140,6 @@ export const useMapaLoadingSaving = () => {
         return;
       }
 
-      // Usar data.data que es la estructura de la API local
       const mapaData = data.data;
 
       // Cargar zonas si no est¡n disponibles
@@ -137,13 +150,24 @@ export const useMapaLoadingSaving = () => {
           if (zonasResponse.ok) {
             zonasCargadas = await zonasResponse.json();
           }
-        } catch (error) {
-        }
+        } catch (error) { }
       }
 
       // Transformar elementos del mapa
       const elementosCrudos = (mapaData.contenido || []).reduce((acc, mesa) => {
-        if (!mesa || !mesa._id) {
+        // Handle Background Restoration
+        if (mesa && (mesa.type === 'background' || mesa._isBackgroundRef)) {
+          // Restore background image from mapaData.imagen_fondo if available
+          const restoredBackground = {
+            ...mesa,
+            type: 'background',
+            imageData: mapaData.imagen_fondo || mesa.imageData || null,
+            imageUrl: mapaData.imagen_fondo || mesa.imageUrl || null
+          };
+          return [...acc, restoredBackground];
+        }
+
+        if (!mesa || !mesa._id || mesa.type !== 'mesa') {
           return acc;
         }
 
@@ -177,8 +201,8 @@ export const useMapaLoadingSaving = () => {
             width: silla.width || 20,
             height: silla.height || 20,
             nombre: silla.nombre || '',
-            label: silla.nombre || '',      // Add label for display
-            labelPlacement: 'top',          // Position label above chair
+            label: silla.nombre || '',
+            labelPlacement: 'top',
             labelStyle: {
               textAlign: 'center',
               fontSize: '12px',
@@ -192,7 +216,7 @@ export const useMapaLoadingSaving = () => {
               ? silla.zona
               : (silla.zona && typeof silla.zona === 'object' ? silla.zona.id : null),
           };
-        }).filter(silla => silla !== null); // Filtrar sillas inv¡lidas
+        }).filter(silla => silla !== null);
 
         return [...acc, mesaConZona, ...sillas];
       }, []);

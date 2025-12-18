@@ -1,5 +1,11 @@
-import React from 'react';
-import { Stage, Layer, Rect, Circle, Text } from 'react-konva';
+import React, { useEffect, useState } from 'react';
+import { Stage, Layer, Rect, Circle, Text, Image as KonvaImage } from 'react-konva';
+import useImage from 'use-image';
+
+const BackgroundImage = ({ src, width, height }) => {
+  const [image] = useImage(src);
+  return <KonvaImage image={image} width={width} height={height} />;
+};
 
 const SeatingMapCore = ({ mapa, zonas = [], onClickSilla }) => {
   if (!mapa) return null;
@@ -20,9 +26,22 @@ const SeatingMapCore = ({ mapa, zonas = [], onClickSilla }) => {
 
   const elementos = Array.isArray(mapa.contenido) ? mapa.contenido : mapa.contenido.zonas || [];
 
+  // Detect background
+  let backgroundSrc = mapa.imagen_fondo;
+  // If not in root, check elements
+  if (!backgroundSrc) {
+    const bgElement = elementos.find(el => el.type === 'background');
+    if (bgElement && (bgElement.imageData || bgElement.imageUrl)) {
+      backgroundSrc = bgElement.imageData || bgElement.imageUrl;
+    }
+  }
+
   return (
     <Stage width={800} height={500}>
       <Layer>
+        {backgroundSrc && (
+          <BackgroundImage src={backgroundSrc} width={800} height={500} />
+        )}
         {elementos.map(elemento => (
           <React.Fragment key={elemento._id}>
             {elemento.type === 'mesa' && (

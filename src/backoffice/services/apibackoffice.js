@@ -96,7 +96,7 @@ const fetchByTenant = async (tableName, filters = {}, options = {}) => {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         query = query.eq(key, value);
-  }
+      }
     });
 
     // Aplicar ordenamiento
@@ -128,7 +128,7 @@ const fetchById = async (tableName, id, options = {}) => {
 
     const { data, error } = await query.single();
     handleError(error, `Error fetching ${tableName} by id`);
-  return data;
+    return data;
   } catch (error) {
     logger.error(`Error in fetchById(${tableName}):`, error);
     throw error;
@@ -177,7 +177,7 @@ const updateRecord = async (tableName, id, data, options = {}) => {
       .eq('id', id)
       .eq('tenant_id', tenantId) // Solo actualizar registros del tenant actual
       .select(options.select || '*')
-    .single();
+      .single();
 
     handleError(error, `Error updating ${tableName}`);
     return result;
@@ -225,20 +225,20 @@ export const createZona = async (data) => {
   // Si no se proporciona tenant_id, intentar obtenerlo de la sala o usar el helper
   if (!data.tenant_id) {
     if (data.sala_id) {
-    try {
-      const { data: salaData, error: salaError } = await client
-        .from('salas')
-        .select('recintos!inner(tenant_id)')
-        .eq('id', data.sala_id)
-        .single();
+      try {
+        const { data: salaData, error: salaError } = await client
+          .from('salas')
+          .select('recintos!inner(tenant_id)')
+          .eq('id', data.sala_id)
+          .single();
 
         if (!salaError && salaData?.recintos?.tenant_id) {
-        data.tenant_id = salaData.recintos.tenant_id;
-      }
-    } catch (error) {
+          data.tenant_id = salaData.recintos.tenant_id;
+        }
+      } catch (error) {
         logger.warn('[createZona] No se pudo obtener tenant_id de la sala');
+      }
     }
-  }
 
     // Si aún no hay tenant_id, usar el helper
     if (!data.tenant_id) {
@@ -261,11 +261,11 @@ export const updateZona = async (id, data) => {
   }
 
   const { data: result, error } = await client
-        .from('zonas')
+    .from('zonas')
     .update(data)
-        .eq('id', id)
+    .eq('id', id)
     .eq('tenant_id', tenantId)
-        .single();
+    .single();
 
   handleError(error, 'Error updating zona');
   return result;
@@ -651,7 +651,8 @@ export const saveMapa = async (salaId, data) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contenido: data.contenido || [],
-        tenant_id: data.tenant_id
+        tenant_id: data.tenant_id,
+        imagen_fondo: data.imagen_fondo // Add imagen_fondo
       })
     });
     if (!resp.ok) {
@@ -666,7 +667,8 @@ export const saveMapa = async (salaId, data) => {
     .upsert({
       sala_id: salaId,
       contenido: data.contenido || [],
-      tenant_id: data.tenant_id
+      tenant_id: data.tenant_id,
+      imagen_fondo: data.imagen_fondo // Add imagen_fondo
     }, { onConflict: 'sala_id' });
   handleError(error);
 };
@@ -1346,11 +1348,11 @@ export const fetchPaymentByLocator = async (locator) => {
 
       data = fallbackResult.data
         ? {
-            ...fallbackResult.data,
-            user: fallbackResult.data.user
-              ? { ...fallbackResult.data.user }
-              : null
-          }
+          ...fallbackResult.data,
+          user: fallbackResult.data.user
+            ? { ...fallbackResult.data.user }
+            : null
+        }
         : null;
       error = fallbackResult.error;
     }
