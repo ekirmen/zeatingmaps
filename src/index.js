@@ -1,4 +1,5 @@
 /* eslint-disable import/first */
+import './polyfills';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -65,9 +66,9 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ 
-          padding: '40px', 
-          textAlign: 'center', 
+        <div style={{
+          padding: '40px',
+          textAlign: 'center',
           fontFamily: 'Arial, sans-serif',
           maxWidth: '600px',
           margin: '0 auto'
@@ -77,8 +78,8 @@ class ErrorBoundary extends React.Component {
             {this.state.error?.toString() || 'Error desconocido'}
           </p>
           <div style={{ marginTop: '30px' }}>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               style={{
                 padding: '10px 20px',
                 backgroundColor: '#1890ff',
