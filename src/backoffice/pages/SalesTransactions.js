@@ -89,7 +89,7 @@ const SalesTransactions = () => {
 
       let funcionesQuery = supabase
         .from('funciones')
-        .select('id, nombre, evento_id, fecha, hora, fecha_celebracion');
+        .select('*');
 
       if (isMultiTenant) {
         recintosQuery = recintosQuery.eq('tenant_id', currentTenant.id);
@@ -106,7 +106,7 @@ const SalesTransactions = () => {
         console.warn('š ï¸ [SalesTransactions] Error cargando funciones, usando fallback select("*"):', error);
         let fallbackQuery = supabase
           .from('funciones')
-          .select('id, nombre, fecha, hora, fecha_celebracion, evento_id, tenant_id');
+          .select('*');
 
         if (isMultiTenant) {
           fallbackQuery = fallbackQuery.eq('tenant_id', currentTenant.id);
@@ -218,7 +218,7 @@ const SalesTransactions = () => {
 
       let query = supabase
         .from('payment_transactions')
-        .select('id, locator, order_id, amount, currency, gateway_name, gateway_id, payment_method, status, created_at, user_id, processed_by, channel, source, sales_channel, is_hidden, hidden_at, evento_id, funcion_id, event_id, function_id, tenant_id')
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(recordLimit);
 

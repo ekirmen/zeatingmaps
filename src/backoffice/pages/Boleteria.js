@@ -75,27 +75,27 @@ const Boleteria = () => {
   const subscribeToFunction = seatLockStore.subscribeToFunction;
   const unsubscribe = seatLockStore.unsubscribe;
 
-  // Suscribirse a eventos en tiempo real para la funciÂ³n seleccionada (optimizado)
+  // Suscribirse a eventos en tiempo real para la función seleccionada (optimizado)
   const subscriptionFuncionId = useRef(null);
   useEffect(() => {
     const currentFuncionId = selectedFuncion?.id;
 
-    // Solo suscribirse si cambiÂ³ la funciÂ³n
+    // Solo suscribirse si cambió la función
     if (currentFuncionId && currentFuncionId !== subscriptionFuncionId.current && subscribeToFunction) {
-      // Desuscribirse de la funciÂ³n anterior si existe
+      // Desuscribirse de la función anterior si existe
       if (subscriptionFuncionId.current && unsubscribe) {
-        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de funciÂ³n anterior:', subscriptionFuncionId.current);
+        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de función anterior:', subscriptionFuncionId.current);
         unsubscribe();
       }
 
-      logger.log('Ã°Å¸â€â€ [Boleteria] SuscribiÂ©ndose a funciÂ³n:', currentFuncionId);
+      logger.log('Ã°Å¸â€â€ [Boleteria] SuscribiÂ©ndose a función:', currentFuncionId);
       subscribeToFunction(currentFuncionId);
       subscriptionFuncionId.current = currentFuncionId;
     }
 
     return () => {
       if (unsubscribe && subscriptionFuncionId.current) {
-        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de funciÂ³n:', subscriptionFuncionId.current);
+        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de función:', subscriptionFuncionId.current);
         unsubscribe();
         subscriptionFuncionId.current = null;
       }
@@ -128,7 +128,7 @@ const Boleteria = () => {
     const currentFuncionId = selectedFuncion?.id;
     const currentEventId = selectedEvent?.id;
 
-    // Solo cargar si cambiÂ³ la funciÂ³n o el evento
+    // Solo cargar si cambió la función o el evento
     if (!selectedFuncion || !selectedEvent) return;
     if (currentFuncionId === prevFuncionId.current && currentEventId === prevEventId.current) return;
 
@@ -563,7 +563,7 @@ const Boleteria = () => {
         const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
 
         if (!funcionId) {
-          message.warning('Selecciona una funciÂ³n antes de bloquear/desbloquear.');
+          message.warning('Selecciona una función antes de bloquear/desbloquear.');
           return;
         }
 
@@ -637,7 +637,7 @@ const Boleteria = () => {
       // Verificar que se haya seleccionado un tipo de entrada
       if (!selectedEntradaId) {
         logger.warn('Å¡Â Ã¯Â¸Â [Boleteria] No se ha seleccionado un tipo de entrada');
-        // AquÂ­ podrÂ­as mostrar un mensaje al usuario
+        // Aquí podrías mostrar un mensaje al usuario
         return;
       }
 
@@ -841,7 +841,7 @@ const Boleteria = () => {
       }
 
       if (!selectedFuncion?.id) {
-        message.warning('Selecciona una funciÂ³n para aplicar los cambios.');
+        message.warning('Selecciona una función para aplicar los cambios.');
         return;
       }
 
@@ -1015,7 +1015,7 @@ const Boleteria = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-w-0 mt-14 md:mt-0 relative">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header ultra compacto con bÂºsqueda de evento y funciÂ³n */}
+          {/* Header ultra compacto con búsqueda de evento y función */}
           <div className="bg-white border-b border-gray-200 px-3 py-2 md:px-1 md:py-0.5 shadow-sm md:shadow-none z-10">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1">
@@ -1052,7 +1052,7 @@ const Boleteria = () => {
                     }}
                     disabled={!selectedEvent}
                   >
-                    <option value="">Selecciona funciÂ³n</option>
+                    <option value="">Selecciona función</option>
                     {funciones?.filter(func => func.evento_id === selectedEvent?.id).map(funcion => (
                       <option key={funcion.id} value={funcion.id}>
                         {new Date(funcion.fecha_celebracion).toLocaleDateString()} {new Date(funcion.fecha_celebracion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -1128,8 +1128,8 @@ const Boleteria = () => {
                   type="button"
                   onClick={() => handleBlockActionToggle('block')}
                   className={`px-2 py-1 rounded border text-[11px] font-semibold ${blockMode && blockAction === 'block'
-                      ? 'bg-red-100 border-red-400 text-red-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                    ? 'bg-red-100 border-red-400 text-red-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
                     }`}
                 >
                   Bloquear
@@ -1138,8 +1138,8 @@ const Boleteria = () => {
                   type="button"
                   onClick={() => handleBlockActionToggle('unlock')}
                   className={`px-2 py-1 rounded border text-[11px] font-semibold ${blockMode && blockAction === 'unlock'
-                      ? 'bg-green-100 border-green-400 text-green-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                    ? 'bg-green-100 border-green-400 text-green-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
                     }`}
                 >
                   Desbloquear
@@ -1177,8 +1177,8 @@ const Boleteria = () => {
                         setSelectedEntradaId(option.entradaId);
                       }}
                       className={`flex-shrink-0 px-2 py-1 rounded font-medium text-xs ${isActive
-                          ? 'bg-purple-600 text-white'
-                          : bgColor + ' hover:opacity-80'
+                        ? 'bg-purple-600 text-white'
+                        : bgColor + ' hover:opacity-80'
                         } transition-colors`}
                       title={`${option.nombre} - ${option.tipo}`}
                     >
@@ -1193,7 +1193,7 @@ const Boleteria = () => {
                 })
               ) : (
                 <div className="text-xs text-gray-500 py-1">
-                  {selectedFuncion ? 'Cargando precios...' : 'Selecciona una funciÂ³n para ver precios'}
+                  {selectedFuncion ? 'Cargando precios...' : 'Selecciona una función para ver precios'}
                 </div>
               )}
             </div>
@@ -1236,7 +1236,7 @@ const Boleteria = () => {
               </div>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                Selecciona una funciÂ³n para ver el mapa de asientos
+                Selecciona una función para ver el mapa de asientos
               </div>
             )}
           </div>

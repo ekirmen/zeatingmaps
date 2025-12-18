@@ -77,7 +77,7 @@ const Dashboard = () => {
         };
       } catch (error) {
         console.error('Error subscribing to realtime updates:', error);
-        return () => {}; // Funci³n de limpieza vac­a en caso de error
+        return () => { }; // Funci³n de limpieza vac­a en caso de error
       }
     };
 
@@ -199,7 +199,7 @@ const Dashboard = () => {
       // Estad­sticas de usuarios - incluyendo usuarios activos (ºltimas 24h)
       const { data: users, error: usersError } = await supabase
         .from('profiles')
-        .select('id, created_at, last_seen, is_active');
+        .select('id, created_at'); // Removed last_seen, is_active causing 400
 
       if (usersError) throw usersError;
 
@@ -718,7 +718,7 @@ const Dashboard = () => {
                 fullscreen={false}
                 headerRender={({ value, type, onChange, onTypeChange }) => {
                   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
                   // Ant Design v5 usa dayjs
                   const currentMonth = monthNames[value.month()];
                   const currentYear = value.year();
