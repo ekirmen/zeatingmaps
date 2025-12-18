@@ -15,7 +15,7 @@ const DashboardLogin = ({ onLogin }) => {
     try {
       setLoading(true);
       setError('');
-      
+
       if (!formData.email || !formData.password) {
         throw new Error('Por favor complete todos los campos');
       }
@@ -29,10 +29,10 @@ const DashboardLogin = ({ onLogin }) => {
         const token = session.access_token;
         localStorage.setItem('token', token);
         onLogin?.({ token, user });
-        message.success('Inicio de sesi³n exitoso');
+        message.success('Inicio de sesión exitoso');
         setIsModalVisible(false);
       } else {
-        message.success('Se envi³ un enlace a tu correo');
+        message.success('Se envió un enlace a tu correo');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -53,21 +53,21 @@ const DashboardLogin = ({ onLogin }) => {
   };
 
   const handleCancel = () => {
-    // No permitir cerrar el modal si no hay sesi³n
+    // No permitir cerrar el modal si no hay sesión
     if (!localStorage.getItem('token')) {
       return;
     }
     setIsModalVisible(false);
   };
 
-  // Si ya hay sesi³n, no mostrar el modal
+  // Si ya hay sesión, no mostrar el modal
   if (localStorage.getItem('token')) {
     return null;
   }
 
   return (
     <Modal
-      title="Iniciar Sesi³n - Panel de Administraci³n"
+      title="Iniciar Sesión - Panel de Administración"
       open={isModalVisible}
       onCancel={handleCancel}
       footer={null}
@@ -87,10 +87,10 @@ const DashboardLogin = ({ onLogin }) => {
             {error}
           </div>
         )}
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Correo electr³nico
+            Correo electrónico
           </label>
           <Input
             placeholder="tu@email.com"
@@ -101,37 +101,37 @@ const DashboardLogin = ({ onLogin }) => {
             size="large"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Contrase±a
+            Contraseña
           </label>
           <Input.Password
-            placeholder="Tu contrase±a"
+            placeholder="Tu contraseña"
             name="password"
             value={formData.password}
             onChange={handleInputChange}
             size="large"
           />
         </div>
-        
+
         <Button
           type="primary"
           size="large"
           block
           loading={loading}
           onClick={handleLogin}
-          style={{ 
-            backgroundColor: theme.primary, 
+          style={{
+            backgroundColor: theme.primary,
             borderColor: theme.primary,
             height: '44px'
           }}
         >
-          {loading ? 'Iniciando sesi³n...' : 'Iniciar Sesi³n'}
+          {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
         </Button>
-        
+
         <div className="text-center text-sm text-gray-500">
-          Solo usuarios autorizados pueden acceder al panel de administraci³n
+          Solo usuarios autorizados pueden acceder al panel de administración
         </div>
       </div>
     </Modal>

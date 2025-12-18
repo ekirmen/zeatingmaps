@@ -83,7 +83,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     if (!funcionId) {
       setIsRedirecting(false);
       setRedirectFailed(true);
-      setError('Funci³n inv¡lida');
+      setError('Función inválida');
       setLoading(false);
       return;
     }
@@ -99,7 +99,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       try {
         const funcionNumeric = parseInt(funcionId, 10);
         if (!Number.isFinite(funcionNumeric) || funcionNumeric <= 0) {
-          throw new Error('Funci³n inv¡lida');
+          throw new Error('Función inválida');
         }
 
         // Optimizar: hacer una sola query con join
@@ -118,7 +118,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         navigate(`/store/eventos/${eventSlug}/map?funcion=${funcionNumeric}`, { replace: true });
       } catch (redirectError) {
-        console.error('[SeatSelectionPage] Error preparando redirecci³n:', redirectError);
+        console.error('[SeatSelectionPage] Error preparando redirección:', redirectError);
         setError(redirectError.message || 'No se pudo redirigir al mapa del evento');
         setRedirectFailed(true);
         setLoading(true);
@@ -130,7 +130,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     attemptRedirect();
   }, [autoRedirectToEventMap, funcionId, navigate]);
 
-  // Suscribirse a funci³n
+  // Suscribirse a función
   useEffect(() => {
     if (isRedirecting || !redirectFailed || !funcionId) {
       return undefined;
@@ -148,14 +148,17 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
     const loadMapa = async () => {
       try {
-        setLoading(true);
+        // Solo mostrar loading si no hay mapa previo (para evitar parpadeo en recargas)
+        if (!mapa) {
+          setLoading(true);
+        }
         setError(null);
         setMapLoadStage('cargandoDatos');
         setMapLoadProgress(10);
 
         const funcionNumeric = parseInt(funcionId, 10);
 
-        // Precargar m³dulos cr­ticos en paralelo con la carga del mapa
+        // Precargar módulos críticos en paralelo con la carga del mapa
         const preloadModules = Promise.all([
           import('../../services/seatPaymentChecker'),
           import('../../components/seatLockStore')
@@ -164,7 +167,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         setMapLoadProgress(15);
 
-        // Cargar funci³n y precargar m³dulos en paralelo
+        // Cargar función y precargar módulos en paralelo
         const funcionQuery = supabase
           .from('funciones')
           .select('sala_id, plantilla')
@@ -225,7 +228,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         const { data: mapaDataFromAPI, error: mapaError } = mapaResult;
         if (mapaError) throw mapaError;
 
-        // Actualizar mapa si se carg³ desde API (puede ser m¡s reciente que el cache)
+        // Actualizar mapa si se cargó desde API (puede ser más reciente que el cache)
         if (mapaDataFromAPI) {
           setMapa(mapaDataFromAPI);
           // Guardar en cache
@@ -262,7 +265,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     loadMapa();
   }, [funcionId, redirectFailed, isRedirecting]);
 
-  // Funci³n optimizada para obtener datos del asiento (con cache)
+  // Función optimizada para obtener datos del asiento (con cache)
   const getSeatData = useCallback((seat) => {
     const seatId = seat._id || seat.id || seat.sillaId;
     if (!seatId) return null;
@@ -272,7 +275,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       return seatDataCache.current.get(seatId);
     }
 
-    // Obtener zona del asiento (simplificado para m³vil)
+    // Obtener zona del asiento (simplificado para móvil)
     const zona = mapa?.zonas?.find(z => z.asientos?.some(a => a._id === seatId)) ||
       mapa?.contenido?.find(el => el.sillas?.some(a => a._id === seatId) && (el.zona || el.zonaId)) ||
       seat.zona || {};
@@ -303,7 +306,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           precio = precioZona.precio || precio;
         }
       } catch (e) {
-        // Silenciar error en m³vil para mejor performance
+        // Silenciar error en móvil para mejor performance
         if (!isMobile) {
         }
       }
@@ -324,7 +327,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   }, [mapa, plantillaPrecios, isMobile]);
 
   const handleSeatToggle = useCallback(async (seat) => {
-    // Obtener datos del asiento (usar cache si est¡ disponible)
+    // Obtener datos del asiento (usar cache si está disponible)
     const seatData = getSeatData(seat);
     if (!seatData) {
       // Si no se pueden obtener datos, usar valores por defecto
@@ -344,7 +347,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       ...seatData
     };
 
-    // En m³vil, no esperar respuesta completa (optimistic update)
+    // En móvil, no esperar respuesta completa (optimistic update)
     if (isMobile) {
       toggleSeat(seatWithData).catch(err => {
         console.error('Error toggling seat:', err);
@@ -458,7 +461,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <ShoppingCartOutlined style={{ fontSize: '20px', color: 'var(--store-primary)' }} />
             <h2 className="store-card-title" style={{ margin: 0 }}>
-              Selecci³n de Asientos
+              Selección de Asientos
             </h2>
           </div>
         </div>
@@ -496,7 +499,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           ) : (
             <Alert
               message="No hay mapa disponible"
-              description="No se encontr³ un mapa de asientos para esta funci³n."
+              description="No se encontró un mapa de asientos para esta función."
               type="warning"
               showIcon
             />

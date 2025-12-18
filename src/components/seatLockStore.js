@@ -456,16 +456,17 @@ export const useSeatLockStore = create((set, get) => ({
       // Ignore storage errors
     }
 
-    console.warn(`🔄 [SEAT_LOCK_STORE] Recargando página automáticamente (motivo: ${reason})`);
-    const timeoutId = window.setTimeout(() => {
-      try {
-        window.location.reload();
-      } catch (error) {
-        console.error('❌ [SEAT_LOCK_STORE] Error al intentar recargar la página:', error);
-      }
-    }, 2000); // Increased delay to 2s
+    console.warn(`🔄 [SEAT_LOCK_STORE] Recarga solicitada (motivo: ${reason}) - Bloqueada para evitar bucles`);
+    // window.setTimeout(() => {
+    //   try {
+    //     window.location.reload();
+    //   } catch (error) {
+    //     console.error('❌ [SEAT_LOCK_STORE] Error al intentar recargar la página:', error);
+    //   }
+    // }, 2000); 
 
-    set({ pendingReloadTimeout: timeoutId });
+    // Solo limpiar el timeout pendiente
+    set({ pendingReloadTimeout: null });
   },
 
   handleRealtimeChannelIssue: (reason, funcionId = null) => {

@@ -45,7 +45,8 @@ const BackgroundImage = ({ config, onLoadProgress }) => {
     return () => {
       cancelled = true;
     };
-  }, [rawUrl, onLoadProgress]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawUrl]); // Removed onLoadProgress to prevent re-fetching on parent re-renders
 
   const imageProps = useMemo(() => ({
     x: config.position?.x || config.posicion?.x || 0,
