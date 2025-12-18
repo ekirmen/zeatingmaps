@@ -661,7 +661,7 @@ export const useBoleteria = () => {
 
         const { data, error } = await supabase
           .from('eventos')
-          .select('id, nombre, recinto, sala') // Optimized selection
+          .select('*')
           .eq('activo', true)
           .order('nombre', { ascending: true });
 

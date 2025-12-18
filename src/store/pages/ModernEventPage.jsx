@@ -209,7 +209,7 @@ const ModernEventPage = () => {
           // Usar .eq() para bºsqueda exacta (case-sensitive) ya que los slugs deben ser ºnicos
           const { data, error: eventError } = await supabase
             .from('eventos')
-            .select('id, slug, nombre, fecha_evento, recinto_id, recinto, estadoVenta, modoVenta, desactivado, activo, imagenes, descripcion, tags, analytics, otrasOpciones, sector')
+            .select('*')
             .eq('slug', eventSlug)
             .maybeSingle();
 
@@ -1107,8 +1107,8 @@ const ModernEventPage = () => {
                       <div
                         key={funcion.id || funcion._id}
                         className={`p-4 md:p-6 border-2 rounded-xl transition-all duration-200 ${selectedFunctionId === (funcion.id || funcion._id)
-                            ? 'border-blue-500 bg-blue-50 shadow-md'
-                            : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
                           }`}
                       >
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

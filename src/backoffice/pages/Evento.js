@@ -48,7 +48,7 @@ const Evento = () => {
 
       let query = supabase
         .from('eventos')
-        .select('id, nombre, fecha_evento, activo, oculto, desactivado, sector, recinto, sala, estadoVenta, descripcionEstado, estadoPersonalizado, mostrarDatosComprador, mostrarDatosBoleto, datosComprador, datosBoleto, otrasOpciones, analytics, created_at, tenant_id, imagenes')
+        .select('*')
         .eq('recinto', recintoSeleccionado.id)
         .eq('sala', salaSeleccionada.id);
 
@@ -198,7 +198,7 @@ const Evento = () => {
     try {
       const { data, error } = await supabase
         .from('eventos')
-        .select('id, nombre, fecha_evento, activo, oculto, desactivado, sector, recinto, sala, estadoVenta, descripcionEstado, estadoPersonalizado, mostrarDatosComprador, mostrarDatosBoleto, datosComprador, datosBoleto, otrasOpciones, analytics, tenant_id, imagenes')
+        .select('*')
         .eq('id', eventoId)
         .single();
 
