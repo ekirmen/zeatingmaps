@@ -158,7 +158,7 @@ export const onConnectionChange = (callback) => {
   });
 };
 
-export default {
+const pwaService = {
   registerServiceWorker,
   promptPWAInstall,
   installPWA,
@@ -168,4 +168,6 @@ export default {
   getConnectionStatus,
   onConnectionChange
 };
+
+export default pwaService;
 
