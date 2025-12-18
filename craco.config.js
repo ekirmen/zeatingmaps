@@ -1,10 +1,28 @@
 ﻿const path = require("path");
+const webpack = require("webpack");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const CompressionPlugin = require("compression-webpack-plugin");
 
 module.exports = {
   webpack: {
     configure: (webpackConfig, { env, paths }) => {
+      // Add ProvidePlugin to polyfill process
+      webpackConfig.plugins = [
+        ...webpackConfig.plugins,
+        new webpack.ProvidePlugin({
+          process: "process/browser.js",
+        }),
+      ];
+
+      // Add resolve fallback for process
+      webpackConfig.resolve = {
+        ...webpackConfig.resolve,
+        fallback: {
+          ...webpackConfig.resolve?.fallback,
+          process: require.resolve("process/browser.js"),
+        },
+      };
+
       if (env === "production") {
         // ============================================
         // 1. ANALIZADOR DE BUNDLES
@@ -41,7 +59,7 @@ module.exports = {
             deleteOriginalAssets: false,
           })
         );
-        
+
         // Brotli compression
         webpackConfig.plugins.push(
           new CompressionPlugin({
@@ -82,7 +100,7 @@ module.exports = {
                 },
               };
             }
-            
+
             if (plugin.constructor.name === "CssMinimizerPlugin") {
               plugin.options.minimizerOptions = {
                 preset: [
@@ -95,7 +113,7 @@ module.exports = {
                 ],
               };
             }
-            
+
             return plugin;
           }),
 
@@ -121,7 +139,7 @@ module.exports = {
                 enforce: true,
                 reuseExistingChunk: true,
               },
-              
+
               // VENDORS GENERAL - MANTENER SIMPLE
               vendors: {
                 test: /[\\/]node_modules[\\/]/,
@@ -131,7 +149,7 @@ module.exports = {
                 minChunks: 2,
                 reuseExistingChunk: true,
               },
-              
+
               // APPLICATION CODE
               commons: {
                 test: /[\\/]src[\\/]/,
@@ -140,7 +158,7 @@ module.exports = {
                 priority: 5,
                 minChunks: 2,
               },
-              
+
               // COMENTA TEMPORALMENTE LOS DEMÁS GRUPOS ESPECÍFICOS
               /*
               antd: {
@@ -200,7 +218,7 @@ module.exports = {
           runtimeChunk: {
             name: "runtime",
           },
-          
+
           moduleIds: "deterministic",
           chunkIds: "deterministic",
           usedExports: true,
@@ -211,7 +229,7 @@ module.exports = {
         // 6. EXCLUIR SOURCE MAPS
         // ============================================
         webpackConfig.devtool = false;
-        
+
         // Remover source map plugins
         webpackConfig.plugins = webpackConfig.plugins.filter(
           (plugin) =>
@@ -220,7 +238,7 @@ module.exports = {
               plugin.constructor.name === "EvalSourceMapDevToolPlugin"
             )
         );
-        
+
         // =========================================
         // 7. PERFOMANCE CONFIG (OPCIONAL)
         // ============================================
