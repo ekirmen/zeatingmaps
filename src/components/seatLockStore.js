@@ -438,11 +438,23 @@ export const useSeatLockStore = create((set, get) => ({
 
     // Check for reload loop
     try {
-      // Bloquear recargas si es por error de auth (403/invalid claim)
-      // Recargar no soluciona un token inválido, solo limpiar el storage lo hace (ya manejado en config/supabase.js)
-      if (reason && (reason.includes('403') || reason.includes('AuthApiError') || reason.includes('claim'))) {
-        console.error('🛑 [SEAT_LOCK_STORE] Error de autenticación detectado. Deteniendo recarga automática para evitar bucle.');
-        // Opcional: forzar logout o limpiar storage aquí también si es necesario
+      // Bloquear recargas si es por error de auth, cierre de canal o timeout
+      // Recargar no soluciona un token inválido ni un error de red transitorio
+      if (reason && (
+        reason.includes('403') ||
+        reason.includes('AuthApiError') ||
+        reason.includes('claim') ||
+        reason === 'CLOSED' ||
+        reason === 'TIMED_OUT' ||
+        reason === 'channel_issue'
+      )) {
+        if (reason === 'CLOSED' || reason === 'TIMED_OUT') {
+          console.warn(`⚠️ [SEAT_LOCK_STORE] Conexión Realtime detectó: ${reason}. Intentando recuperar sin recargar página.`);
+          // Aquí se podría disparar una lógica de reconexión manual si es necesario, 
+          // pero generalmente Supabase client lo maneja.
+        } else {
+          console.error('🛑 [SEAT_LOCK_STORE] Error crítico de auth o conexión detectado. Deteniendo recarga automática para evitar bucle.');
+        }
         return;
       }
 

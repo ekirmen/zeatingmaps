@@ -139,6 +139,13 @@ class SeatPaymentChecker {
       const parsedFuncionId = Number(funcionId);
       const normalizedFuncionId = Number.isFinite(parsedFuncionId) ? parsedFuncionId : null;
 
+      // Validar que funcionId sea válido antes de llamar a RPC
+      if (!normalizedFuncionId) {
+        // Si no hay funcionId válido, no podemos consultar status específico
+        // Retornar mapa por defecto sin errores
+        return this.buildDefaultResultMap(normalizedSeatIds, 'invalid_funcion_id');
+      }
+
       // Llamar a la función RPC para verificar múltiples asientos
       const checkPromise = supabase.rpc('check_seats_payment_status', {
         p_seat_ids: normalizedSeatIds,

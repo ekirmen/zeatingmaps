@@ -681,6 +681,7 @@ const SeatingMapUnified = ({
         logger.warn('❌ [SEATING_MAP] Asiento inválido:', seat);
         return;
       }
+      logger.log('👆 [SEATING_MAP] Asiento clickeado:', seat._id);
 
       const seatId = (seat._id || seat.id || seat.sillaId)?.toString();
       if (!disableSeatClickThrottle) {
@@ -1011,10 +1012,16 @@ const SeatingMapUnified = ({
     return { maxX, maxY };
   }, [validatedSeats, validatedMesas]);
 
+  /* 
+     Fix 1: Estabilizar dimensiones del Stage para evitar reseteos de Zoom en móvil.
+     Usamos window.screen en lugar de window.inner* porque screen no cambia 
+     cuando se muestra/oculta la barra de direcciones.
+  */
   const stageDimensions = useMemo(() => {
     const isMobile = isMobileDevice();
-    const containerWidth = typeof window !== 'undefined' ? window.innerWidth : 800;
-    const containerHeight = typeof window !== 'undefined' ? window.innerHeight : 600;
+    // Usar screen.width/height para mayor estabilidad en móvil, fallback a innerWidth
+    const containerWidth = typeof window !== 'undefined' ? (isMobile ? window.screen.width : window.innerWidth) : 800;
+    const containerHeight = typeof window !== 'undefined' ? (isMobile ? window.screen.height : window.innerHeight) : 600;
 
     if (isMobile) {
       const optimized = getOptimizedStageSize(
@@ -1147,7 +1154,8 @@ const SeatingMapUnified = ({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          draggable={!isMobileDevice() || canvasConfig.listening}
+          /* Fix 2: Habilitar draggable siempre para permitir panning, incluso en móvil */
+          draggable={true}
           ref={stageRef}
           imageSmoothingEnabled={canvasConfig.imageSmoothingEnabled}
           hitGraphEnabled={canvasConfig.hitGraphEnabled}
