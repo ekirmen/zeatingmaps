@@ -201,7 +201,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         // Cargar mapa y plantilla en paralelo
         const mapaQuery = supabase
           .from('mapas')
-          .select('id, sala_id, nombre, contenido, zonas, estado, settings')
+          .select('id, sala_id, nombre, contenido, estado, settings')
           .eq('sala_id', funcion.sala_id)
           .eq('estado', 'active')
           .single();
