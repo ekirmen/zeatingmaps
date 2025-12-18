@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+
 /**
  * Sistema centralizado de loading states para diferentes tipos de carga
  */
@@ -18,8 +20,6 @@ export const LOADING_STATES = {
   VALIDATING: 'validating',
   PROCESSING: 'processing',
 };
-
-import React, { useState } from 'react';
 
 /**
  * Hook para manejar estados de carga específicos
@@ -76,9 +76,9 @@ export const useLoadingState = (initialState = LOADING_STATES.IDLE) => {
 /**
  * Componente de skeleton loader optimizado
  */
-export const SkeletonLoader = ({ 
-  type = 'text', 
-  width = '100%', 
+export const SkeletonLoader = ({
+  type = 'text',
+  width = '100%',
   height = '20px',
   count = 1,
   className = ''
@@ -133,11 +133,11 @@ export const SeatListSkeleton = ({ count = 10 }) => (
 /**
  * Loading state component con mensajes específicos
  */
-export const LoadingState = ({ 
-  state, 
-  message = null, 
+export const LoadingState = ({
+  state,
+  message = null,
   error = null,
-  children = null 
+  children = null
 }) => {
   const messages = {
     [LOADING_STATES.LOADING]: message || 'Cargando...',

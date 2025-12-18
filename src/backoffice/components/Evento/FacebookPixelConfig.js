@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Form, 
-  Input, 
-  Switch, 
-  Button, 
-  Alert, 
-  Space, 
+import {
+  Card,
+  Form,
+  Input,
+  Switch,
+  Button,
+  Alert,
+  Space,
   Typography,
   Divider,
   Row,
   Col
 } from '../../../utils/antdComponents';
-import { 
+import {
   FacebookOutlined,
   EyeOutlined,
   ShoppingCartOutlined,
@@ -68,33 +68,11 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
       loadFacebookPixel();
     }
   }, [eventoData?.id]);
-    try {
-      setLoading(true);
-      const pixel = await getFacebookPixelByEvent(eventoData.id);
-      if (pixel) {
-        setFacebookPixel({
-          pixel_id: pixel.pixel_id || '',
-          pixel_script: pixel.pixel_script || '',
-          is_active: pixel.is_active || false,
-          tracking_pages: pixel.tracking_pages || {
-            event_page: true,
-            cart_page: true,
-            payment_page: true,
-            thank_you_page: true
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error loading Facebook pixel:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSavePixel = async () => {
     try {
       setLoading(true);
-      
+
       if (facebookPixel.pixel_id || facebookPixel.pixel_script) {
         await upsertFacebookPixel({
           evento: eventoData.id,
@@ -103,7 +81,7 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
           is_active: facebookPixel.is_active,
           tracking_pages: facebookPixel.tracking_pages
         });
-        
+
         // Mostrar mensaje de ©xito
         alert('P­xel de Facebook guardado correctamente');
       }
@@ -117,7 +95,7 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
 
   return (
     <div className="facebook-pixel-config">
-      <Card 
+      <Card
         title={
           <Space>
             <FacebookOutlined />
@@ -229,7 +207,7 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
               </Text>
             </div>
           </Col>
-          
+
           <Col xs={24} sm={12}>
             <div className="tracking-page-item">
               <div className="tracking-page-header">
@@ -253,7 +231,7 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
               </Text>
             </div>
           </Col>
-          
+
           <Col xs={24} sm={12}>
             <div className="tracking-page-item">
               <div className="tracking-page-header">
@@ -277,7 +255,7 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
               </Text>
             </div>
           </Col>
-          
+
           <Col xs={24} sm={12}>
             <div className="tracking-page-item">
               <div className="tracking-page-header">
@@ -312,8 +290,8 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
         />
 
         <div className="mt-4">
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             onClick={handleSavePixel}
             loading={loading}
             icon={<FacebookOutlined />}
@@ -341,5 +319,5 @@ src='https://www.facebook.com/tr?id=TU_PIXEL_ID&ev=PageView&noscript=1'/>
   );
 };
 
-export default FacebookPixelConfig; 
+export default FacebookPixelConfig;
 
