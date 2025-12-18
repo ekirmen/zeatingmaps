@@ -213,6 +213,8 @@ class AuditService {
               console.warn('[AUDIT] No se pudo registrar acción (permisos/autenticación):', action, error.message || error.hint);
             }
             // Fallback: almacenar localmente si falla la inserción por permisos
+            // NO reintentar remotamente para evitar bucles de errores 401
+            this.remoteFetchDisabled = true;
             await this.storeLocally(auditData);
             return null;
           }

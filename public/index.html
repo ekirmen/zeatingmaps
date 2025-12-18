@@ -54,26 +54,34 @@
   <script>
     // Debug logging
     console.log('Index.html cargado');
-    console.log('NODE_ENV:', (typeof process !== 'undefined' && process.env) ? process.env.NODE_ENV : 'no disponible en cliente');
+    try {
+      console.log('NODE_ENV:', '%NODE_ENV%');
+    } catch (e) { }
+
+    // Variable para el timeout
+    var mountTimeout;
 
     // Exponer función para que React remueva el loader
     window.__removeLoading = function () {
+      if (mountTimeout) clearTimeout(mountTimeout);
       const loader = document.getElementById('initial-loading');
       if (loader) {
         console.log('Removiendo loader...');
-        loader.style.display = 'none';
-        loader.parentNode.removeChild(loader);
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          if (loader.parentNode) loader.parentNode.removeChild(loader);
+        }, 500);
       }
     };
 
     // Si React no se monta en 10 segundos, mostrar error
-    setTimeout(() => {
+    mountTimeout = setTimeout(() => {
       const root = document.getElementById('root');
       if (root && root.children.length === 0) {
         console.error('React no se montó después de 10 segundos');
         const loader = document.getElementById('initial-loading');
         if (loader) {
-          loader.innerHTML = '<div style="text-align: center;"><h2>Error al cargar la aplicación</h2><p>Por favor, recarga la página.</p><button onclick="window.location.reload()">Recargar</button></div>';
+          loader.innerHTML = '<div style="text-align: center; font-family: sans-serif; padding: 20px;"><h2>Error al cargar la aplicación</h2><p>Por favor, recarga la página.</p><button onclick="window.location.reload()" style="padding: 10px 20px; background: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;">Recargar</button></div>';
         }
       }
     }, 10000);

@@ -41,31 +41,37 @@ const ModernStorePage = () => {
   // Cargar eventos con cache optimizado
   useEffect(() => {
     const fetchEvents = async () => {
+      // Evitar recargas si ya tenemos eventos y el tenant no ha cambiado
       if (!currentTenant?.id) {
         setLoading(false);
         return;
       }
 
-      try {
+      // Si ya hay eventos cargados y no estamos filtrando, evitar spinner
+      if (events.length > 0 && !loading) {
+        // Opcional: Cargar en segundo plano sin spinner visual
+      } else {
         setLoading(true);
+      }
 
+      try {
         // Intentar cargar desde cache primero
         const cacheKey = `events_${currentTenant.id}_${statusFilter}_${sortBy}`;
         const cachedEvents = sessionStorage.getItem(cacheKey);
         const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
         const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp, 10) : Infinity;
-        const CACHE_TTL = 30000; // 30 segundos de cache
+        const CACHE_TTL = 60000; // Aumentar a 1 minuto
 
-        // Si hay cache v¡lido (menos de 30 segundos), usarlo
+        // Si hay cache válido, usarlo
         if (cachedEvents && cacheAge < CACHE_TTL) {
           try {
             const parsedEvents = JSON.parse(cachedEvents);
             setEvents(parsedEvents);
             setLoading(false);
-            // Cargar en background para actualizar cache
-            fetchEventsFromAPI();
+            // No recargar API si el cache es fresco para evitar parpadeo
             return;
           } catch (e) {
+            // Ignorar error de parseo
           }
         }
 
@@ -114,7 +120,12 @@ const ModernStorePage = () => {
         if (fetchError) throw fetchError;
 
         const eventsData = data || [];
-        setEvents(eventsData);
+
+        // Solo actualizar estado si hay cambios para evitar re-renders de imagen
+        setEvents(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(eventsData)) return prev;
+          return eventsData;
+        });
 
         // Guardar en cache
         const cacheKey = `events_${currentTenant.id}_${statusFilter}_${sortBy}`;
