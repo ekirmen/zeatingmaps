@@ -518,7 +518,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             setBackgroundImage(img);
           }
         } catch (error) {
-          console.error('[SeatingLite] Error al cargar imagen de fondo del mapa inicial:', error);
+          console.error(`[SeatingLite] Error al cargar imagen de fondo del mapa inicial. URL: ${source}`, error);
         }
       }
 

@@ -59,7 +59,34 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     cartItems.map(item => item.sillaId || item.id || item._id),
     [cartItems]
   );
+  // Calcular seatIds basado en el mapa cargado
+  const seatIds = useMemo(() => {
+    if (!mapa) return [];
+    const ids = [];
 
+    // Extraer de zonas (legacy)
+    mapa.zonas?.forEach(z => {
+      z.asientos?.forEach(a => {
+        if (a._id || a.id) ids.push(String(a._id || a.id));
+      });
+    });
+
+    // Extraer de contenido (nuevo editor)
+    mapa.contenido?.forEach(el => {
+      // Elementos tipo silla individuales
+      if (el.type === 'silla' && (el._id || el.id)) {
+        ids.push(String(el._id || el.id));
+      }
+      // Grupos de sillas (mesas, filas)
+      if (Array.isArray(el.sillas)) {
+        el.sillas.forEach(s => {
+          if (s._id || s.id) ids.push(String(s._id || s.id));
+        });
+      }
+    });
+
+    return [...new Set(ids)]; // Eliminar duplicados si los hay
+  }, [mapa]);
 
   const ensureSessionId = useCallback(() => {
     if (typeof window === 'undefined') return;
