@@ -467,6 +467,89 @@ export const fetchMapa = async (salaId, funcionId = null) => {
   }
 };
 
+/**
+ * Sube una imagen de fondo de mapa al Storage y retorna la URL pública.
+ * @param {string|File} imageInput - Base64 string o objeto File
+ * @param {string} mapId - ID del mapa (opcional, para nombrar el archivo)
+ */
+export const uploadMapBackground = async (imageInput, mapId = 'temp') => {
+  try {
+    let fileToUpload;
+    let fileName;
+
+    // 1. Convertir Base64 a Blob si es necesario
+    if (typeof imageInput === 'string' && imageInput.startsWith('data:')) {
+      const resp = await fetch(imageInput);
+      fileToUpload = await resp.blob();
+      const ext = imageInput.split(';')[0].split('/')[1] || 'png';
+      fileName = `map_bg_${mapId}_${Date.now()}.${ext}`;
+    } else if (imageInput instanceof File) {
+      fileToUpload = imageInput;
+      fileName = `map_bg_${mapId}_${Date.now()}_${imageInput.name}`;
+    } else {
+      // Asumimos que ya es una URL
+      return imageInput;
+    }
+
+    // 2. Obtener tenant_id para organizar bucket
+    let tenantId = 'default';
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('tenant_id').eq('id', user.id).single();
+        if (profile?.tenant_id) tenantId = profile.tenant_id;
+      }
+    } catch (e) { console.warn('No tenant found for upload', e); }
+
+    const filePath = `${tenantId}/${fileName}`;
+
+    // 3. Subir a Supabase Storage (Bucket 'mapas-backgrounds' o 'public')
+    // Usaremos 'public' carpeta 'backgrounds' si no existe bucket específico
+    const bucketName = 'mapas-backgrounds'; // Asegúrate de crear este bucket en Supabase
+
+    // Verificar si el bucket existe (opcional, o asumir que existe)
+    // Para simplificar, intentamos subir. Si falla por bucket no encontrado, usar 'eventos' como fallback
+    let uploadResult = await supabase.storage.from(bucketName).upload(filePath, fileToUpload, { upsert: true });
+
+    if (uploadResult.error && uploadResult.error.message.includes('Bucket not found')) {
+      console.warn('Bucket mapas-backgrounds no existe, usando fallback "eventos"');
+      uploadResult = await supabase.storage.from('eventos').upload(`backgrounds/${filePath}`, fileToUpload, { upsert: true });
+
+      if (uploadResult.error) throw uploadResult.error;
+
+      const { data: { publicUrl } } = supabase.storage.from('eventos').getPublicUrl(`backgrounds/${filePath}`);
+      return publicUrl;
+    } else if (uploadResult.error) {
+      throw uploadResult.error;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+    return publicUrl;
+
+  } catch (error) {
+    logger.error('❌ [uploadMapBackground] Error subiendo imagen:', error);
+    throw error;
+  }
+};
+
+// Optimización: Fetch solo metadatos para listas/previsualizaciones
+export const fetchMapaMetadata = async (salaId) => {
+  if (!salaId) return null;
+  try {
+    const { data: mapa, error } = await supabase
+      .from('mapas')
+      .select('id, nombre, descripcion, estado, updated_at, sala_id, tenant_id') // NO content
+      .eq('sala_id', salaId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return mapa;
+  } catch (error) {
+    logger.error('❌ [fetchMapaMetadata] Error:', error);
+    return null;
+  }
+};
+
 // Función para cargar asientos reservados desde payment_transactions
 const loadReservedSeats = async (funcionId) => {
   try {

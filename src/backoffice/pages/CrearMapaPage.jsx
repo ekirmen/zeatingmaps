@@ -6,6 +6,7 @@ import { supabase } from '../../supabaseClient';
 import CrearMapaEditor from '../../components/CrearMapa/CrearMapaEditor';
 import SeatingLite from '../components/CrearMapa/SeatingLite';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
+import { uploadMapBackground } from '../services/apibackoffice';
 
 const { Title, Text } = Typography;
 
@@ -545,11 +546,26 @@ const CrearMapaPage = () => {
           // Extract data
           finalImagenFondo = bgElement.imageData || bgElement.imageUrl || null;
 
+          // --- UPLOAD BINARY OPTIMIZATION START ---
+          // Si tenemos data pesada (base64/dataURL), subirla al Storage y obtener URL simple
+          if (finalImagenFondo && typeof finalImagenFondo === 'string' && finalImagenFondo.startsWith('data:')) {
+            try {
+              console.log('[OPTIMIZATION] Subiendo imagen de fondo a almacenamiento seguro...');
+              // Subimos y reemplazamos el base64 con la URL
+              finalImagenFondo = await uploadMapBackground(finalImagenFondo, mapa?.id || 'new');
+              console.log('[OPTIMIZATION] Imagen subida exitosamente:', finalImagenFondo);
+            } catch (uploadErr) {
+              console.error('[OPTIMIZATION] Error subiendo imagen, guardando como base64 (fallback):', uploadErr);
+              // Fallback: se queda como base64, pero al menos intentamos
+            }
+          }
+          // --- UPLOAD BINARY OPTIMIZATION END ---
+
           // Replace with light version in JSON
           const lightBg = {
             ...bgElement,
-            imageData: null,
-            imageUrl: null,
+            imageData: null, // Ensure JSON is clean
+            imageUrl: null, // Ensure JSON is clean (url is in DB column now)
             _isBackgroundRef: true
           };
 
