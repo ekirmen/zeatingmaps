@@ -509,18 +509,35 @@ export const uploadMapBackground = async (imageInput, mapId = 'temp') => {
 
     // Verificar si el bucket existe (opcional, o asumir que existe)
     // Para simplificar, intentamos subir. Si falla por bucket no encontrado, usar 'eventos' como fallback
-    let uploadResult = await supabase.storage.from(bucketName).upload(filePath, fileToUpload, { upsert: true });
+    // Debug del archivo
+    console.log(`[OPTIMIZATION] Preparando subida. Tipo: ${fileToUpload.type}, Tamaño: ${fileToUpload.size} bytes. Bucket: ${bucketName}`);
 
-    if (uploadResult.error && uploadResult.error.message.includes('Bucket not found')) {
-      console.warn('Bucket mapas-backgrounds no existe, usando fallback "eventos"');
-      uploadResult = await supabase.storage.from('eventos').upload(`backgrounds/${filePath}`, fileToUpload, { upsert: true });
+    // Verificar guardas de seguridad
+    if (fileToUpload.size === 0) throw new Error('El archivo generado está vacío (0 bytes)');
 
-      if (uploadResult.error) throw uploadResult.error;
+    const uploadOptions = {
+      upsert: true,
+      contentType: fileToUpload.type || 'image/png'
+    };
+
+    // Para simplificar, intentamos subir. Si falla por bucket no encontrado, usar 'eventos' como fallback
+    let uploadResult = await supabase.storage.from(bucketName).upload(filePath, fileToUpload, uploadOptions);
+
+    if (uploadResult.error) {
+      console.warn('⚠️ [uploadMapBackground] Fallo subida a "mapas-backgrounds". Detalles:', JSON.stringify(uploadResult.error, null, 2));
+      console.warn('Intentando fallback "eventos"...');
+
+      // Fallback a bucket 'eventos'
+      const fallbackResult = await supabase.storage.from('eventos').upload(`backgrounds/${filePath}`, fileToUpload, uploadOptions);
+
+      if (fallbackResult.error) {
+        console.error('❌ [uploadMapBackground] Fallo también en fallback "eventos":', JSON.stringify(fallbackResult.error, null, 2));
+        // Si fallan ambos, lanzamos el error original para que el UI use base64
+        throw uploadResult.error;
+      }
 
       const { data: { publicUrl } } = supabase.storage.from('eventos').getPublicUrl(`backgrounds/${filePath}`);
       return publicUrl;
-    } else if (uploadResult.error) {
-      throw uploadResult.error;
     }
 
     const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(filePath);
