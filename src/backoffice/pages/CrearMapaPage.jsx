@@ -627,7 +627,7 @@ const CrearMapaPage = () => {
 
         const { data, error } = await supabase
           .from('mapas')
-          .insert(insertData)
+          .upsert(insertData, { onConflict: 'sala_id' })
           .select()
           .single();
 
