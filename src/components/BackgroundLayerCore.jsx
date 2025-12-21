@@ -22,7 +22,7 @@ const BackgroundImage = ({ config, onLoadProgress }) => {
 
     let cancelled = false;
     const image = new window.Image();
-    image.crossOrigin = 'anonymous';
+    // image.crossOrigin = 'anonymous'; // Removed to avoid CORS issues
     image.loading = 'lazy';
     image.decoding = 'async';
 

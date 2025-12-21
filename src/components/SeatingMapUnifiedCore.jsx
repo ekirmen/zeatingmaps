@@ -93,7 +93,7 @@ const preloadBackgroundImage = (url, onProgress) => {
               const blobUrl = URL.createObjectURL(blob);
 
               const image = new window.Image();
-              image.crossOrigin = 'anonymous';
+              // image.crossOrigin = 'anonymous'; // Removed to avoid CORS issues
               image.loading = 'lazy';
               image.decoding = 'async';
 
@@ -134,7 +134,7 @@ const preloadBackgroundImage = (url, onProgress) => {
       .catch(error => {
         // Fallback a método tradicional si fetch falla
         const image = new window.Image();
-        image.crossOrigin = url.startsWith('data:') ? undefined : 'anonymous';
+        // image.crossOrigin = 'anonymous'; // Removed to avoid CORS issues with Supabase Storage
         image.loading = 'lazy';
         image.decoding = 'async';
 
@@ -219,8 +219,9 @@ const BackgroundImage = React.memo(({ config, onLoadProgress }) => {
         })
         .catch((error) => {
           if (!cancelled) {
-            logger.error('Error cargando imagen de fondo:', error);
+            logger.error('Error cargando imagen de fondo:', error, { rawUrl });
             setBgImg(null);
+            if (onLoadProgress) onLoadProgress(100); // Ensure progress completes even on error
           }
         });
     };
