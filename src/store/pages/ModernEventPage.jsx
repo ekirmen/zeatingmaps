@@ -198,12 +198,13 @@ const ModernEventPage = () => {
   // Cargar evento y funciones
   useEffect(() => {
     const fetchData = async () => {
+      let eventData = null;
       try {
         setLoading(true);
 
         // Intentar obtener del cach© primero
         console.log('[ModernEventPage] Iniciando carga de evento:', eventSlug);
-        let eventData = await indexedDBCache.getEvento(eventSlug);
+        eventData = await indexedDBCache.getEvento(eventSlug);
         console.log('[ModernEventPage] Cache hit?', !!eventData);
 
         if (!eventData) {
