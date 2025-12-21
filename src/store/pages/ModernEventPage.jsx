@@ -202,7 +202,9 @@ const ModernEventPage = () => {
         setLoading(true);
 
         // Intentar obtener del cach© primero
+        console.log('[ModernEventPage] Iniciando carga de evento:', eventSlug);
         let eventData = await indexedDBCache.getEvento(eventSlug);
+        console.log('[ModernEventPage] Cache hit?', !!eventData);
 
         if (!eventData) {
           // Si no est¡ en cach©, cargar desde la API
@@ -244,7 +246,9 @@ const ModernEventPage = () => {
 
         if (!funcionesData || funcionesData.length === 0) {
           // Si no est¡n en cach©, cargar desde la API
+          console.log('[ModernEventPage] Cargando funciones desde API...');
           funcionesData = await getFunciones(eventData.id);
+          console.log('[ModernEventPage] Funciones cargadas:', funcionesData?.length);
           // Guardar en cach©
           if (funcionesData && funcionesData.length > 0) {
             await indexedDBCache.setFunciones(eventData.id, funcionesData);
@@ -279,6 +283,7 @@ const ModernEventPage = () => {
           message.error(`Error al cargar el evento: ${errorMessage}`);
         }
       } finally {
+        console.log('[ModernEventPage] Finalizando carga...', { eventSlug, found: !!eventData });
         setLoading(false);
       }
     };

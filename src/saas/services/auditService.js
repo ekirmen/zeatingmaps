@@ -59,7 +59,7 @@ class AuditService {
       if (this.remoteLoggingDisabled) {
         await this.storeLocally({
           action,
-          details: JSON.stringify(details),
+          details: details,
           tenant_id: tenantId,
           resource_id: resourceId,
           created_at: new Date().toISOString()
@@ -72,7 +72,7 @@ class AuditService {
         tenant_id: tenantId,
         user_id: this.currentUser?.id,
         action,
-        details: JSON.stringify(details),
+        details: details,
         resource_id: resourceId,
         ip_address: await this.getClientIP(),
         user_agent: (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : null,
@@ -102,7 +102,7 @@ class AuditService {
       }
       await this.storeLocally({
         action,
-        details: JSON.stringify(details),
+        details: details,
         tenant_id: tenantId,
         resource_id: resourceId,
         created_at: new Date().toISOString(),
@@ -161,14 +161,14 @@ class AuditService {
         try {
           const existing = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
           localStorage.setItem('audit_logs_backup', JSON.stringify(existing.concat(toSend).slice(-500)));
-        } catch (e) {}
+        } catch (e) { }
       }
     } catch (err) {
       // network error or abort — stash locally
       try {
         const existing = JSON.parse(localStorage.getItem('audit_logs_backup') || '[]');
         localStorage.setItem('audit_logs_backup', JSON.stringify(existing.concat(toSend).slice(-500)));
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
@@ -386,7 +386,7 @@ class AuditService {
       });
 
       return Object.entries(actionCounts)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, limit)
         .map(([action, count]) => ({ action, count }));
     } catch (error) {

@@ -1,0 +1,101 @@
+[
+  {
+    "id": "0a67f6bb-9895-4710-bb8b-dac8d7807396",
+    "subdomain": "zeatingmaps",
+    "company_name": "Test Update Successc",
+    "contact_email": "info@zeatingmaps.com",
+    "contact_phone": null,
+    "plan_type": "enterprise",
+    "status": "active",
+    "created_at": "2025-08-12T19:00:58.623521",
+    "updated_at": "2025-08-13T17:08:40.191123",
+    "settings": {},
+    "billing_info": {},
+    "stripe_customer_id": null,
+    "logo_url": null,
+    "primary_color": "#1890ff",
+    "secondary_color": "#52c41a",
+    "max_users": 10,
+    "max_events": 50,
+    "total_revenue": 0,
+    "monthly_revenue": 0,
+    "yearly_revenue": 0,
+    "subscription_status": "active",
+    "domain": "ekirmens-projects.vercel.app",
+    "full_url": "zeatingmaps-ekirmens-projects.vercel.app",
+    "theme_config": {
+      "logo": "/assets/logo.png",
+      "primaryColor": "#1890ff",
+      "secondaryColor": "#52c41a"
+    },
+    "feature_flags": {
+      "showSaaS": true,
+      "showStore": true,
+      "showEvents": true,
+      "showVenues": true,
+      "showTicketing": true,
+      "showBackoffice": true
+    },
+    "branding_config": {
+      "tagline": "Sistema de Gestión de Eventos",
+      "companyName": "ZeatingMaps",
+      "contactEmail": "info@zeatingmaps.com"
+    },
+    "custom_routes": [],
+    "is_main_domain": false,
+    "tenant_type": "company"
+  },
+  {
+    "id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "subdomain": "sistema",
+    "company_name": "Sistema Veneventos - Empresa de Prueba",
+    "contact_email": "sistema@veneventos.com",
+    "contact_phone": null,
+    "plan_type": "enterprise",
+    "status": "active",
+    "created_at": "2025-08-12T17:48:16.05675",
+    "updated_at": "2025-10-28T23:46:48.560741",
+    "settings": {
+      "theme": "default",
+      "features": [
+        "ticketing",
+        "maps",
+        "analytics"
+      ]
+    },
+    "billing_info": {},
+    "stripe_customer_id": null,
+    "logo_url": null,
+    "primary_color": "#1890ff",
+    "secondary_color": "#52c41a",
+    "max_users": 10,
+    "max_events": 50,
+    "total_revenue": 0,
+    "monthly_revenue": 0,
+    "yearly_revenue": 0,
+    "subscription_status": "active",
+    "domain": "sistema.veneventos.com",
+    "full_url": "sistema.veneventos.com",
+    "theme_config": {
+      "logo": "/assets/logo-veneventos.png",
+      "primaryColor": "#1890ff",
+      "secondaryColor": "#52c41a"
+    },
+    "feature_flags": {
+      "showSaaS": true,
+      "showStore": true,
+      "showEvents": true,
+      "showVenues": true,
+      "showTicketing": true,
+      "showBackoffice": true
+    },
+    "branding_config": {
+      "tagline": "Sistema de Eventos Profesional",
+      "companyName": "Veneventos - Sistema Principal",
+      "contactEmail": "info@veneventos.com"
+    },
+    "custom_routes": [],
+    "is_main_domain": true,
+    "tenant_type": "main"
+  }
+]

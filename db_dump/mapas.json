@@ -1,0 +1,212 @@
+[
+  {
+    "id": 158,
+    "sala_id": 52,
+    "contenido": [
+      {
+        "_id": "mesa_1766168857524",
+        "fill": "#f0f0f0",
+        "type": "mesa",
+        "shape": "rect",
+        "width": 120,
+        "height": 80,
+        "nombre": "Mesa 1",
+        "posicion": {
+          "x": 100,
+          "y": 120
+        },
+        "rotation": 0
+      },
+      {
+        "_id": "silla_1766168860098_1",
+        "fill": "#00d6a4",
+        "side": "left",
+        "type": "silla",
+        "empty": false,
+        "shape": "circle",
+        "mesaId": "mesa_1766168857524",
+        "nombre": "",
+        "numero": 1,
+        "radius": 10,
+        "posicion": {
+          "x": 75,
+          "y": 146.66666666666666
+        },
+        "sideCount": 2,
+        "sideIndex": 0
+      },
+      {
+        "_id": "silla_1766168860098_2",
+        "fill": "#00d6a4",
+        "side": "left",
+        "type": "silla",
+        "empty": false,
+        "shape": "circle",
+        "mesaId": "mesa_1766168857524",
+        "nombre": "",
+        "numero": 2,
+        "radius": 10,
+        "posicion": {
+          "x": 75,
+          "y": 173.33333333333334
+        },
+        "sideCount": 2,
+        "sideIndex": 1
+      },
+      {
+        "_id": "silla_1766168860098_3",
+        "fill": "#00d6a4",
+        "side": "top",
+        "type": "silla",
+        "empty": false,
+        "shape": "circle",
+        "mesaId": "mesa_1766168857524",
+        "nombre": "",
+        "numero": 3,
+        "radius": 10,
+        "posicion": {
+          "x": 140,
+          "y": 95
+        },
+        "sideCount": 2,
+        "sideIndex": 0
+      },
+      {
+        "_id": "silla_1766168860098_4",
+        "fill": "#00d6a4",
+        "side": "bottom",
+        "type": "silla",
+        "empty": false,
+        "shape": "circle",
+        "mesaId": "mesa_1766168857524",
+        "nombre": "",
+        "numero": 4,
+        "radius": 10,
+        "posicion": {
+          "x": 140,
+          "y": 225
+        },
+        "sideCount": 2,
+        "sideIndex": 0
+      },
+      {
+        "_id": "silla_1766168860098_5",
+        "fill": "#00d6a4",
+        "side": "top",
+        "type": "silla",
+        "empty": false,
+        "shape": "circle",
+        "mesaId": "mesa_1766168857524",
+        "nombre": "",
+        "numero": 5,
+        "radius": 10,
+        "posicion": {
+          "x": 180,
+          "y": 95
+        },
+        "sideCount": 2,
+        "sideIndex": 1
+      },
+      {
+        "_id": "silla_1766168860098_6",
+        "fill": "#00d6a4",
+        "side": "bottom",
+        "type": "silla",
+        "empty": false,
+        "shape": "circle",
+        "mesaId": "mesa_1766168857524",
+        "nombre": "",
+        "numero": 6,
+        "radius": 10,
+        "posicion": {
+          "x": 180,
+          "y": 225
+        },
+        "sideCount": 2,
+        "sideIndex": 1
+      },
+      {
+        "_id": "silla_1766168860098_7",
+        "fill": "#00d6a4",
+        "side": "right",
+        "type": "silla",
+        "empty": false,
+        "shape": "circle",
+        "mesaId": "mesa_1766168857524",
+        "nombre": "",
+        "numero": 7,
+        "radius": 10,
+        "posicion": {
+          "x": 245,
+          "y": 146.66666666666666
+        },
+        "sideCount": 2,
+        "sideIndex": 0
+      },
+      {
+        "_id": "silla_1766168860098_8",
+        "fill": "#00d6a4",
+        "side": "right",
+        "type": "silla",
+        "empty": false,
+        "shape": "circle",
+        "mesaId": "mesa_1766168857524",
+        "nombre": "",
+        "numero": 8,
+        "radius": 10,
+        "posicion": {
+          "x": 245,
+          "y": 173.33333333333334
+        },
+        "sideCount": 2,
+        "sideIndex": 1
+      },
+      {
+        "_id": "meta_config",
+        "key": "config",
+        "type": "meta",
+        "config": {
+          "scale": 1,
+          "gridSize": 20,
+          "showGrid": true,
+          "stagePos": {
+            "x": 0,
+            "y": 0
+          },
+          "snapToGrid": true,
+          "seatSpacing": 25,
+          "backgroundImage": {
+            "x": 0,
+            "y": 0,
+            "_id": "bg_1766170627892",
+            "type": "background",
+            "width": 688,
+            "height": 1024
+          },
+          "backgroundScale": 1,
+          "backgroundOpacity": 1
+        }
+      },
+      {
+        "x": 0,
+        "y": 0,
+        "_id": "bg_1766170627892",
+        "type": "background",
+        "image": {},
+        "width": 688,
+        "height": 1024,
+        "imageUrl": null,
+        "imageData": null,
+        "_isBackgroundRef": true
+      }
+    ],
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "updated_at": "2025-12-19T18:55:48.84975+00:00",
+    "nombre": "Mapa de Sala",
+    "estado": "active",
+    "created_at": "2025-12-19T18:26:27.695097+00:00",
+    "descripcion": "",
+    "imagen_fondo": "https://szmyqodwwdwjdodzebcp.supabase.co/storage/v1/object/public/mapas-backgrounds/9dbdb86f-8424-484c-bb76-0d9fa27573c8/map_bg_158_1766170631499.png",
+    "configuracion": {}
+  }
+]

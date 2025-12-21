@@ -1,0 +1,408 @@
+[
+  {
+    "id": "a5edc8df-2358-456c-ac1c-816161d23a27",
+    "login": "admis@admin.com",
+    "telefono": "+584244511155",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-10-31T19:07:32.472236+00:00",
+    "updated_at": "2025-11-10T02:41:53.601741+00:00",
+    "role": null,
+    "nombre": "Eduardo4",
+    "apellido": "colme8",
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": null,
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "e710b216-a556-435c-95d3-d2f9db6ba890",
+    "login": "redakai475@gmail.con",
+    "telefono": "+584244511155",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-11-11T16:23:26.879106+00:00",
+    "updated_at": "2025-11-11T16:23:26.879106+00:00",
+    "role": null,
+    "nombre": null,
+    "apellido": null,
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "ab0a7f9d-815c-449c-9df1-2d50682b9a3d",
+    "login": "admins1@admin.com",
+    "telefono": "+581515",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-10-31T19:19:49.165447+00:00",
+    "updated_at": "2025-11-10T02:41:56.96656+00:00",
+    "role": null,
+    "nombre": "Eduardos",
+    "apellido": "colme9",
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "04db1787-8f7b-4136-930e-a55468bc62b4",
+    "login": "redakai475@gmail.com",
+    "telefono": "+581515",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-11-11T16:24:47.833029+00:00",
+    "updated_at": "2025-11-11T16:24:47.833029+00:00",
+    "role": null,
+    "nombre": null,
+    "apellido": null,
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "307b938b-31e2-4e66-96f3-f20029b84207",
+    "login": "adm@adm.com",
+    "telefono": "+5834434",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-09-10T19:53:21.820076+00:00",
+    "updated_at": "2025-11-10T02:41:36.248075+00:00",
+    "role": null,
+    "nombre": "Eduardo1",
+    "apellido": "colme",
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "login": "admin1@admin.com",
+    "telefono": "+5834",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-09-17T14:38:44.642683+00:00",
+    "updated_at": "2025-11-10T02:41:38.986568+00:00",
+    "role": null,
+    "nombre": "Eduardo2",
+    "apellido": "colme3",
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "7479653d-17b0-480d-a852-70a0361ced86",
+    "login": "ekirmon1@gmail.com",
+    "telefono": "+584244511155",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-09-10T19:49:36.58534+00:00",
+    "updated_at": "2025-11-10T02:41:44.275528+00:00",
+    "role": null,
+    "nombre": "Eduardo",
+    "apellido": "colme4",
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "9a13ce17-b524-4759-9c55-beeb0736be02",
+    "login": "admin13@admin.com",
+    "telefono": "+5834344343434",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-09-11T18:04:57.350315+00:00",
+    "updated_at": "2025-11-10T02:41:48.075878+00:00",
+    "role": null,
+    "nombre": "Eduardo3",
+    "apellido": "colme7",
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "e09b28c5-da11-4575-a784-86c49f39705b",
+    "login": "eduardo@gmail.com",
+    "telefono": "+584244511155",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-11-04T16:18:47.618059+00:00",
+    "updated_at": "2025-11-10T02:42:03.601601+00:00",
+    "role": null,
+    "nombre": "Eduard",
+    "apellido": "colmee",
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "6174f9ca-8a29-4bc0-85f7-cf009d828807",
+    "login": "scape10001@gmail.com",
+    "telefono": "+584140400651",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-11-12T15:15:07.565751+00:00",
+    "updated_at": "2025-11-12T15:15:07.565751+00:00",
+    "role": null,
+    "nombre": null,
+    "apellido": null,
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "login": "admin10@admin.com",
+    "telefono": "+583",
+    "permisos": {
+      "role": "tenant_admin"
+    },
+    "created_at": "2025-07-10T18:02:46.729087+00:00",
+    "updated_at": "2025-11-17T16:49:58.962209+00:00",
+    "role": "tenant_admin",
+    "nombre": "Eduardo",
+    "apellido": "10",
+    "activo": true,
+    "canales": {
+      "test": true,
+      "internet": true,
+      "boxOffice": true,
+      "marcaBlanca": true
+    },
+    "metodospago": {
+      "zelle": true,
+      "paypal": true,
+      "efectivo": true,
+      "pagoMovil": true,
+      "puntoVenta": true,
+      "procesadorPago": true
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [
+      "[\"jub\"]",
+      "[]"
+    ],
+    "recintos": []
+  },
+  {
+    "id": "512ee00f-6e91-40be-af97-364c290541b0",
+    "login": "redakai1699@gmail.com",
+    "telefono": "+584244511155",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-11-11T15:58:19.869575+00:00",
+    "updated_at": "2025-11-11T15:58:19.869575+00:00",
+    "role": null,
+    "nombre": null,
+    "apellido": null,
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  },
+  {
+    "id": "beddc618-236b-4b4c-b05b-8eaa57810010",
+    "login": "redakai1990@gmail.com",
+    "telefono": "+582",
+    "permisos": {
+      "role": "usuario"
+    },
+    "created_at": "2025-11-20T19:50:36.383217+00:00",
+    "updated_at": "2025-11-20T19:51:14.367955+00:00",
+    "role": null,
+    "nombre": "cas",
+    "apellido": "stro",
+    "activo": true,
+    "canales": {
+      "test": false,
+      "internet": false,
+      "boxOffice": false,
+      "marcaBlanca": false
+    },
+    "metodospago": {
+      "zelle": false,
+      "paypal": false,
+      "efectivo": false,
+      "pagoMovil": false,
+      "puntoVenta": false,
+      "procesadorPago": false
+    },
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tags": [],
+    "recintos": []
+  }
+]

@@ -11,12 +11,12 @@ class NotificationService {
     try {
       this.realtimeSubscription = supabase
         .channel('notifications')
-        .on('postgres_changes', 
-          { 
-            event: 'INSERT', 
-            schema: 'public', 
-            table: 'notifications' 
-          }, 
+        .on('postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications'
+          },
           (payload) => {
             this.handleNewNotification(payload.new);
           }
@@ -67,7 +67,7 @@ class NotificationService {
         type,
         title,
         message,
-        data: JSON.stringify(data),
+        data: data,
         read: false,
         created_at: new Date().toISOString()
       };
@@ -202,7 +202,7 @@ class NotificationService {
   async sendMaintenanceNotification(startTime, endTime, description) {
     const title = 'Mantenimiento Programado';
     const message = `El sistema estará en mantenimiento desde ${startTime} hasta ${endTime}. ${description}`;
-    
+
     return await this.sendSystemNotification(title, message, 'warning');
   }
 
@@ -210,7 +210,7 @@ class NotificationService {
   async sendUpdateNotification(version, features) {
     const title = 'Actualización del Sistema';
     const message = `El sistema ha sido actualizado a la versión ${version}. Nuevas características: ${features.join(', ')}`;
-    
+
     return await this.sendSystemNotification(title, message, 'info');
   }
 
@@ -218,7 +218,7 @@ class NotificationService {
   async sendSecurityAlert(description, action) {
     const title = 'Alerta de Seguridad';
     const message = `${description} Acción requerida: ${action}`;
-    
+
     return await this.sendSystemNotification(title, message, 'error');
   }
 

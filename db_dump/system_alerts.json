@@ -1,0 +1,41 @@
+[
+  {
+    "id": "9bbfca7a-ee41-4cdd-8628-adfbd12cb0c4",
+    "alert_type": "success",
+    "severity": "normal",
+    "title": "Sistema Operativo",
+    "message": "Todos los sistemas funcionando correctamente",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "is_resolved": false,
+    "resolved_by": null,
+    "resolved_at": null,
+    "created_at": "2025-08-08T17:17:24.406162",
+    "metadata": {}
+  },
+  {
+    "id": "65a3f273-057f-488b-a229-0688cef8f59d",
+    "alert_type": "warning",
+    "severity": "normal",
+    "title": "Mantenimiento Programado",
+    "message": "Mantenimiento programado para el próximo fin de semana",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "is_resolved": false,
+    "resolved_by": null,
+    "resolved_at": null,
+    "created_at": "2025-08-08T17:17:24.406162",
+    "metadata": {}
+  },
+  {
+    "id": "060b0868-eb6f-40af-bf93-2307b47206bf",
+    "alert_type": "info",
+    "severity": "normal",
+    "title": "Nueva Funcionalidad",
+    "message": "Nueva función de reportes disponible",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "is_resolved": false,
+    "resolved_by": null,
+    "resolved_at": null,
+    "created_at": "2025-08-08T17:17:24.406162",
+    "metadata": {}
+  }
+]

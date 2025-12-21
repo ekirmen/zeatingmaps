@@ -1,0 +1,38 @@
+[
+  {
+    "id": 69,
+    "nombre": "f3",
+    "direccion": "f, f, ff",
+    "ciudad": "f",
+    "pais": "ff",
+    "capacidad": 4,
+    "codigopostal": "f",
+    "comollegar": "",
+    "direccionlinea1": "f",
+    "estado": "f",
+    "latitud": "",
+    "longitud": "",
+    "usuario_id": null,
+    "new_id": "6d99c932-2484-4224-bf3d-1057768d4cb3",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "updated_at": "2025-09-19T13:22:01.798705+00:00"
+  },
+  {
+    "id": 67,
+    "nombre": "Hotel hesperia",
+    "direccion": "Hotel hesperia, Valencia 2002, Carabobo, Venezuela",
+    "ciudad": "Valencia",
+    "pais": "Venezuela",
+    "capacidad": 2,
+    "codigopostal": "2002",
+    "comollegar": "al lado de dunas",
+    "direccionlinea1": "Hotel hesperia",
+    "estado": "Carabobo",
+    "latitud": "10.2332683",
+    "longitud": "-68.004643",
+    "usuario_id": null,
+    "new_id": "135631d3-6908-4dcd-8794-119b47820584",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "updated_at": "2025-10-29T15:47:06.73832+00:00"
+  }
+]

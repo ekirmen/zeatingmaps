@@ -1,0 +1,478 @@
+[
+  {
+    "id": "0a1dda09-e520-470c-ae54-d66a86fe871d",
+    "nombre": "Plantilla Ventas - Clásica",
+    "tipo_reporte": "sales",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "configuracion_diseno": {
+      "body": {
+        "fontSize": "14px",
+        "textColor": "#333333",
+        "fontFamily": "Arial, sans-serif",
+        "lineHeight": "1.6",
+        "backgroundColor": "#ffffff"
+      },
+      "colors": {
+        "info": "#1890ff",
+        "error": "#ff4d4f",
+        "primary": "#1890ff",
+        "success": "#52c41a",
+        "warning": "#faad14",
+        "secondary": "#52c41a"
+      },
+      "footer": {
+        "text": "© 2024 Tu Empresa. Todos los derechos reservados.",
+        "links": [],
+        "textColor": "#666666",
+        "backgroundColor": "#f5f5f5"
+      },
+      "header": {
+        "logo": null,
+        "title": "Reporte de Ventas",
+        "subtitle": null,
+        "textColor": "#ffffff",
+        "backgroundColor": "#1890ff"
+      },
+      "layout": {
+        "padding": "20px",
+        "maxWidth": "600px",
+        "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+        "borderRadius": "8px"
+      }
+    },
+    "estructura_contenido": {
+      "sections": [
+        {
+          "type": "header",
+          "content": "Resumen del Reporte"
+        },
+        {
+          "type": "summary",
+          "content": "Estadísticas principales"
+        },
+        {
+          "type": "table",
+          "content": "Datos detallados"
+        },
+        {
+          "type": "footer",
+          "content": "Información adicional"
+        }
+      ]
+    },
+    "activo": true,
+    "es_predeterminado": true,
+    "version": "1.0",
+    "created_at": "2025-09-07T21:06:52.081869+00:00",
+    "updated_at": "2025-09-07T21:06:52.081869+00:00",
+    "created_by": "864017e3-ed37-4be6-8851-673094a3629a"
+  },
+  {
+    "id": "a9c9a9db-ddaf-4763-a793-9b33b1ba4669",
+    "nombre": "Plantilla Eventos - Moderna",
+    "tipo_reporte": "events",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "configuracion_diseno": {
+      "body": {
+        "fontSize": "14px",
+        "textColor": "#333333",
+        "fontFamily": "Arial, sans-serif",
+        "lineHeight": "1.6",
+        "backgroundColor": "#ffffff"
+      },
+      "colors": {
+        "info": "#1890ff",
+        "error": "#ff4d4f",
+        "primary": "#1890ff",
+        "success": "#52c41a",
+        "warning": "#faad14",
+        "secondary": "#52c41a"
+      },
+      "footer": {
+        "text": "© 2024 Tu Empresa. Todos los derechos reservados.",
+        "links": [],
+        "textColor": "#666666",
+        "backgroundColor": "#f5f5f5"
+      },
+      "header": {
+        "logo": null,
+        "title": "Reporte de Ventas",
+        "subtitle": null,
+        "textColor": "#ffffff",
+        "backgroundColor": "#1890ff"
+      },
+      "layout": {
+        "padding": "20px",
+        "maxWidth": "600px",
+        "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+        "borderRadius": "8px"
+      }
+    },
+    "estructura_contenido": {
+      "sections": [
+        {
+          "type": "header",
+          "content": "Resumen del Reporte"
+        },
+        {
+          "type": "summary",
+          "content": "Estadísticas principales"
+        },
+        {
+          "type": "table",
+          "content": "Datos detallados"
+        },
+        {
+          "type": "footer",
+          "content": "Información adicional"
+        }
+      ]
+    },
+    "activo": true,
+    "es_predeterminado": true,
+    "version": "1.0",
+    "created_at": "2025-09-07T21:06:52.081869+00:00",
+    "updated_at": "2025-09-07T21:06:52.081869+00:00",
+    "created_by": "864017e3-ed37-4be6-8851-673094a3629a"
+  },
+  {
+    "id": "19213968-4754-462c-a510-04da1fd009ed",
+    "nombre": "Plantilla Usuarios - Minimalista",
+    "tipo_reporte": "users",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "configuracion_diseno": {
+      "body": {
+        "fontSize": "14px",
+        "textColor": "#333333",
+        "fontFamily": "Arial, sans-serif",
+        "lineHeight": "1.6",
+        "backgroundColor": "#ffffff"
+      },
+      "colors": {
+        "info": "#1890ff",
+        "error": "#ff4d4f",
+        "primary": "#1890ff",
+        "success": "#52c41a",
+        "warning": "#faad14",
+        "secondary": "#52c41a"
+      },
+      "footer": {
+        "text": "© 2024 Tu Empresa. Todos los derechos reservados.",
+        "links": [],
+        "textColor": "#666666",
+        "backgroundColor": "#f5f5f5"
+      },
+      "header": {
+        "logo": null,
+        "title": "Reporte de Ventas",
+        "subtitle": null,
+        "textColor": "#ffffff",
+        "backgroundColor": "#1890ff"
+      },
+      "layout": {
+        "padding": "20px",
+        "maxWidth": "600px",
+        "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+        "borderRadius": "8px"
+      }
+    },
+    "estructura_contenido": {
+      "sections": [
+        {
+          "type": "header",
+          "content": "Resumen del Reporte"
+        },
+        {
+          "type": "summary",
+          "content": "Estadísticas principales"
+        },
+        {
+          "type": "table",
+          "content": "Datos detallados"
+        },
+        {
+          "type": "footer",
+          "content": "Información adicional"
+        }
+      ]
+    },
+    "activo": true,
+    "es_predeterminado": true,
+    "version": "1.0",
+    "created_at": "2025-09-07T21:06:52.081869+00:00",
+    "updated_at": "2025-09-07T21:06:52.081869+00:00",
+    "created_by": "864017e3-ed37-4be6-8851-673094a3629a"
+  },
+  {
+    "id": "4a40bacb-c27b-4356-a6b8-f704155f720f",
+    "nombre": "Plantilla Pagos - Profesional",
+    "tipo_reporte": "payments",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "configuracion_diseno": {
+      "body": {
+        "fontSize": "14px",
+        "textColor": "#333333",
+        "fontFamily": "Arial, sans-serif",
+        "lineHeight": "1.6",
+        "backgroundColor": "#ffffff"
+      },
+      "colors": {
+        "info": "#1890ff",
+        "error": "#ff4d4f",
+        "primary": "#1890ff",
+        "success": "#52c41a",
+        "warning": "#faad14",
+        "secondary": "#52c41a"
+      },
+      "footer": {
+        "text": "© 2024 Tu Empresa. Todos los derechos reservados.",
+        "links": [],
+        "textColor": "#666666",
+        "backgroundColor": "#f5f5f5"
+      },
+      "header": {
+        "logo": null,
+        "title": "Reporte de Ventas",
+        "subtitle": null,
+        "textColor": "#ffffff",
+        "backgroundColor": "#1890ff"
+      },
+      "layout": {
+        "padding": "20px",
+        "maxWidth": "600px",
+        "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+        "borderRadius": "8px"
+      }
+    },
+    "estructura_contenido": {
+      "sections": [
+        {
+          "type": "header",
+          "content": "Resumen del Reporte"
+        },
+        {
+          "type": "summary",
+          "content": "Estadísticas principales"
+        },
+        {
+          "type": "table",
+          "content": "Datos detallados"
+        },
+        {
+          "type": "footer",
+          "content": "Información adicional"
+        }
+      ]
+    },
+    "activo": true,
+    "es_predeterminado": true,
+    "version": "1.0",
+    "created_at": "2025-09-07T21:06:52.081869+00:00",
+    "updated_at": "2025-09-07T21:06:52.081869+00:00",
+    "created_by": "864017e3-ed37-4be6-8851-673094a3629a"
+  },
+  {
+    "id": "c90da6bc-c1f3-465e-849b-228e20ac4c56",
+    "nombre": "Plantilla Productos - Elegante",
+    "tipo_reporte": "products",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "configuracion_diseno": {
+      "body": {
+        "fontSize": "14px",
+        "textColor": "#333333",
+        "fontFamily": "Arial, sans-serif",
+        "lineHeight": "1.6",
+        "backgroundColor": "#ffffff"
+      },
+      "colors": {
+        "info": "#1890ff",
+        "error": "#ff4d4f",
+        "primary": "#1890ff",
+        "success": "#52c41a",
+        "warning": "#faad14",
+        "secondary": "#52c41a"
+      },
+      "footer": {
+        "text": "© 2024 Tu Empresa. Todos los derechos reservados.",
+        "links": [],
+        "textColor": "#666666",
+        "backgroundColor": "#f5f5f5"
+      },
+      "header": {
+        "logo": null,
+        "title": "Reporte de Ventas",
+        "subtitle": null,
+        "textColor": "#ffffff",
+        "backgroundColor": "#1890ff"
+      },
+      "layout": {
+        "padding": "20px",
+        "maxWidth": "600px",
+        "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+        "borderRadius": "8px"
+      }
+    },
+    "estructura_contenido": {
+      "sections": [
+        {
+          "type": "header",
+          "content": "Resumen del Reporte"
+        },
+        {
+          "type": "summary",
+          "content": "Estadísticas principales"
+        },
+        {
+          "type": "table",
+          "content": "Datos detallados"
+        },
+        {
+          "type": "footer",
+          "content": "Información adicional"
+        }
+      ]
+    },
+    "activo": true,
+    "es_predeterminado": true,
+    "version": "1.0",
+    "created_at": "2025-09-07T21:06:52.081869+00:00",
+    "updated_at": "2025-09-07T21:06:52.081869+00:00",
+    "created_by": "864017e3-ed37-4be6-8851-673094a3629a"
+  },
+  {
+    "id": "5d4ac425-21cc-4e37-863a-5704874a0e02",
+    "nombre": "Plantilla Promociones - Colorida",
+    "tipo_reporte": "promociones",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "configuracion_diseno": {
+      "body": {
+        "fontSize": "14px",
+        "textColor": "#333333",
+        "fontFamily": "Arial, sans-serif",
+        "lineHeight": "1.6",
+        "backgroundColor": "#ffffff"
+      },
+      "colors": {
+        "info": "#1890ff",
+        "error": "#ff4d4f",
+        "primary": "#1890ff",
+        "success": "#52c41a",
+        "warning": "#faad14",
+        "secondary": "#52c41a"
+      },
+      "footer": {
+        "text": "© 2024 Tu Empresa. Todos los derechos reservados.",
+        "links": [],
+        "textColor": "#666666",
+        "backgroundColor": "#f5f5f5"
+      },
+      "header": {
+        "logo": null,
+        "title": "Reporte de Ventas",
+        "subtitle": null,
+        "textColor": "#ffffff",
+        "backgroundColor": "#1890ff"
+      },
+      "layout": {
+        "padding": "20px",
+        "maxWidth": "600px",
+        "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+        "borderRadius": "8px"
+      }
+    },
+    "estructura_contenido": {
+      "sections": [
+        {
+          "type": "header",
+          "content": "Resumen del Reporte"
+        },
+        {
+          "type": "summary",
+          "content": "Estadísticas principales"
+        },
+        {
+          "type": "table",
+          "content": "Datos detallados"
+        },
+        {
+          "type": "footer",
+          "content": "Información adicional"
+        }
+      ]
+    },
+    "activo": true,
+    "es_predeterminado": true,
+    "version": "1.0",
+    "created_at": "2025-09-07T21:06:52.081869+00:00",
+    "updated_at": "2025-09-07T21:06:52.081869+00:00",
+    "created_by": "864017e3-ed37-4be6-8851-673094a3629a"
+  },
+  {
+    "id": "82715f48-92b7-419e-9b3f-d4a93a7dc8ab",
+    "nombre": "Plantilla Carritos - Simple",
+    "tipo_reporte": "carritos",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "configuracion_diseno": {
+      "body": {
+        "fontSize": "14px",
+        "textColor": "#333333",
+        "fontFamily": "Arial, sans-serif",
+        "lineHeight": "1.6",
+        "backgroundColor": "#ffffff"
+      },
+      "colors": {
+        "info": "#1890ff",
+        "error": "#ff4d4f",
+        "primary": "#1890ff",
+        "success": "#52c41a",
+        "warning": "#faad14",
+        "secondary": "#52c41a"
+      },
+      "footer": {
+        "text": "© 2024 Tu Empresa. Todos los derechos reservados.",
+        "links": [],
+        "textColor": "#666666",
+        "backgroundColor": "#f5f5f5"
+      },
+      "header": {
+        "logo": null,
+        "title": "Reporte de Ventas",
+        "subtitle": null,
+        "textColor": "#ffffff",
+        "backgroundColor": "#1890ff"
+      },
+      "layout": {
+        "padding": "20px",
+        "maxWidth": "600px",
+        "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+        "borderRadius": "8px"
+      }
+    },
+    "estructura_contenido": {
+      "sections": [
+        {
+          "type": "header",
+          "content": "Resumen del Reporte"
+        },
+        {
+          "type": "summary",
+          "content": "Estadísticas principales"
+        },
+        {
+          "type": "table",
+          "content": "Datos detallados"
+        },
+        {
+          "type": "footer",
+          "content": "Información adicional"
+        }
+      ]
+    },
+    "activo": true,
+    "es_predeterminado": true,
+    "version": "1.0",
+    "created_at": "2025-09-07T21:06:52.081869+00:00",
+    "updated_at": "2025-09-07T21:06:52.081869+00:00",
+    "created_by": "864017e3-ed37-4be6-8851-673094a3629a"
+  }
+]

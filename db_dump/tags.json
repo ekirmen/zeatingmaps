@@ -1,0 +1,65 @@
+[
+  {
+    "id": 5,
+    "name": "Música",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "description": null,
+    "color": "#3B82F6",
+    "type": "event",
+    "updated_at": "2025-09-07T19:22:11.965028+00:00"
+  },
+  {
+    "id": 6,
+    "name": "Teatro",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "description": null,
+    "color": "#3B82F6",
+    "type": "event",
+    "updated_at": "2025-09-07T19:22:11.965028+00:00"
+  },
+  {
+    "id": 7,
+    "name": "Deportes",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "description": null,
+    "color": "#3B82F6",
+    "type": "event",
+    "updated_at": "2025-09-07T19:22:11.965028+00:00"
+  },
+  {
+    "id": 8,
+    "name": "Conferencias",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "description": null,
+    "color": "#3B82F6",
+    "type": "event",
+    "updated_at": "2025-09-07T19:22:11.965028+00:00"
+  },
+  {
+    "id": 9,
+    "name": "Exposiciones",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "description": null,
+    "color": "#3B82F6",
+    "type": "event",
+    "updated_at": "2025-09-07T19:22:11.965028+00:00"
+  },
+  {
+    "id": 10,
+    "name": "Festivales",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "description": null,
+    "color": "#3B82F6",
+    "type": "event",
+    "updated_at": "2025-09-07T19:22:11.965028+00:00"
+  },
+  {
+    "id": 11,
+    "name": "d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "description": null,
+    "color": "#3B82F6",
+    "type": "event",
+    "updated_at": "2025-09-07T19:22:11.965028+00:00"
+  }
+]

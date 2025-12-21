@@ -1,0 +1,2088 @@
+[
+  {
+    "id": "1f2cfb3b-6460-44f8-b17c-579428f3ef5c",
+    "user_id": null,
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Exitoso",
+    "message": "Tu pago ha sido procesado correctamente",
+    "type": "success",
+    "status": "sent",
+    "data": {},
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-19T16:37:26.388878+00:00",
+    "updated_at": "2025-09-19T16:37:26.388878+00:00",
+    "read": false
+  },
+  {
+    "id": "f16650b1-46cb-460a-a939-23bf8222fed8",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "d245838c-fb71-4f1c-91a4-6006fdc46902"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-21T22:35:29.466104+00:00",
+    "updated_at": "2025-09-21T22:35:29.466104+00:00",
+    "read": false
+  },
+  {
+    "id": "8f9c4cbb-5557-474d-9089-576271e463ae",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "bc87e073-d150-4ef1-ad1f-507f872eeaef"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-21T22:39:32.654014+00:00",
+    "updated_at": "2025-09-21T22:39:32.654014+00:00",
+    "read": false
+  },
+  {
+    "id": "2fa7507f-848b-43b1-8662-a7af34b6a71b",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "bb03b145-6999-413e-b457-9bea84f80c99"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-21T23:05:53.655789+00:00",
+    "updated_at": "2025-09-21T23:05:53.655789+00:00",
+    "read": false
+  },
+  {
+    "id": "b218a30c-9823-4037-8be4-ab09326da269",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "5e90defd-6563-4432-800c-8236eea885c8"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T02:10:53.10968+00:00",
+    "updated_at": "2025-09-22T02:10:53.10968+00:00",
+    "read": false
+  },
+  {
+    "id": "783ee13f-741f-4711-bdf3-2f0332afc0f5",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "27e3e156-1f1d-40e2-a36a-47b9e98bce30"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T02:12:42.099399+00:00",
+    "updated_at": "2025-09-22T02:12:42.099399+00:00",
+    "read": false
+  },
+  {
+    "id": "45ce9a83-4a31-4f00-b3ed-58b873ceab2e",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "0613de19-7930-4c08-9cfc-3cca99bf9e10"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T02:16:40.234865+00:00",
+    "updated_at": "2025-09-22T02:16:40.234865+00:00",
+    "read": false
+  },
+  {
+    "id": "da234224-f56c-421f-b156-aa9315520e3a",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "958d1f11-88e4-4087-9d37-79d9cfbd534a"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T02:34:02.483413+00:00",
+    "updated_at": "2025-09-22T02:34:02.483413+00:00",
+    "read": false
+  },
+  {
+    "id": "0f0bb9f7-f69a-42a1-8e0f-7c3d198da3c9",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "7c996247-0a62-4913-8291-075ed088c02d"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T02:35:53.304441+00:00",
+    "updated_at": "2025-09-22T02:35:53.304441+00:00",
+    "read": false
+  },
+  {
+    "id": "8071ca23-9c92-4d18-99a9-9611a7d1e02a",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "8e64e086-a7f8-4a6a-b9b0-d1eef139dd0f"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T02:37:34.379156+00:00",
+    "updated_at": "2025-09-22T02:37:34.379156+00:00",
+    "read": false
+  },
+  {
+    "id": "d077bcc9-24a7-4c2c-9cc3-b4cef5e4fbb1",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "69e0ab77-2d29-4956-bfeb-d064fa76ad0c"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T02:50:22.121913+00:00",
+    "updated_at": "2025-09-22T02:50:22.121913+00:00",
+    "read": false
+  },
+  {
+    "id": "321bda34-e8fe-427f-9335-b266b9cbdd60",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "aa5808b1-81a8-428a-aa28-40fc911a793d"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T02:55:31.691687+00:00",
+    "updated_at": "2025-09-22T02:55:31.691687+00:00",
+    "read": false
+  },
+  {
+    "id": "ce84eda3-8dc6-4033-80b5-564d8b0739c3",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $100 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 100,
+      "gateway": "efectivo",
+      "transactionId": "4adbfb8c-40e0-4e5a-9605-c1298d244ff6"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T03:00:05.937888+00:00",
+    "updated_at": "2025-09-22T03:00:05.937888+00:00",
+    "read": false
+  },
+  {
+    "id": "7db3e52b-bd25-447a-a575-ea080e8e3854",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "0cd6b471-e57a-4d96-8bfb-9a86d21dd276"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T03:04:30.846723+00:00",
+    "updated_at": "2025-09-22T03:04:30.846723+00:00",
+    "read": false
+  },
+  {
+    "id": "d9f7e8ec-5cdb-4240-a713-8296f5fd548a",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "f098678b-c4f0-452f-9bb6-bfa41bc5bca7"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T03:05:27.555111+00:00",
+    "updated_at": "2025-09-22T03:05:27.555111+00:00",
+    "read": false
+  },
+  {
+    "id": "e0bf04e7-eaef-4268-ab55-1d786d375f7f",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "b84c1694-5a5f-4b82-a64f-e17e3d0dd369"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T03:12:00.109101+00:00",
+    "updated_at": "2025-09-22T03:12:00.109101+00:00",
+    "read": false
+  },
+  {
+    "id": "42df52c4-a3de-4bdd-964e-8c92478e618f",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "a8deb585-f173-4943-9162-5cc0f93364f0"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T03:21:58.156973+00:00",
+    "updated_at": "2025-09-22T03:21:58.156973+00:00",
+    "read": false
+  },
+  {
+    "id": "69c210be-56c4-4d11-9df5-02a2781a11c3",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "e8ae7cf1-bbf2-4ef0-9379-d58bceea677a"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T03:35:49.442561+00:00",
+    "updated_at": "2025-09-22T03:35:49.442561+00:00",
+    "read": false
+  },
+  {
+    "id": "f95ee0ed-d9b3-4ab0-acc5-47982c9c3a5a",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "a7d95a44-eacc-4198-a5fb-c9b55258e626"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T03:40:52.239204+00:00",
+    "updated_at": "2025-09-22T03:40:52.239204+00:00",
+    "read": false
+  },
+  {
+    "id": "1098399b-fe92-4317-8df7-ddf34eefaa83",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "088ebded-a118-45d8-9274-6ab36b6d5474"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T14:46:46.893471+00:00",
+    "updated_at": "2025-09-22T14:46:46.893471+00:00",
+    "read": false
+  },
+  {
+    "id": "683ee869-ebfa-4ffc-b7a6-d8332e95d538",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "502d61a8-ad7f-429d-810e-4b8483b86ea5"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T14:47:22.687558+00:00",
+    "updated_at": "2025-09-22T14:47:22.687558+00:00",
+    "read": false
+  },
+  {
+    "id": "3d3a6f7c-68e5-40ea-8391-294a3592a73d",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "dd0a2ec5-622f-46a4-801e-fbb6b4644031"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T14:50:35.79569+00:00",
+    "updated_at": "2025-09-22T14:50:35.79569+00:00",
+    "read": false
+  },
+  {
+    "id": "518c91ec-72b2-46bb-9ddb-d14f06a8c21b",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "9b967a3a-e7a0-4296-9b6d-ea6a2cc9e573"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T15:10:17.506572+00:00",
+    "updated_at": "2025-09-22T15:10:17.506572+00:00",
+    "read": false
+  },
+  {
+    "id": "49a7d981-c154-4308-8733-e87c59730003",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "d1f4d459-377b-46f7-8d10-6dc62553d34c"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-22T15:11:26.893404+00:00",
+    "updated_at": "2025-09-22T15:11:26.893404+00:00",
+    "read": false
+  },
+  {
+    "id": "62eb5b2b-a7a4-430a-80b4-b38328810bd2",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "140202ed-9df6-4159-a55c-10ad96d303af"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-23T02:47:18.282971+00:00",
+    "updated_at": "2025-09-23T02:47:18.282971+00:00",
+    "read": false
+  },
+  {
+    "id": "dd5a7076-991d-4707-9a8b-04b95ab047fc",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "2f63e22d-15fe-455b-8699-1125599b6981"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-23T02:48:26.282217+00:00",
+    "updated_at": "2025-09-23T02:48:26.282217+00:00",
+    "read": false
+  },
+  {
+    "id": "7cb74554-6ecf-4130-bdc7-3f0ddedcd0ab",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "03494ef6-3198-42b4-8eb3-f82c761d73e6"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-23T02:54:42.376876+00:00",
+    "updated_at": "2025-09-23T02:54:42.376876+00:00",
+    "read": false
+  },
+  {
+    "id": "50106e8d-f416-4a5c-acfa-93ac5647b341",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "44baea8a-1cfc-45d0-9c06-387c11826873"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-23T03:04:49.648205+00:00",
+    "updated_at": "2025-09-23T03:04:49.648205+00:00",
+    "read": false
+  },
+  {
+    "id": "89805984-676a-44fd-a49b-2f3ec815720d",
+    "user_id": "713a4d5b-bab9-4370-8c25-afb8dd198d6d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "00c2d2e8-4bfd-410b-bfbb-14a67d567732"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-23T03:27:57.961106+00:00",
+    "updated_at": "2025-09-23T03:27:57.961106+00:00",
+    "read": false
+  },
+  {
+    "id": "682fc7c5-64bf-47b1-9e0d-96ea9312af5d",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "87e2b194-4bd8-4cb9-a65f-f5d7c00a714b"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-23T03:30:21.219993+00:00",
+    "updated_at": "2025-09-23T03:30:21.219993+00:00",
+    "read": false
+  },
+  {
+    "id": "3ee17a6d-72f0-49bc-bc2d-1c779b92a70b",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $100 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 100,
+      "gateway": "efectivo",
+      "transactionId": "a118610d-6eaf-4586-ae2f-561c48969166"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-23T04:06:20.467267+00:00",
+    "updated_at": "2025-09-23T04:06:20.467267+00:00",
+    "read": false
+  },
+  {
+    "id": "423baeee-2e08-4764-adf9-e440735f489b",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "89e2da03-dabd-4065-bcad-f5407965c332"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-23T18:21:12.218009+00:00",
+    "updated_at": "2025-09-23T18:21:12.218009+00:00",
+    "read": false
+  },
+  {
+    "id": "9657da44-df14-4368-a1e9-062376bca1d9",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "7013678d-0ab5-4b4c-ae8d-6db8e6b72b6b"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-30T04:00:49.583706+00:00",
+    "updated_at": "2025-09-30T04:00:49.583706+00:00",
+    "read": false
+  },
+  {
+    "id": "60aa98d5-d342-45f9-aeb0-dab5093e8fd9",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "2ae4a8fd-edcc-4c42-8e4e-17820ab4f84e"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-30T04:10:31.499983+00:00",
+    "updated_at": "2025-09-30T04:10:31.499983+00:00",
+    "read": false
+  },
+  {
+    "id": "f8938207-c43a-456f-9554-2173d0f9ce16",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "2c887cf8-7ddc-49a1-aee5-9c91ce2a65e8"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-30T04:18:00.408571+00:00",
+    "updated_at": "2025-09-30T04:18:00.408571+00:00",
+    "read": false
+  },
+  {
+    "id": "85ce0cc4-92e2-4c4b-84ce-eb7d9ec0688e",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "f6b6af2b-a75e-472d-83c5-b046ecfaa0aa"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-30T04:25:31.356287+00:00",
+    "updated_at": "2025-09-30T04:25:31.356287+00:00",
+    "read": false
+  },
+  {
+    "id": "97f0ce28-8f23-4404-86c9-b8fa9a4e05a0",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "57690ab4-888b-414e-afa5-0e24f9341e59"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-30T04:33:43.078299+00:00",
+    "updated_at": "2025-09-30T04:33:43.078299+00:00",
+    "read": false
+  },
+  {
+    "id": "063affb9-f502-4245-a710-4c4d8f814faa",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "transferencia",
+      "transactionId": "c2def22b-a818-42e1-af99-c94a62e3c0b3"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-30T15:46:01.762636+00:00",
+    "updated_at": "2025-09-30T15:46:01.762636+00:00",
+    "read": false
+  },
+  {
+    "id": "1fbe5213-309f-47d0-bd7d-2132bc4c3dbb",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo_tienda",
+      "transactionId": "bcdc4ece-3f80-45c4-a7d7-923360178d40"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-30T15:46:28.31906+00:00",
+    "updated_at": "2025-09-30T15:46:28.31906+00:00",
+    "read": false
+  },
+  {
+    "id": "fd925875-12a3-47bb-a63a-3f3735435659",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "a6a1d7d2-a879-4d70-991c-d29833ed9590"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-09-30T17:50:01.551035+00:00",
+    "updated_at": "2025-09-30T17:50:01.551035+00:00",
+    "read": false
+  },
+  {
+    "id": "3829a312-021f-45a3-ab30-7bbf6b3b5ed3",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "f1b0b67c-48d3-4bd9-a94c-1f4bc7617840"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-03T15:35:38.332994+00:00",
+    "updated_at": "2025-10-03T15:35:38.332994+00:00",
+    "read": false
+  },
+  {
+    "id": "733deaf0-94aa-4471-9102-819e63252848",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "d1ff9a30-e387-45d4-b906-868f620bfca9"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-04T04:02:11.963569+00:00",
+    "updated_at": "2025-10-04T04:02:11.963569+00:00",
+    "read": false
+  },
+  {
+    "id": "e4f818c3-2e1d-41ec-9760-55377dd871b6",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "725e1b9e-9051-4ea0-899b-73fbdfcefb7d"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-10T15:21:47.976953+00:00",
+    "updated_at": "2025-10-10T15:21:47.976953+00:00",
+    "read": false
+  },
+  {
+    "id": "cb0f324b-7566-4379-b7ef-a5fe5a39ccfe",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "7b48343a-57ad-4a56-871c-f59b8efe8494"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-10T18:58:30.677368+00:00",
+    "updated_at": "2025-10-10T18:58:30.677368+00:00",
+    "read": false
+  },
+  {
+    "id": "1ae2a302-861e-4ada-8c28-518a69194909",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "ea90696e-0fdd-4eb5-b338-949d26818bd7"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-10T19:28:41.062915+00:00",
+    "updated_at": "2025-10-10T19:28:41.062915+00:00",
+    "read": false
+  },
+  {
+    "id": "af7dc936-edb2-462f-87b0-a29de5c83782",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "1214ed17-8836-43ac-8d91-9c0e2a43b5cb"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-10T19:34:04.426147+00:00",
+    "updated_at": "2025-10-10T19:34:04.426147+00:00",
+    "read": false
+  },
+  {
+    "id": "852ff66d-3714-4131-9bca-9a70dfc067a5",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "9b977b3b-106e-4caa-ae22-9eda0ce322d1"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-13T15:00:23.148765+00:00",
+    "updated_at": "2025-10-13T15:00:23.148765+00:00",
+    "read": false
+  },
+  {
+    "id": "1f0be03b-a1e3-4062-9c09-44d01bcf5efa",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "e85c418f-a996-4505-98ec-262cb5a68eef"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-13T16:59:58.081617+00:00",
+    "updated_at": "2025-10-13T16:59:58.081617+00:00",
+    "read": false
+  },
+  {
+    "id": "9f5c74b3-f8e8-42b7-9a1c-6efec927242c",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "90906c68-5ad3-424b-b42d-2fd74b794e7d"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-13T17:04:05.566988+00:00",
+    "updated_at": "2025-10-13T17:04:05.566988+00:00",
+    "read": false
+  },
+  {
+    "id": "775583ba-dd78-496c-81cb-8a10a3734faa",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "50cead97-0b05-4c8a-951f-b7e9c25c5128"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-13T17:23:43.14237+00:00",
+    "updated_at": "2025-10-13T17:23:43.14237+00:00",
+    "read": false
+  },
+  {
+    "id": "514df749-3d47-4036-af3d-7959dac1ced3",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "3ae06854-3b0b-4c54-8dba-c19b3af109fb"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-14T17:35:19.723821+00:00",
+    "updated_at": "2025-10-14T17:35:19.723821+00:00",
+    "read": false
+  },
+  {
+    "id": "7331b541-9799-4092-93d7-b6d6208d3f4d",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $100 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 100,
+      "gateway": "efectivo",
+      "transactionId": "e774d7da-28cd-405a-b3d3-7e7a19c16886"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-21T19:50:21.78029+00:00",
+    "updated_at": "2025-10-21T19:50:21.78029+00:00",
+    "read": false
+  },
+  {
+    "id": "3360536e-0fca-4014-9f7d-1ea8f0c236b9",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "edb6d8aa-e900-4ebc-ac7a-079639ff633d"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-28T15:09:30.574363+00:00",
+    "updated_at": "2025-10-28T15:09:30.574363+00:00",
+    "read": false
+  },
+  {
+    "id": "29af9ee5-1ddb-4b4c-a71c-cc107e8b9c7a",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "1697a55b-9374-493d-af71-9ad246f74424"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-28T17:27:28.825534+00:00",
+    "updated_at": "2025-10-28T17:27:28.825534+00:00",
+    "read": false
+  },
+  {
+    "id": "b0e7f245-e236-459e-b9ba-acb5b90a8cd0",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "6b49d472-4943-4422-97d7-4886ba07ef34"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-28T23:01:32.582749+00:00",
+    "updated_at": "2025-10-28T23:01:32.582749+00:00",
+    "read": false
+  },
+  {
+    "id": "ba2728ec-2841-4685-9c99-4396aab58d2b",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "0a3b0393-f07e-4163-a047-a9dc12060a80"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T18:38:55.487914+00:00",
+    "updated_at": "2025-10-31T18:38:55.487914+00:00",
+    "read": false
+  },
+  {
+    "id": "7f685db7-6350-48ab-86e3-2be937071315",
+    "user_id": "a5edc8df-2358-456c-ac1c-816161d23a27",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "2e3862c5-ad1e-4085-85e6-7b5aac9bf84f"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T19:07:45.90965+00:00",
+    "updated_at": "2025-10-31T19:07:45.90965+00:00",
+    "read": false
+  },
+  {
+    "id": "dc930b86-a750-4423-bee9-caf151b5c230",
+    "user_id": "ab0a7f9d-815c-449c-9df1-2d50682b9a3d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "9accf3db-aa97-4138-8cbd-084c2c3cb7d4"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T19:23:11.62879+00:00",
+    "updated_at": "2025-10-31T19:23:11.62879+00:00",
+    "read": false
+  },
+  {
+    "id": "ad10454f-79bf-448b-a06f-633c5aea419d",
+    "user_id": "ab0a7f9d-815c-449c-9df1-2d50682b9a3d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo_tienda",
+      "transactionId": "0575e64d-f54e-4181-ba5b-e41b84b2201f"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T19:23:44.522507+00:00",
+    "updated_at": "2025-10-31T19:23:44.522507+00:00",
+    "read": false
+  },
+  {
+    "id": "b4f21e60-718b-49f7-b93c-c11aeef2513a",
+    "user_id": "ab0a7f9d-815c-449c-9df1-2d50682b9a3d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "02d7e949-5056-4e04-9e3e-6f48e6c47ef1"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T19:24:54.699227+00:00",
+    "updated_at": "2025-10-31T19:24:54.699227+00:00",
+    "read": false
+  },
+  {
+    "id": "1dc75048-14c2-45be-9e39-b153570c798b",
+    "user_id": "ab0a7f9d-815c-449c-9df1-2d50682b9a3d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "48590240-57e2-4fd0-ab28-fcfb25ea46a8"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T19:30:14.310359+00:00",
+    "updated_at": "2025-10-31T19:30:14.310359+00:00",
+    "read": false
+  },
+  {
+    "id": "3974dd37-8d74-4171-a89e-f348e52fdbc2",
+    "user_id": "ab0a7f9d-815c-449c-9df1-2d50682b9a3d",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "261bdbb2-1fac-450c-bb2d-dc6478463fd9"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T19:43:13.049925+00:00",
+    "updated_at": "2025-10-31T19:43:13.049925+00:00",
+    "read": false
+  },
+  {
+    "id": "7cc0bcfa-6f43-4870-b70a-4582609d9461",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "b9e524a6-f0ea-4fe2-96bf-79970a33a66b"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T19:48:38.205955+00:00",
+    "updated_at": "2025-10-31T19:48:38.205955+00:00",
+    "read": false
+  },
+  {
+    "id": "b35d96f4-7f9a-420d-abee-d7d8091af4cb",
+    "user_id": "a5edc8df-2358-456c-ac1c-816161d23a27",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "a4cdfc55-617f-4c9a-a2e6-b6f5b1e48175"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T19:55:07.995917+00:00",
+    "updated_at": "2025-10-31T19:55:07.995917+00:00",
+    "read": false
+  },
+  {
+    "id": "10ec4a8f-324f-408a-b7ae-89a9353e2afd",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "857a9b7c-7334-4751-bb28-6c84726ef1ac"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T20:04:23.109521+00:00",
+    "updated_at": "2025-10-31T20:04:23.109521+00:00",
+    "read": false
+  },
+  {
+    "id": "57329b1e-231b-4c62-b412-a0ee0517785d",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "8542c052-972d-40e7-ad3f-9ac9e147c896"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T20:41:51.39764+00:00",
+    "updated_at": "2025-10-31T20:41:51.39764+00:00",
+    "read": false
+  },
+  {
+    "id": "051cdeba-c711-47a1-b8ff-d40531081d26",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "e25de826-33fb-41b4-89f0-f427d52187ec"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T20:50:21.1525+00:00",
+    "updated_at": "2025-10-31T20:50:21.1525+00:00",
+    "read": false
+  },
+  {
+    "id": "afba390a-0e3c-47ad-a066-4512fcd73417",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "32a6bce8-ddcd-46a0-936b-a850dabd3f0d"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-10-31T20:57:17.398278+00:00",
+    "updated_at": "2025-10-31T20:57:17.398278+00:00",
+    "read": false
+  },
+  {
+    "id": "f4a35f47-c823-48d7-8a84-913ce2d9a574",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "e88f270a-ba46-4caa-b4d2-ccdb80b8b259"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-03T18:51:00.475556+00:00",
+    "updated_at": "2025-11-03T18:51:00.475556+00:00",
+    "read": false
+  },
+  {
+    "id": "599991de-e5c3-4ce9-ae77-3c14aff3a874",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "8d56d60e-a4e0-4bee-9047-902845e42a79"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-03T19:11:14.616469+00:00",
+    "updated_at": "2025-11-03T19:11:14.616469+00:00",
+    "read": false
+  },
+  {
+    "id": "05854fd7-237e-40e4-9a01-56b9e389b001",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "1fc2e058-03f7-43a6-93b2-904735070569"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-04T12:27:09.503488+00:00",
+    "updated_at": "2025-11-04T12:27:09.503488+00:00",
+    "read": false
+  },
+  {
+    "id": "0cb4950d-89c2-4215-b2b4-b28e623ddd6f",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "efectivo",
+      "transactionId": "ca6dcd9c-a64b-4778-831d-2c62e0fca892"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-04T13:15:22.870032+00:00",
+    "updated_at": "2025-11-04T13:15:22.870032+00:00",
+    "read": false
+  },
+  {
+    "id": "506f2170-c496-4962-bb4f-66368b9bc51c",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "pago_movil",
+      "transactionId": "33249904-7202-4aec-ad3b-ae4596989afa"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-04T16:13:34.231687+00:00",
+    "updated_at": "2025-11-04T16:13:34.231687+00:00",
+    "read": false
+  },
+  {
+    "id": "53e57722-9bd0-4c6d-8d47-bfd7545ee3e7",
+    "user_id": "e09b28c5-da11-4575-a784-86c49f39705b",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "pago_movil",
+      "transactionId": "e96f9657-f457-4fa6-bb9c-c236cbd7c77c"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-04T16:19:09.261414+00:00",
+    "updated_at": "2025-11-04T16:19:09.261414+00:00",
+    "read": false
+  },
+  {
+    "id": "4b7c5990-c101-4054-986d-fc31f71af105",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "pago_movil",
+      "transactionId": "9f95f886-76fe-4f70-8e0f-08b19c422c61"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-04T17:48:18.777033+00:00",
+    "updated_at": "2025-11-04T17:48:18.777033+00:00",
+    "read": false
+  },
+  {
+    "id": "53fc713e-5b89-4ab9-9ebe-a2e43d36d012",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $50 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 50,
+      "gateway": "pago_movil",
+      "transactionId": "cadf6084-4c20-4719-94a2-34a329d514ad"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-04T20:06:31.363907+00:00",
+    "updated_at": "2025-11-04T20:06:31.363907+00:00",
+    "read": false
+  },
+  {
+    "id": "5a1a2d97-76bc-4f62-908c-308dda5df8d5",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $16.67 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 16.67,
+      "gateway": "pago_movil",
+      "transactionId": "49cba5b2-6837-4597-887a-0dfdf9ee7e7d"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-04T20:17:37.445566+00:00",
+    "updated_at": "2025-11-04T20:17:37.445566+00:00",
+    "read": false
+  },
+  {
+    "id": "e71bef02-c096-4375-8712-b7b990defd06",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $15 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 15,
+      "gateway": "pago_movil",
+      "transactionId": "90a3bfa5-68e3-47f1-8a69-f568c99b716c"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-09T21:14:18.220084+00:00",
+    "updated_at": "2025-11-09T21:14:18.220084+00:00",
+    "read": false
+  },
+  {
+    "id": "3a8f88b9-f548-44bc-a181-9c375ef5aff2",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "9775106b-eebf-47d2-8c88-d2280c06b630"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-10T03:14:50.822777+00:00",
+    "updated_at": "2025-11-10T03:14:50.822777+00:00",
+    "read": false
+  },
+  {
+    "id": "eb409c7b-fe49-4857-8e2e-13455c1812f9",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "70dcf170-39a6-40db-a586-1b4435a91486"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-10T04:01:22.318676+00:00",
+    "updated_at": "2025-11-10T04:01:22.318676+00:00",
+    "read": false
+  },
+  {
+    "id": "99725bba-7547-4350-b278-40b7c7cc7755",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $15 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 15,
+      "gateway": "pago_movil",
+      "transactionId": "722d2b02-0996-47b7-ab58-5b6501629b63"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-10T06:18:07.561937+00:00",
+    "updated_at": "2025-11-10T06:18:07.561937+00:00",
+    "read": false
+  },
+  {
+    "id": "fecd756d-c51c-406e-b69e-f9d5c3ef08f5",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "a495fde6-c6f4-43d4-874d-71be73c594d5"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-10T12:24:31.600944+00:00",
+    "updated_at": "2025-11-10T12:24:31.600944+00:00",
+    "read": false
+  },
+  {
+    "id": "7cfc59bf-6418-404c-aa3e-f9a2fdc865c9",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "1f542347-420e-4264-bdce-e8c4a37703e3"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-10T12:26:47.303855+00:00",
+    "updated_at": "2025-11-10T12:26:47.303855+00:00",
+    "read": false
+  },
+  {
+    "id": "94131c3c-4069-4874-81a6-29c550c811d9",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $10 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 10,
+      "gateway": "pago_movil",
+      "transactionId": "87c95e3e-8ca4-49cf-8489-e3dbd85947b2"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-10T16:23:28.333612+00:00",
+    "updated_at": "2025-11-10T16:23:28.333612+00:00",
+    "read": false
+  },
+  {
+    "id": "444de3b7-b0cc-4311-b264-92ca5559c6b7",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "7194866a-11aa-4801-858c-aa12af2dc134"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-10T17:48:57.699145+00:00",
+    "updated_at": "2025-11-10T17:48:57.699145+00:00",
+    "read": false
+  },
+  {
+    "id": "eefdf031-ea44-446d-8237-25482a2c9015",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "0ae359f7-f48a-4845-bf8a-52529f7bf990"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-10T23:50:42.845954+00:00",
+    "updated_at": "2025-11-10T23:50:42.845954+00:00",
+    "read": false
+  },
+  {
+    "id": "af85477f-7f87-4be2-a36f-bea79399a524",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "e1fbab71-a4ca-4ca5-a490-c97aa96eead4"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-11T10:59:34.547781+00:00",
+    "updated_at": "2025-11-11T10:59:34.547781+00:00",
+    "read": false
+  },
+  {
+    "id": "5c00c1d6-e52f-4d0e-a22f-ec85f4819d32",
+    "user_id": "512ee00f-6e91-40be-af97-364c290541b0",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "4cff1a8e-7a4b-43b0-bbc0-b6d1487b7944"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-11T16:00:23.234959+00:00",
+    "updated_at": "2025-11-11T16:00:23.234959+00:00",
+    "read": false
+  },
+  {
+    "id": "f8d9c8ee-a2ed-4c53-972b-826f72fe6d1e",
+    "user_id": "512ee00f-6e91-40be-af97-364c290541b0",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "ed2d5fcf-d54e-4680-bfbd-ec1f7155485c"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-11T16:20:16.114575+00:00",
+    "updated_at": "2025-11-11T16:20:16.114575+00:00",
+    "read": false
+  },
+  {
+    "id": "2a737ddd-68b9-4978-8829-a8265e57ef83",
+    "user_id": "e710b216-a556-435c-95d3-d2f9db6ba890",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "3399dba6-3842-4e06-9686-3bbe8e62578c"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-11T16:25:26.057272+00:00",
+    "updated_at": "2025-11-11T16:25:26.057272+00:00",
+    "read": false
+  },
+  {
+    "id": "433cf868-a4ff-4fad-9223-dbe117deacf0",
+    "user_id": "04db1787-8f7b-4136-930e-a55468bc62b4",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "57bed6a8-76b6-4567-b50b-cc2a638e517c"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-11T16:26:33.611146+00:00",
+    "updated_at": "2025-11-11T16:26:33.611146+00:00",
+    "read": false
+  },
+  {
+    "id": "8bcd7911-42c1-4a50-859d-8918e56958b4",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "2efce82a-99d3-4e46-be4f-13c714766dc9"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-14T12:48:41.52987+00:00",
+    "updated_at": "2025-11-14T12:48:41.52987+00:00",
+    "read": false
+  },
+  {
+    "id": "93dbb263-41c0-42e6-91a1-69c9096156ae",
+    "user_id": "626e295e-7e5f-4c4e-9c87-74fd61cc2cdf",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "c3bc7f64-1015-4534-9ac8-b3141dba276b"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-14T19:48:45.124924+00:00",
+    "updated_at": "2025-11-14T19:48:45.124924+00:00",
+    "read": false
+  },
+  {
+    "id": "3d809220-d4f6-410a-a020-51058a111caa",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "76ce507c-4838-4a46-98ca-8b6d0302ed6b"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-19T17:20:44.096663+00:00",
+    "updated_at": "2025-11-19T17:20:44.096663+00:00",
+    "read": false
+  },
+  {
+    "id": "6bc00f99-e3bd-4be6-80df-10f123e501c5",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "6a45dc27-1a24-425a-922f-e68d63c01140"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-19T18:29:27.099731+00:00",
+    "updated_at": "2025-11-19T18:29:27.099731+00:00",
+    "read": false
+  },
+  {
+    "id": "a227d54e-1d8b-4755-9230-5c48b97bc284",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "875091b4-9bc5-49a8-9357-529ece977bc0"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T17:21:41.280319+00:00",
+    "updated_at": "2025-11-20T17:21:41.280319+00:00",
+    "read": false
+  },
+  {
+    "id": "fbd7632b-e013-409e-a63a-de2877c78c14",
+    "user_id": "626e295e-7e5f-4c4e-9c87-74fd61cc2cdf",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "8e9c7e93-d258-434f-970f-7072e3e49966"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T17:48:52.332315+00:00",
+    "updated_at": "2025-11-20T17:48:52.332315+00:00",
+    "read": false
+  },
+  {
+    "id": "03bdd00e-5975-4a20-bfe2-59b6f2c4aead",
+    "user_id": "beddc618-236b-4b4c-b05b-8eaa57810010",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "d6c22050-e758-469f-9b96-174559c80342"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T18:03:08.118407+00:00",
+    "updated_at": "2025-11-20T18:03:08.118407+00:00",
+    "read": false
+  },
+  {
+    "id": "651cce6a-336d-4ffd-aed3-82f40e64d378",
+    "user_id": "129c19e0-9a6b-4588-a148-fb6ef7d78768",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "a52c8b48-2dcd-4d67-9da0-34288262b2aa"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T18:04:30.431005+00:00",
+    "updated_at": "2025-11-20T18:04:30.431005+00:00",
+    "read": false
+  },
+  {
+    "id": "9b05efe8-5024-40bd-babd-9e97f50f81a6",
+    "user_id": "129c19e0-9a6b-4588-a148-fb6ef7d78768",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "727b8521-a3c1-4bc7-b309-4542cf831024"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T19:06:29.229891+00:00",
+    "updated_at": "2025-11-20T19:06:29.229891+00:00",
+    "read": false
+  },
+  {
+    "id": "1529755a-a38b-42f2-922c-e3573b0aff6a",
+    "user_id": "129c19e0-9a6b-4588-a148-fb6ef7d78768",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "9a976f5f-c9f1-4521-9a41-ab75731d4cb7"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T19:39:03.057442+00:00",
+    "updated_at": "2025-11-20T19:39:03.057442+00:00",
+    "read": false
+  },
+  {
+    "id": "42a8086c-fa11-4f9c-9256-6408a1756536",
+    "user_id": "beddc618-236b-4b4c-b05b-8eaa57810010",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "a22dbc7d-d4ca-46c1-99c4-d721a2167f40"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T19:48:37.853494+00:00",
+    "updated_at": "2025-11-20T19:48:37.853494+00:00",
+    "read": false
+  },
+  {
+    "id": "c635f01b-d684-4b95-82f9-afbca50e201d",
+    "user_id": "beddc618-236b-4b4c-b05b-8eaa57810010",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "70d6a922-d455-427a-8d89-44b3f9df03a3"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T19:51:59.764527+00:00",
+    "updated_at": "2025-11-20T19:51:59.764527+00:00",
+    "read": false
+  },
+  {
+    "id": "68ca5600-4285-4692-86d7-615231d68ac7",
+    "user_id": "beddc618-236b-4b4c-b05b-8eaa57810010",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $10 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 10,
+      "gateway": "pago_movil",
+      "transactionId": "e3663451-216d-4560-ab13-2c29544a2c02"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T20:11:11.53585+00:00",
+    "updated_at": "2025-11-20T20:11:11.53585+00:00",
+    "read": false
+  },
+  {
+    "id": "a22c44ff-a0ad-47a5-81e5-ae37f8635798",
+    "user_id": "beddc618-236b-4b4c-b05b-8eaa57810010",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $10 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 10,
+      "gateway": "pago_movil",
+      "transactionId": "7c583460-83d9-45a4-b216-eb0f97f30ef3"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-20T20:23:04.865436+00:00",
+    "updated_at": "2025-11-20T20:23:04.865436+00:00",
+    "read": false
+  },
+  {
+    "id": "328b6030-b64d-44bd-a0dd-3ce7cc5054b2",
+    "user_id": "2da09266-04de-465a-b0f5-812de17d7134",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $10 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 10,
+      "gateway": "pago_movil",
+      "transactionId": "af2a0ada-3fbb-43e7-b5ce-7d2afb6433a8"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-21T13:09:51.683724+00:00",
+    "updated_at": "2025-11-21T13:09:51.683724+00:00",
+    "read": false
+  },
+  {
+    "id": "7279b64a-46d7-49b5-970c-b8491ae57ce4",
+    "user_id": "d71d42d9-6cbd-42af-babb-da26186e89ab",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "8316706f-adbb-4752-b97b-a41c723685ea"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-21T15:58:57.129198+00:00",
+    "updated_at": "2025-11-21T15:58:57.129198+00:00",
+    "read": false
+  },
+  {
+    "id": "ea57330e-bd1c-4bd0-a2c2-ff90ec44820b",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "b1be0117-62ff-48ee-b49d-ed4a9dcec0aa"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-11-25T07:39:05.249736+00:00",
+    "updated_at": "2025-11-25T07:39:05.249736+00:00",
+    "read": false
+  },
+  {
+    "id": "0d31044c-897f-43c3-b0ad-9cd19c57a17c",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $5 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 5,
+      "gateway": "pago_movil",
+      "transactionId": "a5a8363e-b557-4101-b1e1-2aa0e575f12b"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-12-01T19:04:55.885087+00:00",
+    "updated_at": "2025-12-01T19:04:55.885087+00:00",
+    "read": false
+  },
+  {
+    "id": "d9d5072d-7477-4b97-8673-ea58cb08b68f",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "title": "Pago Confirmado",
+    "message": "Tu pago de $10 ha sido procesado exitosamente.",
+    "type": "payment",
+    "status": "pending",
+    "data": {
+      "amount": 10,
+      "gateway": "pago_movil",
+      "transactionId": "a63cbe1a-5f67-49c1-b6a2-9898b3ecdc97"
+    },
+    "sent_at": null,
+    "read_at": null,
+    "created_at": "2025-12-01T19:22:28.014336+00:00",
+    "updated_at": "2025-12-01T19:22:28.014336+00:00",
+    "read": false
+  }
+]

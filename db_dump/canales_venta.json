@@ -1,0 +1,22 @@
+[
+  {
+    "id": 4,
+    "nombre": "Backoffice",
+    "url": "https://sistema.veneventos.com/dashboard/boleteria",
+    "activo": true,
+    "created_at": "2025-08-28T10:23:39",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tipo": "web",
+    "updated_at": "2025-09-07T19:11:55.731067+00:00"
+  },
+  {
+    "id": 2,
+    "nombre": "Internet",
+    "url": "https://sistema.veneventos.com/store/",
+    "activo": true,
+    "created_at": "2025-08-03T02:10:43.848653",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "tipo": "web",
+    "updated_at": "2025-09-07T19:11:55.731067+00:00"
+  }
+]

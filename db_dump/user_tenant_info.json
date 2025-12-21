@@ -1,0 +1,62 @@
+[
+  {
+    "id": "4fced3a9-ac10-4aeb-b08e-4eefb3031062",
+    "user_id": "864017e3-ed37-4be6-8851-673094a3629a",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "is_active": true,
+    "last_login": "2025-09-09T17:49:02.110955+00:00",
+    "login_count": 25,
+    "created_at": "2025-09-09T18:19:02.110955+00:00",
+    "updated_at": "2025-09-09T18:19:02.110955+00:00"
+  },
+  {
+    "id": "83161cdb-e921-4632-9e90-8a2a7142502a",
+    "user_id": "598f3e6e-c490-4fb5-96e2-0e65c6e377e8",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "is_active": true,
+    "last_login": "2025-09-09T16:19:02.110955+00:00",
+    "login_count": 12,
+    "created_at": "2025-09-09T18:19:02.110955+00:00",
+    "updated_at": "2025-09-09T18:19:02.110955+00:00"
+  },
+  {
+    "id": "4f96211a-f15d-438f-9f6e-b3c55373b273",
+    "user_id": "e22f0814-afd4-4b22-b110-efa2c8f48c89",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "is_active": false,
+    "last_login": "2025-09-08T18:19:02.110955+00:00",
+    "login_count": 3,
+    "created_at": "2025-09-09T18:19:02.110955+00:00",
+    "updated_at": "2025-09-09T18:19:02.110955+00:00"
+  },
+  {
+    "id": "3aac70d8-ea6b-4f8d-9d90-b759918a0db6",
+    "user_id": "85f0eab4-c549-4405-9dd6-72084cdc1bd5",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "is_active": true,
+    "last_login": "2025-09-09T17:49:49.817053+00:00",
+    "login_count": 25,
+    "created_at": "2025-09-09T18:19:49.817053+00:00",
+    "updated_at": "2025-09-09T18:19:49.817053+00:00"
+  },
+  {
+    "id": "275b8f57-9a15-4a74-a22c-7d09d07034d9",
+    "user_id": "626e295e-7e5f-4c4e-9c87-74fd61cc2cdf",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "is_active": true,
+    "last_login": "2025-09-09T16:19:49.817053+00:00",
+    "login_count": 12,
+    "created_at": "2025-09-09T18:19:49.817053+00:00",
+    "updated_at": "2025-09-09T18:19:49.817053+00:00"
+  },
+  {
+    "id": "2d47708b-d163-4eb5-87b5-8de54c3ce9dc",
+    "user_id": "3eb4f9df-cf61-4d5f-b3a7-bafcb5dea9c2",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "is_active": false,
+    "last_login": "2025-09-08T18:19:49.817053+00:00",
+    "login_count": 3,
+    "created_at": "2025-09-09T18:19:49.817053+00:00",
+    "updated_at": "2025-09-09T18:19:49.817053+00:00"
+  }
+]

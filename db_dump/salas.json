@@ -1,0 +1,11 @@
+[
+  {
+    "id": 52,
+    "nombre": "sala 1",
+    "recinto_id": 67,
+    "capacidad": 0,
+    "fecha_creacion": "2025-08-14T12:19:22.160907",
+    "usuario_id": null,
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  }
+]

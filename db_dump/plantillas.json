@@ -1,0 +1,13 @@
+[
+  {
+    "id": 9,
+    "nombre": "Precios",
+    "detalles": "[{\"zonaId\":22,\"entradaId\":\"4d80ae04-a6a3-4c47-b0fb-fe36dd1e0f92\",\"precio\":10,\"comision\":0,\"precioGeneral\":0,\"canales\":[4,2,3],\"orden\":0},{\"zonaId\":22,\"entradaId\":\"3c787cd9-c7dd-480f-be30-6ef42a13342d\",\"precio\":10,\"comision\":0,\"precioGeneral\":0,\"canales\":[4,2,3],\"orden\":0},{\"zonaId\":23,\"entradaId\":\"4d80ae04-a6a3-4c47-b0fb-fe36dd1e0f92\",\"precio\":5,\"comision\":0,\"precioGeneral\":0,\"canales\":[4,2,3],\"orden\":0},{\"zonaId\":23,\"entradaId\":\"3c787cd9-c7dd-480f-be30-6ef42a13342d\",\"precio\":105,\"comision\":0,\"precioGeneral\":0,\"canales\":[4,2,3],\"orden\":0}]",
+    "recinto": 67,
+    "sala": 52,
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "created_at": "2025-09-19T13:37:34.646761+00:00",
+    "updated_at": "2025-09-19T13:44:37.162681+00:00",
+    "descripcion": "[{\"zonaId\":22,\"entradaId\":\"4d80ae04-a6a3-4c47-b0fb-fe36dd1e0f92\",\"precio\":10,\"comision\":0,\"precioGeneral\":0,\"canales\":[4,2,3],\"orden\":0},{\"zonaId\":22,\"entradaId\":\"3c787cd9-c7dd-480f-be30-6ef42a13342d\",\"precio\":10,\"comision\":0,\"precioGeneral\":0,\"canales\":[4,2,3],\"orden\":0},{\"zonaId\":23,\"entradaId\":\"4d80ae04-a6a3-4c47-b0fb-fe36dd1e0f92\",\"precio\":5,\"comision\":0,\"precioGeneral\":0,\"canales\":[4,2,3],\"orden\":0},{\"zonaId\":23,\"entradaId\":\"3c787cd9-c7dd-480f-be30-6ef42a13342d\",\"precio\":105,\"comision\":0,\"precioGeneral\":0,\"canales\":[4,2,3],\"orden\":0}]"
+  }
+]

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "97a83dfb-84fb-40ca-b196-2d3e569033da",
+    "nombre": "Camisa",
+    "descripcion": "Roja",
+    "imagen_url": "{\"file\":{\"uid\":\"rc-upload-1762811358481-2\"},\"fileList\":[{\"uid\":\"rc-upload-1762811358481-2\",\"lastModified\":1762811428272,\"lastModifiedDate\":\"2025-11-10T21:50:28.272Z\",\"name\":\"depositphotos_50842825-stock-illustration-red-t-shirt-template.jpg\",\"size\":7968,\"type\":\"image/jpeg\",\"percent\":0,\"originFileObj\":{\"uid\":\"rc-upload-1762811358481-2\"}}]}",
+    "precio_base": 0,
+    "categoria": "servicios",
+    "activo": true,
+    "evento_id": "b0b48dd8-7c52-462a-8c79-b00129422810",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "created_at": "2025-11-10T22:10:04.561371+00:00",
+    "updated_at": "2025-11-10T22:10:04.561371+00:00"
+  }
+]

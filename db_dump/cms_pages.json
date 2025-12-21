@@ -1,0 +1,342 @@
+[
+  {
+    "id": 58,
+    "slug": "venezuela",
+    "nombre": "Venezuela",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": []
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-28T13:56:37.391479",
+    "updated_at": "2025-08-29T00:54:49.705319",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 57,
+    "slug": "usa",
+    "nombre": "Usa",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": []
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-28T13:56:37.391479",
+    "updated_at": "2025-08-29T00:54:49.705319",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 44,
+    "slug": "faq",
+    "nombre": "FAQ",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": []
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-28T13:56:37.391479",
+    "updated_at": "2025-09-11T17:17:36.749151",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 41,
+    "slug": "acerca-de",
+    "nombre": "Acerca de",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": []
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-28T13:56:37.391479",
+    "updated_at": "2025-09-11T17:17:43.768729",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 39,
+    "slug": "recintos",
+    "nombre": "Recintos",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": []
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-28T13:56:37.391479",
+    "updated_at": "2025-09-11T17:17:45.513348",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 42,
+    "slug": "terminos",
+    "nombre": "Términos y Condiciones",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": [
+        {
+          "type": "Información del evento",
+          "config": {}
+        }
+      ]
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-28T13:56:37.391479",
+    "updated_at": "2025-09-11T17:18:25.980287",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 40,
+    "slug": "contacto",
+    "nombre": "Contacto",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": []
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-28T13:56:37.391479",
+    "updated_at": "2025-09-12T13:20:15.129542",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 43,
+    "slug": "privacidad",
+    "nombre": "Política de Privacidad",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": [
+        {
+          "type": "Listado de eventos",
+          "config": {}
+        }
+      ]
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-28T13:56:37.391479",
+    "updated_at": "2025-09-11T17:17:26.239378",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 38,
+    "slug": "eventos",
+    "nombre": "Eventos",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": []
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-28T13:56:37.391479",
+    "updated_at": "2025-09-11T17:17:36.337496",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 110,
+    "slug": "store",
+    "nombre": "store",
+    "descripcion": "",
+    "tipo": "custom",
+    "estado": "published",
+    "meta_title": null,
+    "meta_description": null,
+    "meta_keywords": null,
+    "og_image": null,
+    "configuracion": {},
+    "widgets": {
+      "footer": [],
+      "header": [],
+      "content": [
+        {
+          "type": "Listado de eventos",
+          "config": {
+            "contentType": "todos",
+            "tagCategory": ""
+          }
+        },
+        {
+          "type": "Eventos Destacados",
+          "config": {}
+        },
+        {
+          "type": "Evento dinámico banner grande",
+          "config": {}
+        },
+        {
+          "type": "Evento dinámico banner mediano",
+          "config": {}
+        },
+        {
+          "type": "Información del evento",
+          "config": {}
+        },
+        {
+          "type": "Banner",
+          "config": {}
+        },
+        {
+          "type": "Código HTML",
+          "config": {}
+        },
+        {
+          "type": "Título",
+          "config": {}
+        },
+        {
+          "type": "Subtítulo",
+          "config": {
+            "texto": "gvg"
+          }
+        },
+        {
+          "type": "Paragraph",
+          "config": {}
+        },
+        {
+          "type": "Cabecera email",
+          "config": {}
+        },
+        {
+          "type": "Pie email",
+          "config": {}
+        },
+        {
+          "type": "Botón",
+          "config": {}
+        },
+        {
+          "type": "Pie email notificación",
+          "config": {
+            "html": "gubh"
+          }
+        },
+        {
+          "type": "Información de Recinto",
+          "config": {}
+        },
+        {
+          "type": "Información de Función",
+          "config": {}
+        },
+        {
+          "type": "Preguntas frecuentes",
+          "config": {}
+        },
+        {
+          "type": "Información del evento",
+          "config": {}
+        }
+      ]
+    },
+    "css_custom": null,
+    "js_custom": null,
+    "usuario_creador": null,
+    "fecha_publicacion": null,
+    "created_at": "2025-08-29T00:35:24.599332",
+    "updated_at": "2025-09-11T17:18:42.750678",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  }
+]

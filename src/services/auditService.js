@@ -130,8 +130,8 @@ class AuditService {
       // Preparar datos de auditoría
       const auditData = {
         action,
-        details: JSON.stringify(hashedDetails),
-        metadata: JSON.stringify(metadata),
+        details: hashedDetails,
+        metadata: metadata,
         resource_id: resourceId,
         resource_type: resourceType,
         severity,
@@ -230,7 +230,7 @@ class AuditService {
       // Fallback: almacenar localmente
       await this.storeLocally({
         action,
-        details: JSON.stringify(details),
+        details: details,
         error: error?.message || 'Unknown error',
         created_at: new Date().toISOString()
       });

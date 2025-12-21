@@ -1,0 +1,32 @@
+[
+  {
+    "id": 7,
+    "key": "cart-seat-expiration",
+    "value": "10",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 16,
+    "key": "site_name",
+    "value": "Mi Sistema de Eventos",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 17,
+    "key": "site_description",
+    "value": "Sistema de gestión de eventos y boletería",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 18,
+    "key": "default_currency",
+    "value": "USD",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 19,
+    "key": "timezone",
+    "value": "America/Mexico_City",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  }
+]

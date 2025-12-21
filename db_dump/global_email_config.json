@@ -1,0 +1,17 @@
+[
+  {
+    "id": "d2838ba6-3a78-46e0-b1fe-f632d5a5a3da",
+    "provider": "smtp",
+    "smtp_host": "mail.omegaboletos.com",
+    "smtp_port": 465,
+    "smtp_secure": true,
+    "smtp_user": "email@omegaboletos.com",
+    "smtp_pass": "",
+    "from_email": "email@omegaboletos.com",
+    "from_name": "Omega Boletos",
+    "reply_to": "email@omegaboletos.com",
+    "is_active": true,
+    "created_at": "2025-10-29T18:46:02.48924+00:00",
+    "updated_at": "2025-10-29T18:46:02.48924+00:00"
+  }
+]

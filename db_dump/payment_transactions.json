@@ -1,0 +1,172 @@
+[
+  {
+    "id": "aef18172-af96-4733-a022-9e72a179f26e",
+    "order_id": "41AV6GKE",
+    "gateway_id": null,
+    "amount": 5,
+    "currency": "USD",
+    "status": "completed",
+    "gateway_transaction_id": null,
+    "gateway_response": null,
+    "created_at": "2025-11-25T11:11:12.791+00:00",
+    "updated_at": "2025-11-25T11:10:04.661103+00:00",
+    "user_id": "beddc618-236b-4b4c-b05b-8eaa57810010",
+    "evento_id": "b0b48dd8-7c52-462a-8c79-b00129422810",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "locator": "41AV6GKE",
+    "funcion_id": 43,
+    "payment_method": "PayPal",
+    "gateway_name": "manual",
+    "seats": [
+      {
+        "id": "silla_1760365774051_18",
+        "_id": "silla_1760365774051_18",
+        "mesa": null,
+        "name": "6",
+        "zona": 23,
+        "price": 5,
+        "seatId": "silla_1760365774051_18",
+        "seat_id": "silla_1760365774051_18"
+      }
+    ],
+    "monto": 5,
+    "usuario_id": "beddc618-236b-4b4c-b05b-8eaa57810010",
+    "event": "b0b48dd8-7c52-462a-8c79-b00129422810",
+    "funcion": 43,
+    "processed_by": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "payment_gateway_id": "7e797aa6-ebbf-4b3a-8b5d-caa8992018f4",
+    "fecha": "2025-11-25T11:11:12.791+00:00",
+    "payments": [
+      {
+        "amount": 5,
+        "method": "PayPal",
+        "status": "completed",
+        "metadata": null,
+        "reference": null
+      }
+    ],
+    "referrer": null,
+    "discountCode": null,
+    "reservationDeadline": null,
+    "user": "beddc618-236b-4b4c-b05b-8eaa57810010",
+    "metadata": {},
+    "afiliado_id": null,
+    "comision_afiliado": 0
+  },
+  {
+    "id": "a5a8363e-b557-4101-b1e1-2aa0e575f12b",
+    "order_id": "UFIGE553",
+    "gateway_id": "85106f78-c27f-493a-8672-a00212e9ce68",
+    "amount": 5,
+    "currency": "USD",
+    "status": "completed",
+    "gateway_transaction_id": null,
+    "gateway_response": null,
+    "created_at": "2025-12-01T19:04:54.848372+00:00",
+    "updated_at": "2025-12-01T19:04:54.848372+00:00",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "evento_id": "b0b48dd8-7c52-462a-8c79-b00129422810",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "locator": "UFIGE553",
+    "funcion_id": 43,
+    "payment_method": "Pago Móvil",
+    "gateway_name": "Pago Móvil",
+    "seats": [
+      {
+        "id": "silla_1764345964928_14",
+        "_id": "silla_1764345964928_14",
+        "mesa": "shape_1764345952760",
+        "name": 14,
+        "zona": {
+          "id": 23,
+          "color": "#00f1f5",
+          "nombre": "PLATA"
+        },
+        "price": 5,
+        "seatId": "silla_1764345964928_14",
+        "seat_id": "silla_1764345964928_14"
+      }
+    ],
+    "monto": 5,
+    "usuario_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "event": "b0b48dd8-7c52-462a-8c79-b00129422810",
+    "funcion": 43,
+    "processed_by": null,
+    "payment_gateway_id": "85106f78-c27f-493a-8672-a00212e9ce68",
+    "fecha": "2025-12-01T19:04:54.848372+00:00",
+    "payments": [
+      {
+        "amount": 5,
+        "method": "Pago Móvil",
+        "status": "completed",
+        "metadata": null,
+        "reference": "UFIGE553"
+      }
+    ],
+    "referrer": null,
+    "discountCode": null,
+    "reservationDeadline": null,
+    "user": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "metadata": null,
+    "afiliado_id": null,
+    "comision_afiliado": 0
+  },
+  {
+    "id": "a63cbe1a-5f67-49c1-b6a2-9898b3ecdc97",
+    "order_id": "KKLTLVI1",
+    "gateway_id": "85106f78-c27f-493a-8672-a00212e9ce68",
+    "amount": 10,
+    "currency": "USD",
+    "status": "completed",
+    "gateway_transaction_id": null,
+    "gateway_response": null,
+    "created_at": "2025-12-01T19:22:27.158575+00:00",
+    "updated_at": "2025-12-01T19:22:27.158575+00:00",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "evento_id": "b0b48dd8-7c52-462a-8c79-b00129422810",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "locator": "KKLTLVI1",
+    "funcion_id": 43,
+    "payment_method": "Pago Móvil",
+    "gateway_name": "Pago Móvil",
+    "seats": [
+      {
+        "id": "silla_1760365774051_17",
+        "_id": "silla_1760365774051_17",
+        "mesa": "Mesa 12",
+        "name": "5",
+        "zona": {
+          "id": 22,
+          "color": "#ff0000",
+          "nombre": "ORO"
+        },
+        "price": 10,
+        "seatId": "silla_1760365774051_17",
+        "seat_id": "silla_1760365774051_17"
+      }
+    ],
+    "monto": 10,
+    "usuario_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "event": "b0b48dd8-7c52-462a-8c79-b00129422810",
+    "funcion": 43,
+    "processed_by": null,
+    "payment_gateway_id": "85106f78-c27f-493a-8672-a00212e9ce68",
+    "fecha": "2025-12-01T19:22:27.158575+00:00",
+    "payments": [
+      {
+        "amount": 10,
+        "method": "Pago Móvil",
+        "status": "completed",
+        "metadata": null,
+        "reference": "KKLTLVI1"
+      }
+    ],
+    "referrer": null,
+    "discountCode": null,
+    "reservationDeadline": null,
+    "user": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "metadata": null,
+    "afiliado_id": null,
+    "comision_afiliado": 0
+  }
+]

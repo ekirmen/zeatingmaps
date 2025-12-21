@@ -1,0 +1,26 @@
+[
+  {
+    "id": 5,
+    "nombre": "e",
+    "porcentaje": 1,
+    "tenant_id": null
+  },
+  {
+    "id": 6,
+    "nombre": "ff",
+    "porcentaje": 3,
+    "tenant_id": null
+  },
+  {
+    "id": 10,
+    "nombre": "iva",
+    "porcentaje": 10,
+    "tenant_id": "0a67f6bb-9895-4710-bb8b-dac8d7807396"
+  },
+  {
+    "id": 11,
+    "nombre": "iva ",
+    "porcentaje": 16,
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  }
+]

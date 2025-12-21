@@ -1,0 +1,138 @@
+[
+  {
+    "id": "82c55373-ef69-48c0-a1fb-ebcf4eb4e816",
+    "payment_id": "a5a8363e-b557-4101-b1e1-2aa0e575f12b",
+    "locator": "UFIGE553",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "downloaded_at": "2025-12-01T19:05:58.679+00:00",
+    "download_method": "pdf_download",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "ip_address": "154.62.127.253",
+    "metadata": {
+      "seats_count": 1,
+      "payment_status": "completed",
+      "download_source": "web"
+    },
+    "created_at": "2025-12-01T19:05:58.723173+00:00"
+  },
+  {
+    "id": "245ac237-5a04-4633-bf81-ddd00deb5fb7",
+    "payment_id": "a5a8363e-b557-4101-b1e1-2aa0e575f12b",
+    "locator": "UFIGE553",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "downloaded_at": "2025-12-01T19:06:04.626+00:00",
+    "download_method": "pdf_download",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "ip_address": "154.62.127.253",
+    "metadata": {
+      "seats_count": 1,
+      "payment_status": "completed",
+      "download_source": "web"
+    },
+    "created_at": "2025-12-01T19:06:04.685745+00:00"
+  },
+  {
+    "id": "ab491406-676a-4823-b175-eeb65ed14d82",
+    "payment_id": "a5a8363e-b557-4101-b1e1-2aa0e575f12b",
+    "locator": "UFIGE553",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "downloaded_at": "2025-12-01T19:06:05.821+00:00",
+    "download_method": "pdf_download",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "ip_address": "154.62.127.253",
+    "metadata": {
+      "seats_count": 1,
+      "payment_status": "completed",
+      "download_source": "web"
+    },
+    "created_at": "2025-12-01T19:06:05.886173+00:00"
+  },
+  {
+    "id": "b54cd44d-da9b-46cd-8c57-b28501a40abd",
+    "payment_id": "a5a8363e-b557-4101-b1e1-2aa0e575f12b",
+    "locator": "UFIGE553",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "downloaded_at": "2025-12-01T19:06:06.853+00:00",
+    "download_method": "pdf_download",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "ip_address": "154.62.127.253",
+    "metadata": {
+      "seats_count": 1,
+      "payment_status": "completed",
+      "download_source": "web"
+    },
+    "created_at": "2025-12-01T19:06:06.874227+00:00"
+  },
+  {
+    "id": "84686336-5745-4c8e-bfa1-7b5914478fa3",
+    "payment_id": "a5a8363e-b557-4101-b1e1-2aa0e575f12b",
+    "locator": "UFIGE553",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "downloaded_at": "2025-12-01T19:06:16.798+00:00",
+    "download_method": "pdf_download",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "ip_address": "154.62.127.253",
+    "metadata": {
+      "seats_count": 1,
+      "payment_status": "completed",
+      "download_source": "web"
+    },
+    "created_at": "2025-12-01T19:06:16.829295+00:00"
+  },
+  {
+    "id": "479e0f88-1d84-4cd0-81a5-8ff759843fae",
+    "payment_id": "a5a8363e-b557-4101-b1e1-2aa0e575f12b",
+    "locator": "UFIGE553",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "downloaded_at": "2025-12-01T19:22:07.484+00:00",
+    "download_method": "pdf_download",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "ip_address": "154.62.127.253",
+    "metadata": {
+      "seats_count": 1,
+      "payment_status": "completed",
+      "download_source": "web"
+    },
+    "created_at": "2025-12-01T19:22:07.515595+00:00"
+  },
+  {
+    "id": "c537cde7-8bef-4383-a6bf-283b92f7ea0d",
+    "payment_id": "a63cbe1a-5f67-49c1-b6a2-9898b3ecdc97",
+    "locator": "KKLTLVI1",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "downloaded_at": "2025-12-01T19:22:35.936+00:00",
+    "download_method": "pdf_download",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "ip_address": "154.62.127.253",
+    "metadata": {
+      "seats_count": 1,
+      "payment_status": "completed",
+      "download_source": "web"
+    },
+    "created_at": "2025-12-01T19:22:35.991892+00:00"
+  },
+  {
+    "id": "4e3a7a1b-0af4-4f6c-8c77-f1c16a8edb7d",
+    "payment_id": "a63cbe1a-5f67-49c1-b6a2-9898b3ecdc97",
+    "locator": "KKLTLVI1",
+    "user_id": "cf142159-506f-4fe6-a45c-98ca2fd07f20",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8",
+    "downloaded_at": "2025-12-01T19:22:55.716+00:00",
+    "download_method": "pdf_download",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "ip_address": "154.62.127.253",
+    "metadata": {
+      "seats_count": 1,
+      "payment_status": "completed",
+      "download_source": "web"
+    },
+    "created_at": "2025-12-01T19:22:55.741915+00:00"
+  }
+]

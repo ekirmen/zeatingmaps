@@ -1,0 +1,20 @@
+[
+  {
+    "id": 22,
+    "nombre": "ORO",
+    "aforo": 3,
+    "color": "#ff0000",
+    "numerada": false,
+    "sala_id": "52",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  },
+  {
+    "id": 23,
+    "nombre": "PLATA",
+    "aforo": 0,
+    "color": "#00f1f5",
+    "numerada": true,
+    "sala_id": "52",
+    "tenant_id": "9dbdb86f-8424-484c-bb76-0d9fa27573c8"
+  }
+]
