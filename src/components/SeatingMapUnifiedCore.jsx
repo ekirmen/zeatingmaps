@@ -1120,14 +1120,14 @@ const SeatingMapUnified = ({
       overflow: 'hidden',
       maxWidth: '100%'
     }}>
-      {imagesLoading && (
+      {/* imagesLoading && (
         <MapLoadingProgress
           loading={imagesLoading}
           progress={imageLoadProgress}
           stage={imageLoadStage}
           showDetails={true}
         />
-      )}
+      ) */}
 
 
       <div style={{
