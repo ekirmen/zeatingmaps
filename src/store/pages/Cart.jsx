@@ -412,23 +412,18 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
     // El carrito se muestra sin requerir sesión; el login se solicita al pagar
 
     return (
-        <>
+        <div className="flex flex-col h-full bg-white rounded-lg shadow-sm overflow-hidden">
             {/* Facebook Pixel */}
             <FacebookPixel />
 
-            <div className="store-card-header" style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                borderBottom: '1px solid var(--store-gray-200)',
-                paddingBottom: '16px'
-            }}>
+            <div className="store-card-header p-4 border-b border-gray-200">
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    marginBottom: '12px'
                 }}>
-                    <h1 className="store-text-xl md:store-text-2xl store-font-bold">
+                    <h1 className="store-text-xl md:store-text-2xl store-font-bold m-0">
                         Carrito de Compras
                         {itemCount > 0 && (
                             <span className="store-ml-2 store-text-base store-font-normal store-text-gray-500">
@@ -460,10 +455,11 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 )}
             </div>
 
-            <div className="store-card-body" style={{ flex: '1 1 auto', overflow: 'auto' }}>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 bg-white relative">
                 {/* Quick Actions */}
                 {itemCount > 0 && (
-                    <div className="store-space-y-4 mb-6">
+                    <div className="mb-4">
                         <button
                             onClick={clearCart}
                             className="store-button store-button-secondary store-button-sm"
@@ -475,10 +471,10 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 )}
 
                 {/* Cart Items */}
-                <div className="max-h-[400px] overflow-y-auto store-space-y-4">
+                <div className="store-space-y-4">
                     {itemCount === 0 && !currentLocator ? (
-                        <div className="store-text-center store-text-gray-500 py-8">
-                            <ShoppingCartOutlined className="text-4xl mb-2" />
+                        <div className="store-text-center store-text-gray-500 py-8 flex flex-col items-center justify-center h-full">
+                            <ShoppingCartOutlined className="text-4xl mb-4 text-gray-300" />
                             <p className="store-text-lg store-font-medium">No hay items en el carrito</p>
                             <p className="store-text-sm store-text-gray-400 mt-2">Añade asientos al carrito</p>
                         </div>
@@ -486,12 +482,12 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                         <>
                             {/* Locator Seats Section */}
                             {currentLocator && locatorSeats.length > 0 && (
-                                <div className="store-space-y-4">
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 md:gap-4">
-                                        <h3 className="store-text-base md:store-text-lg store-font-semibold store-text-gray-900 break-words">
+                                <div className="store-space-y-4 mb-6">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 md:gap-4 pb-2 border-b border-gray-100">
+                                        <h3 className="store-text-base md:store-text-lg store-font-semibold store-text-gray-900 break-words m-0">
                                             <UserOutlined className="mr-2" />
-                                            <span className="block sm:inline">Asientos del Localizador:</span>
-                                            <span className="block sm:inline font-mono text-xs sm:text-sm">{currentLocator}</span>
+                                            <span className="block sm:inline">Localizador:</span>
+                                            <span className="block sm:inline font-mono text-xs sm:text-sm ml-1 bg-gray-100 px-2 py-1 rounded">{currentLocator}</span>
                                         </h3>
                                         <div className="flex-shrink-0">
                                             <BulkTicketsDownloadButton
@@ -503,17 +499,17 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                     </div>
 
                                     {locatorSeats.map((seat) => (
-                                        <div key={seat.id} className="store-cart-item">
-                                            <div className="store-cart-item-header">
-                                                <div className="store-cart-item-title break-words">
+                                        <div key={seat.id} className="store-cart-item bg-gray-50 rounded-lg p-3">
+                                            <div className="store-cart-item-header flex justify-between mb-2">
+                                                <div className="store-cart-item-title font-medium break-words">
                                                     {seat.nombre || `Asiento ${seat.id}`}
                                                 </div>
-                                                <div className="store-cart-item-price">
+                                                <div className="store-cart-item-price font-bold">
                                                     ${formatPrice(seat.precio)}
                                                 </div>
                                             </div>
-                                            <div className="store-text-xs md:store-text-sm store-text-gray-600 mb-2 md:mb-3">
-                                                {seat.zona || 'General'} - {seat.isPaid ? 'PAGADO' : 'RESERVADO'}
+                                            <div className="store-text-xs md:store-text-sm store-text-gray-600 mb-3">
+                                                {seat.zona || 'General'} - <span className={seat.isPaid ? "text-green-600 font-semibold" : "text-yellow-600 font-semibold"}>{seat.isPaid ? 'PAGADO' : 'RESERVADO'}</span>
                                             </div>
                                             <div className="store-cart-item-actions flex flex-wrap gap-2">
                                                 <TicketDownloadButton
@@ -523,29 +519,25 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                                 />
                                                 <button
                                                     disabled={seat.isPaid}
-                                                    className={`store-button store-button-sm flex-1 sm:flex-none ${seat.isPaid ? 'store-button-ghost' : 'store-button-secondary'}`}
+                                                    className={`store-button store-button-sm flex-1 sm:flex-none ${seat.isPaid ? 'store-button-ghost opacity-50 cursor-not-allowed' : 'store-button-secondary hover:bg-red-50 hover:text-red-500 hover:border-red-200'}`}
                                                 >
                                                     <DeleteOutlined />
                                                     <span className="hidden sm:inline">{seat.isPaid ? 'Pagado' : 'Quitar'}</span>
                                                     <span className="sm:hidden">{seat.isPaid ? 'Pagado' : 'Quitar'}</span>
                                                 </button>
-                                                {!seat.isPaid && (
-                                                    <span className="store-badge store-badge-warning">Pendiente</span>
-                                                )}
                                             </div>
                                         </div>
                                     ))}
 
                                     {/* Payment Status Summary */}
-                                    <div className="store-alert store-alert-info">
-                                        <div className="flex justify-between items-center store-text-sm">
-                                            <span>Asientos Pagados: <strong className="store-text-success">{paidSeats.length}</strong></span>
-                                            <span>Asientos Pendientes: <strong className="store-text-warning">{unpaidSeats.length}</strong></span>
+                                    <div className="store-alert store-alert-info bg-blue-50 border-blue-100 text-blue-800 p-3 rounded-lg text-sm">
+                                        <div className="flex justify-between items-center">
+                                            <span>Pagados: <strong className="text-green-600">{paidSeats.length}</strong></span>
+                                            <span>Pendientes: <strong className="text-orange-500">{unpaidSeats.length}</strong></span>
                                         </div>
                                         {unpaidSeats.length > 0 && (
-                                            <div className="store-alert store-alert-warning mt-3">
-                                                š ï¸ Hay {unpaidSeats.length} asientos pendientes de pago.
-                                                Los tickets solo se pueden descargar cuando est©n completamente pagados.
+                                            <div className="mt-2 text-xs opacity-90">
+                                                Hay asientos pendientes. Paga para descargar tickets.
                                             </div>
                                         )}
                                     </div>
@@ -555,7 +547,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             {/* Current Cart Seats Section */}
                             {filteredItems && Array.isArray(filteredItems) && filteredItems.length > 0 && (
                                 <div className="mb-6">
-                                    <Title level={5} className="mb-2">
+                                    <Title level={5} className="mb-3 px-1 flex items-center">
                                         <UserOutlined className="mr-2" />
                                         Asientos Seleccionados ({(filteredItems && Array.isArray(filteredItems) ? filteredItems.length : 0)})
                                     </Title>
@@ -565,9 +557,9 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
 
                                         return (
                                             <Card
-                                                key={item.sillaId}
+                                                key={item.sillaId || Math.random()}
                                                 size="small"
-                                                className="mb-2"
+                                                className="mb-3 shadow-sm hover:shadow-md transition-shadow"
                                                 actions={[
                                                     <Button
                                                         type="text"
@@ -575,31 +567,25 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                                         onClick={() => removeFromCart(seatId)}
                                                         size="small"
                                                         disabled={isPaid}
-                                                        className={isPaid ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"}
+                                                        className={`w-full h-full rounded-none ${isPaid ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-red-500"}`}
                                                     >
                                                         {isPaid ? 'Pagado' : 'Eliminar'}
                                                     </Button>
                                                 ]}
                                             >
-                                                <div className="flex justify-between items-center">
-                                                    <div className="flex-1">
-                                                        <div className="font-medium text-sm">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex-1 pr-2">
+                                                        <div className="font-semibold text-sm mb-1">
                                                             {item.nombre || `Asiento ${item.sillaId || item.id || item._id}`}
                                                         </div>
-                                                        <div className="text-xs text-gray-600" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                            {item.nombreZona && (
-                                                                <div>Zona: {item.nombreZona}</div>
-                                                            )}
-                                                            {item.nombreMesa && (
-                                                                <div>Mesa: {item.nombreMesa}</div>
-                                                            )}
-                                                            {!item.nombreZona && !item.nombreMesa && (
-                                                                <div>General</div>
-                                                            )}
+                                                        <div className="text-xs text-gray-500 space-y-0.5">
+                                                            {item.nombreZona && <div>Zona: {item.nombreZona}</div>}
+                                                            {item.nombreMesa && <div>Mesa: {item.nombreMesa}</div>}
+                                                            {!item.nombreZona && !item.nombreMesa && <div>General</div>}
                                                         </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <div className="font-bold text-sm">
+                                                    <div className="text-right whitespace-nowrap">
+                                                        <div className="font-bold text-gray-800">
                                                             ${formatPrice(item.precio || 0)}
                                                         </div>
                                                     </div>
@@ -613,22 +599,22 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                             {/* Products Section */}
                             {products && Array.isArray(products) && products.length > 0 && (
                                 <div>
-                                    <Title level={5} className="mb-2">
+                                    <Title level={5} className="mb-3 px-1 flex items-center">
                                         <ShoppingCartOutlined className="mr-2" />
                                         Productos ({(products && Array.isArray(products) ? products.length : 0)})
                                     </Title>
                                     {(products && Array.isArray(products) ? products.map((product) => (
                                         <Card
-                                            key={product.id}
+                                            key={product.id || Math.random()}
                                             size="small"
-                                            className="mb-2"
+                                            className="mb-3 shadow-sm"
                                             actions={[
                                                 <Button
                                                     type="text"
                                                     icon={<DeleteOutlined />}
                                                     onClick={() => removeProduct(product.id)}
                                                     size="small"
-                                                    className="text-gray-600 hover:text-gray-900"
+                                                    className="w-full h-full text-gray-600 hover:text-red-500"
                                                 >
                                                     Eliminar
                                                 </Button>
@@ -638,11 +624,11 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                                                 <div>
                                                     <Text strong>{product.name}</Text>
                                                     <br />
-                                                    <Text type="secondary">
-                                                        Cantidad: {product.quantity}
+                                                    <Text type="secondary" className="text-xs">
+                                                        Cant: {product.quantity}
                                                     </Text>
                                                 </div>
-                                                <Text strong className="text-lg">
+                                                <Text strong className="text-lg text-gray-800">
                                                     ${formatPrice(product.price * product.quantity)}
                                                 </Text>
                                             </div>
@@ -653,60 +639,52 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                         </>
                     )}
                 </div>
+            </div>
 
-                {/* Summary and Checkout - Siempre visible */}
-                <div className="store-cart-summary" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--store-gray-200)' }}>
-                    {itemCount > 0 && (
-                        <div className="store-space-y-3 mb-4">
-                            <div className="store-cart-summary-row">
-                                <span className="store-text-gray-600">Subtotal:</span>
-                                <span className="store-font-semibold">${formatPrice(subtotal)}</span>
-                            </div>
-                            {currentLocator && unpaidSeats.length > 0 && (
-                                <div className="store-cart-summary-row store-text-warning">
-                                    <span>Pendiente de pago:</span>
-                                    <span>${formatPrice((unpaidSeats && Array.isArray(unpaidSeats) ? unpaidSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0))}</span>
-                                </div>
-                            )}
-                            <div className="store-cart-summary-total">
-                                <span>Total a pagar:</span>
-                                <span>${formatPrice(subtotal)}</span>
-                            </div>
+            {/* Sticky Footer Summary and Checkout */}
+            {itemCount > 0 && (
+                <div className="store-cart-summary p-4 bg-gray-50 border-t border-gray-200 mt-auto shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+                    <div className="store-space-y-2 mb-4">
+                        <div className="flex justify-between text-gray-600 text-sm">
+                            <span>Subtotal:</span>
+                            <span className="font-semibold">${formatPrice(subtotal)}</span>
                         </div>
-                    )}
+                        {currentLocator && unpaidSeats.length > 0 && (
+                            <div className="flex justify-between text-orange-600 text-sm">
+                                <span>Pendiente:</span>
+                                <span>${formatPrice((unpaidSeats && Array.isArray(unpaidSeats) ? unpaidSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0))}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between text-lg font-bold text-gray-900 border-t border-gray-200 pt-2 mt-2">
+                            <span>Total:</span>
+                            <span>${formatPrice(subtotal)}</span>
+                        </div>
+                    </div>
 
-                    {/* Bot³n de pago - Siempre visible si hay items */}
-                    {itemCount > 0 && (
-                        <button
-                            onClick={handleCheckout}
-                            className="store-button store-button-primary store-button-lg store-button-block"
-                            style={{
-                                marginTop: '0',
-                                width: '100%',
-                                display: 'block'
-                            }}
-                        >
-                            Proceder al Pago
-                        </button>
-                    )}
+                    {/* Botón de pago - Siempre visible aqui */}
+                    <button
+                        onClick={handleCheckout}
+                        className="store-button store-button-primary store-button-lg w-full py-3 text-base font-bold shadow-md hover:shadow-lg transition-all"
+                    >
+                        Proceder al Pago
+                    </button>
 
-                    {/* Bot³n de descarga de tickets pagados */}
+                    {/* Botón de descarga de tickets pagados */}
                     {currentLocator && paidSeats.length > 0 && (
                         <button
                             onClick={() => {
                                 const downloadBtn = document.querySelector('[data-bulk-download]');
                                 if (downloadBtn) downloadBtn.click();
                             }}
-                            className="store-button store-button-secondary store-button-lg store-button-block"
-                            style={{ marginTop: '8px' }}
+                            className="store-button store-button-secondary store-button-lg w-full mt-2"
                         >
                             <DownloadOutlined />
                             Descargar Tickets Pagados
                         </button>
                     )}
                 </div>
-            </div>
-        </>
+            )}
+        </div>
     );
 };
 

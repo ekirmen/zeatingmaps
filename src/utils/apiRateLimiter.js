@@ -187,9 +187,9 @@ class ApiRateLimiter {
 
 // Instancia global para rate limiting de API
 const globalApiRateLimiter = new ApiRateLimiter({
-  maxRequests: 30, // Máximo 30 requests por minuto
+  maxRequests: 300, // Máximo 300 requests por minuto
   windowMs: 60000, // Ventana de 1 minuto
-  perEndpointLimit: 10 // Máximo 10 requests por endpoint por minuto
+  perEndpointLimit: 100 // Máximo 100 requests por endpoint por minuto
 });
 
 export default globalApiRateLimiter;

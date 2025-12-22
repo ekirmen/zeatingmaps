@@ -36,9 +36,20 @@ const SeatShape = memo(({ seat, color, borderColor, size, isSelected, onClick })
     const strokeWidth = isSelected ? 3 : 1;
     const stroke = isSelected ? '#1890ff' : (borderColor || '#ccc');
 
-    // Choose shape
+    // Label settings
+    const fontSize = 10;
+    const labelText = seat.nombre || seat.label || '';
+
+    // Calculate center for text positioning
+    let centerX, centerY;
+
+    let ShapeComponent;
+
     if (seat.tipo === 'rect' || seat.type === 'rect') {
-        return (
+        centerX = x + width / 2;
+        centerY = y + height / 2;
+
+        ShapeComponent = (
             <Rect
                 x={x}
                 y={y}
@@ -48,51 +59,64 @@ const SeatShape = memo(({ seat, color, borderColor, size, isSelected, onClick })
                 stroke={stroke}
                 strokeWidth={strokeWidth}
                 cornerRadius={4}
-                onClick={(e) => {
-                    e.cancelBubble = true;
-                    onClick?.(seat);
-                }}
-                onTap={(e) => {
-                    e.cancelBubble = true;
-                    onClick?.(seat);
-                }}
-                onMouseEnter={(e) => {
-                    const stage = e.target.getStage();
-                    if (stage) stage.container().style.cursor = 'pointer';
-                }}
-                onMouseLeave={(e) => {
-                    const stage = e.target.getStage();
-                    if (stage) stage.container().style.cursor = 'default';
-                }}
+                shadowBlur={isSelected ? 10 : 0}
+                shadowColor="#1890ff"
+            />
+        );
+    } else {
+        centerX = x + radius;
+        centerY = y + radius;
+
+        ShapeComponent = (
+            <Circle
+                x={centerX}
+                y={centerY}
+                radius={radius}
+                fill={color}
+                stroke={stroke}
+                strokeWidth={strokeWidth}
+                shadowBlur={isSelected ? 10 : 0}
+                shadowColor="#1890ff"
             />
         );
     }
 
+    // Interaction handlers
+    const handleEvents = {
+        onClick: (e) => {
+            e.cancelBubble = true;
+            onClick?.(seat);
+        },
+        onTap: (e) => {
+            e.cancelBubble = true;
+            onClick?.(seat);
+        },
+        onMouseEnter: (e) => {
+            const stage = e.target.getStage();
+            if (stage) stage.container().style.cursor = 'pointer';
+        },
+        onMouseLeave: (e) => {
+            const stage = e.target.getStage();
+            if (stage) stage.container().style.cursor = 'default';
+        }
+    };
+
     return (
-        <Circle
-            x={x + radius} // Konva circle x is center
-            y={y + radius} // Konva circle y is center
-            radius={radius}
-            fill={color}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-            onClick={(e) => {
-                e.cancelBubble = true;
-                onClick?.(seat);
-            }}
-            onTap={(e) => {
-                e.cancelBubble = true;
-                onClick?.(seat);
-            }}
-            onMouseEnter={(e) => {
-                const stage = e.target.getStage();
-                if (stage) stage.container().style.cursor = 'pointer';
-            }}
-            onMouseLeave={(e) => {
-                const stage = e.target.getStage();
-                if (stage) stage.container().style.cursor = 'default';
-            }}
-        />
+        <Group {...handleEvents}>
+            {ShapeComponent}
+            {labelText && (
+                <Text
+                    x={centerX - 20} // Approximate centering
+                    y={y - fontSize - 2} // Above the seat
+                    width={40} // Constrain width to avoid huge text
+                    text={labelText}
+                    fontSize={fontSize}
+                    fill="#333"
+                    align="center"
+                    listening={false} // Allow clicks to pass through to the shape/Group
+                />
+            )}
+        </Group>
     );
 });
 
