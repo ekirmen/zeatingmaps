@@ -14,17 +14,27 @@ export default function SeatLayer({
         const id = s.sillaId || s.id || s._id;
         const idString = String(id);
 
-        // Intentar obtener estado con y sin prefijo
+        // Intentar obtener estado con y sin prefijo de forma defensiva
         let state = null;
-        if (seatStates) {
-          state = seatStates.get(idString) || seatStates.get(`silla_${idString}`);
+        try {
+          if (seatStates && typeof seatStates.get === 'function') {
+            state = seatStates.get(idString) || seatStates.get(`silla_${idString}`);
+          } else if (seatStates && typeof seatStates === 'object') {
+            state = seatStates[idString] || seatStates[`silla_${idString}`];
+          }
+        } catch (e) {
+          // Ignorar errores de acceso
         }
 
         // Determinar color
         let color = s.color; // color por defecto del mapa
-        if (getSeatColor && state) {
+        if (typeof getSeatColor === 'function' && state) {
           // Crear un objeto seat temporal con el estado actualizado para obtener el color
-          color = getSeatColor({ ...s, estado: state });
+          try {
+            color = getSeatColor({ ...s, estado: state });
+          } catch (e) {
+            console.warn('Error calculating seat color', e);
+          }
         } else if (state === 'ocupado' || state === 'vendido') {
           color = '#ff4d4f'; // Rojo fallback
         } else if (state === 'seleccionado') {
