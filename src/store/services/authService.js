@@ -314,8 +314,24 @@ export const logoutUser = async () => {
 };
 
 // Obtener usuario actual
+// Obtener usuario actual
 export const getCurrentUser = async () => {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) throw new Error(error.message);
-  return data.user;
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    // If no session locally, don't bother hitting the network which causes 403
+    if (sessionError || !session) {
+      return null;
+    }
+
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      // Si es un error de autenticación, simplemente retornar null (usuario no logueado)
+      // Esto evita que logs ruidosos aparezcan cuando no hay sesión
+      return null;
+    }
+    return data.user;
+  } catch (error) {
+    return null;
+  }
 };

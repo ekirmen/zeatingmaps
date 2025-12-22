@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         }
         setUser(session.user);
         fetchUserRole(session.user.id);
-        
+
         // Registrar login en auditoría
         auditService.logUserAction('login', {
           userId: session.user.id,
@@ -64,11 +64,19 @@ export const AuthProvider = ({ children }) => {
         setRole(null);
       }
     } catch (error) {
-      console.error('❌ Error al validar sesión:', error.message);
+      // Solo loguear si NO es un error de sesión faltante/invalida (que es normal para visitantes)
+      const isAuthError = error.message?.includes('Auth session missing') ||
+        error.status === 403 ||
+        error.status === 401;
+
+      if (!isAuthError) {
+        console.error('❌ Error al validar sesión:', error.message);
+      }
+
       try {
         localStorage.removeItem('token');
       } catch (storageError) {
-        console.error('Error removing token from localStorage:', storageError);
+        // Ignorar error de storage
       }
       setUser(null);
     } finally {
@@ -85,7 +93,7 @@ export const AuthProvider = ({ children }) => {
           email,
           reason: error?.message || 'Invalid session'
         }).catch(err => console.error('Error logging failed login:', err));
-        
+
         const authError = await createAuthError({
           error: error || new Error('Respuesta de inicio de sesión inválida'),
           email,
@@ -94,7 +102,7 @@ export const AuthProvider = ({ children }) => {
         throw authError;
       }
       const token = data.session.access_token;
-      
+
       // Encriptar y almacenar token de forma segura
       try {
         await setEncryptedItem('token', token);
@@ -107,16 +115,16 @@ export const AuthProvider = ({ children }) => {
         // Fallback: almacenar sin encriptar
         localStorage.setItem('token', token);
       }
-      
+
       setUser(data.user);
       fetchUserRole(data.user.id);
-      
+
       // Registrar login exitoso en auditoría
       auditService.logUserAction('login', {
         userId: data.user.id,
         email: data.user.email
       }).catch(err => console.error('Error logging login:', err));
-      
+
       return data;
     } catch (error) {
       if (error?.code && error?.i18nKey) {
@@ -135,9 +143,9 @@ export const AuthProvider = ({ children }) => {
         email: user.email
       }).catch(err => console.error('Error logging logout:', err));
     }
-    
+
     await supabase.auth.signOut();
-    
+
     // Limpiar datos encriptados
     try {
       localStorage.removeItem('token');
@@ -145,7 +153,7 @@ export const AuthProvider = ({ children }) => {
     } catch (storageError) {
       console.error('Error removing encrypted data:', storageError);
     }
-    
+
     setUser(null);
     setRole(null);
   };
@@ -188,7 +196,7 @@ export const AuthProvider = ({ children }) => {
           setRole(null);
         }
       };
-      
+
       // Ejecutar la función asíncrona sin esperar
       handleSession().catch(error => {
         console.error('Error handling auth state change:', error);

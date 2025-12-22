@@ -16,6 +16,10 @@ class SupabaseWithTracking {
    */
   async getCurrentUser() {
     try {
+      // Check for session first to avoid network 403 on /user endpoint
+      const { data: { session } } = await this.supabase.auth.getSession();
+      if (!session) return 'anonymous';
+
       const { data: { user } } = await this.supabase.auth.getUser();
       if (!user) return 'anonymous';
       return user.email || user.id || 'anonymous';
