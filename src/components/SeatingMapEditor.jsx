@@ -93,7 +93,7 @@ const preloadBackgroundImage = (url, onProgress) => {
               const blobUrl = URL.createObjectURL(blob);
 
               const image = new window.Image();
-              // image.crossOrigin = 'anonymous'; // Removed to avoid CORS issues
+              image.crossOrigin = 'anonymous'; // Enabled for canvas
               image.loading = 'lazy';
               image.decoding = 'async';
 
@@ -134,7 +134,7 @@ const preloadBackgroundImage = (url, onProgress) => {
       .catch(error => {
         // Fallback a método tradicional si fetch falla
         const image = new window.Image();
-        // image.crossOrigin = 'anonymous'; // Removed to avoid CORS issues with Supabase Storage
+        image.crossOrigin = 'anonymous'; // Enabled for canvas
         image.loading = 'lazy';
         image.decoding = 'async';
 

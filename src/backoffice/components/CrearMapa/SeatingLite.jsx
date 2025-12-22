@@ -402,7 +402,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     return new Promise((resolve, reject) => {
       try {
         const img = new window.Image();
-        // img.crossOrigin = 'anonymous'; // Removed to avoid CORS issues if bucket isn't configured
+        img.crossOrigin = 'anonymous'; // Enabled for canvas
         img.onload = () => resolve(img);
         img.onerror = (error) => reject(error);
         img.src = source;

@@ -102,7 +102,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
           allSeats.push(seatData);
           // Asiento agregado
           // Caso 3: Elemento que puede ser un asiento pero no tiene el tipo correcto
-        } else if (elemento._id && elemento.nombre && (elemento.x !== undefined || elemento.posicion)) {
+        } else if (elemento._id && elemento.nombre && (elemento.x !== undefined || elemento.posicion) && elemento.type !== 'mesa') {
           // Procesando elemento como asiento potencial
 
           const seatData = {
@@ -135,7 +135,8 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             elemento.type === 'background' ||
             elemento.type === 'text' ||
             elemento.type === 'line' ||
-            elemento.type === 'shape'
+            elemento.type === 'shape' ||
+            elemento.type === 'mesa' // Fix: Exclude tables from being treated as seats
           );
 
           if (isNonSeatElement) {
