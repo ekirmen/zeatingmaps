@@ -812,11 +812,47 @@ const SeatingMapUnified = ({
     };
   }, []);
 
+  const lastTapRef = useRef(0);
+
   const handleTouchStart = useCallback((e) => {
     const stage = stageRef.current;
     if (!stage) return;
 
     const touches = e.evt.touches;
+
+    // Double tap zoom logic
+    if (touches.length === 1) {
+      const now = Date.now();
+      if (now - lastTapRef.current < 300) {
+        // Double tap detected
+        e.evt.preventDefault();
+        const oldScale = stage.scaleX();
+        const newScale = Math.min(oldScale * 1.5, 3);
+        const pointer = stage.getPointerPosition();
+
+        const mousePointTo = {
+          x: (pointer.x - stage.x()) / oldScale,
+          y: (pointer.y - stage.y()) / oldScale,
+        };
+
+        const newPos = {
+          x: pointer.x - mousePointTo.x * newScale,
+          y: pointer.y - mousePointTo.y * newScale,
+        };
+
+        stage.to({
+          scaleX: newScale,
+          scaleY: newScale,
+          x: newPos.x,
+          y: newPos.y,
+          duration: 0.3
+        });
+        lastTapRef.current = 0;
+        return;
+      }
+      lastTapRef.current = now;
+    }
+
     if (touches && touches.length === 2) {
       e.evt.preventDefault();
       const touch1 = touches[0];
@@ -1171,9 +1207,9 @@ const SeatingMapUnified = ({
       <div style={{
         width: '100%',
         height: '100%',
-        overflow: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'contain'
+        overflow: 'hidden', // Changed from auto to hidden to prevent double scrolling
+        touchAction: 'none', // Prevent browser handling of gestures
+        position: 'relative'
       }}>
         <Stage
           width={stageDimensions.width}
@@ -1189,8 +1225,9 @@ const SeatingMapUnified = ({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          /* Fix 2: Habilitar draggable siempre para permitir panning, incluso en móvil */
+          /* Fix 2: Habilitar draggable siempre para permitir panning */
           draggable={true}
+          dragDistance={10} // Prevent micro-movements from blocking clicks
           ref={stageRef}
           imageSmoothingEnabled={canvasConfig.imageSmoothingEnabled}
           hitGraphEnabled={canvasConfig.hitGraphEnabled}

@@ -531,9 +531,8 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
               width: '100%',
               height: '100%',
               flex: '1 1 auto',
-              overflow: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'contain'
+              overflow: 'hidden', // Changed from auto to hidden to rely on Konva panning
+              position: 'relative'
             }}>
               <LazySeatingMap
                 mapa={mapa}
