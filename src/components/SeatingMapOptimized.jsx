@@ -331,13 +331,7 @@ const SeatingMapOptimized = ({
         }
     }, [onSeatClick]);
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg">
-                <Spin size="large" tip="Cargando mapa..." />
-            </div>
-        );
-    }
+
 
     // Determine Background Image
     const backgroundImage = mapa?.imagen_fondo || null;
@@ -478,6 +472,25 @@ const SeatingMapOptimized = ({
                     </Group>
                 </Layer>
             </Stage>
+
+            {/* Loading Overlay */}
+            {loading && (
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backdropFilter: 'blur(2px)'
+                }}>
+                    <Spin size="large" tip="Procesando..." />
+                </div>
+            )}
         </div>
     );
 };
