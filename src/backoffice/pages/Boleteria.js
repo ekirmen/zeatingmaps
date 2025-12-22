@@ -1203,34 +1203,41 @@ const Boleteria = () => {
           <div className="flex-1 bg-white overflow-hidden relative">
             {/* Debug log removed for production performance */}
             {selectedFuncion && mapa ? (
-              <div className="h-full p-2 overflow-auto">
-                <LazySeatingMap
-                  funcionId={selectedFuncion?.id || selectedFuncion?._id}
-                  mapa={mapa}
-                  zonas={mapa?.zonas || []}
-                  selectedFuncion={selectedFuncion}
-                  selectedEvent={selectedEvent}
-                  onSeatToggle={handleSeatToggle}
-                  foundSeats={foundSeats}
-                  selectedSeats={selectedSeatIds}
-                  lockedSeats={permanentLocks}
-                  allowSearchSeatSelection={searchAllSeats}
-                  allowBlockedSeatSelection={blockAction === 'unlock'}
-                  disableSeatClickThrottle={blockMode}
-                  modoVenta={true}
-                  showPrices={true}
-                  showZones={true}
-                  showLegend={false}
-                  allowSeatSelection={true}
-                  debug={true}
-                  isSeatLocked={isSeatLocked}
-                  isSeatLockedByMe={isSeatLockedByMe}
-                />
+              <div className="h-full w-full overflow-hidden relative">
+                <div className="absolute inset-0">
+                  <LazySeatingMap
+                    funcionId={selectedFuncion?.id || selectedFuncion?._id}
+                    mapa={mapa}
+                    zonas={mapa?.zonas || []}
+                    selectedFuncion={selectedFuncion}
+                    selectedEvent={selectedEvent}
+                    onSeatToggle={handleSeatToggle}
+                    foundSeats={foundSeats}
+                    selectedSeats={selectedSeatIds}
+                    lockedSeats={permanentLocks}
+                    allowSearchSeatSelection={searchAllSeats}
+                    allowBlockedSeatSelection={blockAction === 'unlock'}
+                    disableSeatClickThrottle={blockMode}
+                    modoVenta={true}
+                    showPrices={true}
+                    showZones={true}
+                    showLegend={false}
+                    allowSeatSelection={true}
+                    debug={true}
+                    isSeatLocked={isSeatLocked}
+                    isSeatLockedByMe={isSeatLockedByMe}
+                  />
+                </div>
 
                 {carrito?.length > 0 && (
-                  <div className="md:hidden sticky bottom-4 left-0 right-0 mx-2 mt-3 rounded-lg bg-purple-600 text-white text-sm font-semibold px-3 py-2 shadow-lg flex items-center justify-between">
-                    <span>{carrito.length === 1 ? 'Asiento seleccionado' : `${carrito.length} asientos seleccionados`}</span>
-                    <span className="text-xs opacity-90">ContinÂºa la compra en el carrito Å¾Å“</span>
+                  <div className="md:hidden absolute bottom-4 left-2 right-2 z-20 rounded-lg bg-purple-600 text-white text-sm font-semibold px-3 py-2 shadow-lg flex items-center justify-between pointer-events-none">
+                    <span className="pointer-events-auto">{carrito.length === 1 ? 'Asiento seleccionado' : `${carrito.length} asientos seleccionados`}</span>
+                    <button
+                      onClick={() => setCartOpen(true)}
+                      className="text-xs opacity-90 hover:opacity-100 underline pointer-events-auto"
+                    >
+                      Ver carrito Å¾Å“
+                    </button>
                   </div>
                 )}
               </div>
