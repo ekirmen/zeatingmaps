@@ -512,7 +512,7 @@ export const uploadMapBackground = async (imageInput, mapId = 'temp') => {
     // Debug del archivo
     console.log(`[OPTIMIZATION] Preparando subida. Tipo: ${fileToUpload.type}, Tamaño: ${fileToUpload.size} bytes. Bucket: ${bucketName}`);
 
-    // Verificar guardas de seguridad
+    // Verificación de seguridad
     if (fileToUpload.size === 0) throw new Error('El archivo generado está vacío (0 bytes)');
 
     const uploadOptions = {
@@ -520,15 +520,20 @@ export const uploadMapBackground = async (imageInput, mapId = 'temp') => {
       contentType: fileToUpload.type || 'image/png'
     };
 
+    // Convertir a ArrayBuffer para evitar problemas de serialización con FormData en algunos navegadores/proxies
+    const fileBuffer = await fileToUpload.arrayBuffer();
+
+    console.log(`[OPTIMIZATION] Subiendo ${fileToUpload.size} bytes como ArrayBuffer...`);
+
     // Para simplificar, intentamos subir. Si falla por bucket no encontrado, usar 'eventos' como fallback
-    let uploadResult = await supabase.storage.from(bucketName).upload(filePath, fileToUpload, uploadOptions);
+    let uploadResult = await supabase.storage.from(bucketName).upload(filePath, fileBuffer, uploadOptions);
 
     if (uploadResult.error) {
       console.warn('⚠️ [uploadMapBackground] Fallo subida a "mapas-backgrounds". Detalles:', JSON.stringify(uploadResult.error, null, 2));
       console.warn('Intentando fallback "eventos"...');
 
       // Fallback a bucket 'eventos'
-      const fallbackResult = await supabase.storage.from('eventos').upload(`backgrounds/${filePath}`, fileToUpload, uploadOptions);
+      const fallbackResult = await supabase.storage.from('eventos').upload(`backgrounds/${filePath}`, fileBuffer, uploadOptions);
 
       if (fallbackResult.error) {
         console.error('❌ [uploadMapBackground] Fallo también en fallback "eventos":', JSON.stringify(fallbackResult.error, null, 2));
