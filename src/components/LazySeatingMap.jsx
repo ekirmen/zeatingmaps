@@ -8,7 +8,7 @@ import LoadOnVisible from './LoadOnVisible';
 const LazySeatingMap = (props) => {
   return (
     <LoadOnVisible
-      loader={() => import('./SeatingMapUnifiedCore')}
+      loader={() => import('./SeatingMapViewer')}
       fallback={<SeatMapSkeleton />}
       rootMargin="200px" // Reducido de 400px para cargar más rápido
       loaderProps={props}

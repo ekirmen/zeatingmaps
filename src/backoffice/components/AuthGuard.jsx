@@ -13,27 +13,34 @@ const AuthGuard = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      // Primero intentar obtener la sesi³n actual (no requiere llamada a la API)
+      // Primero intentar obtener la sesión actual
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
+        console.error('Session error:', sessionError);
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
       }
 
       const activeUser = sessionData?.session?.user;
 
       if (activeUser) {
-        setIsAuthenticated(true);
-        return;
-      }
+        // Verificar si el usuario tiene acceso al tenant (backoffice)
+        // Importamos dinámicamente para evitar ciclos si authService usa componentes que usan AuthGuard (poco probable pero seguro)
+        const { verifyTenantAccess } = await import('../services/authService');
+        const { hasAccess, reason } = await verifyTenantAccess(activeUser.id);
 
-      // Fallback: intentar obtener el usuario directamente (puede requerir llamada de red)
-      const { data: { user }, error } = await supabase.auth.getUser();
-
-      if (error) {
-        console.error('Error checking auth:', error);
-        setIsAuthenticated(false);
+        if (hasAccess) {
+          setIsAuthenticated(true);
+        } else {
+          console.warn('Usuario autenticado pero sin acceso al dashboard:', reason);
+          setIsAuthenticated(false); // Mantener false para mostrar login o acceso denegado
+          // Podríamos mostrar un estado específico de "No autorizado"
+          // Por ahora, simplemente no autenticamos para el dashboard
+        }
       } else {
-        setIsAuthenticated(!!user);
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error('Error in checkAuth:', error);
@@ -54,7 +61,7 @@ const AuthGuard = ({ children }) => {
         gap: '16px'
       }}>
         <Spin size="large" />
-        <div>Verificando autenticaci³n...</div>
+        <div>Verificando autenticación...</div>
       </div>
     );
   }
