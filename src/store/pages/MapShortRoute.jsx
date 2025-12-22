@@ -33,16 +33,16 @@ const MapShortRoute = () => {
     }
 
     const loadEventAndRedirect = async () => {
-        // Si tenemos un slug v¡lido (no "r") y una funci³n,
-        // y estamos en la ruta /eventos/:eventSlug/map, dejar que EventMapPage maneje
-        if (eventSlug && eventSlug !== 'r' && funcion) {
-          const funcionId = parseInt(funcion, 10);
-          if (Number.isFinite(funcionId) && funcionId > 0) {
-            // Redirigir inmediatamente sin hacer queries adicionales
-            navigate(`/store/eventos/${eventSlug}/map?funcion=${funcionId}`, { replace: true });
-            return;
-          }
+      // Si tenemos un slug v¡lido (no "r") y una funci³n,
+      // y estamos en la ruta /eventos/:eventSlug/map, dejar que EventMapPage maneje
+      if (eventSlug && eventSlug !== 'r' && funcion) {
+        const funcionId = parseInt(funcion, 10);
+        if (Number.isFinite(funcionId) && funcionId > 0) {
+          // Redirigir inmediatamente sin hacer queries adicionales
+          navigate(`/store/eventos/${eventSlug}/map?funcion=${funcionId}`, { replace: true });
+          return;
         }
+      }
 
       // Si no hay funci³n, redirigir a la p¡gina del evento (ser¡ manejado por ModernEventPage)
       // MapShortRoute solo debe manejar rutas con ?funcion= para rutas cortas
@@ -81,15 +81,15 @@ const MapShortRoute = () => {
             throw new Error('Evento no encontrado');
           }
 
-               // Verificar que la funci³n pertenece a este evento
-               const { data: funcionData, error: funcionError } = await supabase
-                 .from('funciones')
-                 .select('id, evento_id')
-                 .eq('id', funcionId)
-                 .single();
+          // Verificar que la funci³n pertenece a este evento
+          const { data: funcionData, error: funcionError } = await supabase
+            .from('funciones')
+            .select('id, evento_id')
+            .eq('id', funcionId)
+            .single();
 
-               if (funcionError) throw funcionError;
-               const eventoId = funcionData.evento_id;
+          if (funcionError) throw funcionError;
+          const eventoId = funcionData.evento_id;
 
           if (eventoId !== eventoData.id) {
             throw new Error('La funci³n no pertenece a este evento');
@@ -121,7 +121,7 @@ const MapShortRoute = () => {
 
         // Si el evento no tiene slug, usar seat-selection como fallback
         if (!eventoData.slug) {
-          navigate(`/store/seat-selection/${funcionId}`, { replace: true });
+          navigate(`/store/seat-selection/${funcionId}?redirect=false`, { replace: true });
           return;
         }
 
@@ -139,7 +139,7 @@ const MapShortRoute = () => {
       } catch (error) {
         // Si es ruta corta (slug es "r" o no existe), usar seat-selection como fallback
         if ((!eventSlug || eventSlug === 'r') && funcionId) {
-          navigate(`/store/seat-selection/${funcionId}`, { replace: true });
+          navigate(`/store/seat-selection/${funcionId}?redirect=false`, { replace: true });
         } else if (eventSlug && eventSlug !== 'r') {
           // Si tenemos slug v¡lido pero fall³, mostrar error
           setLoading(false);
@@ -150,8 +150,8 @@ const MapShortRoute = () => {
     };
 
     loadEventAndRedirect();
-  }, [navigate, searchParams, eventSlug, location.pathname]); 
-  
+  }, [navigate, searchParams, eventSlug, location.pathname]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">

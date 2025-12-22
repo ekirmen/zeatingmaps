@@ -51,7 +51,7 @@ const EventMapPage = () => {
         if (!funcionData || !funcionData.eventos) {
           // Si el evento no existe o la funci³n no pertenece, usar seat-selection como fallback
           if (funcionId) {
-            navigate(`/store/seat-selection/${funcionId}`, { replace: true });
+            navigate(`/store/seat-selection/${funcionId}?redirect=false`, { replace: true });
             return;
           }
           throw new Error('Evento o funci³n no encontrados');
@@ -62,7 +62,7 @@ const EventMapPage = () => {
         console.error('[EventMapPage] Error validando:', error);
         // Si hay un error y tenemos funci³n, usar seat-selection como fallback
         if (funcionId && error.message !== 'Evento no encontrado' && !error.message.includes('no pertenece')) {
-          navigate(`/store/seat-selection/${funcionId}`, { replace: true });
+          navigate(`/store/seat-selection/${funcionId}?redirect=false`, { replace: true });
         } else if (!funcionId) {
           // Si no hay funci³n, redirigir a la p¡gina principal
           navigate('/store', { replace: true });

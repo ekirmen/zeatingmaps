@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Spin } from '../../utils/antdComponents';
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import LazySeatingMap from '../../components/LazySeatingMap';
@@ -19,8 +19,10 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   const [plantillaPrecios, setPlantillaPrecios] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isRedirecting, setIsRedirecting] = useState(autoRedirectToEventMap);
-  const [redirectFailed, setRedirectFailed] = useState(!autoRedirectToEventMap);
+  const [searchParams] = useSearchParams();
+  const shouldAutoRedirect = autoRedirectToEventMap && searchParams.get('redirect') !== 'false' && searchParams.get('redirect') !== '0';
+  const [isRedirecting, setIsRedirecting] = useState(shouldAutoRedirect);
+  const [redirectFailed, setRedirectFailed] = useState(!shouldAutoRedirect);
 
   // Cache para zona/mesa/precio por asiento (evitar recalcular en cada click)
   const seatDataCache = React.useRef(new Map());
@@ -115,7 +117,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       return;
     }
 
-    if (!autoRedirectToEventMap) {
+    if (!shouldAutoRedirect) {
       setIsRedirecting(false);
       setRedirectFailed(true);
       return;
@@ -155,7 +157,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     };
 
     attemptRedirect();
-  }, [autoRedirectToEventMap, funcionId, navigate]);
+  }, [shouldAutoRedirect, funcionId, navigate]);
 
   // Suscribirse a función
   useEffect(() => {
