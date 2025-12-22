@@ -458,4 +458,6 @@ const SeatingMapOptimized = ({
     );
 };
 
+export { URLImage as BackgroundImage }; // Export URLImage as BackgroundImage for compatibility
+
 export default memo(SeatingMapOptimized);
