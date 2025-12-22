@@ -40,7 +40,7 @@ const LoadOnVisible = ({ loader, fallback = null, rootMargin = '200px', once = t
   }, [shouldLoad, loader]);
 
   return (
-    <div ref={ref}>
+    <div ref={ref} style={{ width: '100%', height: '100%' }}>
       {LazyComp ? (
         <Suspense fallback={fallback}>
           <LazyComp {...loaderProps} />

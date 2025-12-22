@@ -1,8 +1,8 @@
 import React from 'react';
 import { Circle, Label, Tag, Text } from 'react-konva';
 
-export default function SeatWithTooltip({ seat = {}, x = 0, y = 0, onClick }) {
-  const fill = seat.color || (seat.estado === 'reservado' ? '#666' : 'lightgreen');
+export default function SeatWithTooltip({ seat = {}, x = 0, y = 0, onClick, fill: propFill, status }) {
+  const fill = propFill || seat.color || (seat.estado === 'reservado' ? '#666' : 'lightgreen');
   const label = seat.nombre || seat.numero || '';
 
   return (
