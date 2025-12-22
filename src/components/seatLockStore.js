@@ -500,7 +500,32 @@ export const useSeatLockStore = create((set, get) => ({
       lastFuncionId: funcionId || get().lastFuncionId,
     });
 
-    // Intentar recargar inmediatamente para forzar la reconexión
+    const currentFuncionId = funcionId || get().lastFuncionId;
+
+    // Si es un timeout o cierre, intentar reconectar explícitamente tras un breve delay
+    if (reason === 'TIMED_OUT' || reason === 'CLOSED' || reason === 'CHANNEL_ERROR') {
+      console.log(`🔄 [SEAT_LOCK_STORE] Intentando reconexión automática tras ${reason}...`);
+
+      // Limpiar canal actual si existe
+      const { channel } = get();
+      if (channel) {
+        try {
+          channel.unsubscribe();
+        } catch (e) { }
+        set({ channel: null });
+      }
+
+      // Re-suscribir después de 1 segundo
+      if (currentFuncionId) {
+        setTimeout(() => {
+          console.log(`🔌 [SEAT_LOCK_STORE] Ejecutando re-suscripción para función ${currentFuncionId}`);
+          get().subscribeToFunction(currentFuncionId);
+        }, 1000);
+      }
+      return;
+    }
+
+    // Para otros errores desconocidos, usar el fallback de recarga (controlado por schedulePageReload)
     get().schedulePageReload(reason || 'channel_issue');
   },
 

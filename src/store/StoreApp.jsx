@@ -7,6 +7,7 @@ import SecurityHandler from './components/SecurityHandler';
 import Header from './components/StoreHeader';
 import BasicFooter from '../components/BasicFooter';
 import GlobalCartTimer from './components/GlobalCartTimer';
+import DebugOverlay from './components/DebugOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { useTenant } from '../contexts/TenantContext';
 import { useCartStore } from './cartStore';
@@ -18,30 +19,33 @@ import './styles/store-design.css';
 const lazyImport = (path) => React.lazy(() => import(`${path}` /* webpackPrefetch: true */));
 
 const Pages = {
-  SelectSeats: lazyImport('./pages/SelectSeats'),
-  Event: lazyImport('./pages/Event'),
-  EventInfo: lazyImport('./pages/EventInfo'),
-  BuyEvent: lazyImport('./pages/BuyEvent'),
+  // Core Pages
+  StoreHomePage: lazyImport('./pages/StoreHomePage'),
+  EventPage: lazyImport('./pages/EventPage'),
+  SeatSelectionPage: lazyImport('./pages/SeatSelectionPage'),
+  EventMapPage: lazyImport('./pages/EventMapPage'),
+  EventSearchMap: lazyImport('./pages/EventSearchMap'),
+  EventsVenue: lazyImport('./pages/EventsVenue'),
+
+  // Cart & Checkout
   CartPage: lazyImport('./pages/Cart'),
   Pay: lazyImport('./pages/Pay'),
-  Profile: lazyImport('./pages/profile.js'),
-  ModernEventPage: lazyImport('./pages/ModernEventPage'),
-  EventMapPage: lazyImport('./pages/EventMapPage'),
-  ModernStorePage: lazyImport('./pages/ModernStorePage'),
+  PaymentSuccess: lazyImport('./pages/PaymentSuccess'),
   ThankYouPage: lazyImport('./pages/ThankYouPage'),
+
+  // Auth & User
   StoreLogin: lazyImport('./pages/Login'),
   Register: lazyImport('./pages/Register'),
   ForgotPassword: lazyImport('./pages/ForgotPassword'),
   ResetPassword: lazyImport('./pages/ResetPassword'),
-  EventSearchMap: lazyImport('./pages/EventSearchMap'),
-  PaymentSuccess: lazyImport('./pages/PaymentSuccess'),
+  Profile: lazyImport('./pages/profile.js'),
+
+  // Static / CMS
   FaqPage: lazyImport('./pages/FaqPage'),
-  SeatSelectionPage: lazyImport('./pages/SeatSelectionPage'),
   PrivacyPolicy: lazyImport('./pages/PrivacyPolicy'),
   CookiesPolicy: lazyImport('./pages/CookiesPolicy'),
   LegalTerms: lazyImport('./pages/LegalTerms'),
   CmsPage: lazyImport('./pages/CmsPage'),
-  EventsVenue: lazyImport('./pages/EventsVenue'),
   NotFound: lazyImport('./pages/NotFound'),
 };
 
@@ -90,33 +94,39 @@ const StoreApp = () => {
           <div className="min-h-screen flex flex-col">
             {showHeader && <Header />}
             <div className="flex-grow">
-              <Suspense fallback={<div style={{ padding: 40 }}>Cargando...</div>}>
+              <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
                 <Routes>
-                  <Route index element={<Pages.ModernStorePage />} />
+                  {/* Home & Search */}
+                  <Route index element={<Pages.StoreHomePage />} />
                   <Route path="tag/:tagSlug?" element={<Pages.EventsVenue groupByTags />} />
+                  <Route path="search-map" element={<Pages.EventSearchMap />} />
+
+                  {/* Event Flow */}
+                  <Route path="eventos/:eventSlug" element={<Pages.EventPage />} />
                   <Route path="eventos/:eventSlug/map" element={<Pages.EventMapPage />} />
-                  <Route path="eventos/:eventSlug" element={<Pages.ModernEventPage />} />
-                  <Route path="event/:eventId" element={<Pages.EventInfo />} />
-                  <Route path="event/:eventId/full" element={<Pages.Event />} />
-                  <Route path="buy-event/:id" element={<Pages.BuyEvent />} />
-                  <Route path="select-seats/:salaId" element={<Pages.SelectSeats />} />
-                  <Route path="select-seats/:salaId/:funcionId" element={<Pages.SelectSeats />} />
+
+                  {/* Seat Selection & Purchase */}
                   <Route path="seat-selection/:funcionId" element={<Pages.SeatSelectionPage />} />
                   <Route path="cart" element={<Pages.CartPage />} />
                   <Route path="payment" element={<ProtectedRoute requireTenantAccess={false}><Pages.Pay /></ProtectedRoute>} />
+                  <Route path="payment-success/:locator?" element={<ProtectedRoute requireTenantAccess={false}><Pages.PaymentSuccess /></ProtectedRoute>} />
+                  <Route path="thank-you" element={<Pages.ThankYouPage />} />
+
+                  {/* Auth */}
                   <Route path="login" element={<Pages.StoreLogin />} />
                   <Route path="register" element={<Pages.Register />} />
                   <Route path="forgot-password" element={<Pages.ForgotPassword />} />
                   <Route path="reset-password" element={<Pages.ResetPassword />} />
-                  <Route path="search-map" element={<Pages.EventSearchMap />} />
-                  <Route path="faq" element={<Pages.FaqPage />} />
                   <Route path="perfil" element={<Pages.Profile userData={user} onUpdateProfile={updateProfile} />} />
+
+                  {/* Static / CMS */}
+                  <Route path="faq" element={<Pages.FaqPage />} />
                   <Route path="privacy-policy" element={<Pages.PrivacyPolicy />} />
                   <Route path="cookies-policy" element={<Pages.CookiesPolicy />} />
                   <Route path="legal-terms" element={<Pages.LegalTerms />} />
                   <Route path=":pageSlug" element={<Pages.CmsPage />} />
-                  <Route path="payment-success/:locator?" element={<ProtectedRoute requireTenantAccess={false}><Pages.PaymentSuccess /></ProtectedRoute>} />
-                  <Route path="thank-you" element={<Pages.ThankYouPage />} />
+
+                  {/* Fallback */}
                   <Route path="404" element={<Pages.NotFound />} />
                   <Route path="*" element={<Pages.NotFound />} />
                 </Routes>
@@ -124,6 +134,7 @@ const StoreApp = () => {
             </div>
             {showFooter && <BasicFooter />}
             <GlobalCartTimer />
+            <DebugOverlay />
           </div>
         </SecurityHandler>
       </RefProvider>
