@@ -719,8 +719,14 @@ const SeatingMapUnified = ({
       logger.log('👆 [SEATING_MAP] Asiento clickeado:', seat._id);
 
       const seatId = (seat._id || seat.id || seat.sillaId)?.toString();
+
+      // DEBUG: Visual confirmation of click
+      console.log('👆 [DEBUG CLICK] Click detectado en asiento:', seatId, seat);
+      // message.info(`DEBUG: Click en asiento ${seatId}`); // Descomentar si se necesita feedback visual en pantalla
+
       if (!disableSeatClickThrottle) {
         if (!clickThrottle.canClick(seatId)) {
+          console.warn('⚠️ [DEBUG CLICK] Throttle activo para asiento:', seatId);
           if (onSeatError) {
             onSeatError('Por favor, espera un momento antes de hacer clic nuevamente en este asiento.');
           }

@@ -14,8 +14,15 @@ export default function SeatWithTooltip({ seat = {}, x = 0, y = 0, onClick, fill
         fill={fill}
         stroke="black"
         strokeWidth={1}
-        onClick={() => onClick && onClick(seat)}
-        onTap={() => onClick && onClick(seat)}
+        onClick={(e) => {
+          e.cancelBubble = true; // Stop propagation
+          onClick && onClick(seat);
+        }}
+        onTap={(e) => {
+          e.cancelBubble = true;
+          onClick && onClick(seat);
+        }}
+        listening={true} // Explicitly enable events
         onMouseEnter={(e) => {
           const container = e.target.getStage().container();
           container.style.cursor = 'pointer';
@@ -26,7 +33,7 @@ export default function SeatWithTooltip({ seat = {}, x = 0, y = 0, onClick, fill
         }}
       />
       {label && (
-        <Label x={x + 14} y={y - 10}>
+        <Label x={x + 14} y={y - 10} listening={false}>
           <Tag fill="#222" opacity={0.8} cornerRadius={4} />
           <Text text={label} fontSize={11} padding={6} fill="white" />
         </Label>
