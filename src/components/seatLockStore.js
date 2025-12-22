@@ -495,6 +495,12 @@ export const useSeatLockStore = create((set, get) => ({
   },
 
   handleRealtimeChannelIssue: (reason, funcionId = null) => {
+    // Evitar recursión infinita si ya estamos intentando reconectar
+    if (get().isReconnecting) {
+      console.log('🔄 [SEAT_LOCK_STORE] Reconexión ya en progreso, ignorando solucitud duplicada.');
+      return;
+    }
+
     set({
       connectionIssueDetected: true,
       lastFuncionId: funcionId || get().lastFuncionId,
@@ -502,30 +508,45 @@ export const useSeatLockStore = create((set, get) => ({
 
     const currentFuncionId = funcionId || get().lastFuncionId;
 
-    // Si es un timeout o cierre, intentar reconectar explícitamente tras un breve delay
+    // Si es un timeout o cierre, intentar reconectar explícitamente con exponential backoff
     if (reason === 'TIMED_OUT' || reason === 'CLOSED' || reason === 'CHANNEL_ERROR') {
-      console.log(`🔄 [SEAT_LOCK_STORE] Intentando reconexión automática tras ${reason}...`);
+      const retryCount = (get().connectionRetryCount || 0) + 1;
 
-      // Limpiar canal actual si existe
-      const { channel } = get();
-      if (channel) {
-        try {
-          channel.unsubscribe();
-        } catch (e) { }
-        set({ channel: null });
+      // Límite de reintentos (ej: 5 intentos)
+      if (retryCount > 6) {
+        console.error('🛑 [SEAT_LOCK_STORE] Límite de reintentos excedido. Recargando página...');
+        set({ connectionRetryCount: 0, isReconnecting: false });
+        get().schedulePageReload('max_retries_exceeded');
+        return;
       }
 
-      // Re-suscribir después de 1 segundo
+      set({ isReconnecting: true, connectionRetryCount: retryCount });
+      console.log(`🔄 [SEAT_LOCK_STORE] Intentando reconexión automática tras ${reason} (Intento ${retryCount}/5)...`);
+
+      // Limpiar canal actual de forma segura
+      try {
+        const { channel } = get();
+        if (channel) channel.unsubscribe();
+      } catch (e) { }
+      set({ channel: null });
+
+      // Exponential backoff: 1s, 2s, 4s, 8s, 16s...
+      const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 10000);
+
       if (currentFuncionId) {
         setTimeout(() => {
           console.log(`🔌 [SEAT_LOCK_STORE] Ejecutando re-suscripción para función ${currentFuncionId}`);
+          // Resetear flag JUSTO ANTES de intentar conectar de nuevo para permitir nuevos errores si fallan
+          set({ isReconnecting: false });
           get().subscribeToFunction(currentFuncionId);
-        }, 1000);
+        }, delay);
+      } else {
+        set({ isReconnecting: false });
       }
       return;
     }
 
-    // Para otros errores desconocidos, usar el fallback de recarga (controlado por schedulePageReload)
+    // Para otros errores desconocidos o AuthApiError, recargar
     get().schedulePageReload(reason || 'channel_issue');
   },
 
