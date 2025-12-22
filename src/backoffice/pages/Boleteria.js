@@ -1221,7 +1221,7 @@ const Boleteria = () => {
                     modoVenta={true}
                     showPrices={true}
                     showZones={true}
-                    showLegend={false}
+                    showLegend={true}
                     allowSeatSelection={true}
                     debug={true}
                     isSeatLocked={isSeatLocked}

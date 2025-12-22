@@ -130,9 +130,54 @@ const SeatingMapOptimized = ({
     onSeatClick,        // Handler: (seat) => void
     modoVenta = false,   // True = Store, False = Backoffice
     loading = false,
+    showLegend = false,
     // Adapter props to handle legacy calls/unused props securely
     ...restProps
 }) => {
+    // Basic Legend Component
+    const MapLegend = () => (
+        <div style={{
+            position: 'absolute',
+            bottom: 20,
+            left: 20,
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            padding: '10px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            zIndex: 100,
+            fontSize: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+            pointerEvents: 'none' // Click through purely visual
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: 16, height: 16, backgroundColor: '#4CAF50', borderRadius: '4px' }} />
+                <span>Disponible</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: 16, height: 16, backgroundColor: '#ffd700', borderRadius: '4px', border: '1px solid #e0c000' }} />
+                <span>Tu Selección</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {/* Blue for "Other" in standard theme */}
+                <div style={{ width: 16, height: 16, backgroundColor: '#2196F3', borderRadius: '4px' }} />
+                <span>Selección de otro</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: 16, height: 16, backgroundColor: '#2d3748', borderRadius: '4px' }} />
+                <span>Ocupado / Vendido</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: 16, height: 16, backgroundColor: '#805ad5', borderRadius: '4px' }} />
+                <span>Reservado</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: 16, height: 16, backgroundColor: '#f56565', borderRadius: '4px' }} />
+                <span>Bloqueado</span>
+            </div>
+        </div>
+    );
     const containerRef = useRef(null);
     const stageRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -491,6 +536,8 @@ const SeatingMapOptimized = ({
                     <Spin size="large" tip="Procesando..." />
                 </div>
             )}
+
+            {showLegend && <MapLegend />}
         </div>
     );
 };

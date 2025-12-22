@@ -478,19 +478,13 @@ export const useSeatLockStore = create((set, get) => ({
       // Ignore storage errors
     }
 
-    console.warn(`🔄 [SEAT_LOCK_STORE] Recarga solicitada (motivo: ${reason})`);
+    console.warn(`🔄 [SEAT_LOCK_STORE] Recarga solicitada (motivo: ${reason}) - AUTO-RELOAD DESACTIVADO`);
 
-    // Usar timeout para permitir que logs se guarden
+    // Auto-reload desactivado para mejorar UX. Solo log, no refresh.
+    // Si la conexión falla, la lógica de reconexión debería encargarse.
     if (typeof window !== 'undefined') {
-      const timeoutId = window.setTimeout(() => {
-        try {
-          window.location.reload();
-        } catch (error) {
-          console.error('❌ [SEAT_LOCK_STORE] Error al intentar recargar la página:', error);
-        }
-      }, 2000);
-
-      set({ pendingReloadTimeout: timeoutId });
+      // Opcional: Podríamos mostrar un toast aquí si tuviéramos acceso a 'message' de AntD, 
+      // pero como estamos en un store de Zustand fuera de React context por defecto, solo logueamos.
     }
   },
 

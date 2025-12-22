@@ -87,12 +87,14 @@ $$;
 -- Replaces usage of missing 'seat_status_view' relation error if any, 
 -- and ensures correct atomic locking logic.
 DROP FUNCTION IF EXISTS lock_seat_atomically(text, integer, text, text);
+DROP FUNCTION IF EXISTS lock_seat_atomically(text, integer, text, text, text);
 
 CREATE OR REPLACE FUNCTION lock_seat_atomically(
     p_seat_id text,
     p_funcion_id integer,
     p_session_id text,
-    p_status text DEFAULT 'seleccionado'
+    p_status text DEFAULT 'seleccionado',
+    p_tenant_id text DEFAULT NULL
 )
 RETURNS TABLE (
     id uuid,
@@ -127,7 +129,8 @@ BEGIN
         IF v_existing_lock.session_id = p_session_id::uuid AND v_existing_lock.status NOT IN ('vendido', 'pagado', 'reservado', 'bloqueado') THEN
              UPDATE seat_locks sl_update
              SET expires_at = v_expires_at,
-                 locked_at = NOW()
+                 locked_at = NOW(),
+                 tenant_id = COALESCE(p_tenant_id::uuid, sl_update.tenant_id)
              WHERE sl_update.id = v_existing_lock.id
              RETURNING sl_update.id, sl_update.seat_id, sl_update.funcion_id, sl_update.session_id::text, sl_update.status, sl_update.locked_at, sl_update.expires_at;
              
@@ -142,8 +145,8 @@ BEGIN
     -- Insert new lock
     -- CAST p_session_id to UUID for insert
     RETURN QUERY
-    INSERT INTO seat_locks (seat_id, funcion_id, session_id, status, locked_at, expires_at, lock_type)
-    VALUES (p_seat_id, p_funcion_id, p_session_id::uuid, p_status, NOW(), v_expires_at, 'seat')
+    INSERT INTO seat_locks (seat_id, funcion_id, session_id, status, locked_at, expires_at, lock_type, tenant_id)
+    VALUES (p_seat_id, p_funcion_id, p_session_id::uuid, p_status, NOW(), v_expires_at, 'seat', p_tenant_id::uuid)
     RETURNING seat_locks.id, seat_locks.seat_id, seat_locks.funcion_id, seat_locks.session_id::text, seat_locks.status, seat_locks.locked_at, seat_locks.expires_at;
 END;
 $$;
@@ -195,6 +198,6 @@ CREATE POLICY "Enable read access for all users" ON seat_locks FOR SELECT USING 
 -- For now, we rely on the RPC (which runs with owner privileges or default) 
 -- But IF the RPC is not SECURITY DEFINER, the user needs permission.
 -- Let's make the RPC SECURITY DEFINER to avoid RLS issues for the write operations.
-ALTER FUNCTION lock_seat_atomically(text, integer, text, text) SECURITY DEFINER;
+ALTER FUNCTION lock_seat_atomically(text, integer, text, text, text) SECURITY DEFINER;
 ALTER FUNCTION check_seat_availability(text, integer, text) SECURITY DEFINER;
 ALTER FUNCTION check_seats_payment_status(text[], integer, text, text) SECURITY DEFINER;
