@@ -173,6 +173,8 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
       return;
     }
 
+    let isMounted = true;
+
     const loadMapa = async () => {
       try {
         // Solo mostrar loading si no hay mapa previo (para evitar parpadeo en recargas)
@@ -184,12 +186,18 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         setMapLoadProgress(10);
 
         const funcionNumeric = parseInt(funcionId, 10);
+        const TIMEOUT_MS = 15000;
+
+        const timeoutPromise = (msg) => new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(msg || 'Tiempo de espera agotado')), TIMEOUT_MS)
+        );
 
         // Precargar módulos críticos en paralelo con la carga del mapa
         const preloadModules = Promise.all([
           import('../../services/seatPaymentChecker'),
           import('../../components/seatLockStore')
         ]).catch(err => {
+          console.warn('Error precargando modulos:', err);
         });
 
         setMapLoadProgress(15);
@@ -202,7 +210,12 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           .single();
 
         // Iniciar ambas operaciones en paralelo (no esperamos preloadModules)
-        const funcionResult = await funcionQuery;
+        // Agregamos timeout a la query de funcion
+        const funcionResult = await Promise.race([
+          funcionQuery,
+          timeoutPromise('Error al cargar datos de la función: Tiempo de espera agotado')
+        ]);
+
         preloadModules.catch(() => { }); // Precargar en segundo plano
 
         setMapLoadProgress(30);
@@ -225,6 +238,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
             setMapa(mapaData);
             setMapLoadProgress(60);
           } catch (e) {
+            console.warn('Error parseando mapa cache:', e);
           }
         }
 
@@ -245,10 +259,13 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
           : Promise.resolve({ data: funcion.plantilla || null, error: null });
 
         // Cargar mapa y plantilla en paralelo para reducir tiempo total
-        const [mapaResult, plantillaResult] = await Promise.all([
-          mapaQuery,
-          plantillaQuery
+        // Agregamos timeout a las queries
+        const [mapaResult, plantillaResult] = await Promise.race([
+          Promise.all([mapaQuery, plantillaQuery]),
+          timeoutPromise('Error al cargar mapa: Tiempo de espera agotado')
         ]);
+
+        if (!isMounted) return;
 
         setMapLoadProgress(75);
 
@@ -259,7 +276,9 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         if (mapaDataFromAPI) {
           setMapa(mapaDataFromAPI);
           // Guardar en cache
-          sessionStorage.setItem(mapaCacheKey, JSON.stringify(mapaDataFromAPI));
+          try {
+            sessionStorage.setItem(mapaCacheKey, JSON.stringify(mapaDataFromAPI));
+          } catch (e) { }
         } else if (!mapaData) {
           // Si no hay datos ni en cache ni en API, establecer null
           setMapa(null);
@@ -279,17 +298,22 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
         // Ocultar loading r¡pidamente despu©s de mostrar 100%
         setTimeout(() => {
-          setLoading(false);
+          if (isMounted) setLoading(false);
         }, 100);
       } catch (err) {
+        if (!isMounted) return;
+        console.error('[SeatSelectionPage] Error loading map:', err);
         // Error silencioso - ya se muestra en la UI
-        setError(err.message);
+        setError(err.message || 'Error desconocido al cargar el mapa');
         setMapLoadProgress(0);
         setLoading(false);
       }
+
     };
 
     loadMapa();
+
+    return () => { isMounted = false; };
   }, [funcionId, redirectFailed, isRedirecting]);
 
   // Función optimizada para obtener datos del asiento (con cache)
