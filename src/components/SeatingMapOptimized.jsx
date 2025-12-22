@@ -298,6 +298,10 @@ const SeatingMapOptimized = ({
                 const { width, height } = entry.contentRect;
                 if (width > 0 && height > 0) {
                     setDimensions({ width, height });
+                    // Force redraw to ensure Konva updates its internal hit graph dimensions
+                    if (stageRef.current) {
+                        stageRef.current.batchDraw();
+                    }
                 }
             }
         });
@@ -504,7 +508,7 @@ const SeatingMapOptimized = ({
                                 seat,
                                 null,
                                 isSelected,
-                                Array.from(selectedSeatIds),
+                                selectedSeatIds,
                                 lockedSeats
                             );
                             const border = getBorderColor(seat, isSelected);

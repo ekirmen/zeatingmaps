@@ -66,14 +66,18 @@ const Boleteria = () => {
     setFoundSeats(seats);
   });
 
-  const seatLockStore = useSeatLockStore();
+  const {
+    lockSeat,
+    unlockSeat,
+    isSeatLocked,
+    isSeatLockedByMe,
+    subscribeToFunction,
+    unsubscribe,
+    lockedSeats: rtLockedSeats,
+    seatStates
+  } = useSeatLockStore();
 
-  const lockSeat = seatLockStore.lockSeat;
-  const unlockSeat = seatLockStore.unlockSeat;
-  const isSeatLocked = seatLockStore.isSeatLocked;
-  const isSeatLockedByMe = seatLockStore.isSeatLockedByMe;
-  const subscribeToFunction = seatLockStore.subscribeToFunction;
-  const unsubscribe = seatLockStore.unsubscribe;
+
 
   // Suscribirse a eventos en tiempo real para la función seleccionada (optimizado)
   const subscriptionFuncionId = useRef(null);
@@ -1214,7 +1218,9 @@ const Boleteria = () => {
                     onSeatToggle={handleSeatToggle}
                     foundSeats={foundSeats}
                     selectedSeats={selectedSeatIds}
-                    lockedSeats={permanentLocks}
+                    lockedSeats={[...permanentLocks, ...rtLockedSeats]}
+                    seatStates={seatStates}
+                    rtLockedSeats={rtLockedSeats}
                     allowSearchSeatSelection={searchAllSeats}
                     allowBlockedSeatSelection={blockAction === 'unlock'}
                     disableSeatClickThrottle={blockMode}

@@ -2,7 +2,7 @@
 // Se usa en Store, Boletería y Crear Mapa
 
 import { useTheme } from '../contexts/ThemeContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
@@ -76,16 +76,21 @@ export const useSeatColors = (eventId = null) => {
     loadEventTheme();
   }, [eventId, theme, getEventTheme]);
 
+  // Cache session_id to avoid localStorage access on every seat render
+  const currentSessionId = useMemo(() => {
+    if (typeof window === 'undefined') return 'unknown';
+    const rawSessionId = localStorage.getItem('anonSessionId');
+    return rawSessionId
+      ? rawSessionId.trim().toLowerCase().replace(/^["']|["']$/g, '')
+      : 'unknown';
+  }, []);
+
   // Función para obtener el color automático de un asiento
   const getSeatColor = (seat, zona, isSelected, selectedSeats = [], lockedSeats = [], seatStates = null) => {
     const seatId = seat._id || seat.id;
-    const isSelectedByMe = selectedSeats.includes(seatId);
-
-    // Obtener el session_id actual y normalizarlo (match with atomicSeatLock/store logic)
-    const rawSessionId = localStorage.getItem('anonSessionId');
-    const currentSessionId = rawSessionId
-      ? rawSessionId.trim().toLowerCase().replace(/^["']|["']$/g, '')
-      : 'unknown';
+    const isSelectedByMe = selectedSeats instanceof Set
+      ? selectedSeats.has(seatId)
+      : Array.isArray(selectedSeats) && selectedSeats.includes(seatId);
 
     // Verificar si hay un estado actualizado en el store (tiempo real) - PRIORIDAD MÁXIMA
     // seatStates puede ser un Map o un objeto
