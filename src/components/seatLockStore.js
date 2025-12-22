@@ -1660,6 +1660,27 @@ export const useSeatLockStore = create((set, get) => ({
     }
   },
 
+  // Alternar estado de asiento (toggle)
+  toggleSeat: async (seat) => {
+    const seatId = seat._id || seat.id || seat.sillaId;
+    if (!seatId) return false;
+
+    // Verificar si ya está seleccionado por mí
+    const isLockedByMe = await get().isSeatLockedByMe(seatId, seat.funcionId);
+
+    if (isLockedByMe) {
+      return get().unlockSeat(seatId, seat.funcionId);
+    } else {
+      // Verificar si está ocupado por otro
+      const isLocked = await get().isSeatLocked(seatId, seat.funcionId);
+      if (isLocked) {
+        console.warn('Asiento ya ocupado:', seatId);
+        return false;
+      }
+      return get().lockSeat(seatId, 'seleccionado', seat.funcionId);
+    }
+  },
+
   // Cache para verificaciones de BD (evita consultas innecesarias)
   seatStatusCache: new Map(),
 
