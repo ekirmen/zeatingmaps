@@ -1074,20 +1074,36 @@ const SeatingMapUnified = ({
 
   const validatedSeats = allSeats;
 
+  // Calcular dimensiones basado en elementos estáticos (mesas y elementos raw) para evitar recálculos por cambios de estado
   const maxDimensions = useMemo(() => {
     let maxX = 800;
     let maxY = 600;
 
-    if (validatedSeats.length > 0) {
-      maxX = Math.max(...validatedSeats.map((s) => (s.x || 0) + (s.ancho || 30)), 800);
-      maxY = Math.max(...validatedSeats.map((s) => (s.y || 0) + (s.alto || 30)), 600);
-    } else if (validatedMesas.length > 0) {
-      maxX = Math.max(...validatedMesas.map((m) => (m.posicion?.x || 0) + (m.width || 100)), 800);
-      maxY = Math.max(...validatedMesas.map((m) => (m.posicion?.y || 0) + (m.height || 80)), 600);
+    // Calcular basado en asientos RAW (sin estado dinámico)
+    const rawSeats = [];
+    rawMapElements?.forEach(el => {
+      if (Array.isArray(el.sillas)) {
+        rawSeats.push(...el.sillas);
+      } else if (el.type === 'silla') {
+        rawSeats.push(el);
+      }
+    });
+
+    if (rawSeats.length > 0) {
+      maxX = Math.max(...rawSeats.map((s) => (s.posicion?.x || s.x || 0) + (s.ancho || 30)), 800);
+      maxY = Math.max(...rawSeats.map((s) => (s.posicion?.y || s.y || 0) + (s.alto || 30)), 600);
+    }
+
+    // Y mesas
+    if (mesas.length > 0) {
+      const mX = Math.max(...mesas.map((m) => (m.posicion?.x || m.x || 0) + (m.width || 100)), 800);
+      const mY = Math.max(...mesas.map((m) => (m.posicion?.y || m.y || 0) + (m.height || 80)), 600);
+      maxX = Math.max(maxX, mX);
+      maxY = Math.max(maxY, mY);
     }
 
     return { maxX, maxY };
-  }, [validatedSeats, validatedMesas]);
+  }, [rawMapElements, mesas]);
 
   /* 
      Fix 1: Estabilizar dimensiones del Stage para evitar reseteos de Zoom en móvil.
@@ -1234,6 +1250,7 @@ const SeatingMapUnified = ({
           /* Fix 2: Habilitar draggable siempre para permitir panning */
           draggable={true}
           dragDistance={10} // Prevent micro-movements from blocking clicks
+          tapDistance={15} // Tolerance for tap vs drag logic
           ref={stageRef}
           imageSmoothingEnabled={canvasConfig.imageSmoothingEnabled}
           hitGraphEnabled={canvasConfig.hitGraphEnabled}

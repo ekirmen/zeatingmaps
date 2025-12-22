@@ -546,6 +546,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
                 isAnySeatInTableLocked={isAnySeatInTableLocked}
                 areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
                 lockedSeats={lockedSeats}
+                modoVenta={true}
               />
             </div>
           ) : (
