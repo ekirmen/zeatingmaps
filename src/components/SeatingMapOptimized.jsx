@@ -499,9 +499,15 @@ const SeatingMapOptimized = ({
                             // For robustness, let's assume 'seat.estado' is reliable OR calculate color manually if needed.
                             // The 'getSeatColor' hook usually takes the seat object which includes 'estado'.
 
-                            // Let's pass the raw seat to shape.
-                            const color = getSeatColor(seat);
-                            const border = getBorderColor(seat);
+                            // Pass all state to getSeatColor to ensure realtime updates work
+                            const color = getSeatColor(
+                                seat,
+                                null,
+                                isSelected,
+                                Array.from(selectedSeatIds),
+                                lockedSeats
+                            );
+                            const border = getBorderColor(seat, isSelected);
 
                             return (
                                 <SeatShape
