@@ -4,7 +4,7 @@ import { Search, UserPlus, X, Edit, Settings, ChevronDown, ChevronUp } from 'luc
 import { supabase, supabaseAdmin } from '../../../supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
 import downloadTicket from '../../../utils/downloadTicket';
-import { useCartStore } from '../../store/cartStore';
+import { useCartStore } from '../../../store/cartStore';
 
 const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect, setSelectedEvent }) => {
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
