@@ -62,7 +62,7 @@ const UnifiedContextSelector = ({
 
                 // 3. Fetch Functions (Funciones)
                 let functionsQuery = supabase.from('funciones').select('id, nombre, evento_id, fecha_celebracion');
-                if (isMultiTenant) functionsQuery = functionsQuery.eq('tenant_id', currentTenant.id);
+
 
                 const [venuesRes, eventsRes, functionsRes] = await Promise.all([
                     venuesQuery,
