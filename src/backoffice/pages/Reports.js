@@ -55,6 +55,7 @@ import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { TenantEmailConfigService } from '../services/tenantEmailConfigService';
+import UnifiedContextSelector from '../components/UnifiedContextSelector';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -76,6 +77,11 @@ const Reports = () => {
     eventType: 'all',
     paymentMethod: 'all',
     status: 'all'
+  });
+  const [contextFilters, setContextFilters] = useState({
+    venueId: 'all',
+    eventId: 'all',
+    functionId: 'all'
   });
   const [selectedReport, setSelectedReport] = useState('sales');
   const [exportModalVisible, setExportModalVisible] = useState(false);
@@ -228,7 +234,7 @@ const Reports = () => {
 
   useEffect(() => {
     loadReportData();
-  }, [filters, selectedReport]);
+  }, [filters, selectedReport, contextFilters]);
 
   const loadReportData = async () => {
     try {
@@ -297,6 +303,10 @@ const Reports = () => {
     } finally {
       setDeletingReportId(null);
     }
+  };
+
+  const handleContextFilterChange = ({ venueId, eventId, functionId }) => {
+    setContextFilters({ venueId, eventId, functionId });
   };
 
   const handleLoadSavedReport = (reportId) => {
@@ -483,15 +493,27 @@ const Reports = () => {
 
   const loadSalesReport = async () => {
     try {
+      // Use !inner if filtering by venue to ensure we can filter on the joined table
+      const eventJoinType = contextFilters.venueId !== 'all' ? '!inner' : '';
+
       let query = supabase
         .from('payment_transactions')
-        .select('id, created_at, monto, status, user_id, evento_id, user:profiles!user_id(login), event:eventos(nombre)')
+        .select(`id, created_at, monto, status, user_id, evento_id, funcion_id, user:profiles!user_id(login), event:eventos${eventJoinType}(nombre, recinto)`)
         .in('status', ['pagado', 'completed']);
 
       if (filters.dateRange) {
         query = query
           .gte('created_at', filters.dateRange[0].toISOString())
           .lte('created_at', filters.dateRange[1].toISOString());
+      }
+
+      // Context Filters
+      if (contextFilters.functionId !== 'all') {
+        query = query.eq('funcion_id', contextFilters.functionId);
+      } else if (contextFilters.eventId !== 'all') {
+        query = query.eq('evento_id', contextFilters.eventId);
+      } else if (contextFilters.venueId !== 'all') {
+        query = query.eq('event.recinto', contextFilters.venueId);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -521,6 +543,13 @@ const Reports = () => {
         query = query
           .gte('fecha_evento', filters.dateRange[0].toISOString())
           .lte('fecha_evento', filters.dateRange[1].toISOString());
+      }
+
+      // Context Filters
+      if (contextFilters.eventId !== 'all') {
+        query = query.eq('id', contextFilters.eventId);
+      } else if (contextFilters.venueId !== 'all') {
+        query = query.eq('recinto', contextFilters.venueId);
       }
 
       const { data, error } = await query.order('fecha_evento', { ascending: false });
@@ -556,9 +585,10 @@ const Reports = () => {
 
   const loadPaymentsReport = async () => {
     try {
+      const eventJoinType = contextFilters.venueId !== 'all' ? '!inner' : '';
       let query = supabase
         .from('payment_transactions')
-        .select('id, monto, status, created_at, user_id, user:profiles!user_id(login)')
+        .select(`id, monto, status, created_at, user_id, evento_id, funcion_id, user:profiles!user_id(login), event:eventos${eventJoinType}(recinto)`)
 
       if (filters.status !== 'all') {
         const statusMap = {
@@ -575,6 +605,16 @@ const Reports = () => {
         query = query
           .gte('created_at', filters.dateRange[0].toISOString())
           .lte('created_at', filters.dateRange[1].toISOString());
+      }
+
+      // Context Filters
+      if (contextFilters.functionId !== 'all') {
+        query = query.eq('funcion_id', contextFilters.functionId);
+      } else if (contextFilters.eventId !== 'all') {
+        query = query.eq('evento_id', contextFilters.eventId);
+      } else if (contextFilters.venueId !== 'all') {
+        // Filter by venue using the joined event table
+        query = query.eq('event.recinto', contextFilters.venueId);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -1458,6 +1498,16 @@ const Reports = () => {
                 }
               />
             </Space>
+          </Col>
+
+          <Col xs={24} md={12}>
+            <UnifiedContextSelector
+              onFilterChange={handleContextFilterChange}
+              venueId={contextFilters.venueId}
+              eventId={contextFilters.eventId}
+              functionId={contextFilters.functionId}
+              style={{ marginTop: 8 }}
+            />
           </Col>
 
           <Col xs={24} sm={12} md={4}>

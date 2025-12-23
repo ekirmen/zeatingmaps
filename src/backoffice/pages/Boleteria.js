@@ -15,6 +15,7 @@ import { useClientManagement } from '../hooks/useClientManagement';
 import { supabase } from '../../supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import logger from '../../utils/logger';
+import UnifiedContextSelector from '../components/UnifiedContextSelector';
 
 const Boleteria = () => {
   const {
@@ -50,6 +51,28 @@ const Boleteria = () => {
   const [searchAllSeatsLoading, setSearchAllSeatsLoading] = useState(false);
   const [savedCartBeforeSearch, setSavedCartBeforeSearch] = useState(null);
   const [searchDataLoaded, setSearchDataLoaded] = useState(false);
+
+  // Added for UnifiedContextSelector
+  const [selectedVenueId, setSelectedVenueId] = useState('all');
+
+  const handleContextChange = useCallback(({ venueId, eventId, functionId }) => {
+    setSelectedVenueId(venueId);
+
+    if (eventId !== 'all' && eventId !== selectedEvent?.id) {
+      handleEventSelect(eventId);
+    } else if (eventId === 'all' && selectedEvent) {
+      // Ideally clear event, but handleEventSelect might expect an ID. 
+      // If clearing is not supported by useBoleteria, we might just keep it or inspect handleEventSelect.
+      // Assuming handleEventSelect('') or null works
+      handleEventSelect(null);
+    }
+
+    if (functionId !== 'all' && functionId !== selectedFuncion?.id) {
+      handleFunctionSelect(functionId);
+    } else if (functionId === 'all' && selectedFuncion) {
+      handleFunctionSelect(null);
+    }
+  }, [selectedEvent, selectedFuncion, handleEventSelect, handleFunctionSelect]);
 
   const {
     selectedClient,
@@ -1020,53 +1043,22 @@ const Boleteria = () => {
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header ultra compacto con búsqueda de evento y función */}
+          {/* Header ultra compacto con búsqueda de evento y función - REPLACED with UnifiedContextSelector */}
           <div className="bg-white border-b border-gray-200 px-3 py-2 md:px-1 md:py-0.5 shadow-sm md:shadow-none z-10">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 flex-1">
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-500">Evento:</span>
-                  <select
-                    className="text-xs border border-gray-300 rounded px-1 py-0.5 min-w-0 flex-1"
-                    value={selectedEvent?.id || ''}
-                    onChange={(e) => {
-                      const eventId = e.target.value;
-                      if (eventId && handleEventSelect) {
-                        handleEventSelect(eventId);
-                      }
-                    }}
-                  >
-                    <option value="">Selecciona evento</option>
-                    {eventos?.map(evento => (
-                      <option key={evento.id} value={evento.id}>
-                        {evento.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-500">FunciÂ³n:</span>
-                  <select
-                    className="text-xs border border-gray-300 rounded px-1 py-0.5 min-w-0 flex-1"
-                    value={selectedFuncion?.id || ''}
-                    onChange={(e) => {
-                      const functionId = e.target.value;
-                      if (functionId && handleFunctionSelect) {
-                        handleFunctionSelect(functionId);
-                      }
-                    }}
-                    disabled={!selectedEvent}
-                  >
-                    <option value="">Selecciona función</option>
-                    {funciones?.filter(func => func.evento_id === selectedEvent?.id).map(funcion => (
-                      <option key={funcion.id} value={funcion.id}>
-                        {new Date(funcion.fecha_celebracion).toLocaleDateString()} {new Date(funcion.fecha_celebracion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="flex-1">
+                <UnifiedContextSelector
+                  venueId={selectedVenueId}
+                  eventId={selectedEvent?.id ? String(selectedEvent.id) : 'all'}
+                  functionId={selectedFuncion?.id ? String(selectedFuncion.id) : 'all'}
+                  onFilterChange={handleContextChange}
+                  layout="horizontal"
+                  showVenue={true}
+                  style={{ fontSize: '12px', width: '100%' }}
+                />
               </div>
               <div className="text-xs text-gray-400 flex-shrink-0">
-                Ã°Å¸Å¸Â¢Ã°Å¸Å¸Â¡Ã°Å¸â€Â´Ã°Å¸Å¸Â£Å¡Â«
+                Ã°Å¸Å¸Â¢Ã°Å¸Å¸Â¡Ã°Å¸â€ Â´Ã°Å¸Å¸Â£Å¡Â«
               </div>
             </div>
           </div>

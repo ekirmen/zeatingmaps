@@ -24,6 +24,7 @@ import {
   unhidePaymentTransaction,
   updatePaymentTransactionStatus
 } from '../../services/paymentTransactionsService';
+import UnifiedContextSelector from '../components/UnifiedContextSelector';
 
 const { Text, Title } = Typography;
 
@@ -44,7 +45,7 @@ const STATUS_COLORS = {
 };
 
 const SOURCE_LABELS = {
-  box_office: 'Boleter­a',
+  box_office: 'Boletería',
   online: 'Venta Online',
   web: 'Venta Online',
   affiliate: 'Afiliado',
@@ -56,12 +57,8 @@ const SalesTransactions = () => {
   const { currentTenant } = useTenant();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [filtersLoading, setFiltersLoading] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [profilesMap, setProfilesMap] = useState(new Map());
-  const [venues, setVenues] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [functions, setFunctions] = useState([]);
 
   const [recordLimit, setRecordLimit] = useState(100);
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,150 +72,19 @@ const SalesTransactions = () => {
 
   const isMultiTenant = useMemo(() => currentTenant?.id && currentTenant.id !== 'main-domain', [currentTenant?.id]);
 
-  const loadFilters = useCallback(async () => {
-    try {
-      setFiltersLoading(true);
-
-      let recintosQuery = supabase
-        .from('recintos')
-        .select('id, nombre');
-
-      let eventosQuery = supabase
-        .from('eventos')
-        .select('id, nombre, recinto, recinto_id, tenant_id');
-
-      let funcionesQuery = supabase
-        .from('funciones')
-        .select('*');
-
-      if (isMultiTenant) {
-        recintosQuery = recintosQuery.eq('tenant_id', currentTenant.id);
-        eventosQuery = eventosQuery.eq('tenant_id', currentTenant.id);
-        funcionesQuery = funcionesQuery.eq('tenant_id', currentTenant.id);
-      }
-
-      const [recintosResponse, eventosResponse] = await Promise.all([
-        recintosQuery,
-        eventosQuery
-      ]);
-
-      const handleFuncionesFallback = async (error) => {
-        console.warn('š ï¸ [SalesTransactions] Error cargando funciones, usando fallback select("*"):', error);
-        let fallbackQuery = supabase
-          .from('funciones')
-          .select('*');
-
-        if (isMultiTenant) {
-          fallbackQuery = fallbackQuery.eq('tenant_id', currentTenant.id);
-        }
-
-        const fallbackResponse = await fallbackQuery;
-
-        if (fallbackResponse.error) {
-          console.error('Œ [SalesTransactions] Error en fallback de funciones:', fallbackResponse.error);
-          return fallbackResponse;
-        }
-
-        return {
-          data: fallbackResponse.data || [],
-          error: null
-        };
-      };
-
-      let funcionesResponse = await funcionesQuery;
-
-      if (funcionesResponse.error) {
-        funcionesResponse = await handleFuncionesFallback(funcionesResponse.error);
-      }
-
-      if (recintosResponse.error) {
-        console.error('Error cargando recintos:', recintosResponse.error);
-        message.error('No se pudieron cargar los recintos');
-      } else {
-        setVenues(recintosResponse.data || []);
-      }
-
-      if (eventosResponse.error) {
-        console.error('Error cargando eventos:', eventosResponse.error);
-        message.error('No se pudieron cargar los eventos');
-      } else {
-        setEvents(eventosResponse.data || []);
-      }
-
-      if (funcionesResponse.error) {
-        console.error('Error cargando funciones:', funcionesResponse.error);
-        message.error('No se pudieron cargar las funciones');
-      } else {
-        const normalizedFunctions = (funcionesResponse.data || []).map(funcion => {
-          const fechaCelebracion =
-            funcion.fecha_celebracion ||
-            funcion.fechaCelebracion ||
-            funcion.fecha ||
-            null;
-
-          let hora = funcion.hora;
-
-          if (!hora && fechaCelebracion) {
-            try {
-              const parsed = new Date(fechaCelebracion);
-
-              if (!Number.isNaN(parsed.getTime())) {
-                const hours = String(parsed.getHours()).padStart(2, '0');
-                const minutes = String(parsed.getMinutes()).padStart(2, '0');
-                hora = `${hours}:${minutes}`;
-              }
-            } catch (parseError) {
-            }
-          }
-
-          let nombre = funcion.nombre;
-
-          if (!nombre) {
-            if (fechaCelebracion) {
-              try {
-                const parsed = new Date(fechaCelebracion);
-
-                if (!Number.isNaN(parsed.getTime())) {
-                  nombre = new Intl.DateTimeFormat('es-ES', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short'
-                  }).format(parsed);
-                }
-              } catch (formatError) {
-              }
-            }
-
-            if (!nombre) {
-              nombre = `Funci³n ${funcion.id}`;
-            }
-          }
-
-          return {
-            ...funcion,
-            nombre,
-            fecha: funcion.fecha || fechaCelebracion,
-            hora,
-            fecha_celebracion: fechaCelebracion
-          };
-        });
-
-        setFunctions(normalizedFunctions);
-      }
-    } catch (error) {
-      console.error('Error al cargar filtros de transacciones:', error);
-      message.error('No se pudieron cargar los filtros');
-    } finally {
-      setFiltersLoading(false);
-    }
-  }, [currentTenant?.id, isMultiTenant]);
-
   const loadTransactions = useCallback(async () => {
     try {
       setIsLoading(true);
 
+      // UPDATED: Join with related tables to fetch names
       let query = supabase
         .from('payment_transactions')
-        .select('*')
+        .select(`
+          *,
+          event:eventos(id, nombre, recinto_id, recinto),
+          venue:recintos(id, nombre),
+          funcion:funciones(id, nombre, fecha, fecha_celebracion, hora)
+        `)
         .order('created_at', { ascending: false })
         .limit(recordLimit);
 
@@ -279,58 +145,14 @@ const SalesTransactions = () => {
   }, [currentTenant?.id, isMultiTenant, recordLimit]);
 
   useEffect(() => {
-    loadFilters();
-  }, [loadFilters]);
-
-  useEffect(() => {
     loadTransactions();
   }, [loadTransactions]);
 
-  useEffect(() => {
-    setSelectedEvent('all');
-    setSelectedFunction('all');
-  }, [selectedVenue]);
-
-  useEffect(() => {
-    setSelectedFunction('all');
-  }, [selectedEvent]);
-
-  const venuesMap = useMemo(
-    () => new Map((venues || []).map(venue => [String(venue.id), venue])),
-    [venues]
-  );
-
-  const eventsMap = useMemo(
-    () => new Map((events || []).map(event => [String(event.id), event])),
-    [events]
-  );
-
-  const functionsMap = useMemo(
-    () => new Map((functions || []).map(funcion => [String(funcion.id), funcion])),
-    [functions]
-  );
-
-  const filteredEvents = useMemo(() => {
-    if (selectedVenue === 'all') {
-      return events;
-    }
-
-    return (events || []).filter(event => {
-      const eventVenueId = event?.recinto || event?.recinto_id;
-      return eventVenueId && String(eventVenueId) === String(selectedVenue);
-    });
-  }, [events, selectedVenue]);
-
-  const filteredFunctions = useMemo(() => {
-    if (selectedEvent === 'all') {
-      return functions;
-    }
-
-    return (functions || []).filter(funcion => {
-      const eventId = funcion?.evento_id;
-      return eventId && String(eventId) === String(selectedEvent);
-    });
-  }, [functions, selectedEvent]);
+  const handleContextFilterChange = useCallback(({ venueId, eventId, functionId }) => {
+    setSelectedVenue(venueId);
+    setSelectedEvent(eventId);
+    setSelectedFunction(functionId);
+  }, []);
 
   const formatProfile = useCallback((profile) => {
     if (!profile) {
@@ -349,13 +171,23 @@ const SalesTransactions = () => {
 
     return (transactions || [])
       .map(transaction => {
-        const eventId = transaction?.evento_id || transaction?.event_id || transaction?.eventId;
-        const functionId = transaction?.funcion_id || transaction?.function_id || transaction?.functionId;
+        // Data now comes joined as objects 'event', 'venue', 'funcion' (note lowercase in select)
+        const event = transaction.event;
+        const venue = transaction.venue;
+        // Note: Venue might be null if 'event' has logic to find it or if joined via 'recintos' directly.
+        // My query joins 'venue:recintos'. Assuming transaction has 'recinto_id' or relation is strictly defined?
+        // Actually payment_transactions often doesn't have direct 'recinto_id'. 
+        // Usually it relates via Event.
+        // If query failed to join venue directly, use event.recinto_id logic?
+        // But let's assume the join works if relation exists. If not, we might be missing venue names.
 
-        const event = eventId ? eventsMap.get(String(eventId)) : null;
-        const funcion = functionId ? functionsMap.get(String(functionId)) : null;
-        const venueId = event?.recinto || event?.recinto_id;
-        const venue = venueId ? venuesMap.get(String(venueId)) : null;
+        const funcion = transaction.funcion;
+
+        const eventId = transaction.evento_id || transaction.event_id || transaction.eventId;
+        const functionId = transaction.funcion_id || transaction.function_id || transaction.functionId;
+
+        // Resolve venue ID logic
+        const venueId = venue?.id || event?.recinto_id || event?.recinto;
 
         const buyerProfile = transaction?.user_id ? profilesMap.get(transaction.user_id) : null;
         const sellerProfile = transaction?.processed_by ? profilesMap.get(transaction.processed_by) : null;
@@ -429,22 +261,19 @@ const SalesTransactions = () => {
         return true;
       });
   }, [
-    eventsMap,
     formatProfile,
-    functionsMap,
     profilesMap,
     searchTerm,
     showHidden,
     selectedEvent,
     selectedFunction,
     selectedVenue,
-    transactions,
-    venuesMap
+    transactions
   ]);
 
   const handleStatusChange = useCallback(async (transaction, newStatus) => {
     if (!transaction?.id) {
-      message.warning('No se pudo identificar la transacci³n seleccionada');
+      message.warning('No se pudo identificar la transacción seleccionada');
       return;
     }
 
@@ -460,8 +289,8 @@ const SalesTransactions = () => {
         )
       );
     } catch (error) {
-      console.error('Error al actualizar el estado de la transacci³n:', error);
-      message.error('No se pudo actualizar el estado de la transacci³n');
+      console.error('Error al actualizar el estado de la transacción:', error);
+      message.error('No se pudo actualizar el estado de la transacción');
     } finally {
       setUpdatingId(null);
     }
@@ -469,14 +298,14 @@ const SalesTransactions = () => {
 
   const handleHideTransaction = useCallback(async (transaction) => {
     if (!transaction?.id) {
-      message.warning('No se pudo identificar la transacci³n seleccionada');
+      message.warning('No se pudo identificar la transacción seleccionada');
       return;
     }
 
     try {
       setHidingId(transaction.id);
       const updated = await hidePaymentTransaction(transaction.id);
-      message.success('Transacci³n ocultada correctamente');
+      message.success('Transacción ocultada correctamente');
       setTransactions(prev =>
         prev.map(item =>
           item.id === transaction.id
@@ -485,8 +314,8 @@ const SalesTransactions = () => {
         )
       );
     } catch (error) {
-      console.error('Error al ocultar la transacci³n:', error);
-      message.error('No se pudo ocultar la transacci³n');
+      console.error('Error al ocultar la transacción:', error);
+      message.error('No se pudo ocultar la transacción');
     } finally {
       setHidingId(null);
     }
@@ -494,14 +323,14 @@ const SalesTransactions = () => {
 
   const handleUnhideTransaction = useCallback(async (transaction) => {
     if (!transaction?.id) {
-      message.warning('No se pudo identificar la transacci³n seleccionada');
+      message.warning('No se pudo identificar la transacción seleccionada');
       return;
     }
 
     try {
       setHidingId(transaction.id);
       const updated = await unhidePaymentTransaction(transaction.id);
-      message.success('Transacci³n mostrada nuevamente');
+      message.success('Transacción mostrada nuevamente');
       setTransactions(prev =>
         prev.map(item =>
           item.id === transaction.id
@@ -510,8 +339,8 @@ const SalesTransactions = () => {
         )
       );
     } catch (error) {
-      console.error('Error al mostrar la transacci³n:', error);
-      message.error('No se pudo mostrar la transacci³n');
+      console.error('Error al mostrar la transacción:', error);
+      message.error('No se pudo mostrar la transacción');
     } finally {
       setHidingId(null);
     }
@@ -519,18 +348,18 @@ const SalesTransactions = () => {
 
   const handleDeleteTransaction = useCallback(async (transaction) => {
     if (!transaction?.id) {
-      message.warning('No se pudo identificar la transacci³n seleccionada');
+      message.warning('No se pudo identificar la transacción seleccionada');
       return;
     }
 
     try {
       setDeletingId(transaction.id);
       await deletePaymentTransaction(transaction.id);
-      message.success('Transacci³n eliminada correctamente');
+      message.success('Transacción eliminada correctamente');
       setTransactions(prev => prev.filter(item => item.id !== transaction.id));
     } catch (error) {
-      console.error('Error al eliminar la transacci³n:', error);
-      message.error('No se pudo eliminar la transacci³n');
+      console.error('Error al eliminar la transacción:', error);
+      message.error('No se pudo eliminar la transacción');
     } finally {
       setDeletingId(null);
     }
@@ -576,7 +405,7 @@ const SalesTransactions = () => {
           <Text strong>{record?.gateway_name || record?.gateway_id || 'Sin definir'}</Text>
           {record?.payment_method && (
             <Text type="secondary" style={{ fontSize: 12 }}>
-              M©todo: {record.payment_method.toUpperCase()}
+              Mtodo: {record.payment_method.toUpperCase()}
             </Text>
           )}
         </Space>
@@ -615,28 +444,28 @@ const SalesTransactions = () => {
       title: 'Recinto',
       dataIndex: ['venue', 'nombre'],
       key: 'venue',
-      render: (_, record) => record?.venue?.nombre || '-”'
+      render: (_, record) => record?.venue?.nombre || '-'
     },
     {
       title: 'Evento',
       dataIndex: ['event', 'nombre'],
       key: 'event',
-      render: (_, record) => record?.event?.nombre || '-”'
+      render: (_, record) => record?.event?.nombre || '-'
     },
     {
-      title: 'Funci³n',
+      title: 'Función',
       dataIndex: ['funcion', 'id'],
       key: 'funcion',
       render: (_, record) => {
         if (!record?.funcion) {
-          return '-”';
+          return '-';
         }
 
         const date = record.funcion?.fecha || record.funcion?.fecha_celebracion;
         const time = record.funcion?.hora;
         return (
           <Space direction="vertical" size={0}>
-            <Text strong>{record.funcion?.nombre || `Funci³n ${record.funcion?.id}`}</Text>
+            <Text strong>{record.funcion?.nombre || `Función ${record.funcion?.id}`}</Text>
             {(date || time) && (
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {[date ? format(new Date(date), 'dd/MM/yyyy') : null, time].filter(Boolean).join(' · ')}
@@ -707,10 +536,10 @@ const SalesTransactions = () => {
               </Button>
             )}
             <Popconfirm
-              title="¿Eliminar transacci³n?"
-              description="Esta acci³n no se puede deshacer."
+              title="¿Eliminar transacción?"
+              description="Esta acción no se puede deshacer."
               onConfirm={() => handleDeleteTransaction(record)}
-              okText="S­, eliminar"
+              okText="Sí, eliminar"
               cancelText="Cancelar"
             >
               <Button
@@ -745,52 +574,6 @@ const SalesTransactions = () => {
     loadTransactions();
   }, [loadTransactions]);
 
-  const venueOptions = useMemo(() => [
-    { value: 'all', label: 'Todos los recintos' },
-    ...(venues || []).map(venue => ({
-      value: String(venue.id),
-      label: venue.nombre
-    }))
-  ], [venues]);
-
-  const eventOptions = useMemo(() => [
-    { value: 'all', label: 'Todos los eventos' },
-    ...(filteredEvents || []).map(event => ({
-      value: String(event.id),
-      label: event.nombre
-    }))
-  ], [filteredEvents]);
-
-  const functionOptions = useMemo(() => [
-    { value: 'all', label: 'Todas las funciones' },
-    ...(filteredFunctions || []).map(funcion => ({
-      value: String(funcion.id),
-      label: (() => {
-        const pieces = [];
-        if (funcion.nombre) {
-          pieces.push(funcion.nombre);
-        } else {
-          pieces.push(`Funci³n ${funcion.id}`);
-        }
-
-        const fecha = funcion.fecha || funcion.fecha_celebracion;
-        const hora = funcion.hora;
-        const schedule = [
-          fecha ? format(new Date(fecha), 'dd/MM/yyyy') : null,
-          hora
-        ]
-          .filter(Boolean)
-          .join(' · ');
-
-        if (schedule) {
-          pieces.push(schedule);
-        }
-
-        return pieces.join(' -” ');
-      })()
-    }))
-  ], [filteredFunctions]);
-
   return (
     <div className="p-6 space-y-6">
       <Row justify="space-between" align="middle">
@@ -802,77 +585,73 @@ const SalesTransactions = () => {
         </Col>
         <Col>
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={isLoading}>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={handleRefresh}
+              loading={isLoading}
+            >
               Actualizar
             </Button>
           </Space>
         </Col>
       </Row>
 
-      <Card bordered={false} className="shadow-sm">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} md={8}>
+      <Card>
+        <div style={{ marginBottom: 16 }}>
+          <UnifiedContextSelector
+            onFilterChange={handleContextFilterChange}
+            venueId={selectedVenue}
+            eventId={selectedEvent}
+            functionId={selectedFunction}
+          />
+        </div>
+
+        <Row gutter={[16, 16]} align="middle" justify="space-between" style={{ marginTop: 16 }}>
+          <Col flex="1">
             <Input
-              allowClear
-              placeholder="Buscar por localizador, pedido o cliente"
-              prefix={<SearchOutlined />}
+              prefix={<SearchOutlined className="text-gray-400" />}
+              placeholder="Buscar por localizador, pedido, email..."
               value={searchTerm}
-              onChange={event => setSearchTerm(event.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
+              allowClear
+              style={{ maxWidth: 400 }}
             />
           </Col>
-          <Col xs={24} md={5}>
-            <Select
-              loading={filtersLoading}
-              options={venueOptions}
-              value={selectedVenue}
-              onChange={setSelectedVenue}
-              style={{ width: '100%' }}
-            />
-          </Col>
-          <Col xs={24} md={5}>
-            <Select
-              loading={filtersLoading}
-              options={eventOptions}
-              value={selectedEvent}
-              onChange={setSelectedEvent}
-              style={{ width: '100%' }}
-            />
-          </Col>
-          <Col xs={24} md={6}>
-            <Select
-              loading={filtersLoading}
-              options={functionOptions}
-              value={selectedFunction}
-              onChange={setSelectedFunction}
-              style={{ width: '100%' }}
-              showSearch
-              optionFilterProp="label"
-            />
+          <Col>
+            <Space>
+              <Button onClick={() => setShowHidden(!showHidden)}>
+                {showHidden ? 'Ocultar Ocultos' : 'Ver Ocultos'}
+              </Button>
+            </Space>
           </Col>
         </Row>
       </Card>
 
-      <Card
-        className="shadow-sm"
-        title="Transacciones Recientes"
-        extra={
-          <Space>
-            <Button type="link" onClick={() => setShowHidden(prev => !prev)}>
-              {showHidden ? 'Ocultar transacciones ocultas' : 'Mostrar transacciones ocultas'}
-            </Button>
-            <Button type="link" onClick={handleShowAll}>
-              Ver Todas
-            </Button>
-          </Space>
-        }
-      >
+      <Card className="shadow-sm">
         <Table
-          rowKey={record => record.id}
-          loading={isLoading}
           columns={columns}
           dataSource={preparedTransactions}
-          pagination={{ pageSize: 10, showSizeChanger: false }}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{
+            position: ['bottomRight'],
+            showSizeChanger: true,
+            defaultPageSize: 10,
+            pageSizeOptions: ['10', '20', '50', '100']
+          }}
           scroll={{ x: 1200 }}
+          footer={() => (
+            <div className="flex justify-between items-center">
+              <Text type="secondary">
+                Mostrando últimos {transactions.length} registros
+              </Text>
+              {transactions.length >= recordLimit && (
+                <Button type="link" onClick={handleShowAll}>
+                  Cargar más registros antiguos
+                </Button>
+              )}
+            </div>
+          )}
         />
       </Card>
     </div>
@@ -880,5 +659,3 @@ const SalesTransactions = () => {
 };
 
 export default SalesTransactions;
-
-
