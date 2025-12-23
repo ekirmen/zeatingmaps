@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Input, 
-  Select, 
-  Upload, 
-  message, 
-  Modal, 
-  Image, 
-  Space, 
+import {
+  Card,
+  Button,
+  Input,
+  Select,
+  Upload,
+  message,
+  Modal,
+  Image,
+  Space,
   Popconfirm,
   Tag,
   Row,
@@ -16,23 +16,23 @@ import {
   Typography,
   Divider
 } from '../../utils/antdComponents';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   EyeOutlined,
   UploadOutlined,
   LinkOutlined
-} from '@react-icons/all-files/antd';
+} from '@ant-design/icons';
 import { ImageService } from '../services/imageService';
 
 const { Option } = Select;
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
-const ImageManager = ({ 
-  entityId, 
-  entityType = 'event', 
+const ImageManager = ({
+  entityId,
+  entityType = 'event',
   onImagesChange,
   title = 'Gestor de Im¡genes'
 }) => {
@@ -47,18 +47,18 @@ const ImageManager = ({
     orden: 0
   });
 
-  const imageTypes = entityType === 'event' 
+  const imageTypes = entityType === 'event'
     ? [
-        { value: 'principal', label: 'Principal', color: 'blue' },
-        { value: 'galeria', label: 'Galer­a', color: 'green' },
-        { value: 'banner', label: 'Banner', color: 'purple' }
-      ]
+      { value: 'principal', label: 'Principal', color: 'blue' },
+      { value: 'galeria', label: 'Galer­a', color: 'green' },
+      { value: 'banner', label: 'Banner', color: 'purple' }
+    ]
     : [
-        { value: 'principal', label: 'Principal', color: 'blue' },
-        { value: 'galeria', label: 'Galer­a', color: 'green' },
-        { value: 'exterior', label: 'Exterior', color: 'orange' },
-        { value: 'interior', label: 'Interior', color: 'cyan' }
-      ];
+      { value: 'principal', label: 'Principal', color: 'blue' },
+      { value: 'galeria', label: 'Galer­a', color: 'green' },
+      { value: 'exterior', label: 'Exterior', color: 'orange' },
+      { value: 'interior', label: 'Interior', color: 'cyan' }
+    ];
 
   useEffect(() => {
     if (entityId) {
@@ -68,13 +68,13 @@ const ImageManager = ({
 
   const loadImages = async () => {
     if (!entityId) return;
-    
+
     setLoading(true);
     try {
-      const imageData = entityType === 'event' 
+      const imageData = entityType === 'event'
         ? await ImageService.getEventImages(entityId)
         : await ImageService.getVenueImages(entityId);
-      
+
       setImages(imageData);
       if (onImagesChange) {
         onImagesChange(imageData);
@@ -133,7 +133,7 @@ const ImageManager = ({
 
     try {
       const tableName = entityType === 'event' ? 'evento_imagenes' : 'recinto_imagenes';
-      
+
       if (editingImage) {
         await ImageService.updateImage(editingImage.id, formData, tableName);
         message.success('Imagen actualizada');
@@ -145,7 +145,7 @@ const ImageManager = ({
         }
         message.success('Imagen agregada');
       }
-      
+
       setModalVisible(false);
       loadImages();
     } catch (error) {
@@ -176,11 +176,11 @@ const ImageManager = ({
   };
 
   return (
-    <Card 
+    <Card
       title={title}
       extra={
-        <Button 
-          type="primary" 
+        <Button
+          type="primary"
           icon={<PlusOutlined />}
           onClick={handleAddImage}
         >
@@ -209,8 +209,8 @@ const ImageManager = ({
                 </div>
               }
               actions={[
-                <Button 
-                  type="text" 
+                <Button
+                  type="text"
                   icon={<EditOutlined />}
                   onClick={() => handleEditImage(image)}
                   title="Editar"
@@ -222,9 +222,9 @@ const ImageManager = ({
                   okText="S­"
                   cancelText="No"
                 >
-                  <Button 
-                    type="text" 
-                    danger 
+                  <Button
+                    type="text"
+                    danger
                     icon={<DeleteOutlined />}
                     title="Eliminar"
                   />
@@ -247,14 +247,14 @@ const ImageManager = ({
             </Card>
           </Col>
         ))}
-        
+
         {images.length === 0 && (
           <Col span={24}>
             <div style={{ textAlign: 'center', padding: '40px 20px' }}>
               <Text type="secondary">No hay im¡genes configuradas</Text>
               <br />
-              <Button 
-                type="dashed" 
+              <Button
+                type="dashed"
                 icon={<PlusOutlined />}
                 onClick={handleAddImage}
                 style={{ marginTop: 16 }}

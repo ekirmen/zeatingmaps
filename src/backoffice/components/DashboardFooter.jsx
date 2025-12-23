@@ -1,15 +1,15 @@
 import React from 'react';
 import { Space, Typography } from '../../utils/antdComponents';
 import {
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaSpotify,
-  FaYoutube,
-  FaTiktok,
-  FaWhatsapp,
-  FaTelegramPlane
-} from 'react-icons/fa';
+  FacebookFilled,
+  TwitterOutlined,
+  InstagramOutlined,
+  SoundOutlined,
+  YoutubeFilled,
+  TikTokOutlined,
+  WhatsAppOutlined,
+  SendOutlined
+} from '@ant-design/icons';
 import { useFooter } from '../../contexts/FooterContext';
 
 const { Text } = Typography;
@@ -21,14 +21,14 @@ const DashboardFooter = () => {
     footer?.copyrightText || `© ${new Date().getFullYear()} VenEventos`;
 
   const iconMap = {
-    facebook: FaFacebookF,
-    twitter: FaTwitter,
-    instagram: FaInstagram,
-    spotify: FaSpotify,
-    youtube: FaYoutube,
-    tiktok: FaTiktok,
-    whatsapp: FaWhatsapp,
-    telegram: FaTelegramPlane
+    facebook: FacebookFilled,
+    twitter: TwitterOutlined,
+    instagram: InstagramOutlined,
+    spotify: SoundOutlined,
+    youtube: YoutubeFilled,
+    tiktok: TikTokOutlined,
+    whatsapp: WhatsAppOutlined,
+    telegram: SendOutlined
   };
 
   return (

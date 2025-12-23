@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AiOutlineEye, AiOutlineMobile, AiOutlineDesktop } from 'react-icons/ai';
+import { Eye, Smartphone, Monitor } from 'lucide-react';
 
 const EmailPreview = ({ widgets = [], config = {} }) => {
   const [previewMode, setPreviewMode] = useState('desktop'); // 'desktop' or 'mobile'
@@ -9,9 +9,9 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
     switch (widget.type) {
       case 'Título':
         return (
-          <div className="email-widget-title" style={{ 
-            fontSize: '24px', 
-            fontWeight: 'bold', 
+          <div className="email-widget-title" style={{
+            fontSize: '24px',
+            fontWeight: 'bold',
             color: '#333',
             marginBottom: '16px',
             textAlign: 'center'
@@ -22,9 +22,9 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
 
       case 'Subtítulo':
         return (
-          <div className="email-widget-subtitle" style={{ 
-            fontSize: '18px', 
-            fontWeight: '600', 
+          <div className="email-widget-subtitle" style={{
+            fontSize: '18px',
+            fontWeight: '600',
             color: '#666',
             marginBottom: '12px',
             textAlign: 'center'
@@ -35,9 +35,9 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
 
       case 'Paragraph':
         return (
-          <div className="email-widget-paragraph" style={{ 
-            fontSize: '14px', 
-            lineHeight: '1.6', 
+          <div className="email-widget-paragraph" style={{
+            fontSize: '14px',
+            lineHeight: '1.6',
             color: '#333',
             marginBottom: '16px',
             textAlign: 'left'
@@ -48,16 +48,16 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
 
       case 'Banner':
         return (
-          <div className="email-widget-banner" style={{ 
+          <div className="email-widget-banner" style={{
             marginBottom: '20px',
             textAlign: 'center'
           }}>
             {widget.config?.imagen && (
-              <img 
-                src={widget.config.imagen} 
-                alt="Banner" 
-                style={{ 
-                  maxWidth: '100%', 
+              <img
+                src={widget.config.imagen}
+                alt="Banner"
+                style={{
+                  maxWidth: '100%',
                   height: 'auto',
                   borderRadius: '8px'
                 }}
@@ -71,10 +71,10 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
               Imagen no disponible
             </div>
             {widget.config?.texto && (
-              <div style={{ 
-                marginTop: '8px', 
-                fontSize: '14px', 
-                color: '#666' 
+              <div style={{
+                marginTop: '8px',
+                fontSize: '14px',
+                color: '#666'
               }}>
                 {widget.config.texto}
               </div>
@@ -99,7 +99,7 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
 
         const getButtonText = () => {
           if (widget.config?.textButton) return widget.config.textButton;
-          
+
           switch (widget.config?.buttonType) {
             case '0': return 'Comprar ahora';
             case '1': return 'Invitación';
@@ -119,7 +119,7 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
 
       case 'Información del evento':
         return (
-          <div className="email-widget-event-info" style={{ 
+          <div className="email-widget-event-info" style={{
             backgroundColor: '#f8f9fa',
             padding: '16px',
             borderRadius: '8px',
@@ -134,19 +134,19 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
 
       case 'Código HTML':
         return (
-          <div className="email-widget-html" 
-               dangerouslySetInnerHTML={{ 
-                 __html: widget.config?.html || '<div>Contenido HTML personalizado</div>' 
-               }}
-               style={{ marginBottom: '16px' }}
+          <div className="email-widget-html"
+            dangerouslySetInnerHTML={{
+              __html: widget.config?.html || '<div>Contenido HTML personalizado</div>'
+            }}
+            style={{ marginBottom: '16px' }}
           />
         );
 
       default:
         return (
-          <div className="email-widget-unknown" style={{ 
-            padding: '16px', 
-            backgroundColor: '#f0f0f0', 
+          <div className="email-widget-unknown" style={{
+            padding: '16px',
+            backgroundColor: '#f0f0f0',
             borderRadius: '4px',
             marginBottom: '16px',
             textAlign: 'center',
@@ -171,7 +171,7 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
   return (
     <div className="email-preview-container">
       {/* Preview Controls */}
-      <div className="preview-controls" style={{ 
+      <div className="preview-controls" style={{
         marginBottom: '20px',
         display: 'flex',
         justifyContent: 'space-between',
@@ -195,7 +195,7 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
               gap: '4px'
             }}
           >
-            <AiOutlineDesktop />
+            <Monitor />
             Desktop
           </button>
           <button
@@ -212,7 +212,7 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
               gap: '4px'
             }}
           >
-            <AiOutlineMobile />
+            <Smartphone />
             Mobile
           </button>
         </div>
@@ -231,14 +231,14 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
             gap: '4px'
           }}
         >
-          <AiOutlineEye />
+          <Eye />
           {showPreview ? 'Ocultar Preview' : 'Mostrar Preview'}
         </button>
       </div>
 
       {/* Email Preview */}
       {showPreview && (
-        <div className="email-preview" style={{ 
+        <div className="email-preview" style={{
           backgroundColor: '#f5f5f5',
           padding: '20px',
           borderRadius: '8px',
@@ -246,7 +246,7 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
         }}>
           <div style={containerStyle}>
             {/* Email Header */}
-            <div className="email-header" style={{ 
+            <div className="email-header" style={{
               textAlign: 'center',
               marginBottom: '24px',
               paddingBottom: '16px',
@@ -267,9 +267,9 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
                   </div>
                 ))
               ) : (
-                <div style={{ 
-                  textAlign: 'center', 
-                  padding: '40px', 
+                <div style={{
+                  textAlign: 'center',
+                  padding: '40px',
                   color: '#666',
                   fontStyle: 'italic'
                 }}>
@@ -279,7 +279,7 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
             </div>
 
             {/* Email Footer */}
-            <div className="email-footer" style={{ 
+            <div className="email-footer" style={{
               marginTop: '24px',
               paddingTop: '16px',
               borderTop: '1px solid #e0e0e0',

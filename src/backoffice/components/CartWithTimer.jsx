@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { message } from '../../utils/antdComponents';
-import { AiOutlineClose, AiOutlineClockCircle } from 'react-icons/ai';
+import { X, Clock } from 'lucide-react';
 
 const CartWithTimer = ({
   carrito = [],
@@ -106,7 +106,7 @@ const CartWithTimer = ({
       <div className="bg-purple-600 text-white px-4 py-3 flex items-center justify-between">
         <h3 className="font-semibold text-lg">Carrito</h3>
         <div className="flex items-center gap-2">
-          <AiOutlineClockCircle className="text-yellow-300" />
+          <Clock className="text-yellow-300" />
           <span className="font-mono text-sm">
             {formatTime(timeLeft)}
           </span>
@@ -153,7 +153,7 @@ const CartWithTimer = ({
                     onClick={() => handleRemoveSeat(seat._id)}
                     className="text-red-500 hover:text-red-700 p-1"
                   >
-                    <AiOutlineClose size={14} />
+                    <X size={14} />
                   </button>
                 </div>
               ))}

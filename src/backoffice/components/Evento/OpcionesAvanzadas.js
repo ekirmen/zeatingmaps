@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Modal from 'react-modal';
 import API_BASE_URL from '../../../utils/apiBase';
-import { FaFacebookF } from 'react-icons/fa';
+
 import { supabase } from '../../../supabaseClient';
 import {
   CreditCardOutlined,
@@ -10,7 +10,8 @@ import {
   DollarOutlined,
   AppleOutlined,
   AndroidOutlined,
-  ShopOutlined
+  ShopOutlined,
+  FacebookFilled
 } from '@ant-design/icons';
 
 /**
@@ -415,7 +416,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
 
   return (
     <div className="tab-content opciones-avanzadas space-y-4">
-     <h4>Otras opciones</h4>
+      <h4>Otras opciones</h4>
 
       <div className="form-group space-y-2">
         <label>
@@ -493,11 +494,10 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
               return (
                 <label
                   key={m._id}
-                  className={`inline-flex items-center gap-3 p-2 border border-gray-200 rounded-md ${
-                    isDisabled
+                  className={`inline-flex items-center gap-3 p-2 border border-gray-200 rounded-md ${isDisabled
                       ? 'opacity-50 cursor-not-allowed bg-gray-100'
                       : 'hover:bg-gray-50 cursor-pointer'
-                  }`}
+                    }`}
                 >
                   <input
                     type="checkbox"
@@ -552,7 +552,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
 
           <div className="form-group space-y-1">
             <label className="flex items-center gap-2">
-              <FaFacebookF /> Código Meta Pixel
+              <FacebookFilled /> Código Meta Pixel
             </label>
             <input
               type="text"
