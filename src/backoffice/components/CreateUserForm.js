@@ -113,9 +113,15 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
           })}
           className="w-full border rounded px-3 py-2"
         >
-          <option value="usuario">Usuario</option>
-          <option value="administrador">Administrador</option>
-          <option value="super_administrador">Super Administrador</option>
+          <option value="tenant_admin">Administrador (Dueño)</option>
+          <option value="gerente">Gerente</option>
+          <option value="taquilla">Taquilla</option>
+          <option value="agencias">Agencias</option>
+          <option value="call_center">Call Center</option>
+          <option value="contenido_marketing">Contenido / Marketing</option>
+          <option value="atencion_cliente">Atención al Cliente</option>
+          <option value="vendedor_externo">Vendedor Externo</option>
+          <option value="reportes">Reportes (Auditor)</option>
         </select>
       </div>
       <div className="flex justify-end gap-3">

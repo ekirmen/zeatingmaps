@@ -134,16 +134,15 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
 
   // User profile options for SaaS multi-tenant system
   const profileOptions = [
-    { value: 'super_admin', label: 'Super Administrador' },
-    { value: 'tenant_admin', label: 'Administrador de Tenant' },
-    { value: 'event_manager', label: 'Gestor de Eventos' },
-    { value: 'sales_manager', label: 'Gestor de Ventas' },
-    { value: 'box_office', label: 'Taquilla' },
-    { value: 'customer_support', label: 'Soporte al Cliente' },
-    { value: 'marketing', label: 'Marketing' },
-    { value: 'reports', label: 'Reportes y Analytics' },
-    { value: 'finance', label: 'Finanzas y Facturación' },
-    { value: 'technical', label: 'Soporte Técnico' }
+    { value: 'tenant_admin', label: 'Administrador (Dueño)' },
+    { value: 'gerente', label: 'Gerente' },
+    { value: 'taquilla', label: 'Taquilla' },
+    { value: 'agencias', label: 'Agencias' },
+    { value: 'call_center', label: 'Call Center' },
+    { value: 'contenido_marketing', label: 'Contenido / Marketing' },
+    { value: 'atencion_cliente', label: 'Atención al Cliente' },
+    { value: 'vendedor_externo', label: 'Vendedor Externo' },
+    { value: 'reportes', label: 'Reportes (Auditor)' }
   ];
 
   useEffect(() => {
@@ -222,7 +221,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
   const handleVenueChange = (venueId, checked) => {
     setFormData(prev => ({
       ...prev,
-      recintos: checked 
+      recintos: checked
         ? [...prev.recintos, venueId]
         : prev.recintos.filter(id => id !== venueId)
     }));
@@ -465,7 +464,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
             </label>
           </div>
         </div>
-        
+
         {!hasSelectedChannels && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <div className="flex">
@@ -487,7 +486,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
       {/* Permissions Section */}
       <div className="border-t pt-6">
         <h4 className="text-lg font-medium text-gray-900 mb-4">Permisos</h4>
-        
+
         <div className="mb-4">
           <div className="flex items-center">
             <input
@@ -715,7 +714,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
       {/* Payment Methods Section */}
       <div className="border-t pt-6">
         <h4 className="text-lg font-medium text-gray-900 mb-4">Formas de pago</h4>
-        
+
         <div className="mb-4">
           <div className="flex items-center">
             <input
@@ -758,7 +757,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
       {/* Venues Section */}
       <div className="border-t pt-6">
         <h4 className="text-lg font-medium text-gray-900 mb-4">Recintos usuario</h4>
-        
+
         <div className="mb-4">
           <div className="flex items-center">
             <input

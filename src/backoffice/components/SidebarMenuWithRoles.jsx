@@ -373,6 +373,12 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
           permission: 'settings'
         },
         {
+          title: 'Web Studio',
+          path: '/dashboard/webstudio',
+          icon: faCog,
+          permission: 'webstudio'
+        },
+        {
           title: 'Configuración Asientos',
           path: '/dashboard/seat-settings',
           icon: faCog,
@@ -435,12 +441,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
           icon: faFileAlt,
           permission: 'legal_texts'
         },
-        {
-          title: 'Web Studio',
-          path: '/dashboard/webstudio',
-          icon: faCog,
-          permission: 'webstudio'
-        },
+
         {
           title: 'Configuración de Asientos',
           path: '/dashboard/seat-settings',
