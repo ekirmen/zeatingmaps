@@ -252,7 +252,7 @@ const UnifiedContextSelector = ({
                         >
                             <option value="all">{isCompact ? "Función" : "Todas las Funciones"}</option>
                             {filteredFunctions.map(f => (
-                                <option key={f.id} value={String(f.id)}>{getFunctionLabel(f)}</Option>
+                                <option key={f.id} value={String(f.id)}>{getFunctionLabel(f)}</option>
                             ))}
                         </select>
                     </div>
