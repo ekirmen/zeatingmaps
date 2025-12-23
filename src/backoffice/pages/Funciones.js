@@ -1183,26 +1183,44 @@ const Funciones = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Funciones</h1>
+
+        {/* Header Principal */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+          <div className="px-8 py-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Funciones</h1>
+                <p className="text-lg text-gray-600">
+                  Administra las funciones, precios y configuraciones de tus eventos
+                </p>
+              </div>
               <button
                 onClick={() => {
                   setRecintoSeleccionado(null);
                   setSalaSeleccionada(null);
                   setEventoSeleccionado(null);
                 }}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md font-medium transition-colors"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline transition-all flex items-center gap-2"
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
                 Limpiar Filtros
               </button>
             </div>
+          </div>
+        </div>
 
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="min-w-[220px]">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Recinto</label>
+        {/* Selectores de Recinto, Sala y Evento */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+              {/* Selector Recinto */}
+              <div className="w-full">
+                <label className="block text-base font-semibold text-gray-800 mb-3">
+                  Seleccionar Recinto *
+                </label>
                 <select
                   value={recintoSeleccionado ? recintoSeleccionado.id : ''}
                   onChange={(e) => {
@@ -1210,113 +1228,141 @@ const Funciones = () => {
                     setRecintoSeleccionado(recinto);
                     setSalaSeleccionada(null);
                   }}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3.5 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white appearance-none cursor-pointer min-h-[48px]"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                    paddingRight: '40px'
+                  }}
                 >
-                  <option value="">Seleccionar Recinto</option>
+                  <option value="" disabled style={{ color: '#999' }}>Seleccionar Recinto</option>
                   {recintos.map(recinto => (
-                    <option key={recinto.id} value={recinto.id}>{recinto.nombre}</option>
+                    <option key={recinto.id} value={recinto.id} style={{ color: '#333' }}>{recinto.nombre}</option>
                   ))}
                 </select>
               </div>
 
+              {/* Selector Sala */}
               {recintoSeleccionado && (
-                <div className="min-w-[220px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Sala</label>
+                <div className="w-full">
+                  <label className="block text-base font-semibold text-gray-800 mb-3">
+                    Seleccionar Sala *
+                  </label>
                   <select
                     value={salaSeleccionada ? salaSeleccionada.id : ''}
                     onChange={(e) => {
                       const sala = recintoSeleccionado.salas.find(s => String(s.id) === e.target.value);
                       setSalaSeleccionada(sala);
                     }}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3.5 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white appearance-none cursor-pointer min-h-[48px]"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      paddingRight: '40px'
+                    }}
                   >
-                    <option value="">Seleccionar Sala</option>
-                    {recintoSeleccionado.salas.map(sala => (
-                      <option key={sala.id} value={sala.id}>{sala.nombre}</option>
+                    <option value="" disabled style={{ color: '#999' }}>Seleccionar Sala</option>
+                    {recintoSeleccionado.salas && recintoSeleccionado.salas.map(sala => (
+                      <option key={sala.id} value={sala.id} style={{ color: '#333' }}>{sala.nombre}</option>
                     ))}
                   </select>
                 </div>
               )}
 
+              {/* Selector Evento (Sólo aparece cuando hay sala seleccionada) */}
               {salaSeleccionada && (
-                <div className="min-w-[240px] flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Evento</label>
+                <div className="w-full">
+                  <label className="block text-base font-semibold text-gray-800 mb-3">
+                    Seleccionar Evento
+                  </label>
                   <select
                     value={eventoSeleccionado ? eventoSeleccionado.id : ''}
                     onChange={(e) => {
                       const evento = eventos.find(ev => String(ev.id) === e.target.value);
                       setEventoSeleccionado(evento);
                     }}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3.5 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white appearance-none cursor-pointer min-h-[48px]"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      paddingRight: '40px'
+                    }}
                   >
-                    <option value="">Seleccionar Evento</option>
+                    <option value="" style={{ color: '#999' }}>Todos los eventos</option>
                     {eventos.map(evento => (
-                      <option key={evento.id} value={evento.id}>{evento.nombre}</option>
+                      <option key={evento.id} value={evento.id} style={{ color: '#333' }}>{evento.nombre}</option>
                     ))}
                   </select>
                 </div>
               )}
-
-              <button
-                onClick={() => {
-                  setEditingFuncion(null);
-                  loadLastNuevaFuncion();
-                  setModalIsOpen(true);
-                }}
-                disabled={!recintoSeleccionado || !salaSeleccionada || !eventoSeleccionado}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${recintoSeleccionado && salaSeleccionada && eventoSeleccionado
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-              >
-                Nueva Función
-              </button>
             </div>
 
-            {/* Línea compacta con selección actual: Recinto | Sala | Evento */}
-            {(recintoSeleccionado || salaSeleccionada || eventoSeleccionado) && (
-              <div className="mt-4 px-6 py-3 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600 font-medium">Recinto</span>
-                  <span className="text-gray-900">{recintoSeleccionado?.nombre || '-'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600 font-medium">Sala</span>
-                  <span className="text-gray-900">{salaSeleccionada?.nombre || '-'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600 font-medium">Evento</span>
-                  <span className="text-gray-900">{eventoSeleccionado?.nombre || '-'}</span>
-                </div>
+            {/* Acción: Nueva Función */}
+            {recintoSeleccionado && salaSeleccionada && (
+              <div className="flex items-center gap-3 flex-shrink-0 mt-4 lg:mt-0 lg:self-end">
+                <button
+                  onClick={() => {
+                    setEditingFuncion(null);
+                    loadLastNuevaFuncion();
+                    setModalIsOpen(true);
+                  }}
+                  disabled={!recintoSeleccionado || !salaSeleccionada || !eventoSeleccionado}
+                  className={`px-6 py-3.5 rounded-lg shadow-sm transition-all duration-200 font-semibold flex items-center justify-center gap-2 whitespace-nowrap min-h-[48px] ${recintoSeleccionado && salaSeleccionada && eventoSeleccionado
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    }`}
+                  title={!eventoSeleccionado ? "Selecciona un evento primero" : ""}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Nueva Función
+                </button>
               </div>
             )}
           </div>
 
-          {/* Tabla Compacta con Colores */}
+          {/* Instrucciones */}
+          {(!recintoSeleccionado || !salaSeleccionada) && (
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3">
+              <span className="text-2xl">ℹ️</span>
+              <div className="text-sm text-blue-800">
+                <p className="font-semibold mb-1">Instrucciones</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Selecciona un <strong>Recinto</strong></li>
+                  <li>Selecciona una <strong>Sala</strong></li>
+                  <li>Selecciona un <strong>Evento</strong> (opcional para ver, requerido para crear)</li>
+                </ol>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tabla Cards */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse bg-white">
               <thead>
-                <tr className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Fecha</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Evento</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Sala</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Precios</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Comisiones</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Producto</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Inicio</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Fin</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Liberación</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase">Opciones</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase">Acciones</th>
+                <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Fecha</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Evento</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Sala</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Plantillas</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Venta</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Estado</th>
+                  <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100">
                 {funciones.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="px-4 py-8 text-center text-gray-500 bg-gray-50">
+                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500 text-base">
                       {recintoSeleccionado || salaSeleccionada || eventoSeleccionado
                         ? 'No se encontraron funciones con los filtros seleccionados'
-                        : 'No hay funciones creadas. Crea una nueva función para comenzar.'
+                        : 'Selecciona los filtros arriba para ver las funciones.'
                       }
                     </td>
                   </tr>
@@ -1324,103 +1370,79 @@ const Funciones = () => {
                   funciones.map((funcion, index) => (
                     <tr
                       key={funcion.id}
-                      className={`border-b transition-colors ${index % 2 === 0
-                          ? 'bg-white hover:bg-blue-50'
-                          : 'bg-gray-50 hover:bg-blue-100'
-                        }`}
+                      className="hover:bg-gray-50/80 transition-colors"
                     >
-                      <td className="px-3 py-2 text-xs font-medium text-gray-900 whitespace-nowrap">
-                        {formatFecha(funcion.fechaCelebracion)}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-900">{formatFecha(funcion.fechaCelebracion)}</div>
+                        <div className="text-xs text-gray-500 mt-1">{funcion.hora || ''}</div>
                       </td>
-                      <td className="px-3 py-2 text-xs text-gray-900 max-w-[150px] truncate" title={getEventoNombre(funcion.evento_id)}>
-                        {getEventoNombre(funcion.evento_id) || '—'}
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">{getEventoNombre(funcion.evento_id)}</div>
                       </td>
-                      <td className="px-3 py-2 text-xs text-gray-900">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${funcion.sala?.nombre
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600'
-                          }`}>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           {funcion.sala?.nombre || 'Sin sala'}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-xs">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPlantillaNombre(funcion.plantilla_entradas) !== 'Sin plantilla'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-600'
-                          }`}>
-                          {getPlantillaNombre(funcion.plantilla_entradas)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-xs">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPlantillaComisionesNombre(funcion.plantilla_comisiones) !== 'Sin plantilla'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-gray-100 text-gray-600'
-                          }`}>
-                          {getPlantillaComisionesNombre(funcion.plantilla_comisiones)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-xs">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPlantillaProductoNombre(funcion.plantilla_producto) !== 'Sin plantilla'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-gray-100 text-gray-600'
-                          }`}>
-                          {getPlantillaProductoNombre(funcion.plantilla_producto)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
-                        {formatFecha(funcion.inicioVenta) || '—'}
-                      </td>
-                      <td className="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
-                        {formatFecha(funcion.finVenta) || '—'}
-                      </td>
-                      <td className="px-3 py-2 text-xs">
-                        {funcion.tiempo_caducidad_reservas !== null ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                            {getTiempoCaducidadText(funcion.tiempo_caducidad_reservas)}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-gray-600 flex items-center gap-1">
+                            🎟️ {getPlantillaNombre(funcion.plantilla_entradas)}
                           </span>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-xs">
-                        <div className="flex flex-wrap items-center gap-1 justify-center">
-                          {funcion.pagoAPlazos && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title="Pago a plazos">
-                              💳
+                          {getPlantillaProductoNombre(funcion.plantilla_producto) !== 'Sin plantilla' && (
+                            <span className="text-xs text-gray-600 flex items-center gap-1">
+                              🍿 {getPlantillaProductoNombre(funcion.plantilla_producto)}
                             </span>
-                          )}
-                          {funcion.permitirReservasWeb && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" title="Reservas web">
-                              🌐
-                            </span>
-                          )}
-                          {!funcion.pagoAPlazos && !funcion.permitirReservasWeb && (
-                            <span className="text-gray-400">—</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-xs">
-                        <div className="flex items-center gap-1 justify-center">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-xs text-gray-600">
+                          <div><span className="font-medium">Inicio:</span> {formatFecha(funcion.inicioVenta)}</div>
+                          <div><span className="font-medium">Fin:</span> {formatFecha(funcion.finVenta)}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-1.5">
+                          {funcion.pagoAPlazos && (
+                            <span className="p-1 rounded bg-blue-50 text-blue-600 border border-blue-100" title="Pago a plazos">💳</span>
+                          )}
+                          {funcion.permitirReservasWeb && (
+                            <span className="p-1 rounded bg-green-50 text-green-600 border border-green-100" title="Reservas web">🌐</span>
+                          )}
+                          {!funcion.pagoAPlazos && !funcion.permitirReservasWeb && (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleEdit(funcion)}
-                            className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors"
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Editar"
                           >
-                            ✏️
-                          </button>
-                          <button
-                            onClick={() => handleDelete(funcion.id)}
-                            className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-medium transition-colors"
-                            title="Eliminar"
-                          >
-                            🗑️
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
                           </button>
                           <button
                             onClick={() => handleDuplicate(funcion.id)}
-                            className="px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-xs font-medium transition-colors"
+                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                             title="Duplicar"
                           >
-                            📋
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(funcion.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Eliminar"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
                           </button>
                         </div>
                       </td>

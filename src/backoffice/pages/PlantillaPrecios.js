@@ -13,7 +13,7 @@ const PlantillaPrecios = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [zonas, setZonas] = useState([]);
   const [entradas, setEntradas] = useState([]);
-    const [nombrePlantilla, setNombrePlantilla] = useState('');
+  const [nombrePlantilla, setNombrePlantilla] = useState('');
   const [detallesPrecios, setDetallesPrecios] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -45,7 +45,7 @@ const PlantillaPrecios = () => {
           .order('created_at', { ascending: false });
 
         if (plantillasError) {
-          
+
         }
 
         // Cargar plantillas de precios específicas
@@ -60,7 +60,7 @@ const PlantillaPrecios = () => {
           .order('created_at', { ascending: false });
 
         if (preciosError) {
-          
+
         }
 
         // Combinar datos
@@ -70,12 +70,12 @@ const PlantillaPrecios = () => {
           precios_detalle: (preciosData || []).filter(p => p.plantilla_id === plantilla.id)
         }));
 
-        
+
 
         setPlantillas(combinedPlantillas);
 
       } catch (error) {
-        
+
       }
     };
 
@@ -107,14 +107,14 @@ const PlantillaPrecios = () => {
           .from('entradas')
           .select('*')
           .eq('recinto', recinto.id);
-        
+
         if (error) {
-          
+
           setEntradas([]);
           return;
         }
-        
-        
+
+
         if (data && data.length > 0) {
           const mapped = data.map(e => ({
             id: e.id,
@@ -126,7 +126,7 @@ const PlantillaPrecios = () => {
         }
         setEntradas(data || []);
       } catch (error) {
-        
+
         setEntradas([]);
       }
     };
@@ -139,9 +139,9 @@ const PlantillaPrecios = () => {
       try {
         const canales = await fetchCanalesVenta();
         setCanalesVenta(canales);
-        
+
       } catch (error) {
-        
+
         setCanalesVenta([]);
       }
     };
@@ -159,13 +159,13 @@ const PlantillaPrecios = () => {
 
     const parsed = !error && Array.isArray(data)
       ? data.map(p => ({
-          ...p,
-          detalles: typeof p.detalles === 'string'
-            ? JSON.parse(p.detalles)
-            : Array.isArray(p.detalles)
+        ...p,
+        detalles: typeof p.detalles === 'string'
+          ? JSON.parse(p.detalles)
+          : Array.isArray(p.detalles)
             ? p.detalles
             : []
-        }))
+      }))
       : [];
 
     setPlantillas(parsed);
@@ -178,7 +178,7 @@ const PlantillaPrecios = () => {
   // Recargar entradas cuando se abre el modal de edición
   useEffect(() => {
     if (modalIsOpen && editingPlantilla && (!entradas.length || !zonas.length)) {
-      
+
       // Recargar entradas si no están disponibles
       if (!entradas.length && recinto) {
         const fetchEntradas = async () => {
@@ -200,15 +200,15 @@ const PlantillaPrecios = () => {
 
   /* -------------------- HANDLERS INPUTS DETALLE --------------------- */
   const handleInputChange = (zonaId, entradaId, field, value) => {
-    
-    
+
+
     const updated = [...detallesPrecios];
     const idx = updated.findIndex(d => d.zonaId === zonaId && d.entradaId === entradaId);
-    
+
     // Determinar el tipo de valor y convertirlo apropiadamente
     const numeric = ['precio', 'comision', 'precioGeneral', 'orden'];
     let v;
-    
+
     if (numeric.includes(field)) {
       // Para campos numéricos, convertir a número y establecer 0 si está vacío
       v = value === '' ? 0 : Number(value);
@@ -224,9 +224,9 @@ const PlantillaPrecios = () => {
       updated[idx] = { ...updated[idx], [field]: v };
     } else {
       // Crear nuevo registro
-      updated.push({ 
-        zonaId, 
-        entradaId, 
+      updated.push({
+        zonaId,
+        entradaId,
         [field]: v,
         // Establecer valores por defecto para campos numéricos
         precio: field === 'precio' ? v : 0,
@@ -237,17 +237,17 @@ const PlantillaPrecios = () => {
       });
     }
 
-    
+
     setDetallesPrecios(updated);
   };
 
   const handleCanalChange = (zonaId, entradaId, canalId, checked) => {
-    
-    
+
+
     setDetallesPrecios(prev => {
       const existing = prev.find(d => d.zonaId === zonaId && d.entradaId === entradaId);
       let canalesActuales = [];
-      
+
       if (existing?.canales) {
         // Si canales es un string, convertirlo a array
         if (typeof existing.canales === 'string') {
@@ -260,7 +260,7 @@ const PlantillaPrecios = () => {
           canalesActuales = [...existing.canales];
         }
       }
-      
+
       if (checked) {
         if (!canalesActuales.includes(canalId)) {
           canalesActuales.push(canalId);
@@ -268,7 +268,7 @@ const PlantillaPrecios = () => {
       } else {
         canalesActuales = canalesActuales.filter(id => id !== canalId);
       }
-      
+
       if (existing) {
         return prev.map(d => d.zonaId === zonaId && d.entradaId === entradaId ? { ...d, canales: canalesActuales } : d);
       } else {
@@ -280,7 +280,7 @@ const PlantillaPrecios = () => {
   /* ----------------------- SUBMIT PLANTILLA ------------------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validar que se haya ingresado un nombre
     if (!nombrePlantilla.trim()) {
       alert('Debe ingresar un nombre para la plantilla');
@@ -293,11 +293,11 @@ const PlantillaPrecios = () => {
       return;
     }
 
-    const detallesValidos = detallesPrecios.filter(d => 
-      d.precio !== undefined && 
-      d.precio !== null && 
-      d.precio !== '' && 
-      d.zonaId && 
+    const detallesValidos = detallesPrecios.filter(d =>
+      d.precio !== undefined &&
+      d.precio !== null &&
+      d.precio !== '' &&
+      d.zonaId &&
       d.entradaId
     );
 
@@ -320,7 +320,7 @@ const PlantillaPrecios = () => {
         } else if (Array.isArray(detalle.canales)) {
           canalesSeleccionados = detalle.canales;
         }
-        
+
         canalesSeleccionados.forEach(canalId => {
           const canal = canalesVenta.find(c => c.id === canalId);
           if (canal && !canal.activo) {
@@ -335,11 +335,10 @@ const PlantillaPrecios = () => {
     });
 
     if (canalesDeshabilitados.length > 0) {
-      const mensaje = `No se puede guardar la plantilla. Los siguientes canales están deshabilitados en el sistema:\n\n${
-        canalesDeshabilitados.map(item => 
-          `• ${item.zona} - ${item.entrada}: ${item.canal}`
-        ).join('\n')
-      }\n\nLos canales deshabilitados en el sistema tienen prioridad sobre la configuración de la plantilla.`;
+      const mensaje = `No se puede guardar la plantilla. Los siguientes canales están deshabilitados en el sistema:\n\n${canalesDeshabilitados.map(item =>
+        `• ${item.zona} - ${item.entrada}: ${item.canal}`
+      ).join('\n')
+        }\n\nLos canales deshabilitados en el sistema tienen prioridad sobre la configuración de la plantilla.`;
       alert(mensaje);
       return;
     }
@@ -356,7 +355,7 @@ const PlantillaPrecios = () => {
     try {
       let res;
       if (editingPlantilla) {
-        
+
         res = await supabase
           .from('plantillas')
           .update(payload)
@@ -364,7 +363,7 @@ const PlantillaPrecios = () => {
           .select()
           .single();
       } else {
-        
+
         res = await supabase
           .from('plantillas')
           .insert(payload)
@@ -373,17 +372,17 @@ const PlantillaPrecios = () => {
       }
 
       if (res.error) {
-        
+
         alert(`Error al guardar: ${res.error.message}`);
         return;
       }
 
-      
+
       alert(`${editingPlantilla ? 'Plantilla actualizada' : 'Plantilla creada'} exitosamente con ${detallesValidos.length} configuraciones de precio`);
       closeModal();
       cargarPlantillas();
     } catch (error) {
-      
+
       alert(`Error inesperado: ${error.message}`);
     }
   };
@@ -393,15 +392,15 @@ const PlantillaPrecios = () => {
     try {
       // Asegurar que tenemos las entradas cargadas antes de editar
       if (!entradas.length) {
-        
+
         const { data: entradasData, error: entradasError } = await supabase
           .from('entradas')
           .select('*')
           .eq('recinto', recinto.id);
-        
+
         if (!entradasError && entradasData) {
           setEntradas(entradasData);
-          
+
         }
       }
 
@@ -416,31 +415,31 @@ const PlantillaPrecios = () => {
       if (error) throw error;
 
       const plantilla = data || p;
-      
+
 
       setEditingPlantilla(plantilla);
       setNombrePlantilla(plantilla.nombre);
-      
+
       // Supabase puede retornar `null` si la plantilla no tiene detalles
       // También puede almacenarlos como texto JSON
       const parsedDetalles = typeof plantilla.detalles === 'string'
         ? JSON.parse(plantilla.detalles)
         : plantilla.detalles;
-      
-      
-      
+
+
+
       // Asegurar que tenemos los detalles como array
       const detallesArray = Array.isArray(parsedDetalles) ? parsedDetalles : [];
-      
+
       // Si estamos editando, inicializar con los detalles existentes
       // y agregar cualquier combinación zona-entrada que falte
       if (detallesArray.length > 0) {
         const existingDetalles = [...detallesArray];
-        
+
         // Agregar combinaciones faltantes para zonas y entradas actuales
         zonas.forEach(zona => {
           entradas.forEach(entrada => {
-            const exists = existingDetalles.find(d => 
+            const exists = existingDetalles.find(d =>
               d.zonaId === zona.id && d.entradaId === entrada.id
             );
             if (!exists) {
@@ -456,12 +455,12 @@ const PlantillaPrecios = () => {
             }
           });
         });
-        
-        
+
+
         setDetallesPrecios(existingDetalles);
       } else {
         // Si no hay detalles, inicializar con todas las combinaciones
-        const initialDetalles = zonas.flatMap(z => 
+        const initialDetalles = zonas.flatMap(z =>
           entradas.map(e => ({
             zonaId: z.id,
             entradaId: e.id,
@@ -472,13 +471,13 @@ const PlantillaPrecios = () => {
             orden: 0
           }))
         );
-        
+
         setDetallesPrecios(initialDetalles);
       }
-      
+
       setModalIsOpen(true);
     } catch (err) {
-      
+
     }
   };
 
@@ -489,11 +488,11 @@ const PlantillaPrecios = () => {
   };
 
   /* ------------------- UTILS PARA RENDER TABLA ---------------------- */
-  const combinedItems = zonas.flatMap(z => entradas.map(e => ({ 
-    zonaId: z.id, 
-    zona: z.nombre, 
-    entrada: e.producto, 
-    entradaId: e.id 
+  const combinedItems = zonas.flatMap(z => entradas.map(e => ({
+    zonaId: z.id,
+    zona: z.nombre,
+    entrada: e.producto,
+    entradaId: e.id
   })));
   const currentItems = combinedItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -506,7 +505,7 @@ const PlantillaPrecios = () => {
 
   const openModal = () => {
     // Inicializar detalles con valores por defecto para todas las combinaciones zona-entrada
-    const initialDetalles = zonas.flatMap(z => 
+    const initialDetalles = zonas.flatMap(z =>
       entradas.map(e => ({
         zonaId: z.id,
         entradaId: e.id,
@@ -525,14 +524,14 @@ const PlantillaPrecios = () => {
     if (!zonas.length || !entradas.length) return (
       <tr>
         <td colSpan="8" className="py-4 text-center">
-          {!zonas.length && !entradas.length ? 'Debes crear zonas y entradas' : 
-           !zonas.length ? 'Debes crear zonas' : 'Debes crear entradas'}
+          {!zonas.length && !entradas.length ? 'Debes crear zonas y entradas' :
+            !zonas.length ? 'Debes crear zonas' : 'Debes crear entradas'}
         </td>
       </tr>
     );
 
     // Debug: mostrar información de los datos
-    
+
 
     // Si no hay currentItems, mostrar un mensaje
     if (!currentItems.length) {
@@ -547,12 +546,12 @@ const PlantillaPrecios = () => {
 
     return currentItems.map((item, idx) => {
       const detalle = detallesPrecios.find(d => d.zonaId === item.zonaId && d.entradaId === item.entradaId) || {};
-      
+
       // Buscar la entrada correspondiente para mostrar el nombre
       const entrada = entradas.find(e => e.id === item.entradaId);
       const zona = zonas.find(z => z.id === item.zonaId);
-      
-      
+
+
       return (
         <tr key={idx} className="hover:bg-gray-50">
           <td className="px-6 py-3 font-medium">{zona?.nombre || item.zona || 'Zona no encontrada'}</td>
@@ -563,10 +562,10 @@ const PlantillaPrecios = () => {
           </td>
           {['precio', 'comision', 'precioGeneral'].map(f => (
             <td key={f} className="px-6 py-3">
-              <input 
-                type="number" 
-                className="w-full border px-2 py-1 rounded" 
-                value={detalle[f] ?? ''} 
+              <input
+                type="number"
+                className="w-full border px-2 py-1 rounded"
+                value={detalle[f] ?? ''}
                 onChange={e => handleInputChange(item.zonaId, item.entradaId, f, e.target.value)}
                 placeholder={f === 'precio' ? '0.00' : '0'}
                 min="0"
@@ -591,16 +590,16 @@ const PlantillaPrecios = () => {
                     isSeleccionadoEnPlantilla = detalle.canales.includes(canal.id);
                   }
                 }
-                
+
                 // VERIFICAR JERARQUÍA: Canal debe estar activo EN EL SISTEMA Y seleccionado EN LA PLANTILLA
                 const isActivoEnSistema = canal.activo === true;
                 const isActivo = isActivoEnSistema && isSeleccionadoEnPlantilla;
-                
+
                 // Debug: Log de la jerarquía de prioridades
                 if (detalle.zonaId && detalle.entradaId) {
                   // debug omitido
                 }
-                
+
                 // Determinar el color y estilo del botón según el estado
                 const getButtonStyle = (activo, activoEnSistema, seleccionadoEnPlantilla) => {
                   if (!activoEnSistema) {
@@ -617,7 +616,7 @@ const PlantillaPrecios = () => {
                     return "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-300";
                   }
                 };
-                
+
                 // Obtener el nombre corto del canal y el ícono
                 const getCanalInfo = (nombre) => {
                   if (nombre.toLowerCase().includes('store') || nombre.toLowerCase().includes('internet')) {
@@ -629,9 +628,9 @@ const PlantillaPrecios = () => {
                   }
                   return { short: nombre, icon: '🔗' };
                 };
-                
+
                 const canalInfo = getCanalInfo(canal.nombre);
-                
+
                 return (
                   <button
                     key={canal.id}
@@ -649,10 +648,10 @@ const PlantillaPrecios = () => {
                       }
                     })()}
                   >
-                      <span className="text-xs">{canalInfo.icon}</span>
-                      <span className="text-xs">
-                        {!isActivoEnSistema ? '🚫' : (isActivo ? '✓' : '○')}
-                      </span>
+                    <span className="text-xs">{canalInfo.icon}</span>
+                    <span className="text-xs">
+                      {!isActivoEnSistema ? '🚫' : (isActivo ? '✓' : '○')}
+                    </span>
                   </button>
                 );
               })}
@@ -665,11 +664,11 @@ const PlantillaPrecios = () => {
                 let canalesDisponibles = 0;
                 let canalesSeleccionados = 0;
                 let totalCanales = canalesVenta.length;
-                
+
                 // Contar canales activos en el sistema
                 const canalesActivosEnSistema = canalesVenta.filter(c => c.activo === true);
                 canalesDisponibles = canalesActivosEnSistema.length;
-                
+
                 // Contar canales seleccionados en la plantilla
                 if (detalle.canales) {
                   if (typeof detalle.canales === 'string') {
@@ -683,14 +682,14 @@ const PlantillaPrecios = () => {
                     canalesSeleccionados = detalle.canales.length;
                   }
                 }
-                
+
                 // Calcular porcentaje basado en canales DISPONIBLES (no total)
                 const porcentajeDisponibles = canalesDisponibles > 0 ? Math.round((canalesSeleccionados / canalesDisponibles) * 100) : 0;
-                
+
                 let estadoColor = 'bg-red-100 text-red-800 border-red-200';
                 let estadoTexto = 'Sin canales';
                 let estadoIcono = '🚫';
-                
+
                 if (canalesDisponibles === 0) {
                   // No hay canales activos en el sistema
                   estadoColor = 'bg-red-100 text-red-800 border-red-200';
@@ -717,7 +716,7 @@ const PlantillaPrecios = () => {
                   estadoTexto = '0% activos';
                   estadoIcono = '❌';
                 }
-                
+
                 return (
                   <div className="flex items-center gap-2">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${estadoColor}`}>
@@ -732,10 +731,10 @@ const PlantillaPrecios = () => {
             </div>
           </td>
           <td className="px-6 py-3">
-            <input 
-              type="number" 
-              className="w-full border px-2 py-1 rounded" 
-              value={detalle.orden ?? ''} 
+            <input
+              type="number"
+              className="w-full border px-2 py-1 rounded"
+              value={detalle.orden ?? ''}
               onChange={e => handleInputChange(item.zonaId, item.entradaId, 'orden', e.target.value)}
               placeholder="1"
               min="0"
@@ -749,42 +748,166 @@ const PlantillaPrecios = () => {
 
   /* ------------------------------ UI ------------------------------- */
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h2 className="text-2xl font-bold mb-6">Plantilla de Precios</h2>
-      <div className="bg-white p-6 rounded shadow">
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <select className="border p-2 flex-1 min-w-[220px]" value={recinto?.id || ''} onChange={e => {
-            const r = recintos.find(r => String(r.id) === e.target.value);
-            setRecinto(r);
-            setSala(null);
-          }}>
-            <option value="">Seleccionar Recinto</option>
-            {recintos.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
-          </select>
-          {salas.length > 0 && (
-            <select className="border p-2 flex-1 min-w-[220px]" value={sala?.id || ''} onChange={e => setSala(salas.find(s => String(s.id) === e.target.value))}>
-              <option value="">Seleccionar Sala</option>
-              {salas.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-            </select>
-          )}
-          <button className="bg-blue-600 text-white px-4 py-2 rounded" disabled={!recinto || !sala} onClick={openModal}>Añadir Plantilla</button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* Header Principal */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+          <div className="px-8 py-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Plantillas de Precios</h1>
+            <p className="text-lg text-gray-600">
+              Gestiona los precios base, comisiones y canales para tus eventos
+            </p>
+          </div>
         </div>
 
-        <h3 className="font-semibold mb-2">Plantillas Guardadas</h3>
-        {!plantillas.length ? <p className="italic text-gray-500">No hay plantillas</p> : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {plantillas.map(p => (
-              <div key={p.id} className="border rounded shadow-sm">
-                <div className="bg-gray-50 p-3 font-medium">{p.nombre}</div>
-                <div className="p-3 text-sm text-gray-600">Zonas: {p.detalles?.length || 0}</div>
-                <div className="flex justify-end gap-2 p-3 bg-gray-50">
-                  <button className="bg-yellow-500 text-white px-2 py-1 rounded" onClick={() => handleEditPlantilla(p)}>Editar</button>
-                  <button className="bg-red-600 text-white px-2 py-1 rounded" onClick={() => handleDeletePlantilla(p.id)}>Eliminar</button>
-                </div>
+        {/* Selectores de Recinto y Sala */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              {/* Selector Recinto */}
+              <div className="w-full">
+                <label className="block text-base font-semibold text-gray-800 mb-3">
+                  Seleccionar Recinto *
+                </label>
+                <select
+                  value={recinto?.id || ''}
+                  onChange={e => {
+                    const r = recintos.find(r => String(r.id) === e.target.value);
+                    setRecinto(r);
+                    setSala(null);
+                  }}
+                  className="w-full px-4 py-3.5 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white appearance-none cursor-pointer min-h-[48px]"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                    paddingRight: '40px'
+                  }}
+                >
+                  <option value="" disabled style={{ color: '#999' }}>Seleccionar Recinto</option>
+                  {recintos.map(r => (
+                    <option key={r.id} value={r.id} style={{ color: '#333' }}>{r.nombre}</option>
+                  ))}
+                </select>
               </div>
-            ))}
+
+              {/* Selector Sala */}
+              {recinto && (
+                <div className="w-full">
+                  <label className="block text-base font-semibold text-gray-800 mb-3">
+                    Seleccionar Sala *
+                  </label>
+                  <select
+                    value={sala?.id || ''}
+                    onChange={e => setSala(salas.find(s => String(s.id) === e.target.value))}
+                    className="w-full px-4 py-3.5 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white appearance-none cursor-pointer min-h-[48px]"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      paddingRight: '40px'
+                    }}
+                  >
+                    <option value="" disabled style={{ color: '#999' }}>Seleccionar Sala</option>
+                    {salas.map(s => (
+                      <option key={s.id} value={s.id} style={{ color: '#333' }}>{s.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Acción: Añadir Plantilla */}
+            {recinto && sala && (
+              <div className="flex items-center gap-3 flex-shrink-0 mt-4 lg:mt-0 lg:self-end">
+                <button
+                  onClick={openModal}
+                  disabled={!recinto || !sala}
+                  className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-sm transition-all duration-200 font-semibold flex items-center justify-center gap-2 whitespace-nowrap min-h-[48px]"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Añadir Plantilla
+                </button>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Instrucciones */}
+          {(!recinto || !sala) && (
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3">
+              <span className="text-2xl">ℹ️</span>
+              <div className="text-sm text-blue-800">
+                <p className="font-semibold mb-1">Instrucciones</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Selecciona un <strong>Recinto</strong></li>
+                  <li>Selecciona una <strong>Sala</strong></li>
+                  <li>Crea o edita las plantillas de precios disponibles</li>
+                </ol>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Listado de Plantillas */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-gray-900">Plantillas Guardadas</h3>
+          </div>
+
+          {!plantillas.length ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+              <p className="text-gray-500 text-base">
+                {recinto && sala
+                  ? 'No hay plantillas creadas para esta sala. Crea una nueva para comenzar.'
+                  : 'Selecciona un recinto y una sala para ver las plantillas.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {plantillas.map(p => (
+                <div key={p.id} className="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:text-blue-700 transition-colors">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 3.666V14h-6v-3.334H5V18h14v-7.334h-2.143zM6 7H5v3.334h1V7zm12 0h-1v3.334h1V7z" />
+                        </svg>
+                      </div>
+                      <span className="text-xs font-medium px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full">
+                        {p.detalles?.length || 0} Zonas
+                      </span>
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mb-1">{p.nombre}</h4>
+                    <p className="text-sm text-gray-500 mb-4 line-clamp-2">
+                      {p.descripcion || 'Sin descripción'}
+                    </p>
+
+                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => handleEditPlantilla(p)}
+                        className="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeletePlantilla(p.id)}
+                        className="px-3 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 hover:border-red-300 transition-colors"
+                        title="Eliminar"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="modal" overlayClassName="modal-overlay">
@@ -792,7 +915,7 @@ const PlantillaPrecios = () => {
           <h2 className="text-xl font-bold mb-4">{editingPlantilla ? 'Editar' : 'Crear'} Plantilla</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <input type="text" className="border p-2 w-full" placeholder="Nombre" value={nombrePlantilla} onChange={e => setNombrePlantilla(e.target.value)} required />
-            
+
             {/* Información de debug y resumen de canales */}
             <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -809,12 +932,12 @@ const PlantillaPrecios = () => {
                   <span className="font-medium">Canales disponibles:</span> {canalesVenta.length}
                 </div>
               </div>
-              
+
               {/* Resumen de canales */}
               {canalesVenta.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <div className="font-medium mb-2">Resumen de canales:</div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     {canalesVenta.map(canal => {
                       const canalInfo = (() => {
@@ -827,13 +950,13 @@ const PlantillaPrecios = () => {
                         }
                         return { short: canal.nombre, icon: '🔗' };
                       })();
-                      
-                      const estadoColor = canal.activo 
-                        ? 'bg-green-50 text-green-700 border-green-200' 
+
+                      const estadoColor = canal.activo
+                        ? 'bg-green-50 text-green-700 border-green-200'
                         : 'bg-red-50 text-red-700 border-red-200';
                       const estadoIcono = canal.activo ? '✅' : '🚫';
                       const estadoTexto = canal.activo ? 'Activo' : 'Inactivo';
-                      
+
                       return (
                         <span key={canal.id} className={`flex items-center gap-1 px-2 py-1 rounded text-xs border ${estadoColor}`}>
                           <span>{canalInfo.icon}</span>
@@ -843,24 +966,24 @@ const PlantillaPrecios = () => {
                       );
                     })}
                   </div>
-                  
+
                   {/* Resumen de estado del sistema */}
                   <div className="mt-2 text-xs text-gray-600">
                     <span className="font-medium">Estado del sistema:</span> {
-                      canalesVenta.filter(c => c.activo).length === 0 
-                        ? '🚫 Sin canales activos' 
+                      canalesVenta.filter(c => c.activo).length === 0
+                        ? '🚫 Sin canales activos'
                         : `${canalesVenta.filter(c => c.activo).length}/${canalesVenta.length} canales activos`
                     }
                   </div>
                 </div>
               )}
             </div>
-            
+
             <div className="overflow-x-auto">
-                             <table className="min-w-full text-sm">
-                 <thead className="bg-gray-50">
-                   <tr>{['Zona','Entrada','Precio','Comisión','Precio Gen','Canales','Estado','Orden'].map(h => <th key={h} className="px-4 py-2 text-left">{h}</th>)}</tr>
-                 </thead>
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>{['Zona', 'Entrada', 'Precio', 'Comisión', 'Precio Gen', 'Canales', 'Estado', 'Orden'].map(h => <th key={h} className="px-4 py-2 text-left">{h}</th>)}</tr>
+                </thead>
                 <tbody>{renderTableRows()}</tbody>
               </table>
             </div>

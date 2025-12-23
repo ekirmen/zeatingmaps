@@ -83,7 +83,7 @@ const SalesTransactions = () => {
           *,
           event:eventos(id, nombre, recinto_id, recinto),
           venue:recintos(id, nombre),
-          funcion:funciones(id, nombre, fecha, fecha_celebracion, hora)
+          funcion:funciones(id, nombre, fecha_celebracion)
         `)
         .order('created_at', { ascending: false })
         .limit(recordLimit);
@@ -461,14 +461,22 @@ const SalesTransactions = () => {
           return '-';
         }
 
-        const date = record.funcion?.fecha || record.funcion?.fecha_celebracion;
-        const time = record.funcion?.hora;
+        const dateStr = record.funcion?.fecha_celebracion;
+        let formattedDate = '';
+
+        if (dateStr) {
+          const d = new Date(dateStr);
+          if (!isNaN(d.getTime())) {
+            formattedDate = `${format(d, 'dd/MM/yyyy')} · ${format(d, 'HH:mm')}`;
+          }
+        }
+
         return (
           <Space direction="vertical" size={0}>
             <Text strong>{record.funcion?.nombre || `Función ${record.funcion?.id}`}</Text>
-            {(date || time) && (
+            {formattedDate && (
               <Text type="secondary" style={{ fontSize: 12 }}>
-                {[date ? format(new Date(date), 'dd/MM/yyyy') : null, time].filter(Boolean).join(' · ')}
+                {formattedDate}
               </Text>
             )}
           </Space>

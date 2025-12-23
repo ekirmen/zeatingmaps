@@ -1,24 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Select, Space, Spin, message } from 'antd'; // Assuming antdComponents wrapper or direct import
+import { message } from 'antd';
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
-
-const { Option } = Select;
 
 /**
  * UnifiedContextSelector
  * 
  * A standardized selector for Recinto -> Evento -> Funcion filtering.
  * Automatically fetches data based on the current tenant.
- * 
- * Props:
- * @param {Function} onFilterChange - Callback function returning ({ venueId, eventId, functionId, objects: {venue, event, function} })
- * @param {Object} initialValues - { venueId, eventId, functionId }
- * @param {boolean} showVenue - Whether to show the Venue (Recinto) selector
- * @param {boolean} showEvent - Whether to show the Event selector
- * @param {boolean} showFunction - Whether to show the Function selector
- * @param {string} layout - 'horizontal' or 'vertical'
- * @param {Object} style - Container style
+ * Uses Premium Tailwind Design.
+ * Supports 'horizontal' layout for compact views (like Boleteria).
  */
 const UnifiedContextSelector = ({
     onFilterChange,
@@ -30,7 +21,8 @@ const UnifiedContextSelector = ({
     showVenue = true,
     showEvent = true,
     showFunction = true,
-    layout = 'horizontal',
+    // 'horizontal' for compact flex row, 'grid' (or undefined) for standard premium grid
+    layout = 'grid',
     style = {}
 }) => {
     const { currentTenant } = useTenant();
@@ -69,7 +61,7 @@ const UnifiedContextSelector = ({
                 if (isMultiTenant) eventsQuery = eventsQuery.eq('tenant_id', currentTenant.id);
 
                 // 3. Fetch Functions (Funciones)
-                let functionsQuery = supabase.from('funciones').select('id, nombre, evento_id, fecha_celebracion, fecha, hora, tenant_id');
+                let functionsQuery = supabase.from('funciones').select('id, nombre, evento_id, fecha_celebracion, tenant_id');
                 if (isMultiTenant) functionsQuery = functionsQuery.eq('tenant_id', currentTenant.id);
 
                 const [venuesRes, eventsRes, functionsRes] = await Promise.all([
@@ -158,80 +150,114 @@ const UnifiedContextSelector = ({
     const getFunctionLabel = (func) => {
         if (!func) return '';
         const name = func.nombre || `Función ${func.id}`;
-        const date = func.fecha || func.fecha_celebracion;
-        const time = func.hora;
+        // Use fecha_celebracion as source of truth
+        const dateStr = func.fecha_celebracion;
 
         let label = name;
-        if (date) {
-            const d = new Date(date);
+        if (dateStr) {
+            const d = new Date(dateStr);
             if (!isNaN(d.getTime())) {
-                label += ` - ${d.toLocaleDateString()}`;
+                label += ` - ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
             }
         }
-        if (time) label += ` ${time}`;
         return label;
     };
 
+    const isCompact = layout === 'horizontal';
+
+    // Styles configuration
+    const containerClasses = isCompact
+        ? "flex items-center gap-2 w-full"
+        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+
+    const selectClasses = isCompact
+        ? "w-full text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white appearance-none cursor-pointer py-1 px-2 h-8"
+        : "w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white appearance-none cursor-pointer";
+
+    const svgSize = isCompact ? "10" : "12";
+    const bgPosition = isCompact ? "right 6px center" : "right 12px center";
+    const paddingRight = isCompact ? "24px" : "40px";
+
+    const selectStyle = {
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${svgSize}' height='${svgSize}' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: bgPosition,
+        paddingRight: paddingRight
+    };
+
     return (
-        <div style={style}>
-            <Space direction={layout} size="small" wrap>
+        <div className="w-full" style={style}>
+            <div className={containerClasses}>
 
                 {/* RECINTO SELECTOR */}
                 {showVenue && (
-                    <Select
-                        placeholder="Seleccionar Recinto"
-                        style={{ width: 220 }}
-                        value={effectiveVenueId}
-                        onChange={handleVenueChange}
-                        loading={loading}
-                        showSearch
-                        optionFilterProp="children"
-                    >
-                        <Option value="all">Todos los Recintos</Option>
-                        {venues.map(v => (
-                            <Option key={v.id} value={String(v.id)}>{v.nombre}</Option>
-                        ))}
-                    </Select>
+                    <div className={isCompact ? "flex-1 min-w-[120px]" : "w-full"}>
+                        {!isCompact && (
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Recinto
+                            </label>
+                        )}
+                        <select
+                            value={effectiveVenueId}
+                            onChange={(e) => handleVenueChange(e.target.value)}
+                            disabled={loading}
+                            className={selectClasses}
+                            style={selectStyle}
+                        >
+                            <option value="all">{isCompact ? "Recinto" : "Todos los Recintos"}</option>
+                            {venues.map(v => (
+                                <option key={v.id} value={String(v.id)}>{v.nombre}</option>
+                            ))}
+                        </select>
+                    </div>
                 )}
 
                 {/* EVENTO SELECTOR */}
                 {showEvent && (
-                    <Select
-                        placeholder="Seleccionar Evento"
-                        style={{ width: 220 }}
-                        value={effectiveEventId}
-                        onChange={handleEventChange}
-                        loading={loading}
-                        disabled={!events.length}
-                        showSearch
-                        optionFilterProp="children"
-                    >
-                        <Option value="all">Todos los Eventos</Option>
-                        {filteredEvents.map(e => (
-                            <Option key={e.id} value={String(e.id)}>{e.nombre}</Option>
-                        ))}
-                    </Select>
+                    <div className={isCompact ? "flex-1 min-w-[120px]" : "w-full"}>
+                        {!isCompact && (
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Evento
+                            </label>
+                        )}
+                        <select
+                            value={effectiveEventId}
+                            onChange={(e) => handleEventChange(e.target.value)}
+                            disabled={loading || !events.length || effectiveVenueId === 'all'}
+                            className={`${selectClasses} ${(!events.length || effectiveVenueId === 'all') ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
+                            style={selectStyle}
+                        >
+                            <option value="all">{isCompact ? "Evento" : "Todos los Eventos"}</option>
+                            {filteredEvents.map(e => (
+                                <option key={e.id} value={String(e.id)}>{e.nombre}</option>
+                            ))}
+                        </select>
+                    </div>
                 )}
 
                 {/* FUNCION SELECTOR */}
                 {showFunction && (
-                    <Select
-                        placeholder="Seleccionar Función"
-                        style={{ width: 220 }}
-                        value={effectiveFunctionId}
-                        onChange={handleFunctionChange}
-                        loading={loading}
-                        disabled={!functions.length}
-                        showSearch
-                        optionFilterProp="children"
-                    >
-                        <Option value="all">Todas las Funciones</Option>
-                        {filteredFunctions.map(f => (
-                            <Option key={f.id} value={String(f.id)}>{getFunctionLabel(f)}</Option>
-                        ))}
-                    </Select>
+                    <div className={isCompact ? "flex-1 min-w-[120px]" : "w-full"}>
+                        {!isCompact && (
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Función
+                            </label>
+                        )}
+                        <select
+                            value={effectiveFunctionId}
+                            onChange={(e) => handleFunctionChange(e.target.value)}
+                            disabled={loading || !functions.length || effectiveEventId === 'all'}
+                            className={`${selectClasses} ${(!functions.length || effectiveEventId === 'all') ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
+                            style={selectStyle}
+                        >
+                            <option value="all">{isCompact ? "Función" : "Todas las Funciones"}</option>
+                            {filteredFunctions.map(f => (
+                                <option key={f.id} value={String(f.id)}>{getFunctionLabel(f)}</Option>
+                            ))}
+                        </select>
+                    </div>
                 )}
-            </Space>
+            </div>
         </div>
     );
 };
