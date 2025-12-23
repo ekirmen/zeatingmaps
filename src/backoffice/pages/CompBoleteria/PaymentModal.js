@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message, Alert } from '../../../utils/antdComponents';
-import { AiOutlineDelete } from 'react-icons/ai';
+import { Trash2 } from 'lucide-react';
 import { Typography } from '../../../utils/antdComponents';
 import { createPayment, updatePayment } from '../../services/apibackoffice';
 import { createPaymentTransaction } from '../../../store/services/paymentGatewaysService';
@@ -189,11 +189,10 @@ const CasheaOrderPanel = ({
               </div>
               <div className="flex justify-center">
                 <button
-                  className={`cashea-order-button inline-flex h-12 w-full items-center justify-center rounded-md px-12 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 ${
-                    disabled || isProcessing
+                  className={`cashea-order-button inline-flex h-12 w-full items-center justify-center rounded-md px-12 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 ${disabled || isProcessing
                       ? 'cursor-not-allowed bg-[#DCDCDC] text-gray-500'
                       : 'bg-black text-white hover:bg-black/80'
-                  }`}
+                    }`}
                   type="button"
                   onClick={onCreateOrder}
                   disabled={disabled || isProcessing}
@@ -716,7 +715,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           <Button
             type="text"
             danger
-            icon={<AiOutlineDelete />}
+            icon={<Trash2 />}
             onClick={() => handleDeleteEntry(record.sc)}
           />
         </div>
@@ -872,10 +871,10 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             const normalizedMethodId = hasCasheaPayment
               ? 'cashea'
               : (selectedPaymentMethod || '')
-                  .toString()
-                  .trim()
-                  .toLowerCase()
-                  .replace(/\s+/g, '_');
+                .toString()
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, '_');
 
             const isReservationFlow = hasCasheaPayment || reservationType === '2' || reservationType === '3' || diferencia > 0;
             const seatStatus = determineSeatLockStatus({
@@ -899,143 +898,143 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           }
         }
 
-          // Si ya existe un pago, verificar que no est© completamente pagado antes de actualizar
-          if (existingPayment) {
-            // Verificar el estado del pago existente
-            try {
-              const { data: existingPaymentData, error: fetchError } = await supabase
-                .from('payment_transactions')
-                .select('id, status, amount, locator')
-                .eq('id', existingPayment.paymentId)
-                .single();
-
-              if (fetchError) {
-                console.error('Error obteniendo pago existente:', fetchError);
-                throw new Error('Error al verificar el estado del pago existente');
-              }
-
-              // Verificar si el pago ya est¡ completado
-              if (existingPaymentData && existingPaymentData.status === 'completed') {
-                message.error(`Este ticket ya est¡ completamente pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator}). No se puede procesar otro pago.`);
-                throw new Error(`El ticket ya est¡ pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator})`);
-              }
-
-              // Si el pago existe pero no est¡ completado, actualizarlo
-              return updatePayment(existingPayment.paymentId, paymentData);
-            } catch (error) {
-              console.error('Error validando pago existente:', error);
-              throw error;
-            }
-          } else {
-            // Add reservation deadline if applicable (solo para pagos nuevos)
-            if (reservationType === '2') {
-              paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
-            } else if (reservationType === '3' && selectedDate) {
-              paymentData.reservationDeadline = selectedDate.toDate();
-            }
-
-            return createPayment(paymentData);
-          }
-        });
-
-        const results = await Promise.all(paymentPromises);
-        const tenantIdForTransactions = resolveTenantId({
-          user,
-          selectedEvent,
-          selectedFuncion,
-          seats: safeCarrito,
-          carrito: safeCarrito,
-        });
-
-        if (!tenantIdForTransactions) {
-        }
-        if (results && results.length > 0 && results[0]) {
-          const locator = results[0].locator || effectiveLocator;
-          setLocator(locator);
-          const userId = selectedClient?.id || selectedClient?._id;
-
-          // Crear payment_transaction para cada m©todo de pago usado
+        // Si ya existe un pago, verificar que no est© completamente pagado antes de actualizar
+        if (existingPayment) {
+          // Verificar el estado del pago existente
           try {
-            const paymentTransactionPromises = paymentEntries.map(async (entry) => {
-              const entryIsCashea = entry.metadata?.gateway === 'cashea' || entry.formaPago === 'Cashea';
-              const entryStatus = entry.metadata?.status || (entryIsCashea ? 'pending' : 'completed');
-              const transactionData = {
-                orderId: locator,
-                gatewayId: null, // Para pagos manuales no hay gateway
-                amount: Number(entry.importe) || 0,
-                currency: entry.metadata?.currency || selectedFuncion?.moneda || selectedFuncion?.currency || 'USD',
-                status: entryStatus,
-                gatewayTransactionId: entry.metadata?.orderId || entry.metadata?.transactionId || null,
-                gatewayResponse: entry.metadata?.raw || entry.metadata || null,
-                locator: locator,
-                tenantId: tenantIdForTransactions || null,
-                userId: userId,
-                eventoId: selectedEvent?.id,
-                funcionId: selectedFuncion?.id || selectedFuncion?._id,
-                paymentMethod: entry.formaPago,
-                gatewayName: entryIsCashea ? 'Cashea' : 'manual',
-                metadata: entry.metadata || null,
-                payments: [
-                  {
-                    method: entry.formaPago,
-                    amount: Number(entry.importe) || 0,
-                    metadata: entry.metadata || null,
-                    reference: entry.metadata?.orderId || entry.metadata?.invoiceId || null,
-                    status: entryStatus,
-                  },
-                ],
-              };
+            const { data: existingPaymentData, error: fetchError } = await supabase
+              .from('payment_transactions')
+              .select('id, status, amount, locator')
+              .eq('id', existingPayment.paymentId)
+              .single();
 
-              return await createPaymentTransaction(transactionData);
-            });
-
-            const transactions = await Promise.all(paymentTransactionPromises);
-            // Determinar el status final del pago (completed si todos est¡n completados, sino reservado/pending)
-            const finalStatus = hasCasheaPaymentOverall || diferencia > 0 || paymentStatus === 'reserved'
-              ? 'reservado'
-              : 'completed';
-
-            // Enviar correo autom¡ticamente segºn el status
-            if (locator && userId) {
-              try {
-                // Importar din¡micamente para evitar problemas de ciclo
-                const { sendPaymentEmailByStatus } = await import('../../../store/services/paymentEmailService');
-
-                const emailResult = await sendPaymentEmailByStatus({
-                  locator,
-                  user_id: userId,
-                  status: finalStatus,
-                  transactionId: transactions[0]?.id,
-                  amount: total,
-                });
-
-                if (emailResult.success) {
-                } else {
-                }
-              } catch (emailError) {
-                console.error('Œ [PAYMENT_MODAL] Error enviando correo:', emailError);
-                // No bloquear el flujo si falla el env­o de correo
-              }
+            if (fetchError) {
+              console.error('Error obteniendo pago existente:', fetchError);
+              throw new Error('Error al verificar el estado del pago existente');
             }
-          } catch (transactionError) {
-            console.error('Œ Error creating payment transactions:', transactionError);
-            // No fallar el pago por esto, solo loggear el error
+
+            // Verificar si el pago ya est¡ completado
+            if (existingPaymentData && existingPaymentData.status === 'completed') {
+              message.error(`Este ticket ya est¡ completamente pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator}). No se puede procesar otro pago.`);
+              throw new Error(`El ticket ya est¡ pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator})`);
+            }
+
+            // Si el pago existe pero no est¡ completado, actualizarlo
+            return updatePayment(existingPayment.paymentId, paymentData);
+          } catch (error) {
+            console.error('Error validando pago existente:', error);
+            throw error;
           }
-        }
+        } else {
+          // Add reservation deadline if applicable (solo para pagos nuevos)
+          if (reservationType === '2') {
+            paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
+          } else if (reservationType === '3' && selectedDate) {
+            paymentData.reservationDeadline = selectedDate.toDate();
+          }
 
-        // Asignar tags del evento al comprador si el pago fue exitoso
-        if (selectedEvent?.tags && selectedClient?.id) {
-          await assignEventTagsToUser(selectedClient.id, selectedEvent.tags);
+          return createPayment(paymentData);
         }
+      });
 
-        if (!hasCasheaPaymentOverall) {
-          setShowConfirmation(true);
+      const results = await Promise.all(paymentPromises);
+      const tenantIdForTransactions = resolveTenantId({
+        user,
+        selectedEvent,
+        selectedFuncion,
+        seats: safeCarrito,
+        carrito: safeCarrito,
+      });
+
+      if (!tenantIdForTransactions) {
+      }
+      if (results && results.length > 0 && results[0]) {
+        const locator = results[0].locator || effectiveLocator;
+        setLocator(locator);
+        const userId = selectedClient?.id || selectedClient?._id;
+
+        // Crear payment_transaction para cada m©todo de pago usado
+        try {
+          const paymentTransactionPromises = paymentEntries.map(async (entry) => {
+            const entryIsCashea = entry.metadata?.gateway === 'cashea' || entry.formaPago === 'Cashea';
+            const entryStatus = entry.metadata?.status || (entryIsCashea ? 'pending' : 'completed');
+            const transactionData = {
+              orderId: locator,
+              gatewayId: null, // Para pagos manuales no hay gateway
+              amount: Number(entry.importe) || 0,
+              currency: entry.metadata?.currency || selectedFuncion?.moneda || selectedFuncion?.currency || 'USD',
+              status: entryStatus,
+              gatewayTransactionId: entry.metadata?.orderId || entry.metadata?.transactionId || null,
+              gatewayResponse: entry.metadata?.raw || entry.metadata || null,
+              locator: locator,
+              tenantId: tenantIdForTransactions || null,
+              userId: userId,
+              eventoId: selectedEvent?.id,
+              funcionId: selectedFuncion?.id || selectedFuncion?._id,
+              paymentMethod: entry.formaPago,
+              gatewayName: entryIsCashea ? 'Cashea' : 'manual',
+              metadata: entry.metadata || null,
+              payments: [
+                {
+                  method: entry.formaPago,
+                  amount: Number(entry.importe) || 0,
+                  metadata: entry.metadata || null,
+                  reference: entry.metadata?.orderId || entry.metadata?.invoiceId || null,
+                  status: entryStatus,
+                },
+              ],
+            };
+
+            return await createPaymentTransaction(transactionData);
+          });
+
+          const transactions = await Promise.all(paymentTransactionPromises);
+          // Determinar el status final del pago (completed si todos est¡n completados, sino reservado/pending)
+          const finalStatus = hasCasheaPaymentOverall || diferencia > 0 || paymentStatus === 'reserved'
+            ? 'reservado'
+            : 'completed';
+
+          // Enviar correo autom¡ticamente segºn el status
+          if (locator && userId) {
+            try {
+              // Importar din¡micamente para evitar problemas de ciclo
+              const { sendPaymentEmailByStatus } = await import('../../../store/services/paymentEmailService');
+
+              const emailResult = await sendPaymentEmailByStatus({
+                locator,
+                user_id: userId,
+                status: finalStatus,
+                transactionId: transactions[0]?.id,
+                amount: total,
+              });
+
+              if (emailResult.success) {
+              } else {
+              }
+            } catch (emailError) {
+              console.error('Œ [PAYMENT_MODAL] Error enviando correo:', emailError);
+              // No bloquear el flujo si falla el env­o de correo
+            }
+          }
+        } catch (transactionError) {
+          console.error('Œ Error creating payment transactions:', transactionError);
+          // No fallar el pago por esto, solo loggear el error
         }
-        const successMessage = hasCasheaPaymentOverall
-          ? 'Orden registrada con Cashea. Pendiente de confirmaci³n.'
-          : 'Pago procesado exitosamente';
-        message.success(successMessage);
-        onCancel();
+      }
+
+      // Asignar tags del evento al comprador si el pago fue exitoso
+      if (selectedEvent?.tags && selectedClient?.id) {
+        await assignEventTagsToUser(selectedClient.id, selectedEvent.tags);
+      }
+
+      if (!hasCasheaPaymentOverall) {
+        setShowConfirmation(true);
+      }
+      const successMessage = hasCasheaPaymentOverall
+        ? 'Orden registrada con Cashea. Pendiente de confirmaci³n.'
+        : 'Pago procesado exitosamente';
+      message.success(successMessage);
+      onCancel();
     } catch (error) {
       console.error('Payment error:', error);
 
@@ -1243,7 +1242,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                       error={casheaError}
                       seats={safeCarrito}
                     />
-              )}
+                  )}
                 </div>
               </TabPane>
             </Tabs>
@@ -1266,28 +1265,28 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         footer={
           isFullyPaid
             ? [
-                <Button
-                  key="email"
-                  type="default"
-                  variant="outlined"
-                  block
-                  onClick={handleEmailTicket}
-                  loading={isSendingEmail}
-                  disabled={!effectiveLocator || !emailToSend || !isValidEmail(emailToSend) || isSendingEmail}
-                >
-                  Enviar por correo
-                </Button>,
-                <Button
-                  key="download"
-                  type="default"
-                  variant="outlined"
-                  block
-                  onClick={handleDownloadTicket}
-                  disabled={!effectiveLocator}
-                >
-                  Descargar Ticket
-                </Button>
-              ]
+              <Button
+                key="email"
+                type="default"
+                variant="outlined"
+                block
+                onClick={handleEmailTicket}
+                loading={isSendingEmail}
+                disabled={!effectiveLocator || !emailToSend || !isValidEmail(emailToSend) || isSendingEmail}
+              >
+                Enviar por correo
+              </Button>,
+              <Button
+                key="download"
+                type="default"
+                variant="outlined"
+                block
+                onClick={handleDownloadTicket}
+                disabled={!effectiveLocator}
+              >
+                Descargar Ticket
+              </Button>
+            ]
             : null
         }
       >

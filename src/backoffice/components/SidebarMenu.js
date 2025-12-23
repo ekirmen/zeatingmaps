@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  faHome,
-  faTicketAlt,
-  faCalendarAlt,
-  faUsers,
-  faCreditCard,
-  faChartBar,
-  faCog,
-  faPalette,
-  faEnvelope,
-  faGlobe,
-  faFileAlt,
-  faPercent,
-  faMap,
-  faBuilding,
-  faPoll,
-  faTag,
-  faBell,
-  faCogs,
-  faMoneyBillWave,
-  faBox,
-  faCalendar,
-  faUsersCog,
-  faCode,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+  Home,
+  Ticket,
+  Calendar,
+  Users,
+  CreditCard,
+  BarChart2,
+  Settings,
+  Palette,
+  Mail,
+  Globe,
+  FileText,
+  Percent,
+  Map,
+  Building,
+  BarChart,
+  Tag,
+  Bell,
+  Banknote,
+  Package,
+  CalendarRange,
+  userCog,
+  Code,
+  ChevronRight,
+  ChevronDown,
+  UserCog
+} from 'lucide-react';
 import EventSearch from './EventSearch';
 
 const SidebarMenu = ({ collapsed }) => {
@@ -49,15 +50,15 @@ const SidebarMenu = ({ collapsed }) => {
       if (temporaryExpandedTimeout) {
         clearTimeout(temporaryExpandedTimeout);
       }
-      
+
       setTemporaryExpanded(true);
-      
+
       // Crear nuevo timeout
       const newTimeout = setTimeout(() => {
         setTemporaryExpanded(false);
         setTemporaryExpandedTimeout(null);
       }, 5000); // Aumentado a 5 segundos para más estabilidad
-      
+
       setTemporaryExpandedTimeout(newTimeout);
     }
   };
@@ -69,13 +70,13 @@ const SidebarMenu = ({ collapsed }) => {
       if (temporaryExpandedTimeout) {
         clearTimeout(temporaryExpandedTimeout);
       }
-      
+
       // Crear nuevo timeout
       const newTimeout = setTimeout(() => {
         setTemporaryExpanded(false);
         setTemporaryExpandedTimeout(null);
       }, 5000);
-      
+
       setTemporaryExpandedTimeout(newTimeout);
     }
   };
@@ -93,153 +94,118 @@ const SidebarMenu = ({ collapsed }) => {
     {
       title: 'Dashboard',
       path: '/dashboard',
-      icon: faHome,
+      icon: Home,
       type: 'link'
     },
     {
       title: 'Administración',
-      icon: faCogs,
+      icon: Settings,
       type: 'submenu',
       submenuId: 'admin',
       items: [
-        { title: 'Recintos', path: '/dashboard/recintos', icon: faBuilding },
-        { title: 'Plano', path: '/dashboard/plano', icon: faMap },
-        { title: 'Usuarios', path: '/dashboard/usuarios', icon: faUsers },
-        { title: 'Liquidaciones', path: '/dashboard/liquidacion', icon: faMoneyBillWave }
+        { title: 'Recintos', path: '/dashboard/recintos', icon: Building },
+        { title: 'Plano', path: '/dashboard/plano', icon: Map },
+        { title: 'Usuarios', path: '/dashboard/usuarios', icon: Users },
+        { title: 'Liquidaciones', path: '/dashboard/liquidacion', icon: Banknote }
       ]
     },
     {
       title: 'Programación',
-      icon: faCalendarAlt,
+      icon: Calendar,
       type: 'submenu',
       submenuId: 'scheduling',
       items: [
-        { title: 'Entradas', path: '/dashboard/entradas', icon: faTicketAlt },
-        { title: 'Plantillas de precios', path: '/dashboard/plantillas-precios', icon: faPercent },
-        { title: 'Productos', path: '/dashboard/productos', icon: faBox },
-        { title: 'Plantillas de Productos', path: '/dashboard/plantillas-productos', icon: faBox },
-        { title: 'Paquetes', path: '/dashboard/paquetes', icon: faBox },
-        { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: faPercent },
-        { title: 'Pasarelas de Pago', path: '/dashboard/payment-gateways', icon: faCreditCard },
-        { title: 'IVA', path: '/dashboard/iva', icon: faPercent },
-        { title: 'Descuentos', path: '/dashboard/descuentos', icon: faPercent },
-        { title: 'Abonos', path: '/dashboard/abonos', icon: faCalendarAlt },
-        { title: 'Afiliados', path: '/dashboard/afiliados', icon: faUsers },
-        { title: 'Eventos', path: '/dashboard/eventos', icon: faTicketAlt },
-        { title: 'Funciones', path: '/dashboard/funciones', icon: faCalendar }
-        // { title: 'Donaciones', path: '/dashboard/donaciones', icon: faHandHoldingHeart }, // OCULTO
-        // { title: 'Seguros', path: '/dashboard/seguros', icon: faShieldAlt }, // OCULTO
-        // { title: 'Envío a domicilio', path: '/dashboard/envio', icon: faTruck }, // OCULTO
-        // { title: 'Cupos', path: '/dashboard/cupos', icon: faChartBar }, // OCULTO
-        // { title: 'Plantillas de cupos', path: '/dashboard/plantillas-cupos', icon: faFileAlt }, // OCULTO
-        // { title: 'Filas virtuales', path: '/dashboard/filas-virtuales', icon: faUsers }, // OCULTO
-        // { title: 'Paquetes', path: '/dashboard/paquetes', icon: faBox }, // OCULTO
-        // { title: 'Multipase', path: '/dashboard/multipase', icon: faTicketAlt }, // OCULTO
+        { title: 'Entradas', path: '/dashboard/entradas', icon: Ticket },
+        { title: 'Plantillas de precios', path: '/dashboard/plantillas-precios', icon: Percent },
+        { title: 'Productos', path: '/dashboard/productos', icon: Package },
+        { title: 'Plantillas de Productos', path: '/dashboard/plantillas-productos', icon: Package },
+        { title: 'Paquetes', path: '/dashboard/paquetes', icon: Package },
+        { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: Percent },
+        { title: 'Pasarelas de Pago', path: '/dashboard/payment-gateways', icon: CreditCard },
+        { title: 'IVA', path: '/dashboard/iva', icon: Percent },
+        { title: 'Descuentos', path: '/dashboard/descuentos', icon: Percent },
+        { title: 'Abonos', path: '/dashboard/abonos', icon: CalendarRange },
+        { title: 'Afiliados', path: '/dashboard/afiliados', icon: Users },
+        { title: 'Eventos', path: '/dashboard/eventos', icon: Ticket },
+        { title: 'Funciones', path: '/dashboard/funciones', icon: Calendar }
       ]
     },
     {
       title: 'CRM',
-      icon: faUsersCog,
+      icon: UserCog,
       type: 'submenu',
       submenuId: 'crm',
       items: [
-        { title: 'Mailchimp', path: '/dashboard/mailchimp', icon: faEnvelope },
-        { title: 'Formularios', path: '/dashboard/formularios', icon: faFileAlt },
-        { title: 'Notificaciones', path: '/dashboard/notificaciones', icon: faBell },
-        // { title: 'Fan ID', path: '/dashboard/fanid', icon: faIdCard }, // OCULTO
-        { title: 'Encuestas', path: '/dashboard/encuestas', icon: faPoll },
-        { title: 'Campañas de mailing', path: '/dashboard/email-campaigns', icon: faEnvelope },
-        { title: 'Etiquetas', path: '/dashboard/tags', icon: faTag }
+        { title: 'Mailchimp', path: '/dashboard/mailchimp', icon: Mail },
+        { title: 'Formularios', path: '/dashboard/formularios', icon: FileText },
+        { title: 'Notificaciones', path: '/dashboard/notificaciones', icon: Bell },
+        { title: 'Encuestas', path: '/dashboard/encuestas', icon: BarChart },
+        { title: 'Campañas de mailing', path: '/dashboard/email-campaigns', icon: Mail },
+        { title: 'Etiquetas', path: '/dashboard/tags', icon: Tag }
       ]
     },
-    // {
-    //   title: 'Acreditaciones',
-    //   icon: faIdCard,
-    //   type: 'submenu',
-    //   submenuId: 'accreditations',
-    //   items: [
-    //     { title: 'Eventos de acreditación', path: '/dashboard/accreditation-management', icon: faClipboardCheck },
-    //     { title: 'Acreditaciones', path: '/dashboard/accreditations', icon: faCheckCircle }
-    //   ]
-    // }, // OCULTO
-    // {
-    //   title: 'Promociones',
-    //   icon: faGift,
-    //   type: 'submenu',
-    //   submenuId: 'promos',
-    //   items: [
-    //     { title: 'Códigos promocionales', path: '/dashboard/promos', icon: faTicketAlt },
-    //     { title: 'Tarjetas regalo', path: '/dashboard/gift-cards', icon: faGift },
-    //     { title: 'Invitaciones', path: '/dashboard/invitations', icon: faEnvelope },
-    //     { title: 'Programas de fidelización', path: '/dashboard/loyalty-clubs', icon: faCrown },
-    //     { title: 'Compra compartida', path: '/dashboard/group-promotions', icon: faUsers }
-    //   ]
-    // }, // OCULTO
     {
       title: 'Informes',
-      icon: faFileAlt,
+      icon: FileText,
       type: 'submenu',
       submenuId: 'reports',
       items: [
-        { title: 'Reportes Detallados', path: '/dashboard/reports', icon: faChartBar },
-        { title: 'Reportes Programados (acción rápida)', path: '/dashboard/scheduled-reports', icon: faEnvelope },
-        { title: 'Plantillas de Email', path: '/dashboard/email-templates', icon: faPalette }
+        { title: 'Reportes Detallados', path: '/dashboard/reports', icon: BarChart2 },
+        { title: 'Reportes Programados (acción rápida)', path: '/dashboard/scheduled-reports', icon: Mail },
+        { title: 'Plantillas de Email', path: '/dashboard/email-templates', icon: Palette }
       ]
     },
     {
       title: 'Personalización',
-      icon: faPalette,
+      icon: Palette,
       type: 'submenu',
       submenuId: 'personalization',
       items: [
-        // { title: 'Sitios web', path: '/dashboard/sites', icon: faGlobe }, // OCULTO
-        { title: 'Formatos de entrada', path: '/dashboard/formato-entrada', icon: faTicketAlt },
-        // { title: 'Banners de publicidad', path: '/dashboard/banner-ads', icon: faImage }, // OCULTO
-        { title: 'Textos legales', path: '/dashboard/legal-texts', icon: faFileAlt },
-        { title: 'Web Studio', path: '/dashboard/webstudio', icon: faPalette },
-        { title: 'Configuración de Asientos', path: '/dashboard/seat-settings', icon: faCog },
-        { title: 'Configuración de Correo', path: '/dashboard/email-config', icon: faEnvelope },
-        { title: 'Páginas', path: '/dashboard/pages', icon: faFileAlt },
-        { title: 'Colores Web', path: '/dashboard/webcolors', icon: faPalette }
-        // { title: 'Repositorio de imágenes', path: '/dashboard/galeria', icon: faImage } // OCULTO
+        { title: 'Formatos de entrada', path: '/dashboard/formato-entrada', icon: Ticket },
+        { title: 'Textos legales', path: '/dashboard/legal-texts', icon: FileText },
+        { title: 'Web Studio', path: '/dashboard/webstudio', icon: Palette },
+        { title: 'Configuración de Asientos', path: '/dashboard/seat-settings', icon: Settings },
+        { title: 'Configuración de Correo', path: '/dashboard/email-config', icon: Mail },
+        { title: 'Páginas', path: '/dashboard/pages', icon: FileText },
+        { title: 'Colores Web', path: '/dashboard/webcolors', icon: Palette }
       ]
     },
     {
       title: 'Boletería',
       path: '/dashboard/boleteria',
-      icon: faTicketAlt,
+      icon: Ticket,
       type: 'link'
     },
     {
       title: 'Panel SaaS',
-      icon: faGlobe,
+      icon: Globe,
       type: 'submenu',
       submenuId: 'saas',
-        items: [
-          { title: 'Dashboard SaaS', path: '/dashboard/saas', icon: faChartBar },
-          { title: 'Facturación', path: '/dashboard/saas/billing', icon: faCreditCard },
-          { title: 'Pasarelas de Pago', path: '/dashboard/saas/payment-gateways', icon: faCreditCard },
-          { title: 'Roles y Permisos', path: '/dashboard/saas/roles', icon: faUsers },
-          { title: 'API Explorer', path: '/dashboard/saas/api-explorer', icon: faCode },
-          { title: 'Configuración', path: '/dashboard/saas/settings', icon: faCog }
-        ]
+      items: [
+        { title: 'Dashboard SaaS', path: '/dashboard/saas', icon: BarChart2 },
+        { title: 'Facturación', path: '/dashboard/saas/billing', icon: CreditCard },
+        { title: 'Pasarelas de Pago', path: '/dashboard/saas/payment-gateways', icon: CreditCard },
+        { title: 'Roles y Permisos', path: '/dashboard/saas/roles', icon: Users },
+        { title: 'API Explorer', path: '/dashboard/saas/api-explorer', icon: Code },
+        { title: 'Configuración', path: '/dashboard/saas/settings', icon: Settings }
+      ]
     }
   ];
 
   const renderMenuItem = (item) => {
+    const Icon = item.icon;
     if (item.type === 'link') {
       return (
         <Link
           key={item.title}
           to={item.path}
-          className={`flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
-            isActive(item.path) ? 'bg-blue-100 text-blue-600 border-r-2 border-blue-600' : ''
-          }`}
+          className={`flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${isActive(item.path) ? 'bg-blue-100 text-blue-600 border-r-2 border-blue-600' : ''
+            }`}
           onClick={() => {
             handleTemporaryExpansion();
           }}
         >
-          <FontAwesomeIcon icon={item.icon} className="w-5 h-5 mr-3" />
+          <Icon className="w-5 h-5 mr-3" />
           {(!collapsed || temporaryExpanded) && <span>{item.title}</span>}
         </Link>
       );
@@ -253,39 +219,41 @@ const SidebarMenu = ({ collapsed }) => {
               handleTemporaryExpansion();
               toggleSubmenu(item.submenuId);
             }}
-            className={`w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
-              activeSubmenu === item.submenuId ? 'bg-blue-100 text-blue-600' : ''
-            }`}
+            className={`w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${activeSubmenu === item.submenuId ? 'bg-blue-100 text-blue-600' : ''
+              }`}
           >
             <div className="flex items-center">
-              <FontAwesomeIcon icon={item.icon} className="w-5 h-5 mr-3" />
+              <Icon className="w-5 h-5 mr-3" />
               {(!collapsed || temporaryExpanded) && <span>{item.title}</span>}
             </div>
             {(!collapsed || temporaryExpanded) && (
-              <FontAwesomeIcon 
-                icon={activeSubmenu === item.submenuId ? 'chevron-down' : 'chevron-right'} 
-                className="w-4 h-4 transition-transform"
-              />
+              activeSubmenu === item.submenuId ? (
+                <ChevronDown className="w-4 h-4 transition-transform" />
+              ) : (
+                <ChevronRight className="w-4 h-4 transition-transform" />
+              )
             )}
           </button>
-          
+
           {activeSubmenu === item.submenuId && (!collapsed || temporaryExpanded) && (
             <div className="bg-gray-50">
-              {item.items.map((subItem) => (
-                <Link
-                  key={subItem.title}
-                  to={subItem.path}
-                  className={`flex items-center px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
-                    isActive(subItem.path) ? 'bg-blue-100 text-blue-600' : ''
-                  }`}
-                  onClick={() => {
-                    handleTemporaryExpansion();
-                  }}
-                >
-                  <FontAwesomeIcon icon={subItem.icon} className="w-4 h-4 mr-3" />
-                  <span>{subItem.title}</span>
-                </Link>
-              ))}
+              {item.items.map((subItem) => {
+                const SubIcon = subItem.icon;
+                return (
+                  <Link
+                    key={subItem.title}
+                    to={subItem.path}
+                    className={`flex items-center px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors ${isActive(subItem.path) ? 'bg-blue-100 text-blue-600' : ''
+                      }`}
+                    onClick={() => {
+                      handleTemporaryExpansion();
+                    }}
+                  >
+                    <SubIcon className="w-4 h-4 mr-3" />
+                    <span>{subItem.title}</span>
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>
@@ -299,7 +267,7 @@ const SidebarMenu = ({ collapsed }) => {
   const isBoleteriaActive = isActive('/dashboard/boleteria');
 
   return (
-    <div 
+    <div
       className={`bg-white shadow-lg ${(collapsed && !temporaryExpanded) ? 'w-16' : 'w-64'} transition-all duration-300`}
       onMouseEnter={keepExpanded}
       onMouseMove={keepExpanded}
@@ -328,6 +296,41 @@ const SidebarMenu = ({ collapsed }) => {
       </nav>
     </div>
   );
+};
+
+// Si estamos en boletería y el menú no está colapsado, mostrar el buscador
+const isBoleteriaActive = isActive('/dashboard/boleteria');
+
+return (
+  <div
+    className={`bg-white shadow-lg ${(collapsed && !temporaryExpanded) ? 'w-16' : 'w-64'} transition-all duration-300`}
+    onMouseEnter={keepExpanded}
+    onMouseMove={keepExpanded}
+  >
+    {/* Logo */}
+    <div className="p-4 border-b border-gray-200">
+      <div className="flex items-center justify-center">
+        {(!collapsed || temporaryExpanded) && (
+          <div className="text-xl font-bold text-blue-600">
+            Panel Admin
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* Buscador de eventos (solo en boletería) */}
+    {isBoleteriaActive && (!collapsed || temporaryExpanded) && (
+      <div className="p-4 border-b border-gray-200">
+        <EventSearch />
+      </div>
+    )}
+
+    {/* Menu Items */}
+    <nav className="py-4">
+      {mainMenuItems.map(renderMenuItem)}
+    </nav>
+  </div>
+);
 };
 
 export default SidebarMenu;

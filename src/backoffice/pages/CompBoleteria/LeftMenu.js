@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Input, Card, Table, Form, Button, message, Select, Checkbox } from '../../../utils/antdComponents';
-import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit, AiOutlineSetting, AiOutlineDown, AiOutlineUp } from 'react-icons/ai';
+import { Search, UserPlus, X, Edit, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase, supabaseAdmin } from '../../../supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
 import downloadTicket from '../../../utils/downloadTicket';
@@ -351,7 +351,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       <div className="absolute top-0 right-0 z-10">
         <Button
           type="text"
-          icon={isMenuCollapsed ? <AiOutlineDown /> : <AiOutlineUp />}
+          icon={isMenuCollapsed ? <ChevronDown /> : <ChevronUp />}
           onClick={toggleMenu}
           className="bg-white shadow-md rounded-full w-8 h-8 flex items-center justify-center"
           title={isMenuCollapsed ? "Mostrar menú" : "Ocultar menú"}
@@ -359,12 +359,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       </div>
 
       <div className="p-4 space-y-4 bg-white shadow rounded">
-        <Button icon={<AiOutlineSearch />} onClick={() => setIsSearchModalVisible(true)} block>
+        <Button icon={<Search />} onClick={() => setIsSearchModalVisible(true)} block>
           Buscar Tickets
         </Button>
 
         <Button
-          icon={<AiOutlineUserAdd />}
+          icon={<UserPlus />}
           onClick={() => setIsAccountModalVisible(true)}
           block
         >
@@ -372,14 +372,14 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         </Button>
 
         <Button
-          icon={<AiOutlineSetting />}
+          icon={<Settings />}
           onClick={() => setIsConfigModalVisible(true)}
           block
         >
           Configuración
         </Button>
         <Button
-          icon={<AiOutlineClose />}
+          icon={<X />}
           onClick={() => {
             const { clearCart } = useCartStore.getState();
             clearCart();
@@ -400,8 +400,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 <div className="text-sm text-gray-500">{userData.email || userData.telefono || 'Sin datos de contacto'}</div>
               </div>
               <div className="flex gap-2">
-                <Button size="small" icon={<AiOutlineEdit />} onClick={() => setIsAccountModalVisible(true)} />
-                <Button size="small" icon={<AiOutlineClose />} danger onClick={handleClearClient} />
+                <Button size="small" icon={<Edit />} onClick={() => setIsAccountModalVisible(true)} />
+                <Button size="small" icon={<X />} danger onClick={handleClearClient} />
               </div>
             </div>
           </Card>
@@ -584,7 +584,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               onSearch={handleAccountSearch}
               loading={searchLoading}
             />
-            <Button className="mt-2" onClick={() => setIsAddingAccount(true)} block icon={<AiOutlineUserAdd />}>
+            <Button className="mt-2" onClick={() => setIsAddingAccount(true)} block icon={<UserPlus />}>
               Crear nueva cuenta
             </Button>
 

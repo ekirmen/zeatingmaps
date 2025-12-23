@@ -20,7 +20,7 @@ export { default as Col } from 'antd/es/col';
 export { default as ConfigProvider } from 'antd/es/config-provider';
 export { default as theme } from 'antd/es/theme';
 
-// Icons - usar react-icons en lugar de @ant-design/icons cuando sea posible
+// Icons - usar lucide-react en lugar de @ant-design/icons cuando sea posible
 export { default as AntdIcon } from '@ant-design/icons';
 
 // Estilos CSS (en lugar de LESS)

@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { toast } from 'react-hot-toast';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
+import { CheckCircle, Ticket } from 'lucide-react';
 import { loadMetaPixel, trackEvent } from '../utils/analytics';
 import { useCartStore } from '../../store/cartStore';
 import downloadTicket from '../../utils/downloadTicket';
@@ -338,7 +337,7 @@ const PaymentSuccess = () => {
           }}
           className="w-full mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
         >
-          <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
+          <Ticket className="mr-2 w-4 h-4" />
           Descargar Ticket N{ticketNumber}
         </button>
       </div>
@@ -400,7 +399,7 @@ const PaymentSuccess = () => {
           <div className="mb-6 md:mb-8 md:flex md:items-center md:justify-between md:text-left text-center">
             <div className="flex items-center justify-center md:justify-start space-x-4">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <FontAwesomeIcon icon={faCheckCircle} className="text-green-600 text-2xl" />
+                <CheckCircle className="text-green-600 text-2xl" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -418,223 +417,222 @@ const PaymentSuccess = () => {
             </div>
           </div>
 
-        <div className="border-t border-b border-gray-200 py-4 my-6">
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-            <span>
-              Última sincronización: {refreshLabel || 'cargando...'}
-            </span>
-            {retryCount > 0 && (
-              <span>Reintentos: {retryCount}</span>
+          <div className="border-t border-b border-gray-200 py-4 my-6">
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+              <span>
+                Última sincronización: {refreshLabel || 'cargando...'}
+              </span>
+              {retryCount > 0 && (
+                <span>Reintentos: {retryCount}</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-gray-600">Localizador:</span>
+              <span className="font-mono font-bold text-lg">{locator}</span>
+            </div>
+
+            {paymentDetails && (
+              <>
+                {!isReservation && (
+                  <>
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-gray-600">Total Pagado:</span>
+                      <span className="font-bold">$ {paymentDetails.amount}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-gray-600">Método de Pago:</span>
+                      <span className="capitalize">{paymentDetails.paymentMethod}</span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Fecha de la Compra:</span>
+                  <span>{formatPurchaseDate(paymentDetails.created_at)}</span>
+                </div>
+              </>
             )}
           </div>
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-gray-600">Localizador:</span>
-            <span className="font-mono font-bold text-lg">{locator}</span>
-          </div>
 
-          {paymentDetails && (
-            <>
-              {!isReservation && (
-                <>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-gray-600">Total Pagado:</span>
-                    <span className="font-bold">$ {paymentDetails.amount}</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-gray-600">Método de Pago:</span>
-                    <span className="capitalize">{paymentDetails.paymentMethod}</span>
-                  </div>
-                </>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Fecha de la Compra:</span>
-                <span>{formatPurchaseDate(paymentDetails.created_at)}</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        {isReservation && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  <strong>Reserva temporal:</strong> Tienes tiempo limitado para completar el pago.
-                </p>
-                <p className="text-sm text-yellow-700 mt-2">
-                  <strong>Tiempo para pagar:</strong> {paymentDetails?.tiempo_caducidad_reservas ?
-                    `${Math.abs(paymentDetails.tiempo_caducidad_reservas)} minutos` :
-                    'Contacta para más información'
-                  }
-                </p>
-                <p className="text-sm text-yellow-700 mt-1">
-                  <strong>Contacto:</strong> +1 (555) 123-4567
-                </p>
+          {isReservation && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+              <div className="flex">
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    <strong>Reserva temporal:</strong> Tienes tiempo limitado para completar el pago.
+                  </p>
+                  <p className="text-sm text-yellow-700 mt-2">
+                    <strong>Tiempo para pagar:</strong> {paymentDetails?.tiempo_caducidad_reservas ?
+                      `${Math.abs(paymentDetails.tiempo_caducidad_reservas)} minutos` :
+                      'Contacta para más información'
+                    }
+                  </p>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    <strong>Contacto:</strong> +1 (555) 123-4567
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {!isReservation && paymentDetails && (
-          <div className="my-6">
-            {seats && Array.isArray(seats) && seats.length > 0 ? (
-              <>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Tickets ({seats.length})</h3>
-                    <p className="text-sm text-gray-600 mt-1">Agrupa por zona o mesa para preparar descargas por bloques.</p>
+          {!isReservation && paymentDetails && (
+            <div className="my-6">
+              {seats && Array.isArray(seats) && seats.length > 0 ? (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Tickets ({seats.length})</h3>
+                      <p className="text-sm text-gray-600 mt-1">Agrupa por zona o mesa para preparar descargas por bloques.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="groupingMode" className="text-sm text-gray-700 whitespace-nowrap">Organizar por</label>
+                      <select
+                        id="groupingMode"
+                        value={groupingMode}
+                        onChange={(e) => setGroupingMode(e.target.value)}
+                        className="border-gray-300 rounded-md text-sm px-3 py-2"
+                      >
+                        <option value="none">Sin agrupación</option>
+                        <option value="zone">Zona</option>
+                        <option value="mesa">Mesa</option>
+                      </select>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="groupingMode" className="text-sm text-gray-700 whitespace-nowrap">Organizar por</label>
-                    <select
-                      id="groupingMode"
-                      value={groupingMode}
-                      onChange={(e) => setGroupingMode(e.target.value)}
-                      className="border-gray-300 rounded-md text-sm px-3 py-2"
-                    >
-                      <option value="none">Sin agrupación</option>
-                      <option value="zone">Zona</option>
-                      <option value="mesa">Mesa</option>
-                    </select>
-                  </div>
-                </div>
 
-                {groupingMode === 'none' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    {seatsWithIndex.map((seat) => renderSeatCard(seat, seat.__index))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {Object.entries(groupedSeats).map(([groupName, items]) => (
-                      <div key={groupName} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-3">
-                          <div>
-                            <p className="font-semibold text-gray-900">{groupName}</p>
-                            <p className="text-xs text-gray-600">{items.length} ticket(s) en este bloque</p>
+                  {groupingMode === 'none' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {seatsWithIndex.map((seat) => renderSeatCard(seat, seat.__index))}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {Object.entries(groupedSeats).map(([groupName, items]) => (
+                        <div key={groupName} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-center mb-3">
+                            <div>
+                              <p className="font-semibold text-gray-900">{groupName}</p>
+                              <p className="text-xs text-gray-600">{items.length} ticket(s) en este bloque</p>
+                            </div>
+                            <span className="text-xs text-gray-500">Listo para descarga por grupo</span>
                           </div>
-                          <span className="text-xs text-gray-500">Listo para descarga por grupo</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {items.map((seat) => renderSeatCard(seat, seat.__index))}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {items.map((seat) => renderSeatCard(seat, seat.__index))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                  <p className="text-sm text-yellow-700">
+                    <strong>Nota:</strong> No se encontraron asientos para esta transacción.
+                    {paymentDetails.status === 'completed' || paymentDetails.status === 'pagado'
+                      ? ' Contacta con soporte si necesitas ayuda.'
+                      : ' Los asientos aparecerán cuando el pago esté completo.'}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+            {!isReservation && (
+              <>
+                <button
+                  onClick={handleDownloadAllTickets}
+                  className="flex items-center justify-center px-6 py-3 store-button store-button-primary"
+                  style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)' }}
+                >
+                  <Ticket className="mr-2 w-4 h-4" />
+                  Descargar todos los PDF
+                </button>
+                {walletEnabled && (
+                  <button
+                    onClick={handleDownloadPkpass}
+                    className="flex items-center justify-center px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                      <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                    </svg>
+                    Descargar Wallet
+                  </button>
                 )}
               </>
-            ) : (
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                <p className="text-sm text-yellow-700">
-                  <strong>Nota:</strong> No se encontraron asientos para esta transacción.
-                  {paymentDetails.status === 'completed' || paymentDetails.status === 'pagado'
-                    ? ' Contacta con soporte si necesitas ayuda.'
-                    : ' Los asientos aparecerán cuando el pago esté completo.'}
-                </p>
-              </div>
             )}
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-          {!isReservation && (
-            <>
+            {isReservation && (
               <button
-                onClick={handleDownloadAllTickets}
-                className="flex items-center justify-center px-6 py-3 store-button store-button-primary"
+                onClick={handleContinuePayment}
+                className="px-6 py-3 store-button store-button-primary"
                 style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)' }}
               >
-                <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
-                Descargar todos los PDF
+                Completar Pago
               </button>
-              {walletEnabled && (
-                <button
-                  onClick={handleDownloadPkpass}
-                  className="flex items-center justify-center px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                    <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-                  </svg>
-                  Descargar Wallet
-                </button>
-              )}
-            </>
-          )}
-          {isReservation && (
-            <button
-              onClick={handleContinuePayment}
-              className="px-6 py-3 store-button store-button-primary"
-              style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)' }}
-            >
-              Completar Pago
-            </button>
-          )}
-
-          <button
-            onClick={() => {
-              const path = refParam ? `/store?ref=${refParam}` : '/store';
-              navigate(path);
-            }}
-            className="px-6 py-3 store-button store-button-secondary"
-          >
-            Volver al Inicio
-          </button>
-        </div>
-
-        {downloadState.status !== 'idle' && (
-          <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-gray-800">
-                {downloadState.type === 'wallet' ? 'Descarga Wallet' : 'Descarga de PDF'}
-              </p>
-              <span
-                className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  downloadState.status === 'running'
-                    ? 'bg-blue-100 text-blue-700'
-                    : downloadState.status === 'success'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700'
-                }`}
-              >
-                {downloadState.status === 'running' && 'En progreso'}
-                {downloadState.status === 'success' && 'Completado'}
-                {downloadState.status === 'error' && 'Con errores'}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-              <div
-                className={`h-2.5 rounded-full ${downloadState.status === 'error' ? 'bg-red-500' : 'bg-blue-600'}`}
-                style={{ width: `${downloadState.progress}%` }}
-              />
-            </div>
-            <p className="text-xs text-gray-600">{downloadState.message}</p>
-
-            {downloadState.status === 'error' && (
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={downloadState.type === 'wallet' ? handleDownloadPkpass : handleDownloadAllTickets}
-                  className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                >
-                  Reintentar descarga
-                </button>
-                <button
-                  onClick={() => setDownloadState({ status: 'idle', message: '', progress: 0, type: null })}
-                  className="px-3 py-2 border border-gray-300 text-sm rounded-md hover:bg-gray-100"
-                >
-                  Ocultar
-                </button>
-              </div>
             )}
+
+            <button
+              onClick={() => {
+                const path = refParam ? `/store?ref=${refParam}` : '/store';
+                navigate(path);
+              }}
+              className="px-6 py-3 store-button store-button-secondary"
+            >
+              Volver al Inicio
+            </button>
           </div>
-        )}
+
+          {downloadState.status !== 'idle' && (
+            <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-gray-800">
+                  {downloadState.type === 'wallet' ? 'Descarga Wallet' : 'Descarga de PDF'}
+                </p>
+                <span
+                  className={`text-xs font-medium px-2 py-1 rounded-full ${downloadState.status === 'running'
+                      ? 'bg-blue-100 text-blue-700'
+                      : downloadState.status === 'success'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                >
+                  {downloadState.status === 'running' && 'En progreso'}
+                  {downloadState.status === 'success' && 'Completado'}
+                  {downloadState.status === 'error' && 'Con errores'}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                <div
+                  className={`h-2.5 rounded-full ${downloadState.status === 'error' ? 'bg-red-500' : 'bg-blue-600'}`}
+                  style={{ width: `${downloadState.progress}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-600">{downloadState.message}</p>
+
+              {downloadState.status === 'error' && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={downloadState.type === 'wallet' ? handleDownloadPkpass : handleDownloadAllTickets}
+                    className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                  >
+                    Reintentar descarga
+                  </button>
+                  <button
+                    onClick={() => setDownloadState({ status: 'idle', message: '', progress: 0, type: null })}
+                    className="px-3 py-2 border border-gray-300 text-sm rounded-md hover:bg-gray-100"
+                  >
+                    Ocultar
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
 
-        {emailSent && (
-          <div className="mt-8 text-center text-sm text-gray-500">
-            <p>Se ha enviado un correo electrónico con los detalles de tu compra</p>
-            <p className="mt-1">Guarda tu localizador para futuras referencias</p>
-          </div>
-        )}
+          {emailSent && (
+            <div className="mt-8 text-center text-sm text-gray-500">
+              <p>Se ha enviado un correo electrónico con los detalles de tu compra</p>
+              <p className="mt-1">Guarda tu localizador para futuras referencias</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -642,3 +640,4 @@ const PaymentSuccess = () => {
 };
 
 export default PaymentSuccess;
+

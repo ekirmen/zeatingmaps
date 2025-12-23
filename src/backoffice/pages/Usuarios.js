@@ -3,7 +3,7 @@ import { supabase } from '../../supabaseClient';
 import CreateUserForm from '../components/CreateUserForm';
 import EnhancedEditUserForm from '../components/EnhancedEditUserForm';
 import { toast } from 'react-hot-toast';
-import { AiOutlineEdit, AiOutlineDelete, AiOutlineKey, AiOutlineMail, AiOutlinePhone, AiOutlineUser } from 'react-icons/ai';
+import { Edit, Trash2, Key, Mail, Phone, User } from 'lucide-react';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const Usuarios = () => {
@@ -154,7 +154,7 @@ const Usuarios = () => {
             onClick={() => setIsCreating(true)}
             className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2"
           >
-            <AiOutlineUser />
+            <User />
             Crear Usuario
           </button>
         </div>
@@ -170,7 +170,7 @@ const Usuarios = () => {
             onClick={() => setIsCreating(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
           >
-            <AiOutlineUser />
+            <User />
             Crear Usuario
           </button>
         </div>
@@ -181,7 +181,7 @@ const Usuarios = () => {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <AiOutlineUser className="w-6 h-6 text-blue-600" />
+              <User className="w-6 h-6 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
@@ -232,7 +232,7 @@ const Usuarios = () => {
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <AiOutlineUser className="h-6 w-6 text-blue-600" />
+                          <User className="h-6 w-6 text-blue-600" />
                         </div>
                       </div>
                       <div className="ml-4">
@@ -245,12 +245,12 @@ const Usuarios = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
                       <div className="flex items-center gap-1">
-                        <AiOutlineMail className="w-4 h-4 text-gray-400" />
+                        <Mail className="w-4 h-4 text-gray-400" />
                         {user.email}
                       </div>
                       {user.telefono && (
                         <div className="flex items-center gap-1 mt-1">
-                          <AiOutlinePhone className="w-4 h-4 text-gray-400" />
+                          <Phone className="w-4 h-4 text-gray-400" />
                           {user.telefono}
                         </div>
                       )}
@@ -266,7 +266,7 @@ const Usuarios = () => {
                         className="text-blue-600 hover:text-blue-900"
                         title="Editar"
                       >
-                        <AiOutlineEdit className="w-4 h-4" />
+                        <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => {
@@ -276,14 +276,14 @@ const Usuarios = () => {
                         className="text-yellow-600 hover:text-yellow-900"
                         title="Cambiar contraseña"
                       >
-                        <AiOutlineKey className="w-4 h-4" />
+                        <Key className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(user.id)}
                         className="text-red-600 hover:text-red-900"
                         title="Eliminar"
                       >
-                        <AiOutlineDelete className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { Button, message, Dropdown, Menu, Card } from '../../../utils/antdComponents';
-import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
+import { X, MoreHorizontal } from 'lucide-react';
 import downloadTicket from '../../../utils/downloadTicket';
 
 const formatCurrency = (value) => {
@@ -71,7 +71,7 @@ const Cart = ({
       if (!acc[key]) {
         acc[key] = { fecha: item.funcionFecha, items: [] };
       }
-      
+
       const precioValue = getNumericPrice(item.precio ?? item.precio_total);
 
       // Agrupar por zona y precio
@@ -81,7 +81,7 @@ const Cart = ({
         group.tipoPrecio === item.tipoPrecio &&
         group.descuentoNombre === item.descuentoNombre
       );
-      
+
       if (existingGroup) {
         existingGroup.cantidad += 1;
         existingGroup.asientos.push({
@@ -111,7 +111,7 @@ const Cart = ({
           }]
         });
       }
-      
+
       return acc;
     }, {});
   }, [safeCarrito]);
@@ -119,11 +119,11 @@ const Cart = ({
   const handleRemoveSeat = useCallback((groupKey) => {
     // groupKey es una combinaci³n de zona, precio y tipo
     const [zona, precio, tipoPrecio, descuentoNombre] = groupKey.split('|');
-    
+
     setCarrito(
       safeCarrito.filter(
         (item) => !(
-          item.zona === zona && 
+          item.zona === zona &&
           item.precio === parseFloat(precio) &&
           item.tipoPrecio === tipoPrecio &&
           item.descuentoNombre === descuentoNombre
@@ -144,14 +144,14 @@ const Cart = ({
 
   const handleDownloadAllTickets = useCallback(async () => {
     if (!safeCarrito.length) return;
-    
+
     try {
       const locators = [...new Set(safeCarrito.map(item => item.locator).filter(Boolean))];
 
       for (const locator of locators) {
         await downloadTicket(locator);
       }
-      
+
       message.success('Tickets descargados correctamente');
     } catch (error) {
       console.error('Error downloading tickets:', error);
@@ -187,7 +187,7 @@ const Cart = ({
           {safeCarrito.length > 0 && !hasLockActions && (
             <Dropdown overlay={menu} trigger={["click"]} visible={menuVisible} onVisibleChange={setMenuVisible} placement="bottomRight">
               <button className="text-gray-500 hover:text-gray-800" title="Opciones">
-                <AiOutlineMore size={20} />
+                <MoreHorizontal size={20} />
               </button>
             </Dropdown>
           )}
@@ -197,7 +197,7 @@ const Cart = ({
               className="text-red-500 hover:text-red-700 transition"
               title="Limpiar carrito"
             >
-              <AiOutlineClose />
+              <X />
             </button>
           )}
         </div>

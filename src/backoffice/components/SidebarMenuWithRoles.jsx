@@ -3,48 +3,39 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Menu,
   Layout,
-  Tooltip,
-  Badge,
   Typography,
   Space,
   Tag
 } from '../../utils/antdComponents';
 import {
-  faHome,
-  faCogs,
-  faBuilding,
-  faMap,
-  faUsers,
-  faMoneyBillWave,
-  faTicketAlt,
-  faBox,
-  faGift,
-  faPercent,
-  faShieldAlt,
-  faTruck,
-  faCalendarAlt,
-  faChartLine,
-  faTrophy,
-  faLayerGroup,
-  faFileInvoice,
-  faCoins,
-  faReceipt,
-  faTags,
-  faCog,
-  faPrint,
-  faEnvelope,
-  faFileAlt,
-  faUndo,
-  faChartBar,
-  faCreditCard,
-  faCloud,
-  faDatabase,
-  faCode,
-  faUserShield,
-  faStore,
-  faChartPie
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+  Home,
+  Settings,
+  Building,
+  Map,
+  Users,
+  Banknote,
+  Ticket,
+  Package,
+  Gift,
+  Percent,
+  Calendar,
+  BarChart2,
+  Trophy,
+  Layers,
+  FileText,
+  Coins,
+  Receipt,
+  Tags,
+  Printer,
+  Mail,
+  RotateCcw,
+  CreditCard,
+  Cloud,
+  Code,
+  ShieldCheck,
+  Store,
+  PieChart
+} from 'lucide-react';
 import { useRole } from './RoleBasedAccess';
 
 const { Sider } = Layout;
@@ -83,7 +74,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     }
   };
 
-  // Funci³n para mantener el sidebar expandido cuando el usuario está interactuando
+  // Función para mantener el sidebar expandido cuando el usuario está interactuando
   const keepExpanded = () => {
     if (collapsed && temporaryExpanded) {
       // Limpiar timeout anterior si existe
@@ -115,7 +106,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     return null;
   }
 
-  // Funci³n para crear elementos de menú con verificaci³n de permisos
+  // Función para crear elementos de menú con verificaci³n de permisos
   const createMenuItem = (item) => {
     // Verificar si el usuario tiene permisos para este elemento
     if (item.permission && !hasPermission(item.permission)) {
@@ -145,13 +136,13 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     {
       title: 'Dashboard',
       path: '/dashboard',
-      icon: faHome,
+      icon: Home,
       type: 'link',
       permission: 'dashboard'
     },
     {
       title: 'Administración',
-      icon: faCogs,
+      icon: Settings,
       type: 'submenu',
       submenuId: 'admin',
       permission: 'usuarios', // Mostrar si tiene al menos uno de los permisos de admin
@@ -159,155 +150,155 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         {
           title: 'Recintos',
           path: '/dashboard/recintos',
-          icon: faBuilding,
+          icon: Building,
           permission: 'recintos'
         },
         {
           title: 'Plano',
           path: '/dashboard/plano',
-          icon: faMap,
+          icon: Map,
           permission: 'recintos'
         },
         {
           title: 'Usuarios',
           path: '/dashboard/usuarios',
-          icon: faUsers,
+          icon: Users,
           permission: 'usuarios'
         },
         {
           title: 'Liquidaciones',
           path: '/dashboard/liquidacion',
-          icon: faMoneyBillWave,
+          icon: Banknote,
           permission: 'liquidaciones'
         }
       ]
     },
     {
       title: 'Programación',
-      icon: faCalendarAlt,
+      icon: Calendar,
       type: 'submenu',
       submenuId: 'programming',
-      permission: 'eventos', // Mostrar si tiene al menos uno de los permisos de programaci³n
+      permission: 'eventos', // Mostrar si tiene al menos uno de los permisos de programación
       items: [
         {
           title: 'Entradas',
           path: '/dashboard/entradas',
-          icon: faTicketAlt,
+          icon: Ticket,
           permission: 'entradas'
         },
         {
           title: 'Productos',
           path: '/dashboard/productos',
-          icon: faBox,
+          icon: Package,
           permission: 'productos'
         },
         {
           title: 'Plantillas Productos',
           path: '/dashboard/plantillas-productos',
-          icon: faGift,
+          icon: Gift,
           permission: 'plantillas_productos'
         },
         // { 
         //   title: 'Donaciones', 
         //   path: '/dashboard/donaciones', 
-        //   icon: faGift,
+        //   icon: Gift,
         //   permission: 'entradas'
         // },
         {
           title: 'Comisiones',
           path: '/dashboard/comisiones',
-          icon: faPercent,
+          icon: Percent,
           permission: 'comisiones'
         },
         // { 
         //   title: 'Seguros', 
         //   path: '/dashboard/seguros', 
-        //   icon: faShieldAlt,
+        //   icon: ShieldCheck,
         //   permission: 'seguros'
         // },
         // { 
         //   title: 'Envío', 
         //   path: '/dashboard/envio', 
-        //   icon: faTruck,
+        //   icon: Truck,
         //   permission: 'envio'
         // },
         {
           title: 'Eventos',
           path: '/dashboard/eventos',
-          icon: faCalendarAlt,
+          icon: Calendar,
           permission: 'eventos'
         },
         {
           title: 'Plantillas Precios',
           path: '/dashboard/plantillas-precios',
-          icon: faChartLine,
+          icon: BarChart2,
           permission: 'plantillas_precios'
         },
         {
           title: 'Funciones',
           path: '/dashboard/funciones',
-          icon: faTrophy,
+          icon: Trophy,
           permission: 'funciones'
         },
         {
           title: 'Cupos',
           path: '/dashboard/cupos',
-          icon: faLayerGroup,
+          icon: Layers,
           permission: 'funciones'
         },
         {
           title: 'Plantillas Cupos',
           path: '/dashboard/plantillas-cupos',
-          icon: faChartLine,
+          icon: BarChart2,
           permission: 'plantillas_precios'
         },
         {
           title: 'Paquetes',
           path: '/dashboard/paquetes',
-          icon: faBox,
+          icon: Package,
           permission: 'paquetes'
         },
         // {
         //   title: 'Filas Virtuales',
         //   path: '/dashboard/filas-virtuales',
-        //   icon: faLayerGroup,
+        //   icon: Layers,
         //   permission: 'funciones'
         // },
         // { 
         //   title: 'Paquetes', 
         //   path: '/dashboard/paquetes', 
-        //   icon: faBox,
+        //   icon: Package,
         //   permission: 'paquetes'
         // },
         // { 
         //   title: 'Multipase', 
         //   path: '/dashboard/multipase', 
-        //   icon: faTicketAlt,
+        //   icon: Ticket,
         //   permission: 'multipase'
         // },
         {
           title: 'Abonos',
           path: '/dashboard/abonos',
-          icon: faFileInvoice,
+          icon: FileText,
           permission: 'abonos'
         },
         {
           title: 'Afiliados',
           path: '/dashboard/afiliados',
-          icon: faUsers,
+          icon: Users,
           permission: 'afiliados'
         },
         {
           title: 'IVA',
           path: '/dashboard/iva',
-          icon: faCoins,
+          icon: Coins,
           permission: 'iva'
         }
       ]
     },
     {
       title: 'Ventas',
-      icon: faStore,
+      icon: Store,
       type: 'submenu',
       submenuId: 'sales',
       permission: 'boleteria', // Mostrar si tiene al menos uno de los permisos de ventas
@@ -315,12 +306,12 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         {
           title: 'Transacciones',
           path: '/dashboard/transacciones',
-          icon: faCreditCard,
+          icon: CreditCard,
           permission: 'boleteria'
         },
         {
           title: 'Reportes',
-          icon: faChartPie,
+          icon: PieChart,
           type: 'submenu',
           submenuId: 'reports-sales',
           permission: 'reportes',
@@ -328,13 +319,13 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
             {
               title: 'Reportes Detallados',
               path: '/dashboard/reportes',
-              icon: faChartPie,
+              icon: PieChart,
               permission: 'reportes'
             },
             {
               title: 'Reportes Programados (acción rápida)',
               path: '/dashboard/scheduled-reports',
-              icon: faEnvelope,
+              icon: Mail,
               permission: 'reportes'
             }
           ]
@@ -342,26 +333,26 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         {
           title: 'CRM',
           path: '/dashboard/crm',
-          icon: faUsers,
+          icon: Users,
           permission: 'crm'
         },
         {
           title: 'Tags',
           path: '/dashboard/tags',
-          icon: faTags,
+          icon: Tags,
           permission: 'tags'
         },
         {
           title: 'Comunicación Masiva',
           path: '/dashboard/email-campaigns',
-          icon: faEnvelope,
+          icon: Mail,
           permission: 'email_campaigns'
         }
       ]
     },
     {
       title: 'Configuración',
-      icon: faCog,
+      icon: Settings,
       type: 'submenu',
       submenuId: 'config',
       permission: 'settings', // Mostrar si tiene al menos uno de los permisos de configuraci³n
@@ -369,62 +360,62 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         {
           title: 'Configuración',
           path: '/dashboard/settings',
-          icon: faCog,
+          icon: Settings,
           permission: 'settings'
         },
         {
           title: 'Web Studio',
           path: '/dashboard/webstudio',
-          icon: faCog,
+          icon: Settings,
           permission: 'webstudio'
         },
         {
           title: 'Configuración Asientos',
           path: '/dashboard/seat-settings',
-          icon: faCog,
+          icon: Settings,
           permission: 'seat_settings'
         },
         {
           title: 'Configuración Impresora',
           path: '/dashboard/printer-settings',
-          icon: faPrint,
+          icon: Printer,
           permission: 'printer_settings'
         },
         {
           title: 'Configuración Email',
           path: '/dashboard/email-config',
-          icon: faEnvelope,
+          icon: Mail,
           permission: 'email_config'
         },
         {
           title: 'Logs de Auditoría',
           path: '/dashboard/audit-logs',
-          icon: faFileAlt,
+          icon: FileText,
           permission: 'audit_logs'
         },
         {
           title: 'Gestión Reembolsos',
           path: '/dashboard/refund-management',
-          icon: faUndo,
+          icon: RotateCcw,
           permission: 'refund_management'
         },
         {
           title: 'Analytics de Pagos',
           path: '/dashboard/payment-analytics',
-          icon: faChartBar,
+          icon: BarChart2,
           permission: 'payment_analytics'
         },
         {
           title: 'Pasarelas de Pago',
           path: '/dashboard/payment-gateways',
-          icon: faCreditCard,
+          icon: CreditCard,
           permission: 'payment_gateways'
         }
       ]
     },
     {
       title: 'Personalización',
-      icon: faCog,
+      icon: Settings,
       type: 'submenu',
       submenuId: 'personalization',
       permission: 'personalizacion',
@@ -432,38 +423,38 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         {
           title: 'Formatos de entrada',
           path: '/dashboard/formato-entrada',
-          icon: faTicketAlt,
+          icon: Ticket,
           permission: 'formato_entrada'
         },
         {
           title: 'Textos legales',
           path: '/dashboard/legal-texts',
-          icon: faFileAlt,
+          icon: FileText,
           permission: 'legal_texts'
         },
 
         {
           title: 'Configuración de Asientos',
           path: '/dashboard/seat-settings',
-          icon: faCog,
+          icon: Settings,
           permission: 'seat_settings'
         },
         {
           title: 'Configuración de Correo',
           path: '/dashboard/email-config',
-          icon: faEnvelope,
+          icon: Mail,
           permission: 'email_config'
         },
         {
           title: 'Páginas',
           path: '/dashboard/pages',
-          icon: faFileAlt,
+          icon: FileText,
           permission: 'pages'
         },
         {
           title: 'Colores Web',
           path: '/dashboard/webcolors',
-          icon: faCog,
+          icon: Settings,
           permission: 'webcolors'
         }
       ]
@@ -471,7 +462,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     {
       title: 'Boletería',
       path: '/dashboard/boleteria',
-      icon: faTicketAlt,
+      icon: Ticket,
       type: 'link',
       permission: 'boleteria'
     }
@@ -481,7 +472,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
   if (hasPermission('saas')) {
     mainMenuItems.push({
       title: 'SaaS',
-      icon: faCloud,
+      icon: Cloud,
       type: 'submenu',
       submenuId: 'saas',
       permission: 'saas',
@@ -489,43 +480,43 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         {
           title: 'Dashboard SaaS',
           path: '/dashboard/saas',
-          icon: faChartPie,
+          icon: PieChart,
           permission: 'saas'
         },
         {
           title: 'Usuarios del Sistema',
           path: '/dashboard/saas/users',
-          icon: faUsers,
+          icon: Users,
           permission: 'saas_roles'
         },
         {
           title: 'Configuración',
           path: '/dashboard/saas/settings',
-          icon: faCog,
+          icon: Settings,
           permission: 'saas_settings'
         },
         {
           title: 'Facturación',
           path: '/dashboard/saas/billing',
-          icon: faMoneyBillWave,
+          icon: Banknote,
           permission: 'saas_billing'
         },
         {
           title: 'Pasarelas de Pago',
           path: '/dashboard/saas/payment-gateways',
-          icon: faCreditCard,
+          icon: CreditCard,
           permission: 'saas_payment_gateways'
         },
         {
           title: 'Gestión de Roles',
           path: '/dashboard/saas/roles',
-          icon: faUserShield,
+          icon: ShieldCheck,
           permission: 'saas_roles'
         },
         {
           title: 'API Explorer',
           path: '/dashboard/saas/api-explorer',
-          icon: faCode,
+          icon: Code,
           permission: 'saas_api_explorer'
         }
       ]
@@ -539,10 +530,11 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
 
   // Convertir a formato de menú de Ant Design
   const transformToMenuItems = (items) => items.map(item => {
+    const Icon = item.icon;
     if (item.type === 'submenu') {
       return {
         key: item.submenuId,
-        icon: <FontAwesomeIcon icon={item.icon} />,
+        icon: <Icon size={16} />,
         label: item.title,
         children: transformToMenuItems(item.items || [])
       };
@@ -550,7 +542,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
 
     return {
       key: item.path,
-      icon: <FontAwesomeIcon icon={item.icon} />,
+      icon: <Icon size={16} />,
       label: item.title,
       onClick: () => handleMenuClick(item.path)
     };
@@ -587,7 +579,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       <div className="p-4 border-b">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <FontAwesomeIcon icon={faTicketAlt} className="text-white text-sm" />
+            <Ticket className="text-white w-4 h-4" />
           </div>
           {isExpanded && (
             <div>
@@ -604,7 +596,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
           <Space direction="vertical" size="small" className="w-full">
             <div className="flex items-center space-x-2">
               <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                <FontAwesomeIcon icon={faUsers} className="text-white text-xs" />
+                <Users className="text-white w-3 h-3" />
               </div>
               <Text strong className="text-sm">Usuario Actual</Text>
             </div>
@@ -615,7 +607,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
         </div>
       )}
 
-      {/* Menº */}
+      {/* Menú */}
       <div style={{ flex: 1, overflow: 'auto' }}>
         <Menu
           mode="inline"

@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMasksTheater, faFilm, faMusic, faFutbol, faImage, faBuilding, faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import {
+  Drama,
+  Film,
+  Music,
+  Trophy,
+  Image as ImageIcon,
+  Building,
+  MoreHorizontal
+} from 'lucide-react';
 import { useTags } from '../../contexts/TagContext';
 
 const MAX_TAGS = 3;
@@ -158,29 +165,31 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
           <label className="block text-sm font-medium text-gray-700 mb-3">Sector:</label>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
             {[
-              { id: 1, label: 'Artes escénicas', icon: faMasksTheater },
-              { id: 2, label: 'Cine', icon: faFilm },
-              { id: 3, label: 'Música', icon: faMusic },
-              { id: 4, label: 'Deportes', icon: faFutbol },
-              { id: 5, label: 'Exposiciones', icon: faImage },
-              { id: 6, label: 'Ferias', icon: faBuilding },
-              { id: 8, label: 'Otros', icon: faEllipsis }
-            ].map(s => (
-              <div
-                key={s.id}
-                className={`contenedor-sector cursor-pointer p-4 border-2 rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:shadow-md ${
-                  form.sector === s.label
-                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-blue-600 shadow-lg'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                }`}
-                onClick={() => handleSectorSelect(s.label)}
-              >
-                <div className="obj-sector mb-2">
-                  <FontAwesomeIcon icon={s.icon} className={`ico-sector text-xl ${form.sector === s.label ? 'text-white' : 'text-gray-600'}`} />
+              { id: 1, label: 'Artes escénicas', icon: Drama },
+              { id: 2, label: 'Cine', icon: Film },
+              { id: 3, label: 'Música', icon: Music },
+              { id: 4, label: 'Deportes', icon: Trophy },
+              { id: 5, label: 'Exposiciones', icon: ImageIcon },
+              { id: 6, label: 'Ferias', icon: Building },
+              { id: 8, label: 'Otros', icon: MoreHorizontal }
+            ].map(s => {
+              const Icon = s.icon;
+              return (
+                <div
+                  key={s.id}
+                  className={`contenedor-sector cursor-pointer p-4 border-2 rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:shadow-md ${form.sector === s.label
+                      ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-blue-600 shadow-lg'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                    }`}
+                  onClick={() => handleSectorSelect(s.label)}
+                >
+                  <div className="obj-sector mb-2">
+                    <Icon className={`w-6 h-6 ${form.sector === s.label ? 'text-white' : 'text-gray-600'}`} />
+                  </div>
+                  <label className="text-sm font-medium text-center leading-tight">{s.label}</label>
                 </div>
-                <label className="text-sm font-medium text-center leading-tight">{s.label}</label>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Campo de sector personalizado */}

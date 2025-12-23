@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Modal, Drawer, Button, message } from '../../utils/antdComponents';
-import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
+import { ChevronLeft, Menu } from 'lucide-react';
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import LazySeatingMap from '../../components/LazySeatingMap';
@@ -995,7 +995,7 @@ const Boleteria = () => {
             onClick={() => setSidebarOpen(true)}
             className="bg-white p-2 rounded shadow-lg"
           >
-            <AiOutlineMenu className="text-xl" />
+            <Menu className="text-xl" />
           </button>
         </div>
 
@@ -1013,7 +1013,7 @@ const Boleteria = () => {
               onClick={() => window.location.href = '/dashboard'}
               className="flex items-center gap-2 text-sm font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 shadow-sm hover:bg-purple-100 transition"
             >
-              <AiOutlineLeft className="text-base" />
+              <ChevronLeft className="text-base" />
               <span>Volver al panel</span>
             </button>
           </div>
@@ -1027,7 +1027,7 @@ const Boleteria = () => {
               onClick={() => window.location.href = '/dashboard'}
               className="flex items-center gap-2 text-sm font-semibold text-purple-700 bg-white border border-purple-200 rounded-lg px-3 py-2 shadow-sm hover:bg-purple-50 transition"
             >
-              <AiOutlineLeft className="text-base" />
+              <ChevronLeft className="text-base" />
               <span>Volver al panel</span>
             </button>
           </div>

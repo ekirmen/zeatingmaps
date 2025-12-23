@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { AiOutlinePlus, AiOutlineSave, AiOutlineEye, AiOutlineSend } from 'react-icons/ai';
+import { Plus, Save, Eye, Send } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 
 const EmailPageCreator = ({ setSidebarCollapsed }) => {
@@ -212,7 +212,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
-          <AiOutlinePlus />
+          <Plus className="w-4 h-4" />
           Nueva Página
         </button>
       </div>
@@ -281,14 +281,14 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
                         className="text-blue-600 hover:text-blue-900"
                         title="Editar"
                       >
-                        <AiOutlineEye className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleSendTest(page)}
                         className="text-green-600 hover:text-green-900"
                         title="Enviar prueba"
                       >
-                        <AiOutlineSend className="w-4 h-4" />
+                        <Send className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeletePage(page.id)}
@@ -450,7 +450,7 @@ const EmailPageCreator = ({ setSidebarCollapsed }) => {
                   onClick={editingPage ? handleUpdatePage : handleCreatePage}
                   className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
                 >
-                  <AiOutlineSave />
+                  <Save className="w-4 h-4" />
                   {editingPage ? 'Actualizar' : 'Crear'}
                 </button>
               </div>

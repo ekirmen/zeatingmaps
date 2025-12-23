@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { AiOutlineLeft, AiOutlineEdit, AiOutlineDelete, AiOutlineCopy, AiOutlineUp, AiOutlineDown } from 'react-icons/ai';
-import { AiOutlineSetting } from 'react-icons/ai';
+import { ChevronLeft, Edit, Trash2, Copy, ChevronUp, ChevronDown, Settings } from 'lucide-react';
 import EmailWidgetRenderer from '../components/EmailWidgets/EmailWidgetRenderer';
 import EmailTestPanel from '../components/EmailTestPanel';
 import EmailPageCreator from './EmailPageCreator';
@@ -769,7 +768,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             title="Mover arriba"
             disabled={!canMoveUp}
           >
-            <AiOutlineUp className="w-3.5 h-3.5" />
+            <ChevronUp className="w-3.5 h-3.5" />
           </button>
 
           {/* Move Down Button */}
@@ -779,7 +778,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             title="Mover abajo"
             disabled={!canMoveDown}
           >
-            <AiOutlineDown className="w-3.5 h-3.5" />
+            <ChevronDown className="w-3.5 h-3.5" />
           </button>
 
           <div className="w-px h-4 bg-gray-200 mx-1 self-center"></div>
@@ -790,7 +789,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             onClick={() => duplicateWidget(area, idx)}
             title="Duplicar widget"
           >
-            <AiOutlineCopy className="w-3.5 h-3.5" />
+            <Copy className="w-3.5 h-3.5" />
           </button>
 
           {/* Settings Button */}
@@ -799,7 +798,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             onClick={() => openSettings(area, widget, idx)}
             title="Ajustes"
           >
-            <AiOutlineSetting className="w-3.5 h-3.5" />
+            <Settings className="w-3.5 h-3.5" />
           </button>
 
           {/* Delete Button */}
@@ -808,7 +807,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             onClick={() => removeWidget(area, idx)}
             title="Eliminar widget"
           >
-            <AiOutlineDelete className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -1491,14 +1490,14 @@ const WebStudio = ({ setSidebarCollapsed }) => {
               onClick={() => handleContextMenuAction('edit')}
               className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
             >
-              <AiOutlineEdit className="w-4 h-4" />
+              <Edit className="w-4 h-4" />
               Editar
             </button>
             <button
               onClick={() => handleContextMenuAction('duplicate')}
               className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
             >
-              <AiOutlineCopy className="w-4 h-4" />
+              <Copy className="w-4 h-4" />
               Duplicar
             </button>
             <div className="border-t border-gray-200 my-1"></div>
@@ -1506,7 +1505,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
               onClick={() => handleContextMenuAction('delete')}
               className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
             >
-              <AiOutlineDelete className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" />
               Eliminar
             </button>
           </div>
@@ -1531,7 +1530,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           className="flex items-center gap-2 mb-6 text-gray-500 hover:text-gray-900 transition-colors"
           onClick={() => window.history.back()}
         >
-          <AiOutlineLeft />
+          <ChevronLeft />
           <span className="font-medium">Volver al Dashboard</span>
         </button>
 

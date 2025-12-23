@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Input, Table, Button, message } from '../../../utils/antdComponents';
-import { AiOutlineUserAdd } from 'react-icons/ai';
+import { UserPlus } from 'lucide-react';
 import { supabase, supabaseAdmin } from '../../../supabaseClient';
 
 const ClientModals = ({
@@ -180,7 +180,7 @@ const ClientModals = ({
         <Button
           type="default"
           block
-          icon={<AiOutlineUserAdd />}
+          icon={<UserPlus />}
           onClick={() => setIsAddingAccount(true)}
         >
           Crear nueva cuenta
@@ -193,18 +193,18 @@ const ClientModals = ({
             <Input
               placeholder="Nombre completo"
               value={newClientForm.nombre}
-              onChange={(e) => setNewClientForm({...newClientForm, nombre: e.target.value})}
+              onChange={(e) => setNewClientForm({ ...newClientForm, nombre: e.target.value })}
             />
             <Input
               placeholder="Email"
               type="email"
               value={newClientForm.email}
-              onChange={(e) => setNewClientForm({...newClientForm, email: e.target.value})}
+              onChange={(e) => setNewClientForm({ ...newClientForm, email: e.target.value })}
             />
             <Input
               placeholder="Tel©fono (opcional)"
               value={newClientForm.telefono}
-              onChange={(e) => setNewClientForm({...newClientForm, telefono: e.target.value})}
+              onChange={(e) => setNewClientForm({ ...newClientForm, telefono: e.target.value })}
             />
             <div className="flex gap-2">
               <Button

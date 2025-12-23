@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { 
-  AiOutlinePlus, 
-  AiOutlineSearch, 
-  AiOutlineDelete, 
-  AiOutlineCopy, 
-  AiOutlineBarChart, 
-  AiOutlineEdit,
-  AiOutlineMail,
-  AiOutlineCalendar,
-  AiOutlineEye,
-  AiOutlineSend
-} from 'react-icons/ai';
+import {
+  Plus,
+  Search,
+  Trash2,
+  Copy,
+  BarChart2,
+  Edit,
+  Mail,
+  Calendar,
+  Eye,
+  Send
+} from 'lucide-react';
 import { emailCampaignService } from '../services/emailCampaignService';
 
 const EmailCampaigns = ({ setSidebarCollapsed }) => {
@@ -62,7 +62,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
         tipo: 'newsletter',
         configuracion: {}
       });
-      
+
       if (newCampaign) {
         await loadCampaigns(); // Recargar la lista
       }
@@ -179,11 +179,11 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
               <p className="mt-2 text-gray-600">Gestiona tus campañas de marketing por email</p>
             </div>
             <div className="mt-4 sm:mt-0">
-              <button 
+              <button
                 onClick={handleNewCampaign}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
               >
-                <AiOutlinePlus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" />
                 Nueva Campaña
               </button>
             </div>
@@ -196,7 +196,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <AiOutlineMail className="h-6 w-6 text-blue-600" />
+                  <Mail className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
@@ -212,7 +212,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <AiOutlineSend className="h-6 w-6 text-green-600" />
+                  <Send className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
@@ -230,7 +230,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <AiOutlineCalendar className="h-6 w-6 text-yellow-600" />
+                  <Calendar className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
@@ -247,13 +247,13 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <AiOutlineEye className="h-6 w-6 text-purple-600" />
+                <Eye className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Tasa Apertura</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {campaigns.length > 0 ? 
+                    {campaigns.length > 0 ?
                       Math.round((campaigns.reduce((acc, c) => acc + (c.sent || 0), 0) / campaigns.length) * 100) || 0
                       : 0}%
                   </dd>
@@ -270,7 +270,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
               <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <AiOutlineSearch className="h-5 w-5 text-gray-400" />
+                    <Search className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -280,7 +280,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                
+
                 <select
                   className="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   value={filterType}
@@ -342,7 +342,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                 {currentCampaigns.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                      <AiOutlineMail className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <Mail className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                       <p className="text-lg font-medium">No hay campañas</p>
                       <p className="text-sm">Crea tu primera campaña de email para comenzar</p>
                     </td>
@@ -354,7 +354,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
                             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                              <AiOutlineMail className="h-5 w-5 text-blue-600" />
+                              <Mail className="h-5 w-5 text-blue-600" />
                             </div>
                           </div>
                           <div className="ml-4">
@@ -391,28 +391,28 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                             className="text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-blue-50 transition-colors duration-150"
                             title="Editar campaña"
                           >
-                            <AiOutlineEdit className="h-4 w-4" />
+                            <Edit className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleCopyCampaign(campaign.id)}
                             className="text-gray-600 hover:text-gray-900 p-1 rounded-md hover:bg-gray-50 transition-colors duration-150"
                             title="Copiar campaña"
                           >
-                            <AiOutlineCopy className="h-4 w-4" />
+                            <Copy className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleShowCharts(campaign.id)}
                             className="text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50 transition-colors duration-150"
                             title="Ver estadísticas"
                           >
-                            <AiOutlineBarChart className="h-4 w-4" />
+                            <BarChart2 className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteCampaign(campaign.id)}
                             className="text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-red-50 transition-colors duration-150"
                             title="Eliminar campaña"
                           >
-                            <AiOutlineDelete className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
@@ -462,24 +462,23 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                         <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </button>
-                    
+
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       const pageNum = i + 1;
                       return (
                         <button
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === pageNum
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === pageNum
                               ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                               : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           {pageNum}
                         </button>
                       );
                     })}
-                    
+
                     {totalPages > 5 && (
                       <>
                         <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
@@ -493,7 +492,7 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
                         </button>
                       </>
                     )}
-                    
+
                     <button
                       onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRecinto } from '../contexts/RecintoContext';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faThLarge, faList } from '@fortawesome/free-solid-svg-icons';
+import { LayoutGrid, List } from 'lucide-react';
 import DatosBasicos from '../components/Evento/DatosBasicos';
 import DisenoEspectaculo from '../components/Evento//DisenoEspectaculo';
 import ConfiguracionVenta from '../components/Evento/ConfiguracionVenta';
@@ -420,7 +419,7 @@ const Evento = () => {
                     }`}
                   title="Vista de cuadrícula"
                 >
-                  <FontAwesomeIcon icon={faThLarge} />
+                  <LayoutGrid className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => toggleView('list')}
@@ -430,7 +429,7 @@ const Evento = () => {
                     }`}
                   title="Vista de lista"
                 >
-                  <FontAwesomeIcon icon={faList} />
+                  <List className="w-5 h-5" />
                 </button>
               </div>
               <button
@@ -640,3 +639,4 @@ const Evento = () => {
 }
 
 export default Evento;
+
