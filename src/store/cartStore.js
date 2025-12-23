@@ -69,14 +69,27 @@ export const useCartStore = create(
 
       const startExpirationTimer = () => {
         clearExpirationTimer();
-        timer = setInterval(() => {
-          const { cartExpiration } = get();
+        timer = setInterval(async () => {
+          const { cartExpiration, items } = get();
           const timeLeft = Math.max(
             0,
             Math.floor((cartExpiration - Date.now()) / 1000)
           );
           set({ timeLeft });
           if (timeLeft <= 0) {
+            // Expiration: unlock all seats before clearing cart
+            try {
+              const { useSeatLockStore } = await import('../components/seatLockStore');
+              for (const s of items) {
+                const seatId = s._id || s.id || s.sillaId;
+                const functionId = s.functionId || s.funcionId || get().functionId;
+                if (seatId && functionId) {
+                  await useSeatLockStore.getState().unlockSeat(seatId, functionId);
+                }
+              }
+            } catch (e) {
+              console.warn('⚠️ Error unlocking seats on expiration:', e);
+            }
             clearExpirationTimer();
             set({
               items: [],
@@ -366,6 +379,26 @@ export const useCartStore = create(
             } catch (err) {
             }
             startExpirationTimer();
+            // Re‑apply seat locks for persisted items (so UI retains selection after refresh)
+            (async () => {
+              const { useSeatLockStore } = await import('../components/seatLockStore');
+              const { items } = get();
+              for (const s of items) {
+                const seatId = s._id || s.id || s.sillaId;
+                const functionId = s.functionId || s.funcionId || get().functionId;
+                if (!seatId || !functionId) continue;
+                try {
+                  // Only lock if not already locked by this session
+                  const sessionId = await useSeatLockStore.getState().getValidSessionId();
+                  const isLockedByMe = await useSeatLockStore.getState().isSeatLockedByMe(seatId, functionId, sessionId);
+                  if (!isLockedByMe) {
+                    await useSeatLockStore.getState().lockSeat(seatId, 'seleccionado', functionId);
+                  }
+                } catch (e) {
+                  console.warn('⚠️ Failed to re‑lock seat on restore:', seatId, e);
+                }
+              }
+            })();
           } else {
             // Expirado: liberar asientos y limpiar
             const { useSeatLockStore } = await import('../components/seatLockStore');

@@ -4,6 +4,7 @@ import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit, AiOut
 import { supabase, supabaseAdmin } from '../../../supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
 import downloadTicket from '../../../utils/downloadTicket';
+import { useCartStore } from '../../store/cartStore';
 
 const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect, setSelectedEvent }) => {
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
@@ -376,6 +377,17 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           block
         >
           Configuración
+        </Button>
+        <Button
+          icon={<AiOutlineClose />}
+          onClick={() => {
+            const { clearCart } = useCartStore.getState();
+            clearCart();
+          }}
+          block
+          danger
+        >
+          Remove Seats
         </Button>
 
         {userData && (
