@@ -53,15 +53,15 @@ const UnifiedContextSelector = ({
                 const isMultiTenant = currentTenant.id !== 'main-domain';
 
                 // 1. Fetch Venues (Recintos)
-                let venuesQuery = supabase.from('recintos').select('id, nombre, tenant_id');
+                let venuesQuery = supabase.from('recintos').select('id, nombre');
                 if (isMultiTenant) venuesQuery = venuesQuery.eq('tenant_id', currentTenant.id);
 
                 // 2. Fetch Events (Eventos)
-                let eventsQuery = supabase.from('eventos').select('id, nombre, recinto, recinto_id, tenant_id');
+                let eventsQuery = supabase.from('eventos').select('id, nombre, recinto, recinto_id');
                 if (isMultiTenant) eventsQuery = eventsQuery.eq('tenant_id', currentTenant.id);
 
                 // 3. Fetch Functions (Funciones)
-                let functionsQuery = supabase.from('funciones').select('id, nombre, evento_id, fecha_celebracion, tenant_id');
+                let functionsQuery = supabase.from('funciones').select('id, nombre, evento_id, fecha_celebracion');
                 if (isMultiTenant) functionsQuery = functionsQuery.eq('tenant_id', currentTenant.id);
 
                 const [venuesRes, eventsRes, functionsRes] = await Promise.all([
@@ -80,7 +80,10 @@ const UnifiedContextSelector = ({
 
             } catch (error) {
                 console.error('Error loading UnifiedContextSelector data:', error);
-                message.error('Error cargando filtros');
+                // Solo mostrar error si no es por falta de tenant en inicialización
+                if (currentTenant?.id) {
+                    message.error('Error cargando filtros');
+                }
             } finally {
                 setLoading(false);
             }

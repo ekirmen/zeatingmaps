@@ -346,7 +346,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
   return (
     <div className="relative h-full">
-      {/* Bot³n para mostrar/ocultar menú */}
+      {/* Botón para mostrar/ocultar menú */}
       <div className="absolute top-0 right-0 z-10">
         <Button
           type="text"
@@ -357,47 +357,43 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         />
       </div>
 
-      {/* Menº colapsible */}
-      <div className={`transition-all duration-300 ease-in-out ${isMenuCollapsed ? 'h-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
-        }`}>
-        <div className="p-4 space-y-4 bg-white shadow rounded">
-          <Button icon={<AiOutlineSearch />} onClick={() => setIsSearchModalVisible(true)} block>
-            Buscar Tickets
-          </Button>
+      <div className="p-4 space-y-4 bg-white shadow rounded">
+        <Button icon={<AiOutlineSearch />} onClick={() => setIsSearchModalVisible(true)} block>
+          Buscar Tickets
+        </Button>
 
-          <Button
-            icon={<AiOutlineUserAdd />}
-            onClick={() => setIsAccountModalVisible(true)}
-            block
-          >
-            Buscar/Añadir Cuenta
-          </Button>
+        <Button
+          icon={<AiOutlineUserAdd />}
+          onClick={() => setIsAccountModalVisible(true)}
+          block
+        >
+          Buscar/Añadir Cuenta
+        </Button>
 
-          <Button
-            icon={<AiOutlineSetting />}
-            onClick={() => setIsConfigModalVisible(true)}
-            block
-          >
-            Configuración
-          </Button>
+        <Button
+          icon={<AiOutlineSetting />}
+          onClick={() => setIsConfigModalVisible(true)}
+          block
+        >
+          Configuración
+        </Button>
 
-          {userData && (
-            <Card size="small" className="border border-gray-200">
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className="font-semibold">
-                    {userData.login || userData.nombre || userData.email || 'Cliente sin nombre'}
-                  </div>
-                  <div className="text-sm text-gray-500">{userData.email || userData.telefono || 'Sin datos de contacto'}</div>
+        {userData && (
+          <Card size="small" className="border border-gray-200">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="font-semibold">
+                  {userData.login || userData.nombre || userData.email || 'Cliente sin nombre'}
                 </div>
-                <div className="flex gap-2">
-                  <Button size="small" icon={<AiOutlineEdit />} onClick={() => setIsAccountModalVisible(true)} />
-                  <Button size="small" icon={<AiOutlineClose />} danger onClick={handleClearClient} />
-                </div>
+                <div className="text-sm text-gray-500">{userData.email || userData.telefono || 'Sin datos de contacto'}</div>
               </div>
-            </Card>
-          )}
-        </div>
+              <div className="flex gap-2">
+                <Button size="small" icon={<AiOutlineEdit />} onClick={() => setIsAccountModalVisible(true)} />
+                <Button size="small" icon={<AiOutlineClose />} danger onClick={handleClearClient} />
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* MODAL búsqueda */}
@@ -546,7 +542,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       {/* MODAL cuentas */}
       <Modal
         open={isAccountModalVisible}
-        title={isAddingAccount ? 'A±adir Cuenta' : 'Buscar Cuenta'}
+        title={isAddingAccount ? 'Añadir Cuenta' : 'Buscar Cuenta'}
         onCancel={() => {
           setIsAccountModalVisible(false);
           setIsAddingAccount(false);
@@ -554,23 +550,21 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           configForm.resetFields();
         }}
         footer={null}
-      >
-        {isAddingAccount ? (
-          <Form layout="vertical" form={configForm} onFinish={handleAddAccount}>
-            <Form.Item name="login" label="Nombre" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="telefono" label="Teléfono">
-              <Input />
-            </Form.Item>
-            <Button htmlType="submit" block>
-              Crear Cuenta
-            </Button>
-          </Form>
-        ) : (
+      > <Form layout="vertical" form={configForm} onFinish={handleAddAccount}>
+          <Form.Item name="login" label="Nombre" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="telefono" label="Teléfono">
+            <Input />
+          </Form.Item>
+          <Button htmlType="submit" block>
+            Crear Cuenta
+          </Button>
+        </Form>
+        {isAddingAccount ? null : (
           <>
             <Input.Search
               placeholder="Buscar por email"
@@ -610,10 +604,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         )}
       </Modal>
 
-      {/* MODAL Configuraci³n */}
       <Modal
         open={isConfigModalVisible}
-        title="Configuraci³n de Impresi³n"
+        title="Configuración de Impresión"
         onCancel={() => setIsConfigModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setIsConfigModalVisible(false)}>
@@ -629,7 +622,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           form={configForm}
           layout="vertical"
           onFinish={(values) => {
-            message.success('Configuraci³n guardada exitosamente');
+            message.success('Configuración guardada exitosamente');
             setIsConfigModalVisible(false);
           }}
           initialValues={{
@@ -640,7 +633,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           }}
         >
           <div className="space-y-6">
-            {/* Configuraci³n de Tickets */}
+            {/* Configuración de Tickets */}
             <div>
               <h4 className="font-semibold mb-4">Entradas</h4>
               <Form.Item
@@ -661,7 +654,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               </Form.Item>
             </div>
 
-            {/* Configuraci³n de Recibos */}
+            {/* Configuración de Recibos */}
             <div>
               <h4 className="font-semibold mb-4">Recibo</h4>
               <Form.Item
@@ -682,7 +675,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           </div>
         </Form>
       </Modal>
-    </div>
+    </div >
   );
 };
 
