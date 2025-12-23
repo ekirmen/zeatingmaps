@@ -4,6 +4,9 @@
 
 /* Importar optimizaciones móviles */
 @import './styles/mobile-optimizations.css';
+@import './styles/design-system.css';
+@import './styles/animations.css';
+@import './styles/cross-browser.css';
 
 /* Animación pulse para skeletons - mejora percepción de carga */
 @keyframes pulse {

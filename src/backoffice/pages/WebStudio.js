@@ -755,66 +755,88 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     return (
       <div
         key={idx}
-        className="relative border p-2 mb-2 bg-white rounded shadow-sm"
+        className="relative group border border-gray-200 p-4 mb-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-300"
         draggable={area === 'content'}
         onDragStart={() => area === 'content' && handleDragStart(idx)}
         onDragOver={area === 'content' ? handleDragOver : undefined}
         onDrop={() => area === 'content' && handleDrop(idx)}
       >
-        <div className="absolute top-1 right-1 flex gap-1">
+        <div className="absolute top-2 right-2 flex gap-1 bg-white bg-opacity-90 rounded-lg p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 border border-gray-100">
           {/* Move Up Button */}
           <button
-            className={`text-gray-500 hover:text-gray-700 font-bold ${!canMoveUp ? 'opacity-30 cursor-not-allowed' : ''}`}
+            className={`p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors ${!canMoveUp ? 'opacity-30 cursor-not-allowed' : ''}`}
             onClick={() => canMoveUp && moveWidget(area, idx, idx - 1)}
             title="Mover arriba"
             disabled={!canMoveUp}
           >
-            <AiOutlineUp className="w-4 h-4" />
+            <AiOutlineUp className="w-3.5 h-3.5" />
           </button>
 
           {/* Move Down Button */}
           <button
-            className={`text-gray-500 hover:text-gray-700 font-bold ${!canMoveDown ? 'opacity-30 cursor-not-allowed' : ''}`}
+            className={`p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors ${!canMoveDown ? 'opacity-30 cursor-not-allowed' : ''}`}
             onClick={() => canMoveDown && moveWidget(area, idx, idx + 1)}
             title="Mover abajo"
             disabled={!canMoveDown}
           >
-            <AiOutlineDown className="w-4 h-4" />
+            <AiOutlineDown className="w-3.5 h-3.5" />
           </button>
+
+          <div className="w-px h-4 bg-gray-200 mx-1 self-center"></div>
 
           {/* Duplicate Button */}
           <button
-            className="text-green-500 hover:text-green-700 font-bold"
+            className="p-1.5 rounded-md text-green-600 hover:text-green-700 hover:bg-green-50 transition-colors"
             onClick={() => duplicateWidget(area, idx)}
             title="Duplicar widget"
           >
-            <AiOutlineCopy className="w-4 h-4" />
+            <AiOutlineCopy className="w-3.5 h-3.5" />
           </button>
 
           {/* Settings Button */}
           <button
-            className="text-blue-500 hover:text-blue-700 font-bold"
+            className="p-1.5 rounded-md text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors"
             onClick={() => openSettings(area, widget, idx)}
             title="Ajustes"
           >
-            <AiOutlineSetting className="w-4 h-4" />
+            <AiOutlineSetting className="w-3.5 h-3.5" />
           </button>
 
           {/* Delete Button */}
           <button
-            className="text-red-500 font-bold hover:text-red-700"
+            className="p-1.5 rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
             onClick={() => removeWidget(area, idx)}
             title="Eliminar widget"
           >
-            ×
+            <AiOutlineDelete className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="text-sm font-medium pr-32">{widget.type}</div>
-        {widget.config && Object.keys(widget.config).length > 0 && (
-          <div className="text-xs text-gray-500 mt-1 pr-32">
-            {Object.entries(widget.config).map(([key, value]) => (
-              <div key={key}>{key}: {value}</div>
-            ))}
+
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${widget.type === 'Banner' ? 'bg-purple-100 text-purple-600' :
+            widget.type === 'Listado de eventos' ? 'bg-blue-100 text-blue-600' :
+              widget.type === 'Eventos Destacados' ? 'bg-indigo-100 text-indigo-600' :
+                'bg-gray-100 text-gray-600'
+            }`}>
+            <i className={`fas ${widget.type === 'Banner' ? 'fa-image' :
+              widget.type === 'Listado de eventos' ? 'fa-list-ul' :
+                widget.type === 'Eventos Destacados' ? 'fa-star' :
+                  'fa-cube'
+              } text-sm`}></i>
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-gray-800">{widget.type}</div>
+            {widget.config && (widget.config.titulo || widget.config.texto) && (
+              <div className="text-xs text-gray-500 truncate max-w-[200px]">
+                {widget.config.titulo || widget.config.texto}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {widget.config && Object.keys(widget.config).length > 0 && !widget.config.titulo && !widget.config.texto && (
+          <div className="text-xs text-gray-400 mt-2 pl-11">
+            {Object.keys(widget.config).length} propiedades configuradas
           </div>
         )}
       </div>
@@ -1269,274 +1291,277 @@ const WebStudio = ({ setSidebarCollapsed }) => {
               </button>
             </div>
           </div>
-              </div>
+        </div>
 
-      {/* Email Test Panel */}
-      <EmailTestPanel />
+        {/* Email Test Panel */}
+        <EmailTestPanel />
 
-      {/* Email Creator Modal */}
-      {showEmailCreator && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] mx-4 overflow-hidden">
-            <div className="bg-gray-100 px-6 py-4 border-b">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Creador de Páginas de Email
-                </h3>
-                <button
-                  onClick={handleCloseEmailCreator}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        {/* Email Creator Modal */}
+        {showEmailCreator && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] mx-4 overflow-hidden">
+              <div className="bg-gray-100 px-6 py-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Creador de Páginas de Email
+                  </h3>
+                  <button
+                    onClick={handleCloseEmailCreator}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="h-full overflow-hidden">
-              <EmailPageCreator setSidebarCollapsed={() => {}} />
+              <div className="h-full overflow-hidden">
+                <EmailPageCreator setSidebarCollapsed={() => { }} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Site Map Modal */}
-      {showSiteMap && (
-        <SiteMap onClose={handleCloseSiteMap} />
-      )}
+        {/* Site Map Modal */}
+        {showSiteMap && (
+          <SiteMap onClose={handleCloseSiteMap} />
+        )}
 
-      {/* New Page Modal */}
-      {showNewPageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
-            <div className="bg-gray-100 px-6 py-4 border-b">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Crear Nueva Página
-                </h3>
-                <button
-                  onClick={handleCloseNewPage}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-              <div className="grid grid-cols-1 gap-6">
-                {/* Nombre */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre de la página *
-                  </label>
-                  <input
-                    type="text"
-                    value={newPageData.name}
-                    onChange={(e) => setNewPageData({ ...newPageData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Nombre de la página"
-                  />
+        {/* New Page Modal */}
+        {showNewPageModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
+              <div className="bg-gray-100 px-6 py-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Crear Nueva Página
+                  </h3>
+                  <button
+                    onClick={handleCloseNewPage}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
+              </div>
 
-                {/* URL */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    URL *
-                  </label>
-                  <div className="flex items-center">
-                    <span className="text-gray-500 mr-2">/</span>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Nombre */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre de la página *
+                    </label>
                     <input
                       type="text"
-                      value={newPageData.url}
-                      onChange={(e) => setNewPageData({ ...newPageData, url: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="my-new-page"
+                      value={newPageData.name}
+                      onChange={(e) => setNewPageData({ ...newPageData, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Nombre de la página"
                     />
                   </div>
-                </div>
 
-                {/* Título */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Título de la página
-                  </label>
-                  <input
-                    type="text"
-                    value={newPageData.title}
-                    onChange={(e) => setNewPageData({ ...newPageData, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Título que aparecerá en el navegador"
-                  />
-                </div>
-
-                {/* Descripción */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descripción de la página
-                    <span className="text-xs text-gray-500 ml-1">(aparecerá en los buscadores)</span>
-                  </label>
-                  <textarea
-                    value={newPageData.description}
-                    onChange={(e) => setNewPageData({ ...newPageData, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={3}
-                    placeholder="Descripción de la página"
-                  />
-                </div>
-
-                {/* Palabras clave */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Palabras clave
-                    <span className="text-xs text-gray-500 ml-1">(separadas por comas)</span>
-                  </label>
-                  <textarea
-                    value={newPageData.keywords}
-                    onChange={(e) => setNewPageData({ ...newPageData, keywords: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={2}
-                    placeholder="palabra1, palabra2, palabra3"
-                  />
-                </div>
-
-                {/* CSS */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    CSS personalizado
-                  </label>
-                  <textarea
-                    value={newPageData.css}
-                    onChange={(e) => setNewPageData({ ...newPageData, css: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                    rows={4}
-                    placeholder="/* Tu CSS personalizado aquí */"
-                  />
-                </div>
-
-                {/* Ocultar de SEO */}
-                <div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="hideFromSEO"
-                      checked={newPageData.hideFromSEO}
-                      onChange={(e) => setNewPageData({ ...newPageData, hideFromSEO: e.target.checked })}
-                      className="mr-2"
-                    />
-                    <label htmlFor="hideFromSEO" className="text-sm font-medium text-gray-700">
-                      Ocultar para los robots de búsqueda
+                  {/* URL */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      URL *
                     </label>
+                    <div className="flex items-center">
+                      <span className="text-gray-500 mr-2">/</span>
+                      <input
+                        type="text"
+                        value={newPageData.url}
+                        onChange={(e) => setNewPageData({ ...newPageData, url: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="my-new-page"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Título */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Título de la página
+                    </label>
+                    <input
+                      type="text"
+                      value={newPageData.title}
+                      onChange={(e) => setNewPageData({ ...newPageData, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Título que aparecerá en el navegador"
+                    />
+                  </div>
+
+                  {/* Descripción */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Descripción de la página
+                      <span className="text-xs text-gray-500 ml-1">(aparecerá en los buscadores)</span>
+                    </label>
+                    <textarea
+                      value={newPageData.description}
+                      onChange={(e) => setNewPageData({ ...newPageData, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={3}
+                      placeholder="Descripción de la página"
+                    />
+                  </div>
+
+                  {/* Palabras clave */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Palabras clave
+                      <span className="text-xs text-gray-500 ml-1">(separadas por comas)</span>
+                    </label>
+                    <textarea
+                      value={newPageData.keywords}
+                      onChange={(e) => setNewPageData({ ...newPageData, keywords: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={2}
+                      placeholder="palabra1, palabra2, palabra3"
+                    />
+                  </div>
+
+                  {/* CSS */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CSS personalizado
+                    </label>
+                    <textarea
+                      value={newPageData.css}
+                      onChange={(e) => setNewPageData({ ...newPageData, css: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      rows={4}
+                      placeholder="/* Tu CSS personalizado aquí */"
+                    />
+                  </div>
+
+                  {/* Ocultar de SEO */}
+                  <div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="hideFromSEO"
+                        checked={newPageData.hideFromSEO}
+                        onChange={(e) => setNewPageData({ ...newPageData, hideFromSEO: e.target.checked })}
+                        className="mr-2"
+                      />
+                      <label htmlFor="hideFromSEO" className="text-sm font-medium text-gray-700">
+                        Ocultar para los robots de búsqueda
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Footer */}
-            <div className="bg-gray-100 px-6 py-4 border-t">
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={handleCloseNewPage}
-                  className="px-4 py-2 text-gray-700 bg-gray-300 rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleCreateNewPage}
-                  className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Crear Página
-                </button>
+              {/* Footer */}
+              <div className="bg-gray-100 px-6 py-4 border-t">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={handleCloseNewPage}
+                    className="px-4 py-2 text-gray-700 bg-gray-300 rounded-md hover:bg-gray-400 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleCreateNewPage}
+                    className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Crear Página
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Context Menu */}
-      {contextMenu.show && (
-        <div
-          className="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg py-1 min-w-[150px]"
-          style={{
-            left: contextMenu.x,
-            top: contextMenu.y,
-            transform: 'translate(-50%, -100%)'
-          }}
-        >
-          <button
-            onClick={() => handleContextMenuAction('edit')}
-            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+        {/* Context Menu */}
+        {contextMenu.show && (
+          <div
+            className="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg py-1 min-w-[150px]"
+            style={{
+              left: contextMenu.x,
+              top: contextMenu.y,
+              transform: 'translate(-50%, -100%)'
+            }}
           >
-            <AiOutlineEdit className="w-4 h-4" />
-            Editar
-          </button>
-          <button
-            onClick={() => handleContextMenuAction('duplicate')}
-            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
-          >
-            <AiOutlineCopy className="w-4 h-4" />
-            Duplicar
-          </button>
-          <div className="border-t border-gray-200 my-1"></div>
-          <button
-            onClick={() => handleContextMenuAction('delete')}
-            className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
-          >
-            <AiOutlineDelete className="w-4 h-4" />
-            Eliminar
-          </button>
-        </div>
-      )}
+            <button
+              onClick={() => handleContextMenuAction('edit')}
+              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+            >
+              <AiOutlineEdit className="w-4 h-4" />
+              Editar
+            </button>
+            <button
+              onClick={() => handleContextMenuAction('duplicate')}
+              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+            >
+              <AiOutlineCopy className="w-4 h-4" />
+              Duplicar
+            </button>
+            <div className="border-t border-gray-200 my-1"></div>
+            <button
+              onClick={() => handleContextMenuAction('delete')}
+              className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+            >
+              <AiOutlineDelete className="w-4 h-4" />
+              Eliminar
+            </button>
+          </div>
+        )}
 
-      {/* Click outside to close context menu */}
-      {contextMenu.show && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={closeContextMenu}
-        />
-      )}
-    </div>
-  );
-};
+        {/* Click outside to close context menu */}
+        {contextMenu.show && (
+          <div
+            className="fixed inset-0 z-40"
+            onClick={closeContextMenu}
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-80 bg-gray-100 p-4 overflow-y-auto">
+      <aside className="w-80 bg-white border-r border-gray-200 p-4 overflow-y-auto shadow-lg z-10">
         <button
-          className="flex items-center gap-2 mb-4 text-gray-700 hover:text-gray-900"
+          className="flex items-center gap-2 mb-6 text-gray-500 hover:text-gray-900 transition-colors"
           onClick={() => window.history.back()}
         >
           <AiOutlineLeft />
-          <span>Volver</span>
+          <span className="font-medium">Volver al Dashboard</span>
         </button>
 
         {/* WEB STUDIO Header */}
-        <div className="mb-4">
-          <h3 className="font-bold text-lg text-gray-800">WEB STUDIO</h3>
+        <div className="mb-6 pb-4 border-b border-gray-100">
+          <h3 className="font-bold text-xl text-gray-900 tracking-tight">WEB STUDIO</h3>
+          <p className="text-xs text-gray-400 mt-1">Editor de contenido</p>
         </div>
 
         {/* Mapa del sitio */}
         <div className="mb-6">
           <button
-            className="w-full text-left p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl shadow-md hover:shadow-lg hover:from-blue-700 hover:to-indigo-800 transition-all duration-200 font-medium flex items-center justify-between group"
             onClick={handleSiteMap}
           >
-            Mapa del sitio
+            <span>Mapa del sitio</span>
+            <i className="fas fa-sitemap opacity-70 group-hover:opacity-100 transition-opacity"></i>
           </button>
         </div>
 
         {/* Accordion Menu */}
-        <div className="space-y-2">
+        <div className="space-y-4">
           {/* Páginas */}
-          <div className="border border-gray-300 rounded-lg">
+          <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
             <button
-              className="w-full text-left p-3 bg-gray-200 hover:bg-gray-300 transition-colors font-medium"
+              className="w-full flex items-center justify-between p-3 bg-white hover:bg-gray-50 transition-colors font-semibold text-gray-700 border-b border-gray-100"
               onClick={() => setPagesExpanded(!pagesExpanded)}
             >
-              Páginas {pagesExpanded ? '▼' : '▶'}
+              <span>Páginas</span>
+              <span className="text-gray-400 text-xs transform transition-transform duration-200" style={{ transform: pagesExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
             </button>
 
             {pagesExpanded && (
@@ -1571,9 +1596,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                           .map(page => (
                             <div
                               key={page.id}
-                              className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer ${
-                                selectedPage?.id === page.id ? 'bg-blue-50 border border-blue-200' : ''
-                              }`}
+                              className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer ${selectedPage?.id === page.id ? 'bg-blue-50 border border-blue-200' : ''
+                                }`}
                               onClick={() => setSelectedPage(page)}
                             >
                               <div className="flex-1">
@@ -1645,9 +1669,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                           .map(page => (
                             <div
                               key={page.id}
-                              className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer ${
-                                selectedPage?.id === page.id ? 'bg-blue-50 border border-blue-200' : ''
-                              }`}
+                              className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer ${selectedPage?.id === page.id ? 'bg-blue-50 border border-blue-200' : ''
+                                }`}
                               onClick={() => setSelectedPage(page)}
                             >
                               <div className="flex-1">
@@ -1889,22 +1912,20 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           <button
             onClick={handleSave}
             disabled={!selectedPage}
-            className={`w-full py-2 rounded transition-colors ${
-              selectedPage
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            className={`w-full py-2 rounded transition-colors ${selectedPage
+              ? 'bg-green-600 hover:bg-green-700 text-white'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
           >
             Guardar página
           </button>
           <button
             onClick={handleClearCache}
             disabled={!selectedPage}
-            className={`w-full py-2 rounded transition-colors ${
-              selectedPage
-                ? 'bg-gray-400 hover:bg-gray-500 text-white'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            className={`w-full py-2 rounded transition-colors ${selectedPage
+              ? 'bg-gray-400 hover:bg-gray-500 text-white'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
           >
             Limpiar cache
           </button>
