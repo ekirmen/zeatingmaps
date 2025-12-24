@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import logger from '../utils/logger';
+import { useSupabaseQuery } from './useSupabaseQuery';
 
 /**
  * Hook para manejar operaciones asíncronas con estados de loading, error y data
@@ -23,25 +24,25 @@ export const useAsyncOperation = (asyncFunction, options = {}) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const result = await asyncFunction(...args);
-      
+
       setData(result);
-      
+
       if (onSuccess) {
         onSuccess(result);
       }
-      
+
       return result;
     } catch (err) {
       const errorMessage = err.message || 'Error en operación asíncrona';
       logger.error('Error in useAsyncOperation:', err);
       setError(errorMessage);
-      
+
       if (onError) {
         onError(err);
       }
-      
+
       throw err;
     } finally {
       setLoading(false);
@@ -64,17 +65,7 @@ export const useAsyncOperation = (asyncFunction, options = {}) => {
  * @returns {Object} { data, loading, error, refetch }
  */
 export const useTenantData = (tableName, options = {}) => {
-  const { 
-    filters = {}, 
-    select = '*', 
-    orderBy, 
-    ascending = true,
-    immediate = true 
-  } = options;
-
   // Nota: useTenantData ahora usa useSupabaseQuery
   // Este hook se mantiene para compatibilidad pero se recomienda usar useSupabaseQuery directamente
-  // Re-exportar useSupabaseQuery para mantener compatibilidad
-  const { useSupabaseQuery } = require('./useSupabaseQuery');
   return useSupabaseQuery(tableName, options);
 };
