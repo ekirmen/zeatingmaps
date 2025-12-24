@@ -15,38 +15,35 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { loadGtm, loadMetaPixel, trackEvent } from './utils/analytics';
 import './styles/store-design.css';
 
-// Lazy load con prefetch
-const lazyImport = (path) => React.lazy(() => import(`${path}` /* webpackPrefetch: true */));
-
 const Pages = {
   // Core Pages
-  StoreHomePage: lazyImport('./pages/StoreHomePage'),
-  EventPage: lazyImport('./pages/EventPage'),
-  SeatSelectionPage: lazyImport('./pages/SeatSelectionPage'),
-  EventMapPage: lazyImport('./pages/EventMapPage'),
-  EventSearchMap: lazyImport('./pages/EventSearchMap'),
-  EventsVenue: lazyImport('./pages/EventsVenue'),
+  StoreHomePage: React.lazy(() => import('./pages/StoreHomePage')),
+  EventPage: React.lazy(() => import('./pages/EventPage')),
+  SeatSelectionPage: React.lazy(() => import('./pages/SeatSelectionPage')),
+  EventMapPage: React.lazy(() => import('./pages/EventMapPage')),
+  EventSearchMap: React.lazy(() => import('./pages/EventSearchMap')),
+  EventsVenue: React.lazy(() => import('./pages/EventsVenue')),
 
   // Cart & Checkout
-  CartPage: lazyImport('./pages/Cart'),
-  Pay: lazyImport('./pages/Pay'),
-  PaymentSuccess: lazyImport('./pages/PaymentSuccess'),
-  ThankYouPage: lazyImport('./pages/ThankYouPage'),
+  CartPage: React.lazy(() => import('./pages/Cart')),
+  Pay: React.lazy(() => import('./pages/Pay')),
+  PaymentSuccess: React.lazy(() => import('./pages/PaymentSuccess')),
+  ThankYouPage: React.lazy(() => import('./pages/ThankYouPage')),
 
   // Auth & User
-  StoreLogin: lazyImport('./pages/Login'),
-  Register: lazyImport('./pages/Register'),
-  ForgotPassword: lazyImport('./pages/ForgotPassword'),
-  ResetPassword: lazyImport('./pages/ResetPassword'),
-  Profile: lazyImport('./pages/profile.js'),
+  StoreLogin: React.lazy(() => import('./pages/Login')),
+  Register: React.lazy(() => import('./pages/Register')),
+  // ForgotPassword: React.lazy(() => import('./pages/ForgotPassword')),
+  // ResetPassword: React.lazy(() => import('./pages/ResetPassword')),
+  Profile: React.lazy(() => import('./pages/profile.js')),
 
   // Static / CMS
-  FaqPage: lazyImport('./pages/FaqPage'),
-  PrivacyPolicy: lazyImport('./pages/PrivacyPolicy'),
-  CookiesPolicy: lazyImport('./pages/CookiesPolicy'),
-  LegalTerms: lazyImport('./pages/LegalTerms'),
-  CmsPage: lazyImport('./pages/CmsPage'),
-  NotFound: lazyImport('./pages/NotFound'),
+  FaqPage: React.lazy(() => import('./pages/FaqPage')),
+  PrivacyPolicy: React.lazy(() => import('./pages/PrivacyPolicy')),
+  CookiesPolicy: React.lazy(() => import('./pages/CookiesPolicy')),
+  LegalTerms: React.lazy(() => import('./pages/LegalTerms')),
+  CmsPage: React.lazy(() => import('./pages/CmsPage')),
+  NotFound: React.lazy(() => import('./pages/NotFound')),
 };
 
 const StoreApp = () => {
@@ -115,8 +112,8 @@ const StoreApp = () => {
                   {/* Auth */}
                   <Route path="login" element={<Pages.StoreLogin />} />
                   <Route path="register" element={<Pages.Register />} />
-                  <Route path="forgot-password" element={<Pages.ForgotPassword />} />
-                  <Route path="reset-password" element={<Pages.ResetPassword />} />
+                  {/* <Route path="forgot-password" element={<Pages.ForgotPassword />} /> */}
+                  {/* <Route path="reset-password" element={<Pages.ResetPassword />} /> */}
                   <Route path="perfil" element={<Pages.Profile userData={user} onUpdateProfile={updateProfile} />} />
 
                   {/* Static / CMS */}
