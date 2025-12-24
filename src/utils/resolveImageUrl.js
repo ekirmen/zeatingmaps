@@ -32,7 +32,7 @@ export default function resolveImageUrl(imagePath, bucket = 'eventos', tenantId 
 
   // Construir la URL completa para Supabase Storage
   // Usar el endpoint de render para transformaciones de imagen
-  if (finalPath.match(/\.(jpg|jpeg|png|webp)$/i)) {
+  if (typeof finalPath === 'string' && finalPath.match(/\.(jpg|jpeg|png|webp)$/i)) {
     // Supabase render endpoint supports transformations
     const renderUrl = `${supabaseUrl}/storage/v1/render/image/public/${bucket}/${finalPath}`;
     return `${renderUrl}?width=1200&quality=80`;
