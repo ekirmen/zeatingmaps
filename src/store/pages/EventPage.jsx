@@ -904,7 +904,7 @@ const ModernEventPage = () => {
         <div className="relative h-64 md:h-80 overflow-hidden">
           <EventImage
             event={evento}
-            imageType="logoHorizontal"
+            imageType="banner"
             className="w-full h-full object-cover"
             showDebug={DEBUG}
             priority={true} // High priority for LCP
