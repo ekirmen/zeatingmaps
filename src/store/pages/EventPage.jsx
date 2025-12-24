@@ -1020,7 +1020,7 @@ const ModernEventPage = () => {
                   title={
                     <div className="flex items-center">
                       <InfoCircleOutlined className="text-blue-500 mr-2" />
-                      <span className="text-xl font-semibold">Información del Evento</span>
+                      <h2 className="text-xl font-semibold m-0">Información del Evento</h2>
                     </div>
                   }
                   className="mb-6 shadow-sm border border-gray-200 rounded-xl"
@@ -1078,7 +1078,7 @@ const ModernEventPage = () => {
                   title={
                     <div className="flex items-center">
                       <FileTextOutlined className="text-green-500 mr-2" />
-                      <span className="text-xl font-semibold">Descripción del Evento</span>
+                      <h2 className="text-xl font-semibold m-0">Descripción del Evento</h2>
                     </div>
                   }
                   className="mb-6 shadow-sm border border-gray-200 rounded-xl"
@@ -1096,7 +1096,7 @@ const ModernEventPage = () => {
                 title={
                   <div className="flex items-center">
                     <CalendarOutlined className="text-blue-500 mr-2" />
-                    <span className="text-xl font-semibold">Funciones Disponibles</span>
+                    <h2 className="text-xl font-semibold m-0">Funciones Disponibles</h2>
                   </div>
                 }
                 className="mb-6 shadow-sm border border-gray-200 rounded-xl"
@@ -1177,7 +1177,7 @@ const ModernEventPage = () => {
                   title={
                     <div className="flex items-center">
                       <SettingOutlined className="text-gray-500 mr-2" />
-                      <span className="text-xl font-semibold">Otras Opciones</span>
+                      <h2 className="text-xl font-semibold m-0">Otras Opciones</h2>
                     </div>
                   }
                   className="mb-6 shadow-sm border border-gray-200 rounded-xl"
@@ -1206,7 +1206,7 @@ const ModernEventPage = () => {
                   title={
                     <div className="flex items-center">
                       <BarChartOutlined className="text-green-500 mr-2" />
-                      <span className="text-xl font-semibold">Analytics</span>
+                      <h2 className="text-xl font-semibold m-0">Analytics</h2>
                     </div>
                   }
                   className="mb-6 shadow-sm border border-gray-200 rounded-xl"
@@ -1235,7 +1235,7 @@ const ModernEventPage = () => {
                     title={
                       <div className="flex items-center">
                         <TrophyOutlined className="text-yellow-500 mr-2" />
-                        <span className="font-semibold">Estadísticas</span>
+                        <h2 className="text-lg font-semibold m-0">Estadísticas</h2>
                       </div>
                     }
                     className="shadow-sm border border-gray-200 rounded-xl"
@@ -1269,7 +1269,7 @@ const ModernEventPage = () => {
                     title={
                       <div className="flex items-center">
                         <InfoCircleOutlined className="text-gray-500 mr-2" />
-                        <span className="font-semibold">Información Técnica</span>
+                        <h2 className="text-lg font-semibold m-0">Información Técnica</h2>
                       </div>
                     }
                     className="shadow-sm border border-gray-200 rounded-xl"
@@ -1300,7 +1300,7 @@ const ModernEventPage = () => {
                   <Card
                     title={
                       <div className="flex items-center">
-                        <span className="text-xl font-semibold">Video del Evento</span>
+                        <h2 className="text-xl font-semibold m-0">Video del Evento</h2>
                       </div>
                     }
                     className="mb-6 shadow-sm border border-gray-200 rounded-xl"

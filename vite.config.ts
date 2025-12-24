@@ -33,6 +33,17 @@ export default defineConfig(({ mode }) => {
                 transformMixedEsModules: true,
             },
             outDir: 'build', // Mantener compatibilidad con carpeta de salida
+            rollupOptions: {
+                output: {
+                    manualChunks: {
+                        'react-vendor': ['react', 'react-dom', 'react-router-dom', 'zustand', '@reduxjs/toolkit'],
+                        'ui-vendor': ['antd', '@ant-design/icons', 'lucide-react', 'framer-motion'],
+                        'map-vendor': ['konva', 'react-konva', 'use-image'],
+                        'editor-vendor': ['react-quill'],
+                        'supabase-vendor': ['@supabase/supabase-js'],
+                    }
+                }
+            }
         },
         esbuild: {
             loader: "jsx",

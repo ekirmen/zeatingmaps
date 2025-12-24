@@ -452,9 +452,9 @@ const ModernStorePage = () => {
                   {/* Contenido de la tarjeta */}
                   <div className="store-event-card-content">
                     {/* Título */}
-                    <h3 className="store-event-card-title">
+                    <h2 className="store-event-card-title">
                       {event.nombre}
-                    </h3>
+                    </h2>
 
                     {/* Descripción */}
                     {event.descripcion && (

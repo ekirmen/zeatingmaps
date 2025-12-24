@@ -133,8 +133,8 @@ const EventImage = ({
           }}
         >
           <div
-            className="text-gray-400 text-4xl font-bold"
-            style={{ color: '#bfbfbf' }}
+            className="text-gray-500 text-4xl font-bold"
+            style={{ color: '#6b7280' }}
           >
             {fallbackChar}
           </div>
