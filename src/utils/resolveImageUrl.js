@@ -35,7 +35,7 @@ export default function resolveImageUrl(imagePath, bucket = 'eventos', tenantId 
 
   // Optimización de formato y calidad si es una imagen
   if (finalPath.match(/\.(jpg|jpeg|png|webp)$/i)) {
-    return `${storageUrl}?format=webp&quality=80`;
+    return `${storageUrl}?format=webp&quality=80&width=1200`;
   }
 
   return storageUrl;
