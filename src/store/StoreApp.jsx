@@ -92,7 +92,7 @@ const StoreApp = () => {
             {showHeader && <Header />}
             <main className="flex-grow" role="main">
               <Suspense fallback={
-                <div className="w-full flex items-center justify-center bg-gray-50" style={{ minHeight: '60vh' }}>
+                <div className="w-full flex items-center justify-center bg-gray-50" style={{ minHeight: '100vh' }}>
                   <div className="text-gray-400">Cargando...</div>
                 </div>
               }>
