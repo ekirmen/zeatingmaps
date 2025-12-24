@@ -37,6 +37,7 @@ const ModernStorePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('fecha');
+  const [visibleCount, setVisibleCount] = useState(12);
 
   // Cargar eventos con cache optimizado
   useEffect(() => {
@@ -361,176 +362,189 @@ const ModernStorePage = () => {
             </div>
           </div>
         ) : (
-          <div className="store-grid store-grid-auto" style={{ marginBottom: 'var(--store-space-8)' }}>
-            {filteredEvents.map((event, index) => {
-              const eventStatus = getEventStatus(event);
-              const modoVenta = getModoVenta(event);
-              const tags = getEventTags(event);
+          <>
+            <div className="store-grid store-grid-auto" style={{ marginBottom: 'var(--store-space-8)' }}>
+              {filteredEvents.slice(0, visibleCount).map((event, index) => {
+                const eventStatus = getEventStatus(event);
+                const modoVenta = getModoVenta(event);
+                const tags = getEventTags(event);
 
-              return (
-                <div
-                  key={event.id}
-                  className="store-event-card"
-                  onClick={(e) => handleEventClick(event, e)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      handleEventClick(event, e);
-                    }
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {/* Imagen del evento */}
-                  <div style={{
-                    position: 'relative',
-                    width: '100%',
-                    height: isMobile ? '200px' : '240px',
-                    overflow: 'hidden',
-                    background: 'linear-gradient(135deg, var(--store-gray-100) 0%, var(--store-gray-200) 100%)'
-                  }}>
-                    <EventImage
-                      event={event}
-                      imageType="banner"
-                      priority={index < 2}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        transition: 'transform 0.3s ease'
-                      }}
-                      showDebug={false}
-                    />
-
-                    {/* Badges overlay */}
+                return (
+                  <div
+                    key={event.id}
+                    className="store-event-card"
+                    onClick={(e) => handleEventClick(event, e)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleEventClick(event, e);
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {/* Imagen del evento */}
                     <div style={{
-                      position: 'absolute',
-                      top: 'var(--store-space-3)',
-                      right: 'var(--store-space-3)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 'var(--store-space-2)',
-                      zIndex: 10
+                      position: 'relative',
+                      width: '100%',
+                      height: isMobile ? '200px' : '240px',
+                      overflow: 'hidden',
+                      background: 'linear-gradient(135deg, var(--store-gray-100) 0%, var(--store-gray-200) 100%)'
                     }}>
-                      <Badge
-                        status={eventStatus.status}
-                        text={eventStatus.text}
+                      <EventImage
+                        event={event}
+                        imageType="banner"
+                        priority={index < 2}
                         style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          backdropFilter: 'blur(10px)',
-                          borderRadius: 'var(--store-radius-full)',
-                          padding: 'var(--store-space-1) var(--store-space-2)',
-                          fontSize: 'var(--store-font-size-xs)',
-                          fontWeight: 600,
-                          boxShadow: 'var(--store-shadow-sm)'
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          transition: 'transform 0.3s ease'
                         }}
+                        showDebug={false}
                       />
-                      <Tag
-                        color={modoVenta.color}
-                        style={{
-                          fontSize: 'var(--store-font-size-xs)',
-                          margin: 0,
-                          boxShadow: 'var(--store-shadow-sm)'
-                        }}
-                      >
-                        {modoVenta.text}
-                      </Tag>
-                    </div>
 
-                    {event.oculto && (
+                      {/* Badges overlay */}
                       <div style={{
                         position: 'absolute',
                         top: 'var(--store-space-3)',
-                        left: 'var(--store-space-3)'
+                        right: 'var(--store-space-3)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 'var(--store-space-2)',
+                        zIndex: 10
                       }}>
-                        <Tag color="red" icon={<EyeOutlined />} style={{ fontSize: 'var(--store-font-size-xs)' }}>
-                          Oculto
+                        <Badge
+                          status={eventStatus.status}
+                          text={eventStatus.text}
+                          style={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: 'var(--store-radius-full)',
+                            padding: 'var(--store-space-1) var(--store-space-2)',
+                            fontSize: 'var(--store-font-size-xs)',
+                            fontWeight: 600,
+                            boxShadow: 'var(--store-shadow-sm)'
+                          }}
+                        />
+                        <Tag
+                          color={modoVenta.color}
+                          style={{
+                            fontSize: 'var(--store-font-size-xs)',
+                            margin: 0,
+                            boxShadow: 'var(--store-shadow-sm)'
+                          }}
+                        >
+                          {modoVenta.text}
                         </Tag>
                       </div>
-                    )}
-                  </div>
 
-                  {/* Contenido de la tarjeta */}
-                  <div className="store-event-card-content">
-                    {/* Título */}
-                    <h2 className="store-event-card-title">
-                      {event.nombre}
-                    </h2>
-
-                    {/* Descripción */}
-                    {event.descripcion && (
-                      <p className="store-event-card-description">
-                        {event.descripcion}
-                      </p>
-                    )}
-
-                    {/* Información del evento */}
-                    <div className="store-event-card-meta">
-                      {event.created_at && (
-                        <div className="store-event-card-meta-item">
-                          <CalendarOutlined style={{ color: 'var(--store-primary)' }} />
-                          <span>{formatDateString(event.created_at)}</span>
-                        </div>
-                      )}
-
-                      {event.recintos?.nombre && (
-                        <div className="store-event-card-meta-item">
-                          <EnvironmentOutlined style={{ color: 'var(--store-success)' }} />
-                          <span>{event.recintos.nombre}</span>
-                        </div>
-                      )}
-
-                      {event.sector && (
-                        <div className="store-event-card-meta-item">
-                          <TeamOutlined style={{ color: 'var(--store-secondary)' }} />
-                          <span>{event.sector}</span>
+                      {event.oculto && (
+                        <div style={{
+                          position: 'absolute',
+                          top: 'var(--store-space-3)',
+                          left: 'var(--store-space-3)'
+                        }}>
+                          <Tag color="red" icon={<EyeOutlined />} style={{ fontSize: 'var(--store-font-size-xs)' }}>
+                            Oculto
+                          </Tag>
                         </div>
                       )}
                     </div>
 
-                    {/* Tags */}
-                    {tags.length > 0 && (
-                      <div style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 'var(--store-space-1)',
-                        marginBottom: 'var(--store-space-4)'
-                      }}>
-                        {tags.slice(0, 3).map((tag, index) => (
-                          <Tag key={index} size="small" color="blue">
-                            {tag}
-                          </Tag>
-                        ))}
-                        {tags.length > 3 && (
-                          <Tag size="small" color="default">
-                            +{tags.length - 3}
-                          </Tag>
+                    {/* Contenido de la tarjeta */}
+                    <div className="store-event-card-content">
+                      {/* Título */}
+                      <h2 className="store-event-card-title">
+                        {event.nombre}
+                      </h2>
+
+                      {/* Descripción */}
+                      {event.descripcion && (
+                        <p className="store-event-card-description">
+                          {event.descripcion}
+                        </p>
+                      )}
+
+                      {/* Información del evento */}
+                      <div className="store-event-card-meta">
+                        {event.created_at && (
+                          <div className="store-event-card-meta-item">
+                            <CalendarOutlined style={{ color: 'var(--store-primary)' }} />
+                            <span>{formatDateString(event.created_at)}</span>
+                          </div>
+                        )}
+
+                        {event.recintos?.nombre && (
+                          <div className="store-event-card-meta-item">
+                            <EnvironmentOutlined style={{ color: 'var(--store-success)' }} />
+                            <span>{event.recintos.nombre}</span>
+                          </div>
+                        )}
+
+                        {event.sector && (
+                          <div className="store-event-card-meta-item">
+                            <TeamOutlined style={{ color: 'var(--store-secondary)' }} />
+                            <span>{event.sector}</span>
+                          </div>
                         )}
                       </div>
-                    )}
 
-                    {/* Footer con botón */}
-                    <div className="store-event-card-footer">
-                      <Button
-                        type="primary"
-                        icon={<EyeOutlined />}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleEventClick(event, e);
-                        }}
-                        block
-                        className="store-button store-button-primary"
-                        style={{ marginTop: 'auto' }}
-                      >
-                        Ver Detalles
-                      </Button>
+                      {/* Tags */}
+                      {tags.length > 0 && (
+                        <div style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 'var(--store-space-1)',
+                          marginBottom: 'var(--store-space-4)'
+                        }}>
+                          {tags.slice(0, 3).map((tag, index) => (
+                            <Tag key={index} size="small" color="blue">
+                              {tag}
+                            </Tag>
+                          ))}
+                          {tags.length > 3 && (
+                            <Tag size="small" color="default">
+                              +{tags.length - 3}
+                            </Tag>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Footer con botón */}
+                      <div className="store-event-card-footer">
+                        <Button
+                          type="primary"
+                          icon={<EyeOutlined />}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleEventClick(event, e);
+                          }}
+                          block
+                          className="store-button store-button-primary"
+                          style={{ marginTop: 'auto' }}
+                        >
+                          Ver Detalles
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+            {visibleCount < filteredEvents.length && (
+              <div style={{ textAlign: 'center', marginBottom: 'var(--store-space-8)' }}>
+                <Button
+                  size="large"
+                  onClick={() => setVisibleCount((prev) => prev + 12)}
+                  className="store-button-ghost"
+                >
+                  Cargar más eventos
+                </Button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Estadísticas generales */}

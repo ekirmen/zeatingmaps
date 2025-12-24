@@ -91,7 +91,11 @@ const StoreApp = () => {
           <div className="min-h-screen flex flex-col">
             {showHeader && <Header />}
             <main className="flex-grow" role="main">
-              <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
+              <Suspense fallback={
+                <div className="w-full flex items-center justify-center bg-gray-50" style={{ minHeight: '60vh' }}>
+                  <div className="text-gray-400">Cargando...</div>
+                </div>
+              }>
                 <Routes>
                   {/* Home & Search */}
                   <Route index element={<Pages.StoreHomePage />} />
