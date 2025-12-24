@@ -93,7 +93,7 @@ const StoreApp = () => {
         <SecurityHandler>
           <div className="min-h-screen flex flex-col">
             {showHeader && <Header />}
-            <div className="flex-grow">
+            <main className="flex-grow" role="main">
               <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Cargando...</div>}>
                 <Routes>
                   {/* Home & Search */}
@@ -131,14 +131,14 @@ const StoreApp = () => {
                   <Route path="*" element={<Pages.NotFound />} />
                 </Routes>
               </Suspense>
-            </div>
+            </main>
             {showFooter && <BasicFooter />}
             <GlobalCartTimer />
             <DebugOverlay />
           </div>
         </SecurityHandler>
       </RefProvider>
-    </TenantProvider>
+    </TenantProvider >
   );
 };
 

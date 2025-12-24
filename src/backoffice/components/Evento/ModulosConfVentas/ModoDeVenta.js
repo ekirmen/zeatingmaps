@@ -1,8 +1,8 @@
 import React from 'react';
-import { ReactComponent as GridIcon } from './svg/grid.svg';
-import { ReactComponent as MultiStepIcon } from './svg/manual.svg';
-import { ReactComponent as MapIcon } from './svg/map_first.svg';
-import { ReactComponent as AccreditationIcon } from './svg/accreditation.svg';
+import GridIcon from './svg/grid.svg?react';
+import MultiStepIcon from './svg/manual.svg?react';
+import MapIcon from './svg/map_first.svg?react';
+import AccreditationIcon from './svg/accreditation.svg?react';
 
 const ModoDeVenta = ({ eventoData, setEventoData }) => {
   const handleSeleccionarModo = (modo) => {
@@ -24,11 +24,10 @@ const ModoDeVenta = ({ eventoData, setEventoData }) => {
       <div className="flex flex-wrap items-stretch gap-3">
         <button
           type="button"
-          className={`flex flex-col items-center p-3 border rounded-md cursor-pointer focus:outline-none transition-all duration-200 text-xs ${
-            eventoData.modoVenta === 'grid' 
-              ? 'border-blue-500 bg-blue-50 shadow-sm' 
+          className={`flex flex-col items-center p-3 border rounded-md cursor-pointer focus:outline-none transition-all duration-200 text-xs ${eventoData.modoVenta === 'grid'
+              ? 'border-blue-500 bg-blue-50 shadow-sm'
               : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-          }`}
+            }`}
           onClick={() => handleSeleccionarModo('grid')}
         >
           <GridIcon width={28} height={28} className={`mb-1 ${eventoData.modoVenta === 'grid' ? 'opacity-100' : 'opacity-70'}`} />
@@ -39,11 +38,10 @@ const ModoDeVenta = ({ eventoData, setEventoData }) => {
         </button>
         <button
           type="button"
-          className={`flex flex-col items-center p-3 border rounded-md cursor-pointer focus:outline-none transition-all duration-200 text-xs ${
-            eventoData.modoVenta === 'multi-step'
+          className={`flex flex-col items-center p-3 border rounded-md cursor-pointer focus:outline-none transition-all duration-200 text-xs ${eventoData.modoVenta === 'multi-step'
               ? 'border-blue-500 bg-blue-50 shadow-sm'
               : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-          }`}
+            }`}
           onClick={() => handleSeleccionarModo('multi-step')}
         >
           <MultiStepIcon width={28} height={28} className={`mb-1 ${eventoData.modoVenta === 'multi-step' ? 'opacity-100' : 'opacity-70'}`} />
@@ -54,11 +52,10 @@ const ModoDeVenta = ({ eventoData, setEventoData }) => {
         </button>
         <button
           type="button"
-          className={`flex flex-col items-center p-3 border rounded-md cursor-pointer focus:outline-none transition-all duration-200 text-xs ${
-            eventoData.modoVenta === 'mapa' 
-              ? 'border-blue-500 bg-blue-50 shadow-sm' 
+          className={`flex flex-col items-center p-3 border rounded-md cursor-pointer focus:outline-none transition-all duration-200 text-xs ${eventoData.modoVenta === 'mapa'
+              ? 'border-blue-500 bg-blue-50 shadow-sm'
               : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-          }`}
+            }`}
           onClick={() => handleSeleccionarModo('mapa')}
         >
           <MapIcon width={28} height={28} className={`mb-1 ${eventoData.modoVenta === 'mapa' ? 'opacity-100' : 'opacity-70'}`} />
@@ -70,11 +67,10 @@ const ModoDeVenta = ({ eventoData, setEventoData }) => {
         </button>
         <button
           type="button"
-          className={`flex flex-col items-center p-3 border rounded-md cursor-pointer focus:outline-none transition-all duration-200 text-xs ${
-            eventoData.modoVenta === 'acreditacion'
+          className={`flex flex-col items-center p-3 border rounded-md cursor-pointer focus:outline-none transition-all duration-200 text-xs ${eventoData.modoVenta === 'acreditacion'
               ? 'border-blue-500 bg-blue-50 shadow-sm'
               : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-          }`}
+            }`}
           onClick={() => handleSeleccionarModo('acreditacion')}
         >
           <AccreditationIcon width={28} height={28} className={`mb-1 ${eventoData.modoVenta === 'acreditacion' ? 'opacity-100' : 'opacity-70'}`} />

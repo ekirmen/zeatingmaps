@@ -32,7 +32,7 @@ const BasicFooter = () => {
   const socials = footer?.socials || {};
 
   return (
-    <footer className="bg-gray-900 text-white py-8">
+    <footer className="bg-gray-900 text-white py-8" style={{ minHeight: '180px' }}>
       <div className="max-w-6xl mx-auto px-4">
         {/* Redes sociales */}
         <div className="flex justify-center mb-6 space-x-4">

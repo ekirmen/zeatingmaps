@@ -2,8 +2,8 @@
 import './polyfills';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import './styles/cross-browser.css';
+// import './index.css';
+// import './styles/cross-browser.css';
 
 // Debug
 console.log('React iniciando...');
@@ -24,17 +24,17 @@ try {
 }
 
 // Cargar Ant Design CSS condicionalmente
-if (typeof window !== 'undefined') {
-  const shouldLoadAntdReset = window.location.pathname.startsWith('/backoffice') ||
-    window.location.pathname.startsWith('/admin') ||
-    window.location.pathname.startsWith('/dashboard');
+// if (typeof window !== 'undefined') {
+//   const shouldLoadAntdReset = window.location.pathname.startsWith('/backoffice') ||
+//     window.location.pathname.startsWith('/admin') ||
+//     window.location.pathname.startsWith('/dashboard');
 
-  if (shouldLoadAntdReset) {
-    import('antd/dist/reset.css').catch(() => {
-      console.warn('No se pudo cargar antd reset.css');
-    });
-  }
-}
+//   if (shouldLoadAntdReset) {
+//     import('antd/dist/reset.css').catch(() => {
+//       console.warn('No se pudo cargar antd reset.css');
+//     });
+//   }
+// }
 
 // Importar App (ya está en tu código)
 import App from './App';

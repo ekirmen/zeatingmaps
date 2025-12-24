@@ -907,6 +907,7 @@ const ModernEventPage = () => {
             imageType="logoHorizontal"
             className="w-full h-full object-cover"
             showDebug={DEBUG}
+            priority={true} // High priority for LCP
           />
 
           {/* Overlay con gradiente */}

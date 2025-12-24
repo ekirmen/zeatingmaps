@@ -1458,378 +1458,92 @@ const Reports = () => {
     </>
   );
 
+
+
+  const renderTable = () => {
+    const columns = getReportColumns();
+    const dataSource = getReportData();
+
+    return (
+      <DataTable
+        columns={columns}
+        dataSource={dataSource}
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+        searchable={true}
+        onSearch={(value) => {
+          if (!value) {
+            loadReportData();
+            return;
+          }
+          const lower = value.toLowerCase();
+          const filtered = dataSource.filter(item =>
+            Object.values(item).some(val =>
+              String(val).toLowerCase().includes(lower)
+            )
+          );
+          setReportData(prev => ({
+            ...prev,
+            [selectedReport]: filtered
+          }));
+        }}
+      />
+    );
+  };
+
   const detailedContent = (
     <>
-      {/* Filtros */}
-      <Card className="mb-6">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={6}>
-            <Text strong>Tipo de Reporte:</Text>
-            <Select
-              value={selectedReport}
-              onChange={setSelectedReport}
-              style={{ width: '100%', marginTop: 8 }}
-            >
-              {reportOptions.map(option => (
-                <Option key={option.value} value={option.value}>
-                  <Space>
-                    {option.icon}
-                    {option.label}
-                  </Space>
-                </Option>
-              ))}
-            </Select>
-          </Col>
+      <div className="mb-4 flex flex-wrap gap-4 items-center justify-between">
+        <Space wrap>
+          <RangePicker
+            onChange={(dates) => setFilters(prev => ({ ...prev, dateRange: dates }))}
+            value={filters.dateRange}
+            placeholder={['Inicio', 'Fin']}
+          />
 
-          <Col xs={24} sm={12} md={8}>
-            <Text strong>Rango de Fechas:</Text>
-            <Space direction="vertical" style={{ width: '100%', marginTop: 8 }}>
-              <RangePicker
-                value={filters.dateRange}
-                onChange={(dates) => setFilters(prev => ({ ...prev, dateRange: dates }))}
-                style={{ width: '100%' }}
-              />
-              <Switch
-                checkedChildren="Filtrar por fecha"
-                unCheckedChildren="Todas las fechas"
-                checked={!!filters.dateRange}
-                onChange={(checked) =>
-                  setFilters(prev => ({ ...prev, dateRange: checked ? filters.dateRange : null }))
-                }
-              />
-            </Space>
-          </Col>
-
-          <Col xs={24} md={12}>
-            <UnifiedContextSelector
-              onFilterChange={handleContextFilterChange}
-              venueId={contextFilters.venueId}
-              eventId={contextFilters.eventId}
-              functionId={contextFilters.functionId}
-              style={{ marginTop: 8 }}
-            />
-          </Col>
-
-          <Col xs={24} sm={12} md={4}>
-            <Text strong>Estado:</Text>
+          {selectedReport === 'payments' && (
             <Select
               value={filters.status}
               onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-              style={{ width: '100%', marginTop: 8 }}
+              style={{ width: 120 }}
             >
               <Option value="all">Todos</Option>
-              <Option value="completed">Completados</Option>
-              <Option value="pending">Pendientes</Option>
-              <Option value="failed">Fallidos</Option>
-              <Option value="reserved">Reservados</Option>
+              <Option value="completed">Completado</Option>
+              <Option value="pending">Pendiente</Option>
+              <Option value="failed">Fallido</Option>
             </Select>
-          </Col>
+          )}
 
-          <Col xs={24} sm={12} md={6}>
-            <Space wrap>
-              <Button
-                type="primary"
-                icon={<BarChartOutlined />}
-                onClick={loadReportData}
-              >
-                Actualizar
-              </Button>
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={() => setExportModalVisible(true)}
-              >
-                Exportar
-              </Button>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={() => setExportModalVisible(true)}
+          >
+            Exportar
+          </Button>
 
-      <Card className="mb-6" title="Env­o de resumen por correo">
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Text>
-            Env­a un resumen del reporte seleccionado a tu correo usando la configuraci³n SMTP activa para validar el contenido que recibir¡n tus equipos.
-          </Text>
-          <Space wrap>
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
-              loading={sendingReportEmail}
-              onClick={handleSendReportEmail}
-            >
-              Enviar a mi correo
-            </Button>
-            <Button
-              icon={<EyeOutlined />}
-              onClick={openReportEmailPreview}
-            >
-              Vista previa
-            </Button>
-          </Space>
-          <Text type="secondary">
-            Usa esta opci³n para confirmar que la configuraci³n de correo y los filtros del reporte son correctos antes de programar env­os autom¡ticos.
-          </Text>
+          <Button
+            icon={<SaveOutlined />}
+            onClick={openSaveReportModal}
+          >
+            Guardar Reporte
+          </Button>
+
+          {savedReportsLoading ? (
+            <Spin size="small" />
+          ) : (
+            <Dropdown menu={{ items: savedReportsMenuItems, onClick: handleSavedReportsMenuClick }}>
+              <Button icon={<FolderOpenOutlined />}>
+                Mis Reportes {savedReports.length > 0 && `(${savedReports.length})`}
+              </Button>
+            </Dropdown>
+          )}
         </Space>
-      </Card>
-
-      {/* Estad­sticas */}
-      <Row gutter={[16, 16]} className="mb-6">
-        {selectedReport === 'sales' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Ventas"
-                  value={stats.total}
-                  prefix={<FileTextOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Ingresos Totales"
-                  value={stats.amount}
-                  precision={2}
-                  prefix="$"
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Venta Promedio"
-                  value={stats.average}
-                  precision={2}
-                  prefix="$"
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'events' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Eventos"
-                  value={stats.total}
-                  prefix={<CalendarOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Eventos Activos"
-                  value={stats.active}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Eventos Inactivos"
-                  value={stats.inactive}
-                  prefix={<CloseOutlined />}
-                  valueStyle={{ color: '#faad14' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'users' && (
-          <>
-            <Col xs={24} sm={12}>
-              <Card>
-                <Statistic
-                  title="Total de Usuarios"
-                  value={stats.total}
-                  prefix={<UserOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Card>
-                <Statistic
-                  title="Nuevos Esta Semana"
-                  value={stats.newThisWeek}
-                  prefix={<UserOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'payments' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Transacciones"
-                  value={stats.total}
-                  prefix={<CreditCardOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Completadas"
-                  value={stats.completed}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Monto Total"
-                  value={stats.amount}
-                  precision={2}
-                  prefix="$"
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'products' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Productos"
-                  value={stats.total}
-                  prefix={<ShoppingCartOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Productos Activos"
-                  value={stats.active}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Valor Total"
-                  value={stats.totalValue}
-                  precision={2}
-                  prefix="$"
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'promociones' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Promociones"
-                  value={stats.total}
-                  prefix={<GiftOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Promociones Activas"
-                  value={stats.active}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Promociones Inactivas"
-                  value={stats.inactive}
-                  prefix={<CloseOutlined />}
-                  valueStyle={{ color: '#faad14' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'carritos' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Carritos"
-                  value={stats.total}
-                  prefix={<ShoppingCartOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Carritos con Asientos"
-                  value={stats.cartsWithSeats}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Valor Total"
-                  value={stats.totalValue}
-                  precision={2}
-                  prefix="$"
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-      </Row>
+      </div>
 
       {/* Tabla de Datos */}
       <Card title={`Reporte de ${selectedReport.charAt(0).toUpperCase() + selectedReport.slice(1)}`}>
-        <Table
-          columns={getReportColumns()}
-          dataSource={getReportData()}
-          loading={loading}
-          rowKey="id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} de ${total} registros`
-          }}
-        />
+        {renderTable()}
       </Card>
     </>
   );

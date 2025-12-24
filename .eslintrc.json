@@ -4,23 +4,34 @@
     "es2021": true,
     "node": true
   },
-  "extends": ["eslint:recommended"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended"
+  ],
   "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
+  "plugins": [
+    "react",
+    "react-hooks"
+  ],
   "rules": {
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-    "no-console": "warn"
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "no-unused-vars": "warn",
+    "no-undef": "error"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
   },
   "globals": {
-    "window": "readonly",
-    "document": "readonly",
-    "localStorage": "readonly",
-    "sessionStorage": "readonly",
-    "fetch": "readonly",
-    "console": "readonly",
-    "navigator": "readonly",
     "process": "readonly"
   }
 }

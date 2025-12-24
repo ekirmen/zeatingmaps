@@ -33,35 +33,45 @@ const OptimizedImage = ({
   const generatedSrcSet = useMemo(() => {
     if (srcSet) return srcSet;
     if (!src || typeof src !== 'string') return undefined;
-    
+
     // Si la URL contiene parámetros de Supabase, generar srcSet con diferentes tamaños
     if (src.includes('supabase.co')) {
       const baseUrl = src.split('?')[0];
       const params = new URLSearchParams(src.split('?')[1] || '');
+
+      // Asegurar formato WebP
+      if (!params.has('format')) params.set('format', 'webp');
+
       const widthParam = params.get('width') || '800';
-      
+
       // Generar diferentes tamaños
       const sizes = [400, 800, 1200, 1600];
       return sizes
-        .map(size => `${baseUrl}?width=${size}&quality=80 ${size}w`)
+        .map(size => {
+          // Clonar params para cada tamaño
+          const p = new URLSearchParams(params);
+          p.set('width', size);
+          p.set('quality', '80');
+          return `${baseUrl}?${p.toString()} ${size}w`;
+        })
         .join(', ');
     }
-    
+
     return undefined;
   }, [src, srcSet]);
 
   // Intersection Observer para lazy loading
   useEffect(() => {
     if (priority || isInView) return; // No necesitamos observer si es priority o ya está en view
-    
+
     if (!imgRef.current) return;
-    
+
     // Si el navegador no soporta Intersection Observer, cargar inmediatamente
     if (!('IntersectionObserver' in window)) {
       setIsInView(true);
       return;
     }
-    
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -78,9 +88,9 @@ const OptimizedImage = ({
         threshold: 0.01,
       }
     );
-    
+
     observerRef.current.observe(imgRef.current);
-    
+
     return () => {
       if (observerRef.current && imgRef.current) {
         observerRef.current.unobserve(imgRef.current);
@@ -100,7 +110,7 @@ const OptimizedImage = ({
         link.imageSizes = sizes;
       }
       document.head.appendChild(link);
-      
+
       return () => {
         if (document.head.contains(link)) {
           document.head.removeChild(link);
@@ -125,21 +135,21 @@ const OptimizedImage = ({
       objectFit,
       ...props.style,
     };
-    
+
     // Si tenemos dimensiones, establecerlas para evitar CLS
     if (width) style.width = typeof width === 'number' ? `${width}px` : width;
     if (height) style.height = typeof height === 'number' ? `${height}px` : height;
-    
+
     // Aspect ratio para mantener proporciones
     if (width && height) {
-      const aspectRatio = typeof width === 'number' && typeof height === 'number' 
-        ? width / height 
+      const aspectRatio = typeof width === 'number' && typeof height === 'number'
+        ? width / height
         : null;
       if (aspectRatio) {
         style.aspectRatio = aspectRatio;
       }
     }
-    
+
     return style;
   }, [width, height, objectFit, props.style]);
 
@@ -166,7 +176,7 @@ const OptimizedImage = ({
     <>
       <img
         ref={imgRef}
-        src={imageError ? placeholder : src}
+        src={imageError ? placeholder : src} // Considerar aplicar formato webp al src principal también si es supabase
         alt={alt}
         className={className}
         width={width}
@@ -174,11 +184,12 @@ const OptimizedImage = ({
         sizes={sizes}
         srcSet={generatedSrcSet}
         loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
+        fetchPriority={priority ? 'high' : 'auto'}
+        decoding={priority ? 'sync' : 'async'}
         style={{
           ...imageStyle,
           opacity: imageLoaded ? 1 : 0,
-          transition: 'opacity 0.3s ease-in-out',
+          transition: priority ? 'none' : 'opacity 0.3s ease-in-out', // Evitar transición en LCP
         }}
         onLoad={handleLoad}
         onError={handleError}
@@ -207,4 +218,3 @@ const OptimizedImage = ({
 };
 
 export default OptimizedImage;
-

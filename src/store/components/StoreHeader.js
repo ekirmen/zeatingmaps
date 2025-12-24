@@ -242,7 +242,9 @@ const StoreHeader = ({ onLogin, onLogout }) => {
     alignItems: 'center',
     justifyContent: 'center',
     background: 'transparent',
-    border: 'none'
+    border: 'none',
+    minWidth: '44px',
+    minHeight: '44px'
   };
 
   const primaryButtonStyle = {
@@ -365,7 +367,7 @@ const StoreHeader = ({ onLogin, onLogout }) => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => openAccountModal({ mode: 'login' })}
-                    className="font-medium text-gray-600 hover:text-primary transition-colors text-sm"
+                    className="font-medium text-gray-800 hover:text-primary transition-colors text-sm"
                   >
                     {t('header.login', 'Ingresar')}
                   </button>

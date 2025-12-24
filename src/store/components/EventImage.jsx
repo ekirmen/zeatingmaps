@@ -8,15 +8,14 @@ const EventImage = ({
   imageType = 'banner', // 'banner', 'portada', 'obraImagen'
   className = '',
   fallbackText = null,
-  showDebug = false
+  showDebug = false,
+  priority = false // Allow explicit priority override
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const { currentTenant } = useTenant();
 
   const DEBUG = showDebug === true && process.env.NODE_ENV === 'development';
-  if (DEBUG) {
-  }
 
   // Función para obtener imágenes del evento (memoizada)
   const getEventImages = useCallback(() => {
@@ -39,14 +38,12 @@ const EventImage = ({
 
     try {
       const resolvedUrl = resolveImageUrl(imagePath, 'eventos');
-      if (DEBUG) {
-      }
       return resolvedUrl;
     } catch (error) {
       console.error('Error resolving image URL:', error);
       return null;
     }
-  }, [DEBUG]);
+  }, []);
 
   // Memoizar las imágenes del evento
   const images = useMemo(() => getEventImages(), [getEventImages]);
@@ -94,14 +91,14 @@ const EventImage = ({
   }, [imageUrl]);
 
   const handleImageLoad = useCallback(() => {
-    if (DEBUG)
     setImageLoaded(true);
-  }, [DEBUG, imageUrl]);
+  }, [imageUrl]);
 
   // Usar OptimizedImage para mejor performance
   const finalImageUrl = imageError ? fallbackUrl : (imageUrl || fallbackUrl);
-  // Priorizar imágenes principales - siempre priorizar para tarjetas de eventos
-  const isPriority = imageType === 'banner' || imageType === 'portada' || imageType === 'logoHorizontal' || true; // Siempre priorizar en lista de eventos
+
+  // Priorizar imágenes principales si se indica o si es explícito (pero no siempre true)
+  const isPriority = priority || (imageType === 'banner' || imageType === 'portada' || imageType === 'logoHorizontal');
 
   // Si no hay URL de imagen válida, mostrar fallback inmediatamente
   const hasValidImageUrl = imageUrl && imageUrl !== fallbackUrl && !imageUrl.includes('placehold.co');
