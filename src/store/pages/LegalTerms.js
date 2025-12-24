@@ -100,7 +100,7 @@ const LegalTerms = () => {
             <h3 className="text-xl font-semibold text-gray-900 mb-3">8. Contacto</h3>
             <p className="text-gray-700 mb-4">
               En Kreatickets nos preocupamos por brindarte la mejor experiencia posible al comprar tus tickets para eventos. 
-              Si tienes alguna duda o necesitas asistencia, no dudes en contactarnos. ¡Estamos aquí para ayudarte!
+              Si tienes alguna duda o necesitas asistencia, no dudes en contactarnos. áEstamos aquí para ayudarte!
             </p>
 
             <p className="text-gray-700 mb-4">

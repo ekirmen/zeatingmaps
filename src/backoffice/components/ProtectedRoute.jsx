@@ -37,13 +37,13 @@ const ProtectedRoute = ({ children, permission, requiredRole = null }) => {
     );
   }
 
-  // Verificar rol espec­fico si se requiere
+  // Verificar rol específico si se requiere
   if (requiredRole && getRole() !== requiredRole) {
     return (
       <Result
         status="403"
         title="Acceso Denegado"
-        subTitle={`No puedes acceder a esta p¡gina. Se requiere el rol "${requiredRole}" (nivel insuficiente).`}
+        subTitle={`No puedes acceder a esta página. Se requiere el rol "${requiredRole}" (nivel insuficiente).`}
         extra={
           <Button type="primary" onClick={() => window.history.back()}>
             Volver
@@ -53,13 +53,13 @@ const ProtectedRoute = ({ children, permission, requiredRole = null }) => {
     );
   }
 
-  // Verificar permiso espec­fico
+  // Verificar permiso específico
   if (permission && !hasPermission(permission)) {
     return (
       <Result
         status="403"
         title="Acceso Denegado"
-        subTitle="No puedes acceder a esta p¡gina. Tu nivel de usuario no tiene este permiso."
+        subTitle="No puedes acceder a esta página. Tu nivel de usuario no tiene este permiso."
         extra={
           <Button type="primary" onClick={() => window.history.back()}>
             Volver
@@ -75,7 +75,7 @@ const ProtectedRoute = ({ children, permission, requiredRole = null }) => {
       <Result
         status="403"
         title="Acceso Denegado"
-        subTitle="No puedes acceder a esta p¡gina. Tu nivel de usuario no lo permite."
+        subTitle="No puedes acceder a esta página. Tu nivel de usuario no lo permite."
         extra={
           <Button type="primary" onClick={() => window.history.back()}>
             Volver

@@ -12,7 +12,7 @@ export const useDiscountCode = () => {
       const data = await fetchDescuentoPorCodigo(encodeURIComponent(discountCode.trim()));
       const now = Date.now();
       if (data.fechaInicio && new Date(data.fechaInicio).getTime() > now) {
-        throw new Error('Descuento no disponible aºn');
+        throw new Error('Descuento no disponible aún');
       }
       if (data.fechaFinal && new Date(data.fechaFinal).getTime() < now) {
         throw new Error('Descuento expirado');
@@ -21,7 +21,7 @@ export const useDiscountCode = () => {
       message.success('Descuento aplicado');
     } catch (err) {
       setAppliedDiscount(null);
-      message.error(err.message || 'C³digo inv¡lido');
+      message.error(err.message || 'Código inválido');
     }
   };
 

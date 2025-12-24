@@ -275,7 +275,7 @@ const Reports = () => {
 
   const handleDeleteSavedReport = async (reportId) => {
     if (!currentTenant?.id || !user?.id) {
-      message.error('Selecciona un tenant e inicia sesi³n para gestionar reportes');
+      message.error('Selecciona un tenant e inicia sesión para gestionar reportes');
       return;
     }
 
@@ -354,7 +354,7 @@ const Reports = () => {
     const invalidEmail = emails.find(email => !emailRegex.test(email));
 
     if (invalidEmail) {
-      return Promise.reject(new Error(`Email inv¡lido: ${invalidEmail}`));
+      return Promise.reject(new Error(`Email inválido: ${invalidEmail}`));
     }
 
     return Promise.resolve();
@@ -380,12 +380,12 @@ const Reports = () => {
   const handleSaveReport = async () => {
     try {
       if (!currentTenant?.id || !user?.id) {
-        message.error('Selecciona un tenant e inicia sesi³n para guardar el reporte');
+        message.error('Selecciona un tenant e inicia sesión para guardar el reporte');
         return;
       }
 
       if (!reportConfigsAvailable) {
-        message.error('Los reportes guardados no est¡n disponibles hasta que se ejecute la migraci³n correspondiente.');
+        message.error('Los reportes guardados no están disponibles hasta que se ejecute la migración correspondiente.');
         return;
       }
 
@@ -916,7 +916,7 @@ const Reports = () => {
       key: 'email'
     },
     {
-      title: 'Tel©fono',
+      title: 'Teléfono',
       dataIndex: 'telefono',
       key: 'telefono',
       render: (telefono) => telefono || 'N/A'
@@ -937,7 +937,7 @@ const Reports = () => {
 
   const getPaymentsColumns = () => [
     {
-      title: 'ID Transacci³n',
+      title: 'ID Transacción',
       dataIndex: 'id',
       key: 'id',
       render: (id) => id?.slice(0, 8) + '...' || 'N/A'
@@ -981,10 +981,10 @@ const Reports = () => {
       render: (precio) => `$${parseFloat(precio || 0).toFixed(2)}`
     },
     {
-      title: 'Categor­a',
+      title: 'Categoría',
       dataIndex: 'categoria',
       key: 'categoria',
-      render: (categoria) => categoria || 'Sin categor­a'
+      render: (categoria) => categoria || 'Sin categoría'
     },
     {
       title: 'Stock',
@@ -1006,13 +1006,13 @@ const Reports = () => {
 
   const getPromocionesColumns = () => [
     {
-      title: 'C³digo',
+      title: 'Código',
       dataIndex: 'codigo',
       key: 'codigo',
       render: (codigo) => <Text code>{codigo}</Text>
     },
     {
-      title: 'Descripci³n',
+      title: 'Descripción',
       dataIndex: 'descripcion',
       key: 'descripcion',
       ellipsis: true
@@ -1333,7 +1333,7 @@ const Reports = () => {
             ${previewRows.length < data.length ? `<p style="font-size: 12px; color: #6b7280; margin-top: 8px;">Mostrando ${previewRows.length} de ${data.length} registros. Exporta el reporte desde el panel para ver el detalle completo.</p>` : ''}
           ` : '<p>No hay datos disponibles para el reporte con los filtros seleccionados.</p>'}
         </div>
-        <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">Este correo se gener³ autom¡ticamente desde el panel de reportes de Omega Boletos.</p>
+        <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">Este correo se generó automáticamente desde el panel de reportes de Omega Boletos.</p>
       </div>
     `;
 
@@ -1371,7 +1371,7 @@ const Reports = () => {
       const emailConfig = await TenantEmailConfigService.getActiveEmailConfig();
 
       if (!emailConfig || !emailConfig.smtp_host || !emailConfig.smtp_user || !emailConfig.smtp_pass) {
-        message.error('No hay una configuraci³n de correo activa con credenciales completas.');
+        message.error('No hay una configuración de correo activa con credenciales completas.');
         return;
       }
 
@@ -1449,7 +1449,7 @@ const Reports = () => {
 
       <Alert
         message="Resumen del Sistema"
-        description="Aqu­ puedes ver un resumen general de las m©tricas m¡s importantes del sistema."
+        description="Aquí puedes ver un resumen general de las métricas más importantes del sistema."
         type="info"
         showIcon
         icon={<InfoCircleOutlined />}
@@ -1569,7 +1569,7 @@ const Reports = () => {
           <BarChartOutlined className="mr-2" />
           Reportes y Analytics
         </Title>
-        <Text type="secondary">An¡lisis detallado de datos del sistema</Text>
+        <Text type="secondary">Análisis detallado de datos del sistema</Text>
       </div>
 
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
@@ -1591,7 +1591,7 @@ const Reports = () => {
         />
       </Modal>
 
-      {/* Modal de Exportaci³n */}
+      {/* Modal de Exportación */}
       <Modal
         title="Exportar Reporte"
         open={exportModalVisible}
@@ -1605,7 +1605,7 @@ const Reports = () => {
         >
           <Form.Item
             name="format"
-            label="Formato de Exportaci³n"
+            label="Formato de Exportación"
             rules={[{ required: true, message: 'Por favor selecciona un formato' }]}
           >
             <Select placeholder="Selecciona formato">
@@ -1737,9 +1737,9 @@ const Reports = () => {
                           <Row gutter={16}>
                             <Col span={24}>
                               <Form.Item
-                                label="D­as"
+                                label="Días"
                                 name="weekDays"
-                                rules={[{ required: true, message: 'Seleccione al menos un d­a' }]}
+                                rules={[{ required: true, message: 'Seleccione al menos un día' }]}
                               >
                                 <Checkbox.Group options={weekDayOptions} />
                               </Form.Item>
@@ -1753,9 +1753,9 @@ const Reports = () => {
                           <Row gutter={16}>
                             <Col span={24}>
                               <Form.Item
-                                label="D­a del mes"
+                                label="Día del mes"
                                 name="dayOfMonth"
-                                rules={[{ required: true, message: 'Indica el d­a del mes' }]}
+                                rules={[{ required: true, message: 'Indica el día del mes' }]}
                               >
                                 <InputNumber min={1} max={31} style={{ width: '100%' }} />
                               </Form.Item>
@@ -1773,7 +1773,7 @@ const Reports = () => {
                       <Form.Item
                         label="Hora"
                         name="time"
-                        rules={[{ required: true, message: 'Indica la hora de ejecuci³n' }]}
+                        rules={[{ required: true, message: 'Indica la hora de ejecución' }]}
                       >
                         <TimePicker format="HH:mm" style={{ width: '100%' }} minuteStep={5} />
                       </Form.Item>

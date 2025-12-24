@@ -14,7 +14,7 @@ const MesaTypeMenu = ({ onAddMesa, disabled = false }) => {
       key: 'rect',
       icon: <BorderOuterOutlined />,
       label: 'Mesa Cuadrada',
-      description: 'Mesa rectangular est¡ndar',
+      description: 'Mesa rectangular estándar',
       defaultSize: { width: 120, height: 80 }
     },
     {

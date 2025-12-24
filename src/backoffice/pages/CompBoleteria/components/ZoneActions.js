@@ -16,7 +16,7 @@ export const createZoneActions = ({
     const qty = parseInt(zoneQuantities[zonaId], 10);
     if (!qty || qty <= 0) return;
 
-    // Cliente opcional - se puede seleccionar despu©s
+    // Cliente opcional - se puede seleccionar después
     // if (!selectedClient) {
     //   message.info('Seleccione un cliente antes de agregar asientos');
     // }
@@ -66,7 +66,7 @@ export const createZoneActions = ({
       return;
     }
 
-    // Cliente opcional - se puede seleccionar despu©s
+    // Cliente opcional - se puede seleccionar después
     // if (!selectedClient) {
     //   message.info('Seleccione un cliente antes de agregar asientos');
     // }

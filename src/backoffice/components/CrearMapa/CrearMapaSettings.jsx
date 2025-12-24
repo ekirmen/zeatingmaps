@@ -161,8 +161,8 @@ const CrearMapaSettings = ({
 
   const resetToDefaults = () => {
     Modal.confirm({
-      title: 'Restablecer Configuraci³n',
-      content: '¿Est¡s seguro de que quieres restablecer toda la configuraci³n a los valores por defecto? Esta acci³n no se puede deshacer.',
+      title: 'Restablecer Configuración',
+      content: '¿Estás seguro de que quieres restablecer toda la configuración a los valores por defecto? Esta acción no se puede deshacer.',
       onOk: () => {
         const defaultMapa = {
           ...mapa,
@@ -219,7 +219,7 @@ const CrearMapaSettings = ({
           autoSaveInterval: 5
         });
         
-        message.success('Configuraci³n restablecida a valores por defecto');
+        message.success('Configuración restablecida a valores por defecto');
       }
     });
   };
@@ -230,12 +230,12 @@ const CrearMapaSettings = ({
       <Card>
         <Title level={3} className="mb-6">
           <SettingOutlined className="mr-2" />
-          Configuraci³n Avanzada del Mapa
+          Configuración Avanzada del Mapa
         </Title>
         
         <Paragraph className="text-gray-600 mb-6">
-          Configura los par¡metros avanzados de tu mapa, incluyendo rendimiento, seguridad, 
-          exportaci³n y otras opciones t©cnicas.
+          Configura los parámetros avanzados de tu mapa, incluyendo rendimiento, seguridad, 
+          exportación y otras opciones técnicas.
         </Paragraph>
 
         {/* ===== ALERTAS DE CONFIGURACI“N ===== */}
@@ -243,7 +243,7 @@ const CrearMapaSettings = ({
           {mapa?.contenido?.configuracion?.performanceMode && (
             <Alert
               message="Modo de Rendimiento Activo"
-              description="El modo de rendimiento est¡ habilitado. Esto puede afectar la calidad visual pero mejorar¡ el rendimiento en dispositivos lentos."
+              description="El modo de rendimiento está habilitado. Esto puede afectar la calidad visual pero mejorará el rendimiento en dispositivos lentos."
               type="info"
               showIcon
               icon={<DashboardOutlined />}
@@ -263,7 +263,7 @@ const CrearMapaSettings = ({
           {mapa?.contenido?.configuracion?.watermarkEnabled && (
             <Alert
               message="Marca de Agua Habilitada"
-              description="Las marcas de agua se aplicar¡n autom¡ticamente a todas las exportaciones del mapa."
+              description="Las marcas de agua se aplicarán automáticamente a todas las exportaciones del mapa."
               type="info"
               showIcon
               icon={<PictureOutlined />}
@@ -316,11 +316,11 @@ const CrearMapaSettings = ({
 
               <Form.Item
                 name="descripcion"
-                label="Descripci³n"
+                label="Descripción"
               >
                 <TextArea 
                   rows={3} 
-                  placeholder="Descripci³n detallada del mapa..."
+                  placeholder="Descripción detallada del mapa..."
                 />
               </Form.Item>
 
@@ -328,8 +328,8 @@ const CrearMapaSettings = ({
                 <Col span={12}>
                   <Form.Item
                     name="version"
-                    label="Versi³n"
-                    rules={[{ required: true, message: 'La versi³n es obligatoria' }]}
+                    label="Versión"
+                    rules={[{ required: true, message: 'La versión es obligatoria' }]}
                   >
                     <Input placeholder="1.0.0" />
                   </Form.Item>
@@ -370,13 +370,13 @@ const CrearMapaSettings = ({
               layout="vertical"
               onFieldsChange={handleFormChange}
             >
-              <Title level={5} className="mb-4">Configuraci³n de Cuadr­cula</Title>
+              <Title level={5} className="mb-4">Configuración de Cuadrícula</Title>
               
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
                     name="gridSize"
-                    label="Tama±o de Cuadr­cula (px)"
+                    label="Tamaño de Cuadrícula (px)"
                   >
                     <Slider
                       min={5}
@@ -395,7 +395,7 @@ const CrearMapaSettings = ({
                 <Col span={12}>
                   <Form.Item
                     name="showGrid"
-                    label="Mostrar Cuadr­cula"
+                    label="Mostrar Cuadrícula"
                     valuePropName="checked"
                   >
                     <Switch />
@@ -403,7 +403,7 @@ const CrearMapaSettings = ({
                   
                   <Form.Item
                     name="snapToGrid"
-                    label="Ajustar a Cuadr­cula"
+                    label="Ajustar a Cuadrícula"
                     valuePropName="checked"
                   >
                     <Switch />
@@ -413,7 +413,7 @@ const CrearMapaSettings = ({
 
               <Divider />
 
-              <Title level={5} className="mb-4">Configuraci³n de Fondo</Title>
+              <Title level={5} className="mb-4">Configuración de Fondo</Title>
               
               <Row gutter={16}>
                 <Col span={8}>
@@ -474,7 +474,7 @@ const CrearMapaSettings = ({
               layout="vertical"
               onFieldsChange={handleFormChange}
             >
-              <Title level={5} className="mb-4">Optimizaci³n de Rendimiento</Title>
+              <Title level={5} className="mb-4">Optimización de Rendimiento</Title>
               
               <Row gutter={16}>
                 <Col span={12}>
@@ -488,7 +488,7 @@ const CrearMapaSettings = ({
                   
                   <Form.Item
                     name="cacheEnabled"
-                    label="Habilitar Cach©"
+                    label="Habilitar Caché"
                     valuePropName="checked"
                   >
                     <Switch />
@@ -496,7 +496,7 @@ const CrearMapaSettings = ({
                   
                   <Form.Item
                     name="compressionEnabled"
-                    label="Compresi³n de Datos"
+                    label="Compresión de Datos"
                     valuePropName="checked"
                   >
                     <Switch />
@@ -517,7 +517,7 @@ const CrearMapaSettings = ({
                   
                   <Form.Item
                     name="backupEnabled"
-                    label="Habilitar Respaldo Autom¡tico"
+                    label="Habilitar Respaldo Automático"
                     valuePropName="checked"
                   >
                     <Switch />
@@ -527,7 +527,7 @@ const CrearMapaSettings = ({
 
               <Divider />
 
-              <Title level={5} className="mb-4">Informaci³n de Rendimiento</Title>
+              <Title level={5} className="mb-4">Información de Rendimiento</Title>
               
               <Row gutter={16}>
                 <Col span={6}>
@@ -539,7 +539,7 @@ const CrearMapaSettings = ({
                 </Col>
                 <Col span={6}>
                   <Statistic
-                    title="Tama±o Aproximado"
+                    title="Tamaño Aproximado"
                     value={`${Math.round((JSON.stringify(mapa).length / 1024) * 100) / 100}`}
                     suffix="KB"
                     prefix={<ApiOutlined />}
@@ -560,7 +560,7 @@ const CrearMapaSettings = ({
                 </Col>
                 <Col span={6}>
                   <Statistic
-                    title="Optimizaci³n"
+                    title="Optimización"
                     value={
                       mapa?.contenido?.configuracion?.performanceMode ? 'Activada' : 'Desactivada'
                     }
@@ -577,7 +577,7 @@ const CrearMapaSettings = ({
                   icon={<DashboardOutlined />}
                   onClick={() => setShowPerformanceModal(true)}
                 >
-                  An¡lisis de Rendimiento
+                  Análisis de Rendimiento
                 </Button>
               </div>
             </Form>
@@ -592,7 +592,7 @@ const CrearMapaSettings = ({
               layout="vertical"
               onFieldsChange={handleFormChange}
             >
-              <Title level={5} className="mb-4">Configuraci³n de Seguridad</Title>
+              <Title level={5} className="mb-4">Configuración de Seguridad</Title>
               
               <Row gutter={16}>
                 <Col span={12}>
@@ -602,9 +602,9 @@ const CrearMapaSettings = ({
                   >
                     <Select>
                       <Option value="low">Bajo</Option>
-                      <Option value="standard">Est¡ndar</Option>
+                      <Option value="standard">Estándar</Option>
                       <Option value="high">Alto</Option>
-                      <Option value="maximum">M¡ximo</Option>
+                      <Option value="maximum">Máximo</Option>
                     </Select>
                   </Form.Item>
                   
@@ -613,7 +613,7 @@ const CrearMapaSettings = ({
                     label="Control de Acceso"
                   >
                     <Select>
-                      <Option value="public">Pºblico</Option>
+                      <Option value="public">Público</Option>
                       <Option value="restricted">Restringido</Option>
                       <Option value="private">Privado</Option>
                       <Option value="admin">Solo Administradores</Option>
@@ -635,7 +635,7 @@ const CrearMapaSettings = ({
                       name="watermarkText"
                       label="Texto de Marca de Agua"
                     >
-                      <Input placeholder="Ej: © 2024 Mi Empresa" />
+                      <Input placeholder="Ej: é 2024 Mi Empresa" />
                     </Form.Item>
                   )}
                 </Col>
@@ -646,12 +646,12 @@ const CrearMapaSettings = ({
               <Title level={5} className="mb-4">Recomendaciones de Seguridad</Title>
               
               <Alert
-                message="Configuraci³n de Seguridad"
+                message="Configuración de Seguridad"
                 description={
                   <div>
-                    <p><strong>Nivel Est¡ndar:</strong> Adecuado para la mayor­a de casos de uso</p>
-                    <p><strong>Nivel Alto:</strong> Recomendado para mapas con informaci³n sensible</p>
-                    <p><strong>Nivel M¡ximo:</strong> Solo para mapas con datos cr­ticos</p>
+                    <p><strong>Nivel Estándar:</strong> Adecuado para la mayoría de casos de uso</p>
+                    <p><strong>Nivel Alto:</strong> Recomendado para mapas con información sensible</p>
+                    <p><strong>Nivel Máximo:</strong> Solo para mapas con datos críticos</p>
                   </div>
                 }
                 type="info"
@@ -666,14 +666,14 @@ const CrearMapaSettings = ({
                   icon={<SafetyOutlined />}
                   onClick={() => setShowSecurityModal(true)}
                 >
-                  Auditor­a de Seguridad
+                  Auditoría de Seguridad
                 </Button>
               </div>
             </Form>
           </TabPane>
 
           <TabPane 
-            tab={<span><DownloadOutlined />Exportaci³n</span>} 
+            tab={<span><DownloadOutlined />Exportación</span>} 
             key="export"
           >
             <Form
@@ -681,7 +681,7 @@ const CrearMapaSettings = ({
               layout="vertical"
               onFieldsChange={handleFormChange}
             >
-              <Title level={5} className="mb-4">Formatos de Exportaci³n</Title>
+              <Title level={5} className="mb-4">Formatos de Exportación</Title>
               
               <Form.Item
                 name="exportFormats"
@@ -703,7 +703,7 @@ const CrearMapaSettings = ({
 
               <Form.Item
                 name="maxExportSize"
-                label="Tama±o M¡ximo de Exportaci³n (px)"
+                label="Tamaño Máximo de Exportación (px)"
               >
                 <InputNumber
                   min={512}
@@ -715,7 +715,7 @@ const CrearMapaSettings = ({
 
               <Divider />
 
-              <Title level={5} className="mb-4">Configuraci³n de Calidad</Title>
+              <Title level={5} className="mb-4">Configuración de Calidad</Title>
               
               <Row gutter={16}>
                 <Col span={12}>
@@ -734,15 +734,15 @@ const CrearMapaSettings = ({
                 </Col>
                 
                 <Col span={12}>
-                  <Text className="block mb-2">Compresi³n</Text>
+                  <Text className="block mb-2">Compresión</Text>
                   <Slider
                     min={0}
                     max={100}
                     step={10}
                     marks={{
-                      0: 'Sin compresi³n',
+                      0: 'Sin compresión',
                       50: 'Media',
-                      100: 'M¡xima'
+                      100: 'Máxima'
                     }}
                     defaultValue={20}
                   />
@@ -772,7 +772,7 @@ const CrearMapaSettings = ({
           <Space>
             {onBack && (
               <Button onClick={onBack}>
-                Atr¡s
+                Atrás
               </Button>
             )}
             <Button 
@@ -795,7 +795,7 @@ const CrearMapaSettings = ({
                 <Card size="small" title="Base de Datos">
                   <div className="text-center">
                     <DatabaseOutlined className="text-2xl text-blue-500 mb-2" />
-                    <Text className="block text-sm">Optimizaci³n autom¡tica</Text>
+                    <Text className="block text-sm">Optimización automática</Text>
                     <Switch defaultChecked />
                   </div>
                 </Card>
@@ -815,7 +815,7 @@ const CrearMapaSettings = ({
                 <Card size="small" title="Monitoreo">
                   <div className="text-center">
                                          <DashboardOutlined className="text-2xl text-purple-500 mb-2" />
-                    <Text className="block text-sm">M©tricas en tiempo real</Text>
+                    <Text className="block text-sm">Métricas en tiempo real</Text>
                     <Switch />
                   </div>
                 </Card>
@@ -827,7 +827,7 @@ const CrearMapaSettings = ({
 
       {/* ===== MODALES ===== */}
       <Modal
-        title="An¡lisis de Rendimiento"
+        title="Análisis de Rendimiento"
         open={showPerformanceModal}
         onCancel={() => setShowPerformanceModal(false)}
         footer={null}
@@ -836,7 +836,7 @@ const CrearMapaSettings = ({
         <div className="space-y-4">
           <Alert
             message="Estado del Rendimiento"
-            description="An¡lisis basado en la configuraci³n actual del mapa"
+            description="Análisis basado en la configuración actual del mapa"
             type="info"
             showIcon
           />
@@ -844,7 +844,7 @@ const CrearMapaSettings = ({
           <Row gutter={16}>
             <Col span={12}>
               <Statistic
-                title="Puntuaci³n de Rendimiento"
+                title="Puntuación de Rendimiento"
                 value={85}
                 suffix="/100"
                 valueStyle={{ color: '#3f8600' }}
@@ -863,8 +863,8 @@ const CrearMapaSettings = ({
           <List
             size="small"
             dataSource={[
-              'œ“ Cach© habilitado para mejor rendimiento',
-              'œ“ Compresi³n de datos activada',
+              'œ“ Caché habilitado para mejor rendimiento',
+              'œ“ Compresión de datos activada',
               'š  Considerar reducir elementos si superan 100',
               'œ“ Auto-guardado configurado correctamente'
             ]}
@@ -878,7 +878,7 @@ const CrearMapaSettings = ({
       </Modal>
 
       <Modal
-        title="Auditor­a de Seguridad"
+        title="Auditoría de Seguridad"
         open={showSecurityModal}
         onCancel={() => setShowSecurityModal(false)}
         footer={null}
@@ -887,7 +887,7 @@ const CrearMapaSettings = ({
         <div className="space-y-4">
           <Alert
             message="Estado de Seguridad"
-            description="Evaluaci³n de las configuraciones de seguridad actuales"
+            description="Evaluación de las configuraciones de seguridad actuales"
             type="success"
             showIcon
           />

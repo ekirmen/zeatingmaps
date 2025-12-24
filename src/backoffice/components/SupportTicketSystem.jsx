@@ -267,11 +267,11 @@ const SupportTicketSystem = () => {
       ),
     },
     {
-      title: 'Categor­a',
+      title: 'Categoría',
       dataIndex: 'category',
       key: 'category',
       render: (category) => (
-        <Tag>{category || 'Sin categor­a'}</Tag>
+        <Tag>{category || 'Sin categoría'}</Tag>
       ),
     },
     {
@@ -299,7 +299,7 @@ const SupportTicketSystem = () => {
       ),
     },
     {
-      title: 'Satisfacci³n',
+      title: 'Satisfacción',
       dataIndex: 'satisfaction_rating',
       key: 'satisfaction',
       render: (rating) => (
@@ -427,28 +427,28 @@ const SupportTicketSystem = () => {
         >
           <Form.Item
             name="title"
-            label="T­tulo"
-            rules={[{ required: true, message: 'T­tulo requerido' }]}
+            label="Título"
+            rules={[{ required: true, message: 'Título requerido' }]}
           >
             <Input />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label="Descripci³n"
-            rules={[{ required: true, message: 'Descripci³n requerida' }]}
+            label="Descripción"
+            rules={[{ required: true, message: 'Descripción requerida' }]}
           >
             <TextArea rows={4} />
           </Form.Item>
 
           <Form.Item
             name="category"
-            label="Categor­a"
+            label="Categoría"
           >
             <Select>
-              <Option value="technical">T©cnico</Option>
-              <Option value="billing">Facturaci³n</Option>
-              <Option value="feature_request">Solicitud de Caracter­stica</Option>
+              <Option value="technical">Técnico</Option>
+              <Option value="billing">Facturación</Option>
+              <Option value="feature_request">Solicitud de Característica</Option>
               <Option value="bug_report">Reporte de Error</Option>
               <Option value="general">General</Option>
             </Select>

@@ -60,7 +60,7 @@ const SeatSelectionTimer = ({ selectedSeats, onTimeExpired, onSeatsCleared }) =>
         </div>
         {timeLeft <= 300 && (
           <div className="text-xs text-red-500 mt-1">
-            ¡Completa tu compra antes de que se agote el tiempo!
+            áCompleta tu compra antes de que se agote el tiempo!
           </div>
         )}
       </div>

@@ -21,7 +21,7 @@ export const useMapaLoadingSaving = () => {
     if (process.env.NODE_ENV === 'development') {
     }
 
-    // Sistema de realtime optimizado - solo en producci³n
+    // Sistema de realtime optimizado - solo en producción
     if (process.env.NODE_ENV === 'production') {
       // Implementar realtime solo cuando sea necesario
     } else {
@@ -147,7 +147,7 @@ export const useMapaLoadingSaving = () => {
 
       const mapaData = data.data;
 
-      // Cargar zonas si no est¡n disponibles
+      // Cargar zonas si no están disponibles
       let zonasCargadas = mapaData.zonas || [];
       if (zonasCargadas.length === 0) {
         try {
@@ -235,7 +235,7 @@ export const useMapaLoadingSaving = () => {
       try {
         const data = await fetchMapa(salaId);
         if (data && data.contenido) {
-          // ... resto del c³digo de transformaci³n existente
+          // ... resto del código de transformación existente
           const elementosCrudos = (data.contenido || []).reduce((acc, mesa) => {
             if (!mesa || !mesa._id) {
               return acc;

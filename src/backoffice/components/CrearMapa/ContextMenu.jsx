@@ -39,7 +39,7 @@ const ContextMenu = ({
     {
       key: 'navigation',
       type: 'group',
-      label: 'Navegaci³n',
+      label: 'Navegación',
       children: [
         {
           key: 'pan',
@@ -50,7 +50,7 @@ const ContextMenu = ({
         {
           key: 'select',
           icon: <SelectOutlined />,
-          label: 'Modo Selecci³n',
+          label: 'Modo Selección',
           disabled: !canPan
         },
         {

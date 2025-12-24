@@ -15,7 +15,7 @@ import {
 
 const { Option } = Select;
 
-// Componente Secci³n reutilizable
+// Componente Sección reutilizable
 const Seccion = ({ titulo, children, className = "" }) => (
   <div className={`bg-white rounded-md shadow p-3 mb-3 ${className}`}>
     <h4 className="font-semibold text-gray-700 mb-3">{titulo}</h4>
@@ -24,7 +24,7 @@ const Seccion = ({ titulo, children, className = "" }) => (
 );
 
 const MenuMapa = ({
-  // Estados b¡sicos
+  // Estados básicos
   selectedElement,
   activeMode,
   sectionPoints,
@@ -55,7 +55,7 @@ const MenuMapa = ({
   showBackgroundInWeb,
   backgroundSystem,
   
-  // Funciones b¡sicas
+  // Funciones básicas
   updateElementProperty,
   updateElementSize,
   duplicarElementos,
@@ -212,10 +212,10 @@ const MenuMapa = ({
               />
             </div>
 
-            {/* Rotaci³n */}
+            {/* Rotación */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Rotaci³n: {selectedElement.rotation || 0}°
+                Rotación: {selectedElement.rotation || 0}°
               </label>
               <Slider
                 min={0}
@@ -246,10 +246,10 @@ const MenuMapa = ({
               </div>
             )}
 
-            {/* Nºmero (solo para sillas) */}
+            {/* Número (solo para sillas) */}
             {selectedElement.type === 'silla' && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Nºmero:</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Número:</label>
                 <Input
                   type="number"
                   value={selectedElement.numero || ''}
@@ -287,7 +287,7 @@ const MenuMapa = ({
               </div>
             )}
 
-            {/* Botones de acci³n */}
+            {/* Botones de acción */}
             <div className="flex gap-2">
               <Button 
                 type="primary" 
@@ -300,7 +300,7 @@ const MenuMapa = ({
               <Button 
                 danger 
                 icon={<DeleteOutlined />}
-                onClick={() => {/* Implementar eliminaci³n */}}
+                onClick={() => {/* Implementar eliminación */}}
                 className="flex-1"
               >
                 Eliminar
@@ -425,15 +425,15 @@ const MenuMapa = ({
               onChange={handleConnectionStyleChange}
               className="w-full"
             >
-              <Option value="solid">L­nea s³lida</Option>
-              <Option value="dashed">L­nea punteada</Option>
-              <Option value="dotted">L­nea de puntos</Option>
+              <Option value="solid">Línea sólida</Option>
+              <Option value="dashed">Línea punteada</Option>
+              <Option value="dotted">Línea de puntos</Option>
             </Select>
           </div>
           
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Umbral de conexi³n: {connectionThreshold}px
+              Umbral de conexión: {connectionThreshold}px
             </label>
             <Slider
               min={20}
@@ -448,7 +448,7 @@ const MenuMapa = ({
             <Button 
               size="small"
               icon={<LinkOutlined />}
-              onClick={() => {/* Implementar conexi³n manual */}}
+              onClick={() => {/* Implementar conexión manual */}}
             >
               Conectar Manual
             </Button>
@@ -467,7 +467,7 @@ const MenuMapa = ({
       <Seccion titulo="Coordenadas Precisas">
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Ajustar a cuadr­cula:</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Ajustar a cuadrícula:</label>
             <div className="grid grid-cols-2 gap-2">
               <Button 
                 size="small"
@@ -497,7 +497,7 @@ const MenuMapa = ({
           </div>
           
           <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-            ðŸ’¡ <strong>Consejo:</strong> Usa cuadr­culas m¡s peque±as para mayor precisi³n
+            ðŸ’á <strong>Consejo:</strong> Usa cuadrículas más pequeñas para mayor precisión
           </div>
         </div>
       </Seccion>
@@ -519,7 +519,7 @@ const MenuMapa = ({
                 <div className="text-gray-500">
                   <div className="text-2xl mb-2">ðŸ–¼ï¸</div>
                   <div className="text-sm">Haz clic para seleccionar imagen</div>
-                  <div className="text-xs text-gray-400 mt-1">o arrastra y suelta aqu­</div>
+                  <div className="text-xs text-gray-400 mt-1">o arrastra y suelta aquí</div>
                 </div>
               </label>
             </div>
@@ -580,7 +580,7 @@ const MenuMapa = ({
           )}
           
           <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-            ðŸ’¡ <strong>Consejo:</strong> Las im¡genes m¡s grandes son m¡s f¡ciles de pintar encima
+            ðŸ’á <strong>Consejo:</strong> Las imágenes más grandes son más fáciles de pintar encima
           </div>
         </div>
       </Seccion>
@@ -609,7 +609,7 @@ const MenuMapa = ({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Nºmero de sillas:</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Número de sillas:</label>
             <Input
               type="number"
               value={numSillas}
@@ -674,7 +674,7 @@ const MenuMapa = ({
             onClick={crearSeccion}
             className="w-full"
           >
-            {isCreatingSection ? 'Cancelar Creaci³n de Secci³n' : 'Crear Secci³n'}
+            {isCreatingSection ? 'Cancelar Creación de Sección' : 'Crear Sección'}
           </Button>
           
           <Button 
@@ -682,7 +682,7 @@ const MenuMapa = ({
             onClick={limpiarSeleccion}
             className="w-full"
           >
-            Limpiar Selecci³n
+            Limpiar Selección
           </Button>
           
           <Button 
@@ -690,28 +690,28 @@ const MenuMapa = ({
             onClick={snapToGrid}
             className="w-full"
           >
-            Ajustar a Cuadr­cula
+            Ajustar a Cuadrícula
           </Button>
           
           <Button 
             icon={<SettingOutlined />}
-            onClick={() => {/* Implementar configuraci³n avanzada */}}
+            onClick={() => {/* Implementar configuración avanzada */}}
             className="w-full"
           >
-            Configuraci³n Avanzada
+            Configuración Avanzada
           </Button>
         </div>
       </Seccion>
 
       {/* ===== INFORMACI“N DE NAVEGACI“N ===== */}
-      <Seccion titulo="Navegaci³n del Mapa">
+      <Seccion titulo="Navegación del Mapa">
         <div className="text-xs text-gray-600 space-y-1">
-          <div>ðŸ–±ï¸ <strong>Bot³n central:</strong> Paneo del mapa</div>
+          <div>ðŸ–ñï¸ <strong>Botón central:</strong> Paneo del mapa</div>
           <div>ðŸ” <strong>Rueda:</strong> Zoom in/out</div>
-          <div>ðŸ‘† <strong>Bot³n izquierdo:</strong> Seleccionar elementos</div>
+          <div>ðŸ‘† <strong>Botón izquierdo:</strong> Seleccionar elementos</div>
           <div>ðŸ‘†ðŸ‘† <strong>Doble clic en mesa:</strong> Seleccionar grupo completo</div>
-          <div>Œ¨ï¸ <strong>Ctrl + Click:</strong> Selecci³n mºltiple</div>
-          <div>ðŸ“ <strong>Shift + Arrastrar:</strong> Selecci³n rectangular</div>
+          <div>Œ¨ï¸ <strong>Ctrl + Click:</strong> Selección múltiple</div>
+          <div>ðŸ“ <strong>Shift + Arrastrar:</strong> Selección rectangular</div>
         </div>
       </Seccion>
     </div>

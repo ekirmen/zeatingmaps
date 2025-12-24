@@ -24,7 +24,7 @@ const ImageUploader = ({
         return;
       }
       
-      // Validar tama±o (10MB m¡ximo para mapas)
+      // Validar tamaño (10MB máximo para mapas)
       if (file.size > 10 * 1024 * 1024) {
         message.error('La imagen debe pesar 10MB o menos');
         return;
@@ -116,8 +116,8 @@ const ImageUploader = ({
 
       <div className="text-xs text-gray-500 space-y-1">
         <div>-¢ Formatos soportados: JPG, PNG, GIF, WebP</div>
-        <div>-¢ Tama±o m¡ximo: 10MB</div>
-        <div>-¢ Resoluci³n recomendada: 1920x1080 o superior</div>
+        <div>-¢ Tamaño máximo: 10MB</div>
+        <div>-¢ Resolución recomendada: 1920x1080 o superior</div>
       </div>
     </div>
   );

@@ -66,7 +66,7 @@ const EmailTemplateEditor = ({
     footer: {
       backgroundColor: '#f5f5f5',
       textColor: '#666666',
-      text: '© 2024 Tu Empresa. Todos los derechos reservados.',
+      text: 'é 2024 Tu Empresa. Todos los derechos reservados.',
       links: []
     },
     colors: {
@@ -216,7 +216,7 @@ const EmailTemplateEditor = ({
         <!-- Body Content -->
         <div style="padding: 20px 0;">
           <h2 style="color: ${designConfig.colors.primary};">Resumen del Reporte</h2>
-          <p>Este es un ejemplo de c³mo se ver¡ el contenido del reporte con la configuraci³n actual.</p>
+          <p>Este es un ejemplo de cómo se verá el contenido del reporte con la configuración actual.</p>
           
           <div style="
             background-color: ${designConfig.colors.success}20;
@@ -225,11 +225,11 @@ const EmailTemplateEditor = ({
             margin: 20px 0;
             border-radius: 4px;
           ">
-            <strong>Estad­sticas Principales:</strong>
+            <strong>Estadísticas Principales:</strong>
             <ul style="margin: 10px 0;">
               <li>Total de ventas: $1,234.56</li>
-              <li>Nºmero de transacciones: 45</li>
-              <li>Per­odo: Enero 2024</li>
+              <li>Número de transacciones: 45</li>
+              <li>Período: Enero 2024</li>
             </ul>
           </div>
         </div>
@@ -273,13 +273,13 @@ const EmailTemplateEditor = ({
       
       {section === 'header' && (
         <>
-          <Form.Item label="T­tulo">
+          <Form.Item label="Título">
             <Input
               value={designConfig.header.title}
               onChange={(e) => updateDesignConfig('header', 'title', e.target.value)}
             />
           </Form.Item>
-          <Form.Item label="Subt­tulo">
+          <Form.Item label="Subtítulo">
             <Input
               value={designConfig.header.subtitle}
               onChange={(e) => updateDesignConfig('header', 'subtitle', e.target.value)}
@@ -311,7 +311,7 @@ const EmailTemplateEditor = ({
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="Tama±o de Fuente">
+              <Form.Item label="Tamaño de Fuente">
                 <InputNumber
                   value={parseInt(designConfig.body.fontSize)}
                   onChange={(value) => updateDesignConfig('body', 'fontSize', `${value}px`)}
@@ -321,7 +321,7 @@ const EmailTemplateEditor = ({
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Altura de L­nea">
+              <Form.Item label="Altura de Línea">
                 <InputNumber
                   value={parseFloat(designConfig.body.lineHeight)}
                   onChange={(value) => updateDesignConfig('body', 'lineHeight', value.toString())}
@@ -407,13 +407,13 @@ const EmailTemplateEditor = ({
 
           <Title level={4}>
             <BgColorsOutlined className="mr-2" />
-            Configuraci³n de Dise±o
+            Configuración de Diseño
           </Title>
 
           <Collapse defaultActiveKey={['header', 'body']}>
             {renderDesignSection('Encabezado', 'header')}
             {renderDesignSection('Cuerpo', 'body')}
-            {renderDesignSection('Pie de P¡gina', 'footer')}
+            {renderDesignSection('Pie de Página', 'footer')}
             
             <Panel header="Colores del Sistema" key="colors">
               <Row gutter={16}>
@@ -435,7 +435,7 @@ const EmailTemplateEditor = ({
                   {renderColorPicker('colors', 'error', 'Color de Error')}
                 </Col>
                 <Col span={8}>
-                  {renderColorPicker('colors', 'info', 'Color de Informaci³n')}
+                  {renderColorPicker('colors', 'info', 'Color de Información')}
                 </Col>
               </Row>
             </Panel>
@@ -443,7 +443,7 @@ const EmailTemplateEditor = ({
             <Panel header="Layout" key="layout">
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item label="Ancho M¡ximo">
+                  <Form.Item label="Ancho Máximo">
                     <InputNumber
                       value={parseInt(designConfig.layout.maxWidth)}
                       onChange={(value) => updateDesignConfig('layout', 'maxWidth', `${value}px`)}

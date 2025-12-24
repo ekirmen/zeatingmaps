@@ -20,15 +20,15 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
   const [favoriteMethods, setFavoriteMethods] = useState([]);
   const [userPreferences, setUserPreferences] = useState({});
 
-  // M©todos de pago con iconos y estilos mejorados
+  // Métodos de pago con iconos y estilos mejorados
   const paymentMethods = [
     {
       id: 'stripe',
       name: 'Stripe',
       icon: <CreditCardOutlined />,
       color: '#6772e5',
-      description: 'Tarjetas de cr©dito y d©bito',
-      processingTime: 'Instant¡neo',
+      description: 'Tarjetas de crédito y débito',
+      processingTime: 'Instantáneo',
       fee: '2.9% + $0.30',
       recommended: true,
       available: true
@@ -38,8 +38,8 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
       name: 'PayPal',
       icon: <DollarOutlined />,
       color: '#0070ba',
-      description: 'Pagos a trav©s de PayPal',
-      processingTime: 'Instant¡neo',
+      description: 'Pagos a través de PayPal',
+      processingTime: 'Instantáneo',
       fee: '2.9% + $0.30',
       recommended: true,
       available: true
@@ -50,7 +50,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
       icon: <AppleOutlined />,
       color: '#000000',
       description: 'Pagos para usuarios iOS',
-      processingTime: 'Instant¡neo',
+      processingTime: 'Instantáneo',
       fee: '2.9% + $0.30',
       recommended: true,
       available: true
@@ -61,7 +61,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
       icon: <AndroidOutlined />,
       color: '#4285f4',
       description: 'Pagos para usuarios Android',
-      processingTime: 'Instant¡neo',
+      processingTime: 'Instantáneo',
       fee: '2.9% + $0.30',
       recommended: true,
       available: true
@@ -72,18 +72,18 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
       icon: <BankOutlined />,
       color: '#52c41a',
       description: 'Transferencias bancarias directas',
-      processingTime: '1-3 d­as h¡biles',
-      fee: 'Sin comisi³n',
+      processingTime: '1-3 días hábiles',
+      fee: 'Sin comisión',
       recommended: false,
       available: true
     },
     {
       id: 'pago_movil',
-      name: 'Pago M³vil',
+      name: 'Pago Móvil',
       icon: <MobileOutlined />,
       color: '#1890ff',
-      description: 'Pagos m³viles (MercadoPago, etc.)',
-      processingTime: 'Instant¡neo',
+      description: 'Pagos móviles (MercadoPago, etc.)',
+      processingTime: 'Instantáneo',
       fee: 'Variable',
       recommended: false,
       available: true
@@ -93,9 +93,9 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
       name: 'Pago en Efectivo en Tienda',
       icon: <ShopOutlined />,
       color: '#fa8c16',
-      description: 'Pagos en efectivo en tienda f­sica',
+      description: 'Pagos en efectivo en tienda física',
       processingTime: 'Inmediato',
-      fee: 'Sin comisi³n',
+      fee: 'Sin comisión',
       recommended: false,
       available: true
     },
@@ -106,7 +106,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
       color: '#fa8c16',
       description: 'Pagos en efectivo',
       processingTime: 'Inmediato',
-      fee: 'Sin comisi³n',
+      fee: 'Sin comisión',
       recommended: false,
       available: true
     }
@@ -131,12 +131,12 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
   };
 
   const getAvailabilityStatus = (method) => {
-    // Simular verificaci³n de disponibilidad
+    // Simular verificación de disponibilidad
     if (!method.available) {
       return { status: 'error', message: 'No disponible' };
     }
 
-    // Verificar si es m©todo m³vil y el usuario est¡ en m³vil
+    // Verificar si es método móvil y el usuario está en móvil
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (method.id === 'apple_pay' && !isMobile) {
@@ -153,7 +153,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">M©todos de Pago Disponibles</h3>
+        <h3 className="text-lg font-semibold">Métodos de Pago Disponibles</h3>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <span>Ordenar por:</span>
           <select
@@ -165,7 +165,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
             <option value="recommended">Recomendados</option>
             <option value="favorites">Favoritos</option>
             <option value="processing_time">Tiempo de procesamiento</option>
-            <option value="fee">Comisi³n</option>
+            <option value="fee">Comisión</option>
           </select>
         </div>
       </div>
@@ -217,7 +217,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
                   )}
                 </button>
 
-                {/* Icono del m©todo */}
+                {/* Icono del método */}
                 <div
                   className="text-2xl"
                   style={{ color: method.color }}
@@ -225,7 +225,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
                   {method.icon}
                 </div>
 
-                {/* Informaci³n del m©todo */}
+                {/* Información del método */}
                 <div className="text-left flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <div className="font-medium text-gray-900">
@@ -271,7 +271,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
                   )}
                 </div>
 
-                {/* Indicador de selecci³n */}
+                {/* Indicador de selección */}
                 {isSelected && (
                   <div className="ml-auto">
                     <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
@@ -289,7 +289,7 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
       {metodosDisponibles.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           <DollarOutlined className="text-4xl mb-2" />
-          <p>No hay m©todos de pago disponibles</p>
+          <p>No hay métodos de pago disponibles</p>
         </div>
       )}
     </div>

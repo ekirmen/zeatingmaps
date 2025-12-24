@@ -38,7 +38,7 @@ class ErrorBoundary extends React.Component {
       lastErrorTime: new Date()
     });
 
-    // Log adicional para el error espec­fico de 'R'
+    // Log adicional para el error específico de 'R'
     if (error.message && error.message.includes("Cannot access 'R' before initialization")) {
       console.error('ðŸš¨ [ErrorBoundary] Detected "R" initialization error');
       console.error('ðŸš¨ [ErrorBoundary] Stack trace:', error.stack);
@@ -49,7 +49,7 @@ class ErrorBoundary extends React.Component {
   }
 
   analyzeRVariableError(error) {
-    // Verificar imports problem¡ticos
+    // Verificar imports problemáticos
     const problematicImports = [
       'supabaseClient',
       'useBoleteria',
@@ -60,7 +60,7 @@ class ErrorBoundary extends React.Component {
 
     problematicImports.forEach(importName => {
       try {
-        // Intentar importar din¡micamente para detectar problemas
+        // Intentar importar dinámicamente para detectar problemas
         import(`../../../${importName}`).then(module => {
           console.log(`œ… [ErrorBoundary] ${importName} import successful:`, Object.keys(module));
         }).catch(importError => {
@@ -128,15 +128,15 @@ class ErrorBoundary extends React.Component {
                   description={
                     <div>
                       <Paragraph>
-                        Este error indica que el c³digo est¡ intentando usar la variable <Text code>R</Text> antes de que est© inicializada.
+                        Este error indica que el código está intentando usar la variable <Text code>R</Text> antes de que esté inicializada.
                       </Paragraph>
                       <Paragraph>
                         <Text strong>Posibles causas:</Text>
                       </Paragraph>
                       <ul>
-                        <li>Dependencia circular entre m³dulos</li>
-                        <li>Importaci³n incorrecta de un m³dulo</li>
-                        <li>Variable declarada con <Text code>let</Text> o <Text code>const</Text> usada antes de su declaraci³n</li>
+                        <li>Dependencia circular entre módulos</li>
+                        <li>Importación incorrecta de un módulo</li>
+                        <li>Variable declarada con <Text code>let</Text> o <Text code>const</Text> usada antes de su declaración</li>
                         <li>Problema con el bundler (webpack/vite)</li>
                       </ul>
                       <Paragraph>
@@ -144,7 +144,7 @@ class ErrorBoundary extends React.Component {
                       </Paragraph>
                       <ul>
                         <li>Verificar imports circulares</li>
-                        <li>Revisar el orden de declaraci³n de variables</li>
+                        <li>Revisar el orden de declaración de variables</li>
                         <li>Limpiar cache del navegador</li>
                         <li>Reiniciar el servidor de desarrollo</li>
                       </ul>
@@ -210,7 +210,7 @@ class ErrorBoundary extends React.Component {
                     icon={<ReloadOutlined />}
                     onClick={this.handleReload}
                   >
-                    Recargar P¡gina
+                    Recargar Página
                   </Button>
                   <Button
                     icon={<InfoCircleOutlined />}
@@ -225,7 +225,7 @@ class ErrorBoundary extends React.Component {
               {/* Environment Info */}
               <Divider />
               <div>
-                <Title level={5}>ðŸŒ Informaci³n del Entorno</Title>
+                <Title level={5}>ðŸŒ Información del Entorno</Title>
                 <Text>URL: {window.location.href}</Text>
                 <br />
                 <Text>User Agent: {navigator.userAgent}</Text>

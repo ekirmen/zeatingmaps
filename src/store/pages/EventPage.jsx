@@ -56,7 +56,7 @@ const ModernEventPage = () => {
   // Detectar si estamos en la vista del mapa
   const isMapView = location.pathname.includes('/map');
 
-  // Flag de depuraci³n global (desactivado por defecto)
+  // Flag de depuración global (desactivado por defecto)
   const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
 
   const [evento, setEvento] = useState(null);
@@ -75,11 +75,11 @@ const ModernEventPage = () => {
   const { isMobile } = useResponsive();
   const [viewMode, setViewMode] = useState('map'); // 'map' o 'list'
 
-  // Extraer asientos del mapa usando el hook de sincronizaci³n
+  // Extraer asientos del mapa usando el hook de sincronización
   const { seatsData: syncedSeats } = useMapaSeatsSync(mapa, selectedFunctionId);
 
   // Procesar asientos usando Web Worker si hay muchos (50+)
-  // Para listas peque±as, el overhead del worker no vale la pena
+  // Para listas pequeñas, el overhead del worker no vale la pena
   const { processedSeats: workerProcessedSeats } = useSeatWorker(
     syncedSeats && syncedSeats.length >= 50 ? syncedSeats : [],
     {
@@ -118,7 +118,7 @@ const ModernEventPage = () => {
   const cartItems = useCartStore((state) => state.items);
   const getItemCount = useCartStore((state) => state.getItemCount);
 
-  // Store unificado para sincronizaci³n con boleter­a
+  // Store unificado para sincronización con boletería
   const {
     selectedSeats,
     addSeat: addSeatToUnified,
@@ -150,7 +150,7 @@ const ModernEventPage = () => {
     }
   }, [selectedFunctionId]);
 
-  // Sincronizaci³n autom¡tica con seat_locks (usando useSeatLockStore)
+  // Sincronización automática con seat_locks (usando useSeatLockStore)
   useEffect(() => {
     const { lockedSeats } = useSeatLockStore.getState();
     if (lockedSeats && lockedSeats.length > 0) {
@@ -202,14 +202,14 @@ const ModernEventPage = () => {
       try {
         setLoading(true);
 
-        // Intentar obtener del cach© primero
+        // Intentar obtener del caché primero
         console.log('[ModernEventPage] Iniciando carga de evento:', eventSlug);
         eventData = await indexedDBCache.getEvento(eventSlug);
         console.log('[ModernEventPage] Cache hit?', !!eventData);
 
         if (!eventData) {
-          // Si no est¡ en cach©, cargar desde la API
-          // Usar .eq() para bºsqueda exacta (case-sensitive) ya que los slugs deben ser ºnicos
+          // Si no está en caché, cargar desde la API
+          // Usar .eq() para búsqueda exacta (case-sensitive) ya que los slugs deben ser únicos
           const { data, error: eventError } = await supabase
             .from('eventos')
             .select('*')
@@ -225,7 +225,7 @@ const ModernEventPage = () => {
           }
 
           eventData = data;
-          // Guardar en cach©
+          // Guardar en caché
           await indexedDBCache.setEvento(eventData);
         }
 
@@ -242,15 +242,15 @@ const ModernEventPage = () => {
           if (!recErr) setVenueInfo(recData || null);
         }
 
-        // Intentar obtener funciones del cach©
+        // Intentar obtener funciones del caché
         let funcionesData = await indexedDBCache.getFunciones(eventData.id);
 
         if (!funcionesData || funcionesData.length === 0) {
-          // Si no est¡n en cach©, cargar desde la API
+          // Si no están en caché, cargar desde la API
           console.log('[ModernEventPage] Cargando funciones desde API...');
           funcionesData = await getFunciones(eventData.id);
           console.log('[ModernEventPage] Funciones cargadas:', funcionesData?.length);
-          // Guardar en cach©
+          // Guardar en caché
           if (funcionesData && funcionesData.length > 0) {
             await indexedDBCache.setFunciones(eventData.id, funcionesData);
           }
@@ -259,7 +259,7 @@ const ModernEventPage = () => {
         setFunciones(funcionesData || []);
         setFuncionesForCountdown(funcionesData || []);
 
-        // Seleccionar funci³n autom¡ticamente
+        // Seleccionar función automáticamente
         const funcionParam = searchParams.get('funcion');
         if (funcionParam && funcionesData) {
           const funcion = funcionesData.find(
@@ -279,7 +279,7 @@ const ModernEventPage = () => {
         // Mejorar el mensaje de error
         const errorMessage = err?.message || 'Error desconocido';
         if (errorMessage.includes('Evento no encontrado') || errorMessage.includes('not found')) {
-          message.error('El evento no existe o no est¡ disponible');
+          message.error('El evento no existe o no está disponible');
         } else {
           message.error(`Error al cargar el evento: ${errorMessage}`);
         }
@@ -292,7 +292,7 @@ const ModernEventPage = () => {
     if (eventSlug && eventSlug.trim() !== '') {
       fetchData();
     } else {
-      setError(new Error('Slug de evento inv¡lido'));
+      setError(new Error('Slug de evento inválido'));
       setLoading(false);
     }
   }, [eventSlug, searchParams]);
@@ -317,7 +317,7 @@ const ModernEventPage = () => {
     loadProfile();
   }, [user]);
 
-  // Suscribirse a funci³n
+  // Suscribirse a función
   useEffect(() => {
     if (!selectedFunctionId) return;
     subscribeToFunction(selectedFunctionId);
@@ -334,7 +334,7 @@ const ModernEventPage = () => {
       try {
         setMapLoading(true);
 
-        // Obtener sala_id de la funci³n seleccionada (soporta esquemas nuevo y antiguo)
+        // Obtener sala_id de la función seleccionada (soporta esquemas nuevo y antiguo)
         const selectedFuncion = funciones.find(f => (f.id || f._id) === selectedFunctionId);
         const salaId = selectedFuncion?.sala_id ?? selectedFuncion?.sala;
 
@@ -344,14 +344,14 @@ const ModernEventPage = () => {
           return;
         }
 
-        // Funci³n para cargar desde API
+        // Función para cargar desde API
         const loadMapaFromAPI = async () => {
           try {
-            // Intentar obtener del cach© IndexedDB primero
+            // Intentar obtener del caché IndexedDB primero
             let mapaData = await indexedDBCache.getMapa(salaId);
 
             if (!mapaData) {
-              // Si no est¡ en cach© IndexedDB, cargar desde la API
+              // Si no está en caché IndexedDB, cargar desde la API
               const { data, error: mapaError } = await supabase
                 .from('mapas')
                 .select('*')
@@ -362,14 +362,14 @@ const ModernEventPage = () => {
 
               if (data) {
                 mapaData = data;
-                // Guardar en cach© IndexedDB para pr³ximas veces
+                // Guardar en caché IndexedDB para próximas veces
                 await indexedDBCache.setMapa(salaId, data, data.id);
               }
             }
 
             if (mapaData) {
               setMapa(mapaData);
-              // Tambi©n guardar en sessionStorage para acceso r¡pido
+              // También guardar en sessionStorage para acceso rápido
               const mapaCacheKey = `mapa_${salaId}`;
               sessionStorage.setItem(mapaCacheKey, JSON.stringify(mapaData));
             } else {
@@ -383,7 +383,7 @@ const ModernEventPage = () => {
           }
         };
 
-        // Intentar obtener del cach© primero (sessionStorage para acceso r¡pido)
+        // Intentar obtener del caché primero (sessionStorage para acceso rápido)
         const mapaCacheKey = `mapa_${salaId}`;
         const cachedMapa = sessionStorage.getItem(mapaCacheKey);
 
@@ -401,7 +401,7 @@ const ModernEventPage = () => {
           }
         }
 
-        // Si no hay cache v¡lido, cargar desde API
+        // Si no hay cache válido, cargar desde API
         await loadMapaFromAPI();
       } catch (err) {
         logger.error('Error cargando mapa:', err);
@@ -413,22 +413,22 @@ const ModernEventPage = () => {
     fetchMapa();
   }, [isMapView, selectedFunctionId, funciones]);
 
-  // Funci³n para manejar la selecci³n de funci³n
+  // Función para manejar la selección de función
   // Si estamos en la vista del evento (no mapa), navegar al mapa
-  // Si ya estamos en el mapa, solo actualizar la funci³n seleccionada
+  // Si ya estamos en el mapa, solo actualizar la función seleccionada
   const handleFunctionSelect = (functionId) => {
     setSelectedFunctionId(functionId);
 
-    // Si NO estamos en la vista del mapa, navegar al mapa con la funci³n seleccionada
+    // Si NO estamos en la vista del mapa, navegar al mapa con la función seleccionada
     if (!isMapView) {
       navigate(`/store/eventos/${eventSlug}/map?funcion=${functionId}`, { replace: false });
     }
   };
 
-  // Cache para restricciones de mºltiplos por funci³n
+  // Cache para restricciones de múltiplos por función
   const quantityStepCache = useRef(new Map());
 
-  // Cargar restricci³n de mºltiplos en paralelo cuando cambia la funci³n
+  // Cargar restricción de múltiplos en paralelo cuando cambia la función
   useEffect(() => {
     if (!selectedFunctionId || !evento) return;
 
@@ -436,15 +436,15 @@ const ModernEventPage = () => {
       try {
         const cacheKey = selectedFunctionId;
         if (quantityStepCache.current.has(cacheKey)) {
-          return; // Ya est¡ en cache
+          return; // Ya está en cache
         }
 
-        // Obtener recinto_id desde evento (m¡s r¡pido que consultar funci³n)
+        // Obtener recinto_id desde evento (más rápido que consultar función)
         const recintoId = evento.recinto_id || evento.recinto;
 
         if (!recintoId) return;
 
-        // Consulta optimizada: solo obtener el m¡ximo quantity_step
+        // Consulta optimizada: solo obtener el máximo quantity_step
         const { data: entradasData, error: entradasError } = await supabase
           .from('entradas')
           .select('quantity_step')
@@ -463,7 +463,7 @@ const ModernEventPage = () => {
           quantityStepCache.current.set(cacheKey, null);
         }
       } catch (error) {
-        logger.warn('Error cargando restricci³n de mºltiplos:', error);
+        logger.warn('Error cargando restricción de múltiplos:', error);
         quantityStepCache.current.set(selectedFunctionId, null);
       }
     };
@@ -480,7 +480,7 @@ const ModernEventPage = () => {
       return;
     }
 
-    // Verificaci³n r¡pida de bloqueo (sin await para no bloquear)
+    // Verificación rápida de bloqueo (sin await para no bloquear)
     const isLockedPromise = isSeatLocked(seatId, selectedFunctionId);
     const isLockedByMePromise = isSeatLockedByMe(seatId, selectedFunctionId);
 
@@ -495,7 +495,7 @@ const ModernEventPage = () => {
         logger.warn('Error desbloqueando asiento:', err);
       });
     } else {
-      // Validar restricci³n de mºltiplos (sincr³nico, desde cache)
+      // Validar restricción de múltiplos (sincrónico, desde cache)
       const quantityStep = quantityStepCache.current.get(selectedFunctionId);
       if (quantityStep && quantityStep > 0) {
         const currentSeatCount = selectedSeats.length;
@@ -504,7 +504,7 @@ const ModernEventPage = () => {
         if (newSeatCount % quantityStep !== 0) {
           const nextValidCount = Math.ceil(newSeatCount / quantityStep) * quantityStep;
           message.warning(
-            `Solo puedes seleccionar mºltiplos de ${quantityStep}. ` +
+            `Solo puedes seleccionar múltiplos de ${quantityStep}. ` +
             `Tienes ${currentSeatCount} asiento${currentSeatCount !== 1 ? 's' : ''} seleccionado${currentSeatCount !== 1 ? 's' : ''}. ` +
             `Puedes seleccionar hasta ${nextValidCount} asiento${nextValidCount !== 1 ? 's' : ''}.`
           );
@@ -515,7 +515,7 @@ const ModernEventPage = () => {
       // Verificar bloqueo en paralelo
       const [isLocked, isLockedByMe] = await Promise.all([isLockedPromise, isLockedByMePromise]);
       if (isLocked && !isLockedByMe) {
-        message.warning('Este asiento ya est¡ seleccionado por otro usuario');
+        message.warning('Este asiento ya está seleccionado por otro usuario');
         return;
       }
 
@@ -556,8 +556,8 @@ const ModernEventPage = () => {
 
   const handleTableToggle = (table) => {
 
-    // Por ahora solo mostrar informaci³n de la mesa
-    // En el futuro se puede implementar l³gica para seleccionar toda la mesa
+    // Por ahora solo mostrar información de la mesa
+    // En el futuro se puede implementar lógica para seleccionar toda la mesa
   };
 
 
@@ -594,7 +594,7 @@ const ModernEventPage = () => {
   };
 
 
-  // Funci³n para obtener el estado visual del evento
+  // Función para obtener el estado visual del evento
   const getEventStatus = () => {
     if (evento.desactivado) return { status: 'error', text: 'Desactivado', icon: <CloseCircleOutlined /> };
     if (!evento.activo) return { status: 'warning', text: 'Inactivo', icon: <ExclamationCircleOutlined /> };
@@ -603,15 +603,15 @@ const ModernEventPage = () => {
       'A la venta': { status: 'success', icon: <CheckCircleOutlined /> },
       'Solo en taquilla': { status: 'processing', icon: <InfoCircleOutlined /> },
       'Agotado': { status: 'error', icon: <CloseCircleOutlined /> },
-      'Pr³ximamente': { status: 'processing', icon: <ClockCircleOutlined /> },
-      'Pr³ximamente con cuenta atr¡s': { status: 'processing', icon: <ClockCircleOutlined /> },
+      'Próximamente': { status: 'processing', icon: <ClockCircleOutlined /> },
+      'Próximamente con cuenta atrás': { status: 'processing', icon: <ClockCircleOutlined /> },
       'Estado personalizado': { status: 'default', icon: <InfoCircleOutlined /> },
     };
     const mapped = statusMap[ev.label] || { status: 'default', icon: <InfoCircleOutlined /> };
     return { status: mapped.status, text: ev.label, icon: mapped.icon };
   };
 
-  // Funci³n para obtener el modo de venta
+  // Función para obtener el modo de venta
   const getModoVenta = () => {
     const modos = {
       'normal': { text: 'Venta Normal', color: 'blue' },
@@ -642,7 +642,7 @@ const ModernEventPage = () => {
               <div>
                 <p className="mb-2">
                   {error?.message?.includes('Evento no encontrado') || error?.message?.includes('not found')
-                    ? 'El evento solicitado no existe o no est¡ disponible.'
+                    ? 'El evento solicitado no existe o no está disponible.'
                     : error?.message || 'No se pudo cargar el evento. Por favor, verifica que la URL sea correcta.'}
                 </p>
                 {eventSlug && (
@@ -679,7 +679,7 @@ const ModernEventPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
-          {/* Header con informaci³n b¡sica del evento */}
+          {/* Header con información básica del evento */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-4">
@@ -720,7 +720,7 @@ const ModernEventPage = () => {
               </div>
             </div>
 
-            {/* Informaci³n de la funci³n */}
+            {/* Información de la función */}
             {(() => {
               const funcionSel = funciones.find(f => String(f.id) === String(selectedFunctionId));
               const fechaRaw = funcionSel?.fechaCelebracion || funcionSel?.fecha_celebracion || funcionSel?.fecha || evento?.fecha_evento || null;
@@ -764,14 +764,14 @@ const ModernEventPage = () => {
 
           {/* Layout del mapa y carrito - Responsive */}
           <div className="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8 min-h-[600px]">
-            {/* Mapa de asientos - 2/3 del ancho en desktop, 100% en m³vil */}
+            {/* Mapa de asientos - 2/3 del ancho en desktop, 100% en móvil */}
             <div className="flex-1 lg:flex-[2] min-w-0 w-full lg:w-auto">
               <Card
                 title={
                   <div className="flex items-center">
                     <ShoppingCartOutlined className="text-blue-500 mr-2" />
                     <span className="font-semibold text-sm md:text-base">
-                      {evento?.modoVenta === 'grid' ? 'Selecci³n de Entradas' : 'Selecci³n de Asientos'}
+                      {evento?.modoVenta === 'grid' ? 'Selección de Entradas' : 'Selección de Asientos'}
                     </span>
                   </div>
                 }
@@ -780,7 +780,7 @@ const ModernEventPage = () => {
               >
                 <div className="w-full h-full min-h-[400px] md:min-h-[500px]">
                   {!canStoreAccess ? (
-                    <NotFound title="404" message={`Este evento no est¡ disponible (${eventStatus.text}).`} homePath="/store" />
+                    <NotFound title="404" message={`Este evento no está disponible (${eventStatus.text}).`} homePath="/store" />
                   ) : evento?.modoVenta === 'grid' ? (
                     // Modo Grid - Venta sin mapa
                     <GridSaleMode
@@ -811,7 +811,7 @@ const ModernEventPage = () => {
                     </div>
                   ) : mapa ? (
                     <div className="w-full h-full overflow-auto store-seating-map">
-                      {/* Toggle entre mapa y lista en m³vil */}
+                      {/* Toggle entre mapa y lista en móvil */}
                       {isMobile && (
                         <div className="flex gap-2 p-2 bg-white border-b">
                           <Button
@@ -858,7 +858,7 @@ const ModernEventPage = () => {
                           isAnySeatInTableLocked={isAnySeatInTableLocked}
                           areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
                           onTableToggle={handleTableToggle}
-                        // lockedSeats se obtiene autom¡ticamente del useSeatLockStore
+                        // lockedSeats se obtiene automáticamente del useSeatLockStore
                         />
                       )}
                     </div>
@@ -876,7 +876,7 @@ const ModernEventPage = () => {
               </Card>
             </div>
 
-            {/* Carrito - 1/3 del ancho en desktop, 100% en m³vil */}
+            {/* Carrito - 1/3 del ancho en desktop, 100% en móvil */}
             <div className="flex-1 lg:flex-[1] w-full lg:w-auto lg:max-w-[400px]">
               <div className="sticky top-4">
                 <Cart
@@ -913,7 +913,7 @@ const ModernEventPage = () => {
           {/* Overlay con gradiente */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
 
-          {/* Contenido del hero - Solo t­tulo */}
+          {/* Contenido del hero - Solo título */}
           <div className="absolute inset-0 flex items-end">
             <div className="w-full px-4 pb-6">
               <div className="max-w-7xl mx-auto w-full">
@@ -958,7 +958,7 @@ const ModernEventPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Contenido principal */}
             <div className="lg:col-span-2">
-              {/* Informaci³n del evento (fecha, lugar, tags) - Movido desde el hero */}
+              {/* Información del evento (fecha, lugar, tags) - Movido desde el hero */}
               <Card className="mb-6 shadow-sm border border-gray-200 rounded-xl">
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-3">
@@ -1003,7 +1003,7 @@ const ModernEventPage = () => {
                 </div>
               </Card>
 
-              {/* Descripci³n del evento */}
+              {/* Descripción del evento */}
               {evento.descripcion && (
                 <Card className="mb-6 shadow-sm border border-gray-200 rounded-xl">
                   <div className="prose max-w-none">
@@ -1014,13 +1014,13 @@ const ModernEventPage = () => {
                 </Card>
               )}
 
-              {/* Informaci³n b¡sica del evento - solo admin (estilo tickera) */}
+              {/* Información básica del evento - solo admin (estilo tickera) */}
               {isTenantAdmin && (
                 <Card
                   title={
                     <div className="flex items-center">
                       <InfoCircleOutlined className="text-blue-500 mr-2" />
-                      <span className="text-xl font-semibold">Informaci³n del Evento</span>
+                      <span className="text-xl font-semibold">Información del Evento</span>
                     </div>
                   }
                   className="mb-6 shadow-sm border border-gray-200 rounded-xl"
@@ -1050,19 +1050,19 @@ const ModernEventPage = () => {
                     <Descriptions.Item label="Activo">
                       <Badge
                         status={evento.activo ? 'success' : 'error'}
-                        text={evento.activo ? 'S­' : 'No'}
+                        text={evento.activo ? 'Sí' : 'No'}
                       />
                     </Descriptions.Item>
                     <Descriptions.Item label="Oculto">
                       <Badge
                         status={evento.oculto ? 'error' : 'success'}
-                        text={evento.oculto ? 'S­' : 'No'}
+                        text={evento.oculto ? 'Sí' : 'No'}
                       />
                     </Descriptions.Item>
                     <Descriptions.Item label="Desactivado">
                       <Badge
                         status={evento.desactivado ? 'error' : 'success'}
-                        text={evento.desactivado ? 'S­' : 'No'}
+                        text={evento.desactivado ? 'Sí' : 'No'}
                       />
                     </Descriptions.Item>
                     <Descriptions.Item label="Creado">
@@ -1072,13 +1072,13 @@ const ModernEventPage = () => {
                 </Card>
               )}
 
-              {/* Descripci³n HTML */}
+              {/* Descripción HTML */}
               {evento.descripcionHTML && (
                 <Card
                   title={
                     <div className="flex items-center">
                       <FileTextOutlined className="text-green-500 mr-2" />
-                      <span className="text-xl font-semibold">Descripci³n del Evento</span>
+                      <span className="text-xl font-semibold">Descripción del Evento</span>
                     </div>
                   }
                   className="mb-6 shadow-sm border border-gray-200 rounded-xl"
@@ -1141,7 +1141,7 @@ const ModernEventPage = () => {
                               </div>
                             </div>
                           </div>
-                          {/* Bot³n Continuar */}
+                          {/* Botón Continuar */}
                           <div className="flex-shrink-0 w-full md:w-auto">
                             <Button
                               type="primary"
@@ -1169,7 +1169,7 @@ const ModernEventPage = () => {
               </Card>
 
 
-              {/* Configuraci³n del Comprador eliminada */}
+              {/* Configuración del Comprador eliminada */}
 
               {/* Otras opciones - solo admin */}
               {isTenantAdmin && Object.keys(getOtrasOpciones()).length > 0 && (
@@ -1186,7 +1186,7 @@ const ModernEventPage = () => {
                     {Object.entries(getOtrasOpciones()).map(([key, value]) => (
                       <Descriptions.Item key={key} label={key}>
                         {typeof value === 'boolean' ? (
-                          <Badge status={value ? 'success' : 'error'} text={value ? 'S­' : 'No'} />
+                          <Badge status={value ? 'success' : 'error'} text={value ? 'Sí' : 'No'} />
                         ) : typeof value === 'object' ? (
                           <pre className="text-xs bg-gray-100 p-2 rounded">
                             {JSON.stringify(value, null, 2)}
@@ -1215,7 +1215,7 @@ const ModernEventPage = () => {
                     {Object.entries(analytics).map(([key, value]) => (
                       <Descriptions.Item key={key} label={key}>
                         {typeof value === 'boolean' ? (
-                          <Badge status={value ? 'success' : 'error'} text={value ? 'S­' : 'No'} />
+                          <Badge status={value ? 'success' : 'error'} text={value ? 'Sí' : 'No'} />
                         ) : (
                           String(value)
                         )}
@@ -1229,13 +1229,13 @@ const ModernEventPage = () => {
             {/* Panel lateral */}
             <div className="lg:col-span-1">
               <div className="sticky top-8 space-y-6">
-                {/* Estad­sticas del evento - solo admin */}
+                {/* Estadísticas del evento - solo admin */}
                 {isTenantAdmin && (
                   <Card
                     title={
                       <div className="flex items-center">
                         <TrophyOutlined className="text-yellow-500 mr-2" />
-                        <span className="font-semibold">Estad­sticas</span>
+                        <span className="font-semibold">Estadísticas</span>
                       </div>
                     }
                     className="shadow-sm border border-gray-200 rounded-xl"
@@ -1263,13 +1263,13 @@ const ModernEventPage = () => {
                 )}
 
 
-                {/* Informaci³n t©cnica - solo admin */}
+                {/* Información técnica - solo admin */}
                 {isTenantAdmin && (
                   <Card
                     title={
                       <div className="flex items-center">
                         <InfoCircleOutlined className="text-gray-500 mr-2" />
-                        <span className="font-semibold">Informaci³n T©cnica</span>
+                        <span className="font-semibold">Información Técnica</span>
                       </div>
                     }
                     className="shadow-sm border border-gray-200 rounded-xl"
@@ -1324,7 +1324,7 @@ const ModernEventPage = () => {
           <section className="bg-gray-50 border-t border-gray-200">
             <div className="max-w-6xl mx-auto px-4 py-10">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4 text-center">
-                ¿D³nde ser¡ el evento?
+                ¿Dónde será el evento?
               </h2>
               <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
                 <iframe
@@ -1334,7 +1334,7 @@ const ModernEventPage = () => {
                   scrolling="no"
                   marginHeight="0"
                   marginWidth="0"
-                  title="Ubicaci³n del recinto"
+                  title="Ubicación del recinto"
                   src={venueMapUrl}
                   style={{ border: 0 }}
                   allowFullScreen
@@ -1345,13 +1345,13 @@ const ModernEventPage = () => {
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
                   {venueAddress && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                      <h3 className="text-base font-semibold text-gray-900 mb-2">Direcci³n</h3>
+                      <h3 className="text-base font-semibold text-gray-900 mb-2">Dirección</h3>
                       <p className="leading-relaxed">{venueAddress}</p>
                     </div>
                   )}
                   {venueDirections && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                      <h3 className="text-base font-semibold text-gray-900 mb-2">C³mo llegar</h3>
+                      <h3 className="text-base font-semibold text-gray-900 mb-2">Cómo llegar</h3>
                       <p className="leading-relaxed">{venueDirections}</p>
                     </div>
                   )}

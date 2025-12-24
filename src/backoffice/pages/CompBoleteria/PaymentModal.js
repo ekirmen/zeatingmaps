@@ -107,7 +107,7 @@ const CasheaOrderPanel = ({
   seats = []
 }) => {
   const sanitizedAmount = amount ?? '';
-  const eventName = selectedEvent?.nombre || 'Boleter­a';
+  const eventName = selectedEvent?.nombre || 'Boletería';
   const salaName =
     selectedFuncion?.sala?.nombre ||
     selectedFuncion?.sala?.name ||
@@ -125,7 +125,7 @@ const CasheaOrderPanel = ({
 
   const orderDetails = [
     { label: 'Evento', value: eventName },
-    functionName ? { label: 'Funci³n', value: functionName } : null,
+    functionName ? { label: 'Función', value: functionName } : null,
     { label: 'Asientos seleccionados', value: seatCount.toString() },
     { label: 'Total estimado', value: formatCurrency(total) }
   ].filter(Boolean);
@@ -143,7 +143,7 @@ const CasheaOrderPanel = ({
                 type="button"
                 className="text-gray-700 text-sm font-semibold cursor-pointer underline hover:text-gray-900"
               >
-                Crear orden sin conexi³n
+                Crear orden sin conexión
               </button>
             </div>
           </div>
@@ -228,7 +228,7 @@ const CasheaOrderPanel = ({
                     )}
                     {order.securityCode && (
                       <div>
-                        <span className="font-semibold">C³digo de seguridad:</span> {order.securityCode}
+                        <span className="font-semibold">Código de seguridad:</span> {order.securityCode}
                       </div>
                     )}
                     {order.status && (
@@ -427,14 +427,14 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           setScCounter(parsedPayments.length + 1);
         }
       } catch (error) {
-        console.error('Error cargando m©todos de pago existentes:', error);
+        console.error('Error cargando métodos de pago existentes:', error);
       }
     };
 
     fetchExistingPayments();
   }, [open, existingLocator]);
 
-  // Funci³n para asignar tags del evento al comprador
+  // Función para asignar tags del evento al comprador
   const assignEventTagsToUser = async (userId, eventTags) => {
     if (!eventTags || eventTags.length === 0) return;
 
@@ -491,7 +491,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     if (!effectiveLocator || !trimmedEmail) return;
 
     if (!isValidEmail(trimmedEmail)) {
-      message.error('Ingresa un correo electr³nico v¡lido');
+      message.error('Ingresa un correo electrónico válido');
       return;
     }
     try {
@@ -597,7 +597,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     const parsedAmount = Number(sanitizedAmountString || total || 0);
 
     if (!parsedAmount || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
-      message.error('Monto inv¡lido para crear la orden Cashea');
+      message.error('Monto inválido para crear la orden Cashea');
       return;
     }
 
@@ -614,8 +614,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         amount: parsedAmount,
         currency,
         description: selectedEvent?.nombre
-          ? `Pago boleter­a - ${selectedEvent.nombre}`
-          : 'Pago boleter­a',
+          ? `Pago boletería - ${selectedEvent.nombre}`
+          : 'Pago boletería',
         customer: {
           name:
             `${selectedClient?.nombre || selectedClient?.name || ''} ${selectedClient?.apellido || selectedClient?.lastName || ''}`.trim() ||
@@ -726,7 +726,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const getPaymentStatus = () => {
     if (paymentEntries.some(entry => entry.metadata?.gateway === 'cashea')) {
       return {
-        text: 'Pago pendiente de aprobaci³n Cashea',
+        text: 'Pago pendiente de aprobación Cashea',
         color: '#faad14'
       };
     }
@@ -762,7 +762,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     }
 
     if (paymentEntries.length === 0) {
-      message.error('Debe agregar al menos un m©todo de pago');
+      message.error('Debe agregar al menos un método de pago');
       return;
     }
 
@@ -771,10 +771,10 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       return;
     }
 
-    // Validar que todos los asientos tengan IDs v¡lidos
+    // Validar que todos los asientos tengan IDs válidos
     const invalidSeats = safeCarrito.filter(item => !(item.id || item._id || item.sillaId));
     if (invalidSeats.length > 0) {
-      message.error('Algunos asientos no tienen IDs v¡lidos. Por favor, recarga la p¡gina.');
+      message.error('Algunos asientos no tienen IDs válidos. Por favor, recarga la página.');
       return;
     }
 
@@ -837,7 +837,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           status: entry.metadata?.status || (hasCasheaPayment ? 'pending' : 'completed'),
         }));
         const paymentData = {
-          user_id: selectedClient.id || selectedClient._id, // Usar user_id segºn el esquema
+          user_id: selectedClient.id || selectedClient._id, // Usar user_id según el esquema
           evento_id: eventId,
           funcion_id: selectedFuncion.id || selectedFuncion._id,
           processed_by: isUuid(user?.id) ? user.id : null,
@@ -851,10 +851,10 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           })),
           // Usar localizador existente si ya hay uno, sino generar uno nuevo
           locator: existingPayment ? existingPayment.locator : finalLocator,
-          // Estandarizar estado: 'completed' cuando est¡ totalmente pagado, 'reserved' en caso contrario
+          // Estandarizar estado: 'completed' cuando está totalmente pagado, 'reserved' en caso contrario
           status: paymentStatus,
           payments: normalizedPayments,
-          // Asegurar columnas de monto/amount para la inserci³n
+          // Asegurar columnas de monto/amount para la inserción
           amount: paymentEntries.length > 0
             ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
             : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
@@ -898,7 +898,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           }
         }
 
-        // Si ya existe un pago, verificar que no est© completamente pagado antes de actualizar
+        // Si ya existe un pago, verificar que no esté completamente pagado antes de actualizar
         if (existingPayment) {
           // Verificar el estado del pago existente
           try {
@@ -913,13 +913,13 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               throw new Error('Error al verificar el estado del pago existente');
             }
 
-            // Verificar si el pago ya est¡ completado
+            // Verificar si el pago ya está completado
             if (existingPaymentData && existingPaymentData.status === 'completed') {
-              message.error(`Este ticket ya est¡ completamente pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator}). No se puede procesar otro pago.`);
-              throw new Error(`El ticket ya est¡ pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator})`);
+              message.error(`Este ticket ya está completamente pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator}). No se puede procesar otro pago.`);
+              throw new Error(`El ticket ya está pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator})`);
             }
 
-            // Si el pago existe pero no est¡ completado, actualizarlo
+            // Si el pago existe pero no está completado, actualizarlo
             return updatePayment(existingPayment.paymentId, paymentData);
           } catch (error) {
             console.error('Error validando pago existente:', error);
@@ -953,7 +953,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         setLocator(locator);
         const userId = selectedClient?.id || selectedClient?._id;
 
-        // Crear payment_transaction para cada m©todo de pago usado
+        // Crear payment_transaction para cada método de pago usado
         try {
           const paymentTransactionPromises = paymentEntries.map(async (entry) => {
             const entryIsCashea = entry.metadata?.gateway === 'cashea' || entry.formaPago === 'Cashea';
@@ -989,15 +989,15 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           });
 
           const transactions = await Promise.all(paymentTransactionPromises);
-          // Determinar el status final del pago (completed si todos est¡n completados, sino reservado/pending)
+          // Determinar el status final del pago (completed si todos están completados, sino reservado/pending)
           const finalStatus = hasCasheaPaymentOverall || diferencia > 0 || paymentStatus === 'reserved'
             ? 'reservado'
             : 'completed';
 
-          // Enviar correo autom¡ticamente segºn el status
+          // Enviar correo automáticamente según el status
           if (locator && userId) {
             try {
-              // Importar din¡micamente para evitar problemas de ciclo
+              // Importar dinámicamente para evitar problemas de ciclo
               const { sendPaymentEmailByStatus } = await import('../../../store/services/paymentEmailService');
 
               const emailResult = await sendPaymentEmailByStatus({
@@ -1013,7 +1013,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               }
             } catch (emailError) {
               console.error('Œ [PAYMENT_MODAL] Error enviando correo:', emailError);
-              // No bloquear el flujo si falla el env­o de correo
+              // No bloquear el flujo si falla el envío de correo
             }
           }
         } catch (transactionError) {
@@ -1031,24 +1031,24 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         setShowConfirmation(true);
       }
       const successMessage = hasCasheaPaymentOverall
-        ? 'Orden registrada con Cashea. Pendiente de confirmaci³n.'
+        ? 'Orden registrada con Cashea. Pendiente de confirmación.'
         : 'Pago procesado exitosamente';
       message.success(successMessage);
       onCancel();
     } catch (error) {
       console.error('Payment error:', error);
 
-      // Mensajes de error m¡s amigables
+      // Mensajes de error más amigables
       let errorMessage = 'Error al procesar el pago';
 
       if (error.message?.includes('duplicate key value violates unique constraint')) {
-        errorMessage = 'Œ Error: Uno o m¡s asientos ya est¡n vendidos. Por favor, selecciona otros asientos.';
-      } else if (error.message?.includes('ya est¡ vendido')) {
+        errorMessage = 'Œ Error: Uno o más asientos ya están vendidos. Por favor, selecciona otros asientos.';
+      } else if (error.message?.includes('ya está vendido')) {
         errorMessage = `Œ ${error.message}`;
-      } else if (error.message?.includes('ya est¡ reservado')) {
+      } else if (error.message?.includes('ya está reservado')) {
         errorMessage = `Œ ${error.message}`;
-      } else if (error.message?.includes('Asiento sin ID v¡lido')) {
-        errorMessage = 'Œ Error: Algunos asientos no tienen IDs v¡lidos. Por favor, verifica.';
+      } else if (error.message?.includes('Asiento sin ID válido')) {
+        errorMessage = 'Œ Error: Algunos asientos no tienen IDs válidos. Por favor, verifica.';
       } else if (error.message?.includes('invalid input syntax for type json')) {
         errorMessage = 'Œ Error: Los datos de los asientos no tienen el formato correcto. Por favor, verifica.';
       } else if (error.message) {
@@ -1081,7 +1081,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         width={800}
         footer={
           <div>
-            {/* Informaci³n de la taquilla */}
+            {/* Información de la taquilla */}
             {user && (
               <div style={{
                 marginBottom: '15px',
@@ -1167,14 +1167,14 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                   </div>
 
                   <div style={{ marginTop: '20px' }}>
-                    <h4>Fecha l­mite de reserva</h4>
+                    <h4>Fecha límite de reserva</h4>
                     <Radio.Group
                       onChange={(e) => setReservationType(e.target.value)}
                       value={reservationType}
                     >
-                      <Radio value="1">Sin fecha l­mite</Radio>
+                      <Radio value="1">Sin fecha límite</Radio>
                       <Radio value="2">Reserva temporal</Radio>
-                      <Radio value="3">Selecciona una fecha espec­fica</Radio>
+                      <Radio value="3">Selecciona una fecha específica</Radio>
                     </Radio.Group>
 
                     {reservationType === '3' && (
@@ -1201,9 +1201,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                       >
                         <Option value="Efectivo">Efectivo</Option>
                         <Option value="Zelle">Zelle</Option>
-                        <Option value="Pago movil">Pago m³vil</Option>
+                        <Option value="Pago movil">Pago móvil</Option>
                         <Option value="Transferencia">Transferencia bancaria</Option>
-                        <Option value="Tarjeta">Tarjeta de cr©dito/d©bito</Option>
+                        <Option value="Tarjeta">Tarjeta de crédito/débito</Option>
                         <Option value="PayPal">PayPal</Option>
                         <Option value="Stripe">Stripe</Option>
                         <Option value="Cashea">Cashea</Option>
@@ -1259,7 +1259,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         </div>
       </Modal>
       <Modal
-        title="Confirmaci³n"
+        title="Confirmación"
         open={showConfirmation}
         onCancel={() => setShowConfirmation(false)}
         footer={
@@ -1293,7 +1293,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <h2>Localizador: {effectiveLocator || 'Pendiente'}</h2>
           <Input
-            placeholder="Correo electr³nico"
+            placeholder="Correo electrónico"
             value={emailToSend}
             onChange={(e) => setEmailToSend(e.target.value)}
             style={{ marginTop: '20px' }}

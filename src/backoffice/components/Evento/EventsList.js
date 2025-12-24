@@ -33,7 +33,7 @@ const EventsList = ({
         <p className="text-gray-500 mb-6">
           {!recintoSeleccionado 
             ? 'Selecciona un recinto y sala para ver los eventos'
-            : 'Crea tu primer evento usando el bot³n "Crear Evento"'
+            : 'Crea tu primer evento usando el botón "Crear Evento"'
           }
         </p>
         {recintoSeleccionado && (
@@ -235,7 +235,7 @@ const EventsList = ({
                     <span className="font-semibold text-gray-900 truncate block">
                       {evento.nombre}
                     </span>
-                    {/* Indicador de estado m¡s visible */}
+                    {/* Indicador de estado más visible */}
                     <div className="mt-1 flex items-center gap-2">
                       {(() => {
                         const isActive = evento.activo === true || evento.activo === 'true';
@@ -275,7 +275,7 @@ const EventsList = ({
                       <span>{new Date(evento.fecha_evento).toLocaleDateString('es-ES')}</span>
                     </div>
                   )}
-                  {/* Estados compactos en una sola l­nea */}
+                  {/* Estados compactos en una sola línea */}
                   <div className="flex items-center gap-3 text-xs">
                     {(() => {
                       const isActive = evento.activo === true || evento.activo === 'true';
@@ -290,7 +290,7 @@ const EventsList = ({
                         evento.estadoVenta === 'proximamente' ? 'blue' : 'default';
                       const ventaLabel = evento.estadoVenta === 'a-la-venta' ? 'A la venta' :
                         evento.estadoVenta === 'agotado' ? 'Agotado' :
-                        evento.estadoVenta === 'proximamente' ? 'Pr³ximamente' : evento.estadoVenta;
+                        evento.estadoVenta === 'proximamente' ? 'Próximamente' : evento.estadoVenta;
                       return (
                         <>
                           <span className="text-gray-500">Estado:</span>

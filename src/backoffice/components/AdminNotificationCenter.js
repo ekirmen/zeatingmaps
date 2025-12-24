@@ -36,10 +36,10 @@ const AdminNotificationCenter = () => {
     loadNotifications();
     loadSystemAlerts();
 
-    // Suscribirse a notificaciones y retornar funci³n de limpieza
+    // Suscribirse a notificaciones y retornar función de limpieza
     const cleanup = subscribeToNotifications();
 
-    // Retornar funci³n de limpieza
+    // Retornar función de limpieza
     return () => {
       if (cleanup) {
         cleanup();
@@ -57,7 +57,7 @@ const AdminNotificationCenter = () => {
         .limit(20);
 
       if (error) {
-        // Si la tabla no existe, simplemente establecer un array vac­o
+        // Si la tabla no existe, simplemente establecer un array vacío
         setNotifications([]);
         setUnreadCount(0);
         return;
@@ -85,13 +85,13 @@ const AdminNotificationCenter = () => {
         .limit(10);
 
       if (error) {
-        // Fallback a datos est¡ticos si la tabla no existe
+        // Fallback a datos estáticos si la tabla no existe
         const staticAlerts = [
           {
             id: 1,
             type: 'warning',
             title: 'Pagos Pendientes',
-            message: 'Hay 5 transacciones pendientes de confirmaci³n',
+            message: 'Hay 5 transacciones pendientes de confirmación',
             priority: 'high',
             time: 'Hace 30 min',
             created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
@@ -135,7 +135,7 @@ const AdminNotificationCenter = () => {
         id: alert.id,
         type: alert.type || 'info',
         title: alert.title || 'Alerta del Sistema',
-        message: alert.message || 'Sin descripci³n',
+        message: alert.message || 'Sin descripción',
         priority: alert.priority || 'medium',
         time: formatTimeAgo(alert.created_at),
         created_at: alert.created_at,
@@ -150,7 +150,7 @@ const AdminNotificationCenter = () => {
     }
   };
 
-  // Funci³n auxiliar para formatear tiempo
+  // Función auxiliar para formatear tiempo
   const formatTimeAgo = (dateString) => {
     const now = new Date();
     const date = new Date(dateString);
@@ -163,7 +163,7 @@ const AdminNotificationCenter = () => {
     if (diffInHours < 24) return `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
 
     const diffInDays = Math.floor(diffInHours / 24);
-    return `Hace ${diffInDays} d­a${diffInDays > 1 ? 's' : ''}`;
+    return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
   };
 
   const subscribeToNotifications = () => {
@@ -228,14 +228,14 @@ const AdminNotificationCenter = () => {
           }
         )
         .subscribe();
-      // Retornar funci³n de limpieza
+      // Retornar función de limpieza
       return () => {
         notificationsChannel.unsubscribe();
         alertsChannel.unsubscribe();
       };
 
     } catch (error) {
-      // Fallback a simulaci³n si hay error
+      // Fallback a simulación si hay error
       return () => {
       };
     }
@@ -250,7 +250,7 @@ const AdminNotificationCenter = () => {
         .eq('id', notificationId);
 
       if (error) {
-        // Fallback a actualizaci³n local si hay error
+        // Fallback a actualización local si hay error
         setNotifications(prev =>
           prev.map(n =>
             n.id === notificationId ? { ...n, read: true } : n
@@ -270,7 +270,7 @@ const AdminNotificationCenter = () => {
     } catch (error) {
       console.error('Error marking notification as read:', error);
 
-      // Fallback a actualizaci³n local
+      // Fallback a actualización local
       setNotifications(prev =>
         prev.map(n =>
           n.id === notificationId ? { ...n, read: true } : n
@@ -290,7 +290,7 @@ const AdminNotificationCenter = () => {
       );
       setUnreadCount(0);
 
-      // Simular ©xito
+      // Simular éxito
       console.log('All notifications marked as read successfully (simulated)');
 
     } catch (error) {
@@ -341,17 +341,17 @@ const AdminNotificationCenter = () => {
             size="small"
             onClick={markAllAsRead}
           >
-            Marcar todas como le­das
+            Marcar todas como leídas
           </Button>
         )}
       </div>
 
-      {/* Alertas Cr­ticas */}
+      {/* Alertas Críticas */}
       {systemAlerts.filter(alert => alert.priority === 'critical').length > 0 && (
         <div className="mb-4">
           <Alert
-            message="Alertas Cr­ticas"
-            description="Requieren atenci³n inmediata"
+            message="Alertas Críticas"
+            description="Requieren atención inmediata"
             type="error"
             showIcon
             className="mb-2"

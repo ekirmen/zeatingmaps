@@ -26,14 +26,14 @@ const DocumentationCenter = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
 
   const categories = [
-    { value: 'all', label: 'Todas las categor­as' },
+    { value: 'all', label: 'Todas las categorías' },
     { value: 'getting-started', label: 'Primeros pasos' },
-    { value: 'events', label: 'Gesti³n de eventos' },
+    { value: 'events', label: 'Gestión de eventos' },
     { value: 'tickets', label: 'Sistema de boletos' },
-    { value: 'payments', label: 'Pagos y facturaci³n' },
+    { value: 'payments', label: 'Pagos y facturación' },
     { value: 'users', label: 'Usuarios y permisos' },
-    { value: 'technical', label: 'Configuraci³n t©cnica' },
-    { value: 'troubleshooting', label: 'Soluci³n de problemas' }
+    { value: 'technical', label: 'Configuración técnica' },
+    { value: 'troubleshooting', label: 'Solución de problemas' }
   ];
 
   const difficultyColors = {
@@ -198,10 +198,10 @@ const DocumentationCenter = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <BookOutlined style={{ marginRight: '8px' }} />
-          Centro de Documentaci³n
+          Centro de Documentación
         </Title>
         <Text type="secondary">
-          Encuentra gu­as, tutoriales y soluciones para usar el sistema
+          Encuentra guías, tutoriales y soluciones para usar el sistema
         </Text>
       </div>
 
@@ -209,7 +209,7 @@ const DocumentationCenter = () => {
       <Card style={{ marginBottom: '24px' }}>
         <Space wrap>
           <Search
-            placeholder="Buscar en documentaci³n..."
+            placeholder="Buscar en documentación..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: 300 }}
@@ -230,13 +230,13 @@ const DocumentationCenter = () => {
       </Card>
 
       <div style={{ display: 'flex', gap: '24px' }}>
-        {/* Documentaci³n */}
+        {/* Documentación */}
         <div style={{ flex: 1 }}>
           <Card
             title={
               <Space>
                 <FileTextOutlined />
-                <span>Gu­as y Documentaci³n</span>
+                <span>Guías y Documentación</span>
                 <Tag>{filteredDocs.length}</Tag>
               </Space>
             }
@@ -245,7 +245,7 @@ const DocumentationCenter = () => {
             <List
               dataSource={filteredDocs}
               renderItem={renderDocumentationItem}
-              locale={{ emptyText: 'No se encontr³ documentaci³n' }}
+              locale={{ emptyText: 'No se encontró documentación' }}
             />
           </Card>
         </div>

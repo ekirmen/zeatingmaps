@@ -30,7 +30,7 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
-// Componente simple para gr¡ficos b¡sicos usando divs y CSS
+// Componente simple para gráficos básicos usando divs y CSS
 const SimpleBarChart = ({ data, dataKey, color = '#1890ff', height = 200 }) => {
   const maxValue = Math.max(...data.map(d => d[dataKey])) || 1;
 
@@ -400,7 +400,7 @@ const PaymentAnalytics = () => {
               <Option value="stripe">Stripe</Option>
               <Option value="paypal">PayPal</Option>
               <Option value="transfer">Transferencias</Option>
-              <Option value="mobile_payment">Pago M³vil</Option>
+              <Option value="mobile_payment">Pago Móvil</Option>
               <Option value="zelle">Zelle</Option>
               <Option value="reservation">Reservas</Option>
             </Select>
@@ -454,7 +454,7 @@ const PaymentAnalytics = () => {
         </Col>
       </Row>
 
-      {/* Gr¡ficos Simplificados */}
+      {/* Gráficos Simplificados */}
       <Row gutter={[16, 16]} className="mb-8">
         {/* Ventas Diarias */}
         <Col xs={24} lg={12}>
@@ -521,7 +521,7 @@ const PaymentAnalytics = () => {
       {/* Resumen por Estado */}
       <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24}>
-          <Card title="Resumen por Estado de Transacci³n">
+          <Card title="Resumen por Estado de Transacción">
             <Row gutter={[16, 16]}>
               {Object.entries(statusBreakdown).map(([status, count]) => (
                 <Col xs={12} sm={4} key={status}>

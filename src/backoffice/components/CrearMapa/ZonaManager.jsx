@@ -178,9 +178,9 @@ const ZonaManager = ({
                 <Popconfirm
                   key="delete"
                   title="¿Eliminar esta zona?"
-                  description="Esta acci³n no se puede deshacer"
+                  description="Esta acción no se puede deshacer"
                   onConfirm={() => handleDeleteZona(zona.id)}
-                  okText="S­"
+                  okText="Sí"
                   cancelText="No"
                 >
                   <Button
@@ -216,7 +216,7 @@ const ZonaManager = ({
                 description={
                   <Space direction="vertical" size="small">
                     <Text type="secondary">
-                      Aforo: {zona.aforo || 'Sin l­mite'}
+                      Aforo: {zona.aforo || 'Sin límite'}
                     </Text>
                     {zona.descripcion && (
                       <Text type="secondary">{zona.descripcion}</Text>
@@ -289,12 +289,12 @@ const ZonaManager = ({
             <Col span={8}>
               <Form.Item
                 name="aforo"
-                label="Aforo M¡ximo"
+                label="Aforo Máximo"
               >
                 <Input 
                   type="number" 
                   min={1}
-                  placeholder="Sin l­mite"
+                  placeholder="Sin límite"
                 />
               </Form.Item>
             </Col>
@@ -334,11 +334,11 @@ const ZonaManager = ({
 
           <Form.Item
             name="descripcion"
-            label="Descripci³n"
+            label="Descripción"
           >
             <TextArea 
               rows={3}
-              placeholder="Descripci³n opcional de la zona..."
+              placeholder="Descripción opcional de la zona..."
             />
           </Form.Item>
 

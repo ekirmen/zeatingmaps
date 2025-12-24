@@ -36,7 +36,7 @@ const SeatMapOnboarding = ({
       description: t('onboarding.welcome.description', 'Aprende a seleccionar tus asientos favoritos'),
       content: (
         <div>
-          <Title level={4}>{t('onboarding.welcome.heading', '¡Bienvenido al Selector de Asientos!')}</Title>
+          <Title level={4}>{t('onboarding.welcome.heading', 'áBienvenido al Selector de Asientos!')}</Title>
           <Paragraph>
             {t('onboarding.welcome.text', 
               'Esta guía rápida te ayudará a entender cómo funciona nuestro sistema de selección de asientos. ' +
@@ -171,15 +171,15 @@ const SeatMapOnboarding = ({
       highlightSelector: '.zoom-controls, .map-controls'
     },
     {
-      title: t('onboarding.complete.title', '¡Listo!'),
+      title: t('onboarding.complete.title', 'áListo!'),
       description: t('onboarding.complete.description', 'Ya estás listo para seleccionar asientos'),
       content: (
         <div style={{ textAlign: 'center' }}>
           <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a', marginBottom: 16 }} />
-          <Title level={4}>{t('onboarding.complete.heading', '¡Todo Listo!')}</Title>
+          <Title level={4}>{t('onboarding.complete.heading', 'áTodo Listo!')}</Title>
           <Paragraph>
             {t('onboarding.complete.text', 
-              'Ahora ya sabes cómo seleccionar asientos. ¡Explora el mapa y encuentra tus asientos favoritos! ' +
+              'Ahora ya sabes cómo seleccionar asientos. áExplora el mapa y encuentra tus asientos favoritos! ' +
               'Recuerda que los asientos seleccionados se reservan temporalmente por 15 minutos.'
             )}
           </Paragraph>

@@ -99,7 +99,7 @@ const SeatSettings = () => {
     try {
       setSaving(true);
 
-      // Guardar en localStorage (temporal - despu©s se migrar¡ a base de datos)
+      // Guardar en localStorage (temporal - después se migrará a base de datos)
       const sanitizedLock = clampValue(values.lockExpirationMinutes, currentSettings.lockExpirationMinutes);
       const sanitizedMobile = clampValue(
         values.mobileLockExpirationMinutes,
@@ -277,7 +277,7 @@ const SeatSettings = () => {
                   label={
                     <Space>
                       <Text strong>Tiempo de Advertencia (minutos)</Text>
-                      <Tooltip title="Tiempo antes de la expiraci³n en el que se muestra una advertencia al usuario">
+                      <Tooltip title="Tiempo antes de la expiración en el que se muestra una advertencia al usuario">
                         <InfoCircleOutlined />
                       </Tooltip>
                     </Space>
@@ -314,7 +314,7 @@ const SeatSettings = () => {
                   label={
                     <Space>
                       <Text strong>Intervalo de Limpieza (minutos)</Text>
-                      <Tooltip title="Cada cu¡nto tiempo se ejecuta la limpieza autom¡tica de asientos abandonados">
+                      <Tooltip title="Cada cuánto tiempo se ejecuta la limpieza automática de asientos abandonados">
                         <InfoCircleOutlined />
                       </Tooltip>
                     </Space>
@@ -354,7 +354,7 @@ const SeatSettings = () => {
 
           <Divider />
 
-          {/* Informaci³n de Configuración Actual */}
+          {/* Información de Configuración Actual */}
           <Card title="ðŸ“Š Configuración Actual" size="small">
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={8}>
@@ -394,7 +394,7 @@ const SeatSettings = () => {
 
           <Divider />
 
-          {/* Botones de Acci³n */}
+          {/* Botones de Acción */}
           <div className="flex justify-between items-center">
             <Space>
               <Button
@@ -426,15 +426,15 @@ const SeatSettings = () => {
         </Form>
       </Spin>
 
-      {/* Informaci³n Adicional */}
-      <Card title="„¹ï¸ Informaci³n" className="mt-6">
+      {/* Información Adicional */}
+      <Card title="„¹ï¸ Información" className="mt-6">
         <Paragraph>
           <strong>Tiempo de Bloqueo:</strong> Es el tiempo total que un asiento permanece bloqueado
           antes de liberarse automáticamente.
         </Paragraph>
         <Paragraph>
           <strong>Bloqueo en Móviles:</strong> Define un tiempo específico para compras desde teléfonos o
-          tablets, permiti©ndote ajustar reservas m¡s cortas o largas según tu estrategia.
+          tablets, permitiéndote ajustar reservas más cortas o largas según tu estrategia.
         </Paragraph>
         <Paragraph>
           <strong>Tiempo de Preservación:</strong> Durante este tiempo, si el usuario regresa a la página,

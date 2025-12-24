@@ -10,7 +10,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
   const testSimpleDownload = async () => {
     setIsLoading(true);
     try {
-      // Probar descarga simple sin autenticaci³n
+      // Probar descarga simple sin autenticación
       const url = buildRelativeApiUrl(`payments/${locator}/download?mode=simple`);
       // Verificar conectividad antes de la descarga
       const connectivityResult = await checkApiConnectivity();
@@ -28,7 +28,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 
       const contentType = response.headers.get('Content-Type');
       if (!contentType?.includes('application/pdf')) {
-        throw new Error(`Content-Type inv¡lido: ${contentType}`);
+        throw new Error(`Content-Type inválido: ${contentType}`);
       }
 
       const blob = await response.blob();
@@ -45,7 +45,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
     } catch (error) {
       console.error('Œ [SIMPLE-TEST] Error en descarga simple:', error);
 
-      // Detectar tipos espec­ficos de errores
+      // Detectar tipos específicos de errores
       if (error.message.includes('Failed to fetch')) {
         console.error('Œ [SIMPLE-TEST] Error de red detectado - posible problema de variables de entorno en Vercel');
         message.error('Œ Error de red - verificar variables de entorno en Vercel');
@@ -62,7 +62,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 
   const handleDownload = async () => {
     if (!locator) {
-      message.error('ID de ticket no v¡lido');
+      message.error('ID de ticket no válido');
       return;
     }
 
@@ -77,11 +77,11 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
         return;
       }
       await downloadTicket(locator);
-      message.success('Ticket descargado con ©xito');
+      message.success('Ticket descargado con éxito');
     } catch (err) {
       console.error('Œ [DOWNLOAD] Error en descarga principal:', err);
 
-      // Detectar tipos espec­ficos de errores
+      // Detectar tipos específicos de errores
       if (err.message.includes('Failed to fetch')) {
         console.error('Œ [DOWNLOAD] Error de red detectado - posible problema de variables de entorno en Vercel');
         message.error('Œ Error de red - verificar variables de entorno en Vercel');
@@ -101,7 +101,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 
   return (
     <div>
-      {/* Bot³n principal de descarga */}
+      {/* Botón principal de descarga */}
       <Button
         type="primary"
         icon={<DownloadOutlined />}
@@ -113,10 +113,10 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
         Descargar Ticket
       </Button>
 
-      {/* Bot³n de debug (solo se muestra si showDebugButtons es true) */}
+      {/* Botón de debug (solo se muestra si showDebugButtons es true) */}
       {showDebugButtons && (
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Tooltip title="Probar descarga sin autenticaci³n">
+          <Tooltip title="Probar descarga sin autenticación">
             <Button
               icon={<FileTextOutlined />}
               onClick={testSimpleDownload}
@@ -137,9 +137,9 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
             textAlign: 'center'
           }}>
             <strong>Funciones disponibles:</strong><br/>
-            -¢ Descarga principal con autenticaci³n<br/>
+            -¢ Descarga principal con autenticación<br/>
             -¢ Descarga simple para testing<br/>
-            -¢ Verificaci³n de conectividad autom¡tica<br/>
+            -¢ Verificación de conectividad automática<br/>
             -¢ Logs detallados en consola<br/>
             <br/>
             <strong>Debug:</strong> Abre la consola (F12) para ver logs detallados

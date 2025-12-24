@@ -702,7 +702,7 @@ const Productos = () => {
             <Form.Item
               name="descripcion"
               label="Descripción"
-              rules={[{ required: true, message: 'Por favor ingresa la descripci³n' }]}
+              rules={[{ required: true, message: 'Por favor ingresa la descripción' }]}
             >
               <TextArea
                 rows={4}
@@ -762,7 +762,7 @@ const Productos = () => {
               name="categoria"
               label="Categoría"
             >
-              <Select placeholder="Selecciona una categor­a">
+              <Select placeholder="Selecciona una categoría">
                 <Option value="merchandising">Merchandising</Option>
                 <Option value="alimentos">Alimentos y Bebidas</Option>
                 <Option value="servicios">Servicios</Option>

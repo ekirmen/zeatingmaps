@@ -66,17 +66,17 @@ const MailChimpIntegration = ({ eventId }) => {
       const result = await response.json();
 
       if (result.success) {
-        message.success('Conexi³n exitosa con MailChimp');
+        message.success('Conexión exitosa con MailChimp');
         setIsConnected(true);
         setAudiences(result.audiences || []);
         setMergeFields(result.mergeFields || []);
       } else {
-        message.error('Error de conexi³n: ' + result.error);
+        message.error('Error de conexión: ' + result.error);
         setIsConnected(false);
       }
     } catch (error) {
       console.error('Error testing connection:', error);
-      message.error('Error al probar la conexi³n');
+      message.error('Error al probar la conexión');
       setIsConnected(false);
     } finally {
       setIsTesting(false);
@@ -102,10 +102,10 @@ const MailChimpIntegration = ({ eventId }) => {
 
       if (error) throw error;
 
-      message.success('Configuraci³n guardada correctamente');
+      message.success('Configuración guardada correctamente');
     } catch (error) {
       console.error('Error saving config:', error);
-      message.error('Error al guardar la configuraci³n');
+      message.error('Error al guardar la configuración');
     }
   };
 
@@ -144,18 +144,18 @@ const MailChimpIntegration = ({ eventId }) => {
     <div className="space-y-4">
       <Title level={3}>
         <MailOutlined className="mr-2" />
-        Integraci³n con MailChimp
+        Integración con MailChimp
       </Title>
 
       <Alert
-        message="Recopila emails autom¡ticamente"
-        description="Cada vez que alguien compre entradas, se suscribir¡ autom¡ticamente a tu lista de MailChimp."
+        message="Recopila emails automáticamente"
+        description="Cada vez que alguien compre entradas, se suscribirá automáticamente a tu lista de MailChimp."
         type="info"
         showIcon
         className="mb-4"
       />
 
-      <Card title="Configuraci³n de MailChimp">
+      <Card title="Configuración de MailChimp">
         <Space direction="vertical" style={{ width: '100%' }}>
           {/* API Key */}
           <div>
@@ -180,11 +180,11 @@ const MailChimpIntegration = ({ eventId }) => {
             </Text>
           </div>
 
-          {/* Estado de conexi³n */}
+          {/* Estado de conexión */}
           {isConnected && (
             <Alert
               message="Conectado a MailChimp"
-              description="La integraci³n est¡ activa y funcionando correctamente."
+              description="La integración está activa y funcionando correctamente."
               type="success"
               showIcon
             />
@@ -217,10 +217,10 @@ const MailChimpIntegration = ({ eventId }) => {
             <div className="space-y-4 mt-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <Text>Suscripci³n autom¡tica</Text>
+                  <Text>Suscripción automática</Text>
                   <br />
                   <Text type="secondary" className="text-xs">
-                    Suscribir autom¡ticamente a todos los compradores
+                    Suscribir automáticamente a todos los compradores
                   </Text>
                 </div>
                 <Switch
@@ -234,7 +234,7 @@ const MailChimpIntegration = ({ eventId }) => {
                   <Text>Doble opt-in</Text>
                   <br />
                   <Text type="secondary" className="text-xs">
-                    Enviar email de confirmaci³n antes de suscribir
+                    Enviar email de confirmación antes de suscribir
                   </Text>
                 </div>
                 <Switch
@@ -245,10 +245,10 @@ const MailChimpIntegration = ({ eventId }) => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Text>Habilitar integraci³n</Text>
+                  <Text>Habilitar integración</Text>
                   <br />
                   <Text type="secondary" className="text-xs">
-                    Activar la integraci³n para este evento
+                    Activar la integración para este evento
                   </Text>
                 </div>
                 <Switch
@@ -276,9 +276,9 @@ const MailChimpIntegration = ({ eventId }) => {
 
           <Divider />
 
-          {/* Estad­sticas */}
+          {/* Estadísticas */}
           {isConnected && (
-            <Card size="small" title="Estad­sticas">
+            <Card size="small" title="Estadísticas">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <Text strong className="text-lg">0</Text>
@@ -295,7 +295,7 @@ const MailChimpIntegration = ({ eventId }) => {
           )}
 
           <Button type="primary" onClick={saveConfig} block>
-            Guardar Configuraci³n
+            Guardar Configuración
           </Button>
         </Space>
       </Card>

@@ -41,7 +41,7 @@ const Cart = ({
     if (onApplyLockActions) {
       onApplyLockActions();
     } else {
-      message.warning('No se configur³ la acci³n para aplicar bloqueos.');
+      message.warning('No se configuró la acción para aplicar bloqueos.');
     }
   }, [onApplyLockActions]);
 
@@ -117,7 +117,7 @@ const Cart = ({
   }, [safeCarrito]);
 
   const handleRemoveSeat = useCallback((groupKey) => {
-    // groupKey es una combinaci³n de zona, precio y tipo
+    // groupKey es una combinación de zona, precio y tipo
     const [zona, precio, tipoPrecio, descuentoNombre] = groupKey.split('|');
 
     setCarrito(
@@ -247,7 +247,7 @@ const Cart = ({
             {Object.entries(groupedByFunction).map(([fid, group], idx) => (
               <div key={fid} className="space-y-1">
                 <div className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded">
-                  {`ðŸŽ­ Funci³n ${idx + 1}: `}
+                  {`ðŸŽí Función ${idx + 1}: `}
                   {group.fecha ? new Date(group.fecha).toLocaleDateString('es-ES', {
                     weekday: 'long',
                     year: 'numeric',
@@ -287,7 +287,7 @@ const Cart = ({
                                 const seatName = seat.nombre || seat.sillaId || 'Asiento';
                                 const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
 
-                                // Mostrar informaci³n m¡s clara del boleto
+                                // Mostrar información más clara del boleto
                                 if (mesaName) {
                                   return (
                                     <div key={seat._id} className="text-xs flex items-center gap-1">
@@ -319,7 +319,7 @@ const Cart = ({
                                 }
                               })
                             ) : (
-                              // Mostrar resumen si hay m¡s de 5 asientos
+                              // Mostrar resumen si hay más de 5 asientos
                               <div className="text-xs flex items-center gap-1">
                                 <span className="text-green-600">ðŸŽ«</span>
                                 <span className="font-medium">
@@ -328,7 +328,7 @@ const Cart = ({
                                     const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
                                     return mesaName ? `${mesaName}-${seatName}` : seatName;
                                   }).join(', ')}
-                                  {item.asientos.length > 3 && ` y ${item.asientos.length - 3} m¡s...`}
+                                  {item.asientos.length > 3 && ` y ${item.asientos.length - 3} más...`}
                                 </span>
                               </div>
                             )}
@@ -355,7 +355,7 @@ const Cart = ({
           <div className="text-xs text-gray-600 bg-yellow-50 border border-yellow-100 rounded p-2">
             {blockMode
               ? 'Modo bloqueo/desbloqueo activo. Aplica los cambios cuando termines de seleccionar.'
-              : 'Estos asientos se aplicar¡n como bloqueo/desbloqueo al confirmar.'}
+              : 'Estos asientos se aplicarán como bloqueo/desbloqueo al confirmar.'}
           </div>
           <Button type="primary" block className="h-12 text-base font-semibold" onClick={handleApplyLockActions}>
             Aplicar bloqueo/desbloqueo
@@ -377,7 +377,7 @@ const Cart = ({
               <div className="flex justify-between text-sm text-gray-600">
                 <span className="flex items-center gap-2">
                   <span>ðŸ’¸</span>
-                  <span>Comisi³n ({selectedAffiliate.percentage}%):</span>
+                  <span>Comisión ({selectedAffiliate.percentage}%):</span>
                 </span>
                 <span className="text-red-600">-${(subtotal * (selectedAffiliate.percentage / 100)).toFixed(2)}</span>
               </div>
@@ -397,7 +397,7 @@ const Cart = ({
             className="mt-4 h-12 text-base font-semibold"
             onClick={selectedClient ? handlePaymentClick : onShowUserSearch}
             disabled={selectedClient ? !handlePaymentClick : false}
-            icon={selectedClient ? <span>ðŸ’³</span> : <span>ðŸ‘¤</span>}
+            icon={selectedClient ? <span>ðŸ’ó</span> : <span>ðŸ‘¤</span>}
           >
             {selectedClient ? 'Procesar Pago' : 'Seleccionar Cliente'}
           </Button>

@@ -140,7 +140,7 @@ const InteractiveTutorials = () => {
       }));
 
       Modal.success({
-        title: '¡Tutorial Completado!',
+        title: 'áTutorial Completado!',
         content: `Has completado exitosamente el tutorial "${currentTutorial.title}".`,
         icon: <TrophyOutlined style={{ color: '#52c41a' }} />
       });
@@ -303,7 +303,7 @@ const InteractiveTutorials = () => {
               dataSource={step.tips}
               renderItem={(tip) => (
                 <List.Item>
-                  <Text type="secondary">ðŸ’¡ {tip}</Text>
+                  <Text type="secondary">ðŸ’á {tip}</Text>
                 </List.Item>
               )}
             />
@@ -321,7 +321,7 @@ const InteractiveTutorials = () => {
           Tutoriales Interactivos
         </Title>
         <Text type="secondary">
-          Aprende a usar el sistema paso a paso con gu­as interactivas
+          Aprende a usar el sistema paso a paso con guías interactivas
         </Text>
       </div>
 

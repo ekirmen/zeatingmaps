@@ -111,7 +111,7 @@ const EventThemePanel = () => {
   const handleDeleteTheme = async (eventId) => {
     Modal.confirm({
       title: '¿Eliminar tema del evento?',
-      content: 'Esta acci³n no se puede deshacer. ¿Est¡s seguro?',
+      content: 'Esta acción no se puede deshacer. ¿Estás seguro?',
       okText: 'Eliminar',
       okType: 'danger',
       cancelText: 'Cancelar',
@@ -179,7 +179,7 @@ const EventThemePanel = () => {
       <div style={{ marginBottom: '16px' }}>
         <h3 style={{ margin: 0 }}>ðŸŽ¨ Colores por Evento</h3>
         <p style={{ color: '#666', margin: '8px 0 0 0' }}>
-          Configura colores espec­ficos para cada evento. Los eventos sin configuraci³n usar¡n los colores globales.
+          Configura colores específicos para cada evento. Los eventos sin configuración usarán los colores globales.
         </p>
       </div>
 
@@ -232,7 +232,7 @@ const EventThemePanel = () => {
                     {hasCustomTheme && (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                         <ColorPreview color={eventTheme.seat_available} label="Disponible" />
-                        <ColorPreview color={eventTheme.seat_selected_me} label="Seleccionado por m­" />
+                        <ColorPreview color={eventTheme.seat_selected_me} label="Seleccionado por mí" />
                         <ColorPreview color={eventTheme.seat_selected_other} label="Seleccionado por otro" />
                         <ColorPreview color={eventTheme.seat_blocked} label="Bloqueado" />
                         <ColorPreview color={eventTheme.seat_sold} label="Vendido" />
@@ -314,7 +314,7 @@ const EventThemePanel = () => {
 
             <Form.Item
               name="seat_selected_me"
-              label="Seleccionado por m­"
+              label="Seleccionado por mí"
               rules={[{ required: true, message: 'Color requerido' }]}
             >
               <Input type="color" />

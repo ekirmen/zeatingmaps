@@ -163,7 +163,7 @@ export const sendFunctionCreatedNotification = async (funcion) => {
         await sendPushNotification(userId, {
           type: 'function_created',
           title: `🎫 Nueva Función: ${eventoNombre}`,
-          message: `Nueva función disponible el ${funcionDate}. ¡Compra tus entradas ahora!`,
+          message: `Nueva función disponible el ${funcionDate}. áCompra tus entradas ahora!`,
           data: {
             eventId: evento?.id,
             funcionId: funcion.id,

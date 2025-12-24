@@ -49,8 +49,8 @@ const CrearMapaValidation = ({
   const validationRules = [
     {
       id: 'basic_info',
-      name: 'Informaci³n B¡sica',
-      description: 'Verificar que el mapa tenga informaci³n b¡sica completa',
+      name: 'Información Básica',
+      description: 'Verificar que el mapa tenga información básica completa',
       validate: (mapa) => {
         const errors = [];
         const warnings = [];
@@ -60,7 +60,7 @@ const CrearMapaValidation = ({
         }
         
         if (!mapa.descripcion || mapa.descripcion.trim().length < 10) {
-          warnings.push('Se recomienda agregar una descripci³n m¡s detallada');
+          warnings.push('Se recomienda agregar una descripción más detallada');
         }
         
         if (!mapa.contenido?.configuracion?.dimensions?.width || 
@@ -75,7 +75,7 @@ const CrearMapaValidation = ({
     {
       id: 'elements_structure',
       name: 'Estructura de Elementos',
-      description: 'Verificar que los elementos del mapa est©n correctamente estructurados',
+      description: 'Verificar que los elementos del mapa estén correctamente estructurados',
       validate: (mapa) => {
         const errors = [];
         const warnings = [];
@@ -87,21 +87,21 @@ const CrearMapaValidation = ({
         
         const elementos = mapa.contenido.elementos;
         
-        // Verificar que cada elemento tenga ID ºnico
+        // Verificar que cada elemento tenga ID único
         const ids = elementos.map(el => el._id);
         const uniqueIds = new Set(ids);
         if (ids.length !== uniqueIds.size) {
           errors.push('Hay elementos con IDs duplicados');
         }
         
-        // Verificar que cada elemento tenga posici³n v¡lida
+        // Verificar que cada elemento tenga posición válida
         elementos.forEach((el, index) => {
           if (!el.posicion || typeof el.posicion.x !== 'number' || typeof el.posicion.y !== 'number') {
-            errors.push(`Elemento ${index + 1} no tiene posici³n v¡lida`);
+            errors.push(`Elemento ${index + 1} no tiene posición válida`);
           }
           
           if (el.posicion && (el.posicion.x < 0 || el.posicion.y < 0)) {
-            warnings.push(`Elemento ${index + 1} tiene posici³n negativa`);
+            warnings.push(`Elemento ${index + 1} tiene posición negativa`);
           }
         });
         
@@ -112,7 +112,7 @@ const CrearMapaValidation = ({
     {
       id: 'mesas_sillas',
       name: 'Mesas y Sillas',
-      description: 'Verificar la configuraci³n de mesas y sillas',
+      description: 'Verificar la configuración de mesas y sillas',
       validate: (mapa) => {
         const errors = [];
         const warnings = [];
@@ -129,7 +129,7 @@ const CrearMapaValidation = ({
           warnings.push('No hay sillas configuradas en el mapa');
         }
         
-        // Verificar que las sillas tengan mesa padre v¡lida
+        // Verificar que las sillas tengan mesa padre válida
         sillas.forEach((silla, index) => {
           if (silla.parentId) {
             const mesaPadre = mesas.find(m => m._id === silla.parentId);
@@ -139,15 +139,15 @@ const CrearMapaValidation = ({
           }
         });
         
-        // Verificar que las mesas tengan dimensiones v¡lidas
+        // Verificar que las mesas tengan dimensiones válidas
         mesas.forEach((mesa, index) => {
           if (mesa.shape === 'rect') {
             if (!mesa.width || !mesa.height || mesa.width <= 0 || mesa.height <= 0) {
-              errors.push(`Mesa ${index + 1} tiene dimensiones inv¡lidas`);
+              errors.push(`Mesa ${index + 1} tiene dimensiones inválidas`);
             }
           } else if (mesa.shape === 'circle') {
             if (!mesa.radius || mesa.radius <= 0) {
-              errors.push(`Mesa ${index + 1} tiene radio inv¡lido`);
+              errors.push(`Mesa ${index + 1} tiene radio inválido`);
             }
           }
         });
@@ -158,8 +158,8 @@ const CrearMapaValidation = ({
     
     {
       id: 'zones_configuration',
-      name: 'Configuraci³n de Zonas',
-      description: 'Verificar la configuraci³n de zonas y precios',
+      name: 'Configuración de Zonas',
+      description: 'Verificar la configuración de zonas y precios',
       validate: (mapa) => {
         const errors = [];
         const warnings = [];
@@ -176,7 +176,7 @@ const CrearMapaValidation = ({
           if (el.zonaId) {
             const zona = zonas.find(z => z.id === el.zonaId || z._id === el.zonaId);
             if (!zona) {
-              errors.push(`Elemento ${index + 1} est¡ asignado a una zona inexistente`);
+              errors.push(`Elemento ${index + 1} está asignado a una zona inexistente`);
             }
           }
         });
@@ -187,8 +187,8 @@ const CrearMapaValidation = ({
     
     {
       id: 'performance_optimization',
-      name: 'Optimizaci³n de Rendimiento',
-      description: 'Verificar aspectos de rendimiento y optimizaci³n',
+      name: 'Optimización de Rendimiento',
+      description: 'Verificar aspectos de rendimiento y optimización',
       validate: (mapa) => {
         const errors = [];
         const warnings = [];
@@ -199,7 +199,7 @@ const CrearMapaValidation = ({
           warnings.push('El mapa tiene muchos elementos, esto puede afectar el rendimiento');
         }
         
-        // Verificar elementos fuera de los l­mites del mapa
+        // Verificar elementos fuera de los límites del mapa
         const dimensions = mapa.contenido?.configuracion?.dimensions;
         if (dimensions) {
           elementos.forEach((el, index) => {
@@ -208,7 +208,7 @@ const CrearMapaValidation = ({
               const maxY = dimensions.height;
               
               if (el.posicion.x > maxX || el.posicion.y > maxY) {
-                warnings.push(`Elemento ${index + 1} est¡ fuera de los l­mites del mapa`);
+                warnings.push(`Elemento ${index + 1} está fuera de los límites del mapa`);
               }
             }
           });
@@ -228,11 +228,11 @@ const CrearMapaValidation = ({
         
         const elementos = mapa.contenido?.elementos || [];
         
-        // Verificar que las sillas tengan nºmeros
+        // Verificar que las sillas tengan números
         const sillas = elementos.filter(el => el.type === 'silla');
         sillas.forEach((silla, index) => {
           if (!silla.numero) {
-            warnings.push(`Silla ${index + 1} no tiene nºmero asignado`);
+            warnings.push(`Silla ${index + 1} no tiene número asignado`);
           }
         });
         
@@ -281,12 +281,12 @@ const CrearMapaValidation = ({
       <Card>
         <Title level={3} className="mb-6">
           <SafetyOutlined className="mr-2" />
-          Validaci³n del Mapa
+          Validación del Mapa
         </Title>
         
         <Paragraph className="text-gray-600 mb-6">
-          Antes de publicar el mapa, es importante verificar que todo est© correctamente configurado. 
-          La validaci³n revisar¡ la integridad, estructura y configuraci³n del mapa.
+          Antes de publicar el mapa, es importante verificar que todo esté correctamente configurado. 
+          La validación revisará la integridad, estructura y configuración del mapa.
         </Paragraph>
 
         {/* ===== ESTADSTICAS DE VALIDACI“N ===== */}
@@ -344,14 +344,14 @@ const CrearMapaValidation = ({
             loading={isProcessing}
             disabled={isProcessing}
           >
-            {isProcessing ? 'Validando...' : 'Iniciar Validaci³n'}
+            {isProcessing ? 'Validando...' : 'Iniciar Validación'}
           </Button>
         </div>
 
         {/* ===== PROGRESO DE VALIDACI“N ===== */}
         {isProcessing && (
           <div className="mb-6">
-            <Text className="block mb-2">Progreso de validaci³n:</Text>
+            <Text className="block mb-2">Progreso de validación:</Text>
             <Progress 
               percent={progress} 
               status="active"
@@ -394,7 +394,7 @@ const CrearMapaValidation = ({
             {results.suggestions && results.suggestions.length > 0 && (
               <Alert
                 message={`${results.suggestions.length} Sugerencia(s)`}
-                description="Estas mejoras pueden hacer tu mapa m¡s efectivo:"
+                description="Estas mejoras pueden hacer tu mapa más efectivo:"
                 type="info"
                 showIcon
                 icon={<InfoCircleOutlined />}
@@ -490,10 +490,10 @@ const CrearMapaValidation = ({
                   <div>
                     <CheckCircleOutlined className="text-6xl text-green-500 mb-4" />
                     <Title level={4} className="text-green-600">
-                      ¡Validaci³n Exitosa!
+                      áValidación Exitosa!
                     </Title>
                     <Text className="text-gray-600">
-                      Tu mapa ha pasado todas las verificaciones cr­ticas y est¡ listo para continuar.
+                      Tu mapa ha pasado todas las verificaciones críticas y está listo para continuar.
                     </Text>
                     <div className="mt-4">
                       <Button 
@@ -510,7 +510,7 @@ const CrearMapaValidation = ({
                   <div>
                     <ExclamationCircleOutlined className="text-6xl text-red-500 mb-4" />
                     <Title level={4} className="text-red-600">
-                      Validaci³n Fallida
+                      Validación Fallida
                     </Title>
                     <Text className="text-gray-600">
                       Hay errores que deben corregirse antes de continuar. 
@@ -528,7 +528,7 @@ const CrearMapaValidation = ({
         <div className="mt-6">
           <Title level={4} className="mb-4">
             <InfoCircleOutlined className="mr-2" />
-            Reglas de Validaci³n
+            Reglas de Validación
           </Title>
           
           <Collapse defaultActiveKey={['0']}>
@@ -553,11 +553,11 @@ const CrearMapaValidation = ({
                       error.includes(rule.id)
                     ) ? (
                       <Tag color="red" icon={<ExclamationCircleOutlined />}>
-                        Fall³ validaci³n
+                        Falló validación
                       </Tag>
                     ) : (
                       <Tag color="green" icon={<CheckCircleOutlined />}>
-                        Pas³ validaci³n
+                        Pasó validación
                       </Tag>
                     )}
                   </div>
@@ -573,14 +573,14 @@ const CrearMapaValidation = ({
 
 // ===== FUNCI“N DE VALIDACI“N ESTTICA =====
 CrearMapaValidation.validate = async (mapa) => {
-  // Simular validaci³n as­ncrona
+  // Simular validación asíncrona
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   const errors = [];
   const warnings = [];
   const suggestions = [];
   
-  // Validaci³n b¡sica
+  // Validación básica
   if (!mapa.nombre || mapa.nombre.trim().length < 3) {
     errors.push('El nombre del mapa debe tener al menos 3 caracteres');
   }
@@ -589,17 +589,17 @@ CrearMapaValidation.validate = async (mapa) => {
     errors.push('El mapa debe contener al menos un elemento');
   }
   
-  // Validaci³n de elementos
+  // Validación de elementos
   if (mapa.contenido?.elementos) {
     const elementos = mapa.contenido.elementos;
     
     elementos.forEach((el, index) => {
       if (!el.posicion || typeof el.posicion.x !== 'number' || typeof el.posicion.y !== 'number') {
-        errors.push(`Elemento ${index + 1} no tiene posici³n v¡lida`);
+        errors.push(`Elemento ${index + 1} no tiene posición válida`);
       }
       
       if (el.type === 'silla' && !el.numero) {
-        warnings.push(`Silla ${index + 1} no tiene nºmero asignado`);
+        warnings.push(`Silla ${index + 1} no tiene número asignado`);
       }
       
       if (el.type === 'mesa' && (!el.nombre || el.nombre.trim().length === 0)) {
@@ -609,7 +609,7 @@ CrearMapaValidation.validate = async (mapa) => {
     
     // Sugerencias
     if (elementos.length > 50) {
-      suggestions.push('Considera agrupar elementos similares para mejor organizaci³n');
+      suggestions.push('Considera agrupar elementos similares para mejor organización');
     }
     
     if (!mapa.contenido.zonas || mapa.contenido.zonas.length === 0) {

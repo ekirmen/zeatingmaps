@@ -21,7 +21,7 @@ const MesaSillaManager = ({
 
   useEffect(() => {
     if (mesa && visible) {
-      // Cargar configuraci³n existente si la mesa ya tiene sillas
+      // Cargar configuración existente si la mesa ya tiene sillas
       if (mesa.sillasConfig) {
         setSillasConfig(mesa.sillasConfig);
       }
@@ -141,7 +141,7 @@ const MesaSillaManager = ({
       case 'hexagon':
         return (
           <div className="space-y-4">
-            <Title level={5}>Sillas por lado del hex¡gono</Title>
+            <Title level={5}>Sillas por lado del hexágono</Title>
             <Row gutter={8}>
               {[0, 1, 2, 3, 4, 5].map((lado) => (
                 <Col span={4} key={lado}>
@@ -284,7 +284,7 @@ const MesaSillaManager = ({
 
         <div className="bg-gray-50 p-3 rounded">
           <Text type="secondary" className="text-sm">
-            ðŸ’¡ Las sillas se colocar¡n autom¡ticamente alrededor de la mesa segºn la configuraci³n.
+            ðŸ’á Las sillas se colocarán automáticamente alrededor de la mesa según la configuración.
             {mesa.shape === 'circle' && ' Para mesas circulares, las sillas se distribuyen uniformemente.'}
             {mesa.shape === 'hexagon' && ' Para mesas hexagonales, las sillas se colocan en cada lado.'}
             {mesa.shape === 'star' && ' Para mesas en forma de estrella, las sillas se colocan en cada punto.'}

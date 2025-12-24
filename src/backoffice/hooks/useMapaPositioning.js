@@ -33,7 +33,7 @@ export const useMapaPositioning = (elements, setElements) => {
       });
     });
 
-    message.success(`Elementos ajustados a cuadr­cula de ${gridSize}px`);
+    message.success(`Elementos ajustados a cuadrícula de ${gridSize}px`);
   };
 
   const snapToGrid = () => {

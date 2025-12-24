@@ -57,7 +57,7 @@ const TenantDetail = () => {
       if (tenantError) throw tenantError;
       setTenant(tenantData);
 
-      // Cargar estad­sticas
+      // Cargar estadísticas
       const { data: eventsData } = await supabase
         .from('eventos')
         .select('id, estado')
@@ -158,12 +158,12 @@ const TenantDetail = () => {
 
   const invoiceColumns = [
     {
-      title: 'Nºmero',
+      title: 'Número',
       dataIndex: 'invoice_number',
       key: 'invoice_number',
     },
     {
-      title: 'Descripci³n',
+      title: 'Descripción',
       dataIndex: 'description',
       key: 'description',
     },
@@ -280,11 +280,11 @@ const TenantDetail = () => {
         </div>
       </div>
 
-      {/* Informaci³n b¡sica */}
+      {/* Información básica */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col span={24}>
           <Card>
-            <Descriptions title="Informaci³n de la Empresa" bordered>
+            <Descriptions title="Información de la Empresa" bordered>
               <Descriptions.Item label="Nombre" span={3}>
                 {tenant.company_name}
               </Descriptions.Item>
@@ -309,7 +309,7 @@ const TenantDetail = () => {
               <Descriptions.Item label="Email de Contacto" span={2}>
                 {tenant.contact_email}
               </Descriptions.Item>
-              <Descriptions.Item label="Tel©fono">
+              <Descriptions.Item label="Teléfono">
                 {tenant.contact_phone || 'No especificado'}
               </Descriptions.Item>
               <Descriptions.Item label="Colores Personalizados" span={3}>
@@ -345,7 +345,7 @@ const TenantDetail = () => {
         </Col>
       </Row>
 
-      {/* Estad­sticas */}
+      {/* Estadísticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -390,14 +390,14 @@ const TenantDetail = () => {
         </Col>
       </Row>
 
-      {/* Tabs con informaci³n detallada */}
+      {/* Tabs con información detallada */}
       <Card>
         <Tabs defaultActiveKey="billing">
           <TabPane 
             tab={
               <span>
                 <CreditCardOutlined />
-                Facturaci³n
+                Facturación
               </span>
             } 
             key="billing"
@@ -423,7 +423,7 @@ const TenantDetail = () => {
             tab={
               <span>
                 <BarChartOutlined />
-                M©tricas de Uso
+                Métricas de Uso
               </span>
             } 
             key="metrics"
@@ -444,35 +444,35 @@ const TenantDetail = () => {
             tab={
               <span>
                 <SettingOutlined />
-                Configuraci³n
+                Configuración
               </span>
             } 
             key="settings"
           >
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <Card title="Configuraci³n del Plan">
+                <Card title="Configuración del Plan">
                   <Descriptions column={1}>
                     <Descriptions.Item label="Plan Actual">
                       <Tag color={getPlanColor(tenant.plan_type)}>
                         {tenant.plan_type?.toUpperCase() || 'BASIC'}
                       </Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label="L­mite de Eventos">
+                    <Descriptions.Item label="Límite de Eventos">
                       {tenant.plan_type === 'basic' ? '5 eventos' :
                        tenant.plan_type === 'pro' ? '50 eventos' :
-                       tenant.plan_type === 'enterprise' ? 'Sin l­mite' : '5 eventos'}
+                       tenant.plan_type === 'enterprise' ? 'Sin límite' : '5 eventos'}
                     </Descriptions.Item>
-                    <Descriptions.Item label="L­mite de Usuarios">
+                    <Descriptions.Item label="Límite de Usuarios">
                       {tenant.plan_type === 'basic' ? '100 usuarios' :
                        tenant.plan_type === 'pro' ? '1000 usuarios' :
-                       tenant.plan_type === 'enterprise' ? 'Sin l­mite' : '100 usuarios'}
+                       tenant.plan_type === 'enterprise' ? 'Sin límite' : '100 usuarios'}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
               </Col>
               <Col span={12}>
-                <Card title="Configuraci³n de Dominio">
+                <Card title="Configuración de Dominio">
                   <Descriptions column={1}>
                     <Descriptions.Item label="Subdominio">
                       {tenant.subdomain}.ticketera.com
@@ -480,7 +480,7 @@ const TenantDetail = () => {
                     <Descriptions.Item label="Estado SSL">
                       <Tag color="green">Activo</Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label="Configuraci³n DNS">
+                    <Descriptions.Item label="Configuración DNS">
                       <Tag color="green">Configurado</Tag>
                     </Descriptions.Item>
                   </Descriptions>
@@ -503,7 +503,7 @@ const TenantDetail = () => {
                 <p>Empresa creada - {new Date(tenant.created_at).toLocaleDateString('es-ES')}</p>
               </Timeline.Item>
               <Timeline.Item color="blue">
-                <p>Configuraci³n inicial completada</p>
+                <p>Configuración inicial completada</p>
               </Timeline.Item>
               <Timeline.Item color="blue">
                 <p>Primer evento creado</p>
@@ -536,7 +536,7 @@ const TenantDetail = () => {
                 label="Subdominio"
                 rules={[
                   { required: true, message: 'El subdominio es requerido' },
-                  { pattern: /^[a-z0-9-]+$/, message: 'Solo letras minºsculas, nºmeros y guiones' }
+                  { pattern: /^[a-z0-9-]+$/, message: 'Solo letras minúsculas, números y guiones' }
                 ]}
               >
                 <Input 
@@ -563,7 +563,7 @@ const TenantDetail = () => {
                 label="Email de Contacto"
                 rules={[
                   { required: true, message: 'El email es requerido' },
-                  { type: 'email', message: 'Email inv¡lido' }
+                  { type: 'email', message: 'Email inválido' }
                 ]}
               >
                 <Input placeholder="contacto@miempresa.com" />
@@ -572,7 +572,7 @@ const TenantDetail = () => {
             <Col span={12}>
               <Form.Item
                 name="contact_phone"
-                label="Tel©fono"
+                label="Teléfono"
               >
                 <Input placeholder="+1 234 567 8900" />
               </Form.Item>

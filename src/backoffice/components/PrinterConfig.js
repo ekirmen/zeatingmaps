@@ -126,7 +126,7 @@ const PrinterConfig = () => {
       if (success) {
         message.success('Conexión de impresora exitosa');
       } else {
-        message.error('Error en la conexi³n de impresora');
+        message.error('Error en la conexión de impresora');
       }
     } catch (error) {
       console.error('Error testing printer:', error);
@@ -173,7 +173,7 @@ const PrinterConfig = () => {
       message.success('Configuración guardada exitosamente');
     } catch (error) {
       console.error('Error saving config:', error);
-      message.error('Error al guardar la configuraci³n');
+      message.error('Error al guardar la configuración');
     } finally {
       setLoading(false);
     }
@@ -316,7 +316,7 @@ const PrinterConfig = () => {
               onClick={() => applyTemplate('default')}
             >
               <div className="text-center">
-                <Title level={5}>ðŸŽ­ Estándar</Title>
+                <Title level={5}>ðŸŽí Estándar</Title>
                 <Text type="secondary">80mm - Eventos normales</Text>
                 <br />
                 <Text type="secondary">Formato profesional</Text>
@@ -331,8 +331,8 @@ const PrinterConfig = () => {
               onClick={() => applyTemplate('small')}
             >
               <div className="text-center">
-                <Title level={5}>ðŸ“± Pequeño</Title>
-                <Text type="secondary">58mm - Eventos peque±os</Text>
+                <Title level={5}>ðŸ“ñ Pequeño</Title>
+                <Text type="secondary">58mm - Eventos pequeños</Text>
                 <br />
                 <Text type="secondary">Compacto y económico</Text>
               </div>
@@ -346,7 +346,7 @@ const PrinterConfig = () => {
               onClick={() => applyTemplate('premium')}
             >
               <div className="text-center">
-                <Title level={5}>­ Premium</Title>
+                <Title level={5}>í Premium</Title>
                 <Text type="secondary">112mm - Eventos premium</Text>
                 <br />
                 <Text type="secondary">Máxima calidad</Text>
@@ -458,7 +458,7 @@ const PrinterConfig = () => {
             />
           </Form.Item>
 
-          <Form.Item label="Pie de P¡gina">
+          <Form.Item label="Pie de Página">
             <TextArea
               value={formatConfig.footer}
               onChange={(e) => handleFormatChange('footer', e.target.value)}
@@ -501,7 +501,7 @@ const PrinterConfig = () => {
 
       <Alert
         message="Información Importante"
-        description="Asegºrate de que la impresora Boca esté conectada y encendida antes de realizar las pruebas. El sistema detectar¡ automáticamente las impresoras Boca conectadas."
+        description="Asegúrate de que la impresora Boca esté conectada y encendida antes de realizar las pruebas. El sistema detectará automáticamente las impresoras Boca conectadas."
         type="info"
         showIcon
       />

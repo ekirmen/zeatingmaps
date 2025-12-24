@@ -52,7 +52,7 @@ const CompactBoleteria = ({
     loadEventTheme();
   }, [selectedFuncion, getEventTheme, theme]);
 
-  // Calcular estad­sticas de asientos
+  // Calcular estadísticas de asientos
   const calculateSeatStats = useCallback(() => {
     if (!mapa?.contenido) {
       return;
@@ -87,7 +87,7 @@ const CompactBoleteria = ({
         // Determinar estado del asiento
         let seatStatus = elemento.estado || 'disponible';
         
-        // Verificar si est¡ bloqueado
+        // Verificar si está bloqueado
         const isLocked = Array.isArray(lockedSeats) ? lockedSeats.some(lock => lock.seat_id === elemento._id) : false;
         if (isLocked) {
           const lock = Array.isArray(lockedSeats) ? lockedSeats.find(lock => lock.seat_id === elemento._id) : null;
@@ -159,7 +159,7 @@ const CompactBoleteria = ({
       }
     });
 
-    // A±adir precios a las zonas
+    // Añadir precios a las zonas
     Object.keys(zoneData).forEach(zonaId => {
       const detalle = Array.isArray(plantillaPrecios?.detalles) ? plantillaPrecios.detalles.find(d => d.zonaId === zonaId) : null;
       zoneData[zonaId].precio = detalle?.precio || 0;
@@ -173,7 +173,7 @@ const CompactBoleteria = ({
     calculateSeatStats();
   }, [calculateSeatStats]);
 
-  // Funci³n para obtener el color de un estado
+  // Función para obtener el color de un estado
   const getStatusColor = (status) => {
     switch (status) {
       case 'disponible':
@@ -192,13 +192,13 @@ const CompactBoleteria = ({
     }
   };
 
-  // Funci³n para obtener el porcentaje de ocupaci³n
+  // Función para obtener el porcentaje de ocupación
   const getOccupancyPercentage = (zone) => {
     const occupied = zone.vendidos + zone.reservados + zone.seleccionados;
     return zone.total > 0 ? Math.round((occupied / zone.total) * 100) : 0;
   };
 
-  // Funci³n para manejar clic en asiento
+  // Función para manejar clic en asiento
   const handleSeatClick = (seat) => {
     if (onSeatClick) {
       onSeatClick(seat);
@@ -207,9 +207,9 @@ const CompactBoleteria = ({
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
-      <Title level={2} className="mb-4">ðŸŽ« Boleter­a Compacta</Title>
+      <Title level={2} className="mb-4">ðŸŽ« Boletería Compacta</Title>
       
-      {/* Header con estad­sticas generales */}
+      {/* Header con estadísticas generales */}
       <Card className="mb-4">
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={6}>
@@ -248,7 +248,7 @@ const CompactBoleteria = ({
         
         {/* Barra de progreso general */}
         <div className="mt-4">
-          <Text strong>Ocupaci³n General: </Text>
+          <Text strong>Ocupación General: </Text>
           <Progress 
             percent={seatStats.total > 0 ? Math.round(((seatStats.vendidos + seatStats.reservados + seatStats.seleccionados) / seatStats.total) * 100) : 0}
             status="active"
@@ -262,13 +262,13 @@ const CompactBoleteria = ({
 
       {/* Tabs para cambiar entre vistas */}
       <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-4">
-        <TabPane tab="ðŸ“Š Estad­sticas" key="stats" />
-        <TabPane tab="ðŸ—ºï¸ Mapa Visual" key="map" />
+        <TabPane tab="ðŸ“Š Estadísticas" key="stats" />
+        <TabPane tab="ðŸ—úï¸ Mapa Visual" key="map" />
       </Tabs>
 
       {activeTab === 'stats' ? (
         <>
-          {/* Zonas y estad­sticas */}
+          {/* Zonas y estadísticas */}
           <Row gutter={[16, 16]}>
             {zoneStats.map((zone, index) => (
               <Col xs={24} sm={12} lg={8} xl={6} key={index}>
@@ -284,13 +284,13 @@ const CompactBoleteria = ({
                     </Space>
                   }
                   extra={
-                    <Tooltip title="Ocupaci³n">
+                    <Tooltip title="Ocupación">
                       <Text type="secondary">{getOccupancyPercentage(zone)}%</Text>
                     </Tooltip>
                   }
                 >
                   <div className="space-y-2">
-                    {/* Estad­sticas de la zona */}
+                    {/* Estadísticas de la zona */}
                     <Row gutter={[8, 8]}>
                       <Col span={12}>
                         <Statistic
@@ -407,12 +407,12 @@ const CompactBoleteria = ({
       ) : (
         /* Vista del mapa visual */
         <div className="text-center p-8">
-          <Title level={3}>ðŸ—ºï¸ Mapa Visual</Title>
-          <Text>Esta funcionalidad estar¡ disponible pr³ximamente</Text>
+          <Title level={3}>ðŸ—úï¸ Mapa Visual</Title>
+          <Text>Esta funcionalidad estará disponible próximamente</Text>
         </div>
       )}
 
-      {/* Bot³n de actualizar */}
+      {/* Botón de actualizar */}
       <div className="mt-4 text-center">
         <Button 
           type="primary" 
@@ -420,7 +420,7 @@ const CompactBoleteria = ({
           onClick={calculateSeatStats}
           loading={loading}
         >
-          ðŸ”„ Actualizar Estad­sticas
+          ðŸ”„ Actualizar Estadísticas
         </Button>
       </div>
     </div>

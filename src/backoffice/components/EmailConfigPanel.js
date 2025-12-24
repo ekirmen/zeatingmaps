@@ -49,7 +49,7 @@ const EmailConfigPanel = () => {
         form.setFieldsValue(emailConfig);
       }
     } catch (error) {
-      message.error('Error cargando configuraci³n de correo');
+      message.error('Error cargando configuración de correo');
       console.error(error);
     } finally {
       setLoading(false);
@@ -77,22 +77,22 @@ const EmailConfigPanel = () => {
     try {
       setLoading(true);
       
-      // Validar configuraci³n
+      // Validar configuración
       const validation = EmailConfigService.validateEmailConfig(values);
       if (!validation.isValid) {
-        message.error(`Errores de validaci³n: ${validation.errors.join(', ')}`);
+        message.error(`Errores de validación: ${validation.errors.join(', ')}`);
         return;
       }
 
-      // Guardar configuraci³n
+      // Guardar configuración
       await EmailConfigService.saveEmailConfig(values);
-      message.success('Configuraci³n de correo guardada correctamente');
+      message.success('Configuración de correo guardada correctamente');
       
-      // Recargar configuraci³n
+      // Recargar configuración
       await loadEmailConfig();
       
     } catch (error) {
-      message.error('Error guardando configuraci³n de correo');
+      message.error('Error guardando configuración de correo');
       console.error(error);
     } finally {
       setLoading(false);
@@ -132,7 +132,7 @@ const EmailConfigPanel = () => {
         <div className="mb-6">
           <Title level={2}>
             <MailOutlined className="mr-2" />
-            Configuraci³n de Correo
+            Configuración de Correo
           </Title>
           <Text type="secondary">
             Configura el servidor SMTP para enviar correos con tickets desde tu empresa
@@ -140,8 +140,8 @@ const EmailConfigPanel = () => {
         </div>
 
         <Alert
-          message="Informaci³n importante"
-          description="Para usar Gmail, Outlook u otros proveedores, necesitar¡s generar contrase±as de aplicaci³n o habilitar la autenticaci³n de dos factores."
+          message="Información importante"
+          description="Para usar Gmail, Outlook u otros proveedores, necesitarás generar contraseñas de aplicación o habilitar la autenticación de dos factores."
           type="info"
           showIcon
           className="mb-6"
@@ -156,7 +156,7 @@ const EmailConfigPanel = () => {
             smtp_secure: true
           }}
         >
-          {/* Selecci³n de proveedor */}
+          {/* Selección de proveedor */}
           <Card size="small" className="mb-6">
             <Title level={4}>
               <SettingOutlined className="mr-2" />
@@ -186,10 +186,10 @@ const EmailConfigPanel = () => {
 
           <Divider />
 
-          {/* Configuraci³n SMTP */}
+          {/* Configuración SMTP */}
           <Title level={4}>
             <SecurityScanOutlined className="mr-2" />
-            Configuraci³n del Servidor SMTP
+            Configuración del Servidor SMTP
           </Title>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -221,16 +221,16 @@ const EmailConfigPanel = () => {
 
             <Form.Item
               name="smtp_password"
-              label="Contrase±a SMTP"
-              rules={[{ required: true, message: 'Contrase±a SMTP es requerida' }]}
+              label="Contraseña SMTP"
+              rules={[{ required: true, message: 'Contraseña SMTP es requerida' }]}
             >
-              <Input.Password placeholder="Contrase±a o contrase±a de aplicaci³n" />
+              <Input.Password placeholder="Contraseña o contraseña de aplicación" />
             </Form.Item>
           </div>
 
           <Form.Item
             name="smtp_secure"
-            label="Conexi³n segura (SSL/TLS)"
+            label="Conexión segura (SSL/TLS)"
             valuePropName="checked"
           >
             <Switch />
@@ -238,10 +238,10 @@ const EmailConfigPanel = () => {
 
           <Divider />
 
-          {/* Configuraci³n del remitente */}
+          {/* Configuración del remitente */}
           <Title level={4}>
             <MailOutlined className="mr-2" />
-            Configuraci³n del Remitente
+            Configuración del Remitente
           </Title>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -250,7 +250,7 @@ const EmailConfigPanel = () => {
               label="Email del remitente"
               rules={[
                 { required: true, message: 'Email del remitente es requerido' },
-                { type: 'email', message: 'Formato de email inv¡lido' }
+                { type: 'email', message: 'Formato de email inválido' }
               ]}
             >
               <Input placeholder="ventas@tuempresa.com" />
@@ -270,7 +270,7 @@ const EmailConfigPanel = () => {
               name="reply_to_email"
               label="Email de respuesta (opcional)"
               rules={[
-                { type: 'email', message: 'Formato de email inv¡lido' }
+                { type: 'email', message: 'Formato de email inválido' }
               ]}
             >
               <Input placeholder="soporte@tuempresa.com" />
@@ -286,7 +286,7 @@ const EmailConfigPanel = () => {
 
           <Divider />
 
-          {/* Botones de acci³n */}
+          {/* Botones de acción */}
           <div className="flex justify-end space-x-4">
             <Button
               type="default"
@@ -295,7 +295,7 @@ const EmailConfigPanel = () => {
               loading={testing}
               size="large"
             >
-              Probar Configuraci³n
+              Probar Configuración
             </Button>
 
             <Button
@@ -305,23 +305,23 @@ const EmailConfigPanel = () => {
               loading={loading}
               size="large"
             >
-              Guardar Configuraci³n
+              Guardar Configuración
             </Button>
           </div>
         </Form>
 
-        {/* Informaci³n adicional */}
+        {/* Información adicional */}
         <Collapse className="mt-6">
-          <Panel header="Informaci³n adicional y ayuda" key="1">
+          <Panel header="Información adicional y ayuda" key="1">
             <div className="space-y-4">
               <div>
                 <Title level={5}>Gmail</Title>
                 <Paragraph>
                   Para usar Gmail, necesitas:
                   <ol>
-                    <li>Habilitar la verificaci³n en dos pasos</li>
-                    <li>Generar una contrase±a de aplicaci³n</li>
-                    <li>Usar esa contrase±a en lugar de tu contrase±a normal</li>
+                    <li>Habilitar la verificación en dos pasos</li>
+                    <li>Generar una contraseña de aplicación</li>
+                    <li>Usar esa contraseña en lugar de tu contraseña normal</li>
                   </ol>
                 </Paragraph>
               </div>
@@ -331,8 +331,8 @@ const EmailConfigPanel = () => {
                 <Paragraph>
                   Para Outlook, necesitas:
                   <ol>
-                    <li>Habilitar la autenticaci³n de dos factores</li>
-                    <li>Generar una contrase±a de aplicaci³n</li>
+                    <li>Habilitar la autenticación de dos factores</li>
+                    <li>Generar una contraseña de aplicación</li>
                     <li>Usar el host smtp-mail.outlook.com</li>
                   </ol>
                 </Paragraph>
@@ -344,7 +344,7 @@ const EmailConfigPanel = () => {
                   Si tienes tu propio servidor de correo:
                   <ol>
                     <li>Verifica el host y puerto con tu proveedor</li>
-                    <li>Asegºrate de que el puerto est© abierto</li>
+                    <li>Asegúrate de que el puerto esté abierto</li>
                     <li>Verifica si requiere SSL/TLS</li>
                   </ol>
                 </Paragraph>

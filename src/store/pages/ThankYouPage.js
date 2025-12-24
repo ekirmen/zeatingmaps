@@ -37,7 +37,7 @@ const ThankYouPage = () => {
   };
 
   useEffect(() => {
-    // Obtener datos de la compra desde el estado de navegaci³n
+    // Obtener datos de la compra desde el estado de navegación
     if (location.state?.purchaseData) {
       setPurchaseData(location.state.purchaseData);
       loadFacebookPixel(location.state.purchaseData);
@@ -54,7 +54,7 @@ const ThankYouPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
-      {/* P­xel de Facebook para Purchase */}
+      {/* Píxel de Facebook para Purchase */}
       {facebookPixel && shouldTrackOnPage(facebookPixel, 'thank_you_page') && purchaseData && (
         <FacebookPixel
           pixelId={facebookPixel.pixel_id}
@@ -80,10 +80,10 @@ const ThankYouPage = () => {
               className="mb-4"
             />
             <Title level={2} className="text-green-600">
-              ¡Gracias por tu Compra!
+              áGracias por tu Compra!
             </Title>
             <Text type="secondary" className="text-lg">
-              Tu transacci³n ha sido procesada exitosamente
+              Tu transacción ha sido procesada exitosamente
             </Text>
           </div>
 
@@ -98,7 +98,7 @@ const ThankYouPage = () => {
                   <Text>{purchaseData.eventName}</Text>
                 </div>
                 <div className="flex justify-between">
-                  <Text strong>Nºmero de Tickets:</Text>
+                  <Text strong>Número de Tickets:</Text>
                   <Text>{purchaseData.ticketCount}</Text>
                 </div>
                 <div className="flex justify-between">
@@ -109,7 +109,7 @@ const ThankYouPage = () => {
                 </div>
                 {purchaseData.transactionId && (
                   <div className="flex justify-between">
-                    <Text strong>ID de Transacci³n:</Text>
+                    <Text strong>ID de Transacción:</Text>
                     <Text code>{purchaseData.transactionId}</Text>
                   </div>
                 )}
@@ -118,8 +118,8 @@ const ThankYouPage = () => {
           )}
 
           <Alert
-            message="Confirmaci³n Enviada"
-            description="Hemos enviado un email de confirmaci³n con los detalles de tu compra. Revisa tu bandeja de entrada."
+            message="Confirmación Enviada"
+            description="Hemos enviado un email de confirmación con los detalles de tu compra. Revisa tu bandeja de entrada."
             type="success"
             showIcon
             className="mb-6"

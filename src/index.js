@@ -73,7 +73,7 @@ class ErrorBoundary extends React.Component {
           maxWidth: '600px',
           margin: '0 auto'
         }}>
-          <h1 style={{ color: '#d32f2f' }}>¡Ups! Algo salió mal</h1>
+          <h1 style={{ color: '#d32f2f' }}>áUps! Algo salió mal</h1>
           <p style={{ margin: '20px 0', color: '#555' }}>
             {this.state.error?.toString() || 'Error desconocido'}
           </p>

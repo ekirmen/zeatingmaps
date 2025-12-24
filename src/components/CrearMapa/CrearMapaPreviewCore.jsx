@@ -68,7 +68,7 @@ const CrearMapaPreviewCore = ({
       // Calcular escala para ajustar el mapa al contenedor
       const scaleX = containerWidth / width;
       const scaleY = containerHeight / height;
-      const newScale = Math.min(scaleX, scaleY, 1); // No escalar m¡s all¡ del 100%
+      const newScale = Math.min(scaleX, scaleY, 1); // No escalar más allá del 100%
       
       setScale(newScale);
       
@@ -102,7 +102,7 @@ const CrearMapaPreviewCore = ({
     };
   }, [mapa?.contenido?.configuracion?.background?.image]);
 
-  // Verificar que el mapa tenga dimensiones v¡lidas
+  // Verificar que el mapa tenga dimensiones válidas
   const getMapDimensions = () => {
     if (mapa?.contenido?.configuracion?.dimensions) {
       return mapa.contenido.configuracion.dimensions;
@@ -361,7 +361,7 @@ const CrearMapaPreviewCore = ({
               Vista Previa: {mapa?.nombre || 'Mapa'}
             </Title>
             <Text type="secondary">
-              {mapa?.descripcion || 'Revisa c³mo se ver¡ tu mapa antes de publicarlo'}
+              {mapa?.descripcion || 'Revisa cómo se verá tu mapa antes de publicarlo'}
             </Text>
           </Col>
           
@@ -411,7 +411,7 @@ const CrearMapaPreviewCore = ({
             className="h-full"
           >
             <TabPane 
-              tab={<span><InfoCircleOutlined />Informaci³n</span>} 
+              tab={<span><InfoCircleOutlined />Información</span>} 
               key="info"
             >
               <div className="p-4">
@@ -424,13 +424,13 @@ const CrearMapaPreviewCore = ({
                       {mapa?.estado === 'active' ? 'Activo' : 'Borrador'}
                     </Tag>
                   </Descriptions.Item>
-                  <Descriptions.Item label="Descripci³n">
-                    {mapa?.descripcion || 'Sin descripci³n'}
+                  <Descriptions.Item label="Descripción">
+                    {mapa?.descripcion || 'Sin descripción'}
                   </Descriptions.Item>
                   <Descriptions.Item label="Dimensiones">
                     {stats.dimensiones.width} x {stats.dimensiones.height} px
                   </Descriptions.Item>
-                  <Descriptions.Item label="Versi³n">
+                  <Descriptions.Item label="Versión">
                     {mapa?.metadata?.version || '1.0.0'}
                   </Descriptions.Item>
                   <Descriptions.Item label="Creado">
@@ -443,7 +443,7 @@ const CrearMapaPreviewCore = ({
 
                 <Divider />
 
-                <Title level={5}>Estad­sticas</Title>
+                <Title level={5}>Estadísticas</Title>
                 <Row gutter={16}>
                   <Col span={12}>
                     <Statistic
@@ -518,7 +518,7 @@ const CrearMapaPreviewCore = ({
                           <Text strong>
                             {element.type === 'mesa' ? 'Mesa' : 
                              element.type === 'silla' ? 'Silla' : 
-                             element.type === 'conexion' ? 'Conexi³n' : 
+                             element.type === 'conexion' ? 'Conexión' : 
                              element.type}
                           </Text>
                           <Tag color={
@@ -538,12 +538,12 @@ const CrearMapaPreviewCore = ({
                         
                         {element.numero && (
                           <Text className="text-sm text-gray-600 block">
-                            Nºmero: {element.numero}
+                            Número: {element.numero}
                           </Text>
                         )}
                         
                         <Text className="text-xs text-gray-500 block">
-                          Posici³n: ({element.posicion?.x || 0}, {element.posicion?.y || 0})
+                          Posición: ({element.posicion?.x || 0}, {element.posicion?.y || 0})
                         </Text>
                       </div>
                     </List.Item>
@@ -553,23 +553,23 @@ const CrearMapaPreviewCore = ({
             </TabPane>
 
             <TabPane 
-              tab={<span><SettingOutlined />Configuraci³n</span>} 
+              tab={<span><SettingOutlined />Configuración</span>} 
               key="config"
             >
               <div className="p-4">
-                <Title level={5}>Configuraci³n del Mapa</Title>
+                <Title level={5}>Configuración del Mapa</Title>
                 
                 <Collapse defaultActiveKey={["grid", "background"]}>
-                  <Panel header="Cuadr­cula" key="grid">
+                  <Panel header="Cuadrícula" key="grid">
                     <Descriptions column={1} size="small">
-                      <Descriptions.Item label="Tama±o">
+                      <Descriptions.Item label="Tamaño">
                         {mapa?.contenido?.configuracion?.gridSize || 20}px
                       </Descriptions.Item>
                       <Descriptions.Item label="Mostrar">
-                        {mapa?.contenido?.configuracion?.showGrid ? 'S­' : 'No'}
+                        {mapa?.contenido?.configuracion?.showGrid ? 'Sí' : 'No'}
                       </Descriptions.Item>
-                      <Descriptions.Item label="Ajustar a cuadr­cula">
-                        {mapa?.contenido?.configuracion?.snapToGrid ? 'S­' : 'No'}
+                      <Descriptions.Item label="Ajustar a cuadrícula">
+                        {mapa?.contenido?.configuracion?.snapToGrid ? 'Sí' : 'No'}
                       </Descriptions.Item>
                     </Descriptions>
                   </Panel>
@@ -590,7 +590,7 @@ const CrearMapaPreviewCore = ({
                             {Math.round((mapa.contenido.configuracion.background.opacity || 1) * 100)}%
                           </Descriptions.Item>
                           <Descriptions.Item label="Mostrar en web">
-                            {mapa.contenido.configuracion.background.showInWeb ? 'S­' : 'No'}
+                            {mapa.contenido.configuracion.background.showInWeb ? 'Sí' : 'No'}
                           </Descriptions.Item>
                         </Descriptions>
                       </div>
@@ -792,7 +792,7 @@ const CrearMapaPreview = ({
       // Calcular escala para ajustar el mapa al contenedor
       const scaleX = containerWidth / width;
       const scaleY = containerHeight / height;
-      const newScale = Math.min(scaleX, scaleY, 1); // No escalar m¡s all¡ del 100%
+      const newScale = Math.min(scaleX, scaleY, 1); // No escalar más allá del 100%
       
       setScale(newScale);
       
@@ -826,7 +826,7 @@ const CrearMapaPreview = ({
     };
   }, [mapa?.contenido?.configuracion?.background?.image]);
 
-  // Verificar que el mapa tenga dimensiones v¡lidas
+  // Verificar que el mapa tenga dimensiones válidas
   const getMapDimensions = () => {
     if (mapa?.contenido?.configuracion?.dimensions) {
       return mapa.contenido.configuracion.dimensions;
@@ -1085,7 +1085,7 @@ const CrearMapaPreview = ({
               Vista Previa: {mapa?.nombre || 'Mapa'}
             </Title>
             <Text type="secondary">
-              {mapa?.descripcion || 'Revisa c³mo se ver¡ tu mapa antes de publicarlo'}
+              {mapa?.descripcion || 'Revisa cómo se verá tu mapa antes de publicarlo'}
             </Text>
           </Col>
           
@@ -1135,7 +1135,7 @@ const CrearMapaPreview = ({
             className="h-full"
           >
             <TabPane 
-              tab={<span><InfoCircleOutlined />Informaci³n</span>} 
+              tab={<span><InfoCircleOutlined />Información</span>} 
               key="info"
             >
               <div className="p-4">
@@ -1148,13 +1148,13 @@ const CrearMapaPreview = ({
                       {mapa?.estado === 'active' ? 'Activo' : 'Borrador'}
                     </Tag>
                   </Descriptions.Item>
-                  <Descriptions.Item label="Descripci³n">
-                    {mapa?.descripcion || 'Sin descripci³n'}
+                  <Descriptions.Item label="Descripción">
+                    {mapa?.descripcion || 'Sin descripción'}
                   </Descriptions.Item>
                   <Descriptions.Item label="Dimensiones">
                     {stats.dimensiones.width} x {stats.dimensiones.height} px
                   </Descriptions.Item>
-                  <Descriptions.Item label="Versi³n">
+                  <Descriptions.Item label="Versión">
                     {mapa?.metadata?.version || '1.0.0'}
                   </Descriptions.Item>
                   <Descriptions.Item label="Creado">
@@ -1167,7 +1167,7 @@ const CrearMapaPreview = ({
 
                 <Divider />
 
-                <Title level={5}>Estad­sticas</Title>
+                <Title level={5}>Estadísticas</Title>
                 <Row gutter={16}>
                   <Col span={12}>
                     <Statistic
@@ -1242,7 +1242,7 @@ const CrearMapaPreview = ({
                           <Text strong>
                             {element.type === 'mesa' ? 'Mesa' : 
                              element.type === 'silla' ? 'Silla' : 
-                             element.type === 'conexion' ? 'Conexi³n' : 
+                             element.type === 'conexion' ? 'Conexión' : 
                              element.type}
                           </Text>
                           <Tag color={
@@ -1262,12 +1262,12 @@ const CrearMapaPreview = ({
                         
                         {element.numero && (
                           <Text className="text-sm text-gray-600 block">
-                            Nºmero: {element.numero}
+                            Número: {element.numero}
                           </Text>
                         )}
                         
                         <Text className="text-xs text-gray-500 block">
-                          Posici³n: ({element.posicion?.x || 0}, {element.posicion?.y || 0})
+                          Posición: ({element.posicion?.x || 0}, {element.posicion?.y || 0})
                         </Text>
                       </div>
                     </List.Item>
@@ -1277,23 +1277,23 @@ const CrearMapaPreview = ({
             </TabPane>
 
             <TabPane 
-              tab={<span><SettingOutlined />Configuraci³n</span>} 
+              tab={<span><SettingOutlined />Configuración</span>} 
               key="config"
             >
               <div className="p-4">
-                <Title level={5}>Configuraci³n del Mapa</Title>
+                <Title level={5}>Configuración del Mapa</Title>
                 
                 <Collapse defaultActiveKey={['grid', 'background']}>
-                  <Panel header="Cuadr­cula" key="grid">
+                  <Panel header="Cuadrícula" key="grid">
                     <Descriptions column={1} size="small">
-                      <Descriptions.Item label="Tama±o">
+                      <Descriptions.Item label="Tamaño">
                         {mapa?.contenido?.configuracion?.gridSize || 20}px
                       </Descriptions.Item>
                       <Descriptions.Item label="Mostrar">
-                        {mapa?.contenido?.configuracion?.showGrid ? 'S­' : 'No'}
+                        {mapa?.contenido?.configuracion?.showGrid ? 'Sí' : 'No'}
                       </Descriptions.Item>
-                      <Descriptions.Item label="Ajustar a cuadr­cula">
-                        {mapa?.contenido?.configuracion?.snapToGrid ? 'S­' : 'No'}
+                      <Descriptions.Item label="Ajustar a cuadrícula">
+                        {mapa?.contenido?.configuracion?.snapToGrid ? 'Sí' : 'No'}
                       </Descriptions.Item>
                     </Descriptions>
                   </Panel>
@@ -1314,7 +1314,7 @@ const CrearMapaPreview = ({
                             {Math.round((mapa.contenido.configuracion.background.opacity || 1) * 100)}%
                           </Descriptions.Item>
                           <Descriptions.Item label="Mostrar en web">
-                            {mapa.contenido.configuracion.background.showInWeb ? 'S­' : 'No'}
+                            {mapa.contenido.configuracion.background.showInWeb ? 'Sí' : 'No'}
                           </Descriptions.Item>
                         </Descriptions>
                       </div>

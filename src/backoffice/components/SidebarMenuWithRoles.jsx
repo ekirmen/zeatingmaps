@@ -106,7 +106,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
     return null;
   }
 
-  // Función para crear elementos de menú con verificaci³n de permisos
+  // Función para crear elementos de menú con verificación de permisos
   const createMenuItem = (item) => {
     // Verificar si el usuario tiene permisos para este elemento
     if (item.permission && !hasPermission(item.permission)) {
@@ -355,7 +355,7 @@ const SidebarMenuWithRoles = ({ collapsed, onMenuClick, asDrawer = false }) => {
       icon: Settings,
       type: 'submenu',
       submenuId: 'config',
-      permission: 'settings', // Mostrar si tiene al menos uno de los permisos de configuraci³n
+      permission: 'settings', // Mostrar si tiene al menos uno de los permisos de configuración
       items: [
         {
           title: 'Configuración',

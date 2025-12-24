@@ -15,7 +15,7 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
     setLoading(true);
     try {
       await login(values);
-      message.success('Inicio de sesi³n exitoso');
+      message.success('Inicio de sesión exitoso');
       onSuccess();
       onClose();
     } catch (error) {
@@ -71,11 +71,11 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
       title={
         <div className="text-center">
           <h2 className="text-xl font-bold">
-            {isLogin ? 'Iniciar Sesi³n' : 'Registrarse'}
+            {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
           </h2>
           <p className="text-gray-600 mt-1">
             {isLogin 
-              ? 'Inicia sesi³n para completar tu compra' 
+              ? 'Inicia sesión para completar tu compra' 
               : 'Crea una cuenta para continuar'
             }
           </p>
@@ -130,11 +130,11 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
 
               <Form.Item
                 name="telefono"
-                rules={[{ required: true, message: 'Por favor ingresa tu tel©fono' }]}
+                rules={[{ required: true, message: 'Por favor ingresa tu teléfono' }]}
               >
                 <Input
                   prefix={<PhoneOutlined />}
-                  placeholder="Tel©fono"
+                  placeholder="Teléfono"
                 />
               </Form.Item>
             </>
@@ -144,7 +144,7 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
             name="email"
             rules={[
               { required: true, message: 'Por favor ingresa tu email' },
-              { type: 'email', message: 'Por favor ingresa un email v¡lido' }
+              { type: 'email', message: 'Por favor ingresa un email válido' }
             ]}
           >
             <Input
@@ -157,13 +157,13 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
           <Form.Item
             name="password"
             rules={[
-              { required: true, message: 'Por favor ingresa tu contrase±a' },
-              { min: 6, message: 'La contrase±a debe tener al menos 6 caracteres' }
+              { required: true, message: 'Por favor ingresa tu contraseña' },
+              { min: 6, message: 'La contraseña debe tener al menos 6 caracteres' }
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Contrase±a"
+              placeholder="Contraseña"
             />
           </Form.Item>
 
@@ -172,20 +172,20 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
               name="confirmPassword"
               dependencies={['password']}
               rules={[
-                { required: true, message: 'Por favor confirma tu contrase±a' },
+                { required: true, message: 'Por favor confirma tu contraseña' },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
                     if (!value || getFieldValue('password') === value) {
                       return Promise.resolve();
                     }
-                    return Promise.reject(new Error('Las contrase±as no coinciden'));
+                    return Promise.reject(new Error('Las contraseñas no coinciden'));
                   },
                 }),
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined />}
-                placeholder="Confirmar contrase±a"
+                placeholder="Confirmar contraseña"
               />
             </Form.Item>
           )}
@@ -198,7 +198,7 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
               block
               size="large"
             >
-              {isLogin ? 'Iniciar Sesi³n' : 'Registrarse'}
+              {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
             </Button>
           </Form.Item>
         </Form>
@@ -206,8 +206,8 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
         <div className="text-center">
           <Button type="link" onClick={switchMode}>
             {isLogin 
-              ? '¿No tienes cuenta? Reg­strate aqu­' 
-              : '¿Ya tienes cuenta? Inicia sesi³n aqu­'
+              ? '¿No tienes cuenta? Regístrate aquí' 
+              : '¿Ya tienes cuenta? Inicia sesión aquí'
             }
           </Button>
         </div>

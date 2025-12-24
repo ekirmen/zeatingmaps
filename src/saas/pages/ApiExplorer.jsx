@@ -103,7 +103,7 @@ const ApiExplorer = () => {
       name: 'Dashboard Stats',
       method: 'GET',
       url: '/api/saas/dashboard-stats',
-      description: 'Estad­sticas del dashboard SaaS',
+      description: 'Estadísticas del dashboard SaaS',
       sampleData: {
         tenant_id: 'test-tenant',
         period: '30d'
@@ -137,7 +137,7 @@ const ApiExplorer = () => {
       name: 'Test Stripe Connection',
       method: 'POST',
       url: '/api/payment/test-stripe-connection',
-      description: 'Probar conexi³n con Stripe',
+      description: 'Probar conexión con Stripe',
       sampleData: {
         test: true
       }
@@ -147,14 +147,14 @@ const ApiExplorer = () => {
       name: 'Test PayPal Connection',
       method: 'POST',
       url: '/api/payment/test-paypal-connection',
-      description: 'Probar conexi³n con PayPal',
+      description: 'Probar conexión con PayPal',
       sampleData: {
         test: true
       }
     },
   ];
 
-  // Funci³n para ejecutar un endpoint
+  // Función para ejecutar un endpoint
   const executeEndpoint = async (endpoint) => {
     setLoading(true);
     setSelectedEndpoint(endpoint.name);
@@ -206,7 +206,7 @@ const ApiExplorer = () => {
       if (response.ok) {
         message.success(`œ… ${endpoint.name} ejecutado correctamente`);
       } else {
-        message.error(`Œ ${endpoint.name} fall³: ${data.message || 'Error desconocido'}`);
+        message.error(`Œ ${endpoint.name} falló: ${data.message || 'Error desconocido'}`);
       }
 
     } catch (error) {
@@ -231,14 +231,14 @@ const ApiExplorer = () => {
     }
   };
 
-  // Funci³n para ejecutar todos los endpoints
+  // Función para ejecutar todos los endpoints
   const executeAllEndpoints = async () => {
     setLoading(true);
     setResults([]);
     
     for (const endpoint of endpoints) {
       await executeEndpoint(endpoint);
-      // Peque±a pausa entre requests
+      // Pequeña pausa entre requests
       await new Promise(resolve => setTimeout(resolve, 500));
     }
     
@@ -246,13 +246,13 @@ const ApiExplorer = () => {
     message.success('ðŸŽ‰ Todos los endpoints han sido ejecutados');
   };
 
-  // Funci³n para copiar al portapapeles
+  // Función para copiar al portapapeles
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     message.success('ðŸ“‹ Copiado al portapapeles');
   };
 
-  // Funci³n para formatear JSON
+  // Función para formatear JSON
   const formatJson = (obj) => {
     return JSON.stringify(obj, null, 2);
   };
@@ -327,7 +327,7 @@ const ApiExplorer = () => {
     }
   ];
 
-  // Agrupar endpoints por categor­a
+  // Agrupar endpoints por categoría
   const groupedEndpoints = endpoints.reduce((acc, endpoint) => {
     if (!acc[endpoint.category]) {
       acc[endpoint.category] = [];
@@ -440,7 +440,7 @@ const ApiExplorer = () => {
               {results.length === 0 ? (
                 <Alert
                   message="No hay resultados"
-                  description="Ejecuta algunos endpoints para ver los resultados aqu­."
+                  description="Ejecuta algunos endpoints para ver los resultados aquí."
                   type="info"
                   showIcon
                 />
@@ -479,7 +479,7 @@ const ApiExplorer = () => {
               ) : (
                 <Alert
                   message="No hay respuesta"
-                  description="Ejecuta un endpoint para ver la respuesta aqu­."
+                  description="Ejecuta un endpoint para ver la respuesta aquí."
                   type="info"
                   showIcon
                 />
@@ -487,29 +487,29 @@ const ApiExplorer = () => {
             </Card>
           </TabPane>
 
-          <TabPane tab="ðŸ“š Documentaci³n" key="4">
+          <TabPane tab="ðŸ“š Documentación" key="4">
             <Card>
-              <Title level={4}>Documentaci³n de la API</Title>
+              <Title level={4}>Documentación de la API</Title>
               <Paragraph>
                 Esta herramienta te permite probar todos los endpoints de la API de VeeEventos
-                de forma interactiva. Cada endpoint est¡ documentado con ejemplos de uso.
+                de forma interactiva. Cada endpoint está documentado con ejemplos de uso.
               </Paragraph>
 
-              <Title level={5}>Categor­as de Endpoints:</Title>
+              <Title level={5}>Categorías de Endpoints:</Title>
               <ul>
                 <li><strong>Grid Sale:</strong> Endpoints para venta de entradas en modo grid</li>
-                <li><strong>Events:</strong> Gesti³n de eventos</li>
+                <li><strong>Events:</strong> Gestión de eventos</li>
                 <li><strong>SaaS:</strong> Funcionalidades del panel SaaS</li>
-                <li><strong>Analytics:</strong> Reportes y estad­sticas</li>
-                <li><strong>Payment:</strong> Integraci³n con pasarelas de pago</li>
-                <li><strong>Health:</strong> Verificaci³n del estado del sistema</li>
+                <li><strong>Analytics:</strong> Reportes y estadísticas</li>
+                <li><strong>Payment:</strong> Integración con pasarelas de pago</li>
+                <li><strong>Health:</strong> Verificación del estado del sistema</li>
               </ul>
 
-              <Title level={5}>C³mo usar:</Title>
+              <Title level={5}>Cómo usar:</Title>
               <ol>
                 <li>Selecciona un endpoint de la lista</li>
                 <li>Haz clic en "Ejecutar" para probarlo</li>
-                <li>Ve los resultados en la pesta±a "Resultados"</li>
+                <li>Ve los resultados en la pestaña "Resultados"</li>
                 <li>Revisa la respuesta detallada en "Respuesta"</li>
               </ol>
             </Card>

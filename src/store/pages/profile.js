@@ -54,7 +54,7 @@ const Profile = () => {
         statsData
       ] = await Promise.all([
         getUserProfile(user.id),
-        getUserPurchasesWithSeats(user.id), // Usar la nueva funci³n con asientos
+        getUserPurchasesWithSeats(user.id), // Usar la nueva función con asientos
         getUserReservations(user.id),
         getUserFavorites(user.id),
         getUserActivityHistory(user.id),
@@ -123,7 +123,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     logout();
-    message.success('Sesi³n cerrada correctamente');
+    message.success('Sesión cerrada correctamente');
   };
 
 
@@ -171,13 +171,13 @@ const Profile = () => {
     return (
       <div style={{ padding: '24px', textAlign: 'center' }}>
         <Alert
-          message="Debes iniciar sesi³n"
-          description="Para ver tu perfil, necesitas iniciar sesi³n primero."
+          message="Debes iniciar sesión"
+          description="Para ver tu perfil, necesitas iniciar sesión primero."
           type="warning"
           showIcon
           action={
             <Button size="small" type="primary" href="/store/login">
-              Iniciar Sesi³n
+              Iniciar Sesión
             </Button>
           }
         />
@@ -267,7 +267,7 @@ const Profile = () => {
                         block
                         size="large"
                       >
-                        Cerrar Sesi³n
+                        Cerrar Sesión
                       </Button>
                     </>
                   )}
@@ -278,7 +278,7 @@ const Profile = () => {
         </Row>
       </Card>
 
-      {/* Estad­sticas Reales - Responsive */}
+      {/* Estadísticas Reales - Responsive */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -326,15 +326,15 @@ const Profile = () => {
         </Col>
       </Row>
 
-      {/* Tabs de Informaci³n */}
+      {/* Tabs de Información */}
       <Card>
         <Tabs defaultActiveKey="profile" size="large">
-          {/* Tab: Informaci³n Personal */}
+          {/* Tab: Información Personal */}
           <TabPane
             tab={
               <span>
                 <UserOutlined />
-                Informaci³n Personal
+                Información Personal
               </span>
             }
             key="profile"
@@ -357,7 +357,7 @@ const Profile = () => {
               <Descriptions.Item label="Email" span={2}>
                 {profile?.email}
               </Descriptions.Item>
-              <Descriptions.Item label="Tel©fono">
+              <Descriptions.Item label="Teléfono">
                 {editing ? (
                   <Input
                     value={editForm.phone}
@@ -396,7 +396,7 @@ const Profile = () => {
               <List
                 dataSource={purchases}
                 renderItem={(purchase) => {
-                  // Verificar si el wallet est¡ habilitado para esta compra
+                  // Verificar si el wallet está habilitado para esta compra
                   const getWalletEnabled = () => {
                     if (!purchase?.event?.datosBoleto) {
                       return false;
@@ -452,7 +452,7 @@ const Profile = () => {
                               }}
                               block
                             >
-                              ðŸ“± Descargar Wallet (.pkpass)
+                              ðŸ“ñ Descargar Wallet (.pkpass)
                             </Button>
                           )}
                         </Space>
@@ -475,7 +475,7 @@ const Profile = () => {
                             <FileTextOutlined /> {purchase.seats?.length || 0} asientos
                           </div>
                           <div>
-                            <CreditCardOutlined /> {purchase.payment_method || 'M©todo de pago'}
+                            <CreditCardOutlined /> {purchase.payment_method || 'Método de pago'}
                           </div>
                         </Space>
                       }
@@ -494,7 +494,7 @@ const Profile = () => {
               />
             ) : (
               <Empty
-                description="No tienes compras aºn"
+                description="No tienes compras aún"
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               >
                 <Button type="primary" href="/store">

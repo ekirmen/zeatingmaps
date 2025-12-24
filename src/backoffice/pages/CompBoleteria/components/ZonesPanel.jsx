@@ -34,9 +34,9 @@ const ZonesPanel = ({
   const [debugInfo, setDebugInfo] = useState({});
   const [dataLoaded, setDataLoaded] = useState(false);
 
-  // Funci³n para extraer detalles de la plantilla
+  // Función para extraer detalles de la plantilla
   const extractDetalles = useCallback((funcion, plantilla) => {
-    logger.log('ðŸ” extractDetalles - Iniciando extracci³n...');
+    logger.log('ðŸ” extractDetalles - Iniciando extracción...');
     // Debug logs removed for production performance
 
     let detalles = [];
@@ -51,7 +51,7 @@ const ZonesPanel = ({
         } else {
           detalles = plantilla.detalles;
         }
-        logger.log('œ… Detalles extra­dos desde selectedPlantilla.detalles');
+        logger.log('œ… Detalles extraídos desde selectedPlantilla.detalles');
       } catch (e) {
         logger.error('Œ Error parsing selectedPlantilla.detalles:', e);
         detalles = [];
@@ -66,7 +66,7 @@ const ZonesPanel = ({
         } else {
           detalles = funcion.plantilla.detalles;
         }
-        logger.log('œ… Detalles extra­dos desde funcion.plantilla.detalles');
+        logger.log('œ… Detalles extraídos desde funcion.plantilla.detalles');
       } catch (e) {
         logger.error('Œ Error parsing funcion.plantilla.detalles:', e);
         detalles = [];
@@ -81,14 +81,14 @@ const ZonesPanel = ({
         } else {
           detalles = funcion.plantilla_entradas.detalles;
         }
-        logger.log('œ… Detalles extra­dos desde funcion.plantilla_entradas.detalles');
+        logger.log('œ… Detalles extraídos desde funcion.plantilla_entradas.detalles');
       } catch (e) {
         logger.error('Œ Error parsing funcion.plantilla_entradas.detalles:', e);
         detalles = [];
       }
     }
 
-    logger.log('ðŸ“‹ Detalles extra­dos:', detalles?.length || 0);
+    logger.log('ðŸ“‹ Detalles extraídos:', detalles?.length || 0);
     logger.log('ðŸ“‹ Fuente:', source);
 
     return { detalles, source };
@@ -101,7 +101,7 @@ const ZonesPanel = ({
     if (!selectedFuncion) {
       logger.log('Œ No hay selectedFuncion');
       setPriceOptions([]);
-      setDebugInfo({ error: 'No hay funci³n seleccionada' });
+      setDebugInfo({ error: 'No hay función seleccionada' });
       return;
     }
 
@@ -112,14 +112,14 @@ const ZonesPanel = ({
       // Extraer detalles de la plantilla
       const { detalles, source } = extractDetalles(selectedFuncion, selectedPlantilla);
       
-      logger.log('ðŸ“‹ Detalles extra­dos:', detalles?.length || 0);
+      logger.log('ðŸ“‹ Detalles extraídos:', detalles?.length || 0);
       logger.log('ðŸ“‹ Fuente de detalles:', source);
       
       if (!Array.isArray(detalles) || detalles.length === 0) {
-        logger.log('Œ No hay detalles v¡lidos en la plantilla');
+        logger.log('Œ No hay detalles válidos en la plantilla');
         setPriceOptions([]);
         setDebugInfo({ 
-          error: 'No hay detalles v¡lidos en la plantilla',
+          error: 'No hay detalles válidos en la plantilla',
           source,
           detalles: detalles,
           selectedPlantilla: selectedPlantilla,
@@ -146,7 +146,7 @@ const ZonesPanel = ({
       const entradasQuery = supabase.from('entradas').select('*').order('nombre_entrada');
       // Debug log removed for production performance
       
-      // Consulta de zonas con m¡s logging
+      // Consulta de zonas con más logging
       const zonasQuery = supabase
         .from('zonas')
         .select('*')
@@ -218,11 +218,11 @@ const ZonesPanel = ({
         return;
       }
 
-      // Crear mapas para bºsqueda r¡pida
+      // Crear mapas para búsqueda rápida
       const entradasById = new Map(entradas.map(e => [String(e.id), e]));
       const zonasById = new Map(zonas.map(z => [String(z.id), z]));
 
-      logger.log('ðŸ—ºï¸ Mapa de entradas por ID:', Array.from(entradasById.keys()).length);
+      logger.log('ðŸ—úï¸ Mapa de entradas por ID:', Array.from(entradasById.keys()).length);
       logger.log('ðŸŽ¯ Mapa de zonas por ID:', Array.from(zonasById.keys()).length);
 
       // Procesar detalles y agrupar por zona
@@ -240,7 +240,7 @@ const ZonesPanel = ({
           return;
         }
         
-        // Extraer campos con mºltiples nombres posibles
+        // Extraer campos con múltiples nombres posibles
         const zonaId = detalle.zonaId || detalle.zona_id || detalle.zona?.id || detalle.id_zona || detalle.idZona;
         const entradaId = detalle.entradaId || detalle.entrada_id || detalle.entrada?.id || detalle.id_entrada || detalle.idEntrada || detalle.productoId || detalle.producto_id;
         const precio = parseFloat(detalle.precio || detalle.price || detalle.monto || detalle.valor || 0);
@@ -319,9 +319,9 @@ const ZonesPanel = ({
       logger.log('ðŸ—ï¸ Zonas agrupadas:', zonasAgrupadas?.length || 0);
       logger.log(`ðŸ“Š Resumen: ${detallesProcesados} detalles procesados, ${detallesConError} con error`);
 
-      // Convertir a array y calcular estad­sticas
+      // Convertir a array y calcular estadísticas
       const opciones = Array.from(zonasAgrupadas.values()).map(grupo => {
-        // Calcular estad­sticas de ocupaci³n si hay mapa
+        // Calcular estadísticas de ocupación si hay mapa
         if (mapa) {
           const asientosZona = Object.values(mapa).filter(asiento => 
             String(asiento.zona_id) === String(grupo.zona.id)
@@ -339,7 +339,7 @@ const ZonesPanel = ({
       logger.log('ðŸŽ¯ Opciones de precio finales:', opciones?.length || 0);
       setPriceOptions(opciones);
       
-      // Actualizar informaci³n de debug
+      // Actualizar información de debug
       setDebugInfo({
         success: true,
         source,
@@ -351,14 +351,14 @@ const ZonesPanel = ({
         zonasCargadas: zonas.length
       });
 
-      // Restaurar selecci³n previa si existe
+      // Restaurar selección previa si existe
       if (selectedZonaId && !opciones.find(o => o.zona.id === selectedZonaId)) {
         setActiveZonaId(opciones[0]?.zona.id || null);
       } else if (selectedZonaId) {
         setActiveZonaId(selectedZonaId);
       }
 
-      // Notificar al padre que los precios est¡n cargados
+      // Notificar al padre que los precios están cargados
       if (onPricesLoaded) {
         onPricesLoaded(opciones);
       }
@@ -375,7 +375,7 @@ const ZonesPanel = ({
     }
   }, [selectedFuncion, selectedPlantilla, onPricesLoaded, extractDetalles]); // Removido mapa y selectedZonaId
 
-  // Cargar datos cuando cambie la funci³n o plantilla
+  // Cargar datos cuando cambie la función o plantilla
   useEffect(() => {
     if (selectedFuncion && !dataLoaded) {
       setDataLoaded(true);
@@ -383,12 +383,12 @@ const ZonesPanel = ({
     }
   }, [selectedFuncion, selectedPlantilla, dataLoaded]); // Solo se ejecuta una vez
 
-  // Resetear dataLoaded cuando cambie la funci³n para permitir recarga
+  // Resetear dataLoaded cuando cambie la función para permitir recarga
   useEffect(() => {
     if (selectedFuncion) {
       setDataLoaded(false);
     }
-  }, [selectedFuncion?.id]); // Solo cuando cambie el ID de la funci³n
+  }, [selectedFuncion?.id]); // Solo cuando cambie el ID de la función
 
   // Sync external selectedZonaId †’ internal activeZonaId
   useEffect(() => {
@@ -399,12 +399,12 @@ const ZonesPanel = ({
     }
   }, [selectedZonaId, activeZonaId, priceOptions]);
 
-  // Actualizar estad­sticas cuando cambie el mapa (sin recargar todo)
+  // Actualizar estadísticas cuando cambie el mapa (sin recargar todo)
   useEffect(() => {
     if (mapa && priceOptions.length > 0) {
-      logger.log('ðŸ”„ Mapa cambi³, actualizando estad­sticas...');
+      logger.log('ðŸ”„ Mapa cambió, actualizando estadísticas...');
       const opcionesActualizadas = priceOptions.map(grupo => {
-        // Calcular estad­sticas de ocupaci³n si hay mapa
+        // Calcular estadísticas de ocupación si hay mapa
         const asientosZona = Object.values(mapa).filter(asiento => 
           String(asiento.zona_id) === String(grupo.zona.id)
         );
@@ -427,7 +427,7 @@ const ZonesPanel = ({
 
   return (
     <div className="space-y-3">
-      {/* Informaci³n de Debug */}
+      {/* Información de Debug */}
       {debugInfo.error && (
         <Alert
           message="Error al cargar zonas"
@@ -477,7 +477,7 @@ const ZonesPanel = ({
           <div className="text-xs text-gray-500 px-2 py-1">
             <div>No hay zonas configuradas en la plantilla</div>
             <div className="text-[10px] mt-1">
-              Debug: {selectedFuncion ? 'Funci³n seleccionada' : 'Sin funci³n'} | 
+              Debug: {selectedFuncion ? 'Función seleccionada' : 'Sin función'} | 
               {selectedPlantilla ? 'Plantilla cargada' : 'Sin plantilla'} | 
               {selectedPlantilla?.detalles ? 'Con detalles' : 'Sin detalles'}
             </div>
@@ -548,7 +548,7 @@ const ZonesPanel = ({
               <div className="text-xs font-semibold" style={{ color: zonaData.zona.color || '#333' }}>
                 {zonaData.zona.nombre}
               </div>
-              <div className="text-[10px] text-gray-500">Ocupaci³n: {zonaData.ocupacion || 0}%</div>
+              <div className="text-[10px] text-gray-500">Ocupación: {zonaData.ocupacion || 0}%</div>
             </div>
           ))
         )}
@@ -590,7 +590,7 @@ const ZonesPanel = ({
                     </div>
                     <div className="text-right">
                       <div className="font-bold">${formatCurrency(opt.precio)}</div>
-                      {opt.comision > 0 && <div className="text-gray-500">+${formatCurrency(opt.comision)} comisi³n</div>}
+                      {opt.comision > 0 && <div className="text-gray-500">+${formatCurrency(opt.comision)} comisión</div>}
                     </div>
                   </div>
                 );

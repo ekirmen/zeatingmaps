@@ -258,7 +258,7 @@ const Afiliados = () => {
         <p className="text-gray-600">Gestiona tus afiliados, comisiones y links de referencia</p>
       </div>
 
-      {/* Estad­sticas */}
+      {/* Estadísticas */}
       <Row gutter={16} className="mb-6">
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -361,7 +361,7 @@ const Afiliados = () => {
             name="comision_porcentaje"
             label="Comisión (%)"
             rules={[
-              { required: true, message: 'Ingresa el porcentaje de comisi³n' },
+              { required: true, message: 'Ingresa el porcentaje de comisión' },
               { type: 'number', min: 0, max: 100, message: 'Debe estar entre 0 y 100' }
             ]}
           >

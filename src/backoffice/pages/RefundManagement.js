@@ -145,7 +145,7 @@ const RefundManagement = () => {
       render: (id) => id.slice(0, 8) + '...'
     },
     {
-      title: 'Transacci³n',
+      title: 'Transacción',
       dataIndex: ['payment_transactions', 'id'],
       key: 'transaction',
       render: (id) => id ? id.slice(0, 8) + '...' : 'N/A'
@@ -163,7 +163,7 @@ const RefundManagement = () => {
       render: (amount) => `$${parseFloat(amount).toFixed(2)}`
     },
     {
-      title: 'Raz³n',
+      title: 'Razón',
       dataIndex: 'reason',
       key: 'reason',
       render: (reason) => reason || 'N/A'
@@ -213,12 +213,12 @@ const RefundManagement = () => {
           {record.status === 'pending' && (
             <Popconfirm
               title="¿Rechazar reembolso?"
-              description="Esta acci³n no se puede deshacer"
+              description="Esta acción no se puede deshacer"
               onConfirm={() => {
                 setSelectedRefund(record);
                 setActionModalVisible(true);
               }}
-              okText="S­"
+              okText="Sí"
               cancelText="No"
             >
               <Button type="default" size="small" danger>
@@ -234,7 +234,7 @@ const RefundManagement = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <Title level={2}>Gesti³n de Reembolsos</Title>
+        <Title level={2}>Gestión de Reembolsos</Title>
         <Text type="secondary">
           Administra y procesa las solicitudes de reembolso
         </Text>
@@ -302,7 +302,7 @@ const RefundManagement = () => {
         )}
       </Modal>
 
-      {/* Modal de Acci³n (Aprobar/Rechazar) */}
+      {/* Modal de Acción (Aprobar/Rechazar) */}
       <Modal
         title={`${selectedRefund?.status === 'pending_manual' ? 'Aprobar' : 'Rechazar'} Reembolso`}
         open={actionModalVisible}
@@ -334,7 +334,7 @@ const RefundManagement = () => {
             label="Notas del Administrador"
             rules={[{ required: true, message: 'Por favor ingresa las notas' }]}
           >
-            <TextArea rows={4} placeholder="Ingresa las notas para esta acci³n..." />
+            <TextArea rows={4} placeholder="Ingresa las notas para esta acción..." />
           </Form.Item>
         </Form>
       </Modal>

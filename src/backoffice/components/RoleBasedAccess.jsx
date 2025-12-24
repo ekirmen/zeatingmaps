@@ -161,7 +161,7 @@ export const RoleProvider = ({ children }) => {
     return permissions[permission] || false;
   };
 
-  // Funci³n para verificar acceso a ruta
+  // Función para verificar acceso a ruta
   const canAccess = (path) => {
     if (!userRole || userRole === 'guest' || userRole === 'usuario_store') {
       return false;

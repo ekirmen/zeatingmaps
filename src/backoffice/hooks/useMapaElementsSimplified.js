@@ -17,7 +17,7 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
   const { autoConnectSeats, connectionThreshold } = useMapaConnections(elements, setElements);
   const { addSillasToMesa, limpiarSillasDuplicadas } = useMapaSeats(elements, setElements, selectedZone, numSillas);
 
-  // Creaci³n de mesa
+  // Creación de mesa
   const addMesa = (shape = 'rect') => {
     const id = 'mesa_' + uuidv4();
     const nuevaMesa = {
@@ -58,7 +58,7 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
       if (el._id === id) {
         if (property === 'posicion' && value.x !== undefined && value.y !== undefined) {
           if (!precisePositioning.validate(value.x, value.y)) {
-            message.error('Coordenadas fuera de rango v¡lido');
+            message.error('Coordenadas fuera de rango válido');
             return el;
           }
           value = {
@@ -73,7 +73,7 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
     }));
   };
 
-  // Actualizar tama±o de elementos
+  // Actualizar tamaño de elementos
   const updateElementSize = (id, newWidth, newHeight) => {
     setElements(prev =>
       prev.map(el =>
@@ -94,7 +94,7 @@ export const useMapaElementsSimplified = (elements, setElements, selectedIds, se
   };
 
   return {
-    // Funciones b¡sicas
+    // Funciones básicas
     addMesa,
     addSillasToMesa,
     updateElementProperty,

@@ -71,13 +71,13 @@ const Dashboard = () => {
           )
           .subscribe();
 
-        // Retornar funci³n de limpieza
+        // Retornar función de limpieza
         return () => {
           subscription.unsubscribe();
         };
       } catch (error) {
         console.error('Error subscribing to realtime updates:', error);
-        return () => { }; // Funci³n de limpieza vac­a en caso de error
+        return () => { }; // Función de limpieza vacía en caso de error
       }
     };
 
@@ -87,19 +87,19 @@ const Dashboard = () => {
     // Suscribirse a actualizaciones en tiempo real
     const cleanup = subscribeToRealtimeUpdates();
 
-    // Retornar funci³n de limpieza
+    // Retornar función de limpieza
     return () => {
       if (cleanup) {
         cleanup();
       }
     };
-  }, []); // Sin dependencias ya que las funciones est¡n definidas dentro
+  }, []); // Sin dependencias ya que las funciones están definidas dentro
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
 
-      // Cargar estad­sticas principales
+      // Cargar estadísticas principales
       await Promise.all([
         loadRevenueStats(),
         loadTicketStats(),
@@ -118,7 +118,7 @@ const Dashboard = () => {
 
   const loadRevenueStats = async () => {
     try {
-      // Estad­sticas de ingresos
+      // Estadísticas de ingresos
       const { data: transactions, error } = await supabase
         .from('payment_transactions')
         .select('amount, status, created_at')
@@ -172,7 +172,7 @@ const Dashboard = () => {
 
   const loadTicketStats = async () => {
     try {
-      // Estad­sticas de tickets
+      // Estadísticas de tickets
       const { data: tickets, error } = await supabase
         .from('entradas')
         .select('*');
@@ -196,14 +196,14 @@ const Dashboard = () => {
 
   const loadUserStats = async () => {
     try {
-      // Estad­sticas de usuarios - incluyendo usuarios activos (ºltimas 24h)
+      // Estadísticas de usuarios - incluyendo usuarios activos (últimas 24h)
       const { data: users, error: usersError } = await supabase
         .from('profiles')
         .select('id, created_at'); // Removed last_seen, is_active causing 400
 
       if (usersError) throw usersError;
 
-      // Obtener usuarios activos (ºltimas 24 horas) desde auth.users o user_sessions si existe
+      // Obtener usuarios activos (últimas 24 horas) desde auth.users o user_sessions si existe
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
       // Intentar obtener usuarios activos desde user_sessions o last_login
@@ -235,7 +235,7 @@ const Dashboard = () => {
 
       setStats(prev => ({
         ...prev,
-        activeUsers: activeUsersCount, // Usuarios activos en ºltimas 24h
+        activeUsers: activeUsersCount, // Usuarios activos en últimas 24h
         totalUsers, // Total de usuarios registrados
         newUsersThisWeek
       }));
@@ -325,7 +325,7 @@ const Dashboard = () => {
           id: 1,
           type: 'warning',
           title: 'Pagos pendientes',
-          message: 'Hay 3 transacciones pendientes de confirmaci³n',
+          message: 'Hay 3 transacciones pendientes de confirmación',
           time: 'Hace 2 horas'
         },
         {
@@ -339,7 +339,7 @@ const Dashboard = () => {
           id: 3,
           type: 'success',
           title: 'Venta exitosa',
-          message: 'Se han vendido 15 tickets para "Teatro Cl¡sico"',
+          message: 'Se han vendido 15 tickets para "Teatro Clásico"',
           time: 'Hace 6 horas'
         }
       ];
@@ -428,11 +428,11 @@ const Dashboard = () => {
           Dashboard
         </Title>
         <Text type="secondary" style={{ fontSize: '14px' }}>
-          Resumen general del sistema de boleter­a
+          Resumen general del sistema de boletería
         </Text>
       </div>
 
-      {/* M©tricas Principales */}
+      {/* Métricas Principales */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card style={{ borderRadius: '8px' }}>
@@ -498,17 +498,17 @@ const Dashboard = () => {
               prefix={<ShoppingCartOutlined />}
             />
             <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
-              Requieren atenci³n
+              Requieren atención
             </Text>
           </Card>
         </Col>
       </Row>
 
-      {/* Acciones R¡pidas */}
+      {/* Acciones Rápidas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24}>
           <Card
-            title="Acciones R¡pidas"
+            title="Acciones Rápidas"
             style={{ borderRadius: '8px' }}
           >
             <Row gutter={[16, 16]}>
@@ -521,7 +521,7 @@ const Dashboard = () => {
                   onClick={() => navigate('/backoffice/boleteria')}
                   style={{ height: '48px', fontSize: '14px' }}
                 >
-                  Boleter­a
+                  Boletería
                 </Button>
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
@@ -553,11 +553,11 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Gr¡ficos y An¡lisis */}
+      {/* Gráficos y Análisis */}
       <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
         <Col xs={24} lg={16}>
           <Card
-            title="Ventas por Per­odo"
+            title="Ventas por Período"
             extra={<Button type="link" size="small">Ver Detalles</Button>}
             style={{ borderRadius: '8px' }}
           >
@@ -670,7 +670,7 @@ const Dashboard = () => {
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card title="Eventos Pr³ximos" extra={<Button type="link">Ver Todos</Button>}>
+          <Card title="Eventos Próximos" extra={<Button type="link">Ver Todos</Button>}>
             <List
               dataSource={upcomingEvents}
               renderItem={(event) => (
@@ -702,7 +702,7 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Configuraci³n de M©todos de Pago */}
+      {/* Configuración de Métodos de Pago */}
       <Row gutter={[16, 16]} className="mt-8">
         <Col xs={24}>
           <PaymentMethodsConfig />

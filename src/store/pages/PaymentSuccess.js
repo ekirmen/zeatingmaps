@@ -403,7 +403,7 @@ const PaymentSuccess = () => {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  {isReservation ? '¡Reserva Exitosa!' : '¡Pago Exitoso!'}
+                  {isReservation ? 'áReserva Exitosa!' : 'áPago Exitoso!'}
                 </h2>
                 <p className="mt-1 text-base text-gray-600">
                   {isReservation ? 'Tu reserva ha sido registrada con éxito' : 'Tu compra ha sido registrada con éxito'}

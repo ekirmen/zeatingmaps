@@ -16,7 +16,7 @@ const BasicFooter = () => {
   const { footer } = useFooter();
   const text =
     footer?.copyrightText ||
-    `© ${new Date().getFullYear()} Zeatingmaps`;
+    `é ${new Date().getFullYear()} Zeatingmaps`;
 
   const iconMap = {
     facebook: FacebookFilled,

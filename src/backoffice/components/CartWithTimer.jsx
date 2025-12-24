@@ -174,7 +174,7 @@ const CartWithTimer = ({
             <span>0 - $0.00</span>
           </div>
           <div className="flex justify-between">
-            <span>Comisiones de transacci³n:</span>
+            <span>Comisiones de transacción:</span>
             <span>0 - $0.00</span>
           </div>
           <div className="border-t border-gray-300 pt-2">

@@ -123,19 +123,19 @@ const CrearMapaMain = ({
   // ===== PASOS DEL WIZARD =====
   const steps = [
     {
-      title: 'Configuraci³n B¡sica',
-      description: 'Informaci³n del mapa',
+      title: 'Configuración Básica',
+      description: 'Información del mapa',
       icon: <InfoCircleOutlined />,
       content: 'basic'
     },
     {
-      title: 'Dise±o del Mapa',
+      title: 'Diseño del Mapa',
       description: 'Editor visual',
       icon: <EditOutlined />,
       content: 'editor'
     },
     {
-      title: 'Validaci³n',
+      title: 'Validación',
       description: 'Verificar integridad',
       icon: <CheckCircleOutlined />,
       content: 'validation'
@@ -147,7 +147,7 @@ const CrearMapaMain = ({
       content: 'preview'
     },
     {
-      title: 'Configuraci³n Avanzada',
+      title: 'Configuración Avanzada',
       description: 'Ajustes finales',
       icon: <SettingOutlined />,
       content: 'settings'
@@ -158,16 +158,16 @@ const CrearMapaMain = ({
   useEffect(() => {
     if (initialMapa) {
       setMapa(initialMapa);
-      setCurrentStep(1); // Ir directamente al editor si es edici³n
+      setCurrentStep(1); // Ir directamente al editor si es edición
     }
   }, [initialMapa]);
 
   useEffect(() => {
-    // Calcular progreso basado en el paso actual y validaci³n
+    // Calcular progreso basado en el paso actual y validación
     let progressValue = (currentStep / (steps.length - 1)) * 100;
     
     if (currentStep >= 2 && validationResults.isValid) {
-      progressValue += 20; // Bonus por validaci³n exitosa
+      progressValue += 20; // Bonus por validación exitosa
     }
     
     setProgress(Math.min(progressValue, 100));
@@ -196,7 +196,7 @@ const CrearMapaMain = ({
     setProgress(0);
     
     try {
-      // Simular proceso de validaci³n
+      // Simular proceso de validación
       for (let i = 0; i <= 100; i += 20) {
         setProgress(i);
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -212,7 +212,7 @@ const CrearMapaMain = ({
         message.warning('El mapa tiene algunos problemas que deben corregirse');
       }
     } catch (error) {
-      message.error('Error durante la validaci³n');
+      message.error('Error durante la validación');
       console.error('Validation error:', error);
     } finally {
       setIsProcessing(false);
@@ -238,7 +238,7 @@ const CrearMapaMain = ({
       setMapa(mapaToSave);
       message.success('Mapa guardado exitosamente');
       
-      // Ir al siguiente paso si no es el ºltimo
+      // Ir al siguiente paso si no es el último
       if (currentStep < steps.length - 1) {
         nextStep();
       }
@@ -348,7 +348,7 @@ const CrearMapaMain = ({
                     {isEditMode ? 'Editar Mapa' : 'Crear Nuevo Mapa'}
                   </Title>
                   <Text className="text-lg text-gray-600">
-                    {isEditMode ? 'Modifica la configuraci³n y dise±o del mapa existente' : 'Dise±a y configura un nuevo mapa para tu sala'}
+                    {isEditMode ? 'Modifica la configuración y diseño del mapa existente' : 'Diseña y configura un nuevo mapa para tu sala'}
                   </Text>
                 </div>
               </div>
@@ -359,7 +359,7 @@ const CrearMapaMain = ({
                 <Button 
                   icon={<EyeOutlined />}
                   onClick={() => setShowPreview(true)}
-                  title="Vista previa r¡pida"
+                  title="Vista previa rápida"
                   size="large"
                   className="btn-gradient-primary shadow-custom hover-lift"
                 >
@@ -368,11 +368,11 @@ const CrearMapaMain = ({
                 <Button 
                   icon={<SettingOutlined />}
                   onClick={() => setShowSettings(true)}
-                  title="Configuraci³n avanzada"
+                  title="Configuración avanzada"
                   size="large"
                   className="btn-gradient-success shadow-custom hover-lift"
                 >
-                  Configuraci³n
+                  Configuración
                 </Button>
                 <Button 
                   onClick={onCancel}
@@ -407,7 +407,7 @@ const CrearMapaMain = ({
             <div className="text-right">
               <Text className="text-sm text-gray-500">
                 {progress === 100 ? (
-                  <span className="text-green-600 font-semibold">ðŸŽ‰ ¡Listo para publicar!</span>
+                  <span className="text-green-600 font-semibold">ðŸŽ‰ áListo para publicar!</span>
                 ) : (
                   <span className="text-blue-600">ðŸš€ Continuando...</span>
                 )}
@@ -434,7 +434,7 @@ const CrearMapaMain = ({
         <div className="max-w-4xl mx-auto">
           <div className="mb-4">
             <Text className="text-lg font-semibold text-gray-800 mb-2">
-              Flujo de Creaci³n del Mapa
+              Flujo de Creación del Mapa
             </Text>
             <Text className="text-sm text-gray-600">
               Sigue estos pasos para crear un mapa completo y profesional
@@ -478,7 +478,7 @@ const CrearMapaMain = ({
               <div className="flex items-center gap-3">
                 {validationResults.isValid && (
                   <Tag color="success" icon={<CheckCircleOutlined />} className="px-3 py-1 text-sm font-medium">
-                    œ… Validado - ¡Perfecto!
+                    œ… Validado - áPerfecto!
                   </Tag>
                 )}
                 {validationResults.errors.length > 0 && (
@@ -493,7 +493,7 @@ const CrearMapaMain = ({
                 )}
                 {validationResults.suggestions.length > 0 && (
                   <Tag color="processing" icon={<InfoCircleOutlined />} className="px-3 py-1 text-sm font-medium">
-                    ðŸ’¡ {validationResults.suggestions.length} sugerencias
+                    ðŸ’á {validationResults.suggestions.length} sugerencias
                   </Tag>
                 )}
               </div>
@@ -544,7 +544,7 @@ const CrearMapaMain = ({
       </Modal>
 
       <Modal
-        title="Configuraci³n Avanzada"
+        title="Configuración Avanzada"
         open={showSettings}
         onCancel={() => setShowSettings(false)}
         footer={null}
@@ -584,13 +584,13 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
           <span className="text-4xl text-white">ðŸŽ¨</span>
         </div>
         <Title level={1} className="mb-4 text-gradient">
-          ¡Bienvenido al Creador de Mapas!
+          áBienvenido al Creador de Mapas!
         </Title>
         <Title level={3} className="mb-3 text-gray-700">
-          Configuraci³n B¡sica del Mapa
+          Configuración Básica del Mapa
         </Title>
         <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Comienza creando tu mapa de asientos personalizado. Define la informaci³n fundamental y luego pasa al editor visual donde podr¡s dise±ar la distribuci³n perfecta.
+          Comienza creando tu mapa de asientos personalizado. Define la información fundamental y luego pasa al editor visual donde podrás diseñar la distribución perfecta.
         </Text>
       </div>
       
@@ -629,11 +629,11 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
 
         <Form.Item
           name="descripcion"
-          label="Descripci³n"
+          label="Descripción"
         >
           <TextArea 
             rows={4} 
-            placeholder="Describe el prop³sito y caracter­sticas del mapa..."
+            placeholder="Describe el propósito y características del mapa..."
           />
         </Form.Item>
 

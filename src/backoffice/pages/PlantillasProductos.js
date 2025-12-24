@@ -238,7 +238,7 @@ const PlantillasProductos = () => {
       key: 'nombre',
     },
     {
-      title: 'Descripci³n',
+      title: 'Descripción',
       dataIndex: 'descripcion',
       key: 'descripcion',
       render: (text) => text?.slice(0, 50) + (text?.length > 50 ? '...' : '')
@@ -265,7 +265,7 @@ const PlantillasProductos = () => {
       }
     },
     {
-      title: 'Categor­a',
+      title: 'Categoría',
       dataIndex: 'categoria',
       key: 'categoria',
       render: (categoria) => <Tag color="blue">{categoria}</Tag>
@@ -366,16 +366,16 @@ const PlantillasProductos = () => {
             label="Nombre de la Plantilla"
             rules={[{ required: true, message: 'Por favor ingresa el nombre de la plantilla' }]}
           >
-            <Input placeholder="Ejemplo: Camiseta Est¡ndar" />
+            <Input placeholder="Ejemplo: Camiseta Estándar" />
           </Form.Item>
 
           <Form.Item
             name="descripcion"
-            label="Descripci³n"
+            label="Descripción"
           >
             <TextArea
               rows={4}
-              placeholder="Descripci³n de la plantilla"
+              placeholder="Descripción de la plantilla"
             />
           </Form.Item>
 
@@ -433,12 +433,12 @@ const PlantillasProductos = () => {
 
           <Form.Item
             name="categoria"
-            label="Categor­a"
-            rules={[{ required: true, message: 'Por favor selecciona una categor­a' }]}
+            label="Categoría"
+            rules={[{ required: true, message: 'Por favor selecciona una categoría' }]}
           >
-            <Select placeholder="Selecciona una categor­a">
+            <Select placeholder="Selecciona una categoría">
               <Option value="Merchandising">Merchandising</Option>
-              <Option value="Informaci³n">Informaci³n</Option>
+              <Option value="Información">Información</Option>
               <Option value="Pack">Pack</Option>
               <Option value="Alimentos">Alimentos</Option>
               <Option value="Bebidas">Bebidas</Option>

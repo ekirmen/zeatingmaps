@@ -142,7 +142,7 @@ const ModernStorePage = () => {
     fetchEvents();
   }, [currentTenant?.id, statusFilter, sortBy]);
 
-  // Filtrar eventos por t©rmino de bºsqueda
+  // Filtrar eventos por término de búsqueda
   const filteredEvents = events.filter(event => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
@@ -154,7 +154,7 @@ const ModernStorePage = () => {
     );
   });
 
-  // Funci³n para obtener el estado visual del evento
+  // Función para obtener el estado visual del evento
   const getEventStatus = (event) => {
     if (event.desactivado) return { status: 'error', text: 'Desactivado', color: 'red' };
     if (!event.activo) return { status: 'warning', text: 'Inactivo', color: 'orange' };
@@ -164,7 +164,7 @@ const ModernStorePage = () => {
     return { status: 'default', text: 'Disponible', color: 'default' };
   };
 
-  // Funci³n para obtener el modo de venta
+  // Función para obtener el modo de venta
   const getModoVenta = (event) => {
     const modos = {
       'normal': { text: 'Normal', color: 'blue' },
@@ -176,7 +176,7 @@ const ModernStorePage = () => {
     return modos[event.modoVenta] || { text: 'Normal', color: 'default' };
   };
 
-  // Funci³n para parsear tags
+  // Función para parsear tags
   const getEventTags = (event) => {
     if (!event.tags) return [];
     try {
@@ -264,14 +264,14 @@ const ModernStorePage = () => {
             maxWidth: '600px',
             margin: '0 auto'
           }}>
-            Descubre los mejores eventos y experiencias ºnicas
+            Descubre los mejores eventos y experiencias únicas
           </p>
         </div>
       </div>
 
       {/* Contenido principal */}
       <div className="store-container-wrapper" style={{ paddingTop: 'var(--store-space-8)', paddingBottom: 'var(--store-space-8)' }}>
-        {/* Filtros y bºsqueda */}
+        {/* Filtros y búsqueda */}
         <div className="store-card" style={{ marginBottom: 'var(--store-space-8)' }}>
           <div className="store-card-body">
             <div style={{
@@ -354,7 +354,7 @@ const ModernStorePage = () => {
               >
                 {searchTerm && (
                   <Button type="primary" onClick={() => setSearchTerm('')}>
-                    Limpiar bºsqueda
+                    Limpiar búsqueda
                   </Button>
                 )}
               </Empty>
@@ -451,19 +451,19 @@ const ModernStorePage = () => {
 
                   {/* Contenido de la tarjeta */}
                   <div className="store-event-card-content">
-                    {/* T­tulo */}
+                    {/* Título */}
                     <h3 className="store-event-card-title">
                       {event.nombre}
                     </h3>
 
-                    {/* Descripci³n */}
+                    {/* Descripción */}
                     {event.descripcion && (
                       <p className="store-event-card-description">
                         {event.descripcion}
                       </p>
                     )}
 
-                    {/* Informaci³n del evento */}
+                    {/* Información del evento */}
                     <div className="store-event-card-meta">
                       {event.created_at && (
                         <div className="store-event-card-meta-item">
@@ -508,7 +508,7 @@ const ModernStorePage = () => {
                       </div>
                     )}
 
-                    {/* Footer con bot³n */}
+                    {/* Footer con botón */}
                     <div className="store-event-card-footer">
                       <Button
                         type="primary"
@@ -532,7 +532,7 @@ const ModernStorePage = () => {
           </div>
         )}
 
-        {/* Estad­sticas generales */}
+        {/* Estadísticas generales */}
         <div className="store-card">
           <div className="store-card-body">
             <div style={{
@@ -554,7 +554,7 @@ const ModernStorePage = () => {
                 valueStyle={{ color: 'var(--store-success)' }}
               />
               <Statistic
-                title="Pr³ximamente"
+                title="Próximamente"
                 value={events.filter(e => e.estadoVenta === 'pronto').length}
                 prefix={<ClockCircleOutlined />}
                 valueStyle={{ color: 'var(--store-primary)' }}

@@ -61,7 +61,7 @@ const FloatingTimer = () => {
       await signIn(values.email, values.password);
       setShowLoginModal(false);
       loginForm.resetFields();
-      message.success('¡Bienvenido!');
+      message.success('áBienvenido!');
     } catch (error) {
       const feedbackMessage = getAuthMessage(error);
       const messageType = error?.type && typeof message[error.type] === 'function' ? error.type : 'error';
@@ -81,7 +81,7 @@ const FloatingTimer = () => {
       });
       setShowRegisterModal(false);
       registerForm.resetFields();
-      message.success('¡Cuenta creada exitosamente!');
+      message.success('áCuenta creada exitosamente!');
     } catch (error) {
       message.error('Error al crear cuenta: ' + error.message);
     } finally {
@@ -96,8 +96,8 @@ const FloatingTimer = () => {
 
   // Determinar el color del temporizador basado en el tiempo restante
   const getTimerColor = () => {
-    if (timeLeft <= 300) return '#ff4d4f'; // Rojo para ºltimos 5 minutos
-    if (timeLeft <= 600) return '#faad14'; // Amarillo para ºltimos 10 minutos
+    if (timeLeft <= 300) return '#ff4d4f'; // Rojo para últimos 5 minutos
+    if (timeLeft <= 600) return '#faad14'; // Amarillo para últimos 10 minutos
     return '#52c41a'; // Verde para el resto
   };
 
@@ -115,7 +115,7 @@ const FloatingTimer = () => {
                 <div className="font-bold mt-1">Total: ${total.toFixed(2)}</div>
               </div>
               <div className="text-xs mt-2">
-                {user ? 'Haz clic para ver el carrito' : 'Inicia sesi³n para continuar'}
+                {user ? 'Haz clic para ver el carrito' : 'Inicia sesión para continuar'}
               </div>
             </div>
           }
@@ -154,7 +154,7 @@ const FloatingTimer = () => {
 
       {/* Modal de login */}
       <Modal
-        title="Inicia sesi³n para continuar"
+        title="Inicia sesión para continuar"
         open={showLoginModal}
         onCancel={() => setShowLoginModal(false)}
         footer={null}
@@ -162,10 +162,10 @@ const FloatingTimer = () => {
       >
         <div className="text-center py-4">
           <ShoppingCartOutlined className="text-4xl text-blue-500 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Tu carrito est¡ esperando</h3>
+          <h3 className="text-lg font-semibold mb-2">Tu carrito está esperando</h3>
           <p className="text-gray-600 mb-4">
             Tienes {formatTime(timeLeft)} para completar tu compra. 
-            Inicia sesi³n para continuar.
+            Inicia sesión para continuar.
           </p>
           
           <div className="bg-blue-50 p-3 rounded mb-4">
@@ -191,7 +191,7 @@ const FloatingTimer = () => {
               name="email"
               rules={[
                 { required: true, message: 'Por favor ingresa tu email' },
-                { type: 'email', message: 'Email inv¡lido' }
+                { type: 'email', message: 'Email inválido' }
               ]}
             >
               <Input
@@ -204,12 +204,12 @@ const FloatingTimer = () => {
             <Form.Item
               name="password"
               rules={[
-                { required: true, message: 'Por favor ingresa tu contrase±a' }
+                { required: true, message: 'Por favor ingresa tu contraseña' }
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined />}
-                placeholder="Contrase±a"
+                placeholder="Contraseña"
                 size="large"
               />
             </Form.Item>
@@ -233,7 +233,7 @@ const FloatingTimer = () => {
                 loading={loading}
                 className="flex-1"
               >
-                Iniciar Sesi³n
+                Iniciar Sesión
               </Button>
             </div>
           </Form>
@@ -256,7 +256,7 @@ const FloatingTimer = () => {
           <UserOutlined className="text-4xl text-green-500 mb-4" />
           <h3 className="text-lg font-semibold mb-2">Crea tu cuenta</h3>
           <p className="text-gray-600 mb-4">
-            Reg­strate para completar tu compra y gestionar tus entradas.
+            Regístrate para completar tu compra y gestionar tus entradas.
           </p>
 
           <Form
@@ -282,7 +282,7 @@ const FloatingTimer = () => {
               name="email"
               rules={[
                 { required: true, message: 'Por favor ingresa tu email' },
-                { type: 'email', message: 'Email inv¡lido' }
+                { type: 'email', message: 'Email inválido' }
               ]}
             >
               <Input
@@ -295,11 +295,11 @@ const FloatingTimer = () => {
             <Form.Item
               name="telefono"
               rules={[
-                { required: true, message: 'Por favor ingresa tu tel©fono' }
+                { required: true, message: 'Por favor ingresa tu teléfono' }
               ]}
             >
               <Input
-                placeholder="Tel©fono"
+                placeholder="Teléfono"
                 size="large"
               />
             </Form.Item>
@@ -307,13 +307,13 @@ const FloatingTimer = () => {
             <Form.Item
               name="password"
               rules={[
-                { required: true, message: 'Por favor ingresa una contrase±a' },
-                { min: 6, message: 'La contrase±a debe tener al menos 6 caracteres' }
+                { required: true, message: 'Por favor ingresa una contraseña' },
+                { min: 6, message: 'La contraseña debe tener al menos 6 caracteres' }
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined />}
-                placeholder="Contrase±a"
+                placeholder="Contraseña"
                 size="large"
               />
             </Form.Item>
@@ -322,20 +322,20 @@ const FloatingTimer = () => {
               name="confirmPassword"
               dependencies={['password']}
               rules={[
-                { required: true, message: 'Por favor confirma tu contrase±a' },
+                { required: true, message: 'Por favor confirma tu contraseña' },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
                     if (!value || getFieldValue('password') === value) {
                       return Promise.resolve();
                     }
-                    return Promise.reject(new Error('Las contrase±as no coinciden'));
+                    return Promise.reject(new Error('Las contraseñas no coinciden'));
                   },
                 }),
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined />}
-                placeholder="Confirmar contrase±a"
+                placeholder="Confirmar contraseña"
                 size="large"
               />
             </Form.Item>

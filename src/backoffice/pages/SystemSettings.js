@@ -145,7 +145,7 @@ const SystemSettings = () => {
       message.success('Configuración guardada correctamente');
     } catch (error) {
       console.error('Error saving settings:', error);
-      message.error('Error al guardar la configuraci³n');
+      message.error('Error al guardar la configuración');
     } finally {
       setLoading(false);
     }
@@ -184,7 +184,7 @@ const SystemSettings = () => {
     try {
       setLoading(true);
 
-      // Simular restauraci³n
+      // Simular restauración
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       message.success('Backup restaurado correctamente');
@@ -222,7 +222,7 @@ const SystemSettings = () => {
       {/* Header */}
       <div className="mb-8">
         <Title level={2}>Configuración del Sistema</Title>
-        <Text type="secondary">Gestiona la configuraci³n general del sistema</Text>
+        <Text type="secondary">Gestiona la configuración general del sistema</Text>
       </div>
 
       <Form
@@ -287,7 +287,7 @@ const SystemSettings = () => {
             </Button>
             <Button
               icon={<DownloadOutlined />}
-              onClick={() => message.info('Descargando ºltimo backup...')}
+              onClick={() => message.info('Descargando último backup...')}
             >
               Descargar šltimo Backup
             </Button>
@@ -333,7 +333,7 @@ const SystemSettings = () => {
             <Col xs={24} md={8}>
               <Form.Item
                 name={['security', 'twoFactor']}
-                label="Autenticaci³n de Dos Factores"
+                label="Autenticación de Dos Factores"
                 valuePropName="checked"
               >
                 <Switch />
@@ -478,8 +478,8 @@ const SystemSettings = () => {
           </Form.Item>
 
           <Alert
-            message="Informaci³n del Backup"
-            description="El backup incluir¡ todos los datos de la base de datos y archivos del sistema. Este proceso puede tomar varios minutos."
+            message="Información del Backup"
+            description="El backup incluirá todos los datos de la base de datos y archivos del sistema. Este proceso puede tomar varios minutos."
             type="info"
             showIcon
             className="mb-4"

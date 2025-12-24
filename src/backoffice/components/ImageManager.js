@@ -34,7 +34,7 @@ const ImageManager = ({
   entityId,
   entityType = 'event',
   onImagesChange,
-  title = 'Gestor de Im¡genes'
+  title = 'Gestor de Imágenes'
 }) => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -50,12 +50,12 @@ const ImageManager = ({
   const imageTypes = entityType === 'event'
     ? [
       { value: 'principal', label: 'Principal', color: 'blue' },
-      { value: 'galeria', label: 'Galer­a', color: 'green' },
+      { value: 'galeria', label: 'Galería', color: 'green' },
       { value: 'banner', label: 'Banner', color: 'purple' }
     ]
     : [
       { value: 'principal', label: 'Principal', color: 'blue' },
-      { value: 'galeria', label: 'Galer­a', color: 'green' },
+      { value: 'galeria', label: 'Galería', color: 'green' },
       { value: 'exterior', label: 'Exterior', color: 'orange' },
       { value: 'interior', label: 'Interior', color: 'cyan' }
     ];
@@ -80,7 +80,7 @@ const ImageManager = ({
         onImagesChange(imageData);
       }
     } catch (error) {
-      message.error('Error cargando im¡genes');
+      message.error('Error cargando imágenes');
       console.error(error);
     } finally {
       setLoading(false);
@@ -127,7 +127,7 @@ const ImageManager = ({
     }
 
     if (!ImageService.isValidImageUrl(formData.url)) {
-      message.error('URL de imagen no v¡lida');
+      message.error('URL de imagen no válida');
       return;
     }
 
@@ -217,9 +217,9 @@ const ImageManager = ({
                 />,
                 <Popconfirm
                   title="¿Eliminar esta imagen?"
-                  description="Esta acci³n no se puede deshacer"
+                  description="Esta acción no se puede deshacer"
                   onConfirm={() => handleDeleteImage(image.id)}
-                  okText="S­"
+                  okText="Sí"
                   cancelText="No"
                 >
                   <Button
@@ -251,7 +251,7 @@ const ImageManager = ({
         {images.length === 0 && (
           <Col span={24}>
             <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <Text type="secondary">No hay im¡genes configuradas</Text>
+              <Text type="secondary">No hay imágenes configuradas</Text>
               <br />
               <Button
                 type="dashed"
@@ -304,7 +304,7 @@ const ImageManager = ({
           <div>
             <Text strong>Texto alternativo</Text>
             <TextArea
-              placeholder="Descripci³n de la imagen para accesibilidad"
+              placeholder="Descripción de la imagen para accesibilidad"
               value={formData.alt_text}
               onChange={(e) => setFormData({ ...formData, alt_text: e.target.value })}
               rows={3}

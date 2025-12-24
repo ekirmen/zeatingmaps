@@ -8,7 +8,7 @@ const FunctionModal = ({
   funciones,
   onFunctionSelect,
 }) => {
-  // Funci³n para limpiar/normalizar la funci³n antes de enviarla
+  // Función para limpiar/normalizar la función antes de enviarla
   const normalizeFunction = (funcion) => {
     return {
       ...funcion,
@@ -68,7 +68,7 @@ const FunctionModal = ({
         }
         
         if (inicioVenta && now < inicioVenta) {
-          return <Tag color="orange">Pr³ximamente</Tag>;
+          return <Tag color="orange">Próximamente</Tag>;
         }
         
         if (finVenta && now > finVenta) {
@@ -100,7 +100,7 @@ const FunctionModal = ({
 
   return (
     <Modal
-      title="Seleccionar Funci³n"
+      title="Seleccionar Función"
       open={visible}
       onCancel={onCancel}
       footer={null}

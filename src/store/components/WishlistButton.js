@@ -68,7 +68,7 @@ const WishlistButton = ({ event, size = 'default' }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        message.warning('Debes iniciar sesi³n para guardar favoritos');
+        message.warning('Debes iniciar sesión para guardar favoritos');
         return;
       }
 

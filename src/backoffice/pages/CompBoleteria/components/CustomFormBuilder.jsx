@@ -13,13 +13,13 @@ const { Option } = Select;
 const FIELD_TYPES = [
   { value: 'text', label: 'Texto', icon: 'ðŸ“' },
   { value: 'email', label: 'Email', icon: 'ðŸ“§' },
-  { value: 'phone', label: 'Tel©fono', icon: 'ðŸ“ž' },
+  { value: 'phone', label: 'Teléfono', icon: 'ðŸ“ž' },
   { value: 'select', label: 'Selector', icon: 'ðŸ“‹' },
   { value: 'textarea', label: 'rea de texto', icon: 'ðŸ“„' },
   { value: 'checkbox', label: 'Casilla', icon: '˜‘ï¸' },
-  { value: 'radio', label: 'Bot³n radio', icon: 'ðŸ”˜' },
+  { value: 'radio', label: 'Botón radio', icon: 'ðŸ”˜' },
   { value: 'date', label: 'Fecha', icon: 'ðŸ“…' },
-  { value: 'number', label: 'Nºmero', icon: 'ðŸ”¢' }
+  { value: 'number', label: 'Número', icon: 'ðŸ”¢' }
 ];
 
 const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
@@ -27,7 +27,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
     id: null,
     eventId: eventId,
     name: 'Formulario de Compra',
-    description: 'Recopila informaci³n de tus clientes',
+    description: 'Recopila información de tus clientes',
     fields: [],
     settings: {
       columns: 1,
@@ -61,7 +61,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
       label: `Campo ${formConfig.fields.length + 1}`,
       placeholder: '',
       required: false,
-      options: type === 'select' || type === 'radio' ? ['Opci³n 1', 'Opci³n 2'] : [],
+      options: type === 'select' || type === 'radio' ? ['Opción 1', 'Opción 2'] : [],
       validation: {
         minLength: null,
         maxLength: null,
@@ -159,11 +159,11 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
                 size="small" 
                 icon={<PlusOutlined />}
                 onClick={() => {
-                  const newOptions = [...field.options, `Opci³n ${field.options.length + 1}`];
+                  const newOptions = [...field.options, `Opción ${field.options.length + 1}`];
                   updateField(field.id, { options: newOptions });
                 }}
               >
-                Agregar opci³n
+                Agregar opción
               </Button>
             </div>
           )}
@@ -290,7 +290,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
           )}
         </div>
 
-        {/* rea de construcci³n */}
+        {/* rea de construcción */}
         <div className="lg:col-span-2">
           <Card title="Formulario" size="small">
             <div className="space-y-4">
@@ -301,7 +301,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
               />
               
               <Input.TextArea
-                placeholder="Descripci³n del formulario"
+                placeholder="Descripción del formulario"
                 value={formConfig.description}
                 onChange={(e) => setFormConfig(prev => ({ ...prev, description: e.target.value }))}
                 rows={2}
@@ -320,7 +320,7 @@ const CustomFormBuilder = ({ eventId, onSave, initialForm = null }) => {
                   ))}
                 </div>
               ) : (
-                // Modo edici³n
+                // Modo edición
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}

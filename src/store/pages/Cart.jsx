@@ -237,7 +237,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
 
     // Handle checkout - Optimizado para mobile (async, no bloqueante)
     const handleCheckout = () => {
-        // Validaci³n r¡pida primero (s­ncrona)
+        // Validación rápida primero (síncrona)
         if (itemCount === 0) {
             message.warning('El carrito está vacío');
             return;
@@ -357,7 +357,7 @@ const Cart = ({ items: propsItems, removeFromCart: propsRemoveFromCart, selected
                 }
             });
 
-            // Verificar todos los asientos en batch por funci³n
+            // Verificar todos los asientos en batch por función
             const paidSeatsSet = new Set();
             try {
                 const seatPaymentChecker = await import('../services/seatPaymentChecker');

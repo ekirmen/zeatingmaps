@@ -52,7 +52,7 @@ const UserManagement = () => {
       
       if (authError) throw authError;
 
-      // Luego obtener la informaci³n de tenant para cada usuario
+      // Luego obtener la información de tenant para cada usuario
       const { data: userTenantInfo, error: tenantError } = await supabase
         .from('user_tenant_info')
         .select(`
@@ -67,7 +67,7 @@ const UserManagement = () => {
 
       if (tenantError) throw tenantError;
 
-      // Combinar la informaci³n
+      // Combinar la información
       const combinedUsers = authUsers.users.map(authUser => {
         const tenantInfo = userTenantInfo?.find(uti => uti.user_id === authUser.id);
         return {
@@ -190,7 +190,7 @@ const UserManagement = () => {
     try {
       const values = await form.validateFields();
       
-      // Actualizar informaci³n del usuario
+      // Actualizar información del usuario
       const { error: userError } = await supabase
         .from('user_tenant_info')
         .update({
@@ -366,14 +366,14 @@ const UserManagement = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <TeamOutlined style={{ marginRight: '8px' }} />
-          Gesti³n de Usuarios
+          Gestión de Usuarios
         </Title>
         <Text type="secondary">
           Administra usuarios y roles de todos los tenants
         </Text>
       </div>
 
-      {/* Estad­sticas */}
+      {/* Estadísticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -407,7 +407,7 @@ const UserManagement = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="En l­nea (24h)"
+              title="En línea (24h)"
               value={stats.online || 0}
               valueStyle={{ color: '#1890ff' }}
               prefix={<CrownOutlined />}
@@ -484,7 +484,7 @@ const UserManagement = () => {
         />
       </Card>
 
-      {/* Drawer de edici³n de usuario */}
+      {/* Drawer de edición de usuario */}
       <Drawer
         title="Editar Usuario"
         placement="right"

@@ -67,7 +67,7 @@ const SeatStatusNotification = () => {
             <div className="flex items-center justify-between">
               <div>
                 <ExclamationCircleOutlined className="text-orange-500 mr-2" />
-                <span className="font-semibold">¡Atención! Tus asientos están por expirar</span>
+                <span className="font-semibold">áAtención! Tus asientos están por expirar</span>
               </div>
               <Button
                 type="link"
@@ -114,7 +114,7 @@ const SeatStatusNotification = () => {
           message={
             <div className="flex items-center">
               <CheckCircleOutlined className="text-green-500 mr-2" />
-              <span className="font-semibold">¡Bienvenido de vuelta!</span>
+              <span className="font-semibold">áBienvenido de vuelta!</span>
             </div>
           }
           description="Tus asientos seleccionados han sido restaurados automáticamente."

@@ -52,7 +52,7 @@ const SendTicketEmail = ({
       setEmailConfigStatus(hasConfig ? 'configured' : 'not-configured');
     } catch (error) {
       setEmailConfigStatus('error');
-      console.error('Error verificando configuraci³n de correo:', error);
+      console.error('Error verificando configuración de correo:', error);
     }
   };
 
@@ -132,7 +132,7 @@ const SendTicketEmail = ({
       case 'checking':
         return (
           <Alert
-            message="Verificando configuraci³n de correo..."
+            message="Verificando configuración de correo..."
             type="info"
             showIcon
             className="mb-4"
@@ -142,8 +142,8 @@ const SendTicketEmail = ({
       case 'configured':
         return (
           <Alert
-            message="Configuraci³n de correo activa"
-            description="Los tickets se enviar¡n usando la configuraci³n SMTP de tu empresa"
+            message="Configuración de correo activa"
+            description="Los tickets se enviarán usando la configuración SMTP de tu empresa"
             type="success"
             showIcon
             className="mb-4"
@@ -153,7 +153,7 @@ const SendTicketEmail = ({
       case 'not-configured':
         return (
           <Alert
-            message="Configuraci³n de correo no encontrada"
+            message="Configuración de correo no encontrada"
             description="Necesitas configurar el servidor SMTP de tu empresa para enviar correos"
             type="warning"
             showIcon
@@ -169,8 +169,8 @@ const SendTicketEmail = ({
       case 'error':
         return (
           <Alert
-            message="Error verificando configuraci³n"
-            description="No se pudo verificar la configuraci³n de correo"
+            message="Error verificando configuración"
+            description="No se pudo verificar la configuración de correo"
             type="error"
             showIcon
             className="mb-4"
@@ -248,7 +248,7 @@ const SendTicketEmail = ({
         <div className="text-center py-8">
           <ExclamationCircleOutlined style={{ fontSize: '48px', color: '#faad14' }} />
           <Title level={4} className="mt-4">
-            Configuraci³n de Correo Requerida
+            Configuración de Correo Requerida
           </Title>
           <Paragraph>
             Para enviar tickets por correo, primero debes configurar el servidor SMTP de tu empresa.
@@ -259,7 +259,7 @@ const SendTicketEmail = ({
             href="/backoffice/email-config"
             className="mt-4"
           >
-            Ir a Configuraci³n de Correo
+            Ir a Configuración de Correo
           </Button>
         </div>
       </Modal>
@@ -296,7 +296,7 @@ const SendTicketEmail = ({
           label="Email del destinatario"
           rules={[
             { required: true, message: 'Email es requerido' },
-            { type: 'email', message: 'Formato de email inv¡lido' }
+            { type: 'email', message: 'Formato de email inválido' }
           ]}
         >
           <Input 
@@ -329,8 +329,8 @@ const SendTicketEmail = ({
 
         <div className="text-xs text-gray-500 mb-4">
           <Text type="secondary">
-            <strong>Nota:</strong> Si no marcas la casilla, todos los tickets se enviar¡n en un solo correo.
-            Si la marcas, cada ticket se enviar¡ en un correo individual.
+            <strong>Nota:</strong> Si no marcas la casilla, todos los tickets se enviarán en un solo correo.
+            Si la marcas, cada ticket se enviará en un correo individual.
           </Text>
         </div>
 

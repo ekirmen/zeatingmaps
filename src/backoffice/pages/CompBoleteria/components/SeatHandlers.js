@@ -27,7 +27,7 @@ export const createSeatHandlers = ({
     const zonaId = seat.zona;
     const zonaObj = Array.isArray(zonas) ? zonas.find(z => (z.id || z._id) === zonaId) : null;
 
-    // Cliente opcional - se puede seleccionar despu©s
+    // Cliente opcional - se puede seleccionar después
     // if (!selectedClient) {
     //   message.info('Seleccione un cliente antes de agregar asientos');
     //   return;
@@ -35,13 +35,13 @@ export const createSeatHandlers = ({
 
     // Modo bloqueo - permite seleccionar asientos para bloquearlos
     if (blockMode) {
-      // Verificar que el asiento no est© vendido, reservado o anulado
+      // Verificar que el asiento no esté vendido, reservado o anulado
       if (seat.estado === 'pagado' || seat.estado === 'reservado' || seat.estado === 'anulado') {
         message.warning(`No se puede bloquear un asiento ${seat.estado}`);
         return;
       }
 
-      // Verificar si ya est¡ bloqueado por otro usuario
+      // Verificar si ya está bloqueado por otro usuario
       const [isLocked, lockedByMe] = await Promise.all([
         isSeatLocked(seat._id, currentFuncIdNum),
         isSeatLockedByMe(seat._id, currentFuncIdNum)
@@ -202,7 +202,7 @@ export const createSeatHandlers = ({
   };
 
   const handleSelectCompleteTable = (table) => {
-    // Cliente opcional - se puede seleccionar despu©s
+    // Cliente opcional - se puede seleccionar después
     // if (!selectedClient) {
     //   message.info('Seleccione un cliente antes de agregar asientos');
     //   return;

@@ -36,7 +36,7 @@ const Register = () => {
         phone: `${formData.phoneCode}${formData.phone}`,
       });
       
-      // Si el registro fue exitoso y tenemos una sesi³n, iniciar sesi³n autom¡ticamente
+      // Si el registro fue exitoso y tenemos una sesión, iniciar sesión automáticamente
       if (session && session.access_token) {
         const token = session.access_token;
         localStorage.setItem('token', token);

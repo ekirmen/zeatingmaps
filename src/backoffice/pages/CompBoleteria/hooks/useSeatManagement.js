@@ -37,7 +37,7 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
     loadAbonoSeats();
   }, [abonoMode, selectedEvent]);
 
-  // Suscribirse a eventos en tiempo real para la funci³n seleccionada
+  // Suscribirse a eventos en tiempo real para la función seleccionada
   useEffect(() => {
     if (selectedEvent?.id && subscribeToFunction) {
       subscribeToFunction(selectedEvent.id);
@@ -50,7 +50,7 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
     };
   }, [selectedEvent?.id, subscribeToFunction, unsubscribe]);
 
-  // Liberar asientos bloqueados temporalmente al desmontar o recargar la p¡gina
+  // Liberar asientos bloqueados temporalmente al desmontar o recargar la página
   useEffect(() => {
     const cleanupTemp = () => {
       tempBlocks.forEach(id => {

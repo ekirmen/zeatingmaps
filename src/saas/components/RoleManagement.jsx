@@ -148,7 +148,7 @@ const RoleManagement = () => {
         ),
       },
       {
-        title: 'Descripci³n',
+        title: 'Descripción',
         dataIndex: 'description',
         key: 'description',
       },
@@ -164,7 +164,7 @@ const RoleManagement = () => {
               </Tag>
             ))}
             {permissions.length > 3 && (
-              <Tag size="small">+{permissions.length - 3} m¡s</Tag>
+              <Tag size="small">+{permissions.length - 3} más</Tag>
             )}
           </Space>
         ),
@@ -186,7 +186,7 @@ const RoleManagement = () => {
                 size="small" 
                 danger 
                 icon={<DeleteOutlined />}
-                onClick={() => message.warning('Funci³n de eliminaci³n no implementada')}
+                onClick={() => message.warning('Función de eliminación no implementada')}
               >
                 Eliminar
               </Button>
@@ -265,7 +265,7 @@ const RoleManagement = () => {
         rules={[{ required: true, message: 'Seleccione un usuario' }]}
       >
         <Select placeholder="Seleccionar usuario">
-          {/* Aqu­ se cargar­an los usuarios disponibles */}
+          {/* Aquí se cargarían los usuarios disponibles */}
         </Select>
       </Form.Item>
 
@@ -310,10 +310,10 @@ const RoleManagement = () => {
 
       <Form.Item
         name="description"
-        label="Descripci³n"
-        rules={[{ required: true, message: 'Descripci³n requerida' }]}
+        label="Descripción"
+        rules={[{ required: true, message: 'Descripción requerida' }]}
       >
-        <Input.TextArea placeholder="Descripci³n del rol y sus responsabilidades" />
+        <Input.TextArea placeholder="Descripción del rol y sus responsabilidades" />
       </Form.Item>
 
       <Form.Item
@@ -352,7 +352,7 @@ const RoleManagement = () => {
         <Col span={24}>
           <Title level={2}>
             <TeamOutlined style={{ marginRight: '8px' }} />
-            Gesti³n de Roles y Permisos
+            Gestión de Roles y Permisos
           </Title>
           <Text type="secondary">
             Administra los roles de usuario y sus permisos de acceso al sistema
@@ -382,9 +382,9 @@ const RoleManagement = () => {
                 </Button>
                 <Button 
                   icon={<SecurityScanOutlined />}
-                  onClick={() => message.info('Funci³n de exportaci³n no implementada')}
+                  onClick={() => message.info('Función de exportación no implementada')}
                 >
-                  Exportar Configuraci³n
+                  Exportar Configuración
                 </Button>
               </Space>
             </div>
@@ -401,8 +401,8 @@ const RoleManagement = () => {
             key="assign"
           >
             <Alert
-              message="Asignaci³n de Roles"
-              description="Asigna roles a usuarios espec­ficos y configura permisos personalizados."
+              message="Asignación de Roles"
+              description="Asigna roles a usuarios específicos y configura permisos personalizados."
               type="info"
               showIcon
               style={{ marginBottom: '16px' }}
@@ -457,12 +457,12 @@ const RoleManagement = () => {
             tab={
               <Space>
                 <SettingOutlined />
-                <span>Estad­sticas</span>
+                <span>Estadísticas</span>
               </Space>
             } 
             key="stats"
           >
-            <Title level={4}>Distribuci³n de Usuarios por Rol</Title>
+            <Title level={4}>Distribución de Usuarios por Rol</Title>
             {renderRoleStats()}
           </TabPane>
         </Tabs>

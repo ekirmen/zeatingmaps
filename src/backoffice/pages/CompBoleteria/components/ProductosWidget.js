@@ -162,7 +162,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
           {showFilters && (
             <Space wrap>
               <Select
-                placeholder="Categor­a"
+                placeholder="Categoría"
                 value={categoryFilter}
                 onChange={setCategoryFilter}
                 style={{ width: 120 }}

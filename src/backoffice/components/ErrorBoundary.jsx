@@ -23,7 +23,7 @@ class ErrorBoundary extends React.Component {
   }
 
   handleReload = () => {
-    // Recargar la p¡gina
+    // Recargar la página
     window.location.reload();
   };
 
@@ -33,18 +33,18 @@ class ErrorBoundary extends React.Component {
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
           <div className="max-w-md w-full mx-4">
             <Alert
-              message="Error de Inicializaci³n"
+              message="Error de Inicialización"
               description={
                 <div className="space-y-4">
                   <p>
-                    Ha ocurrido un error al cargar la aplicaci³n. Esto puede deberse a un problema 
-                    temporal de inicializaci³n del c³digo.
+                    Ha ocurrido un error al cargar la aplicación. Esto puede deberse a un problema 
+                    temporal de inicialización del código.
                   </p>
                   <div className="text-sm text-gray-600">
                     <p><strong>Error:</strong> {this.state.error?.message || 'Error desconocido'}</p>
                     {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
                       <details className="mt-2">
-                        <summary className="cursor-pointer">Detalles t©cnicos</summary>
+                        <summary className="cursor-pointer">Detalles técnicos</summary>
                         <pre className="text-xs mt-2 overflow-auto max-h-32">
                           {this.state.errorInfo.componentStack}
                         </pre>
@@ -57,7 +57,7 @@ class ErrorBoundary extends React.Component {
                       icon={<ReloadOutlined />} 
                       onClick={this.handleReload}
                     >
-                      Recargar P¡gina
+                      Recargar Página
                     </Button>
                     <Button 
                       onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}

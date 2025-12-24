@@ -65,7 +65,7 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: 'Configuraci³n',
+      label: 'Configuración',
     },
     {
       type: 'divider',
@@ -73,7 +73,7 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Cerrar Sesi³n',
+      label: 'Cerrar Sesión',
       onClick: logout,
     },
   ];
@@ -118,7 +118,7 @@ const DashboardLayout = ({ children, title, subtitle, actions }) => {
             ðŸŽ« Ticketera
           </div>
           <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>
-            Panel de Administraci³n
+            Panel de Administración
           </Text>
         </div>
 

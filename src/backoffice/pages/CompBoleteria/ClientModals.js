@@ -24,7 +24,7 @@ const ClientModals = ({
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
-      message.warning('Por favor ingresa un t©rmino de bºsqueda');
+      message.warning('Por favor ingresa un término de búsqueda');
       return;
     }
 
@@ -55,7 +55,7 @@ const ClientModals = ({
       }
     } catch (error) {
       console.error('Search error:', error);
-      message.error(error.message || 'Error en la bºsqueda');
+      message.error(error.message || 'Error en la búsqueda');
     }
   };
 
@@ -104,7 +104,7 @@ const ClientModals = ({
 
       if (profileError) throw profileError;
 
-      message.success('Usuario creado con ©xito');
+      message.success('Usuario creado con éxito');
       setNewClientForm({ nombre: '', email: '', telefono: '' });
       setIsAddingAccount(false);
     } catch (error) {
@@ -127,12 +127,12 @@ const ClientModals = ({
       ellipsis: true,
     },
     {
-      title: 'Tel©fono',
+      title: 'Teléfono',
       dataIndex: 'telefono',
       key: 'telefono',
     },
     {
-      title: 'Acci³n',
+      title: 'Acción',
       key: 'actions',
       render: (_, record) => (
         <Button
@@ -157,7 +157,7 @@ const ClientModals = ({
         if (typeof onSearchCancel === 'function') {
           onSearchCancel();
         } else {
-          console.error('Œ [ClientModals] onSearchCancel no es una funci³n:', onSearchCancel);
+          console.error('Œ [ClientModals] onSearchCancel no es una función:', onSearchCancel);
         }
       }}
       footer={null}
@@ -165,7 +165,7 @@ const ClientModals = ({
       centered
     >
       <div className="space-y-4">
-        {/* Barra de bºsqueda */}
+        {/* Barra de búsqueda */}
         <Input.Search
           placeholder="Buscar por email"
           enterButton="Buscar"
@@ -176,7 +176,7 @@ const ClientModals = ({
           allowClear
         />
 
-        {/* Bot³n para crear nueva cuenta */}
+        {/* Botón para crear nueva cuenta */}
         <Button
           type="default"
           block
@@ -202,7 +202,7 @@ const ClientModals = ({
               onChange={(e) => setNewClientForm({ ...newClientForm, email: e.target.value })}
             />
             <Input
-              placeholder="Tel©fono (opcional)"
+              placeholder="Teléfono (opcional)"
               value={newClientForm.telefono}
               onChange={(e) => setNewClientForm({ ...newClientForm, telefono: e.target.value })}
             />

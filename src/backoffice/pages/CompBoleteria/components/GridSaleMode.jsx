@@ -29,7 +29,7 @@ const GridSaleMode = ({
       return;
     }
 
-    // En modo Grid, no necesitamos funci³n espec­fica
+    // En modo Grid, no necesitamos función específica
     console.log('œ… [GridSaleMode] Loading zonas for evento (modo grid)');
     loadZonasAndPrecios();
   }, [evento?.id]);
@@ -38,7 +38,7 @@ const GridSaleMode = ({
     try {
       setLoadingZonas(true);
       setError(null);
-      // Cargar zonas del evento usando la funci³n est¡ndar
+      // Cargar zonas del evento usando la función estándar
       const zonasData = await fetchZonasPorSala(evento.sala);
       setZonas(zonasData || []);
 
@@ -82,7 +82,7 @@ const GridSaleMode = ({
 
     } catch (err) {
       console.error('Error cargando zonas y precios:', err);
-      setError('Error al cargar informaci³n de venta');
+      setError('Error al cargar información de venta');
     } finally {
       setLoadingZonas(false);
     }
@@ -121,7 +121,7 @@ const GridSaleMode = ({
 
     onAddToCart(item);
 
-    // Limpiar cantidad despu©s de agregar
+    // Limpiar cantidad después de agregar
     setCantidades(prev => ({
       ...prev,
       [zona.id]: 0
@@ -299,7 +299,7 @@ const GridSaleMode = ({
         </Text>
       </div>
 
-      {/* Informaci³n del cliente */}
+      {/* Información del cliente */}
       {selectedClient ? (
         <Card className="mb-4" size="small">
           <div className="flex items-center justify-between">
@@ -438,16 +438,16 @@ const GridSaleMode = ({
         </Card>
       )}
 
-      {/* Informaci³n adicional */}
+      {/* Información adicional */}
       <Card size="small">
         <div className="flex items-start gap-2">
           <InfoCircleOutlined className="text-blue-500 mt-1" />
           <div>
             <Text strong className="block mb-1">
-              Informaci³n del modo Grid:
+              Información del modo Grid:
             </Text>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>-¢ Las entradas se venden por zona sin selecci³n espec­fica de asientos</li>
+              <li>-¢ Las entradas se venden por zona sin selección específica de asientos</li>
               <li>-¢ El cliente puede elegir cualquier asiento disponible en la zona</li>
               <li>-¢ Ideal para eventos generales o con asientos no numerados</li>
               <li>-¢ Los precios se configuran por zona en el dashboard</li>

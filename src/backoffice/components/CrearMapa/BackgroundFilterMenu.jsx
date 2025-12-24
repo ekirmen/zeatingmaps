@@ -64,12 +64,12 @@ const BackgroundFilterMenu = ({
     },
     {
       key: 'saturation',
-      label: 'Saturaci³n',
+      label: 'Saturación',
       min: -1,
       max: 1,
       step: 0.1,
       defaultValue: 0,
-      description: 'Ajusta la saturaci³n de los colores'
+      description: 'Ajusta la saturación de los colores'
     },
     {
       key: 'hue',
@@ -228,10 +228,10 @@ const BackgroundFilterMenu = ({
         </div>
 
         {/* ===== INFORMACI“N ADICIONAL ===== */}
-        <Card size="small" title="Informaci³n">
+        <Card size="small" title="Información">
           <Text type="secondary" className="text-sm">
-            Los filtros se aplican en tiempo real. Puedes combinar mºltiples filtros 
-            para crear efectos ºnicos. Usa el bot³n "Restablecer" para volver a la 
+            Los filtros se aplican en tiempo real. Puedes combinar múltiples filtros 
+            para crear efectos únicos. Usa el botón "Restablecer" para volver a la 
             imagen original.
           </Text>
         </Card>

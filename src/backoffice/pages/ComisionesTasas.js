@@ -84,7 +84,7 @@ const ComisionesTasas = () => {
       };
 
       if (editingComision) {
-        // Actualizar comisi³n existente
+        // Actualizar comisión existente
         const { error } = await supabase
           .from('comisiones_tasas')
           .update(comisionData)
@@ -101,7 +101,7 @@ const ComisionesTasas = () => {
         );
         message.success('Comisión actualizada correctamente');
       } else {
-        // Crear nueva comisi³n
+        // Crear nueva comisión
         const { data, error } = await supabase
           .from('comisiones_tasas')
           .insert([comisionData])
@@ -118,7 +118,7 @@ const ComisionesTasas = () => {
       setEditingComision(null);
     } catch (error) {
       console.error('Error saving comision:', error);
-      message.error('Error al guardar la comisi³n');
+      message.error('Error al guardar la comisión');
     }
   };
 
@@ -141,7 +141,7 @@ const ComisionesTasas = () => {
       message.success('Comisión eliminada correctamente');
     } catch (error) {
       console.error('Error deleting comision:', error);
-      message.error('Error al eliminar la comisi³n');
+      message.error('Error al eliminar la comisión');
     }
   };
 
@@ -214,7 +214,7 @@ const ComisionesTasas = () => {
             />
           </Tooltip>
           <Popconfirm
-            title="¿Eliminar esta comisi³n?"
+            title="¿Eliminar esta comisión?"
             onConfirm={() => handleDelete(record.id)}
             okText="Sí"
             cancelText="No"
@@ -257,7 +257,7 @@ const ComisionesTasas = () => {
                 setModalVisible(true);
               }}
             >
-              Nueva Comisi³n
+              Nueva Comisión
             </Button>
           </div>
           <div className="mt-2 p-3 bg-blue-50 rounded-lg">
@@ -283,9 +283,9 @@ const ComisionesTasas = () => {
         />
       </Card>
 
-      {/* Modal para crear/editar comisi³n */}
+      {/* Modal para crear/editar comisión */}
       <Modal
-        title={editingComision ? 'Editar Comisi³n' : 'Nueva Comisi³n'}
+        title={editingComision ? 'Editar Comisión' : 'Nueva Comisión'}
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);

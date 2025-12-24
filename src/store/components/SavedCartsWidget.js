@@ -115,7 +115,7 @@ const SavedCartsWidget = ({ visible, onClose }) => {
             <ShoppingCartOutlined className="text-4xl text-gray-400 mb-4" />
             <Title level={4} className="text-gray-500">No hay carritos guardados</Title>
             <Text type="secondary">
-              Guarda tu carrito actual para acceder a ©l m¡s tarde
+              Guarda tu carrito actual para acceder a él más tarde
             </Text>
           </div>
         ) : (

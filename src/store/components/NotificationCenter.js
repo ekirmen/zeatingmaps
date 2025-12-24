@@ -166,7 +166,7 @@ const NotificationCenter = () => {
             size="small"
             onClick={markAllAsRead}
           >
-            Marcar todas como le­das
+            Marcar todas como leídas
           </Button>
         )}
       </div>

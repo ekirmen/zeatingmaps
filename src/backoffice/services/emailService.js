@@ -354,7 +354,7 @@ class EmailService {
           </div>
           
           <div class="footer">
-            <p>© 2024 Kreatickets. Todos los derechos reservados.</p>
+            <p>é 2024 Kreatickets. Todos los derechos reservados.</p>
             <p><a href="{{unsubscribe_url}}" style="color: #666;">Cancelar suscripción</a></p>
           </div>
         </div>

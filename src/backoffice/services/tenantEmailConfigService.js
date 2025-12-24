@@ -414,7 +414,7 @@ export class TenantEmailConfigService {
       subject: 'Bienvenido a Omega Boletos',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #52c41a;">🎉 ¡Bienvenido!</h2>
+          <h2 style="color: #52c41a;">🎉 áBienvenido!</h2>
           <p>Te damos la bienvenida a <strong>Omega Boletos</strong>. Este correo confirma que la configuración de envío está funcionando correctamente.</p>
           <p>Muy pronto recibirás toda la información necesaria para comenzar a operar tus eventos con nosotros.</p>
           <div style="margin-top: 20px; font-size: 12px; color: #666;">

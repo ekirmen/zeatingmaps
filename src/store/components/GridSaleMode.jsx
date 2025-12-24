@@ -79,7 +79,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
 
     } catch (err) {
       console.error('Error cargando zonas y precios:', err);
-      setError('Error al cargar informaci³n de venta');
+      setError('Error al cargar información de venta');
     } finally {
       setLoadingZonas(false);
     }
@@ -112,14 +112,14 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
       precio: Number(precio.precio) || 0,
       cantidad: cantidad,
       tipo: 'grid',
-      descripcion: `${zona.nombre} - ${funcion?.nombre || 'Funci³n'}`,
+      descripcion: `${zona.nombre} - ${funcion?.nombre || 'Función'}`,
       fecha: funcion?.fechaCelebracion || funcion?.fecha || null,
       hora: funcion?.hora || null
     };
 
     onAddToCart(item);
     
-    // Limpiar cantidad despu©s de agregar
+    // Limpiar cantidad después de agregar
     setCantidades(prev => ({
       ...prev,
       [zona.id]: 0
@@ -321,16 +321,16 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
         </Card>
       )}
 
-      {/* Informaci³n adicional */}
+      {/* Información adicional */}
       <Card className="mt-4 info-card">
         <div className="flex items-start gap-2">
           <InfoCircleOutlined className="text-blue-500 mt-1" />
           <div>
             <Text strong className="block mb-1">
-              Informaci³n importante:
+              Información importante:
             </Text>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>-¢ Las entradas son v¡lidas solo para la fecha y hora seleccionada</li>
+              <li>-¢ Las entradas son válidas solo para la fecha y hora seleccionada</li>
               <li>-¢ Una vez confirmado el pago, no se pueden realizar cambios</li>
               <li>-¢ Presenta tu comprobante en la entrada del evento</li>
               <li>-¢ Para dudas, contacta al organizador del evento</li>

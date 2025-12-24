@@ -51,7 +51,7 @@ const EventSearchMap = () => {
       {events.length > 0 && (
         <List
           bordered
-          header={<div>Resultados de la Bºsqueda</div>}
+          header={<div>Resultados de la Búsqueda</div>}
           dataSource={events}
           renderItem={(item) => (
             <List.Item onClick={() => selectEvent(item)} className="cursor-pointer hover:bg-gray-100">
@@ -83,7 +83,7 @@ const EventSearchMap = () => {
       {/* œ¨ FIX: Use selectedFunc to show details about the selected map */}
       {mapa && selectedFunc && (
           <div className="border p-4">
-            <h3>Mapa de asientos para la funci³n del {selectedFunc.fechaCelebracion ? new Date(selectedFunc.fechaCelebracion).toLocaleString() : 'fecha no disponible'}</h3>
+            <h3>Mapa de asientos para la función del {selectedFunc.fechaCelebracion ? new Date(selectedFunc.fechaCelebracion).toLocaleString() : 'fecha no disponible'}</h3>
             <LoadOnVisible
               loader={() => import('../../components/SeatingMap')}
               fallback={<SeatMapSkeleton />}

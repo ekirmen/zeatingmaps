@@ -111,18 +111,18 @@ const Boleteria = () => {
     if (currentFuncionId && currentFuncionId !== subscriptionFuncionId.current && subscribeToFunction) {
       // Desuscribirse de la función anterior si existe
       if (subscriptionFuncionId.current && unsubscribe) {
-        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de función anterior:', subscriptionFuncionId.current);
+        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂéndose de función anterior:', subscriptionFuncionId.current);
         unsubscribe();
       }
 
-      logger.log('Ã°Å¸â€â€ [Boleteria] SuscribiÂ©ndose a función:', currentFuncionId);
+      logger.log('Ã°Å¸â€â€ [Boleteria] SuscribiÂéndose a función:', currentFuncionId);
       subscribeToFunction(currentFuncionId);
       subscriptionFuncionId.current = currentFuncionId;
     }
 
     return () => {
       if (unsubscribe && subscriptionFuncionId.current) {
-        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂ©ndose de función:', subscriptionFuncionId.current);
+        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂéndose de función:', subscriptionFuncionId.current);
         unsubscribe();
         subscriptionFuncionId.current = null;
       }
@@ -138,14 +138,14 @@ const Boleteria = () => {
   const [isSeatModalVisible, setIsSeatModalVisible] = useState(false);
   const [permanentLocks, setPermanentLocks] = useState([]);
 
-  // Estados para gestiÂ³n de precios y entradas
+  // Estados para gestiÂón de precios y entradas
   const [entradas, setEntradas] = useState([]);
   const [selectedEntradaId, setSelectedEntradaId] = useState(null);
   const [priceOptions, setPriceOptions] = useState([]);
   const [blockMode, setBlockMode] = useState(false);
   const [blockAction, setBlockAction] = useState(null); // 'block' | 'unlock'
 
-  // Eliminar useEffect duplicado - ya estÂ¡ manejado arriba
+  // Eliminar useEffect duplicado - ya estÂá manejado arriba
 
   // useEffect para cargar entradas y opciones de precio (optimizado - solo cuando cambian funcion o evento)
   const prevFuncionId = useRef(null);
@@ -169,7 +169,7 @@ const Boleteria = () => {
         // Cargar entradas del recinto
         const recintoId = selectedEvent.recinto || selectedEvent.recinto_id;
         if (!recintoId) {
-          logger.warn('No se encontrÂ³ recinto_id');
+          logger.warn('No se encontrÂó recinto_id');
           return;
         }
 
@@ -212,7 +212,7 @@ const Boleteria = () => {
             pricesGrouped[entradaId].maxPrecio = Math.max(pricesGrouped[entradaId].maxPrecio, detalle.precio || 0);
           });
 
-          // Combinar con informaciÂ³n de entradas
+          // Combinar con informaciÂón de entradas
           const priceOptionsArray = Object.values(pricesGrouped).map(group => {
             const entrada = entradasData?.find(e => e.id === group.entradaId);
             const safeMinPrecio = Number.isFinite(group.minPrecio) && group.minPrecio !== Infinity
@@ -246,7 +246,7 @@ const Boleteria = () => {
     };
 
     loadEntradasAndPrices();
-  }, [selectedFuncion?.id, selectedEvent?.id]); // Solo dependencias crÂ­ticas
+  }, [selectedFuncion?.id, selectedEvent?.id]); // Solo dependencias crÂíticas
 
   const searchExistingSeats = useCallback(async () => {
     if (!selectedFuncion?.id || searchAllSeatsLoading) return;
@@ -310,7 +310,7 @@ const Boleteria = () => {
             zona: zonaNombre,
             zonaId: seat.zonaId || seat.zona?.id || seat.zona_id,
             precio,
-            tipoPrecio: seat.tipoPrecio || seat.tipo || 'histÂ³rico',
+            tipoPrecio: seat.tipoPrecio || seat.tipo || 'histÂórico',
             locator: payment.locator,
             status: normalizedStatus,
             buyerName,
@@ -495,11 +495,11 @@ const Boleteria = () => {
       const hasSaleItems = safeCart.some(item => !item.lockAction);
 
       if (hasSaleItems) {
-        message.warning('VacÂ­a el carrito de venta antes de usar el modo bloqueo/desbloqueo.');
+        message.warning('VacÂía el carrito de venta antes de usar el modo bloqueo/desbloqueo.');
         return;
       }
 
-      // Si ya estÂ¡ activo el mismo modo, desactivarlo
+      // Si ya estÂá activo el mismo modo, desactivarlo
       if (blockMode && blockAction === action) {
         setBlockMode(false);
         setBlockAction(null);
@@ -508,7 +508,7 @@ const Boleteria = () => {
         return;
       }
 
-      // Limpiar selecciones previas de bloqueo si se cambia la acciÂ³n
+      // Limpiar selecciones previas de bloqueo si se cambia la acciÂón
       const lockItems = safeCart.filter(item => item.lockAction === action);
       if (lockItems.length !== safeCart.filter(item => item.lockAction).length) {
         message.info('Se limpiaron los asientos seleccionados del modo anterior.');
@@ -533,7 +533,7 @@ const Boleteria = () => {
         const seatId = seatData?._id || seatData?.sillaId || seatData?.id;
 
         if (!seatId) {
-          logger.warn('Å¡Â Ã¯Â¸Â [Boleteria] toggleSeat llamado sin identificador vÂ¡lido:', seatData);
+          logger.warn('ÅáÂ Ã¯Â¸Â [Boleteria] toggleSeat llamado sin identificador vÂálido:', seatData);
           return safePrev;
         }
 
@@ -603,12 +603,12 @@ const Boleteria = () => {
         const lockAction = blockAction === 'block' ? 'block' : 'unlock';
 
         if (lockAction === 'block' && blockedStates.includes(seatEstado)) {
-          message.warning('El asiento ya estÂ¡ bloqueado. Usa DESBLOQUEAR si quieres liberarlo.');
+          message.warning('El asiento ya estÂá bloqueado. Usa DESBLOQUEAR si quieres liberarlo.');
           return;
         }
 
         if (lockAction === 'unlock' && !blockedStates.includes(seatEstado)) {
-          message.warning('Solo puedes seleccionar asientos que ya estÂ©n bloqueados para desbloquearlos.');
+          message.warning('Solo puedes seleccionar asientos que ya estÂén bloqueados para desbloquearlos.');
           return;
         }
 
@@ -616,12 +616,12 @@ const Boleteria = () => {
           const safePrev = Array.isArray(prev) ? prev.filter(item => item.lockAction) : [];
           const existingIndex = safePrev.findIndex(item => (item._id || item.sillaId || item.id) === sillaId);
 
-          // Si el asiento ya estÂ¡ seleccionado con la misma acciÂ³n, quitarlo
+          // Si el asiento ya estÂá seleccionado con la misma acciÂón, quitarlo
           if (existingIndex >= 0 && safePrev[existingIndex]?.lockAction === lockAction) {
             return safePrev.filter((_, index) => index !== existingIndex);
           }
 
-          // Reemplazar acciÂ³n si estaba con la contraria
+          // Reemplazar acciÂón si estaba con la contraria
           const withoutSeat = existingIndex >= 0
             ? safePrev.filter((_, index) => index !== existingIndex)
             : safePrev;
@@ -663,16 +663,16 @@ const Boleteria = () => {
 
       // Verificar que se haya seleccionado un tipo de entrada
       if (!selectedEntradaId) {
-        logger.warn('Å¡Â Ã¯Â¸Â [Boleteria] No se ha seleccionado un tipo de entrada');
+        logger.warn('ÅáÂ Ã¯Â¸Â [Boleteria] No se ha seleccionado un tipo de entrada');
         // Aquí podrías mostrar un mensaje al usuario
         return;
       }
 
-      // En modo boleterÂ­a simplificado, no verificamos bloqueos aquÂ­
-      // Los bloqueos se manejan por separado con botones especÂ­ficos
+      // En modo boleterÂía simplificado, no verificamos bloqueos aquÂí
+      // Los bloqueos se manejan por separado con botones especÂíficos
 
       if (seatEstado === 'bloqueado' || seatEstado === 'locked' || seatEstado === 'lock') {
-        message.warning('Este asiento estÂ¡ bloqueado. Activa el modo bloqueo/desbloqueo para liberarlo.');
+        message.warning('Este asiento estÂá bloqueado. Activa el modo bloqueo/desbloqueo para liberarlo.');
         return;
       }
 
@@ -689,7 +689,7 @@ const Boleteria = () => {
         try {
           detalle = JSON.parse(detalle);
         } catch (error) {
-          logger.warn('Å¡Â Ã¯Â¸Â [Boleteria] No se pudo parsear la plantilla de precios:', error);
+          logger.warn('ÅáÂ Ã¯Â¸Â [Boleteria] No se pudo parsear la plantilla de precios:', error);
           detalle = [];
         }
       }
@@ -710,7 +710,7 @@ const Boleteria = () => {
       const detalleFinal = detalleZona || detalleZonaFallback;
       const precio = Number(detalleFinal?.precio) || 0;
 
-      // Obtener informaciÂ³n del tipo de entrada seleccionado
+      // Obtener informaciÂón del tipo de entrada seleccionado
       const entradaSeleccionada = priceOptions?.find(option => option.entradaId === selectedEntradaId);
       const tipoPrecio = entradaSeleccionada?.nombre || detalleFinal?.tipoEntrada || detalleFinal?.tipo || 'general';
       const descuentoNombre = detalleFinal?.descuentoNombre || detalleFinal?.descuento || '';
@@ -739,7 +739,7 @@ const Boleteria = () => {
         modoVenta: 'boleteria'
       };
 
-      // Verificar si el asiento ya estÂ¡ en el carrito
+      // Verificar si el asiento ya estÂá en el carrito
       const exists = carrito.some(item => item.sillaId === sillaId);
 
       if (exists) {
@@ -989,7 +989,7 @@ const Boleteria = () => {
 
       {/* Sidebar izquierdo - Mobile: Drawer, Desktop: Sidebar */}
       <>
-        {/* Mobile: BotÂ³n para abrir sidebar */}
+        {/* Mobile: BotÂón para abrir sidebar */}
         <div className="md:hidden fixed top-2 left-2 z-50">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -1001,7 +1001,7 @@ const Boleteria = () => {
 
         {/* Mobile: Drawer para sidebar */}
         <Drawer
-          title="MenÂº"
+          title="MenÂú"
           placement="left"
           onClose={() => setSidebarOpen(false)}
           open={sidebarOpen}
@@ -1058,15 +1058,15 @@ const Boleteria = () => {
                 />
               </div>
               <div className="text-xs text-gray-400 flex-shrink-0">
-                Ã°Å¸Å¸Â¢Ã°Å¸Å¸Â¡Ã°Å¸â€ Â´Ã°Å¸Å¸Â£Å¡Â«
+                Ã°Å¸Å¸Â¢Ã°Å¸Å¸ÂáÃ°Å¸â€ Â´Ã°Å¸Å¸Â£ÅáÂ«
               </div>
             </div>
           </div>
 
-          {/* NavegaciÂ³n ultra compacta con botones estilo tabs */}
+          {/* NavegaciÂón ultra compacta con botones estilo tabs */}
           <div className="bg-white border-b border-gray-200 sticky top-14 md:static z-10 shadow-sm md:shadow-none">
             <div className="flex items-center justify-between px-2 py-1">
-              {/* BotÂ³n para abrir panel lateral */}
+              {/* BotÂón para abrir panel lateral */}
               <div className="flex items-center">
                 <button
                   className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -1076,19 +1076,19 @@ const Boleteria = () => {
                 </button>
               </div>
 
-              {/* Botones de navegaciÂ³n principales */}
+              {/* Botones de navegaciÂón principales */}
               <div className="flex space-x-1">
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
                   Ã°Å¸ÂÂ·Ã¯Â¸Â Zonas
                 </button>
                 <button className="px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded">
-                  Ã°Å¸â€”ÂºÃ¯Â¸Â Mapa
+                  Ã°Å¸â€”ÂúÃ¯Â¸Â Mapa
                 </button>
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
                   Ã°Å¸Ââ€ Productos
                 </button>
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  Å¡â„¢Ã¯Â¸Â Otros
+                  Åáâ„¢Ã¯Â¸Â Otros
                 </button>
               </div>
 
@@ -1097,17 +1097,17 @@ const Boleteria = () => {
                 <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="Cliente">
                   <i className="text-sm">Ã°Å¸â€˜Â¤</i>
                 </button>
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="FidelizaciÂ³n">
-                  <i className="text-sm">Ã°Å¸â€™Â³</i>
+                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="FidelizaciÂón">
+                  <i className="text-sm">Ã°Å¸â€™Âó</i>
                 </button>
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="InformaciÂ³n">
+                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="InformaciÂón">
                   <i className="text-sm">â€žÂ¹Ã¯Â¸Â</i>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* SecciÂ³n ultra compacta de precios dinÂ¡micos con selecciÂ³n de entrada */}
+          {/* SecciÂón ultra compacta de precios dinÂámicos con selecciÂón de entrada */}
           <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
             <div className="flex items-center gap-3 px-1 py-1">
               <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
@@ -1155,7 +1155,7 @@ const Boleteria = () => {
                     ? `$${minPrecio.toFixed(2)}`
                     : `$${minPrecio.toFixed(2)}-$${maxPrecio.toFixed(2)}`;
 
-                  // Determinar color segÂºn tipo de producto
+                  // Determinar color segÂún tipo de producto
                   let bgColor = 'bg-gray-200 text-gray-700';
                   if (isActive) {
                     bgColor = 'bg-purple-600 text-white';
@@ -1248,9 +1248,9 @@ const Boleteria = () => {
         </div>
 
         {/* Panel derecho - Carrito de compras */}
-        {/* Mobile: BotÂ³n flotante + Drawer */}
+        {/* Mobile: BotÂón flotante + Drawer */}
         <>
-          {/* Mobile: BotÂ³n flotante para carrito */}
+          {/* Mobile: BotÂón flotante para carrito */}
           {carrito && carrito.length > 0 && (
             <div className="md:hidden fixed bottom-4 right-4 z-50">
               <Button
@@ -1260,7 +1260,7 @@ const Boleteria = () => {
                 onClick={() => setCartOpen(true)}
                 className="shadow-lg"
               >
-                Ã°Å¸â€ºâ€™ {carrito.length}
+                Ã°Å¸â€úâ€™ {carrito.length}
               </Button>
             </div>
           )}
@@ -1298,7 +1298,7 @@ const Boleteria = () => {
         onCancel={() => setIsSeatModalVisible(false)}
         footer={null}
         width={800}
-        title="InformaciÂ³n del Asiento"
+        title="InformaciÂón del Asiento"
       >
         {seatPayment && (
           <div>

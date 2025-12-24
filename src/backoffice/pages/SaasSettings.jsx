@@ -39,7 +39,7 @@ const SaasSettings = () => {
       setPlanLimits(data || []);
     } catch (error) {
       console.error('Error loading plan limits:', error);
-      message.error('Error al cargar l­mites de planes');
+      message.error('Error al cargar límites de planes');
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ const SaasSettings = () => {
 
   const loadSystemConfig = async () => {
     try {
-      // En un sistema real, esto vendr­a de una tabla de configuraci³n
+      // En un sistema real, esto vendría de una tabla de configuración
       // Por ahora usamos valores por defecto
       setSystemConfig({
         defaultPlan: 'basic',
@@ -136,11 +136,11 @@ const SaasSettings = () => {
 
   const handleSaveSystemConfig = async () => {
     try {
-      // En un sistema real, esto guardar­a en una tabla de configuraci³n
-      message.success('Configuraci³n del sistema guardada correctamente');
+      // En un sistema real, esto guardaría en una tabla de configuración
+      message.success('Configuración del sistema guardada correctamente');
     } catch (error) {
       console.error('Error saving system config:', error);
-      message.error('Error al guardar configuraci³n');
+      message.error('Error al guardar configuración');
     }
   };
 
@@ -165,22 +165,22 @@ const SaasSettings = () => {
       ),
     },
     {
-      title: 'Eventos M¡x.',
+      title: 'Eventos Máx.',
       dataIndex: 'max_events',
       key: 'max_events',
-      render: (max) => max === -1 ? 'Sin l­mite' : max,
+      render: (max) => max === -1 ? 'Sin límite' : max,
     },
     {
-      title: 'Usuarios M¡x.',
+      title: 'Usuarios Máx.',
       dataIndex: 'max_users',
       key: 'max_users',
-      render: (max) => max === -1 ? 'Sin l­mite' : max,
+      render: (max) => max === -1 ? 'Sin límite' : max,
     },
     {
       title: 'Almacenamiento (GB)',
       dataIndex: 'max_storage_gb',
       key: 'max_storage_gb',
-      render: (max) => max === -1 ? 'Sin l­mite' : max,
+      render: (max) => max === -1 ? 'Sin límite' : max,
     },
     {
       title: 'Precio Mensual',
@@ -214,7 +214,7 @@ const SaasSettings = () => {
               onClick={() => {
                 Modal.confirm({
                   title: '¿Eliminar plan?',
-                  content: `¿Est¡s seguro de que quieres eliminar el plan ${record.plan_type}?`,
+                  content: `¿Estás seguro de que quieres eliminar el plan ${record.plan_type}?`,
                   onOk: () => handleDeletePlan(record.id)
                 });
               }}
@@ -230,10 +230,10 @@ const SaasSettings = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <SettingOutlined style={{ marginRight: '8px' }} />
-          Configuraci³n del Sistema SaaS
+          Configuración del Sistema SaaS
         </Title>
         <Text type="secondary">
-          Gestiona planes, l­mites y configuraciones globales del sistema
+          Gestiona planes, límites y configuraciones globales del sistema
         </Text>
       </div>
 
@@ -241,8 +241,8 @@ const SaasSettings = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col span={24}>
           <Alert
-            message="Configuraci³n del Sistema"
-            description="Estos cambios afectar¡n a todas las empresas en tu plataforma. Asegºrate de revisar cuidadosamente antes de guardar."
+            message="Configuración del Sistema"
+            description="Estos cambios afectarán a todas las empresas en tu plataforma. Asegúrate de revisar cuidadosamente antes de guardar."
             type="info"
             showIcon
             icon={<SafetyCertificateOutlined />}
@@ -250,14 +250,14 @@ const SaasSettings = () => {
         </Col>
       </Row>
 
-      {/* Tabs de configuraci³n */}
+      {/* Tabs de configuración */}
       <Card>
         <Tabs defaultActiveKey="plans">
           <TabPane 
             tab={
               <span>
                 <CreditCardOutlined />
-                Gesti³n de Planes
+                Gestión de Planes
               </span>
             } 
             key="plans"
@@ -288,14 +288,14 @@ const SaasSettings = () => {
             tab={
               <span>
                 <GlobalOutlined />
-                Configuraci³n General
+                Configuración General
               </span>
             } 
             key="general"
           >
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <Card title="Configuraci³n de Planes">
+                <Card title="Configuración de Planes">
                   <Form layout="vertical">
                     <Form.Item label="Plan por Defecto">
                       <Select 
@@ -307,7 +307,7 @@ const SaasSettings = () => {
                         <Option value="enterprise">Enterprise</Option>
                       </Select>
                     </Form.Item>
-                    <Form.Item label="D­as de Prueba Gratuita">
+                    <Form.Item label="Días de Prueba Gratuita">
                       <InputNumber
                         value={systemConfig.trialDays}
                         onChange={(value) => setSystemConfig({...systemConfig, trialDays: value})}
@@ -315,7 +315,7 @@ const SaasSettings = () => {
                         max={365}
                       />
                     </Form.Item>
-                    <Form.Item label="Longitud M¡xima de Subdominio">
+                    <Form.Item label="Longitud Máxima de Subdominio">
                       <InputNumber
                         value={systemConfig.maxSubdomainLength}
                         onChange={(value) => setSystemConfig({...systemConfig, maxSubdomainLength: value})}
@@ -327,9 +327,9 @@ const SaasSettings = () => {
                 </Card>
               </Col>
               <Col span={12}>
-                <Card title="Configuraci³n de Seguridad">
+                <Card title="Configuración de Seguridad">
                   <Form layout="vertical">
-                    <Form.Item label="Habilitar SSL Autom¡tico">
+                    <Form.Item label="Habilitar SSL Automático">
                       <Switch 
                         checked={systemConfig.enableSSL}
                         onChange={(checked) => setSystemConfig({...systemConfig, enableSSL: checked})}
@@ -341,7 +341,7 @@ const SaasSettings = () => {
                         onChange={(checked) => setSystemConfig({...systemConfig, enableAnalytics: checked})}
                       />
                     </Form.Item>
-                    <Form.Item label="Habilitar Backups Autom¡ticos">
+                    <Form.Item label="Habilitar Backups Automáticos">
                       <Switch 
                         checked={systemConfig.enableBackups}
                         onChange={(checked) => setSystemConfig({...systemConfig, enableBackups: checked})}
@@ -357,7 +357,7 @@ const SaasSettings = () => {
                 icon={<SaveOutlined />}
                 onClick={handleSaveSystemConfig}
               >
-                Guardar Configuraci³n
+                Guardar Configuración
               </Button>
             </div>
           </TabPane>
@@ -366,14 +366,14 @@ const SaasSettings = () => {
             tab={
               <span>
                 <DollarOutlined />
-                Configuraci³n de Facturaci³n
+                Configuración de Facturación
               </span>
             } 
             key="billing"
           >
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <Card title="Configuraci³n de Stripe">
+                <Card title="Configuración de Stripe">
                   <Form layout="vertical">
                     <Form.Item label="Stripe Publishable Key">
                       <Input.Password placeholder="pk_test_..." />
@@ -388,11 +388,11 @@ const SaasSettings = () => {
                 </Card>
               </Col>
               <Col span={12}>
-                <Card title="Configuraci³n de Facturaci³n">
+                <Card title="Configuración de Facturación">
                   <Form layout="vertical">
                     <Form.Item label="Moneda por Defecto">
                       <Select defaultValue="USD">
-                        <Option value="USD">USD - D³lar Estadounidense</Option>
+                        <Option value="USD">USD - Dólar Estadounidense</Option>
                         <Option value="EUR">EUR - Euro</Option>
                         <Option value="COP">COP - Peso Colombiano</Option>
                         <Option value="MXN">MXN - Peso Mexicano</Option>
@@ -407,7 +407,7 @@ const SaasSettings = () => {
                         parser={value => value.replace('%', '')}
                       />
                     </Form.Item>
-                    <Form.Item label="D­as de Gracia">
+                    <Form.Item label="Días de Gracia">
                       <InputNumber
                         defaultValue={7}
                         min={0}
@@ -420,7 +420,7 @@ const SaasSettings = () => {
             </Row>
             <div style={{ marginTop: '16px', textAlign: 'right' }}>
               <Button type="primary" icon={<SaveOutlined />}>
-                Guardar Configuraci³n de Facturaci³n
+                Guardar Configuración de Facturación
               </Button>
             </div>
           </TabPane>
@@ -429,16 +429,16 @@ const SaasSettings = () => {
             tab={
               <span>
                 <DatabaseOutlined />
-                Configuraci³n de Base de Datos
+                Configuración de Base de Datos
               </span>
             } 
             key="database"
           >
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <Card title="L­mites de Base de Datos">
+                <Card title="Límites de Base de Datos">
                   <Form layout="vertical">
-                    <Form.Item label="L­mite de Conexiones por Tenant">
+                    <Form.Item label="Límite de Conexiones por Tenant">
                       <InputNumber
                         defaultValue={10}
                         min={1}
@@ -459,7 +459,7 @@ const SaasSettings = () => {
                 </Card>
               </Col>
               <Col span={12}>
-                <Card title="Configuraci³n de Backup">
+                <Card title="Configuración de Backup">
                   <Form layout="vertical">
                     <Form.Item label="Frecuencia de Backup">
                       <Select defaultValue="daily">
@@ -469,7 +469,7 @@ const SaasSettings = () => {
                         <Option value="monthly">Mensual</Option>
                       </Select>
                     </Form.Item>
-                    <Form.Item label="Retenci³n de Backups (d­as)">
+                    <Form.Item label="Retención de Backups (días)">
                       <InputNumber
                         defaultValue={30}
                         min={1}
@@ -485,7 +485,7 @@ const SaasSettings = () => {
             </Row>
             <div style={{ marginTop: '16px', textAlign: 'right' }}>
               <Button type="primary" icon={<SaveOutlined />}>
-                Guardar Configuraci³n de Base de Datos
+                Guardar Configuración de Base de Datos
               </Button>
             </div>
           </TabPane>
@@ -522,8 +522,8 @@ const SaasSettings = () => {
             <Col span={12}>
               <Form.Item
                 name="max_events"
-                label="M¡ximo de Eventos"
-                rules={[{ required: true, message: 'El l­mite de eventos es requerido' }]}
+                label="Máximo de Eventos"
+                rules={[{ required: true, message: 'El límite de eventos es requerido' }]}
               >
                 <InputNumber
                   placeholder="5"
@@ -538,8 +538,8 @@ const SaasSettings = () => {
             <Col span={12}>
               <Form.Item
                 name="max_users"
-                label="M¡ximo de Usuarios"
-                rules={[{ required: true, message: 'El l­mite de usuarios es requerido' }]}
+                label="Máximo de Usuarios"
+                rules={[{ required: true, message: 'El límite de usuarios es requerido' }]}
               >
                 <InputNumber
                   placeholder="100"
@@ -552,7 +552,7 @@ const SaasSettings = () => {
               <Form.Item
                 name="max_storage_gb"
                 label="Almacenamiento (GB)"
-                rules={[{ required: true, message: 'El l­mite de almacenamiento es requerido' }]}
+                rules={[{ required: true, message: 'El límite de almacenamiento es requerido' }]}
               >
                 <InputNumber
                   placeholder="10"

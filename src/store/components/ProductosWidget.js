@@ -47,7 +47,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
         return;
       }
 
-      // Tambi©n cargar productos generales activos
+      // También cargar productos generales activos
       const { data: productosGenerales, error: errorGenerales } = await supabase
         .from('productos')
         .select('*')
@@ -79,7 +79,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
 
       setProductos(productosUnicos);
 
-      // Extraer categor­as ºnicas
+      // Extraer categorías únicas
       const categoriasUnicas = [...new Set(productosUnicos.map(p => p.categoria).filter(Boolean))];
       setCategories(categoriasUnicas);
 
@@ -99,7 +99,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
   const filterProductos = useCallback(() => {
     let filtered = [...productos];
 
-    // Filtro por bºsqueda
+    // Filtro por búsqueda
     if (searchTerm) {
       filtered = filtered.filter(producto =>
         producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -107,7 +107,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
       );
     }
 
-    // Filtro por categor­a
+    // Filtro por categoría
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(producto => producto.categoria === categoryFilter);
     }
@@ -260,10 +260,10 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
       }
       className="mb-4"
     >
-      {/* Filtros y bºsqueda */}
+      {/* Filtros y búsqueda */}
       <div className="mb-4 space-y-3">
         <Search
-          placeholder="Buscar productos por nombre o descripci³n..."
+          placeholder="Buscar productos por nombre o descripción..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           prefix={<SearchOutlined />}
@@ -275,10 +275,10 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
             <Select
               value={categoryFilter}
               onChange={setCategoryFilter}
-              placeholder="Categor­a"
+              placeholder="Categoría"
               allowClear
             >
-              <Option value="all">Todas las categor­as</Option>
+              <Option value="all">Todas las categorías</Option>
               {categories.map(cat => (
                 <Option key={cat} value={cat}>{cat}</Option>
               ))}
@@ -387,7 +387,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
 
                 {stockDisponible <= 5 && stockDisponible > 0 && (
                   <Alert
-                    message="¡Stock limitado!"
+                    message="áStock limitado!"
                     type="warning"
                     showIcon
                     className="mb-2"

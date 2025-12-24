@@ -85,19 +85,19 @@ const PaymentMethodsConfig = () => {
     return typeMap[methodId] || 'gateway';
   };
 
-  // M©todos de pago disponibles
+  // Métodos de pago disponibles
   const availableMethods = [
     {
       id: 'stripe',
       name: 'Stripe',
       icon: <CreditCardOutlined style={{ color: '#6772e5', fontSize: '24px' }} />,
-      description: 'Tarjetas de cr©dito y d©bito',
+      description: 'Tarjetas de crédito y débito',
       enabled: true,
       recommended: true,
-      processingTime: 'Instant¡neo',
+      processingTime: 'Instantáneo',
       fee: '2.9% + $0.30',
       configs: [
-        { key: 'publishable_key', label: 'Clave Pºblica', required: true },
+        { key: 'publishable_key', label: 'Clave Pública', required: true },
         { key: 'secret_key', label: 'Clave Secreta', required: true, secret: true },
         { key: 'webhook_secret', label: 'Webhook Secret', required: false, secret: true },
         { key: 'environment', label: 'Ambiente', required: true, type: 'select', options: ['sandbox', 'live'] },
@@ -109,10 +109,10 @@ const PaymentMethodsConfig = () => {
       id: 'paypal',
       name: 'PayPal',
       icon: <DollarOutlined style={{ color: '#0070ba', fontSize: '24px' }} />,
-      description: 'Pagos a trav©s de PayPal',
+      description: 'Pagos a través de PayPal',
       enabled: true,
       recommended: true,
-      processingTime: 'Instant¡neo',
+      processingTime: 'Instantáneo',
       fee: '2.9% + $0.30',
       configs: [
         { key: 'client_id', label: 'Client ID', required: true },
@@ -126,10 +126,10 @@ const PaymentMethodsConfig = () => {
       id: 'cashea',
       name: 'Cashea',
       icon: <CreditCardOutlined style={{ color: '#111827', fontSize: '24px' }} />,
-      description: 'Compra ahora y paga despu©s con Cashea',
+      description: 'Compra ahora y paga después con Cashea',
       enabled: true,
       recommended: false,
-      processingTime: 'Aprobaci³n instant¡nea',
+      processingTime: 'Aprobación instantánea',
       fee: 'Configurable',
       configs: [
         { key: 'api_base_url', label: 'API Base URL', required: true, placeholder: 'https://api.cashea.example.com' },
@@ -150,7 +150,7 @@ const PaymentMethodsConfig = () => {
       description: 'Pagos para usuarios iOS',
       enabled: true,
       recommended: true,
-      processingTime: 'Instant¡neo',
+      processingTime: 'Instantáneo',
       fee: '2.9% + $0.30',
       configs: [
         { key: 'merchant_id', label: 'Merchant ID', required: true },
@@ -166,7 +166,7 @@ const PaymentMethodsConfig = () => {
       description: 'Pagos para usuarios Android',
       enabled: true,
       recommended: true,
-      processingTime: 'Instant¡neo',
+      processingTime: 'Instantáneo',
       fee: '2.9% + $0.30',
       configs: [
         { key: 'merchant_id', label: 'Merchant ID', required: true },
@@ -181,24 +181,24 @@ const PaymentMethodsConfig = () => {
       description: 'Transferencias bancarias directas',
       enabled: true,
       recommended: false,
-      processingTime: '1-3 d­as h¡biles',
-      fee: 'Sin comisi³n',
+      processingTime: '1-3 días hábiles',
+      fee: 'Sin comisión',
       configs: [
         { key: 'bank_name', label: 'Nombre del Banco', required: true },
-        { key: 'account_number', label: 'Nºmero de Cuenta', required: true },
+        { key: 'account_number', label: 'Número de Cuenta', required: true },
         { key: 'account_holder', label: 'Titular de la Cuenta', required: true },
-        { key: 'routing_number', label: 'C³digo de Enrutamiento', required: false },
-        { key: 'swift_code', label: 'C³digo SWIFT', required: false }
+        { key: 'routing_number', label: 'Código de Enrutamiento', required: false },
+        { key: 'swift_code', label: 'Código SWIFT', required: false }
       ]
     },
     {
       id: 'pago_movil',
-      name: 'Pago M³vil',
+      name: 'Pago Móvil',
       icon: <MobileOutlined style={{ color: '#1890ff', fontSize: '24px' }} />,
-      description: 'Pagos m³viles (MercadoPago, etc.)',
+      description: 'Pagos móviles (MercadoPago, etc.)',
       enabled: true,
       recommended: false,
-      processingTime: 'Instant¡neo',
+      processingTime: 'Instantáneo',
       fee: 'Variable',
       configs: [
         { key: 'provider', label: 'Proveedor', required: true, type: 'select', options: ['MercadoPago', 'PayU', 'Otro'] },
@@ -213,15 +213,15 @@ const PaymentMethodsConfig = () => {
       id: 'efectivo_tienda',
       name: 'Pago en Efectivo en Tienda',
       icon: <ShopOutlined style={{ color: '#fa8c16', fontSize: '24px' }} />,
-      description: 'Pagos en efectivo en tienda f­sica',
+      description: 'Pagos en efectivo en tienda física',
       enabled: true,
       recommended: false,
       processingTime: 'Inmediato',
-      fee: 'Sin comisi³n',
+      fee: 'Sin comisión',
       configs: [
-        { key: 'store_address', label: 'Direcci³n de la Tienda', required: true },
-        { key: 'store_hours', label: 'Horarios de Atenci³n', required: true },
-        { key: 'contact_phone', label: 'Tel©fono de Contacto', required: true },
+        { key: 'store_address', label: 'Dirección de la Tienda', required: true },
+        { key: 'store_hours', label: 'Horarios de Atención', required: true },
+        { key: 'contact_phone', label: 'Teléfono de Contacto', required: true },
         { key: 'instructions', label: 'Instrucciones', required: false, type: 'textarea' }
       ]
     },
@@ -233,37 +233,37 @@ const PaymentMethodsConfig = () => {
       enabled: true,
       recommended: false,
       processingTime: 'Inmediato',
-      fee: 'Sin comisi³n',
+      fee: 'Sin comisión',
       configs: [
         { key: 'instructions', label: 'Instrucciones', required: false, type: 'textarea' },
-        { key: 'location', label: 'Ubicaci³n', required: false },
+        { key: 'location', label: 'Ubicación', required: false },
         { key: 'contact', label: 'Contacto', required: false }
       ]
     }
   ];
 
-  // Clave secreta para encriptaci³n (en producci³n deber­a estar en variables de entorno)
+  // Clave secreta para encriptación (en producción debería estar en variables de entorno)
   const SECRET_KEY = 'ekirmen-payment-secret-key-2024';
 
-  // Funci³n para encriptar datos sensibles
+  // Función para encriptar datos sensibles
   const encryptSensitiveData = (data) => {
     return CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
   };
 
-  // Funci³n para desencriptar datos sensibles
+  // Función para desencriptar datos sensibles
   const decryptSensitiveData = (encryptedData) => {
     try {
-      // Si no hay datos encriptados, retornar objeto vac­o
+      // Si no hay datos encriptados, retornar objeto vacío
       if (!encryptedData || encryptedData === '{}' || encryptedData === '') {
         return {};
       }
 
-      // Si ya es un objeto JSON v¡lido, retornarlo directamente
+      // Si ya es un objeto JSON válido, retornarlo directamente
       if (typeof encryptedData === 'object') {
         return encryptedData;
       }
 
-      // Si es una cadena que parece JSON v¡lido, parsearla directamente
+      // Si es una cadena que parece JSON válido, parsearla directamente
       if (typeof encryptedData === 'string' && encryptedData.startsWith('{')) {
         return JSON.parse(encryptedData);
       }
@@ -283,22 +283,22 @@ const PaymentMethodsConfig = () => {
     }
   };
 
-  // Funci³n para validar API keys
+  // Función para validar API keys
   const validateApiKey = async (method, config) => {
     try {
       setTestingConnection(prev => ({ ...prev, [method]: true }));
 
-      // Simular validaci³n de API key (en producci³n ser­a una llamada real)
+      // Simular validación de API key (en producción sería una llamada real)
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Simular resultado de validaci³n
-      const isValid = Math.random() > 0.3; // 70% de ©xito simulado
+      // Simular resultado de validación
+      const isValid = Math.random() > 0.3; // 70% de éxito simulado
 
       setConnectionStatus(prev => ({
         ...prev,
         [method]: {
           status: isValid ? 'success' : 'error',
-          message: isValid ? 'Conexi³n exitosa' : 'API Key inv¡lida',
+          message: isValid ? 'Conexión exitosa' : 'API Key inválida',
           lastTested: new Date().toISOString()
         }
       }));
@@ -311,7 +311,7 @@ const PaymentMethodsConfig = () => {
         ...prev,
         [method]: {
           status: 'error',
-          message: 'Error de conexi³n',
+          message: 'Error de conexión',
           lastTested: new Date().toISOString()
         }
       }));
@@ -319,7 +319,7 @@ const PaymentMethodsConfig = () => {
     }
   };
 
-  // Funci³n para obtener configuraci³n por pa­s/regi³n
+  // Función para obtener configuración por país/región
   const getRegionalConfig = (country) => {
     const regionalConfigs = {
       'US': {
@@ -351,13 +351,13 @@ const PaymentMethodsConfig = () => {
       // Obtener tenant_id
       const tenantId = currentTenant?.id || resolveTenantId();
 
-      // Cargar m©todos de pago desde la base de datos, filtrando por tenant_id si existe
+      // Cargar métodos de pago desde la base de datos, filtrando por tenant_id si existe
       let query = supabase
         .from('payment_methods')
         .select('*');
 
-      // Si hay tenant_id, filtrar por ©l (priorizar m©todos espec­ficos del tenant)
-      // Si no hay tenant_id, cargar todos para ver qu© hay
+      // Si hay tenant_id, filtrar por él (priorizar métodos específicos del tenant)
+      // Si no hay tenant_id, cargar todos para ver qué hay
       if (tenantId) {
         query = query.eq('tenant_id', tenantId);
       }
@@ -370,16 +370,16 @@ const PaymentMethodsConfig = () => {
       if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
       }
 
-      // Si no hay datos en la BD o no hay tenant_id, usar los m©todos por defecto
+      // Si no hay datos en la BD o no hay tenant_id, usar los métodos por defecto
       if (!methods || methods.length === 0) {
         setPaymentMethods(availableMethods);
       } else {
-        // Si hay tenant_id, usar solo los m©todos del tenant
+        // Si hay tenant_id, usar solo los métodos del tenant
         // Si no hay tenant_id, agrupar por method_id y priorizar los que tienen tenant_id
         let filteredMethods = methods;
 
         if (!tenantId) {
-          // Si no hay tenant_id, agrupar por method_id y tomar el primero (que deber­a ser el m¡s reciente)
+          // Si no hay tenant_id, agrupar por method_id y tomar el primero (que debería ser el más reciente)
           const methodMap = new Map();
           methods.forEach(m => {
             const key = m.method_id;
@@ -393,7 +393,7 @@ const PaymentMethodsConfig = () => {
               } else if (existing.tenant_id && !m.tenant_id) {
                 // Mantener el que tiene tenant_id
               } else {
-                // Si ambos tienen o no tienen tenant_id, tomar el m¡s reciente
+                // Si ambos tienen o no tienen tenant_id, tomar el más reciente
                 const existingDate = new Date(existing.updated_at || existing.created_at || 0);
                 const currentDate = new Date(m.updated_at || m.created_at || 0);
                 if (currentDate > existingDate) {
@@ -405,9 +405,9 @@ const PaymentMethodsConfig = () => {
           filteredMethods = Array.from(methodMap.values());
         }
 
-        // Combinar con los m©todos disponibles
+        // Combinar con los métodos disponibles
         const combinedMethods = availableMethods.map(method => {
-          // Buscar el m©todo guardado, priorizando los que tienen tenant_id
+          // Buscar el método guardado, priorizando los que tienen tenant_id
           const savedMethod = filteredMethods.find(m => m.method_id === method.id);
           return {
             ...method,
@@ -430,7 +430,7 @@ const PaymentMethodsConfig = () => {
 
   const loadPaymentHistory = async () => {
     try {
-      // Simular carga de historial (en producci³n ser­a desde la BD)
+      // Simular carga de historial (en producción sería desde la BD)
       const mockHistory = [
         {
           id: 1,
@@ -455,7 +455,7 @@ const PaymentMethodsConfig = () => {
 
   const loadFavoriteMethods = async () => {
     try {
-      // Cargar m©todos favoritos desde localStorage
+      // Cargar métodos favoritos desde localStorage
       const favorites = JSON.parse(localStorage.getItem('favoritePaymentMethods') || '[]');
       setFavoriteMethods(favorites);
     } catch (error) {
@@ -465,10 +465,10 @@ const PaymentMethodsConfig = () => {
 
   const handleMethodToggle = async (methodId, enabled) => {
     try {
-      // Obtener el m©todo completo del estado
+      // Obtener el método completo del estado
       const method = paymentMethods.find(m => m.id === methodId);
       if (!method) {
-        throw new Error('M©todo de pago no encontrado');
+        throw new Error('Método de pago no encontrado');
       }
 
       // Obtener tenant_id
@@ -484,7 +484,7 @@ const PaymentMethodsConfig = () => {
         )
       );
 
-      // Verificar si el m©todo ya existe en la BD
+      // Verificar si el método ya existe en la BD
       const { data: existingMethod } = await supabase
         .from('payment_methods')
         .select('*')
@@ -505,14 +505,14 @@ const PaymentMethodsConfig = () => {
       // Si existe, incluir campos adicionales para mantener la integridad
       if (existingMethod) {
         methodData.config = existingMethod.config || {};
-        methodData.processing_time = existingMethod.processing_time || method.processingTime || 'Instant¡neo';
+        methodData.processing_time = existingMethod.processing_time || method.processingTime || 'Instantáneo';
         methodData.fee_structure = existingMethod.fee_structure || method.fee_structure || { percentage: 0, fixed: 0 };
         methodData.is_recommended = existingMethod.is_recommended !== undefined ? existingMethod.is_recommended : method.recommended || false;
         methodData.description = existingMethod.description || method.description || '';
       } else {
         // Si no existe, incluir valores por defecto
         methodData.config = {};
-        methodData.processing_time = method.processingTime || 'Instant¡neo';
+        methodData.processing_time = method.processingTime || 'Instantáneo';
         methodData.fee_structure = method.fee_structure || { percentage: 0, fixed: 0 };
         methodData.is_recommended = method.recommended || false;
         methodData.description = method.description || '';
@@ -538,10 +538,10 @@ const PaymentMethodsConfig = () => {
       };
       setPaymentHistory(prev => [historyEntry, ...prev]);
 
-      message.success(`M©todo de pago ${enabled ? 'activado' : 'desactivado'} correctamente`);
+      message.success(`Método de pago ${enabled ? 'activado' : 'desactivado'} correctamente`);
     } catch (error) {
       console.error('Error updating payment method:', error);
-      message.error('Error al actualizar el m©todo de pago');
+      message.error('Error al actualizar el método de pago');
 
       // Revertir cambio local
       setPaymentMethods(prev =>
@@ -555,7 +555,7 @@ const PaymentMethodsConfig = () => {
   const openConfigModal = async (method) => {
     setSelectedMethod(method);
 
-    // Cargar configuraci³n existente
+    // Cargar configuración existente
     const { data: config, error } = await supabase
       .from('payment_methods')
       .select('config')
@@ -565,7 +565,7 @@ const PaymentMethodsConfig = () => {
     if (error && error.code !== 'PGRST116') {
     }
 
-    // Llenar el formulario con la configuraci³n existente
+    // Llenar el formulario con la configuración existente
     configForm.setFieldsValue(config?.config || {});
     setConfigModalVisible(true);
   };
@@ -580,7 +580,7 @@ const PaymentMethodsConfig = () => {
       if (hasApiKey) {
         const isValid = await validateApiKey(selectedMethod.id, values);
         if (!isValid) {
-          message.warning('La API key no es v¡lida, pero se guardar¡ la configuraci³n');
+          message.warning('La API key no es válida, pero se guardará la configuración');
         }
       }
 
@@ -593,7 +593,7 @@ const PaymentMethodsConfig = () => {
       // Encriptar datos sensibles
       const encryptedConfig = encryptSensitiveData(values);
 
-      // Verificar si el m©todo ya existe en la BD
+      // Verificar si el método ya existe en la BD
       const { data: existingMethod } = await supabase
         .from('payment_methods')
         .select('*')
@@ -614,13 +614,13 @@ const PaymentMethodsConfig = () => {
 
       // Si existe, incluir campos adicionales para mantener la integridad
       if (existingMethod) {
-        methodData.processing_time = existingMethod.processing_time || selectedMethod.processingTime || 'Instant¡neo';
+        methodData.processing_time = existingMethod.processing_time || selectedMethod.processingTime || 'Instantáneo';
         methodData.fee_structure = existingMethod.fee_structure || selectedMethod.fee_structure || { percentage: 0, fixed: 0 };
         methodData.is_recommended = existingMethod.is_recommended !== undefined ? existingMethod.is_recommended : selectedMethod.recommended || false;
         methodData.description = existingMethod.description || selectedMethod.description || '';
       } else {
         // Si no existe, incluir valores por defecto
-        methodData.processing_time = selectedMethod.processingTime || 'Instant¡neo';
+        methodData.processing_time = selectedMethod.processingTime || 'Instantáneo';
         methodData.fee_structure = selectedMethod.fee_structure || { percentage: 0, fixed: 0 };
         methodData.is_recommended = selectedMethod.recommended || false;
         methodData.description = selectedMethod.description || '';
@@ -645,7 +645,7 @@ const PaymentMethodsConfig = () => {
       };
       setPaymentHistory(prev => [historyEntry, ...prev]);
 
-      message.success('Configuraci³n guardada correctamente');
+      message.success('Configuración guardada correctamente');
       setConfigModalVisible(false);
       configForm.resetFields();
 
@@ -659,7 +659,7 @@ const PaymentMethodsConfig = () => {
       );
     } catch (error) {
       console.error('Error saving config:', error);
-      message.error('Error al guardar la configuraci³n');
+      message.error('Error al guardar la configuración');
     }
   };
 
@@ -670,7 +670,7 @@ const PaymentMethodsConfig = () => {
     }));
   };
 
-  // Funci³n para bulk actions
+  // Función para bulk actions
   const handleBulkAction = async (action) => {
     try {
       setBulkActionLoading(true);
@@ -684,7 +684,7 @@ const PaymentMethodsConfig = () => {
       // Preparar updates con todos los campos requeridos
       const updates = await Promise.all(
         paymentMethods.map(async (method) => {
-          // Verificar si el m©todo ya existe en la BD
+          // Verificar si el método ya existe en la BD
           const { data: existingMethod } = await supabase
             .from('payment_methods')
             .select('*')
@@ -704,14 +704,14 @@ const PaymentMethodsConfig = () => {
           // Si existe, incluir campos adicionales para mantener la integridad
           if (existingMethod) {
             methodData.config = existingMethod.config || {};
-            methodData.processing_time = existingMethod.processing_time || method.processingTime || 'Instant¡neo';
+            methodData.processing_time = existingMethod.processing_time || method.processingTime || 'Instantáneo';
             methodData.fee_structure = existingMethod.fee_structure || method.fee_structure || { percentage: 0, fixed: 0 };
             methodData.is_recommended = existingMethod.is_recommended !== undefined ? existingMethod.is_recommended : method.recommended || false;
             methodData.description = existingMethod.description || method.description || '';
           } else {
             // Si no existe, incluir valores por defecto
             methodData.config = {};
-            methodData.processing_time = method.processingTime || 'Instant¡neo';
+            methodData.processing_time = method.processingTime || 'Instantáneo';
             methodData.fee_structure = method.fee_structure || { percentage: 0, fixed: 0 };
             methodData.is_recommended = method.recommended || false;
             methodData.description = method.description || '';
@@ -735,16 +735,16 @@ const PaymentMethodsConfig = () => {
         prev.map(method => ({ ...method, enabled: action === 'enable' }))
       );
 
-      message.success(`Todos los m©todos ${action === 'enable' ? 'activados' : 'desactivados'} correctamente`);
+      message.success(`Todos los métodos ${action === 'enable' ? 'activados' : 'desactivados'} correctamente`);
     } catch (error) {
       console.error('Error in bulk action:', error);
-      message.error('Error en la acci³n masiva');
+      message.error('Error en la acción masiva');
     } finally {
       setBulkActionLoading(false);
     }
   };
 
-  // Funci³n para toggle favorito
+  // Función para toggle favorito
   const toggleFavorite = (methodId) => {
     const isFavorite = favoriteMethods.includes(methodId);
     const newFavorites = isFavorite
@@ -754,10 +754,10 @@ const PaymentMethodsConfig = () => {
     setFavoriteMethods(newFavorites);
     localStorage.setItem('favoritePaymentMethods', JSON.stringify(newFavorites));
 
-    message.success(`M©todo ${isFavorite ? 'removido de' : 'agregado a'} favoritos`);
+    message.success(`Método ${isFavorite ? 'removido de' : 'agregado a'} favoritos`);
   };
 
-  // Funci³n para exportar configuraci³n
+  // Función para exportar configuración
   const exportConfig = () => {
     const config = paymentMethods.map(method => ({
       id: method.id,
@@ -775,10 +775,10 @@ const PaymentMethodsConfig = () => {
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
 
-    message.success('Configuraci³n exportada correctamente');
+    message.success('Configuración exportada correctamente');
   };
 
-  // Funci³n para importar configuraci³n
+  // Función para importar configuración
   const importConfig = (file) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -787,7 +787,7 @@ const PaymentMethodsConfig = () => {
 
         // Validar estructura
         if (!Array.isArray(config)) {
-          throw new Error('Formato de archivo inv¡lido');
+          throw new Error('Formato de archivo inválido');
         }
 
         // Obtener tenant_id
@@ -796,12 +796,12 @@ const PaymentMethodsConfig = () => {
           throw new Error('No se pudo determinar el tenant_id');
         }
 
-        // Aplicar configuraci³n
+        // Aplicar configuración
         for (const methodConfig of config) {
-          // Buscar el m©todo en availableMethods para obtener datos completos
+          // Buscar el método en availableMethods para obtener datos completos
           const availableMethod = availableMethods.find(m => m.id === methodConfig.id);
 
-          // Verificar si el m©todo ya existe en la BD
+          // Verificar si el método ya existe en la BD
           const { data: existingMethod } = await supabase
             .from('payment_methods')
             .select('*')
@@ -821,13 +821,13 @@ const PaymentMethodsConfig = () => {
 
           // Si existe, incluir campos adicionales para mantener la integridad
           if (existingMethod) {
-            methodData.processing_time = existingMethod.processing_time || availableMethod?.processingTime || 'Instant¡neo';
+            methodData.processing_time = existingMethod.processing_time || availableMethod?.processingTime || 'Instantáneo';
             methodData.fee_structure = existingMethod.fee_structure || availableMethod?.fee_structure || { percentage: 0, fixed: 0 };
             methodData.is_recommended = existingMethod.is_recommended !== undefined ? existingMethod.is_recommended : (availableMethod?.recommended || false);
             methodData.description = existingMethod.description || availableMethod?.description || '';
           } else {
             // Si no existe, incluir valores por defecto
-            methodData.processing_time = availableMethod?.processingTime || 'Instant¡neo';
+            methodData.processing_time = availableMethod?.processingTime || 'Instantáneo';
             methodData.fee_structure = availableMethod?.fee_structure || { percentage: 0, fixed: 0 };
             methodData.is_recommended = availableMethod?.recommended || false;
             methodData.description = availableMethod?.description || '';
@@ -841,18 +841,18 @@ const PaymentMethodsConfig = () => {
             });
         }
 
-        // Recargar m©todos
+        // Recargar métodos
         await loadPaymentMethods();
-        message.success('Configuraci³n importada correctamente');
+        message.success('Configuración importada correctamente');
       } catch (error) {
         console.error('Error importing config:', error);
-        message.error('Error al importar la configuraci³n');
+        message.error('Error al importar la configuración');
       }
     };
     reader.readAsText(file);
   };
 
-  // Funci³n para obtener badge de estado
+  // Función para obtener badge de estado
   const getStatusBadge = (method) => {
     const hasConfig = Object.keys(method.config || {}).length > 0;
     const isConfigured = hasConfig && method.config[method.configs?.[0]?.key];
@@ -866,7 +866,7 @@ const PaymentMethodsConfig = () => {
     }
   };
 
-  // Funci³n para obtener icono de conexi³n
+  // Función para obtener icono de conexión
   const getConnectionIcon = (methodId) => {
     const status = connectionStatus[methodId];
     if (testingConnection[methodId]) {
@@ -885,7 +885,7 @@ const PaymentMethodsConfig = () => {
       title={
         <Space>
           <SettingOutlined />
-          <span>M©todos de Pago</span>
+          <span>Métodos de Pago</span>
         </Space>
       }
       extra={
@@ -918,9 +918,9 @@ const PaymentMethodsConfig = () => {
           </Space>
           <Space size="small" wrap>
             <Popconfirm
-              title="¿Activar todos los m©todos?"
+              title="¿Activar todos los métodos?"
               onConfirm={() => handleBulkAction('enable')}
-              okText="S­"
+              okText="Sí"
               cancelText="No"
             >
               <Button
@@ -933,9 +933,9 @@ const PaymentMethodsConfig = () => {
               </Button>
             </Popconfirm>
             <Popconfirm
-              title="¿Desactivar todos los m©todos?"
+              title="¿Desactivar todos los métodos?"
               onConfirm={() => handleBulkAction('disable')}
-              okText="S­"
+              okText="Sí"
               cancelText="No"
             >
               <Button
@@ -985,7 +985,7 @@ const PaymentMethodsConfig = () => {
                   onClick={() => validateApiKey(method.id, method.config)}
                   loading={testingConnection[method.id]}
                   disabled={!method.enabled || !method.config}
-                  title="Probar conexi³n"
+                  title="Probar conexión"
                 />,
                 <Button
                   key="config"
@@ -1057,7 +1057,7 @@ const PaymentMethodsConfig = () => {
         ))}
       </Row>
 
-      {/* Modal de Configuraci³n */}
+      {/* Modal de Configuración */}
       <Modal
         title={
           <Space>
@@ -1075,13 +1075,13 @@ const PaymentMethodsConfig = () => {
       >
         <div className="mb-4">
           <Alert
-            message="Informaci³n del M©todo"
+            message="Información del Método"
             description={
               <div>
                 <p><strong>Tiempo de procesamiento:</strong> {selectedMethod?.processingTime}</p>
-                <p><strong>Comisi³n:</strong> {selectedMethod?.fee}</p>
+                <p><strong>Comisión:</strong> {selectedMethod?.fee}</p>
                 {selectedMethod?.recommended && (
-                  <p><Tag color="blue">M©todo recomendado</Tag></p>
+                  <p><Tag color="blue">Método recomendado</Tag></p>
                 )}
               </div>
             }
@@ -1158,7 +1158,7 @@ const PaymentMethodsConfig = () => {
               htmlType="submit"
               icon={<CheckOutlined />}
             >
-              Guardar Configuraci³n
+              Guardar Configuración
             </Button>
           </div>
         </Form>
@@ -1200,7 +1200,7 @@ const PaymentMethodsConfig = () => {
         title={
           <Space>
             <UploadOutlined />
-            <span>Importar/Exportar Configuraci³n</span>
+            <span>Importar/Exportar Configuración</span>
           </Space>
         }
         open={importExportModalVisible}
@@ -1209,9 +1209,9 @@ const PaymentMethodsConfig = () => {
         width={500}
       >
         <div className="space-y-4">
-          <Card title="Exportar Configuraci³n" size="small">
+          <Card title="Exportar Configuración" size="small">
             <p className="text-sm text-gray-600 mb-3">
-              Descarga un archivo JSON con toda la configuraci³n actual de m©todos de pago.
+              Descarga un archivo JSON con toda la configuración actual de métodos de pago.
             </p>
             <Button
               type="primary"
@@ -1219,13 +1219,13 @@ const PaymentMethodsConfig = () => {
               onClick={exportConfig}
               block
             >
-              Exportar Configuraci³n
+              Exportar Configuración
             </Button>
           </Card>
 
-          <Card title="Importar Configuraci³n" size="small">
+          <Card title="Importar Configuración" size="small">
             <p className="text-sm text-gray-600 mb-3">
-              Sube un archivo JSON para restaurar una configuraci³n anterior.
+              Sube un archivo JSON para restaurar una configuración anterior.
             </p>
             <Upload
               beforeUpload={importConfig}

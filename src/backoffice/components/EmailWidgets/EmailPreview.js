@@ -288,7 +288,7 @@ const EmailPreview = ({ widgets = [], config = {} }) => {
               color: '#999'
             }}>
               <p>Este es un email generado automáticamente</p>
-              <p>© 2024 Kreatickets. Todos los derechos reservados.</p>
+              <p>é 2024 Kreatickets. Todos los derechos reservados.</p>
             </div>
           </div>
         </div>

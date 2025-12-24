@@ -15,13 +15,13 @@ export const useMapData = (selectedFuncion) => {
       : selectedFuncion.sala;
   }, [selectedFuncion?.sala]);
 
-  // Memoizar el ID de la funci³n
+  // Memoizar el ID de la función
   const funcionId = useMemo(() =>
     selectedFuncion?.id || selectedFuncion?._id,
     [selectedFuncion?.id, selectedFuncion?._id]
   );
 
-  // Memoizar la funci³n de carga de datos
+  // Memoizar la función de carga de datos
   const loadData = useCallback(async () => {
     if (!salaId) {
       setMapa(null);
@@ -68,7 +68,7 @@ export const useMapData = (selectedFuncion) => {
             sillas: el.sillas.map(s => {
               const st = seatMap[s._id || s.id];
               if (!st) {
-                // Si no hay datos en seatMap, asumir que est¡ disponible
+                // Si no hay datos en seatMap, asumir que está disponible
                 return { ...s, estado: 'disponible' };
               }
 

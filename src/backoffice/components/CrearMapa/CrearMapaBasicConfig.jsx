@@ -30,13 +30,13 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
           <span className="text-4xl text-white">ðŸŽ¨</span>
         </div>
         <Title level={1} className="mb-4 text-gradient">
-          ¡Bienvenido al Creador de Mapas!
+          áBienvenido al Creador de Mapas!
         </Title>
         <Title level={3} className="mb-3 text-gray-700">
-          Configuraci³n B¡sica del Mapa
+          Configuración Básica del Mapa
         </Title>
         <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Comienza creando tu mapa de asientos personalizado. Define la informaci³n fundamental y luego pasa al editor visual donde podr¡s dise±ar la distribuci³n perfecta.
+          Comienza creando tu mapa de asientos personalizado. Define la información fundamental y luego pasa al editor visual donde podrás diseñar la distribución perfecta.
         </Text>
       </div>
 
@@ -68,16 +68,16 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
           </Form.Item>
 
           <Form.Item
-            label="Descripci³n"
+            label="Descripción"
             name="descripcion"
             rules={[
-              { required: true, message: 'Por favor ingresa una descripci³n' },
-              { min: 10, message: 'La descripci³n debe tener al menos 10 caracteres' }
+              { required: true, message: 'Por favor ingresa una descripción' },
+              { min: 10, message: 'La descripción debe tener al menos 10 caracteres' }
             ]}
           >
             <TextArea
               rows={4}
-              placeholder="Describe el prop³sito y caracter­sticas del mapa..."
+              placeholder="Describe el propósito y características del mapa..."
               className="text-base"
             />
           </Form.Item>
@@ -88,7 +88,7 @@ const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
           >
             <TextArea
               rows={3}
-              placeholder="Informaci³n adicional, instrucciones especiales, etc..."
+              placeholder="Información adicional, instrucciones especiales, etc..."
               className="text-base"
             />
           </Form.Item>

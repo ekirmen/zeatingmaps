@@ -415,7 +415,7 @@ export const emailCampaignService = {
 
     html += `
           <div class="footer">
-            <p>© 2024 Kreatickets. Todos los derechos reservados.</p>
+            <p>é 2024 Kreatickets. Todos los derechos reservados.</p>
             <p><a href="{{unsubscribe_url}}">Cancelar suscripción</a></p>
           </div>
         </div>

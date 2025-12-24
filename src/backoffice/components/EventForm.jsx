@@ -57,7 +57,7 @@ const EventForm = ({
         sala_id: eventData.sala_id
       });
 
-      // Cargar im¡genes existentes
+      // Cargar imágenes existentes
       if (eventData.imagenes) {
         try {
           const images = typeof eventData.imagenes === 'string' 
@@ -66,7 +66,7 @@ const EventForm = ({
           
           setImageUrls(images);
           
-          // Generar previews para im¡genes existentes
+          // Generar previews para imágenes existentes
           const previews = {};
           Object.keys(images).forEach(key => {
             if (images[key]?.url) {
@@ -84,7 +84,7 @@ const EventForm = ({
     }
   }, [eventData, form, currentTenant]);
 
-  // Funci³n para subir imagen al bucket del tenant
+  // Función para subir imagen al bucket del tenant
   const uploadImageToTenantBucket = async (file, imageType) => {
     if (!currentTenant?.id) {
       throw new Error('No tenant ID available');
@@ -105,7 +105,7 @@ const EventForm = ({
 
       if (error) throw error;
 
-      // Obtener URL pºblica
+      // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
@@ -124,13 +124,13 @@ const EventForm = ({
     }
   };
 
-  // Manejar subida de im¡genes
+  // Manejar subida de imágenes
   const handleImageUpload = async (file, imageType) => {
     setUploading(true);
     try {
       const imageData = await uploadImageToTenantBucket(file, imageType);
       
-      // Actualizar estado de im¡genes
+      // Actualizar estado de imágenes
       setImageUrls(prev => ({
         ...prev,
         [imageType]: imageData
@@ -143,7 +143,7 @@ const EventForm = ({
       }));
 
       message.success(`${imageType} subida exitosamente`);
-      return false; // Prevenir subida autom¡tica
+      return false; // Prevenir subida automática
     } catch (error) {
       message.error(`Error subiendo ${imageType}: ${error.message}`);
       return false;
@@ -183,7 +183,7 @@ const EventForm = ({
     }
   };
 
-  // Manejar env­o del formulario
+  // Manejar envío del formulario
   const handleSubmit = async (values) => {
     try {
       const eventData = {
@@ -294,8 +294,8 @@ const EventForm = ({
 
         <Form.Item
           name="descripcion"
-          label="Descripci³n"
-          rules={[{ required: true, message: 'Por favor ingresa la descripci³n' }]}
+          label="Descripción"
+          rules={[{ required: true, message: 'Por favor ingresa la descripción' }]}
         >
           <TextArea 
             rows={4} 
@@ -307,8 +307,8 @@ const EventForm = ({
           <Col span={12}>
             <Form.Item
               name="ubicacion"
-              label="Ubicaci³n"
-              rules={[{ required: true, message: 'Por favor ingresa la ubicaci³n' }]}
+              label="Ubicación"
+              rules={[{ required: true, message: 'Por favor ingresa la ubicación' }]}
             >
               <Input placeholder="Ej: Estadio Nacional" />
             </Form.Item>
@@ -346,7 +346,7 @@ const EventForm = ({
                 }
                 style={{ width: '100%' }}
               >
-                {/* Aqu­ se cargar­an los recintos disponibles */}
+                {/* Aquí se cargarían los recintos disponibles */}
               </Select>
             </Form.Item>
           </Col>
@@ -365,7 +365,7 @@ const EventForm = ({
                 }
                 style={{ width: '100%' }}
               >
-                {/* Aqu­ se cargar­an las salas disponibles */}
+                {/* Aquí se cargarían las salas disponibles */}
               </Select>
             </Form.Item>
           </Col>
@@ -379,7 +379,7 @@ const EventForm = ({
           <Switch />
         </Form.Item>
 
-        <Divider>Im¡genes del Evento</Divider>
+        <Divider>Imágenes del Evento</Divider>
 
         <Row gutter={16}>
           <Col span={8}>

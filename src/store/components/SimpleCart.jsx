@@ -67,7 +67,7 @@ const SimpleCart = memo(() => {
       {cartSummary.isEmpty ? (
         <div className="text-center py-8">
           <ShoppingCartOutlined className="text-4xl text-gray-400 mb-2" />
-          <Text type="secondary">Tu carrito est¡ vac­o</Text>
+          <Text type="secondary">Tu carrito está vacío</Text>
           <br />
           <Text type="secondary" className="text-sm">Selecciona asientos en el mapa</Text>
         </div>

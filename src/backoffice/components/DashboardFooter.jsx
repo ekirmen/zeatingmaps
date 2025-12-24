@@ -18,7 +18,7 @@ const DashboardFooter = () => {
   const { footer } = useFooter();
   const socials = footer?.socials || {};
   const copyrightText =
-    footer?.copyrightText || `© ${new Date().getFullYear()} VenEventos`;
+    footer?.copyrightText || `é ${new Date().getFullYear()} VenEventos`;
 
   const iconMap = {
     facebook: FacebookFilled,

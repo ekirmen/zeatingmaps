@@ -211,7 +211,7 @@ const CRM = () => {
 
       if (error) throw error;
 
-      message.success('Notificaci³n creada exitosamente');
+      message.success('Notificación creada exitosamente');
       setIsNotificationModalVisible(false);
       notificationForm.resetFields();
       setSelectedEvent(null);
@@ -220,7 +220,7 @@ const CRM = () => {
       loadData();
     } catch (error) {
       console.error('Error creating notification:', error);
-      message.error('Error al crear notificaci³n');
+      message.error('Error al crear notificación');
     }
   };
 
@@ -233,17 +233,17 @@ const CRM = () => {
 
       if (error) throw error;
 
-      message.success('Notificaci³n marcada como le­da');
+      message.success('Notificación marcada como leída');
       loadData();
     } catch (error) {
       console.error('Error updating notification:', error);
-      message.error('Error al actualizar notificaci³n');
+      message.error('Error al actualizar notificación');
     }
   };
 
   const notificationColumns = [
     {
-      title: 'T­tulo',
+      title: 'Título',
       dataIndex: 'titulo',
       key: 'titulo',
     },
@@ -269,7 +269,7 @@ const CRM = () => {
       key: 'evento',
     },
     {
-      title: 'Funci³n',
+      title: 'Función',
       dataIndex: ['funciones', 'fecha'],
       key: 'funcion',
       render: (fecha) => fecha ? new Date(fecha).toLocaleDateString() : '-',
@@ -306,7 +306,7 @@ const CRM = () => {
                     <p><strong>Mensaje:</strong> {record.mensaje}</p>
                     <p><strong>Tipo:</strong> {record.tipo}</p>
                     <p><strong>Evento:</strong> {record.eventos?.nombre || 'N/A'}</p>
-                    <p><strong>Funci³n:</strong> {record.funciones?.fecha ? new Date(record.funciones.fecha).toLocaleString() : 'N/A'}</p>
+                    <p><strong>Función:</strong> {record.funciones?.fecha ? new Date(record.funciones.fecha).toLocaleString() : 'N/A'}</p>
                     <p><strong>Usuarios destinatarios:</strong> {record.usuarios_destinatarios?.length || 0}</p>
                   </div>
                 ),
@@ -322,7 +322,7 @@ const CRM = () => {
               icon={<CheckOutlined />}
               onClick={() => handleMarkAsRead(record.id)}
             >
-              Marcar como le­da
+              Marcar como leída
             </Button>
           )}
         </div>
@@ -336,8 +336,8 @@ const CRM = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">CRM - Gesti³n de Clientes</h1>
-          <p className="text-gray-600">Gesti³n de clientes, notificaciones y comunicaci³n</p>
+          <h1 className="text-2xl font-bold text-gray-800">CRM - Gestión de Clientes</h1>
+          <p className="text-gray-600">Gestión de clientes, notificaciones y comunicación</p>
         </div>
         <div className="flex gap-2">
           <Badge count={unreadCount} showZero={false}>
@@ -346,7 +346,7 @@ const CRM = () => {
               onClick={() => setIsNotificationModalVisible(true)}
               type="primary"
             >
-              Crear Notificaci³n
+              Crear Notificación
             </Button>
           </Badge>
         </div>
@@ -370,14 +370,14 @@ const CRM = () => {
         </TabPane>
 
         <TabPane tab="Clientes" key="clients">
-          <Card title="Gesti³n de Clientes">
+          <Card title="Gestión de Clientes">
             <Table
               dataSource={users}
               columns={[
                 { title: 'Nombre', dataIndex: 'login', key: 'login' },
                 { title: 'Email', dataIndex: 'email', key: 'email' },
                 { title: 'Empresa', dataIndex: 'empresa', key: 'empresa' },
-                { title: 'Tel©fono', dataIndex: 'telefono', key: 'telefono' },
+                { title: 'Teléfono', dataIndex: 'telefono', key: 'telefono' },
                 {
                   title: 'Estado',
                   dataIndex: 'activo',
@@ -401,7 +401,7 @@ const CRM = () => {
               dataSource={events}
               columns={[
                 { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
-                { title: 'Descripci³n', dataIndex: 'descripcion', key: 'descripcion', ellipsis: true },
+                { title: 'Descripción', dataIndex: 'descripcion', key: 'descripcion', ellipsis: true },
                 {
                   title: 'Fecha',
                   dataIndex: 'fecha',
@@ -416,9 +416,9 @@ const CRM = () => {
         </TabPane>
       </Tabs>
 
-      {/* Modal para crear notificaci³n */}
+      {/* Modal para crear notificación */}
       <Modal
-        title="Crear Nueva Notificaci³n"
+        title="Crear Nueva Notificación"
         open={isNotificationModalVisible}
         onCancel={() => {
           setIsNotificationModalVisible(false);
@@ -437,10 +437,10 @@ const CRM = () => {
         >
           <Form.Item
             name="titulo"
-            label="T­tulo"
-            rules={[{ required: true, message: 'Por favor ingrese el t­tulo' }]}
+            label="Título"
+            rules={[{ required: true, message: 'Por favor ingrese el título' }]}
           >
-            <Input placeholder="T­tulo de la notificaci³n" />
+            <Input placeholder="Título de la notificación" />
           </Form.Item>
 
           <Form.Item
@@ -448,7 +448,7 @@ const CRM = () => {
             label="Mensaje"
             rules={[{ required: true, message: 'Por favor ingrese el mensaje' }]}
           >
-            <Input.TextArea rows={4} placeholder="Mensaje de la notificaci³n" />
+            <Input.TextArea rows={4} placeholder="Mensaje de la notificación" />
           </Form.Item>
 
           <Form.Item
@@ -478,9 +478,9 @@ const CRM = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="Funci³n (Opcional)">
+          <Form.Item label="Función (Opcional)">
             <Select
-              placeholder="Seleccione una funci³n"
+              placeholder="Seleccione una función"
               value={selectedFunction}
               onChange={setSelectedFunction}
               allowClear
@@ -511,7 +511,7 @@ const CRM = () => {
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
-              Crear Notificaci³n
+              Crear Notificación
             </Button>
           </Form.Item>
         </Form>

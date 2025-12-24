@@ -64,7 +64,7 @@ const AuditLogs = () => {
     try {
       setLoading(true);
       
-      // Construir filtros para el servicio de auditor­a
+      // Construir filtros para el servicio de auditoría
       const auditFilters = {};
       
       if (filters.dateRange && filters.dateRange.length === 2) {
@@ -77,8 +77,8 @@ const AuditLogs = () => {
       }
       
       if (filters.user) {
-        // Buscar por usuario (necesitar­amos obtener el ID del usuario)
-        // Por ahora, buscar por acci³n que contenga el t©rmino
+        // Buscar por usuario (necesitaríamos obtener el ID del usuario)
+        // Por ahora, buscar por acción que contenga el término
         auditFilters.action = filters.user;
       }
       
@@ -90,7 +90,7 @@ const AuditLogs = () => {
         auditFilters.resourceType = filters.resourceType;
       }
       
-      // Cargar logs desde el servicio de auditor­a
+      // Cargar logs desde el servicio de auditoría
       const auditLogs = await auditService.getLogs(auditFilters, 100);
       
       // Formatear logs para la tabla
@@ -117,7 +117,7 @@ const AuditLogs = () => {
       
       setLogs(formattedLogs);
       
-      // Calcular estad­sticas
+      // Calcular estadísticas
       setStats({
         total: formattedLogs.length,
         errors: formattedLogs.filter(log => log.severity === 'error').length,
@@ -128,7 +128,7 @@ const AuditLogs = () => {
       
     } catch (error) {
       console.error('Error loading audit logs:', error);
-      message.error('Error al cargar los logs de auditor­a');
+      message.error('Error al cargar los logs de auditoría');
       
       // Cargar logs locales como fallback
       try {
@@ -148,7 +148,7 @@ const AuditLogs = () => {
     }
   };
 
-  // Funci³n helper para obtener descripci³n de acci³n
+  // Función helper para obtener descripción de acción
   const getActionDescription = (log) => {
     const action = log.action || '';
     const details = log.details ? (typeof log.details === 'string' ? JSON.parse(log.details) : log.details) : {};
@@ -160,7 +160,7 @@ const AuditLogs = () => {
     
     if (action.startsWith('seat_')) {
       const seatAction = action.replace('seat_', '');
-      return `Asiento ${seatAction}: ${details.seatId || 'N/A'} - Funci³n ${details.functionId || 'N/A'}`;
+      return `Asiento ${seatAction}: ${details.seatId || 'N/A'} - Función ${details.functionId || 'N/A'}`;
     }
     
     if (action.startsWith('user_')) {
@@ -265,7 +265,7 @@ const AuditLogs = () => {
       )
     },
     {
-      title: 'Acci³n',
+      title: 'Acción',
       dataIndex: 'action',
       key: 'action',
       render: (action) => (
@@ -288,7 +288,7 @@ const AuditLogs = () => {
       )
     },
     {
-      title: 'Descripci³n',
+      title: 'Descripción',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true
@@ -318,7 +318,7 @@ const AuditLogs = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <Title level={2}>Logs de Auditor­a</Title>
+        <Title level={2}>Logs de Auditoría</Title>
         <Text type="secondary">Monitoreo de actividades del sistema</Text>
       </div>
 
@@ -333,7 +333,7 @@ const AuditLogs = () => {
             />
           </Col>
           <Col xs={24} sm={12} md={6}>
-            <Text strong>Acci³n:</Text>
+            <Text strong>Acción:</Text>
             <Select
               value={filters.action}
               onChange={(value) => setFilters(prev => ({ ...prev, action: value }))}
@@ -401,7 +401,7 @@ const AuditLogs = () => {
         </Space>
       </Card>
 
-      {/* Estad­sticas */}
+      {/* Estadísticas */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={8} md={6}>
           <Card>
@@ -433,7 +433,7 @@ const AuditLogs = () => {
         <Col xs={24} sm={8} md={6}>
           <Card>
             <Statistic
-              title="Cr­ticos"
+              title="Críticos"
               value={stats.critical}
               valueStyle={{ color: '#cf1322' }}
             />
@@ -442,7 +442,7 @@ const AuditLogs = () => {
         <Col xs={24} sm={8} md={6}>
           <Card>
             <Statistic
-              title="Informaci³n"
+              title="Información"
               value={stats.info}
               valueStyle={{ color: '#52c41a' }}
             />
@@ -451,7 +451,7 @@ const AuditLogs = () => {
       </Row>
 
       {/* Tabla de Logs */}
-      <Card title="Logs de Auditor­a">
+      <Card title="Logs de Auditoría">
         <Table
           columns={columns}
           dataSource={logs}
@@ -481,7 +481,7 @@ const AuditLogs = () => {
       >
         {selectedLog && (
           <div>
-            <Descriptions title="Informaci³n General" bordered>
+            <Descriptions title="Información General" bordered>
               <Descriptions.Item label="ID" span={3}>
                 {selectedLog.id}
               </Descriptions.Item>
@@ -491,7 +491,7 @@ const AuditLogs = () => {
               <Descriptions.Item label="Usuario" span={3}>
                 {selectedLog.user}
               </Descriptions.Item>
-              <Descriptions.Item label="Acci³n" span={3}>
+              <Descriptions.Item label="Acción" span={3}>
                 <Tag color={getActionColor(selectedLog.action)}>
                   {selectedLog.action.replace('_', ' ').toUpperCase()}
                 </Tag>
@@ -526,7 +526,7 @@ const AuditLogs = () => {
                   <Text ellipsis style={{ maxWidth: 400 }}>{selectedLog.referrer}</Text>
                 </Descriptions.Item>
               )}
-              <Descriptions.Item label="Descripci³n" span={3}>
+              <Descriptions.Item label="Descripción" span={3}>
                 {selectedLog.description}
               </Descriptions.Item>
               <Descriptions.Item label="IP" span={3}>

@@ -89,7 +89,7 @@ const Plano = () => {
     loadRecintos();
   }, [recintos.length, setRecintos]);
 
-  // Funci³n para cargar zonas con retry
+  // Función para cargar zonas con retry
   const loadZonas = async (salaId, retryCount = 0) => {
     if (!salaId) {
       setZonas([]);
@@ -102,7 +102,7 @@ const Plano = () => {
       logger.log('[PLANO] Cargando zonas para sala:', salaId, retryCount > 0 ? `(intento ${retryCount + 1})` : '');
       const zonasData = await fetchZonasPorSala(salaId);
 
-      // Verificar que zonasData sea un array v¡lido
+      // Verificar que zonasData sea un array válido
       if (Array.isArray(zonasData)) {
         setZonas(zonasData);
         logger.log('[PLANO] Zonas cargadas correctamente:', zonasData.length);
@@ -145,12 +145,12 @@ const Plano = () => {
     try {
       const mapaData = await fetchMapaMetadata(salaId);
 
-      // Verificar que mapaData sea v¡lido
+      // Verificar que mapaData sea válido
       if (mapaData && typeof mapaData === 'object') {
         setMapaPreview(mapaData);
         logger.log('[PLANO] Mapa cargado correctamente:', mapaData);
       } else {
-        logger.warn('[PLANO] mapaData no es v¡lido:', mapaData);
+        logger.warn('[PLANO] mapaData no es válido:', mapaData);
         setMapaPreview(null);
       }
     } catch (error) {
@@ -176,7 +176,7 @@ const Plano = () => {
       alert('Debe seleccionar una sala primero para crear el mapa.');
       return;
     }
-    // Redirigir a la p¡gina de crear mapa
+    // Redirigir a la página de crear mapa
     window.location.href = `/dashboard/crear-mapa/${sala.id}`;
   };
 
@@ -247,7 +247,7 @@ const Plano = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-3xl font-semibold mb-6 text-gray-800">Gesti³n de Zonas</h1>
+        <h1 className="text-3xl font-semibold mb-6 text-gray-800">Gestión de Zonas</h1>
 
         <div className="flex flex-wrap gap-6 mb-6">
           <div className="flex flex-col">
@@ -398,12 +398,12 @@ const Plano = () => {
                     </div>
                   ))}
                 {Array.isArray(zonas) && zonas.filter(z => !zonaSearch || String(z.nombre || '').toLowerCase().includes(zonaSearch.toLowerCase())).length === 0 && (
-                  <div className="text-center p-6 border border-dashed border-gray-300 rounded text-gray-600">No hay zonas que coincidan con la bºsqueda.</div>
+                  <div className="text-center p-6 border border-dashed border-gray-300 rounded text-gray-600">No hay zonas que coincidan con la búsqueda.</div>
                 )}
               </div>
             ) : (
               <div className="text-center p-6 border border-dashed border-gray-300 rounded">
-                <p className="text-gray-600">Error: Las zonas no est¡n disponibles</p>
+                <p className="text-gray-600">Error: Las zonas no están disponibles</p>
               </div>
             )}
 
@@ -426,7 +426,7 @@ const Plano = () => {
                             <strong>Estado:</strong> {mapaPreview.estado}
                           </span>
                           <span>
-                            <strong>šltima actualizaci³n:</strong>
+                            <strong>šltima actualización:</strong>
                             {mapaPreview.updated_at ? (
                               <span>{new Date(mapaPreview.updated_at).toLocaleString('es-ES')}</span>
                             ) : (
@@ -446,7 +446,7 @@ const Plano = () => {
                         <button
                           className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                         >
-                          ðŸ“Š Ver Estad­sticas
+                          ðŸ“Š Ver Estadísticas
                         </button>
                       </div>
                     </div>
@@ -456,7 +456,7 @@ const Plano = () => {
                     <div className="text-gray-600 space-y-2">
                       <p>No hay mapa para esta sala.</p>
                       <p className="text-sm text-gray-500">
-                        Crea un mapa para visualizar la distribuci³n de asientos y mesas.
+                        Crea un mapa para visualizar la distribución de asientos y mesas.
                       </p>
                       <div className="mt-3">
                         <button

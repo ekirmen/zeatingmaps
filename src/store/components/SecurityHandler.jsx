@@ -3,34 +3,34 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { message } from '../../utils/antdComponents';
 
 /**
- * Componente de seguridad para manejar par¡metros sensibles en la URL
- * Previene la exposici³n de credenciales en logs, historial del navegador, etc.
+ * Componente de seguridad para manejar parámetros sensibles en la URL
+ * Previene la exposición de credenciales en logs, historial del navegador, etc.
  */
 const SecurityHandler = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Verificar si hay par¡metros sensibles en la URL
+    // Verificar si hay parámetros sensibles en la URL
     const urlParams = new URLSearchParams(location.search);
 
-    // Par¡metros realmente sensibles (credenciales directas)
+    // Parámetros realmente sensibles (credenciales directas)
     const sensitiveParams = ['email', 'password', 'key', 'secret'];
 
-    // Par¡metros de autenticaci³n que pueden estar en la URL (no remover)
+    // Parámetros de autenticación que pueden estar en la URL (no remover)
     const authParams = ['token', 'access_token', 'refresh_token', 'code'];
 
-    // Verificar solo par¡metros realmente sensibles
+    // Verificar solo parámetros realmente sensibles
     const hasSensitiveData = sensitiveParams.some(param => urlParams.has(param));
 
     if (hasSensitiveData) {
       // Mostrar advertencia de seguridad
       message.warning({
-        content: 'š ï¸ Detectados par¡metros sensibles en la URL. Por seguridad, estos ser¡n removidos.',
+        content: 'š ï¸ Detectados parámetros sensibles en la URL. Por seguridad, estos serán removidos.',
         duration: 5,
       });
 
-      // Crear nueva URL sin par¡metros sensibles (pero mantener auth params)
+      // Crear nueva URL sin parámetros sensibles (pero mantener auth params)
       const cleanParams = new URLSearchParams();
       urlParams.forEach((value, key) => {
         if (!sensitiveParams.includes(key)) {
@@ -42,7 +42,7 @@ const SecurityHandler = ({ children }) => {
       const newSearch = cleanParams.toString();
       const newUrl = `${location.pathname}${newSearch ? `?${newSearch}` : ''}`;
 
-      // Reemplazar la URL actual sin par¡metros sensibles
+      // Reemplazar la URL actual sin parámetros sensibles
       window.history.replaceState({}, '', newUrl);
 
       // Log de seguridad (sin datos sensibles)
@@ -55,7 +55,7 @@ const SecurityHandler = ({ children }) => {
     const { hash, pathname } = location;
     if (!hash) return;
 
-    // Evitar redirecci³n si ya estamos en la pantalla correcta
+    // Evitar redirección si ya estamos en la pantalla correcta
     if (pathname.startsWith('/store/reset-password')) return;
 
     const hashParams = new URLSearchParams(hash.replace(/^#/, ''));

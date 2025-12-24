@@ -44,7 +44,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   } = useSeatLockStore();
   const lockedSeats = useSeatLockStore((state) => state.lockedSeats);
 
-  // Filtrar items del carrito que pertenecen a esta funci³n (memoizado)
+  // Filtrar items del carrito que pertenecen a esta función (memoizado)
   const funcionCartItems = useMemo(() =>
     cartItems.filter(item =>
       String(item.functionId || item.funcionId) === String(funcionId)
@@ -298,7 +298,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
         // Mostrar 100% inmediatamente
         setMapLoadProgress(100);
 
-        // Ocultar loading r¡pidamente despu©s de mostrar 100%
+        // Ocultar loading rápidamente después de mostrar 100%
         setTimeout(() => {
           if (isMounted) setLoading(false);
         }, 100);

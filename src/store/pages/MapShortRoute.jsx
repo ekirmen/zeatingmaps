@@ -33,7 +33,7 @@ const MapShortRoute = () => {
     }
 
     const loadEventAndRedirect = async () => {
-      // Si tenemos un slug v¡lido (no "r") y una funci³n,
+      // Si tenemos un slug válido (no "r") y una función,
       // y estamos en la ruta /eventos/:eventSlug/map, dejar que EventMapPage maneje
       if (eventSlug && eventSlug !== 'r' && funcion) {
         const funcionId = parseInt(funcion, 10);
@@ -44,14 +44,14 @@ const MapShortRoute = () => {
         }
       }
 
-      // Si no hay funci³n, redirigir a la p¡gina del evento (ser¡ manejado por ModernEventPage)
+      // Si no hay función, redirigir a la página del evento (será manejado por ModernEventPage)
       // MapShortRoute solo debe manejar rutas con ?funcion= para rutas cortas
       if (!funcion) {
         if (eventSlug) {
-          // Redirigir a la p¡gina del evento (ModernEventPage lo manejar¡)
+          // Redirigir a la página del evento (ModernEventPage lo manejará)
           navigate(`/store/eventos/${eventSlug}`, { replace: true });
         } else {
-          // Si no hay slug ni funci³n, redirigir a la p¡gina principal
+          // Si no hay slug ni función, redirigir a la página principal
           navigate('/store', { replace: true });
         }
         return;
@@ -66,8 +66,8 @@ const MapShortRoute = () => {
       try {
         setLoading(true);
 
-        // Si tenemos un slug v¡lido (no "r"), verificar que el evento existe
-        // Si el slug es "r" o no existe, buscar el evento desde la funci³n
+        // Si tenemos un slug válido (no "r"), verificar que el evento existe
+        // Si el slug es "r" o no existe, buscar el evento desde la función
         if (eventSlug && eventSlug !== 'r') {
           // Verificar que el evento existe
           const { data: eventoData, error: eventoError } = await supabase
@@ -81,7 +81,7 @@ const MapShortRoute = () => {
             throw new Error('Evento no encontrado');
           }
 
-          // Verificar que la funci³n pertenece a este evento
+          // Verificar que la función pertenece a este evento
           const { data: funcionData, error: funcionError } = await supabase
             .from('funciones')
             .select('id, evento_id')
@@ -92,15 +92,15 @@ const MapShortRoute = () => {
           const eventoId = funcionData.evento_id;
 
           if (eventoId !== eventoData.id) {
-            throw new Error('La funci³n no pertenece a este evento');
+            throw new Error('La función no pertenece a este evento');
           }
 
-          // Todo est¡ correcto, EventMapPage manejar¡ el resto
+          // Todo está correcto, EventMapPage manejará el resto
           setLoading(false);
           return;
         }
 
-        // Ruta corta: buscar el evento desde la funci³n (slug es "r" o no existe)
+        // Ruta corta: buscar el evento desde la función (slug es "r" o no existe)
         // Optimizar: hacer una sola query con join para reducir round-trips
         const { data: funcionData, error: funcionError } = await supabase
           .from('funciones')
@@ -110,13 +110,13 @@ const MapShortRoute = () => {
 
         if (funcionError) throw funcionError;
         if (!funcionData) {
-          throw new Error('Funci³n no encontrada');
+          throw new Error('Función no encontrada');
         }
 
-        // Obtener el evento desde la relaci³n
+        // Obtener el evento desde la relación
         const eventoData = funcionData.eventos;
         if (!eventoData) {
-          throw new Error('La funci³n no tiene un evento asociado');
+          throw new Error('La función no tiene un evento asociado');
         }
 
         // Si el evento no tiene slug, usar seat-selection como fallback
@@ -141,7 +141,7 @@ const MapShortRoute = () => {
         if ((!eventSlug || eventSlug === 'r') && funcionId) {
           navigate(`/store/seat-selection/${funcionId}?redirect=false`, { replace: true });
         } else if (eventSlug && eventSlug !== 'r') {
-          // Si tenemos slug v¡lido pero fall³, mostrar error
+          // Si tenemos slug válido pero falló, mostrar error
           setLoading(false);
         } else {
           navigate('/store', { replace: true });

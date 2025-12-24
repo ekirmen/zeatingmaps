@@ -15,11 +15,11 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
     try {
       setPrinting(true);
       
-      // Cargar configuraci³n de formato
+      // Cargar configuración de formato
       const config = await getFormatConfig();
       setFormatConfig(config);
 
-      // Verificar conexi³n de impresora
+      // Verificar conexión de impresora
       const status = await bocaPrinterService.getPrinterStatus();
       setPrinterStatus(status);
 
@@ -84,8 +84,8 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
       >
         <div className="print-ticket-modal">
           <Alert
-            message="Confirmaci³n de Impresi³n"
-            description="Se imprimir¡ el ticket en la impresora Boca conectada. Asegºrate de que la impresora est© encendida y tenga papel."
+            message="Confirmación de Impresión"
+            description="Se imprimirá el ticket en la impresora Boca conectada. Asegúrate de que la impresora esté encendida y tenga papel."
             type="info"
             showIcon
             className="mb-4"
@@ -142,20 +142,20 @@ const PrintTicketButton = ({ ticketData, onPrintComplete }) => {
 
           {formatConfig && (
             <div className="mb-4">
-              <Title level={5}>Configuraci³n de Formato:</Title>
+              <Title level={5}>Configuración de Formato:</Title>
               <div className="format-info">
                 <Text>Papel: {formatConfig.paperWidth}mm x {formatConfig.paperHeight}mm</Text>
                 <br />
                 <Text>Fuente: {formatConfig.fontSize === '00' ? 'Normal' : 'Doble'}</Text>
                 <br />
-                <Text>Alineaci³n: {formatConfig.alignment === '1' ? 'Centro' : 'Izquierda'}</Text>
+                <Text>Alineación: {formatConfig.alignment === '1' ? 'Centro' : 'Izquierda'}</Text>
               </div>
             </div>
           )}
 
           <Alert
             message="Nota Importante"
-            description="Si la impresora no responde, verifica que est© conectada y encendida. Puedes configurar la impresora en la secci³n 'Impresora Boca' del menº."
+            description="Si la impresora no responde, verifica que esté conectada y encendida. Puedes configurar la impresora en la sección 'Impresora Boca' del menú."
             type="warning"
             showIcon
           />

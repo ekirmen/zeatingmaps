@@ -11,7 +11,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
   const [height, setHeight] = useState(mesa?.height || 80);
   const [radius, setRadius] = useState(mesa?.radius || 60);
   
-  // Configuraci³n de sillas
+  // Configuración de sillas
   const [sillasConfig, setSillasConfig] = useState({
     rect: { top: 0, right: 0, bottom: 0, left: 0 },
     circle: { cantidad: 8, radio: 80 },
@@ -28,7 +28,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
       setHeight(mesa.height || 80);
       setRadius(mesa.radius || 60);
       
-      // Cargar configuraci³n existente de sillas
+      // Cargar configuración existente de sillas
       if (mesa.sillasConfig) {
         setSillasConfig(mesa.sillasConfig);
       }
@@ -143,10 +143,10 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
           </Text>
         </div>
 
-        {/* Rotaci³n */}
+        {/* Rotación */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <Text strong>Rotaci³n:</Text>
+            <Text strong>Rotación:</Text>
             <Text>{rotation}°</Text>
           </div>
           <Slider
@@ -165,7 +165,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
           />
         </div>
 
-        {/* Dimensiones segºn el tipo de mesa */}
+        {/* Dimensiones según el tipo de mesa */}
         {mesa.shape === 'rect' || mesa.type === 'rect' ? (
           <Row gutter={16}>
             <Col span={12}>
@@ -214,16 +214,16 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
 
         <Divider />
 
-        {/* Gesti³n de Sillas */}
+        {/* Gestión de Sillas */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <Text strong>Gesti³n de Sillas</Text>
+            <Text strong>Gestión de Sillas</Text>
             <Text type="primary" className="text-sm">
               Total: {getTotalSillas()}
             </Text>
           </div>
 
-          {/* Configuraci³n segºn tipo de mesa */}
+          {/* Configuración según tipo de mesa */}
           {(mesa.shape === 'rect' || mesa.type === 'rect') && (
             <div className="space-y-3">
               <Text type="secondary" className="text-xs">Sillas por lado:</Text>
@@ -336,7 +336,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
             </div>
           )}
 
-          {/* Botones de acci³n para sillas */}
+          {/* Botones de acción para sillas */}
           <div className="flex gap-2 mt-3">
             <Button
               icon={<PlusOutlined />}
@@ -382,11 +382,11 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas,
           </Button>
         </div>
 
-        {/* Informaci³n adicional */}
+        {/* Información adicional */}
         <div className="bg-gray-50 p-2 rounded text-xs">
           <Text type="secondary">
-            ðŸ’¡ <strong>ID:</strong> {mesa._id}<br/>
-            ðŸ’¡ <strong>Posici³n:</strong> X: {Math.round(mesa.posicion?.x || 0)}, Y: {Math.round(mesa.posicion?.y || 0)}
+            ðŸ’á <strong>ID:</strong> {mesa._id}<br/>
+            ðŸ’á <strong>Posición:</strong> X: {Math.round(mesa.posicion?.x || 0)}, Y: {Math.round(mesa.posicion?.y || 0)}
           </Text>
         </div>
       </div>

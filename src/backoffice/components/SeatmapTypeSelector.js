@@ -8,21 +8,21 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
     {
       id: 'ROWS_WITH_SECTIONS',
       title: 'Filas con secciones',
-      description: 'Recintos de tama±o medio y grande, como teatros o estadios',
+      description: 'Recintos de tamaño medio y grande, como teatros o estadios',
       icon: 'ðŸŸï¸',
       value: 'ROWS_WITH_SECTIONS'
     },
     {
       id: 'ROWS_WITHOUT_SECTIONS',
       title: 'Filas sin secciones',
-      description: 'Recintos peque±os, como peque±os teatros o salas de cine',
-      icon: 'ðŸŽ­',
+      description: 'Recintos pequeños, como pequeños teatros o salas de cine',
+      icon: 'ðŸŽí',
       value: 'ROWS_WITHOUT_SECTIONS'
     },
     {
       id: 'MIXED',
-      title: 'Dise±o mixto',
-      description: 'Todas las herramientas est¡n disponibles (excepto secciones)',
+      title: 'Diseño mixto',
+      description: 'Todas las herramientas están disponibles (excepto secciones)',
       icon: 'ðŸŽ¨',
       value: 'MIXED'
     },
@@ -81,7 +81,7 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
           color: '#1e293b',
           marginBottom: '2rem'
         }}>
-          ðŸŽ¯ ¿Qu© tipo de plano de asientos quieres dise±ar?
+          ðŸŽ¯ ¿Qué tipo de plano de asientos quieres diseñar?
         </div>
         
         <div style={{ marginBottom: '2rem' }}>

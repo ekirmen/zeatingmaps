@@ -56,7 +56,7 @@ const MapLoadingProgress = ({
                 {progress >= 30 && progress < 60 && 'Cargando imagen de fondo...'}
                 {progress >= 60 && progress < 90 && 'Cargando asientos...'}
                 {progress >= 90 && progress < 100 && 'Finalizando...'}
-                {progress >= 100 && '¡Carga completada!'}
+                {progress >= 100 && 'áCarga completada!'}
               </p>
             </div>
           )}

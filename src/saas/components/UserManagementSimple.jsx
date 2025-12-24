@@ -68,7 +68,7 @@ const UserManagementSimple = () => {
 
       if (profilesError) throw profilesError;
 
-      // Obtener informaci³n adicional de user_tenant_info si existe
+      // Obtener información adicional de user_tenant_info si existe
       const userIds = profiles?.map(p => p.id) || [];
       const { data: userTenantInfo, error: tenantError } = await supabase
         .from('user_tenant_info')
@@ -170,14 +170,14 @@ const UserManagementSimple = () => {
 
   const loadStats = async () => {
     try {
-      // Obtener estad­sticas desde profiles
+      // Obtener estadísticas desde profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, tenant_id, is_active, activo');
 
       if (profilesError) throw profilesError;
 
-      // Obtener informaci³n adicional de user_tenant_info si existe
+      // Obtener información adicional de user_tenant_info si existe
       const userIds = profiles?.map(p => p.id) || [];
       const { data: userTenantInfo, error: tenantError } = await supabase
         .from('user_tenant_info')
@@ -212,7 +212,7 @@ const UserManagementSimple = () => {
     try {
       const values = await form.validateFields();
 
-      // Actualizar informaci³n en profiles
+      // Actualizar información en profiles
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -226,7 +226,7 @@ const UserManagementSimple = () => {
 
       if (profileError) throw profileError;
 
-      // Actualizar informaci³n del usuario en user_tenant_info si existe
+      // Actualizar información del usuario en user_tenant_info si existe
       const { error: tenantError } = await supabase
         .from('user_tenant_info')
         .update({
@@ -400,14 +400,14 @@ const UserManagementSimple = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <TeamOutlined style={{ marginRight: '8px' }} />
-          Gesti³n de Usuarios
+          Gestión de Usuarios
         </Title>
         <Text type="secondary">
           Administra usuarios y roles de todos los tenants
         </Text>
       </div>
 
-      {/* Estad­sticas */}
+      {/* Estadísticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -441,7 +441,7 @@ const UserManagementSimple = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="En l­nea (24h)"
+              title="En línea (24h)"
               value={stats.online || 0}
               valueStyle={{ color: '#1890ff' }}
               prefix={<CrownOutlined />}
@@ -518,7 +518,7 @@ const UserManagementSimple = () => {
         />
       </Card>
 
-      {/* Drawer de edici³n de usuario */}
+      {/* Drawer de edición de usuario */}
       <Drawer
         title="Editar Usuario"
         placement="right"

@@ -11,7 +11,7 @@ const CART_KEY = 'boleteriaCart';
 const SELECTED_SEATS_KEY = 'boleteriaSelectedSeats';
 
 export const useBoleteria = () => {
-  // Usar ref para evitar renders mºltiples
+  // Usar ref para evitar renders múltiples
   const isInitialized = useRef(false);
 
   if (!isInitialized.current) {
@@ -73,14 +73,14 @@ export const useBoleteria = () => {
     logger.log('ðŸ”„ [useBoleteria] Mapa state changed:', mapa ? 'œ… Cargado' : 'Œ Null');
   }, [mapa]);
 
-  // Restaurar carrito cuando se cargue la funci³n
+  // Restaurar carrito cuando se cargue la función
   useEffect(() => {
     if (selectedFuncion && carrito.length === 0) {
       try {
         const savedCart = localStorage.getItem(CART_KEY);
         if (savedCart) {
           const parsedCart = JSON.parse(savedCart);
-          // Solo restaurar si el carrito tiene items y es para la funci³n actual
+          // Solo restaurar si el carrito tiene items y es para la función actual
           if (parsedCart.length > 0 && parsedCart[0]?.funcionId === selectedFuncion.id) {
             setCarrito(parsedCart);
             logger.log('ðŸ”„ [useBoleteria] Carrito restaurado desde localStorage:', parsedCart.length, 'items');
@@ -92,11 +92,11 @@ export const useBoleteria = () => {
     }
   }, [selectedFuncion, carrito.length]);
 
-  // Funci³n para guardar carrito en localStorage
+  // Función para guardar carrito en localStorage
   const saveCarritoToStorage = useCallback((newCarrito) => {
     try {
       if (!Array.isArray(newCarrito)) {
-        logger.warn('š ï¸ [useBoleteria] Intento de guardar carrito inv¡lido:', newCarrito);
+        logger.warn('š ï¸ [useBoleteria] Intento de guardar carrito inválido:', newCarrito);
         localStorage.setItem(CART_KEY, JSON.stringify([]));
         return;
       }
@@ -123,13 +123,13 @@ export const useBoleteria = () => {
     setSelectedEvent(newEvent);
   }, [setSelectedEvent]);
 
-  // Funci³n para limpiar carrito
+  // Función para limpiar carrito
   const clearCarrito = useCallback(() => {
     setCarritoMemo([]);
     logger.log('ðŸ—‘ï¸ [useBoleteria] Carrito limpiado');
   }, [setCarritoMemo]);
 
-  // Funci³n para agregar asiento al carrito
+  // Función para agregar asiento al carrito
   const addToCarrito = useCallback((asiento, precio, zona) => {
     const newItem = {
       id: asiento.id || asiento._id,
@@ -148,7 +148,7 @@ export const useBoleteria = () => {
     logger.log('ž• [useBoleteria] Asiento agregado al carrito:', newItem);
   }, [selectedFuncion?.id, setCarritoMemo]);
 
-  // Funci³n para quitar asiento del carrito
+  // Función para quitar asiento del carrito
   const removeFromCarrito = useCallback((asientoId) => {
     setCarritoMemo(prev => {
       const safePrev = Array.isArray(prev) ? prev : [];
@@ -158,7 +158,7 @@ export const useBoleteria = () => {
     logger.log('ž– [useBoleteria] Asiento removido del carrito:', asientoId);
   }, [setCarritoMemo]);
 
-  // Manejar la selecci³n de una funci³n
+  // Manejar la selección de una función
   const handleFunctionSelect = useCallback(async (functionId, options = {}) => {
     logger.log('ðŸ”„ [useBoleteria] handleFunctionSelect called with function ID:', functionId, 'options:', options);
     setLoading(true);
@@ -169,12 +169,12 @@ export const useBoleteria = () => {
     setSelectedPlantilla(null);
     setMapa(null);
     setZonas([]);
-    // Limpiar carrito solo si es una funci³n diferente Y no se debe preservar el carrito
+    // Limpiar carrito solo si es una función diferente Y no se debe preservar el carrito
     if (selectedFuncion?.id !== functionId && !options.preserveCart) {
-      logger.log('ðŸ§¹ [useBoleteria] Limpiando carrito porque es funci³n diferente');
+      logger.log('ðŸ§¹ [useBoleteria] Limpiando carrito porque es función diferente');
       setCarritoMemo([]);
     } else if (options.preserveCart) {
-      logger.log('ðŸ›’ [useBoleteria] Preservando carrito por opci³n preserveCart');
+      logger.log('ðŸ›’ [useBoleteria] Preservando carrito por opción preserveCart');
     }
 
     // Ensure functionId is a primitive value
@@ -194,14 +194,14 @@ export const useBoleteria = () => {
 
       if (funcionError) throw funcionError;
       if (!funcionData) {
-        message.warning('Funci³n no encontrada.');
+        message.warning('Función no encontrada.');
         return false;
       }
 
       // Validar que funcionData tenga las propiedades necesarias
       if (!funcionData || !funcionData.id) {
         logger.error('Œ [useBoleteria] funcionData no tiene ID:', funcionData);
-        message.error('Datos de funci³n inv¡lidos');
+        message.error('Datos de función inválidos');
         return false;
       }
 
@@ -224,8 +224,8 @@ export const useBoleteria = () => {
       setSelectedFuncion(funcionMapeada);
       localStorage.setItem(FUNC_KEY, functionId);
 
-      logger.log('œ… [useBoleteria] Funci³n seleccionada:', funcionMapeada);
-      logger.log('ðŸ“‹ [useBoleteria] Plantilla de la funci³n:', funcionData.plantilla);
+      logger.log('œ… [useBoleteria] Función seleccionada:', funcionMapeada);
+      logger.log('ðŸ“‹ [useBoleteria] Plantilla de la función:', funcionData.plantilla);
       logger.log('ðŸ” [useBoleteria] Estructura completa de funcionData:', {
         id: funcionData.id,
         sala_id: funcionData.sala_id,
@@ -242,7 +242,7 @@ export const useBoleteria = () => {
         logger.log('ðŸ“‹ Tipo de detalles:', typeof funcionData.plantilla.detalles);
         setSelectedPlantilla(funcionData.plantilla);
       } else {
-        logger.log('Œ No hay plantilla de precios para esta funci³n');
+        logger.log('Œ No hay plantilla de precios para esta función');
         logger.log('ðŸ” Buscando en plantilla_entradas...');
 
         // Intentar cargar plantilla desde plantilla_entradas
@@ -261,7 +261,7 @@ export const useBoleteria = () => {
               logger.log('ðŸ“‹ Plantilla detalles:', plantillaData.detalles);
               setSelectedPlantilla(plantillaData);
             } else {
-              logger.log('Œ No se encontr³ plantilla con ID:', funcionData.plantilla_entradas);
+              logger.log('Œ No se encontró plantilla con ID:', funcionData.plantilla_entradas);
             }
           } catch (e) {
             logger.error('Œ Error en fallback de plantilla:', e);
@@ -291,7 +291,7 @@ export const useBoleteria = () => {
           logger.log('ðŸ“Š [useBoleteria] mapData.contenido:', mapData?.contenido);
 
           if (!mapData) {
-            logger.error('Œ [useBoleteria] fetchMapa retorn³ null/undefined');
+            logger.error('Œ [useBoleteria] fetchMapa retornó null/undefined');
             logger.error('Œ [useBoleteria] Verificar RLS policies para mapas');
           }
 
@@ -303,9 +303,9 @@ export const useBoleteria = () => {
           logger.log('ðŸ·ï¸ [useBoleteria] Zonas cargadas:', zonasData);
           setZonas(zonasData);
 
-          // Calcular estad­sticas del evento basadas en el mapa cargado
+          // Calcular estadísticas del evento basadas en el mapa cargado
           if (mapData && mapData.contenido) {
-            logger.log('ðŸ“Š [useBoleteria] Calculando estad­sticas desde el mapa cargado');
+            logger.log('ðŸ“Š [useBoleteria] Calculando estadísticas desde el mapa cargado');
             let totalSeats = 0;
             let availableSeats = 0;
             let soldSeats = 0;
@@ -321,7 +321,7 @@ export const useBoleteria = () => {
               elementos.forEach(elemento => {
                 // Validar que elemento no sea null/undefined
                 if (!elemento || typeof elemento !== 'object') {
-                  logger.warn('š ï¸ [useBoleteria] Elemento inv¡lido en mapa:', elemento);
+                  logger.warn('š ï¸ [useBoleteria] Elemento inválido en mapa:', elemento);
                   return;
                 }
 
@@ -331,7 +331,7 @@ export const useBoleteria = () => {
                   elemento.sillas.forEach(silla => {
                     // Validar que silla no sea null/undefined
                     if (!silla || typeof silla !== 'object') {
-                      logger.warn('š ï¸ [useBoleteria] Silla inv¡lida en elemento:', silla);
+                      logger.warn('š ï¸ [useBoleteria] Silla inválida en elemento:', silla);
                       return;
                     }
 
@@ -351,7 +351,7 @@ export const useBoleteria = () => {
                   });
                 }
 
-                // Tambi©n contar asientos individuales (type: 'silla')
+                // También contar asientos individuales (type: 'silla')
                 if (elemento.type === 'silla') {
                   totalSeats++;
                   switch (elemento.estado) {
@@ -370,7 +370,7 @@ export const useBoleteria = () => {
                 }
               });
             } else {
-              logger.warn('š ï¸ [useBoleteria] Mapa cargado pero sin contenido v¡lido o no es array', {
+              logger.warn('š ï¸ [useBoleteria] Mapa cargado pero sin contenido válido o no es array', {
                 mapData: mapData,
                 contenido: mapData.contenido,
                 esArray: Array.isArray(mapData.contenido),
@@ -381,7 +381,7 @@ export const useBoleteria = () => {
 
             // Si no hay asientos en el formato esperado, intentar con el formato de zonas
             if (totalSeats === 0 && mapData.contenido.zonas && Array.isArray(mapData.contenido.zonas)) {
-              logger.log('ðŸ” [useBoleteria] Intentando calcular estad­sticas desde zonas');
+              logger.log('ðŸ” [useBoleteria] Intentando calcular estadísticas desde zonas');
               mapData.contenido.zonas.forEach(zona => {
                 if (zona.asientos && Array.isArray(zona.asientos)) {
                   totalSeats += zona.asientos.length;
@@ -405,7 +405,7 @@ export const useBoleteria = () => {
               });
             }
 
-            logger.log('œ… [useBoleteria] Estad­sticas calculadas:', {
+            logger.log('œ… [useBoleteria] Estadísticas calculadas:', {
               totalSeats,
               availableSeats,
               soldSeats,
@@ -423,7 +423,7 @@ export const useBoleteria = () => {
               logger.log('š ï¸ [useBoleteria] No se encontraron asientos en el mapa');
             }
           } else {
-            logger.log('š ï¸ [useBoleteria] Mapa cargado pero sin contenido v¡lido o no es array');
+            logger.log('š ï¸ [useBoleteria] Mapa cargado pero sin contenido válido o no es array');
             logger.log('š ï¸ [useBoleteria] mapData:', mapData);
             logger.log('š ï¸ [useBoleteria] mapData.contenido:', mapData?.contenido);
             logger.log('š ï¸ [useBoleteria] Es array:', Array.isArray(mapData?.contenido));
@@ -446,8 +446,8 @@ export const useBoleteria = () => {
       return true;
 
     } catch (err) {
-      logger.error("Error al seleccionar funci³n:", err);
-      message.error(`Error al seleccionar funci³n: ${err.message}`);
+      logger.error("Error al seleccionar función:", err);
+      message.error(`Error al seleccionar función: ${err.message}`);
       setError(err);
       return false;
     } finally {
@@ -455,7 +455,7 @@ export const useBoleteria = () => {
     }
   }, [selectedFuncion?.id, setCarritoMemo]);
 
-  // Manejar la selecci³n de un evento
+  // Manejar la selección de un evento
   const handleEventSelect = useCallback(async (eventoId) => {
     logger.log('ðŸ”„ [useBoleteria] handleEventSelect called with event ID:', eventoId);
     setLoading(true);
@@ -479,7 +479,7 @@ export const useBoleteria = () => {
 
       if (eventoError) throw eventoError;
       if (!eventoData || !eventoData.id) {
-        message.warning('Evento no encontrado o datos inv¡lidos.');
+        message.warning('Evento no encontrado o datos inválidos.');
         return { success: false };
       }
 
@@ -571,7 +571,7 @@ export const useBoleteria = () => {
         zonas: [],
         carrito: [],
         loading: false,
-        error: 'Error de inicializaci³n',
+        error: 'Error de inicialización',
         debugInfo: {},
         setDebugInfo: () => { },
         setCarrito: () => { },
@@ -648,10 +648,10 @@ export const useBoleteria = () => {
       setLoading(true);
       setError(null);
       try {
-        // Verificar autenticaci³n primero
+        // Verificar autenticación primero
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
-          logger.error('Œ [useBoleteria] Error de autenticaci³n:', authError);
+          logger.error('Œ [useBoleteria] Error de autenticación:', authError);
           setError('Usuario no autenticado');
           setLoading(false);
           return;
@@ -686,10 +686,10 @@ export const useBoleteria = () => {
           await handleEventSelect(data[0].id);
         }
 
-        // Si hay un evento guardado en localStorage, tambi©n verificar si hay funci³n guardada
+        // Si hay un evento guardado en localStorage, también verificar si hay función guardada
         const storedFunctionId = localStorage.getItem(FUNC_KEY);
         if (storedFunctionId) {
-          logger.log('ðŸ”„ [useBoleteria] Funci³n guardada encontrada, cargando mapa...');
+          logger.log('ðŸ”„ [useBoleteria] Función guardada encontrada, cargando mapa...');
           // Esperar un poco para que el evento se haya cargado completamente
           setTimeout(async () => {
             await handleFunctionSelect(storedFunctionId);

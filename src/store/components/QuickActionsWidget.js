@@ -19,7 +19,7 @@ const QuickActionsWidget = () => {
   const [savedCartsVisible, setSavedCartsVisible] = useState(false);
   const { getItemCount, calculateTotal, clearCart, items, products } = useCartStore();
 
-  // Memoizar c¡lculos del carrito
+  // Memoizar cálculos del carrito
   const { itemCount, total, seatsCount, productsCount } = useMemo(() => ({
     itemCount: getItemCount(),
     total: calculateTotal(),
@@ -37,7 +37,7 @@ const QuickActionsWidget = () => {
         title={
           <div className="flex items-center space-x-2">
             <ShoppingCartOutlined className="text-blue-500" />
-            <span>Acciones R¡pidas</span>
+            <span>Acciones Rápidas</span>
           </div>
         }
         className="mb-4"

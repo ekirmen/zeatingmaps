@@ -45,7 +45,7 @@ const BillingDashboard = () => {
       setSubscriptions(subscriptionsData);
       setStats({ ...initialStats, ...(statsData || {}) });
     } catch (error) {
-      message.error('Error al cargar datos de facturaci³n');
+      message.error('Error al cargar datos de facturación');
       setStats(initialStats);
     } finally {
       setLoading(false);
@@ -59,32 +59,32 @@ const BillingDashboard = () => {
         values.plan_type,
         values.customer_email
       );
-      message.success('Suscripci³n creada exitosamente');
+      message.success('Suscripción creada exitosamente');
       setModalVisible(false);
       form.resetFields();
       loadData();
     } catch (error) {
-      message.error('Error al crear suscripci³n');
+      message.error('Error al crear suscripción');
     }
   };
 
   const handleCancelSubscription = async (subscriptionId) => {
     try {
       await billingService.cancelSubscription(subscriptionId);
-      message.success('Suscripci³n cancelada exitosamente');
+      message.success('Suscripción cancelada exitosamente');
       loadData();
     } catch (error) {
-      message.error('Error al cancelar suscripci³n');
+      message.error('Error al cancelar suscripción');
     }
   };
 
   const handleResumeSubscription = async (subscriptionId) => {
     try {
       await billingService.resumeSubscription(subscriptionId);
-      message.success('Suscripci³n reanudada exitosamente');
+      message.success('Suscripción reanudada exitosamente');
       loadData();
     } catch (error) {
-      message.error('Error al reanudar suscripci³n');
+      message.error('Error al reanudar suscripción');
     }
   };
 
@@ -145,7 +145,7 @@ const BillingDashboard = () => {
       ),
     },
     {
-      title: 'Pr³ximo Pago',
+      title: 'Próximo Pago',
       dataIndex: 'next_billing_date',
       key: 'next_billing_date',
       render: (date) => (date ? new Date(date).toLocaleDateString() : '-”'),
@@ -163,7 +163,7 @@ const BillingDashboard = () => {
             />
           </Tooltip>
           {record.status === 'active' && (
-            <Tooltip title="Cancelar Suscripci³n">
+            <Tooltip title="Cancelar Suscripción">
               <Button 
                 icon={<StopOutlined />} 
                 size="small"
@@ -173,7 +173,7 @@ const BillingDashboard = () => {
             </Tooltip>
           )}
           {record.status === 'cancelled' && (
-            <Tooltip title="Reanudar Suscripci³n">
+            <Tooltip title="Reanudar Suscripción">
               <Button 
                 icon={<PlayCircleOutlined />} 
                 size="small"
@@ -192,12 +192,12 @@ const BillingDashboard = () => {
         <Col span={24}>
           <Title level={2}>
             <DollarOutlined style={{ marginRight: '8px' }} />
-            Dashboard de Facturaci³n
+            Dashboard de Facturación
           </Title>
         </Col>
       </Row>
 
-      {/* Estad­sticas */}
+      {/* Estadísticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -246,7 +246,7 @@ const BillingDashboard = () => {
       {Number(stats.failedSubscriptions) > 0 && (
         <Alert
           message={`${stats.failedSubscriptions} suscripciones con pagos fallidos`}
-          description="Hay suscripciones que requieren atenci³n inmediata."
+          description="Hay suscripciones que requieren atención inmediata."
           type="warning"
           showIcon
           style={{ marginBottom: '16px' }}
@@ -269,7 +269,7 @@ const BillingDashboard = () => {
               icon={<PlusOutlined />} 
               onClick={() => setModalVisible(true)}
             >
-              Nueva Suscripci³n
+              Nueva Suscripción
             </Button>
           </Space>
         }
@@ -288,9 +288,9 @@ const BillingDashboard = () => {
         />
       </Card>
 
-      {/* Modal para crear suscripci³n */}
+      {/* Modal para crear suscripción */}
       <Modal
-        title="Nueva Suscripci³n"
+        title="Nueva Suscripción"
         visible={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -307,7 +307,7 @@ const BillingDashboard = () => {
             rules={[{ required: true, message: 'Seleccione un tenant' }]}
           >
             <Select placeholder="Seleccionar tenant">
-              {/* Aqu­ se cargar­an los tenants disponibles */}
+              {/* Aquí se cargarían los tenants disponibles */}
             </Select>
           </Form.Item>
 
@@ -317,7 +317,7 @@ const BillingDashboard = () => {
             rules={[{ required: true, message: 'Seleccione un plan' }]}
           >
             <Select placeholder="Seleccionar plan">
-              <Option value="basic">B¡sico - $29.99</Option>
+              <Option value="basic">Básico - $29.99</Option>
               <Option value="pro">Profesional - $79.99</Option>
               <Option value="enterprise">Empresarial - $199.99</Option>
             </Select>
@@ -328,7 +328,7 @@ const BillingDashboard = () => {
             label="Email del Cliente"
             rules={[
               { required: true, message: 'Email requerido' },
-              { type: 'email', message: 'Email inv¡lido' }
+              { type: 'email', message: 'Email inválido' }
             ]}
           >
             <Input placeholder="cliente@empresa.com" />
@@ -337,7 +337,7 @@ const BillingDashboard = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                Crear Suscripci³n
+                Crear Suscripción
               </Button>
               <Button onClick={() => setModalVisible(false)}>
                 Cancelar
@@ -347,9 +347,9 @@ const BillingDashboard = () => {
         </Form>
       </Modal>
 
-      {/* Modal de detalles de suscripci³n */}
+      {/* Modal de detalles de suscripción */}
       <Modal
-        title={`Detalles de Suscripci³n - ${selectedSubscription?.ticket_number}`}
+        title={`Detalles de Suscripción - ${selectedSubscription?.ticket_number}`}
         visible={!!selectedSubscription}
         onCancel={() => setSelectedSubscription(null)}
         footer={null}
@@ -381,7 +381,7 @@ const BillingDashboard = () => {
                 </Tag>
               </Col>
               <Col span={12}>
-                <Text strong>Pr³ximo Pago:</Text>
+                <Text strong>Próximo Pago:</Text>
                 <br />
                 <Text>
                   {selectedSubscription.next_billing_date

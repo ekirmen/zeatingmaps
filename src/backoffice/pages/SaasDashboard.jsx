@@ -105,7 +105,7 @@ const SaasDashboard = () => {
           id: 3,
           type: 'warning',
           title: 'Mantenimiento Programado',
-          message: 'Mantenimiento programado para ma±ana a las 2:00 AM',
+          message: 'Mantenimiento programado para mañana a las 2:00 AM',
           read: true,
           created_at: new Date(Date.now() - 7200000).toISOString()
         }
@@ -119,10 +119,10 @@ const SaasDashboard = () => {
     }
   }, []);
 
-  // Cargar m©tricas avanzadas
+  // Cargar métricas avanzadas
   const loadAdvancedMetrics = useCallback(async () => {
     try {
-      // C¡lculo de crecimiento mensual - CORREGIDO
+      // Cálculo de crecimiento mensual - CORREGIDO
       const currentDate = new Date();
       const lastMonth = new Date();
       lastMonth.setMonth(lastMonth.getMonth() - 1);
@@ -157,7 +157,7 @@ const SaasDashboard = () => {
       });
     } catch (error) {
       console.error('Error loading advanced metrics:', error);
-      // Establecer m©tricas por defecto en caso de error
+      // Establecer métricas por defecto en caso de error
       setAdvancedMetrics({
         monthlyGrowth: 0,
         churnRate: 0,
@@ -264,7 +264,7 @@ const SaasDashboard = () => {
       });
     } catch (error) {
       console.error('Error loading stats:', error);
-      message.error('Error al cargar estad­sticas');
+      message.error('Error al cargar estadísticas');
     }
   }, []);
 
@@ -300,7 +300,7 @@ const SaasDashboard = () => {
   const handleViewTenant = async (tenant) => {
     setSelectedTenant(tenant);
 
-    // Cargar datos espec­ficos del tenant
+    // Cargar datos específicos del tenant
     try {
       // Cargar eventos del tenant
       const { data: eventosData } = await supabase
@@ -384,7 +384,7 @@ const SaasDashboard = () => {
           plan_type: values.plan_type || 'basic',
           max_users: values.max_users || 10,
           max_events: values.max_events || 50,
-          // Si no se especifica full_url, generarla autom¡ticamente
+          // Si no se especifica full_url, generarla automáticamente
           full_url: values.full_url || (values.subdomain && values.domain ? `${values.subdomain}.${values.domain}` : values.domain)
         };
 
@@ -597,10 +597,10 @@ const SaasDashboard = () => {
         </Col>
       </Row>
 
-      {/* Alertas cr­ticas */}
+      {/* Alertas críticas */}
       {stats.criticalAlerts > 0 && (
         <Alert
-          message={`${stats.criticalAlerts} alertas cr­ticas requieren atenci³n`}
+          message={`${stats.criticalAlerts} alertas críticas requieren atención`}
           description="Hay problemas urgentes que necesitan ser resueltos inmediatamente."
           type="error"
           showIcon
@@ -845,7 +845,7 @@ const SaasDashboard = () => {
         title="Gestión de Empresas"
         extra={
           <Space>
-            <Button icon={<AuditOutlined />} onClick={() => message.info('Ver logs de auditor­a')}>
+            <Button icon={<AuditOutlined />} onClick={() => message.info('Ver logs de auditoría')}>
               Auditoría
             </Button>
             <Button icon={<CloudUploadOutlined />} onClick={() => message.info('Gestión de backups')}>
@@ -1019,7 +1019,7 @@ const SaasDashboard = () => {
                         selectedTenant.status === 'pending' ? 'Pendiente' : selectedTenant.status}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Fecha de Creaci³n">
+              <Descriptions.Item label="Fecha de Creación">
                 {new Date(selectedTenant.created_at).toLocaleDateString()}
               </Descriptions.Item>
               <Descriptions.Item label="Última Actualización">
@@ -1393,7 +1393,7 @@ const TenantConfigSupport = ({ tenant, onAction }) => {
     <div>
       <Alert
         message="Configuración del Tenant"
-        description="Aqu­ puedes modificar la configuraci³n general del cliente"
+        description="Aquí puedes modificar la configuración general del cliente"
         type="info"
         showIcon
         style={{ marginBottom: '16px' }}
@@ -1572,7 +1572,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
               <Button size="small" onClick={() => onAction('update_function', { id: item.id, estado: 'active' })}>
                 Activar
               </Button>,
-              <Button size="small" onClick={() => onAction('update_function', { id: item.id, nombre: 'Funci³n Modificada' })}>
+              <Button size="small" onClick={() => onAction('update_function', { id: item.id, nombre: 'Función Modificada' })}>
                 Modificar Nombre
               </Button>
             ]}
@@ -1597,7 +1597,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
           >
             <List.Item.Meta
               title={item.nombre}
-              description={`Direcci³n: ${item.direccion} - Capacidad: ${item.capacidad} - Estado: ${item.estado}`}
+              description={`Dirección: ${item.direccion} - Capacidad: ${item.capacidad} - Estado: ${item.estado}`}
             />
           </List.Item>
         );
@@ -1606,7 +1606,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
           <List.Item
             actions={[
               <Button size="small" onClick={() => onAction('update_commission', { id: item.id, porcentaje: 0 })}>
-                Quitar Comisi³n
+                Quitar Comisión
               </Button>,
               <Button size="small" onClick={() => onAction('update_commission', { id: item.id, estado: 'active' })}>
                 Activar
@@ -1614,7 +1614,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
             ]}
           >
             <List.Item.Meta
-              title={`Comisi³n ${item.id}`}
+              title={`Comisión ${item.id}`}
               description={`Porcentaje: ${item.porcentaje}% - Tipo: ${item.tipo} - Estado: ${item.estado}`}
             />
           </List.Item>
@@ -1706,7 +1706,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
       case 'venues': return 'Recintos';
       case 'commissions': return 'Comisiones';
       case 'zones': return 'Zonas';
-      case 'customization': return 'Personalizaci³n';
+      case 'customization': return 'Personalización';
       case 'sales': return 'Ventas';
       case 'reports': return 'Reportes';
       default: return 'Datos';
