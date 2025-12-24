@@ -36,8 +36,7 @@ export default defineConfig(({ mode }) => {
             rollupOptions: {
                 output: {
                     manualChunks: {
-                        'react-vendor': ['react', 'react-dom', 'react-router-dom', 'zustand', '@reduxjs/toolkit'],
-                        'ui-vendor': ['antd', '@ant-design/icons', 'lucide-react', 'framer-motion'],
+                        'react-vendor': ['react', 'react-dom', 'react-router-dom', 'zustand'],
                         'map-vendor': ['konva', 'react-konva', 'use-image'],
                         'editor-vendor': ['react-quill'],
                         'supabase-vendor': ['@supabase/supabase-js'],

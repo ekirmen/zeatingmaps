@@ -362,7 +362,7 @@ const ModernStorePage = () => {
           </div>
         ) : (
           <div className="store-grid store-grid-auto" style={{ marginBottom: 'var(--store-space-8)' }}>
-            {filteredEvents.map((event) => {
+            {filteredEvents.map((event, index) => {
               const eventStatus = getEventStatus(event);
               const modoVenta = getModoVenta(event);
               const tags = getEventTags(event);
@@ -392,6 +392,7 @@ const ModernStorePage = () => {
                     <EventImage
                       event={event}
                       imageType="banner"
+                      priority={index < 2}
                       style={{
                         width: '100%',
                         height: '100%',
