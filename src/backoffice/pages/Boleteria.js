@@ -745,8 +745,9 @@ const Boleteria = () => {
       if (exists) {
         // Deseleccionar: quitar del carrito y desbloquear en BD
         await toggleSeat(cartItem);
-        await unlockSeat(sillaId, funcionId);
-        logger.log('Ã°Å¸â€â€ž [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
+        // Boletería puede desbloquear asientos permanentemente bloqueados
+        await unlockSeat(sillaId, funcionId, { allowForceUnlock: true });
+        logger.log('🗑️ [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
       } else {
         // Seleccionar: bloquear en BD primero, luego agregar al carrito
         const lockResult = await lockSeat(sillaId, 'seleccionado', funcionId);
