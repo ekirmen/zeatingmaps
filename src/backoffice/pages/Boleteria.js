@@ -746,7 +746,12 @@ const Boleteria = () => {
         // Deseleccionar: quitar del carrito y desbloquear en BD
         await toggleSeat(cartItem);
         // Boletería puede desbloquear asientos permanentemente bloqueados
-        await unlockSeat(sillaId, funcionId, { allowForceUnlock: true });
+        // allowOverrideSession: usa el session_id del lock existente en lugar del actual
+        // allowForceUnlock: permite desbloquear asientos con status permanente
+        await unlockSeat(sillaId, funcionId, {
+          allowOverrideSession: true,
+          allowForceUnlock: true
+        });
         logger.log('🗑️ [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
       } else {
         // Seleccionar: bloquear en BD primero, luego agregar al carrito
