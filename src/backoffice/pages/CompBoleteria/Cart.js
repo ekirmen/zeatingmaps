@@ -138,9 +138,46 @@ const Cart = ({
     message.success('Carrito limpiado');
   }, [setCarrito]);
 
-  const handleBlockAction = useCallback(() => {
-    message.info('Activa el modo de bloqueo/desbloqueo para gestionar asientos.');
-  }, []);
+  const handleBlockAction = useCallback(async () => {
+    if (!safeCarrito.length) {
+      message.warning('No hay asientos en el carrito');
+      return;
+    }
+
+    // Import seat lock store to check status
+    const { isSeatLocked } = await import('../../../components/seatLockStore').then(m => m.useSeatLockStore.getState());
+
+    // Check each seat and determine action
+    const updatedCarrito = await Promise.all(
+      safeCarrito.map(async (item) => {
+        const seatId = item._id || item.sillaId || item.id;
+        const funcionId = item.funcionId;
+
+        // Check if seat is currently locked
+        const isLocked = await isSeatLocked(seatId, funcionId);
+
+        // Set lockAction based on current status
+        return {
+          ...item,
+          lockAction: isLocked ? 'unlock' : 'block'
+        };
+      })
+    );
+
+    setCarrito(updatedCarrito);
+    setMenuVisible(false);
+
+    const hasBlocks = updatedCarrito.some(item => item.lockAction === 'block');
+    const hasUnlocks = updatedCarrito.some(item => item.lockAction === 'unlock');
+
+    if (hasBlocks && hasUnlocks) {
+      message.info('Asientos marcados para bloquear y desbloquear según su estado actual');
+    } else if (hasBlocks) {
+      message.info('Asientos marcados para bloquear');
+    } else {
+      message.info('Asientos marcados para desbloquear');
+    }
+  }, [safeCarrito, setCarrito]);
 
   const handleDownloadAllTickets = useCallback(async () => {
     if (!safeCarrito.length) return;
