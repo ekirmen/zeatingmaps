@@ -20,12 +20,12 @@ import { useTenant } from './contexts/TenantContext';
 import './index.css';
 
 // Lazy load de contexto
-const ThemeProvider = lazy(() => import('./contexts/ThemeContext.js'));
+const ThemeProvider = lazy(() => import('./contexts/ThemeContext.jsx'));
 const TenantErrorBoundary = lazy(() => import('./components/TenantErrorBoundary.jsx'));
 const MapShortRoute = lazy(() => import('./store/pages/MapShortRoute.jsx'));
 const VercelAnalytics = lazy(() => import('./components/VercelAnalytics.jsx'));
 const VercelSpeedInsights = lazy(() => import('./components/VercelSpeedInsights.jsx'));
-const LegalTerms = lazy(() => import('./store/pages/LegalTerms.js'));
+const LegalTerms = lazy(() => import('./store/pages/LegalTerms.jsx'));
 const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt.jsx'));
 
 // Lazy load de las apps principales para reducir el bundle inicial
