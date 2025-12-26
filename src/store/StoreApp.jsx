@@ -35,7 +35,7 @@ const Pages = {
   Register: React.lazy(() => import('./pages/Register')),
   // ForgotPassword: React.lazy(() => import('./pages/ForgotPassword')),
   // ResetPassword: React.lazy(() => import('./pages/ResetPassword')),
-  Profile: React.lazy(() => import('./pages/profile.js')),
+  Profile: React.lazy(() => import('./pages/profile.jsx')),
 
   // Static / CMS
   FaqPage: React.lazy(() => import('./pages/FaqPage')),
