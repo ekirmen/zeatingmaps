@@ -6,6 +6,7 @@
     "node": "22.x"
   },
   "homepage": "/store",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "cross-env LANG=en_US.UTF-8 vite build",
