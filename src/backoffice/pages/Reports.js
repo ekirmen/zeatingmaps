@@ -40,7 +40,7 @@ import {
   CloseOutlined,
   CheckCircleOutlined,
   CreditCardOutlined,
-  TrendingUpOutlined,
+  RiseOutlined,
   GiftOutlined,
   ShoppingCartOutlined,
   StarOutlined,

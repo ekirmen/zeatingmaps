@@ -13,6 +13,7 @@ import { useTenant } from '../../contexts/TenantContext';
  */
 const UnifiedContextSelector = ({
     onFilterChange,
+    onFunctionClick, // Callback when function selector is clicked
     // Controlled props (optional)
     venueId,
     eventId,
@@ -60,14 +61,12 @@ const UnifiedContextSelector = ({
                 let eventsQuery = supabase.from('eventos').select('id, nombre, recinto, recinto_id');
                 if (isMultiTenant) eventsQuery = eventsQuery.eq('tenant_id', currentTenant.id);
 
-                // 3. Fetch Functions (Funciones) - Only active and available for sale
+                // 3. Fetch Functions (Funciones) - Show if sales period is still active
                 const now = new Date().toISOString();
                 let functionsQuery = supabase
                     .from('funciones')
                     .select('id, evento_id, fecha_celebracion, inicio_venta, fin_venta, visible_en_boleteria, visible_en_store')
                     .eq('activo', true)
-                    .gte('fecha_celebracion', now)
-                    .lte('inicio_venta', now)
                     .gte('fin_venta', now)
                     .order('fecha_celebracion', { ascending: true });
 
@@ -260,11 +259,18 @@ const UnifiedContextSelector = ({
                         <select
                             value={effectiveFunctionId}
                             onChange={(e) => handleFunctionChange(e.target.value)}
-                            disabled={loading || !functions.length || effectiveEventId === 'all'}
-                            className={`${selectClasses} ${(!functions.length || effectiveEventId === 'all') ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
-                            style={selectStyle}
+                            onClick={(e) => {
+                                // Open modal on click
+                                e.preventDefault();
+                                if (onFunctionClick) {
+                                    onFunctionClick();
+                                }
+                            }}
+                            disabled={loading}
+                            className={`${selectClasses} cursor-pointer`}
+                            style={{ ...selectStyle, cursor: 'pointer' }}
                         >
-                            <option value="all">{isCompact ? "Función" : "Todas las Funciones"}</option>
+                            <option value="all">{isCompact ? "Función" : "Seleccionar Función"}</option>
                             {filteredFunctions.map(f => (
                                 <option key={f.id} value={String(f.id)}>{getFunctionLabel(f)}</option>
                             ))}

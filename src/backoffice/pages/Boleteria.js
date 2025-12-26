@@ -1048,7 +1048,6 @@ const Boleteria = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-w-0 mt-14 md:mt-0 relative">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header ultra compacto con búsqueda de evento y función */}
           {/* Header ultra compacto con búsqueda de evento y función - REPLACED with UnifiedContextSelector */}
           <div className="bg-white border-b border-gray-200 px-3 py-2 md:px-1 md:py-0.5 shadow-sm md:shadow-none z-10">
             <div className="flex items-center justify-between gap-2">
@@ -1058,13 +1057,11 @@ const Boleteria = () => {
                   eventId={selectedEvent?.id ? String(selectedEvent.id) : 'all'}
                   functionId={selectedFuncion?.id ? String(selectedFuncion.id) : 'all'}
                   onFilterChange={handleContextChange}
+                  onFunctionClick={() => setIsFunctionsModalVisible(true)}
                   layout="horizontal"
                   showVenue={true}
                   style={{ fontSize: '12px', width: '100%' }}
                 />
-              </div>
-              <div className="text-xs text-gray-400 flex-shrink-0">
-                Ã°Å¸Å¸Â¢Ã°Å¸Å¸ÂáÃ°Å¸â€ Â´Ã°Å¸Å¸Â£ÅáÂ«
               </div>
             </div>
           </div>
