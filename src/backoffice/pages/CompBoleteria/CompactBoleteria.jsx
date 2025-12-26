@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, Space, Typography, Button, Tooltip, Tabs } from '../../../utils/antdComponents';
-import { 
-  UserOutlined, 
-  ShoppingCartOutlined, 
-  CheckCircleOutlined, 
+import {
+  UserOutlined,
+  ShoppingCartOutlined,
+  CheckCircleOutlined,
   DollarOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
@@ -13,12 +13,12 @@ import { useTheme } from '../../../contexts/ThemeContext';
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
-const CompactBoleteria = ({ 
-  selectedFuncion, 
-  mapa, 
-  zonas = [], 
+const CompactBoleteria = ({
+  selectedFuncion,
+  mapa,
+  zonas = [],
   plantillaPrecios = [],
-  onSeatClick 
+  onSeatClick
 }) => {
   const [seatStats, setSeatStats] = useState({
     total: 0,
@@ -31,7 +31,7 @@ const CompactBoleteria = ({
   const [zoneStats, setZoneStats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('stats');
-  
+
   const { theme, getEventTheme } = useTheme();
   const [eventTheme, setEventTheme] = useState(theme);
   const { lockedSeats } = useSeatLockStore();
@@ -72,21 +72,21 @@ const CompactBoleteria = ({
     // Procesar todos los elementos del mapa
     // Si el contenido es un array, procesarlo directamente
     // Si es un objeto, buscar la propiedad 'elementos'
-    const elementos = Array.isArray(mapa.contenido) 
-      ? mapa.contenido 
+    const elementos = Array.isArray(mapa.contenido)
+      ? mapa.contenido
       : mapa.contenido.elementos || [];
-    
+
     if (!Array.isArray(elementos)) {
       return stats;
     }
-    
+
     elementos.forEach(elemento => {
       if (elemento.type === 'silla') {
         stats.total++;
-        
+
         // Determinar estado del asiento
         let seatStatus = elemento.estado || 'disponible';
-        
+
         // Verificar si está bloqueado
         const isLocked = Array.isArray(lockedSeats) ? lockedSeats.some(lock => lock.seat_id === elemento._id) : false;
         if (isLocked) {
@@ -135,7 +135,7 @@ const CompactBoleteria = ({
           };
         }
         zoneData[zonaId].total++;
-        
+
         switch (seatStatus) {
           case 'disponible':
             zoneData[zonaId].disponibles++;
@@ -207,8 +207,8 @@ const CompactBoleteria = ({
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
-      <Title level={2} className="mb-4">ðŸŽ« Boletería Compacta</Title>
-      
+      <Title level={2} className="mb-4">Boletería Compacta</Title>
+
       {/* Header con estadísticas generales */}
       <Card className="mb-4">
         <Row gutter={[16, 16]} align="middle">
@@ -245,11 +245,11 @@ const CompactBoleteria = ({
             />
           </Col>
         </Row>
-        
+
         {/* Barra de progreso general */}
         <div className="mt-4">
           <Text strong>Ocupación General: </Text>
-          <Progress 
+          <Progress
             percent={seatStats.total > 0 ? Math.round(((seatStats.vendidos + seatStats.reservados + seatStats.seleccionados) / seatStats.total) * 100) : 0}
             status="active"
             strokeColor={{
@@ -262,8 +262,8 @@ const CompactBoleteria = ({
 
       {/* Tabs para cambiar entre vistas */}
       <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-4">
-        <TabPane tab="ðŸ“Š Estadísticas" key="stats" />
-        <TabPane tab="ðŸ—úï¸ Mapa Visual" key="map" />
+        <TabPane tab="Estadísticas" key="stats" />
+        <TabPane tab="Mapa Visual" key="map" />
       </Tabs>
 
       {activeTab === 'stats' ? (
@@ -272,8 +272,8 @@ const CompactBoleteria = ({
           <Row gutter={[16, 16]}>
             {zoneStats.map((zone, index) => (
               <Col xs={24} sm={12} lg={8} xl={6} key={index}>
-                <Card 
-                  size="small" 
+                <Card
+                  size="small"
                   className="h-full"
                   title={
                     <Space>
@@ -308,7 +308,7 @@ const CompactBoleteria = ({
                         />
                       </Col>
                     </Row>
-                    
+
                     <Row gutter={[8, 8]}>
                       <Col span={12}>
                         <Statistic
@@ -330,7 +330,7 @@ const CompactBoleteria = ({
 
                     {/* Barra de progreso de la zona */}
                     <div className="mt-2">
-                      <Progress 
+                      <Progress
                         percent={getOccupancyPercentage(zone)}
                         size="small"
                         strokeColor={{
@@ -354,12 +354,12 @@ const CompactBoleteria = ({
 
           {/* Leyenda de colores */}
           <Card className="mt-4" size="small">
-            <Title level={5}>ðŸŽ¨ Leyenda de Estados</Title>
+            <Title level={5}>Leyenda de Estados</Title>
             <Row gutter={[16, 8]}>
               <Col>
                 <Space>
-                  <div 
-                    className="w-4 h-4 rounded-full" 
+                  <div
+                    className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: getStatusColor('disponible') }}
                   />
                   <Text>Disponible</Text>
@@ -367,8 +367,8 @@ const CompactBoleteria = ({
               </Col>
               <Col>
                 <Space>
-                  <div 
-                    className="w-4 h-4 rounded-full" 
+                  <div
+                    className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: getStatusColor('seleccionado') }}
                   />
                   <Text>Seleccionado</Text>
@@ -376,8 +376,8 @@ const CompactBoleteria = ({
               </Col>
               <Col>
                 <Space>
-                  <div 
-                    className="w-4 h-4 rounded-full" 
+                  <div
+                    className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: getStatusColor('vendido') }}
                   />
                   <Text>Vendido</Text>
@@ -385,8 +385,8 @@ const CompactBoleteria = ({
               </Col>
               <Col>
                 <Space>
-                  <div 
-                    className="w-4 h-4 rounded-full" 
+                  <div
+                    className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: getStatusColor('reservado') }}
                   />
                   <Text>Reservado</Text>
@@ -394,8 +394,8 @@ const CompactBoleteria = ({
               </Col>
               <Col>
                 <Space>
-                  <div 
-                    className="w-4 h-4 rounded-full" 
+                  <div
+                    className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: getStatusColor('bloqueado') }}
                   />
                   <Text>Bloqueado</Text>
@@ -407,15 +407,15 @@ const CompactBoleteria = ({
       ) : (
         /* Vista del mapa visual */
         <div className="text-center p-8">
-          <Title level={3}>ðŸ—úï¸ Mapa Visual</Title>
+          <Title level={3}>Mapa Visual</Title>
           <Text>Esta funcionalidad estará disponible próximamente</Text>
         </div>
       )}
 
       {/* Botón de actualizar */}
       <div className="mt-4 text-center">
-        <Button 
-          type="primary" 
+        <Button
+          type="primary"
           icon={<ReloadOutlined />}
           onClick={calculateSeatStats}
           loading={loading}

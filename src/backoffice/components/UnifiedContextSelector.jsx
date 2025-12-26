@@ -60,8 +60,16 @@ const UnifiedContextSelector = ({
                 let eventsQuery = supabase.from('eventos').select('id, nombre, recinto, recinto_id');
                 if (isMultiTenant) eventsQuery = eventsQuery.eq('tenant_id', currentTenant.id);
 
-                // 3. Fetch Functions (Funciones)
-                let functionsQuery = supabase.from('funciones').select('id, nombre, evento_id, fecha_celebracion');
+                // 3. Fetch Functions (Funciones) - Only active and available for sale
+                const now = new Date().toISOString();
+                let functionsQuery = supabase
+                    .from('funciones')
+                    .select('id, evento_id, fecha_celebracion, inicio_venta, fin_venta, visible_en_boleteria, visible_en_store')
+                    .eq('activo', true)
+                    .gte('fecha_celebracion', now)
+                    .lte('inicio_venta', now)
+                    .gte('fin_venta', now)
+                    .order('fecha_celebracion', { ascending: true });
 
 
                 const [venuesRes, eventsRes, functionsRes] = await Promise.all([
@@ -152,18 +160,21 @@ const UnifiedContextSelector = ({
     // Helper to format function label
     const getFunctionLabel = (func) => {
         if (!func) return '';
-        const name = func.nombre || `Función ${func.id}`;
-        // Use fecha_celebracion as source of truth
+        // Use fecha_celebracion as the primary label
         const dateStr = func.fecha_celebracion;
 
-        let label = name;
         if (dateStr) {
             const d = new Date(dateStr);
             if (!isNaN(d.getTime())) {
-                label += ` - ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                return `${d.toLocaleDateString('es-ES', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                })} - ${d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
             }
         }
-        return label;
+        return `Función ${func.id}`;
     };
 
     const isCompact = layout === 'horizontal';
