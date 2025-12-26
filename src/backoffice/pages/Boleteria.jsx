@@ -16,6 +16,7 @@ import { supabase } from '../../supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import logger from '../../utils/logger';
 import UnifiedContextSelector from '../components/UnifiedContextSelector';
+import { AppstoreOutlined, EnvironmentOutlined, ShoppingOutlined, EllipsisOutlined } from '@ant-design/icons';
 
 const Boleteria = () => {
   const {
@@ -1081,8 +1082,8 @@ const Boleteria = () => {
                     onClick={() => setIsFunctionsModalVisible(true)}
                     disabled={!selectedEvent}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${selectedEvent
-                        ? 'bg-purple-600 text-white hover:bg-purple-700'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      ? 'bg-purple-600 text-white hover:bg-purple-700'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       }`}
                   >
                     {selectedFuncion ? `Función: ${new Date(selectedFuncion.fecha_celebracion).toLocaleDateString()}` : 'Seleccionar Función'}
@@ -1105,19 +1106,19 @@ const Boleteria = () => {
                 </button>
               </div>
 
-              {/* Botones de navegaciÂón principales */}
+              {/* Botones de navegación principales */}
               <div className="flex space-x-1">
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  Ã°Å¸ÂÂ·Ã¯Â¸Â Zonas
+                  <AppstoreOutlined /> Zonas
                 </button>
                 <button className="px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded">
-                  Ã°Å¸â€”ÂúÃ¯Â¸Â Mapa
+                  <EnvironmentOutlined /> Mapa
                 </button>
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  Ã°Å¸Ââ€ Productos
+                  <ShoppingOutlined /> Productos
                 </button>
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  Åáâ„¢Ã¯Â¸Â Otros
+                  <EllipsisOutlined /> Otros
                 </button>
               </div>
 
