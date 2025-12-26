@@ -470,6 +470,14 @@ export const useBoleteria = () => {
     setCarritoMemo([]);
 
     try {
+      // Skip query if eventoId is 'all', null, or invalid
+      if (!eventoId || eventoId === 'all' || eventoId === 'null') {
+        logger.log('⚠️ [useBoleteria] eventoId is invalid, skipping event selection:', eventoId);
+        setSelectedEvent(null);
+        setFunciones([]);
+        return { success: false, message: 'No event selected' };
+      }
+
       const { data: eventoData, error: eventoError } = await supabase
         .from('eventos')
         .select('*')
