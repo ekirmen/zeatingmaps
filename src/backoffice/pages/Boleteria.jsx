@@ -1048,20 +1048,46 @@ const Boleteria = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-w-0 mt-14 md:mt-0 relative">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header ultra compacto con búsqueda de evento y función - REPLACED with UnifiedContextSelector */}
-          <div className="bg-white border-b border-gray-200 px-3 py-2 md:px-1 md:py-0.5 shadow-sm md:shadow-none z-10">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex-1">
-                <UnifiedContextSelector
-                  venueId={selectedVenueId}
-                  eventId={selectedEvent?.id ? String(selectedEvent.id) : 'all'}
-                  functionId={selectedFuncion?.id ? String(selectedFuncion.id) : 'all'}
-                  onFilterChange={handleContextChange}
-                  onFunctionClick={() => setIsFunctionsModalVisible(true)}
-                  layout="horizontal"
-                  showVenue={true}
-                  style={{ fontSize: '12px', width: '100%' }}
-                />
+          {/* Header ultra compacto con búsqueda de evento y función */}
+          <div className="bg-white border-b border-gray-200 px-3 py-2 md:px-4 md:py-3 shadow-sm z-10">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1 flex items-center gap-3">
+                {/* Selector de Evento */}
+                <div className="flex-1 max-w-md">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Evento</label>
+                  <select
+                    value={selectedEvent?.id || ''}
+                    onChange={(e) => {
+                      const eventId = e.target.value;
+                      if (eventId) {
+                        handleEventSelect(eventId);
+                      }
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="">Seleccionar evento...</option>
+                    {eventos.map(evento => (
+                      <option key={evento.id} value={evento.id}>
+                        {evento.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Botón para seleccionar función */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">&nbsp;</label>
+                  <button
+                    onClick={() => setIsFunctionsModalVisible(true)}
+                    disabled={!selectedEvent}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${selectedEvent
+                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                  >
+                    {selectedFuncion ? `Función: ${new Date(selectedFuncion.fecha_celebracion).toLocaleDateString()}` : 'Seleccionar Función'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
