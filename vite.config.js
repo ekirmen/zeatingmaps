@@ -28,8 +28,8 @@ export default defineConfig({
                         './src/backoffice/BackofficeAppWithRoles.jsx'
                     ],
                     'store-core': [
-                        './src/store/StoreApp.js',
-                        './src/store/components/StoreHeader.js'
+                        './src/store/StoreApp.jsx',
+                        './src/store/components/StoreHeader.jsx'
                     ]
                 }
             }
