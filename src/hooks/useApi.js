@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { API_ENDPOINTS, apiRequest, handleApiError } from '../config/apiEndpoints';
+import { eventosService, zonasService } from '../services/supabaseServices';
 
 export const useApi = () => {
   const [loading, setLoading] = useState(false);
@@ -25,12 +26,21 @@ export const useApi = () => {
 
   // Grid Sale APIs
   const gridSale = {
-    loadZonas: useCallback(async (evento) => {
-      return request(API_ENDPOINTS.GRID_SALE.LOAD_ZONAS, {
-        method: 'POST',
-        body: JSON.stringify({ evento })
-      });
-    }, [request]),
+    loadZonas: useCallback(async (salaId) => {
+      // Usar Supabase directo con RLS
+      setLoading(true);
+      setError(null);
+      try {
+        const zonas = await zonasService.list(salaId);
+        return zonas;
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, []),
 
     validateSale: useCallback(async (items, evento, funcion) => {
       return request(API_ENDPOINTS.GRID_SALE.VALIDATE_SALE, {
@@ -49,10 +59,21 @@ export const useApi = () => {
 
   // Events APIs
   const events = {
-    list: useCallback(async (params = {}) => {
-      const queryParams = new URLSearchParams(params).toString();
-      return request(`${API_ENDPOINTS.EVENTS.LIST}?${queryParams}`);
-    }, [request]),
+    list: useCallback(async (filters = {}) => {
+      // Usar Supabase directo con RLS
+      setLoading(true);
+      setError(null);
+      try {
+        const eventos = await eventosService.list(filters);
+        return eventos;
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, []),
 
     getBySlug: useCallback(async (slug) => {
       return request(`${API_ENDPOINTS.EVENTS.GET_BY_SLUG}?slug=${slug}`);
