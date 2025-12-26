@@ -29,13 +29,13 @@ const InstallmentPaymentSelector = ({
   const calcularFechasVencimiento = () => {
     const fechas = [];
     const fechaBase = fechaInicio ? new Date(fechaInicio) : new Date();
-    
+
     for (let i = 0; i < cantidadCuotas; i++) {
       const fechaVencimiento = new Date(fechaBase);
       fechaVencimiento.setDate(fechaVencimiento.getDate() + (i * diasEntrePagos));
       fechas.push(fechaVencimiento);
     }
-    
+
     return fechas;
   };
 
@@ -79,79 +79,85 @@ const InstallmentPaymentSelector = ({
       >
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           {/* Opción: Pago completo */}
-          <Radio.Button value={0} style={{ width: '100%', textAlign: 'left', padding: '12px' }}>
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              <Space>
-                <Text strong>{t('installments.full_payment', 'Pago Completo')}</Text>
-                <Tag color="blue">${total.toFixed(2)}</Tag>
+          <div
+            style={{
+              border: cuotasSeleccionadas === 0 ? '2px solid #1890ff' : '1px solid #d9d9d9',
+              borderRadius: '8px',
+              padding: '16px',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              backgroundColor: cuotasSeleccionadas === 0 ? '#e6f7ff' : '#fff',
+              transition: 'all 0.3s'
+            }}
+            onClick={() => !disabled && onCuotasChange(0)}
+          >
+            <Radio value={0} style={{ width: '100%' }}>
+              <Space direction="vertical" size="small" style={{ width: '100%', marginLeft: '8px' }}>
+                <Space>
+                  <Text strong>Pago Completo</Text>
+                  <Tag color="blue">${total.toFixed(2)}</Tag>
+                </Space>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  Paga todo ahora y evita cuotas futuras
+                </Text>
               </Space>
-              <Text type="secondary" style={{ fontSize: '12px' }}>
-                {t('installments.full_payment_desc', 'Paga todo ahora y evita cuotas futuras')}
-              </Text>
-            </Space>
-          </Radio.Button>
+            </Radio>
+          </div>
 
-          <Divider style={{ margin: '8px 0' }}>
-            {t('installments.or', 'O')}
-          </Divider>
+          <Divider style={{ margin: '8px 0' }}>O</Divider>
 
           {/* Opciones de cuotas */}
           {cuotasCalculadas.map((cuota, index) => {
             const fechaVencimiento = fechasVencimiento[index];
             const esUltima = index === cuotasCalculadas.length - 1;
-            
+            const isSelected = cuotasSeleccionadas === cuota.numero;
+
             return (
-              <Radio.Button
+              <div
                 key={cuota.numero}
-                value={cuota.numero}
                 style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '12px',
-                  border: cuotasSeleccionadas === cuota.numero ? '2px solid #1890ff' : '1px solid #d9d9d9'
+                  border: isSelected ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  cursor: disabled ? 'not-allowed' : 'pointer',
+                  backgroundColor: isSelected ? '#e6f7ff' : '#fff',
+                  transition: 'all 0.3s'
                 }}
+                onClick={() => !disabled && onCuotasChange(cuota.numero)}
               >
-                <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                  <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                    <Space>
-                      <CalendarOutlined />
-                      <Text strong>
-                        {t('installments.installment_number', 'Cuota {number} de {total}', {
-                          number: cuota.numero,
-                          total: cantidadCuotas
-                        })}
-                      </Text>
-                      {esUltima && (
-                        <Tag color="orange">
-                          {t('installments.last', 'Última')}
-                        </Tag>
-                      )}
+                <Radio value={cuota.numero} style={{ width: '100%' }}>
+                  <Space direction="vertical" size="small" style={{ width: '100%', marginLeft: '8px' }}>
+                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                      <Space>
+                        <CalendarOutlined />
+                        <Text strong>
+                          Cuota {cuota.numero} de {cantidadCuotas}
+                        </Text>
+                        {esUltima && (
+                          <Tag color="orange">Última</Tag>
+                        )}
+                      </Space>
+                      <Tag color="green" style={{ fontSize: '14px' }}>
+                        ${cuota.monto.toFixed(2)}
+                      </Tag>
                     </Space>
-                    <Tag color="green" style={{ fontSize: '14px' }}>
-                      ${cuota.monto.toFixed(2)}
-                    </Tag>
-                  </Space>
-                  
-                  <Space direction="vertical" size={0} style={{ width: '100%' }}>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      {t('installments.due_date', 'Vence: {date}', {
-                        date: fechaVencimiento.toLocaleDateString('es-ES', {
+
+                    <Space direction="vertical" size={0} style={{ width: '100%' }}>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>
+                        Vence: {fechaVencimiento.toLocaleDateString('es-ES', {
                           day: 'numeric',
                           month: 'long',
                           year: 'numeric'
-                        })
-                      })}
-                    </Text>
-                    {index > 0 && (
-                      <Text type="secondary" style={{ fontSize: '11px' }}>
-                        {t('installments.days_apart', '{days} días después de la cuota anterior', {
-                          days: diasEntrePagos
                         })}
                       </Text>
-                    )}
+                      {index > 0 && (
+                        <Text type="secondary" style={{ fontSize: '11px' }}>
+                          {diasEntrePagos} días después de la cuota anterior
+                        </Text>
+                      )}
+                    </Space>
                   </Space>
-                </Space>
-              </Radio.Button>
+                </Radio>
+              </div>
             );
           })}
         </Space>
