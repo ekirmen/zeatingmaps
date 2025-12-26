@@ -41,6 +41,10 @@
       "destination": "/logo512.png"
     },
     {
+      "source": "/store/assets/:path*",
+      "destination": "/assets/:path*"
+    },
+    {
       "source": "/store/static/:path*",
       "destination": "/static/:path*"
     },
