@@ -37,6 +37,7 @@ const ModernStorePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('fecha');
+  const [tagFilter, setTagFilter] = useState(''); // New: filter by tag
   const [visibleCount, setVisibleCount] = useState(12);
 
   // Cargar eventos con cache optimizado
@@ -143,16 +144,30 @@ const ModernStorePage = () => {
     fetchEvents();
   }, [currentTenant?.id, statusFilter, sortBy]);
 
-  // Filtrar eventos por término de búsqueda
+  // Filtrar eventos por término de búsqueda y tag
   const filteredEvents = events.filter(event => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      event.nombre?.toLowerCase().includes(searchLower) ||
-      event.descripcion?.toLowerCase().includes(searchLower) ||
-      event.sector?.toLowerCase().includes(searchLower) ||
-      event.recintos?.nombre?.toLowerCase().includes(searchLower)
-    );
+    // Filter by search term
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = (
+        event.nombre?.toLowerCase().includes(searchLower) ||
+        event.descripcion?.toLowerCase().includes(searchLower) ||
+        event.sector?.toLowerCase().includes(searchLower) ||
+        event.recintos?.nombre?.toLowerCase().includes(searchLower)
+      );
+      if (!matchesSearch) return false;
+    }
+
+    // Filter by tag
+    if (tagFilter) {
+      const eventTags = getEventTags(event);
+      const matchesTag = eventTags.some(tag =>
+        tag.toLowerCase() === tagFilter.toLowerCase()
+      );
+      if (!matchesTag) return false;
+    }
+
+    return true;
   });
 
   // Función para obtener el estado visual del evento
@@ -499,7 +514,17 @@ const ModernStorePage = () => {
                           marginBottom: 'var(--store-space-4)'
                         }}>
                           {tags.slice(0, 3).map((tag, index) => (
-                            <Tag key={index} size="small" color="blue">
+                            <Tag
+                              key={index}
+                              size="small"
+                              color="blue"
+                              style={{ cursor: 'pointer' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTagFilter(tag);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                            >
                               {tag}
                             </Tag>
                           ))}
