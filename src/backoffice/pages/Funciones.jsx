@@ -1060,12 +1060,12 @@ const Funciones = () => {
 
       const funcionEditada = {
         // Campos base y equivalencias
-        fechaCelebracion: f.fecha_celebracion || '',
+        fechaCelebracion: formatDateTimeLocal(f.fecha_celebracion),
         zonaHoraria: f.zona_horaria || 'America/Mexico_City',
         litSesion: f.lit_sesion || '',
         utilizaLitSesion: f.utiliza_lit_sesion || false,
         tiempoCaducidadReservas: f.tiempo_caducidad_reservas ?? -120,
-        aperturaPuertas: f.apertura_puertas || '',
+        aperturaPuertas: formatDateTimeLocal(f.apertura_puertas),
         promotionalSessionLabel: f.promotional_session_label || '',
         sessionBelongsSeasonPass: f.session_belongs_season_pass || false,
         idAbonoSala: Array.isArray(f.id_abono_sala) ? f.id_abono_sala : [],
@@ -1079,8 +1079,8 @@ const Funciones = () => {
         streamingPassword: f.streaming_password || '',
         streamingOnlyOneSessionByTicket: !!f.streaming_only_one_session_by_ticket,
         streamingShowUrl: !!f.streaming_show_url,
-        streamingTransmissionStart: f.streaming_transmission_start || '',
-        streamingTransmissionStop: f.streaming_transmission_stop || '',
+        streamingTransmissionStart: formatDateTimeLocal(f.streaming_transmission_start),
+        streamingTransmissionStop: formatDateTimeLocal(f.streaming_transmission_stop),
 
         // Relaciones/plantillas
         idSala: f.sala_id || null,
@@ -1100,8 +1100,8 @@ const Funciones = () => {
         mismaFechaCanales: f.misma_fecha_canales !== false,
 
         // Ventas y canales
-        fechaInicioVenta: f.inicio_venta || '',
-        fechaFinVenta: f.fin_venta || '',
+        fechaInicioVenta: formatDateTimeLocal(f.inicio_venta),
+        fechaFinVenta: formatDateTimeLocal(f.fin_venta),
         canales: canalesParsed || { boxOffice: { activo: true, inicio: '', fin: '' }, internet: { activo: true, inicio: '', fin: '' } },
 
         // Cancelación e impresión
@@ -1311,8 +1311,8 @@ const Funciones = () => {
                   }}
                   disabled={!recintoSeleccionado || !salaSeleccionada || !eventoSeleccionado}
                   className={`px-6 py-3.5 rounded-lg shadow-sm transition-all duration-200 font-semibold flex items-center justify-center gap-2 whitespace-nowrap min-h-[48px] ${recintoSeleccionado && salaSeleccionada && eventoSeleccionado
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
-                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     }`}
                   title={!eventoSeleccionado ? "Selecciona un evento primero" : ""}
                 >
