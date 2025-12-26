@@ -5,6 +5,7 @@ import { useRecintoSala } from '../contexts/RecintoSalaContext';
 import { fetchZonasPorSala, createZona, updateZona, deleteZona, fetchMapa, fetchMapaMetadata } from '../services/apibackoffice';
 import { supabase } from '../../supabaseClient';
 import Modal from 'react-modal';
+import { PlusOutlined, BgColorsOutlined, EditOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
 
 import { message } from '../../utils/antdComponents';
 
@@ -319,14 +320,14 @@ const Plano = () => {
                   disabled={!canCreateZona()}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium shadow-sm text-sm"
                 >
-                  ž• Nueva Zona
+                  <PlusOutlined /> Nueva Zona
                 </button>
                 <button
                   onClick={handleCrearMapa}
                   disabled={!sala?.id}
                   className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
                 >
-                  ðŸŽ¨ Crear Mapa
+                  <BgColorsOutlined /> Crear Mapa
                 </button>
               </div>
             </div>
@@ -350,7 +351,7 @@ const Plano = () => {
                     disabled={!sala?.id}
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                   >
-                    ðŸŽ¨ Crear Mapa
+                    <BgColorsOutlined /> Crear Mapa
                   </button>
                 </div>
               </div>
@@ -385,13 +386,13 @@ const Plano = () => {
                             }}
                             className="flex-1 sm:flex-none px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm whitespace-nowrap font-medium"
                           >
-                            œï¸ Editar
+                            <EditOutlined /> Editar
                           </button>
                           <button
                             onClick={() => handleDeleteZona(zona.id)}
                             className="flex-1 sm:flex-none px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm whitespace-nowrap font-medium"
                           >
-                            ðŸ—‘ï¸ Eliminar
+                            <DeleteOutlined /> Eliminar
                           </button>
                         </div>
                       </div>
@@ -441,12 +442,12 @@ const Plano = () => {
                           onClick={handleCrearMapa}
                           className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                         >
-                          œï¸ Editar Mapa
+                          <EditOutlined /> Editar Mapa
                         </button>
                         <button
                           className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                         >
-                          ðŸ“Š Ver Estadísticas
+                          <BarChartOutlined /> Ver Estadísticas
                         </button>
                       </div>
                     </div>
@@ -464,7 +465,7 @@ const Plano = () => {
                           disabled={!sala?.id}
                           className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
                         >
-                          ðŸŽ¨ Crear Mapa de la Sala
+                          <BgColorsOutlined /> Crear Mapa de la Sala
                         </button>
                       </div>
                     </div>
