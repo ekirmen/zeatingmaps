@@ -3,20 +3,20 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Variables de entorno
+// Variables de entorno - Vite usa import.meta.env
 const supabaseUrl =
-  process.env.REACT_APP_SUPABASE_URL ||
-  process.env.SUPABASE_URL ||
-  process.env.NEXT_PUBLIC_SUPABASE_URL
+  import.meta.env.VITE_SUPABASE_URL ||
+  import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+  import.meta.env.REACT_APP_SUPABASE_URL
 const supabaseAnonKey =
-  process.env.REACT_APP_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  import.meta.env.REACT_APP_SUPABASE_ANON_KEY
 const serviceRoleKey =
-  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.REACT_SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+  import.meta.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
+  import.meta.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ||
+  import.meta.env.REACT_SUPABASE_SERVICE_ROLE_KEY
 
 // Verificar variables de entorno
 if (!supabaseUrl || !supabaseAnonKey) {
