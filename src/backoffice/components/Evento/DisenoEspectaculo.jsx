@@ -257,95 +257,194 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   };
 
   return (
-    <div className="diseno-container space-y-6">
-      <section className="description-section space-y-2">
-        <h4 className="font-semibold">Descripción</h4>
+    <div className="diseno-container space-y-8 max-w-7xl mx-auto">
+      {/* Descripción */}
+      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <span className="text-blue-600">📝</span> Descripción del Evento
+        </h3>
         <textarea
           value={eventoData.descripcion || ''}
           onChange={(e) => {
             setEventoData(prev => ({ ...prev, descripcion: e.target.value }));
           }}
-          className="w-full p-3 border border-gray-300 rounded-md"
+          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
           rows={6}
           placeholder="Escribe la descripción del evento aquí..."
         />
       </section>
 
-      <section className="summary-section">
-        <h4>Resumir descripción/es</h4>
+      {/* Resumen */}
+      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <span className="text-blue-600">📋</span> Resumen de Descripción
+        </h3>
         <textarea
           value={eventoData.resumenDescripcion || ''}
           onChange={handleSummaryChange}
-          placeholder="Escriba un resumen aquí"
+          placeholder="Escribe un resumen breve aquí"
           rows={4}
-          className="summary-textarea"
+          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
         />
       </section>
 
-      <section className="content-section space-y-4">
-        <h4 className="font-semibold">Contenidos</h4>
-
-        <div className="image-upload-grid grid grid-cols-1 md:grid-cols-3 gap-4">
-          {console.log('🖼️ [DisenoEspectaculo] Renderizando previews:', imagesPreviews)}
+      {/* Imágenes Principales */}
+      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+          <span className="text-blue-600">🖼️</span> Imágenes Principales
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { type: 'banner', label: 'Banner (2560x1713)' },
-            { type: 'obraImagen', label: 'Imagen de obra (1200x1800)' },
-            { type: 'portada', label: 'Portada (2400x1256)' },
-            { type: 'logoHorizontal', label: 'Logo horizontal (640x200)' },
-            { type: 'logoVertical', label: 'Logo vertical (400x600)' },
-            { type: 'bannerPublicidad', label: 'Banner publicidad (500x700)' },
-            { type: 'logoCuadrado', label: 'Logo cuadrado (600x600)' },
-            { type: 'logoPassbook', label: 'Logo passbook (450x150)' },
-            { type: 'passbookBanner', label: 'Passbook banner (753x200)' },
-            { type: 'icono', label: 'Icono (360x360)' }
-          ].map(({ type, label }) => (
-            <div key={type} className="image-upload-item flex flex-col gap-2 items-start">
-              <h5 className="font-medium">{label}</h5>
-              <div className="image-preview border border-gray-300 flex items-center justify-center" style={{
-                width: type === 'logoVertical' || type === 'bannerPublicidad' ? '200px' : '320px',
-                height: type === 'logoVertical' || type === 'bannerPublicidad' ? '300px' :
-                  type === 'portada' ? '167px' :
-                    type === 'logoHorizontal' || type === 'logoPassbook' || type === 'passbookBanner' ? '100px' : '214px'
-              }}>
+            { type: 'banner', label: 'Banner', dimensions: '2560x1713', width: '100%', height: '200px' },
+            { type: 'obraImagen', label: 'Imagen de Obra', dimensions: '1200x1800', width: '100%', height: '280px' },
+            { type: 'portada', label: 'Portada', dimensions: '2400x1256', width: '100%', height: '200px' }
+          ].map(({ type, label, dimensions, width, height }) => (
+            <div key={type} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-gray-700">{label}</h4>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{dimensions}</span>
+              </div>
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden"
+                style={{ width, height }}
+              >
                 {imagesPreviews[type] ? (
                   <img
                     src={imagesPreviews[type]}
                     alt={`Preview ${type}`}
+                    className="w-full h-full object-contain"
                     onLoad={() => console.log(`✅ [DisenoEspectaculo] Imagen ${type} cargada:`, imagesPreviews[type])}
                     onError={() => console.error(`❌ [DisenoEspectaculo] Error cargando imagen ${type}:`, imagesPreviews[type])}
-                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                   />
                 ) : (
-                  <div className="placeholder text-sm text-gray-500">Esperando imagen</div>
-                )}
-              </div>
-              <div className="upload-buttons flex items-center gap-2 mt-1">
-                <input
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp"
-                  onChange={(e) => handleImageChange(e, type)}
-                  disabled={uploading}
-                  className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
-                />
-                {uploading && (
-                  <div className="flex items-center gap-2 text-sm text-blue-600">
-                    <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                    Subiendo...
+                  <div className="text-center p-4">
+                    <div className="text-gray-400 text-4xl mb-2">📷</div>
+                    <p className="text-sm text-gray-500">Sin imagen</p>
                   </div>
                 )}
               </div>
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                onChange={(e) => handleImageChange(e, type)}
+                disabled={uploading}
+                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
             </div>
           ))}
         </div>
+      </section>
 
-        <div className="image-upload-item flex flex-col gap-2 mt-4">
-          <h5 className="font-medium">Galería del Espectáculo</h5>
-          <div className="gallery-preview grid grid-cols-2 md:grid-cols-3 gap-4">
+      {/* Logos */}
+      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+          <span className="text-blue-600">🎯</span> Logos
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { type: 'logoHorizontal', label: 'Logo Horizontal', dimensions: '640x200', height: '120px' },
+            { type: 'logoVertical', label: 'Logo Vertical', dimensions: '400x600', height: '180px' },
+            { type: 'logoCuadrado', label: 'Logo Cuadrado', dimensions: '600x600', height: '150px' },
+            { type: 'icono', label: 'Icono', dimensions: '360x360', height: '150px' }
+          ].map(({ type, label, dimensions, height }) => (
+            <div key={type} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-sm text-gray-700">{label}</h4>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{dimensions}</span>
+              </div>
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden"
+                style={{ width: '100%', height }}
+              >
+                {imagesPreviews[type] ? (
+                  <img
+                    src={imagesPreviews[type]}
+                    alt={`Preview ${type}`}
+                    className="w-full h-full object-contain p-2"
+                  />
+                ) : (
+                  <div className="text-center p-4">
+                    <div className="text-gray-400 text-3xl mb-1">🏷️</div>
+                    <p className="text-xs text-gray-500">Sin logo</p>
+                  </div>
+                )}
+              </div>
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                onChange={(e) => handleImageChange(e, type)}
+                disabled={uploading}
+                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Imágenes Especiales */}
+      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+          <span className="text-blue-600">✨</span> Imágenes Especiales
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { type: 'bannerPublicidad', label: 'Banner Publicidad', dimensions: '500x700', height: '200px' },
+            { type: 'logoPassbook', label: 'Logo Passbook', dimensions: '450x150', height: '120px' },
+            { type: 'passbookBanner', label: 'Passbook Banner', dimensions: '753x200', height: '120px' }
+          ].map(({ type, label, dimensions, height }) => (
+            <div key={type} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-gray-700">{label}</h4>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{dimensions}</span>
+              </div>
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden"
+                style={{ width: '100%', height }}
+              >
+                {imagesPreviews[type] ? (
+                  <img
+                    src={imagesPreviews[type]}
+                    alt={`Preview ${type}`}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-center p-4">
+                    <div className="text-gray-400 text-3xl mb-1">🎫</div>
+                    <p className="text-xs text-gray-500">Sin imagen</p>
+                  </div>
+                )}
+              </div>
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                onChange={(e) => handleImageChange(e, type)}
+                disabled={uploading}
+                className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Galería del Espectáculo */}
+      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+          <span className="text-blue-600">🎭</span> Galería del Espectáculo
+        </h3>
+
+        {imagesPreviews.espectaculo.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
             {imagesPreviews.espectaculo.map((img, index) => (
-              <div key={index} className="thumbnail-container relative border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                <img src={img} alt={`Espectáculo ${index}`} className="thumbnail w-full h-32 object-cover" />
+              <div key={index} className="relative group">
+                <div className="aspect-video border-2 border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  <img
+                    src={img}
+                    alt={`Espectáculo ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 <button
-                  className="delete-btn absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md transition-colors"
+                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => deleteEspectaculoImage(index)}
                   title="Eliminar imagen"
                 >
@@ -354,33 +453,40 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-2">
+        )}
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <div className="flex-1">
             <input
               type="file"
               accept=".jpg,.jpeg,.png,.webp"
               onChange={(e) => handleImageChange(e, 'espectaculo')}
               disabled={uploading}
-              className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
+              className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 disabled:opacity-50"
             />
-            {uploading && (
-              <div className="flex items-center gap-2 text-sm text-blue-600">
-                <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                Subiendo...
-              </div>
-            )}
           </div>
+          {uploading && (
+            <div className="flex items-center gap-2 text-sm text-blue-600">
+              <div className="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+              Subiendo...
+            </div>
+          )}
         </div>
+      </section>
 
-        <div className="video-section flex flex-col gap-2 mt-4">
-          <h5 className="font-medium">URL Video</h5>
-          <input
-            type="text"
-            value={eventoData.videoURL || ''}
-            onChange={handleVideoUrlChange}
-            placeholder="URL del video (YouTube, Vimeo, etc)"
-            className="video-input p-2 border border-gray-300 rounded"
-          />
-        </div>
+      {/* Video URL */}
+      <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <span className="text-blue-600">🎥</span> Video del Evento
+        </h3>
+        <input
+          type="text"
+          value={eventoData.videoURL || ''}
+          onChange={handleVideoUrlChange}
+          placeholder="https://youtube.com/watch?v=... o https://vimeo.com/..."
+          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        />
+        <p className="mt-2 text-sm text-gray-500">Ingresa la URL de YouTube, Vimeo u otra plataforma de video</p>
       </section>
     </div>
   );
