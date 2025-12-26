@@ -304,8 +304,8 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
               <div className="image-preview border border-gray-300 flex items-center justify-center" style={{
                 width: type === 'logoVertical' || type === 'bannerPublicidad' ? '200px' : '320px',
                 height: type === 'logoVertical' || type === 'bannerPublicidad' ? '300px' :
-                       type === 'portada' ? '167px' :
-                       type === 'logoHorizontal' || type === 'logoPassbook' || type === 'passbookBanner' ? '100px' : '214px'
+                  type === 'portada' ? '167px' :
+                    type === 'logoHorizontal' || type === 'logoPassbook' || type === 'passbookBanner' ? '100px' : '214px'
               }}>
                 {imagesPreviews[type] ? (
                   <img
@@ -339,15 +339,17 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         </div>
 
         <div className="image-upload-item flex flex-col gap-2 mt-4">
-          <div className="gallery-preview grid grid-cols-2 md:grid-cols-3 gap-2">
+          <h5 className="font-medium">Galería del Espectáculo</h5>
+          <div className="gallery-preview grid grid-cols-2 md:grid-cols-3 gap-4">
             {imagesPreviews.espectaculo.map((img, index) => (
-              <div key={index} className="thumbnail-container relative">
+              <div key={index} className="thumbnail-container relative border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <img src={img} alt={`Espectáculo ${index}`} className="thumbnail w-full h-32 object-cover" />
                 <button
-                  className="delete-btn absolute top-1 right-1 bg-white rounded-full px-1 text-xs"
+                  className="delete-btn absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md transition-colors"
                   onClick={() => deleteEspectaculoImage(index)}
+                  title="Eliminar imagen"
                 >
-                  ❌
+                  ✕
                 </button>
               </div>
             ))}
