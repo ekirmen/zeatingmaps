@@ -312,7 +312,7 @@ const Plano = () => {
                   disabled={loadingZonas}
                   className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                  {loadingZonas ? 'Cargando...' : 'ðŸ”„ Refrescar'}
+                  {loadingZonas ? 'Cargando...' : 'Refrescar'}
                 </button>
                 <button
                   onClick={() => { setEditingZona(null); setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false }); setModalIsOpen(true); }}

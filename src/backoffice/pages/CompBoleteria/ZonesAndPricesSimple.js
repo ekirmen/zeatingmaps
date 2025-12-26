@@ -250,7 +250,7 @@ const ZonesAndPricesSimple = ({
   return (
     <div className="h-full flex flex-col" ref={ref}>
       <div className="p-4 border-b bg-white">
-        <Title level={4} className="!mb-0">ðŸŽ« Gestión de Zonas y Precios</Title>
+        <Title level={4} className="!mb-0">Gestión de Zonas y Precios</Title>
         <Text type="secondary">Selecciona el evento, la función y los precios que deseas vender en boletería.</Text>
       </div>
 
