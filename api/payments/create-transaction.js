@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { createPaymentTransaction } from '../../src/store/services/paymentGatewaysService.js';
+import { TIMEOUTS, withTimeout } from '../../src/config/timeouts.js';
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ||
@@ -17,11 +18,11 @@ const SERVICE_ROLE_KEY =
 const supabaseAdmin =
   SUPABASE_URL && SERVICE_ROLE_KEY
     ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      })
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
     : null;
 
 export default async function handler(req, res) {
@@ -52,13 +53,13 @@ export default async function handler(req, res) {
     const payload =
       typeof req.body === 'string'
         ? (() => {
-            try {
-              return JSON.parse(req.body);
-            } catch (parseError) {
-              console.error('[payments/create-transaction] Invalid JSON payload:', parseError);
-              return null;
-            }
-          })()
+          try {
+            return JSON.parse(req.body);
+          } catch (parseError) {
+            console.error('[payments/create-transaction] Invalid JSON payload:', parseError);
+            return null;
+          }
+        })()
         : req.body;
 
     if (!payload || typeof payload !== 'object') {
@@ -68,14 +69,30 @@ export default async function handler(req, res) {
       });
     }
 
-    const transaction = await createPaymentTransaction(payload, { client: supabaseAdmin });
+    // Execute with timeout
+    const transaction = await withTimeout(
+      createPaymentTransaction(payload, { client: supabaseAdmin }),
+      TIMEOUTS.PAYMENT_CREATE,
+      'Create Payment Transaction'
+    );
 
     return res.status(200).json({
       success: true,
       data: transaction,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('[payments/create-transaction] Error creating transaction via API:', error);
+
+    // Handle timeout specifically
+    if (error.message.includes('timeout')) {
+      return res.status(408).json({
+        success: false,
+        error: 'Request timeout',
+        details: 'La operación tardó demasiado tiempo',
+      });
+    }
+
     const status = Number(error?.status || error?.code) || 500;
     return res.status(status).json({
       success: false,

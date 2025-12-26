@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { TIMEOUTS, withTimeout } from '../../src/config/timeouts.js';
 
 // Inicializar cliente con Service Role Key para bypass RLS
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -28,7 +29,7 @@ export default async function handler(req, res) {
     try {
         const { logs, ...singleLog } = req.body;
 
-        // Permitir enviar 'logs' (array) o un solo log en el body
+        // Permitir enviar 'logs' (array) o un solo log in the body
         const dataToInsert = Array.isArray(logs) ? logs : [singleLog];
 
         if (dataToInsert.length === 0) {
@@ -44,20 +45,40 @@ export default async function handler(req, res) {
             };
         });
 
-        const { data, error } = await supabaseAdmin
-            .from('audit_logs')
-            .insert(cleanData)
-            .select();
+        // Execute with timeout
+        const result = await withTimeout(
+            supabaseAdmin
+                .from('audit_logs')
+                .insert(cleanData)
+                .select(),
+            TIMEOUTS.AUDIT_CREATE,
+            'Create Audit Log'
+        );
+
+        const { data, error } = result;
 
         if (error) {
             console.error('[API AUDIT] Error inserting logs:', error);
             return res.status(500).json({ error: error.message });
         }
 
-        return res.status(200).json({ success: true, data });
+        return res.status(200).json({
+            success: true,
+            data,
+            timestamp: new Date().toISOString()
+        });
 
     } catch (error) {
         console.error('[API AUDIT] Server error:', error);
+
+        // Handle timeout specifically
+        if (error.message.includes('timeout')) {
+            return res.status(408).json({
+                error: 'Request timeout',
+                details: 'La operación tardó demasiado tiempo'
+            });
+        }
+
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
