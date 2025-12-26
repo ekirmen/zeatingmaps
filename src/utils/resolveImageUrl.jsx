@@ -10,9 +10,12 @@ export default function resolveImageUrl(imagePath, bucket = 'eventos', tenantId 
   }
 
   // Si es una ruta relativa, construir la URL de Supabase Storage
-  const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ||
+    import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+    import.meta.env.REACT_APP_SUPABASE_URL;
 
   if (!supabaseUrl) {
+    console.warn('⚠️ [resolveImageUrl] No Supabase URL found in environment variables');
     return imagePath;
   }
 
