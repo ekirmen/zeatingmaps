@@ -1,6 +1,7 @@
+```
 import React, { useMemo, useCallback, forwardRef } from 'react';
 import { Card, Typography, Space, Tag, Button, Empty, Divider, message, Select } from '../../../utils/antdComponents';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, TagOutlined } from '@ant-design/icons';
 import { v4 as uuidv4 } from 'uuid';
 import ProductosWidget from './components/ProductosWidget';
 import PaquetesWidget from './components/PaquetesWidget';
@@ -108,14 +109,14 @@ const ZonesAndPricesSimple = ({
       const zonaInfo = zonasMap.get(zonaId) || {};
       const current = grouped.get(zonaId) || {
         zonaId,
-        zonaNombre: zonaInfo?.nombre || detalle?.zona?.nombre || `Zona ${zonaId}`,
+        zonaNombre: zonaInfo?.nombre || detalle?.zona?.nombre || `Zona ${ zonaId } `,
         zonaColor: zonaInfo?.color || detalle?.zona?.color || undefined,
         capacidad: zonaInfo?.capacidad || zonaInfo?.capacidad_total || null,
         precios: []
       };
 
       current.precios.push({
-        id: detalle?.id || detalle?.priceId || `detalle-${zonaId}-${current.precios.length}`,
+        id: detalle?.id || detalle?.priceId || `detalle - ${ zonaId } -${ current.precios.length } `,
         nombre: detalle?.nombre || detalle?.entrada?.nombre_entrada || detalle?.titulo || detalle?.tipoEntrada || 'Entrada general',
         tipo: detalle?.tipoEntrada || detalle?.tipo || 'general',
         precio: Number(detalle?.precio) || 0,
@@ -142,12 +143,12 @@ const ZonesAndPricesSimple = ({
   const handleAddPriceToCart = useCallback((zonaInfo, priceInfo) => {
     if (!setCarrito) return;
 
-    const nombreEntrada = priceInfo.nombre || `${zonaInfo.zonaNombre} - ${priceInfo.tipo}`;
+    const nombreEntrada = priceInfo.nombre || `${ zonaInfo.zonaNombre } - ${ priceInfo.tipo } `;
     const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
     const funcionFecha = selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion || null;
 
     const newItem = {
-      _id: `manual-${zonaInfo.zonaId}-${priceInfo.id}-${uuidv4()}`,
+      _id: `manual - ${ zonaInfo.zonaId } -${ priceInfo.id } -${ uuidv4() } `,
       sillaId: null,
       nombre: nombreEntrada,
       nombreZona: zonaInfo.zonaNombre,
@@ -170,7 +171,7 @@ const ZonesAndPricesSimple = ({
       return [...safePrev, newItem];
     });
 
-    message.success(`${nombreEntrada} agregado al carrito`);
+    message.success(`${ nombreEntrada } agregado al carrito`);
   }, [selectedFuncion, setCarrito]);
 
   const handleProductAdded = useCallback((producto, quantity) => {
@@ -183,12 +184,12 @@ const ZonesAndPricesSimple = ({
     const funcionFecha = selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion || null;
 
     const items = Array.from({ length: count }).map((_, index) => ({
-      _id: `producto-${producto.id || index}-${uuidv4()}`,
+      _id: `producto - ${ producto.id || index } -${ uuidv4() } `,
       sillaId: null,
       nombre: baseNombre,
       nombreZona: baseZona,
       zona: baseZona,
-      zonaId: `producto-${producto.id || baseNombre}`,
+      zonaId: `producto - ${ producto.id || baseNombre } `,
       precio: Number(producto.precio) || 0,
       tipoPrecio: 'producto',
       descuentoNombre: '',
@@ -206,7 +207,7 @@ const ZonesAndPricesSimple = ({
       return [...safePrev, ...items];
     });
 
-    message.success(count === 1 ? `${baseNombre} agregado al carrito` : `${count} unidades agregadas al carrito`);
+    message.success(count === 1 ? `${ baseNombre } agregado al carrito` : `${ count } unidades agregadas al carrito`);
   }, [selectedFuncion, setCarrito]);
 
   const handlePackageAdded = useCallback((paquete, quantity) => {
@@ -217,12 +218,12 @@ const ZonesAndPricesSimple = ({
     const funcionFecha = selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion || null;
 
     const items = Array.from({ length: count }).map((_, index) => ({
-      _id: `paquete-${paquete.id || index}-${uuidv4()}`,
+      _id: `paquete - ${ paquete.id || index } -${ uuidv4() } `,
       sillaId: null,
       nombre: baseNombre,
       nombreZona: 'Paquetes',
       zona: 'Paquetes',
-      zonaId: `paquete-${paquete.id || baseNombre}`,
+      zonaId: `paquete - ${ paquete.id || baseNombre } `,
       precio: Number(paquete.precio_especial || paquete.precio || 0),
       tipoPrecio: 'paquete',
       descuentoNombre: '',
@@ -240,7 +241,7 @@ const ZonesAndPricesSimple = ({
       return [...safePrev, ...items];
     });
 
-    message.success(count === 1 ? `${baseNombre} agregado al carrito` : `${count} unidades agregadas al carrito`);
+    message.success(count === 1 ? `${ baseNombre } agregado al carrito` : `${ count } unidades agregadas al carrito`);
   }, [selectedFuncion, setCarrito]);
 
   const selectedEventId = selectedEvent?.id || selectedEvent?._id || undefined;
@@ -250,7 +251,7 @@ const ZonesAndPricesSimple = ({
   return (
     <div className="h-full flex flex-col" ref={ref}>
       <div className="p-4 border-b bg-white">
-        <Title level={4} className="!mb-0">Gestión de Zonas y Precios</Title>
+        <Title level={4} className="!mb-0"><TagOutlined /> Gestión de Zonas y Precios</Title>
         <Text type="secondary">Selecciona el evento, la función y los precios que deseas vender en boletería.</Text>
       </div>
 
@@ -317,7 +318,7 @@ const ZonesAndPricesSimple = ({
                 >
                   {plantillas.map(plantilla => (
                     <Option key={plantilla.id || plantilla._id} value={plantilla.id || plantilla._id}>
-                      {plantilla.nombre || `Plantilla ${plantilla.id || plantilla._id}`}
+                      {plantilla.nombre || `Plantilla ${ plantilla.id || plantilla._id } `}
                     </Option>
                   ))}
                 </Select>

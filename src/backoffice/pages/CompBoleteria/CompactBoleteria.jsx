@@ -5,7 +5,11 @@ import {
   ShoppingCartOutlined,
   CheckCircleOutlined,
   DollarOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  BarChartOutlined,
+  EnvironmentOutlined,
+  TagOutlined,
+  BgColorsOutlined
 } from '@ant-design/icons';
 import { useSeatLockStore } from '../../../components/seatLockStore';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -354,7 +358,7 @@ const CompactBoleteria = ({
 
           {/* Leyenda de colores */}
           <Card className="mt-4" size="small">
-            <Title level={5}>Leyenda de Estados</Title>
+            <Title level={5}><BgColorsOutlined /> Leyenda de Estados</Title>
             <Row gutter={[16, 8]}>
               <Col>
                 <Space>
