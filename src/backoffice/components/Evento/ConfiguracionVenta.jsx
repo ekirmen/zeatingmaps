@@ -192,4 +192,3 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
 };
 
 export default ConfiguracionVenta;
-```
