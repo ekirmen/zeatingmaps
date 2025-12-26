@@ -207,6 +207,7 @@ export const RoleProvider = ({ children }) => {
       '/dashboard/refund-management': 'refund_management',
       '/dashboard/payment-analytics': 'payment_analytics',
       '/dashboard/payment-gateways': 'payment_gateways',
+      '/dashboard/webstudio': 'webstudio',
       // SaaS
       '/dashboard/saas': 'saas',
       '/dashboard/saas/settings': 'saas_settings',
