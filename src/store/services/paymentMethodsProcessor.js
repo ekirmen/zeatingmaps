@@ -618,7 +618,6 @@ const createPaymentMethodProcessor = (method) => {
     transferencia_bancaria: TransferenciaMethodProcessor,
     pago_movil: PagoMovilMethodProcessor,
     'pago_móvil': PagoMovilMethodProcessor,
-    'pago_movil': PagoMovilMethodProcessor,
     'pago móvil': PagoMovilMethodProcessor,
     efectivo_tienda: EfectivoTiendaMethodProcessor,
     efectivo: EfectivoMethodProcessor,
