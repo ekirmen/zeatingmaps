@@ -1161,6 +1161,40 @@ const Funciones = () => {
     }
   };
 
+  // Helper function to format dates for display
+  const formatFecha = (fecha) => {
+    if (!fecha) return '—';
+    try {
+      const date = new Date(fecha);
+      if (isNaN(date.getTime())) return '—';
+      return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    } catch (error) {
+      return '—';
+    }
+  };
+
+  // Helper function to get event name
+  const getEventoNombre = (eventoId) => {
+    const evento = eventos.find(e => e.id === eventoId);
+    return evento?.nombre || 'Sin evento';
+  };
+
+  // Helper function to get template name
+  const getPlantillaNombre = (plantillaId) => {
+    const plantilla = plantillas.find(p => p.id === plantillaId);
+    return plantilla?.nombre || 'Sin plantilla';
+  };
+
+  // Helper function to get product template name
+  const getPlantillaProductoNombre = (plantillaId) => {
+    const plantilla = plantillasProductos.find(p => p.id === plantillaId);
+    return plantilla?.nombre || 'Sin plantilla';
+  };
+
   const handleDuplicate = async (id) => {
     const { data, error } = await supabase.from('funciones').select('*').eq('id', id).single();
     if (error || !data) {
