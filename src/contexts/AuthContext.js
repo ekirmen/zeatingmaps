@@ -8,21 +8,33 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null); // Cambio: guardar perfil completo
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserRole = useCallback(async (id) => {
+  const fetchUserProfile = useCallback(async (id) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('permisos')
+        .select('id, role, permisos, tenant_id, nombre, apellido, activo')
         .eq('id', id)
         .single();
+
       if (error) throw error;
-      setRole(data.permisos?.role || null);
+
+      // Guardar perfil completo
+      setProfile(data);
+
+      // Mantener compatibilidad: role puede venir de data.role o data.permisos.role
+      const userRole = data.role || data.permisos?.role || null;
+      setRole(userRole);
+
+      return data;
     } catch (err) {
-      console.error('Error fetching role:', err.message);
+      console.error('Error fetching user profile:', err.message);
+      setProfile(null);
       setRole(null);
+      return null;
     }
   }, []);
 
@@ -45,7 +57,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('token', session.access_token);
         }
         setUser(session.user);
-        fetchUserRole(session.user.id);
+        fetchUserProfile(session.user.id);
 
         // Registrar login en auditoría
         auditService.logUserAction('login', {
@@ -82,7 +94,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [fetchUserRole]);
+  }, [fetchUserProfile]);
 
   const login = async ({ email, password }) => {
     try {
@@ -117,7 +129,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       setUser(data.user);
-      fetchUserRole(data.user.id);
+      fetchUserProfile(data.user.id);
 
       // Registrar login exitoso en auditoría
       auditService.logUserAction('login', {
@@ -184,7 +196,7 @@ export const AuthProvider = ({ children }) => {
             }
           }
           setUser(session.user);
-          fetchUserRole(session.user.id);
+          fetchUserProfile(session.user.id);
         } else {
           try {
             localStorage.removeItem('token');
@@ -209,10 +221,11 @@ export const AuthProvider = ({ children }) => {
       isMounted = false;
       authListener?.subscription?.unsubscribe();
     };
-  }, [fetchUserRole, validateSession]);
+  }, [fetchUserProfile, validateSession]);
 
   const value = {
     user,
+    profile, // Nuevo: perfil completo con role, permisos, tenant_id
     role,
     login,
     logout,

@@ -31,15 +31,16 @@ export default function resolveImageUrl(imagePath, bucket = 'eventos', tenantId 
   }
 
   // Construir la URL completa para Supabase Storage
-  // Usar el endpoint de render para transformaciones de imagen
+  // Usar el endpoint público para evitar errores CORS (ERR_BLOCKED_BY_ORB)
+  const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${finalPath}`;
+
+  // Opcionalmente, agregar parámetros de transformación si es imagen
   if (typeof finalPath === 'string' && finalPath.match(/\.(jpg|jpeg|png|webp)$/i)) {
-    // Supabase render endpoint supports transformations
-    const renderUrl = `${supabaseUrl}/storage/v1/render/image/public/${bucket}/${finalPath}`;
-    return `${renderUrl}?width=1200&quality=80`;
+    // Nota: Las transformaciones solo funcionan con el endpoint de render,
+    // pero causan errores CORS. Usar URL pública directa.
+    return storageUrl;
   }
 
-  // Para archivos no-imagen, usar el endpoint público estándar
-  const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${finalPath}`;
   return storageUrl;
 }
 

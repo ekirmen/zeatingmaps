@@ -195,57 +195,137 @@ export const useApi = () => {
   // Functions APIs
   const functions = {
     list: useCallback(async (eventoId) => {
-      return request(`${API_ENDPOINTS.FUNCTIONS.LIST}?evento_id=${eventoId}`);
-    }, [request]),
+      // Usar Supabase directo con RLS
+      setLoading(true);
+      setError(null);
+      try {
+        const { funcionesService } = await import('../services/supabaseServices');
+        const funciones = await funcionesService.list({ evento_id: eventoId });
+        return funciones;
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, []),
 
     create: useCallback(async (funcionData) => {
-      return request(API_ENDPOINTS.FUNCTIONS.CREATE, {
-        method: 'POST',
-        body: JSON.stringify(funcionData)
-      });
-    }, [request]),
+      setLoading(true);
+      setError(null);
+      try {
+        const { funcionesService } = await import('../services/supabaseServices');
+        const funcion = await funcionesService.create(funcionData);
+        return funcion;
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, []),
 
     update: useCallback(async (funcionData) => {
-      return request(API_ENDPOINTS.FUNCTIONS.UPDATE, {
-        method: 'PUT',
-        body: JSON.stringify(funcionData)
-      });
-    }, [request]),
+      setLoading(true);
+      setError(null);
+      try {
+        const { funcionesService } = await import('../services/supabaseServices');
+        const funcion = await funcionesService.update(funcionData.id, funcionData);
+        return funcion;
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, []),
 
     delete: useCallback(async (funcionId) => {
-      return request(API_ENDPOINTS.FUNCTIONS.DELETE, {
-        method: 'DELETE',
-        body: JSON.stringify({ id: funcionId })
-      });
-    }, [request])
+      setLoading(true);
+      setError(null);
+      try {
+        const { funcionesService } = await import('../services/supabaseServices');
+        await funcionesService.delete(funcionId);
+        return { success: true };
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, [])
   };
 
   // Zones APIs
   const zones = {
     list: useCallback(async (salaId) => {
-      return request(`${API_ENDPOINTS.ZONES.LIST}?sala_id=${salaId}`);
-    }, [request]),
+      // Usar Supabase directo con RLS
+      setLoading(true);
+      setError(null);
+      try {
+        const { zonasService } = await import('../services/supabaseServices');
+        const zonas = await zonasService.list(salaId);
+        return zonas;
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, []),
 
     create: useCallback(async (zonaData) => {
-      return request(API_ENDPOINTS.ZONES.CREATE, {
-        method: 'POST',
-        body: JSON.stringify(zonaData)
-      });
-    }, [request]),
+      setLoading(true);
+      setError(null);
+      try {
+        const { zonasService } = await import('../services/supabaseServices');
+        const zona = await zonasService.create(zonaData);
+        return zona;
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, []),
 
     update: useCallback(async (zonaData) => {
-      return request(API_ENDPOINTS.ZONES.UPDATE, {
-        method: 'PUT',
-        body: JSON.stringify(zonaData)
-      });
-    }, [request]),
+      setLoading(true);
+      setError(null);
+      try {
+        const { zonasService } = await import('../services/supabaseServices');
+        const zona = await zonasService.update(zonaData.id, zonaData);
+        return zona;
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, []),
 
     delete: useCallback(async (zonaId) => {
-      return request(API_ENDPOINTS.ZONES.DELETE, {
-        method: 'DELETE',
-        body: JSON.stringify({ id: zonaId })
-      });
-    }, [request])
+      setLoading(true);
+      setError(null);
+      try {
+        const { zonasService } = await import('../services/supabaseServices');
+        await zonasService.delete(zonaId);
+        return { success: true };
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    }, [])
   };
 
   // Sales APIs
