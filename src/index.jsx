@@ -39,11 +39,11 @@ try {
 // Importar App (ya está en tu código)
 import App from './App';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { TenantProvider } from './contexts/TenantContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { FooterProvider } from './contexts/FooterContext';
-import { HeaderProvider } from './contexts/HeaderContext';
+import { AuthProvider } from './contexts/AuthContext.jsx';
+import { TenantProvider } from './contexts/TenantContext.jsx';
+import { ThemeProvider } from './contexts/ThemeContext.jsx';
+import { FooterProvider } from './contexts/FooterContext.jsx';
+import { HeaderProvider } from './contexts/HeaderContext.jsx';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import { SpeedInsights } from '@vercel/speed-insights/react';
