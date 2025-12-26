@@ -162,27 +162,34 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
   };
 
   return (
-    <div className="tab-content configuracion-venta space-y-6">
+    <div className="tab-content configuracion-venta space-y-6 max-w-7xl mx-auto">
       <ModoDeVenta eventoData={eventoData} setEventoData={setEventoData} />
       <VentaDeZonas />
       <RegistroObligatorio eventoData={eventoData} setEventoData={setEventoData} />
       <EstadoDeVenta eventoData={eventoData} setEventoData={setEventoData} />
-      <DatosCompradorObligatorios
-        mostrarDatos={mostrarDatosComprador}
-        toggleMostrarDatos={toggleMostrarDatosComprador}
-        datosComprador={datosComprador}
-        updateDatosComprador={updateDatosComprador}
-        setAllDatosSolicitados={setAllDatosSolicitados}
-        setAllDatosObligatorios={setAllDatosObligatorios}
-      />
-      <DatosPorBoleto
-        mostrarDatos={mostrarDatosBoleto}
-        toggleMostrarDatos={toggleMostrarDatosBoleto}
-        datosBoleto={datosBoleto}
-        updateDatosBoleto={updateDatosBoleto}
-      />
+
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <DatosCompradorObligatorios
+          mostrarDatos={mostrarDatosComprador}
+          toggleMostrarDatos={toggleMostrarDatosComprador}
+          datosComprador={datosComprador}
+          updateDatosComprador={updateDatosComprador}
+          setAllDatosSolicitados={setAllDatosSolicitados}
+          setAllDatosObligatorios={setAllDatosObligatorios}
+        />
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <DatosPorBoleto
+          mostrarDatos={mostrarDatosBoleto}
+          toggleMostrarDatos={toggleMostrarDatosBoleto}
+          datosBoleto={datosBoleto}
+          updateDatosBoleto={updateDatosBoleto}
+        />
+      </div>
     </div>
   );
 };
 
 export default ConfiguracionVenta;
+```
