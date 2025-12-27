@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
+import { Calendar } from 'lucide-react';
 
 /**
  * UnifiedContextSelector
@@ -28,6 +29,7 @@ const UnifiedContextSelector = ({
 }) => {
     const { currentTenant } = useTenant();
     const [loading, setLoading] = useState(false);
+    const [showFunctionModal, setShowFunctionModal] = useState(false);
 
     // Data
     const [venues, setVenues] = useState([]);
@@ -248,22 +250,18 @@ const UnifiedContextSelector = ({
                     </div>
                 )}
 
-                {/* FUNCION SELECTOR */}
+                {/* FUNCIÓN BUTTON */}
                 {showFunction && (
-                    <div className={isCompact ? "flex-1 min-w-[120px]" : "w-full"}>
+                    <div className={isCompact ? "" : "w-full"}>
                         {!isCompact && (
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Función
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                                &nbsp;
                             </label>
                         )}
-                        <select
-                            value={effectiveFunctionId}
-                            onChange={(e) => handleFunctionChange(e.target.value)}
-                            onClick={(e) => {
-                                // Open modal on click
-                                e.preventDefault();
-                                if (onFunctionClick) {
-                                    onFunctionClick();
+                        <button
+                            onClick={() => {
+                                if (filteredFunctions.length > 0 && effectiveEventId !== 'all') {
+                                    setShowFunctionModal(true);
                                 }
                             }}
                             disabled={loading}
@@ -278,6 +276,67 @@ const UnifiedContextSelector = ({
                     </div>
                 )}
             </div>
+
+            {/* Function Selection Modal */}
+            <Modal
+                title="Seleccionar Función"
+                open={showFunctionModal}
+                onCancel={() => setShowFunctionModal(false)}
+                footer={null}
+                width={600}
+                centered
+            >
+                <div className="space-y-2">
+                    {filteredFunctions.map(func => {
+                        const isSelected = String(func.id) === String(effectiveFunctionId);
+                        const fecha = new Date(func.fecha_celebracion);
+
+                        return (
+                            <button
+                                key={func.id}
+                                onClick={() => {
+                                    handleFunctionChange(String(func.id));
+                                    setShowFunctionModal(false);
+                                }}
+                                className={`w-full p-4 rounded-lg border-2 transition-all text-left ${isSelected
+                                        ? 'border-purple-500 bg-purple-50'
+                                        : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50'
+                                    }`}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600'
+                                            }`}>
+                                            <Calendar className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-gray-800">
+                                                {fecha.toLocaleDateString('es-ES', {
+                                                    weekday: 'long',
+                                                    day: '2-digit',
+                                                    month: 'long',
+                                                    year: 'numeric'
+                                                })}
+                                            </div>
+                                            <div className="text-sm text-gray-600">
+                                                {fecha.toLocaleTimeString('es-ES', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {isSelected && (
+                                        <div className="text-purple-600 font-semibold">
+                                            ✓ Seleccionada
+                                        </div>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </Modal>
         </div>
     );
 };
