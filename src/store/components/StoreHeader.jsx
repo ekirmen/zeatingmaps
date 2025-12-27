@@ -342,241 +342,234 @@ const StoreHeader = ({ onLogin, onLogout }) => {
         {/* --- Right: Actions --- */}
         <div className="flex items-center gap-2 md:gap-4">
 
+          {/* Mi Perfil and Mis Compras buttons - Desktop only */}
+          {!isMobile && isAuthenticated && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/store/perfil')}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-all flex items-center gap-1.5"
+              >
+                <UserOutlined />
+                <span className="hidden xl:inline">Mi Perfil</span>
+              </button>
+              <button
+                onClick={() => navigate('/store/perfil?tab=orders')}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-all flex items-center gap-1.5"
+              >
+                <ShoppingCartOutlined />
+                <span className="hidden xl:inline">Mis Compras</span>
+              </button>
+            </div>
+          )}
+
           {/* Cart */}
           <LinkWithRef to="/store/cart">
             <Badge count={cartBadgeCount} color="var(--store-primary)" offset={[-4, 4]}>
               <button style={iconButtonStyle} className="hover:bg-gray-100">
-                <Badge count={cartItems.length} showZero={false} offset={[-5, 5]}>
-                  <button
-                    style={iconButtonStyle}
-                    className="relative"
-                  >
-                    <ShoppingCartOutlined />
-                  </button>
-                </Badge>
-              </LinkWithRef>
-
-              {/* Desktop Auth */}
-              {!isMobile && (
-                <>
-                  {isAuthenticated ? (
-                    <Dropdown overlay={userMenu} trigger={['click']} placement="bottomRight">
-                      <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 8px', borderRadius: '20px', background: '#f5f5f5', transition: 'all 0.2s' }} className="hover:bg-gray-200">
-                        <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: 'var(--store-primary)' }} />
-                        <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate">
-                          {userProfile?.email?.split('@')[0]}
-                        </span>
-                      </div>
-                    </Dropdown>
-                  ) : (
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => openAccountModal({ mode: 'login' })}
-                        className="font-medium text-gray-800 hover:text-primary transition-colors text-sm"
                       >
-                        {t('header.login', 'Ingresar')}
-                      </button>
-                      <button
-                        style={primaryButtonStyle}
-                        onClick={() => openAccountModal({ mode: 'register' })}
-                        className="hover:opacity-90 transform hover:scale-[1.02] active:scale-[0.98]"
-                      >
-                        {t('header.register', 'Registrarse')}
-                      </button>
-                    </div>
+                {t('header.login', 'Ingresar')}
+              </button>
+              <button
+                style={primaryButtonStyle}
+                onClick={() => openAccountModal({ mode: 'register' })}
+                className="hover:opacity-90 transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {t('header.register', 'Registrarse')}
+              </button>
+            </div>
                   )}
+          </>
+              )}
+
+          {/* Mobile Menu Toggle */}
+          {isMobile && (
+            <button
+              style={iconButtonStyle}
+              onClick={() => setMobileMenuOpen(true)}
+              className="ml-1"
+            >
+              <MenuOutlined />
+            </button>
+          )}
+        </div>
+      </AntHeader>
+
+      {/* --- Mobile Drawer Menu --- */}
+      <Drawer
+        placement="right"
+        onClose={() => setMobileMenuOpen(false)}
+        open={mobileMenuOpen}
+        width={300}
+        title={
+          <div className="flex items-center gap-2">
+            {header.logoUrl && <img src={header.logoUrl} alt="Logo" style={{ height: '24px' }} />}
+            <span className="font-bold">{header.companyName}</span>
+          </div>
+        }
+        styles={{ body: { padding: 0 } }}
+      >
+        <div className="flex flex-col h-full">
+          {/* User Info Section (Mobile) */}
+          <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+            {isAuthenticated ? (
+              <div className="flex items-center gap-4">
+                <Avatar size={48} icon={<UserOutlined />} style={{ backgroundColor: 'var(--store-primary)' }} />
+                <div className="overflow-hidden">
+                  <Text strong className="block text-lg truncate">{userProfile?.email?.split('@')[0]}</Text>
+                  <Text type="secondary" className="text-xs">Sesión iniciada</Text>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <Text type="secondary" className="block mb-4">Bienvenido a nuestra tienda</Text>
+                <Button type="primary" block size="large" onClick={() => { setMobileMenuOpen(false); openAccountModal({ mode: 'login' }); }}>
+                  Iniciar Sesión / Registrarse
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Menu Items */}
+          <div className="flex-1 overflow-y-auto py-2">
+            <Menu mode="inline" selectedKeys={[location.pathname]} style={{ border: 'none' }}>
+              <Menu.Item key="/store" icon={<HomeOutlined />} onClick={() => { navigate('/store'); setMobileMenuOpen(false); }}>
+                {t('header.home')}
+              </Menu.Item>
+              <Menu.Item key="/store/eventos" icon={<SearchOutlined />} onClick={() => { navigate('/store/eventos'); setMobileMenuOpen(false); }}>
+                Eventos
+              </Menu.Item>
+              <Menu.Item key="/store/cart" icon={<ShoppingCartOutlined />} onClick={() => { navigate('/store/cart'); setMobileMenuOpen(false); }}>
+                {t('header.cart')} ({cartBadgeCount})
+              </Menu.Item>
+
+              {isAuthenticated && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item key="/store/perfil" icon={<UserOutlined />} onClick={() => { navigate('/store/perfil'); setMobileMenuOpen(false); }}>
+                    Mi Perfil
+                  </Menu.Item>
+                  <Menu.Item key="logout" icon={<LogoutOutlined />} danger onClick={() => { handleLogout(); setMobileMenuOpen(false); }}>
+                    Cerrar Sesión
+                  </Menu.Item>
                 </>
               )}
+            </Menu>
+          </div>
 
-              {/* Mobile Menu Toggle */}
-              {isMobile && (
-                <button
-                  style={iconButtonStyle}
-                  onClick={() => setMobileMenuOpen(true)}
-                  className="ml-1"
-                >
-                  <MenuOutlined />
-                </button>
-              )}
+          {/* Footer Actions */}
+          <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center text-xs text-gray-500">
+            <div className="flex items-center gap-2">
+              <GlobalOutlined />
+              <span>Español</span>
             </div>
-          </AntHeader>
+            <span>v1.2.0</span>
+          </div>
+        </div>
+      </Drawer>
 
-          {/* --- Mobile Drawer Menu --- */}
-          <Drawer
-            placement="right"
-            onClose={() => setMobileMenuOpen(false)}
-            open={mobileMenuOpen}
-            width={300}
-            title={
-              <div className="flex items-center gap-2">
-                {header.logoUrl && <img src={header.logoUrl} alt="Logo" style={{ height: '24px' }} />}
-                <span className="font-bold">{header.companyName}</span>
-              </div>
-            }
-            styles={{ body: { padding: 0 } }}
-          >
-            <div className="flex flex-col h-full">
-              {/* User Info Section (Mobile) */}
-              <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-                {isAuthenticated ? (
-                  <div className="flex items-center gap-4">
-                    <Avatar size={48} icon={<UserOutlined />} style={{ backgroundColor: 'var(--store-primary)' }} />
-                    <div className="overflow-hidden">
-                      <Text strong className="block text-lg truncate">{userProfile?.email?.split('@')[0]}</Text>
-                      <Text type="secondary" className="text-xs">Sesión iniciada</Text>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <Text type="secondary" className="block mb-4">Bienvenido a nuestra tienda</Text>
-                    <Button type="primary" block size="large" onClick={() => { setMobileMenuOpen(false); openAccountModal({ mode: 'login' }); }}>
-                      Iniciar Sesión / Registrarse
-                    </Button>
-                  </div>
-                )}
-              </div>
+      {/* --- Account Modal (Reused Logic) --- */}
+      <Modal
+        open={isAccountModalVisible}
+        onCancel={() => setIsAccountModalVisible(false)}
+        footer={null}
+        width={400}
+        centered
+        className="store-modal"
+        zIndex={1001}
+      >
+        <div className="p-6">
+          <div className="text-center mb-8">
+            <Title level={3} style={{ marginBottom: 0 }}>
+              {accountMode === 'login' ? 'Bienvenido' : accountMode === 'register' ? 'Crear Cuenta' : 'Recuperar'}
+            </Title>
+            <Text type="secondary">
+              {accountMode === 'login' ? 'Ingresa a tu cuenta para continuar' : accountMode === 'register' ? 'Únete para comprar entradas' : 'Recupera tu acceso'}
+            </Text>
+          </div>
 
-              {/* Menu Items */}
-              <div className="flex-1 overflow-y-auto py-2">
-                <Menu mode="inline" selectedKeys={[location.pathname]} style={{ border: 'none' }}>
-                  <Menu.Item key="/store" icon={<HomeOutlined />} onClick={() => { navigate('/store'); setMobileMenuOpen(false); }}>
-                    {t('header.home')}
-                  </Menu.Item>
-                  <Menu.Item key="/store/eventos" icon={<SearchOutlined />} onClick={() => { navigate('/store/eventos'); setMobileMenuOpen(false); }}>
-                    Eventos
-                  </Menu.Item>
-                  <Menu.Item key="/store/cart" icon={<ShoppingCartOutlined />} onClick={() => { navigate('/store/cart'); setMobileMenuOpen(false); }}>
-                    {t('header.cart')} ({cartBadgeCount})
-                  </Menu.Item>
+          {/* Forms would go here - simplified for brevity, using same logic as original */}
+          {/* ... (Keeping the original form logic would make this file huge, assuming standard form implementation here or reuse components) ... */}
+          {/* Re-implementing basic inputs for completeness based on original file logic */}
 
-                  {isAuthenticated && (
-                    <>
-                      <Menu.Divider />
-                      <Menu.Item key="/store/perfil" icon={<UserOutlined />} onClick={() => { navigate('/store/perfil'); setMobileMenuOpen(false); }}>
-                        Mi Perfil
-                      </Menu.Item>
-                      <Menu.Item key="logout" icon={<LogoutOutlined />} danger onClick={() => { handleLogout(); setMobileMenuOpen(false); }}>
-                        Cerrar Sesión
-                      </Menu.Item>
-                    </>
-                  )}
-                </Menu>
-              </div>
-
-              {/* Footer Actions */}
-              <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center text-xs text-gray-500">
-                <div className="flex items-center gap-2">
-                  <GlobalOutlined />
-                  <span>Español</span>
-                </div>
-                <span>v1.2.0</span>
-              </div>
-            </div>
-          </Drawer>
-
-          {/* --- Account Modal (Reused Logic) --- */}
-          <Modal
-            open={isAccountModalVisible}
-            onCancel={() => setIsAccountModalVisible(false)}
-            footer={null}
-            width={400}
-            centered
-            className="store-modal"
-            zIndex={1001}
-          >
-            <div className="p-6">
-              <div className="text-center mb-8">
-                <Title level={3} style={{ marginBottom: 0 }}>
-                  {accountMode === 'login' ? 'Bienvenido' : accountMode === 'register' ? 'Crear Cuenta' : 'Recuperar'}
-                </Title>
-                <Text type="secondary">
-                  {accountMode === 'login' ? 'Ingresa a tu cuenta para continuar' : accountMode === 'register' ? 'Únete para comprar entradas' : 'Recupera tu acceso'}
-                </Text>
-              </div>
-
-              {/* Forms would go here - simplified for brevity, using same logic as original */}
-              {/* ... (Keeping the original form logic would make this file huge, assuming standard form implementation here or reuse components) ... */}
-              {/* Re-implementing basic inputs for completeness based on original file logic */}
-
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                if (accountMode === 'login') handleLogin();
-                if (accountMode === 'register') handleRegister();
-                if (accountMode === 'forgot') handleForgotPassword();
-              }}>
-                {accountMode !== 'forgot' && (
-                  <>
-                    {accountMode === 'register' && (
-                      <div className="mb-4">
-                        <Input
-                          prefix={<PhoneOutlined />}
-                          placeholder="Teléfono"
-                          value={registerData.phone}
-                          onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
-                          addonBefore="+58"
-                          size="large"
-                        />
-                      </div>
-                    )}
-
-                    <div className="mb-4">
-                      <Input
-                        prefix={<MailOutlined />}
-                        placeholder="Correo electrónico"
-                        value={accountMode === 'register' ? registerData.email : formData.email}
-                        onChange={(e) => accountMode === 'register' ? setRegisterData({ ...registerData, email: e.target.value }) : setFormData({ ...formData, email: e.target.value })}
-                        size="large"
-                      />
-                    </div>
-
-                    <div className="mb-6">
-                      <Input.Password
-                        prefix={<LockOutlined />}
-                        placeholder="Contraseña"
-                        value={accountMode === 'register' ? registerData.password : formData.password}
-                        onChange={(e) => accountMode === 'register' ? setRegisterData({ ...registerData, password: e.target.value }) : setFormData({ ...formData, password: e.target.value })}
-                        size="large"
-                      />
-                    </div>
-                  </>
-                )}
-
-                {accountMode === 'forgot' && (
-                  <div className="mb-6">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (accountMode === 'login') handleLogin();
+            if (accountMode === 'register') handleRegister();
+            if (accountMode === 'forgot') handleForgotPassword();
+          }}>
+            {accountMode !== 'forgot' && (
+              <>
+                {accountMode === 'register' && (
+                  <div className="mb-4">
                     <Input
-                      prefix={<MailOutlined />}
-                      placeholder="Correo para recuperar"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
+                      prefix={<PhoneOutlined />}
+                      placeholder="Teléfono"
+                      value={registerData.phone}
+                      onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
+                      addonBefore="+58"
                       size="large"
                     />
                   </div>
                 )}
 
-                <Button type="primary" htmlType="submit" block size="large" loading={isSubmitting[accountMode]} style={primaryButtonStyle}>
-                  {accountMode === 'login' ? 'Ingresar' : accountMode === 'register' ? 'Registrarse' : 'Enviar enlace'}
-                </Button>
-              </form>
+                <div className="mb-4">
+                  <Input
+                    prefix={<MailOutlined />}
+                    placeholder="Correo electrónico"
+                    value={accountMode === 'register' ? registerData.email : formData.email}
+                    onChange={(e) => accountMode === 'register' ? setRegisterData({ ...registerData, email: e.target.value }) : setFormData({ ...formData, email: e.target.value })}
+                    size="large"
+                  />
+                </div>
 
-              <div className="mt-6 text-center space-y-2">
-                {accountMode === 'login' && (
-                  <>
-                    <a onClick={() => setAccountMode('forgot')} className="block text-sm text-gray-500 hover:text-primary cursor-pointer">
-                      ¿Olvidaste tu contraseña?
-                    </a>
-                    <div className="text-sm">
-                      ¿No tienes cuenta? <a onClick={() => setAccountMode('register')} className="text-primary font-medium cursor-pointer">Regístrate</a>
-                    </div>
-                  </>
-                )}
-                {(accountMode === 'register' || accountMode === 'forgot') && (
-                  <a onClick={() => setAccountMode('login')} className="text-primary font-medium cursor-pointer">Volver al inicio de sesión</a>
-                )}
+                <div className="mb-6">
+                  <Input.Password
+                    prefix={<LockOutlined />}
+                    placeholder="Contraseña"
+                    value={accountMode === 'register' ? registerData.password : formData.password}
+                    onChange={(e) => accountMode === 'register' ? setRegisterData({ ...registerData, password: e.target.value }) : setFormData({ ...formData, password: e.target.value })}
+                    size="large"
+                  />
+                </div>
+              </>
+            )}
+
+            {accountMode === 'forgot' && (
+              <div className="mb-6">
+                <Input
+                  prefix={<MailOutlined />}
+                  placeholder="Correo para recuperar"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  size="large"
+                />
               </div>
-            </div>
-          </Modal>
-        </>
-        );
+            )}
+
+            <Button type="primary" htmlType="submit" block size="large" loading={isSubmitting[accountMode]} style={primaryButtonStyle}>
+              {accountMode === 'login' ? 'Ingresar' : accountMode === 'register' ? 'Registrarse' : 'Enviar enlace'}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center space-y-2">
+            {accountMode === 'login' && (
+              <>
+                <a onClick={() => setAccountMode('forgot')} className="block text-sm text-gray-500 hover:text-primary cursor-pointer">
+                  ¿Olvidaste tu contraseña?
+                </a>
+                <div className="text-sm">
+                  ¿No tienes cuenta? <a onClick={() => setAccountMode('register')} className="text-primary font-medium cursor-pointer">Regístrate</a>
+                </div>
+              </>
+            )}
+            {(accountMode === 'register' || accountMode === 'forgot') && (
+              <a onClick={() => setAccountMode('login')} className="text-primary font-medium cursor-pointer">Volver al inicio de sesión</a>
+            )}
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
 };
 
-        export default StoreHeader;
+export default StoreHeader;
