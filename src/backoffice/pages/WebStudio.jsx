@@ -544,9 +544,16 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
     try {
       // Obtener el tenant_id del usuario actual
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (authError) {
+        console.error('Error de autenticación:', authError);
+        toast.error('Error de autenticación. Por favor, inicia sesión nuevamente.');
+        return;
+      }
+
       if (!user) {
-        toast.error('Usuario no autenticado');
+        toast.error('Usuario no autenticado. Por favor, inicia sesión.');
         return;
       }
 
@@ -557,6 +564,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         .single();
 
       if (profileError || !profile?.tenant_id) {
+        console.error('Error obteniendo perfil:', profileError);
         toast.error('Usuario sin tenant válido');
         return;
       }
