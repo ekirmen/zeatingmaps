@@ -264,15 +264,29 @@ const UnifiedContextSelector = ({
                                     setShowFunctionModal(true);
                                 }
                             }}
-                            disabled={loading}
-                            className={`${selectClasses} cursor-pointer`}
-                            style={{ ...selectStyle, cursor: 'pointer' }}
+                            disabled={loading || !filteredFunctions.length || effectiveEventId === 'all'}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${(!filteredFunctions.length || effectiveEventId === 'all')
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-purple-600 text-white hover:bg-purple-700 shadow-sm hover:shadow-md'
+                                }`}
                         >
-                            <option value="all">{isCompact ? "Función" : "Seleccionar Función"}</option>
-                            {filteredFunctions.map(f => (
-                                <option key={f.id} value={String(f.id)}>{getFunctionLabel(f)}</option>
-                            ))}
-                        </select>
+                            <Calendar className="w-4 h-4" />
+                            {effectiveFunctionId && effectiveFunctionId !== 'all' ? (
+                                <>
+                                    {(() => {
+                                        const func = filteredFunctions.find(f => String(f.id) === String(effectiveFunctionId));
+                                        if (!func) return 'Seleccionar...';
+                                        return new Date(func.fecha_celebracion).toLocaleDateString('es-ES', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                        });
+                                    })()}
+                                </>
+                            ) : (
+                                'Seleccionar Función'
+                            )}
+                        </button>
                     </div>
                 )}
             </div>
@@ -299,8 +313,8 @@ const UnifiedContextSelector = ({
                                     setShowFunctionModal(false);
                                 }}
                                 className={`w-full p-4 rounded-lg border-2 transition-all text-left ${isSelected
-                                        ? 'border-purple-500 bg-purple-50'
-                                        : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50'
+                                    ? 'border-purple-500 bg-purple-50'
+                                    : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50'
                                     }`}
                             >
                                 <div className="flex items-center justify-between">
