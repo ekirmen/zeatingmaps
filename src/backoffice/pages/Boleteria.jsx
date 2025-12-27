@@ -53,7 +53,6 @@ const Boleteria = () => {
   const [searchAllSeatsLoading, setSearchAllSeatsLoading] = useState(false);
   const [savedCartBeforeSearch, setSavedCartBeforeSearch] = useState(null);
   const [searchDataLoaded, setSearchDataLoaded] = useState(false);
-  const [isFunctionsModalVisible, setIsFunctionsModalVisible] = useState(false);
 
   // Added for UnifiedContextSelector
   const [selectedVenueId, setSelectedVenueId] = useState('all');
