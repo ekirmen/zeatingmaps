@@ -8,6 +8,7 @@ import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
 import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
+import FunctionSwitcher from '../components/FunctionSwitcher';
 
 
 import { useBoleteria } from '../hooks/useBoleteria';
@@ -719,6 +720,7 @@ const Boleteria = () => {
       const nombreMesa = silla.nombreMesa || silla.mesa_nombre || silla.mesaNombre || silla.tableName || '';
       const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
       const funcionFecha = selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion || null;
+      const funcionNombre = selectedFuncion?.nombre || '';
 
       const cartItem = {
         _id: sillaId,
@@ -732,6 +734,7 @@ const Boleteria = () => {
         descuentoNombre,
         funcionId,
         funcionFecha,
+        funcionNombre,
         nombreMesa,
         precioInfo: detalleFinal || null,
         entradaId: selectedEntradaId,
@@ -1311,6 +1314,22 @@ const Boleteria = () => {
 
           {/* Desktop: Sidebar fijo para carrito */}
           <div className="hidden md:flex w-64 bg-white border-l border-gray-200 flex flex-col">
+            {/* Function Switcher - only show if multiple functions */}
+            {funciones && funciones.length > 1 && (
+              <div className="p-2 border-b border-gray-200">
+                <FunctionSwitcher
+                  funciones={funciones}
+                  selectedFuncion={selectedFuncion}
+                  onFunctionChange={(funcion) => {
+                    setSelectedFuncion(funcion);
+                    // Clear selected seats but keep cart items
+                    setSelectedSeatIds([]);
+                  }}
+                  cartItems={carrito}
+                />
+              </div>
+            )}
+
             <div className="flex-1 min-h-0">
               <Cart {...cartProps}>
                 {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
