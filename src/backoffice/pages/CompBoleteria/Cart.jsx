@@ -312,7 +312,7 @@ const Cart = ({
                         {group.items.reduce((sum, item) => sum + item.cantidad, 0)} asientos
                       </div>
                     </div>
-                  </div>>
+                  </div>
                   {group.items.map((item) => {
                     const groupKey = `${item.zona}|${item.precio}|${item.tipoPrecio}|${item.descuentoNombre}`;
 
@@ -401,7 +401,8 @@ const Cart = ({
                     );
                   })}
                 </div>
-              ))}
+              );
+            })}
           </>
         )}
       </div>
