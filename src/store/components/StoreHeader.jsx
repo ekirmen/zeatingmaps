@@ -366,20 +366,44 @@ const StoreHeader = ({ onLogin, onLogout }) => {
           <LinkWithRef to="/store/cart">
             <Badge count={cartBadgeCount} color="var(--store-primary)" offset={[-4, 4]}>
               <button style={iconButtonStyle} className="hover:bg-gray-100">
-                      >
-                {t('header.login', 'Ingresar')}
+                <ShoppingCartOutlined />
               </button>
-              <button
-                style={primaryButtonStyle}
-                onClick={() => openAccountModal({ mode: 'register' })}
-                className="hover:opacity-90 transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                {t('header.register', 'Registrarse')}
-              </button>
-            </div>
-                  )}
-          </>
+            </Badge>
+          </LinkWithRef>
+
+          {/* Desktop Auth */}
+          {!isMobile && (
+            <>
+              {isAuthenticated ? (
+                <Dropdown overlay={userMenu} trigger={['click']} placement="bottomRight">
+                  <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 8px', borderRadius: '20px', background: '#f5f5f5', transition: 'all 0.2s' }} className="hover:bg-gray-200">
+                    <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: 'var(--store-primary)' }} />
+                    <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate">
+                      {userProfile?.email?.split('@')[0]}
+                    </span>
+                  </div>
+                </Dropdown>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openAccountModal({ mode: 'login' })}
+                    className="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-primary transition-all duration-200 rounded-lg hover:bg-gray-50"
+                  >
+                    Ingresar
+                  </button>
+                  <button
+                    onClick={() => openAccountModal({ mode: 'register' })}
+                    className="px-5 py-2 text-sm font-semibold text-white rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--store-primary) 0%, #667eea 100%)',
+                    }}
+                  >
+                    Registrarse
+                  </button>
+                </div>
               )}
+            </>
+          )}
 
           {/* Mobile Menu Toggle */}
           {isMobile && (
