@@ -281,108 +281,127 @@ const Cart = ({
                 {safeCarrito.length} asientos
               </div>
             )}
-            {Object.entries(groupedByFunction).map(([fid, group], idx) => (
-              <div key={fid} className="space-y-1">
-                <div className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded">
-                  {`ðŸŽí Función ${idx + 1}: `}
-                  {group.fecha ? new Date(group.fecha).toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  }) : 'Fecha no disponible'}
-                </div>
-                {group.items.map((item) => {
-                  const groupKey = `${item.zona}|${item.precio}|${item.tipoPrecio}|${item.descuentoNombre}`;
+            {Object.entries(groupedByFunction).map(([fid, group], idx) => {
+              // Get function name from first item in group
+              const firstItem = safeCarrito.find(item => (item.funcionId || 'default') === fid);
+              const funcionNombre = firstItem?.funcionNombre || '';
 
-                  return (
-                    <Card key={groupKey} size="small" className="mb-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="font-medium text-sm flex items-center gap-2">
-                            <span className="text-blue-600">ðŸ“</span>
-                            <span>{item.zona}</span>
-                            <span className="text-gray-400">|</span>
-                            <span className="font-bold text-green-600">${formatCurrency(item.precio)}</span>
+              return (
+                <div key={fid} className="space-y-1">
+                  <div className="text-xs font-semibold text-gray-700 bg-gradient-to-r from-blue-50 to-blue-100 px-3 py-2 rounded-lg border border-blue-200 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-600">🎭</span>
+                      <div className="flex-1">
+                        {funcionNombre && (
+                          <div className="font-bold text-gray-800 mb-0.5">
+                            {funcionNombre}
                           </div>
-                          {item.tipoPrecio === 'descuento' && (
-                            <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                              <span>ðŸŽ‰</span>
-                              <span>Descuento: {item.descuentoNombre}</span>
+                        )}
+                        <div className="text-[11px] text-gray-600">
+                          {group.fecha ? new Date(group.fecha).toLocaleDateString('es-ES', {
+                            weekday: 'short',
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : 'Fecha no disponible'}
+                        </div>
+                      </div>
+                      <div className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                        {group.items.reduce((sum, item) => sum + item.cantidad, 0)} asientos
+                      </div>
+                    </div>
+                  </div>>
+                  {group.items.map((item) => {
+                    const groupKey = `${item.zona}|${item.precio}|${item.tipoPrecio}|${item.descuentoNombre}`;
+
+                    return (
+                      <Card key={groupKey} size="small" className="mb-2">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm flex items-center gap-2">
+                              <span className="text-blue-600">ðŸ“</span>
+                              <span>{item.zona}</span>
+                              <span className="text-gray-400">|</span>
+                              <span className="font-bold text-green-600">${formatCurrency(item.precio)}</span>
                             </div>
-                          )}
-                          <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                            <span>ðŸ“Š</span>
-                            <span>Cantidad: {item.cantidad}</span>
-                          </div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {item.asientos.length <= 5 ? (
-                              // Mostrar todos los asientos si son 5 o menos
-                              item.asientos.map(seat => {
-                                const seatName = seat.nombre || seat.sillaId || 'Asiento';
-                                const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
-
-                                // Mostrar información más clara del boleto
-                                if (mesaName) {
-                                  return (
-                                    <div key={seat._id} className="text-xs flex items-center gap-1">
-                                      <span className="text-blue-600">ðŸŽ«</span>
-                                      <span className="font-medium">{mesaName} - {seatName}</span>
-                                      {(seat.locator || seat.buyerName || seat.buyerEmail) && (
-                                        <span className="text-[11px] text-gray-500">
-                                          {seat.locator && <span className="mr-1">ðŸ”– {seat.locator}</span>}
-                                          {seat.buyerName && <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>}
-                                          {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
-                                        </span>
-                                      )}
-                                    </div>
-                                  );
-                                } else {
-                                  return (
-                                    <div key={seat._id} className="text-xs flex items-center gap-1">
-                                      <span className="text-green-600">ðŸŽ«</span>
-                                      <span className="font-medium">{seatName}</span>
-                                      {(seat.locator || seat.buyerName || seat.buyerEmail) && (
-                                        <span className="text-[11px] text-gray-500">
-                                          {seat.locator && <span className="mr-1">ðŸ”– {seat.locator}</span>}
-                                          {seat.buyerName && <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>}
-                                          {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
-                                        </span>
-                                      )}
-                                    </div>
-                                  );
-                                }
-                              })
-                            ) : (
-                              // Mostrar resumen si hay más de 5 asientos
-                              <div className="text-xs flex items-center gap-1">
-                                <span className="text-green-600">ðŸŽ«</span>
-                                <span className="font-medium">
-                                  {item.asientos.slice(0, 3).map(seat => {
-                                    const seatName = seat.nombre || seat.sillaId || 'Asiento';
-                                    const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
-                                    return mesaName ? `${mesaName}-${seatName}` : seatName;
-                                  }).join(', ')}
-                                  {item.asientos.length > 3 && ` y ${item.asientos.length - 3} más...`}
-                                </span>
+                            {item.tipoPrecio === 'descuento' && (
+                              <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                                <span>ðŸŽ‰</span>
+                                <span>Descuento: {item.descuentoNombre}</span>
                               </div>
                             )}
+                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                              <span>ðŸ“Š</span>
+                              <span>Cantidad: {item.cantidad}</span>
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              {item.asientos.length <= 5 ? (
+                                // Mostrar todos los asientos si son 5 o menos
+                                item.asientos.map(seat => {
+                                  const seatName = seat.nombre || seat.sillaId || 'Asiento';
+                                  const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
+
+                                  // Mostrar información más clara del boleto
+                                  if (mesaName) {
+                                    return (
+                                      <div key={seat._id} className="text-xs flex items-center gap-1">
+                                        <span className="text-blue-600">ðŸŽ«</span>
+                                        <span className="font-medium">{mesaName} - {seatName}</span>
+                                        {(seat.locator || seat.buyerName || seat.buyerEmail) && (
+                                          <span className="text-[11px] text-gray-500">
+                                            {seat.locator && <span className="mr-1">ðŸ”– {seat.locator}</span>}
+                                            {seat.buyerName && <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>}
+                                            {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  } else {
+                                    return (
+                                      <div key={seat._id} className="text-xs flex items-center gap-1">
+                                        <span className="text-green-600">ðŸŽ«</span>
+                                        <span className="font-medium">{seatName}</span>
+                                        {(seat.locator || seat.buyerName || seat.buyerEmail) && (
+                                          <span className="text-[11px] text-gray-500">
+                                            {seat.locator && <span className="mr-1">ðŸ”– {seat.locator}</span>}
+                                            {seat.buyerName && <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>}
+                                            {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                })
+                              ) : (
+                                // Mostrar resumen si hay más de 5 asientos
+                                <div className="text-xs flex items-center gap-1">
+                                  <span className="text-green-600">ðŸŽ«</span>
+                                  <span className="font-medium">
+                                    {item.asientos.slice(0, 3).map(seat => {
+                                      const seatName = seat.nombre || seat.sillaId || 'Asiento';
+                                      const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
+                                      return mesaName ? `${mesaName}-${seatName}` : seatName;
+                                    }).join(', ')}
+                                    {item.asientos.length > 3 && ` y ${item.asientos.length - 3} más...`}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
+                          <button
+                            onClick={() => handleRemoveSeat(groupKey)}
+                            className="text-red-500 hover:text-red-700 text-xs"
+                          >
+                            —
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleRemoveSeat(groupKey)}
-                          className="text-red-500 hover:text-red-700 text-xs"
-                        >
-                          —
-                        </button>
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            ))}
+                      </Card>
+                    );
+                  })}
+                </div>
+              ))}
           </>
         )}
       </div>
