@@ -260,14 +260,22 @@ const UnifiedContextSelector = ({
                         )}
                         <button
                             onClick={() => {
+                                console.log('🔘 Function button clicked');
+                                console.log('filteredFunctions:', filteredFunctions);
+                                console.log('effectiveEventId:', effectiveEventId);
+                                console.log('filteredFunctions.length:', filteredFunctions.length);
+
                                 if (filteredFunctions.length > 0 && effectiveEventId !== 'all') {
+                                    console.log('✅ Opening function modal');
                                     setShowFunctionModal(true);
+                                } else {
+                                    console.log('❌ Modal NOT opening - conditions not met');
                                 }
                             }}
                             disabled={loading || !filteredFunctions.length || effectiveEventId === 'all'}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${(!filteredFunctions.length || effectiveEventId === 'all')
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-purple-600 text-white hover:bg-purple-700 shadow-sm hover:shadow-md'
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-purple-600 text-white hover:bg-purple-700 shadow-sm hover:shadow-md'
                                 }`}
                         >
                             <Calendar className="w-4 h-4" />
