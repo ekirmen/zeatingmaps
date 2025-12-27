@@ -1162,21 +1162,59 @@ const Funciones = () => {
   };
 
   const handleDuplicate = async (id) => {
-    const { data, error } = await supabase.from('funciones').select('*').eq('id', id).single();
-    if (error || !data) {
-      alert('No se pudo duplicar');
-      return;
-    }
+    try {
+      // Fetch the function to duplicate
+      const { data, error } = await supabase.from('funciones').select('*').eq('id', id).single();
 
-    const { id: _, ...duplicatedData } = data;
-    const { error: insertError } = await supabase.from('funciones').insert([duplicatedData]);
-    if (insertError) {
-      alert('Error al duplicar');
-    } else {
-      if (duplicatedData.sala) {
-        await syncSeatsForSala(duplicatedData.sala);
+      if (error || !data) {
+        console.error('Error fetching function:', error);
+        alert('No se pudo obtener la función para duplicar');
+        return;
       }
-      loadFunciones();
+
+      // Exclude fields that might cause unique constraint violations
+      const {
+        id: _,
+        created_at,
+        updated_at,
+        slug,
+        ...duplicatedData
+      } = data;
+
+      // Add a suffix to the name to indicate it's a duplicate
+      if (duplicatedData.nombre) {
+        duplicatedData.nombre = `${duplicatedData.nombre} (Copia)`;
+      }
+
+      // Insert the duplicated function
+      const { data: newFunction, error: insertError } = await supabase
+        .from('funciones')
+        .insert([duplicatedData])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error duplicating function:', insertError);
+        alert(`Error al duplicar: ${insertError.message || 'Error desconocido'}`);
+        return;
+      }
+
+      // Sync seats if sala is specified
+      if (duplicatedData.sala) {
+        try {
+          await syncSeatsForSala(duplicatedData.sala);
+        } catch (syncError) {
+          console.error('Error syncing seats:', syncError);
+          // Don't fail the duplication if seat sync fails
+        }
+      }
+
+      // Reload functions to show the new one
+      await loadFunciones();
+      alert('Función duplicada correctamente');
+    } catch (err) {
+      console.error('Unexpected error during duplication:', err);
+      alert('Error inesperado al duplicar la función');
     }
   };
 
