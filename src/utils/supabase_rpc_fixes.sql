@@ -110,12 +110,12 @@ AS $$
 DECLARE
     v_existing_lock record;
     v_expires_at timestamptz;
+    v_result record;
 BEGIN
     -- Set expiration (e.g., 10 minutes from now)
     v_expires_at := NOW() + interval '10 minutes';
 
     -- Check for existing active lock
-    -- ALIAS tables to avoid ambiguity with output columns
     SELECT * INTO v_existing_lock 
     FROM seat_locks sl
     WHERE sl.seat_id = p_seat_id 
@@ -125,16 +125,24 @@ BEGIN
 
     IF v_existing_lock.id IS NOT NULL THEN
         -- If locked by same session, extend it
-        -- CAST p_session_id to UUID for comparison
-        IF v_existing_lock.session_id = p_session_id::uuid AND v_existing_lock.status NOT IN ('vendido', 'pagado', 'reservado', 'bloqueado') THEN
-             UPDATE seat_locks sl_update
+        IF v_existing_lock.session_id::text = p_session_id AND v_existing_lock.status NOT IN ('vendido', 'pagado', 'reservado', 'bloqueado') THEN
+             -- Update and return the updated row
+             UPDATE seat_locks
              SET expires_at = v_expires_at,
                  locked_at = NOW(),
-                 tenant_id = COALESCE(p_tenant_id::uuid, sl_update.tenant_id)
-             WHERE sl_update.id = v_existing_lock.id
-             RETURNING sl_update.id, sl_update.seat_id, sl_update.funcion_id, sl_update.session_id::text, sl_update.status, sl_update.locked_at, sl_update.expires_at;
+                 tenant_id = COALESCE(p_tenant_id::uuid, tenant_id)
+             WHERE id = v_existing_lock.id
+             RETURNING 
+                seat_locks.id, 
+                seat_locks.seat_id, 
+                seat_locks.funcion_id, 
+                seat_locks.session_id::text, 
+                seat_locks.status, 
+                seat_locks.locked_at, 
+                seat_locks.expires_at
+             INTO v_result;
              
-             RETURN QUERY SELECT v_existing_lock.id, v_existing_lock.seat_id, v_existing_lock.funcion_id, v_existing_lock.session_id::text, v_existing_lock.status, NOW() as locked_at, v_expires_at as expires_at;
+             RETURN QUERY SELECT v_result.id, v_result.seat_id, v_result.funcion_id, v_result.session_id, v_result.status, v_result.locked_at, v_result.expires_at;
              RETURN;
         ELSE
              -- Locked by someone else or permanent status
@@ -143,10 +151,17 @@ BEGIN
     END IF;
 
     -- Insert new lock
-    -- CAST p_session_id to UUID for insert
     RETURN QUERY
     INSERT INTO seat_locks (seat_id, funcion_id, session_id, status, locked_at, expires_at, lock_type, tenant_id)
     VALUES (p_seat_id, p_funcion_id, p_session_id::uuid, p_status, NOW(), v_expires_at, 'seat', p_tenant_id::uuid)
+    ON CONFLICT (seat_id, funcion_id, tenant_id) 
+    DO UPDATE SET 
+        session_id = EXCLUDED.session_id,
+        status = EXCLUDED.status,
+        locked_at = EXCLUDED.locked_at,
+        expires_at = EXCLUDED.expires_at,
+        lock_type = EXCLUDED.lock_type
+    WHERE seat_locks.session_id::text = p_session_id OR seat_locks.expires_at < NOW()
     RETURNING seat_locks.id, seat_locks.seat_id, seat_locks.funcion_id, seat_locks.session_id::text, seat_locks.status, seat_locks.locked_at, seat_locks.expires_at;
 END;
 $$;
