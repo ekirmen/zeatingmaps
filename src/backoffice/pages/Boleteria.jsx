@@ -99,7 +99,8 @@ const Boleteria = () => {
     subscribeToFunction,
     unsubscribe,
     lockedSeats: rtLockedSeats,
-    seatStates
+    seatStates,
+    seatStatesVersion  // Version counter to trigger re-renders
   } = useSeatLockStore();
 
 
