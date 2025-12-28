@@ -132,6 +132,18 @@ const Boleteria = () => {
     };
   }, [selectedFuncion?.id, subscribeToFunction, unsubscribe]);
 
+  // Debug: Log cuando seatStates cambia
+  useEffect(() => {
+    if (seatStates && seatStates.size > 0) {
+      console.log('🎨 [BOLETERIA] seatStates actualizado:', {
+        size: seatStates.size,
+        version: seatStatesVersion,
+        sample: Array.from(seatStates.entries()).slice(0, 3)
+      });
+    }
+  }, [seatStates, seatStatesVersion]);
+
+
   const [isFunctionsModalVisible, setIsFunctionsModalVisible] = useState(false);
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
