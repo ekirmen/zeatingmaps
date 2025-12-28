@@ -144,6 +144,7 @@ const SeatingMapOptimized = ({
     showLegend = false,
     blockMode = false,   // Block mode flag
     blockAction = null,  // 'block' or 'unlock'
+    seatStates = null,   // Map or object with seat states from store
     // Adapter props to handle legacy calls/unused props securely
     ...restProps
 }) => {
