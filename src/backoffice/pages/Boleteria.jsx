@@ -610,7 +610,7 @@ const Boleteria = () => {
         }
 
         if (lockAction === 'unlock' && !blockedStates.includes(seatEstado)) {
-          message.warning('Solo puedes seleccionar asientos que ya estÂén bloqueados para desbloquearlos.');
+          message.warning('⚠️ Modo Desbloqueo: Solo puedes seleccionar asientos que estén bloqueados (no vendidos/pagados).');
           return;
         }
 
