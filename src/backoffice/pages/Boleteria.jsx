@@ -497,7 +497,7 @@ const Boleteria = () => {
       const hasSaleItems = safeCart.some(item => !item.lockAction);
 
       if (hasSaleItems) {
-        message.warning('VacÂía el carrito de venta antes de usar el modo bloqueo/desbloqueo.');
+        message.warning('Vacía el carrito de venta antes de usar el modo bloqueo/desbloqueo.');
         return;
       }
 
@@ -1152,26 +1152,26 @@ const Boleteria = () => {
                 Buscar
               </label>
               <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
-                <span className="text-[11px] text-gray-600">Bloqueo:</span>
+                <span className="text-[11px] text-gray-600 font-semibold">Modo:</span>
                 <button
                   type="button"
                   onClick={() => handleBlockActionToggle('block')}
-                  className={`px-2 py-1 rounded border text-[11px] font-semibold ${blockMode && blockAction === 'block'
-                    ? 'bg-red-100 border-red-400 text-red-700'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                  className={`px-3 py-1.5 rounded-lg border-2 text-[11px] font-bold transition-all duration-200 ${blockMode && blockAction === 'block'
+                      ? 'bg-red-50 border-red-500 text-red-700 shadow-md shadow-red-200'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-300'
                     }`}
                 >
-                  Bloquear
+                  🔒 Bloquear
                 </button>
                 <button
                   type="button"
                   onClick={() => handleBlockActionToggle('unlock')}
-                  className={`px-2 py-1 rounded border text-[11px] font-semibold ${blockMode && blockAction === 'unlock'
-                    ? 'bg-green-100 border-green-400 text-green-700'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                  className={`px-3 py-1.5 rounded-lg border-2 text-[11px] font-bold transition-all duration-200 ${blockMode && blockAction === 'unlock'
+                      ? 'bg-green-50 border-green-500 text-green-700 shadow-md shadow-green-200'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-green-50 hover:border-green-300'
                     }`}
                 >
-                  Desbloquear
+                  🔓 Desbloquear
                 </button>
               </div>
               {searchAllSeatsLoading && (
@@ -1249,6 +1249,8 @@ const Boleteria = () => {
                     allowSearchSeatSelection={searchAllSeats}
                     allowBlockedSeatSelection={blockAction === 'unlock'}
                     disableSeatClickThrottle={blockMode}
+                    blockMode={blockMode}
+                    blockAction={blockAction}
                     modoVenta={true}
                     showPrices={true}
                     showZones={true}
