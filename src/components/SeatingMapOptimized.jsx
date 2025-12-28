@@ -522,7 +522,8 @@ const SeatingMapOptimized = ({
                                 null,
                                 isSelected,
                                 selectedSeatIds,
-                                lockedSeats
+                                lockedSeats,
+                                seatStates  // Pass seatStates for real-time updates
                             );
                             const border = getBorderColor(seat, isSelected);
 
