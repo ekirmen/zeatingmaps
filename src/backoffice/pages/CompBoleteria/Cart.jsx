@@ -321,7 +321,7 @@ const Cart = ({
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="font-medium text-sm flex items-center gap-2">
-                              <span className="text-blue-600">ðŸ“</span>
+                              <span className="text-blue-600"></span>
                               <span>{item.zona}</span>
                               <span className="text-gray-400">|</span>
                               <span className="font-bold text-green-600">${formatCurrency(item.precio)}</span>
@@ -333,7 +333,7 @@ const Cart = ({
                               </div>
                             )}
                             <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                              <span>ðŸ“Š</span>
+                              <span></span>
                               <span>Cantidad: {item.cantidad}</span>
                             </div>
                             <div className="text-xs text-gray-400 mt-1">
@@ -351,8 +351,8 @@ const Cart = ({
                                         <span className="font-medium">{mesaName} - {seatName}</span>
                                         {(seat.locator || seat.buyerName || seat.buyerEmail) && (
                                           <span className="text-[11px] text-gray-500">
-                                            {seat.locator && <span className="mr-1">ðŸ”– {seat.locator}</span>}
-                                            {seat.buyerName && <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>}
+                                            {seat.locator && <span className="mr-1"></span>}
+                                            {seat.buyerName && <span className="mr-1"></span>}
                                             {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
                                           </span>
                                         )}
@@ -361,12 +361,12 @@ const Cart = ({
                                   } else {
                                     return (
                                       <div key={seat._id} className="text-xs flex items-center gap-1">
-                                        <span className="text-green-600">ðŸŽ«</span>
+                                        <span className="text-green-600"></span>
                                         <span className="font-medium">{seatName}</span>
                                         {(seat.locator || seat.buyerName || seat.buyerEmail) && (
                                           <span className="text-[11px] text-gray-500">
-                                            {seat.locator && <span className="mr-1">ðŸ”– {seat.locator}</span>}
-                                            {seat.buyerName && <span className="mr-1">ðŸ‘¤ {seat.buyerName}</span>}
+                                            {seat.locator && <span className="mr-1"></span>}
+                                            {seat.buyerName && <span className="mr-1"></span>}
                                             {seat.buyerEmail && <span className="text-gray-400">({seat.buyerEmail})</span>}
                                           </span>
                                         )}
@@ -377,7 +377,7 @@ const Cart = ({
                               ) : (
                                 // Mostrar resumen si hay más de 5 asientos
                                 <div className="text-xs flex items-center gap-1">
-                                  <span className="text-green-600">ðŸŽ«</span>
+                                  <span className="text-green-600"></span>
                                   <span className="font-medium">
                                     {item.asientos.slice(0, 3).map(seat => {
                                       const seatName = seat.nombre || seat.sillaId || 'Asiento';
@@ -425,7 +425,7 @@ const Cart = ({
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-2">
-                <span>ðŸ›’</span>
+                <span></span>
                 <span>Subtotal:</span>
               </span>
               <span className="font-medium">${subtotal.toFixed(2)}</span>
@@ -433,7 +433,7 @@ const Cart = ({
             {selectedAffiliate && (
               <div className="flex justify-between text-sm text-gray-600">
                 <span className="flex items-center gap-2">
-                  <span>ðŸ’¸</span>
+                  <span></span>
                   <span>Comisión ({selectedAffiliate.percentage}%):</span>
                 </span>
                 <span className="text-red-600">-${(subtotal * (selectedAffiliate.percentage / 100)).toFixed(2)}</span>
@@ -441,7 +441,7 @@ const Cart = ({
             )}
             <div className="flex justify-between font-semibold border-t pt-3 text-lg">
               <span className="flex items-center gap-2">
-                <span>ðŸ’°</span>
+                <span></span>
                 <span>Total:</span>
               </span>
               <span className="text-green-600">${total.toFixed(2)}</span>
@@ -454,7 +454,7 @@ const Cart = ({
             className="mt-4 h-12 text-base font-semibold"
             onClick={selectedClient ? handlePaymentClick : onShowUserSearch}
             disabled={selectedClient ? !handlePaymentClick : false}
-            icon={selectedClient ? <span>ðŸ’ó</span> : <span>ðŸ‘¤</span>}
+            icon={selectedClient ? <span></span> : <span></span>}
           >
             {selectedClient ? 'Procesar Pago' : 'Seleccionar Cliente'}
           </Button>
