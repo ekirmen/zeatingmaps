@@ -1350,7 +1350,8 @@ const Boleteria = () => {
         onCancel={() => setIsFunctionsModalVisible(false)}
         funciones={funciones || []}
         onFunctionSelect={(funcion) => {
-          handleFunctionSelect(funcion.id || funcion._id);
+          // Preserve cart to support multi-function selection
+          handleFunctionSelect(funcion.id || funcion._id, { preserveCart: true });
           setIsFunctionsModalVisible(false);
         }}
       />
