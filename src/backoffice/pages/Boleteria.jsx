@@ -1125,18 +1125,6 @@ const Boleteria = () => {
                 </button>
               </div>
 
-              {/* Botones secundarios */}
-              <div className="flex items-center space-x-1">
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="Cliente">
-                  <i className="text-sm">Ã°Å¸â€˜Â¤</i>
-                </button>
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="FidelizaciÂón">
-                  <i className="text-sm">Ã°Å¸â€™Âó</i>
-                </button>
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="InformaciÂón">
-                  <i className="text-sm">â€žÂ¹Ã¯Â¸Â</i>
-                </button>
-              </div>
             </div>
           </div>
 
