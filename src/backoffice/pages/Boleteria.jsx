@@ -1157,8 +1157,8 @@ const Boleteria = () => {
                   type="button"
                   onClick={() => handleBlockActionToggle('block')}
                   className={`px-3 py-1.5 rounded-lg border-2 text-[11px] font-bold transition-all duration-200 ${blockMode && blockAction === 'block'
-                      ? 'bg-red-50 border-red-500 text-red-700 shadow-md shadow-red-200'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-300'
+                    ? 'bg-red-50 border-red-500 text-red-700 shadow-md shadow-red-200'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-300'
                     }`}
                 >
                   🔒 Bloquear
@@ -1167,8 +1167,8 @@ const Boleteria = () => {
                   type="button"
                   onClick={() => handleBlockActionToggle('unlock')}
                   className={`px-3 py-1.5 rounded-lg border-2 text-[11px] font-bold transition-all duration-200 ${blockMode && blockAction === 'unlock'
-                      ? 'bg-green-50 border-green-500 text-green-700 shadow-md shadow-green-200'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-green-50 hover:border-green-300'
+                    ? 'bg-green-50 border-green-500 text-green-700 shadow-md shadow-green-200'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-green-50 hover:border-green-300'
                     }`}
                 >
                   🔓 Desbloquear
@@ -1295,7 +1295,7 @@ const Boleteria = () => {
                 onClick={() => setCartOpen(true)}
                 className="shadow-lg"
               >
-                Ã°Å¸â€úâ€™ {carrito.length}
+                🛒 {carrito.length}
               </Button>
             </div>
           )}
