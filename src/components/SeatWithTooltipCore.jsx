@@ -1,9 +1,23 @@
 import React from 'react';
 import { Circle, Label, Tag, Text } from 'react-konva';
 
-export default function SeatWithTooltip({ seat = {}, x = 0, y = 0, onClick, fill: propFill, status }) {
+export default function SeatWithTooltip({ seat = {}, x = 0, y = 0, onClick, fill: propFill, status, blockMode = false, blockAction = null }) {
   const fill = propFill || seat.color || (seat.estado === 'reservado' ? '#666' : 'lightgreen');
   const label = seat.nombre || seat.numero || '';
+
+  // Determine stroke color and width based on block mode
+  let strokeColor = 'black';
+  let strokeWidth = 1;
+
+  if (blockMode) {
+    if (blockAction === 'block') {
+      strokeColor = '#ef4444'; // Red for block mode
+      strokeWidth = 3;
+    } else if (blockAction === 'unlock') {
+      strokeColor = '#22c55e'; // Green for unlock mode
+      strokeWidth = 3;
+    }
+  }
 
   return (
     <React.Fragment>
@@ -12,8 +26,8 @@ export default function SeatWithTooltip({ seat = {}, x = 0, y = 0, onClick, fill
         y={y}
         radius={12}
         fill={fill}
-        stroke="black"
-        strokeWidth={1}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
         onClick={(e) => {
           e.cancelBubble = true; // Stop propagation
           onClick && onClick(seat);

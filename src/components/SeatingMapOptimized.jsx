@@ -24,7 +24,7 @@ const URLImage = ({ src, x, y, width, height, opacity, ...props }) => {
     );
 };
 
-const SeatShape = memo(({ seat, color, borderColor, size, isSelected, onClick }) => {
+const SeatShape = memo(({ seat, color, borderColor, size, isSelected, onClick, blockMode = false, blockAction = null }) => {
     // Determine shape based on seat type or default to Circle
     const x = seat.posicion?.x ?? seat.x ?? 0;
     const y = seat.posicion?.y ?? seat.y ?? 0;
@@ -32,9 +32,20 @@ const SeatShape = memo(({ seat, color, borderColor, size, isSelected, onClick })
     const width = seat.ancho ?? size ?? 20;
     const height = seat.alto ?? size ?? 20;
 
-    // Visual feedback for selection
-    const strokeWidth = isSelected ? 3 : 1;
-    const stroke = isSelected ? '#1890ff' : (borderColor || '#ccc');
+    // Visual feedback for selection and block mode
+    let strokeWidth = isSelected ? 3 : 1;
+    let stroke = isSelected ? '#1890ff' : (borderColor || '#ccc');
+
+    // Override stroke for block mode
+    if (blockMode) {
+        if (blockAction === 'block') {
+            stroke = '#ef4444'; // Red for block mode
+            strokeWidth = 3;
+        } else if (blockAction === 'unlock') {
+            stroke = '#22c55e'; // Green for unlock mode
+            strokeWidth = 3;
+        }
+    }
 
     // Label settings
     const fontSize = 10;
@@ -131,6 +142,8 @@ const SeatingMapOptimized = ({
     modoVenta = false,   // True = Store, False = Backoffice
     loading = false,
     showLegend = false,
+    blockMode = false,   // Block mode flag
+    blockAction = null,  // 'block' or 'unlock'
     // Adapter props to handle legacy calls/unused props securely
     ...restProps
 }) => {
@@ -521,6 +534,8 @@ const SeatingMapOptimized = ({
                                     borderColor={border}
                                     isSelected={isSelected}
                                     onClick={handleSeatInteraction}
+                                    blockMode={blockMode}
+                                    blockAction={blockAction}
                                 />
                             );
                         })}

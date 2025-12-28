@@ -6,7 +6,9 @@ export default function SeatLayer({
   seats = [],
   onSeatClick,
   seatStates,
-  getSeatColor
+  getSeatColor,
+  blockMode = false,
+  blockAction = null
 }) {
   return (
     <Layer>
@@ -52,6 +54,8 @@ export default function SeatLayer({
             onClick={onSeatClick}
             fill={color}
             status={state}
+            blockMode={blockMode}
+            blockAction={blockAction}
           />
         );
       })}
