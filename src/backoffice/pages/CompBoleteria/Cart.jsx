@@ -328,7 +328,7 @@ const Cart = ({
                             </div>
                             {item.tipoPrecio === 'descuento' && (
                               <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                                <span>ðŸŽ‰</span>
+                                <span></span>
                                 <span>Descuento: {item.descuentoNombre}</span>
                               </div>
                             )}
@@ -347,7 +347,7 @@ const Cart = ({
                                   if (mesaName) {
                                     return (
                                       <div key={seat._id} className="text-xs flex items-center gap-1">
-                                        <span className="text-blue-600">ðŸŽ«</span>
+                                        <span className="text-blue-600"></span>
                                         <span className="font-medium">{mesaName} - {seatName}</span>
                                         {(seat.locator || seat.buyerName || seat.buyerEmail) && (
                                           <span className="text-[11px] text-gray-500">
