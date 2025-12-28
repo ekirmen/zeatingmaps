@@ -1177,6 +1177,36 @@ const Boleteria = () => {
               {searchAllSeatsLoading && (
                 <span className="text-[11px] text-blue-600">Buscando asientos vendidos/reservados...</span>
               )}
+
+              {/* Visual Legend for Block/Unblock Modes */}
+              {blockMode && (
+                <div className="mt-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <div className="text-[10px] font-semibold text-gray-700 mb-1">
+                    {blockAction === 'block' ? '🔒 Modo Bloquear:' : '🔓 Modo Desbloquear:'}
+                  </div>
+                  {blockAction === 'block' ? (
+                    <div className="text-[10px] text-gray-600 space-y-0.5">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-red-500"></div>
+                        <span>Asientos disponibles (con borde rojo)</span>
+                      </div>
+                      <div className="text-gray-500 italic">
+                        → Selecciona asientos para bloquearlos permanentemente
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-gray-600 space-y-0.5">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-green-500"></div>
+                        <span>Asientos bloqueados (con borde verde)</span>
+                      </div>
+                      <div className="text-gray-500 italic">
+                        → Solo puedes seleccionar asientos bloqueados (no vendidos)
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex space-x-2 overflow-x-auto">
               {priceOptions && priceOptions.length > 0 ? (
