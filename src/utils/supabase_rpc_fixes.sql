@@ -1,10 +1,10 @@
 -- ==========================================
--- 1. Recreate Missing View: seat_status_view
+-- 1. Recrear Vista: seat_status_view
 -- ==========================================
--- This view is required by lock_seat_atomically to check status efficiently
+-- Esta vista es requerida por lock_seat_atomically para verificar el estado de forma eficiente
 DROP VIEW IF EXISTS seat_status_view;
 
--- Remove legacy trigger that tries to write to the view
+-- Eliminar trigger legado que intentaba escribir en la vista
 DROP TRIGGER IF EXISTS update_seat_status_view_trigger ON seat_locks;
 DROP FUNCTION IF EXISTS update_seat_status_view();
 
@@ -17,15 +17,17 @@ SELECT
     user_id,
     locked_at,
     expires_at,
-    lock_type
+    lock_type,
+    precio,
+    metadata
 FROM seat_locks
 WHERE (expires_at > NOW() OR status IN ('vendido', 'pagado', 'reservado', 'bloqueado'));
 
 -- ==========================================
--- 2. Fix RPC: check_seats_payment_status
+-- 2. Corregir RPC: check_seats_payment_status
 -- ==========================================
--- Fixes "query has no destination for result data" error
--- Drop variants to avoid "Could not choose the best candidate function"
+-- Corrige el error "query has no destination for result data"
+-- Eliminar variantes antiguas para evitar ambigüedades
 DROP FUNCTION IF EXISTS check_seats_payment_status(text[], integer, text, text);
 DROP FUNCTION IF EXISTS check_seats_payment_status(text[], integer, text, uuid);
 DROP FUNCTION IF EXISTS check_seats_payment_status(text[], integer, uuid, uuid);
@@ -43,11 +45,12 @@ RETURNS TABLE (
     source text
 ) 
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 BEGIN
     RETURN QUERY
     WITH payment_status AS (
-        -- Check payment_transactions (Highest priority)
+        -- Verificar transacciones de pago (Prioridad máxima)
         SELECT 
             elem->>'id' as s_id,
             true as paid,
@@ -55,11 +58,11 @@ BEGIN
             'payment' as src
         FROM payment_transactions pt,
         jsonb_array_elements(pt.seats) as elem
-        WHERE pt.status = 'completed' -- Explicitly qualify status column
+        WHERE pt.status = 'completed'
         AND (elem->>'id' = ANY(p_seat_ids) OR elem->>'_id' = ANY(p_seat_ids))
     ),
     lock_status AS (
-        -- Check seat_locks
+        -- Verificar bloqueos de asientos
         SELECT 
             sl.seat_id as s_id,
             CASE WHEN sl.status IN ('vendido', 'pagado') THEN true ELSE false END as paid,
@@ -82,10 +85,9 @@ END;
 $$;
 
 -- ==========================================
--- 3. Fix RPC: lock_seat_atomically
+-- 3. Corregir RPC: lock_seat_atomically
 -- ==========================================
--- Replaces usage of missing 'seat_status_view' relation error if any, 
--- and ensures correct atomic locking logic.
+-- Añade soporte para precio y metadatos, y asegura lógica atómica.
 DROP FUNCTION IF EXISTS lock_seat_atomically(text, integer, text, text);
 DROP FUNCTION IF EXISTS lock_seat_atomically(text, integer, text, text, text);
 
@@ -94,7 +96,9 @@ CREATE OR REPLACE FUNCTION lock_seat_atomically(
     p_funcion_id integer,
     p_session_id text,
     p_status text DEFAULT 'seleccionado',
-    p_tenant_id text DEFAULT NULL
+    p_tenant_id text DEFAULT NULL,
+    p_precio numeric DEFAULT NULL,
+    p_metadata jsonb DEFAULT NULL
 )
 RETURNS TABLE (
     id uuid,
@@ -103,34 +107,38 @@ RETURNS TABLE (
     session_id text,
     status text,
     locked_at timestamptz,
-    expires_at timestamptz
+    expires_at timestamptz,
+    precio numeric,
+    metadata jsonb
 )
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 DECLARE
     v_existing_lock record;
     v_expires_at timestamptz;
     v_result record;
 BEGIN
-    -- Set expiration (e.g., 10 minutes from now)
+    -- Establecer expiración (10 minutos por defecto)
     v_expires_at := NOW() + interval '10 minutes';
 
-    -- Check for existing active lock
+    -- Verificar bloqueo activo existente
     SELECT * INTO v_existing_lock 
     FROM seat_locks sl
     WHERE sl.seat_id = p_seat_id 
     AND sl.funcion_id = p_funcion_id
     AND (sl.expires_at > NOW() OR sl.status IN ('vendido', 'pagado', 'reservado', 'bloqueado'))
-    FOR UPDATE; -- Row-level lock to prevent race conditions
+    FOR UPDATE; -- Bloqueo a nivel de fila para prevenir condiciones de carrera
 
     IF v_existing_lock.id IS NOT NULL THEN
-        -- If locked by same session, extend it
+        -- Si está bloqueado por la misma sesión, extender el bloqueo
         IF v_existing_lock.session_id::text = p_session_id AND v_existing_lock.status NOT IN ('vendido', 'pagado', 'reservado', 'bloqueado') THEN
-             -- Update and return the updated row
              UPDATE seat_locks
              SET expires_at = v_expires_at,
                  locked_at = NOW(),
-                 tenant_id = COALESCE(p_tenant_id::uuid, tenant_id)
+                 tenant_id = COALESCE(p_tenant_id::uuid, tenant_id),
+                 precio = COALESCE(p_precio, precio),
+                 metadata = COALESCE(p_metadata, metadata)
              WHERE id = v_existing_lock.id
              RETURNING 
                 seat_locks.id, 
@@ -139,35 +147,39 @@ BEGIN
                 seat_locks.session_id::text, 
                 seat_locks.status, 
                 seat_locks.locked_at, 
-                seat_locks.expires_at
+                seat_locks.expires_at,
+                seat_locks.precio,
+                seat_locks.metadata
              INTO v_result;
              
-             RETURN QUERY SELECT v_result.id, v_result.seat_id, v_result.funcion_id, v_result.session_id, v_result.status, v_result.locked_at, v_result.expires_at;
+             RETURN QUERY SELECT v_result.id, v_result.seat_id, v_result.funcion_id, v_result.session_id, v_result.status, v_result.locked_at, v_result.expires_at, v_result.precio, v_result.metadata;
              RETURN;
         ELSE
-             -- Locked by someone else or permanent status
+             -- Bloqueado por otro usuario o estado permanente
              RAISE EXCEPTION 'seat_already_locked' USING HINT = 'Asiento ya ocupado';
         END IF;
     END IF;
 
-    -- Insert new lock
+    -- Insertar nuevo bloqueo
     RETURN QUERY
-    INSERT INTO seat_locks (seat_id, funcion_id, session_id, status, locked_at, expires_at, lock_type, tenant_id)
-    VALUES (p_seat_id, p_funcion_id, p_session_id::uuid, p_status, NOW(), v_expires_at, 'seat', p_tenant_id::uuid)
+    INSERT INTO seat_locks (seat_id, funcion_id, session_id, status, locked_at, expires_at, lock_type, tenant_id, precio, metadata)
+    VALUES (p_seat_id, p_funcion_id, p_session_id::uuid, p_status, NOW(), v_expires_at, 'seat', p_tenant_id::uuid, p_precio, p_metadata)
     ON CONFLICT (seat_id, funcion_id, tenant_id) 
     DO UPDATE SET 
         session_id = EXCLUDED.session_id,
         status = EXCLUDED.status,
         locked_at = EXCLUDED.locked_at,
         expires_at = EXCLUDED.expires_at,
-        lock_type = EXCLUDED.lock_type
+        lock_type = EXCLUDED.lock_type,
+        precio = COALESCE(EXCLUDED.precio, seat_locks.precio),
+        metadata = COALESCE(EXCLUDED.metadata, seat_locks.metadata)
     WHERE seat_locks.session_id::text = p_session_id OR seat_locks.expires_at < NOW()
-    RETURNING seat_locks.id, seat_locks.seat_id, seat_locks.funcion_id, seat_locks.session_id::text, seat_locks.status, seat_locks.locked_at, seat_locks.expires_at;
+    RETURNING seat_locks.id, seat_locks.seat_id, seat_locks.funcion_id, seat_locks.session_id::text, seat_locks.status, seat_locks.locked_at, seat_locks.expires_at, seat_locks.precio, seat_locks.metadata;
 END;
 $$;
 
 -- ==========================================
--- 4. Fix RPC: check_seat_availability
+-- 4. Corregir RPC: check_seat_availability
 -- ==========================================
 DROP FUNCTION IF EXISTS check_seat_availability(text, integer, text);
 
@@ -178,6 +190,7 @@ CREATE OR REPLACE FUNCTION check_seat_availability(
 )
 RETURNS boolean
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 DECLARE
     v_count integer;
@@ -190,37 +203,22 @@ BEGIN
         sl.expires_at > NOW() 
         OR sl.status IN ('vendido', 'pagado', 'reservado', 'bloqueado')
     )
-    -- CAST p_session_id to UUID for comparison
     AND (p_session_id IS NULL OR sl.session_id != p_session_id::uuid); 
 
     RETURN v_count = 0;
 END;
 $$;
 
--- Enable RLS on seat_locks table to ensure proper access control
+-- Habilitar RLS en la tabla seat_locks
 ALTER TABLE seat_locks ENABLE ROW LEVEL SECURITY;
 
--- Allow public read access to seat_locks so all users can see which seats are locked/sold
--- This is critical for Realtime updates to work across different clients
+-- Permitir acceso de lectura público a seat_locks para actualizaciones en tiempo real
 DROP POLICY IF EXISTS "Enable read access for all users" ON seat_locks;
 CREATE POLICY "Enable read access for all users" ON seat_locks FOR SELECT USING (true);
 
--- Allow authenticated (and anon) users to insert/update their own locks
--- Note: The RPC lock_seat_atomically handles the logic, but RLS must allow the underlying operations if not using security definer
--- However, since we want to rely on the RPC (which should ideally be SECURITY DEFINER, but let's keep it simple for now),
--- we will allow detailed access. But purely for Realtime syncing, SELECT is the most important.
-
--- For now, we rely on the RPC (which runs with owner privileges or default) 
--- But IF the RPC is not SECURITY DEFINER, the user needs permission.
--- Let's make the RPC SECURITY DEFINER to avoid RLS issues for the write operations.
-ALTER FUNCTION lock_seat_atomically(text, integer, text, text, text) SECURITY DEFINER;
-ALTER FUNCTION check_seat_availability(text, integer, text) SECURITY DEFINER;
-ALTER FUNCTION check_seats_payment_status(text[], integer, text, text) SECURITY DEFINER;
-
 -- ==========================================
--- 5. Enable Realtime Replication
+-- 5. Habilitar Replicación en Tiempo Real
 -- ==========================================
--- Ensure table is part of the realtime publication
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'seat_locks') THEN

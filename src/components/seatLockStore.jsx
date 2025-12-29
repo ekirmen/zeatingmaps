@@ -1257,7 +1257,7 @@ export const useSeatLockStore = create((set, get) => ({
   },
 
   // Bloquear asiento individual usando servicio atómico
-  lockSeat: async (seatId, status = 'seleccionado', overrideFuncionId = null) => {
+  lockSeat: async (seatId, status = 'seleccionado', overrideFuncionId = null, options = {}) => {
     try {
       const topic = get().channel?.topic;
       const rawSessionId = await getSessionId();
@@ -1292,11 +1292,13 @@ export const useSeatLockStore = create((set, get) => ({
       } = validation;
 
       // Usar servicio atómico para el bloqueo (esperar respuesta del servidor)
+      const { precio = null, metadata = null } = options;
       const result = await atomicSeatLockService.lockSeatAtomically(
         normalizedSeatId,
         normalizedFuncionId,
         normalizedSessionId,
-        status
+        status,
+        { precio, metadata }
       );
 
       if (!result.success) {
@@ -1322,6 +1324,8 @@ export const useSeatLockStore = create((set, get) => ({
             lock_type: 'seat',
             locator: result.lockData.locator,
             id: result.lockData.id,
+            precio: result.lockData.precio,
+            metadata: result.lockData.metadata
           },
         ];
 

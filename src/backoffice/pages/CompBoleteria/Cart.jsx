@@ -21,6 +21,7 @@ const Cart = ({
   selectedClient,
   selectedAffiliate,
   onShowUserSearch,
+  onRemoveSeat,
   children,
   blockMode = false,
   onApplyLockActions
@@ -116,22 +117,34 @@ const Cart = ({
     }, {});
   }, [safeCarrito]);
 
-  const handleRemoveSeat = useCallback((groupKey) => {
+  const handleRemoveSeat = useCallback(async (groupKey, fid) => {
     // groupKey es una combinación de zona, precio y tipo
     const [zona, precio, tipoPrecio, descuentoNombre] = groupKey.split('|');
+    const numericPrecio = parseFloat(precio);
 
-    setCarrito(
-      safeCarrito.filter(
-        (item) => !(
-          item.zona === zona &&
-          item.precio === parseFloat(precio) &&
-          item.tipoPrecio === tipoPrecio &&
-          item.descuentoNombre === descuentoNombre
-        )
+    const itemsToRemove = safeCarrito.filter(
+      (item) => (
+        (item.funcionId || 'default') === fid &&
+        item.zona === zona &&
+        item.precio === numericPrecio &&
+        item.tipoPrecio === tipoPrecio &&
+        item.descuentoNombre === descuentoNombre
       )
     );
-    message.success('Asientos eliminados del carrito');
-  }, [safeCarrito, setCarrito]);
+
+    if (onRemoveSeat) {
+      // Si hay un callback externo (para liberar en BD), lo usamos
+      await onRemoveSeat(itemsToRemove);
+    } else {
+      // Si no, simplemente filtramos localmente
+      setCarrito(
+        safeCarrito.filter(
+          (item) => !itemsToRemove.some(r => (item._id || item.sillaId) === (r._id || r.sillaId))
+        )
+      );
+      message.success('Asientos eliminados del carrito');
+    }
+  }, [safeCarrito, setCarrito, onRemoveSeat]);
 
   const clearCart = useCallback(() => {
     setCarrito([]);
@@ -433,7 +446,7 @@ const Cart = ({
                             </div>
                           </div>
                           <button
-                            onClick={() => handleRemoveSeat(groupKey)}
+                            onClick={() => handleRemoveSeat(groupKey, fid)}
                             className="text-red-500 hover:text-red-700 text-xs"
                           >
                             —

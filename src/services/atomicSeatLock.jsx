@@ -43,12 +43,16 @@ class AtomicSeatLockService {
       const locator = this.generateTempLocator();
 
       // Preparar datos para la función de base de datos
+      const { precio = null, metadata = null } = options;
+
       const lockData = {
         p_seat_id: normalizedSeatId,
         p_funcion_id: normalizedFuncionId,
         p_session_id: normalizedSessionId,
         p_status: status,
-        p_tenant_id: tenantId // Agregar tenant_id
+        p_tenant_id: tenantId, // Agregar tenant_id
+        p_precio: precio ? Number(precio) : null,
+        p_metadata: metadata
       };
 
       const activePermanentLock = await this.getActivePermanentLock(normalizedSeatId, normalizedFuncionId);

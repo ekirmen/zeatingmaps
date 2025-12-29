@@ -565,13 +565,46 @@ const Boleteria = () => {
       setBlockMode(true);
       setBlockAction(action);
       message.info(
-        action === 'block'
-          ? 'Modo BLOQUEAR activado. Selecciona asientos disponibles para bloquearlos.'
-          : 'Modo DESBLOQUEAR activado. Selecciona asientos bloqueados para liberarlos.'
       );
     },
     [blockAction, blockMode, carrito, setCarrito]
   );
+
+  /**
+   * Maneja la eliminación de un grupo de asientos del carrito,
+   * asegurando que se liberen los bloqueos en la base de datos.
+   */
+  const handleRemoveSeatGroup = useCallback(async (seatsToRemove) => {
+    if (!Array.isArray(seatsToRemove) || seatsToRemove.length === 0) return;
+
+    const funcionId = selectedFuncion?.id;
+    if (!funcionId) return;
+
+    try {
+      // 1. Desbloquear cada asiento en la base de datos
+      await Promise.all(seatsToRemove.map(seat => {
+        const sillaId = seat.sillaId || seat._id || seat.id;
+        return unlockSeat(sillaId, funcionId, {
+          allowOverrideSession: true,
+          allowForceUnlock: true
+        });
+      }));
+
+      // 2. Actualizar el carrito local
+      setCarrito(prev => {
+        const safePrev = Array.isArray(prev) ? prev : [];
+        const seatIdsToRemove = seatsToRemove.map(s => s.sillaId || s._id || s.id);
+        return safePrev.filter(item =>
+          !seatIdsToRemove.includes(item.sillaId || item._id || item.id)
+        );
+      });
+
+      message.success(`${seatsToRemove.length} asiento(s) liberado(s) correctamente`);
+    } catch (error) {
+      logger.error('❌ [Boleteria] Error al liberar asientos:', error);
+      message.error('Error al liberar los asientos en la base de datos');
+    }
+  }, [selectedFuncion?.id, unlockSeat, setCarrito, message, logger]);
 
   const toggleSeat = useCallback(
     (seatData) => {
@@ -619,8 +652,7 @@ const Boleteria = () => {
         .from('seat_locks')
         .select('seat_id, zona_id, zona_nombre, precio, metadata, status')
         .eq('session_id', targetSessionId)
-        .eq('funcion_id', funcionId)
-        .in('status', ['seleccionado', 'locked', 'reservado', 'lock']);
+        .eq('funcion_id', funcionId);
 
       if (seatsError || !allSeats || allSeats.length === 0) {
         throw new Error('No se encontraron asientos activos en esta sesión para transferir');
@@ -660,15 +692,17 @@ const Boleteria = () => {
         throw new Error('Error al transferir asientos: ' + updateError.message);
       }
 
-      // 6. Agregar asientos al carrito local
+      // 6. Agregar asientos al carrito local preservando precios y metadatos
       const seatsForCart = allSeats.map(s => ({
         sillaId: s.seat_id,
         _id: s.seat_id,
         zonaId: s.zona_id,
         zonaNombre: s.zona_nombre,
-        precio: s.precio || 0,
+        precio: Number(s.precio) || 0,
         funcionId: selectedFuncion.id,
-        metadata: s.metadata || {}
+        metadata: s.metadata || {},
+        tipoPrecio: s.metadata?.tipoPrecio || s.metadata?.tipoEntrada || 'reclamado',
+        descuentoNombre: s.metadata?.descuentoNombre || ''
       }));
 
       setCarrito(prev => {
@@ -1139,9 +1173,19 @@ const Boleteria = () => {
         });
         logger.log('🗑️ [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
       } else {
-        // Seleccionar: bloquear en BD primero, luego agregar al carrito
+        // Seleccionar: bloquear en BD primero con precio y metadatos, luego agregar al carrito
         try {
-          const lockResult = await lockSeat(sillaId, 'seleccionado', funcionId);
+          // Incluimos precio e información de promoción en el bloqueo
+          const lockResult = await lockSeat(sillaId, 'seleccionado', funcionId, {
+            precio: precio,
+            metadata: {
+              tipoPrecio,
+              descuentoNombre,
+              entradaId: selectedEntradaId,
+              originalPrice: precio,
+              timestamp: Date.now()
+            }
+          });
           if (lockResult) {
             await toggleSeat(cartItem);
             logger.log('œ… [Boleteria] Asiento seleccionado y bloqueado:', sillaId);
@@ -1274,6 +1318,7 @@ const Boleteria = () => {
   const cartProps = useMemo(() => ({
     carrito,
     setCarrito,
+    onRemoveSeat: handleRemoveSeatGroup,
     selectedClient,
     onPaymentClick: () => setIsPaymentModalVisible(true),
     onShowPaymentModal: () => setIsPaymentModalVisible(true),
