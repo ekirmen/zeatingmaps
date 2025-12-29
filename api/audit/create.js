@@ -2,15 +2,30 @@ import { createClient } from '@supabase/supabase-js';
 import { TIMEOUTS, withTimeout } from '../../src/config/timeouts.js';
 
 // Inicializar cliente con Service Role Key para bypass RLS
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.REACT_SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || process.env.react_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl =
+    process.env.VITE_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.REACT_APP_SUPABASE_URL ||
+    process.env.REACT_SUPABASE_URL ||
+    process.env.react_SUPABASE_URL ||
+    process.env.SUPABASE_URL;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    }
-});
+const supabaseServiceKey =
+    process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.REACT_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.react_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+    ? createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    })
+    : null;
 
 export default async function handler(req, res) {
     // Configurar CORS
@@ -26,8 +41,14 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    if (!supabaseAdmin) {
+        console.error('[API AUDIT] Supabase client not initialized. Missing URL or Service Key.');
+        return res.status(500).json({ error: 'Server configuration error' });
+    }
+
     try {
-        const { logs, ...singleLog } = req.body;
+        const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const { logs, ...singleLog } = payload || {};
 
         // Permitir enviar 'logs' (array) o un solo log in the body
         const dataToInsert = Array.isArray(logs) ? logs : [singleLog];

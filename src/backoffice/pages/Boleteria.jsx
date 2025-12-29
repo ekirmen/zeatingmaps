@@ -869,11 +869,12 @@ const Boleteria = () => {
         return;
       }
 
-      const seatEstado = silla.estado || silla.status || 'disponible';
-
-      // NUEVO: Detectar si el asiento está seleccionado por otro usuario
       const seatId = silla._id || silla.id;
-      const seatState = seatStates?.get(seatId);
+      const rtState = seatStates?.get(seatId);
+
+      // El estado real-time manda sobre el estado estático del mapa
+      const seatEstado = rtState || silla.estado || silla.status || 'disponible';
+      const seatState = rtState;
 
       // Detectar click en asiento seleccionado por otro (azul)
       if (seatState === 'seleccionado_por_otro' && !blockMode) {
@@ -943,7 +944,7 @@ const Boleteria = () => {
           return;
         }
 
-        const blockedStates = ['bloqueado', 'locked', 'lock'];
+        const blockedStates = ['bloqueado', 'locked', 'lock', 'seleccionado_por_otro', 'reservado'];
         const lockAction = blockAction === 'block' ? 'block' : 'unlock';
 
         if (lockAction === 'block' && blockedStates.includes(seatEstado)) {

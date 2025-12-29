@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Usa la Service Role Key para poder saltar RLS en operaciones administrativas
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.REACT_SUPABASE_URL || process.env.react_SUPABASE_URL;
 const supabaseKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.react_SUPABASE_SERVICE_ROLE_KEY;
 
 const getSupabaseAdmin = () => {

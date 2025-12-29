@@ -6,6 +6,8 @@ const SUPABASE_URL =
   process.env.SUPABASE_URL ||
   process.env.REACT_APP_SUPABASE_URL ||
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.REACT_SUPABASE_URL ||
+  process.env.react_SUPABASE_URL ||
   process.env.react_NEXT_PUBLIC_SUPABASE_URL;
 
 const SERVICE_ROLE_KEY =
