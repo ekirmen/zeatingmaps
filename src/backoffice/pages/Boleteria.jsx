@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Drawer, Button, message } from '../../utils/antdComponents';
-import { ChevronLeft, Menu } from 'lucide-react';
+import { ChevronLeft, Menu, X } from 'lucide-react';
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import LazySeatingMap from '../../components/LazySeatingMap';

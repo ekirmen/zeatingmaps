@@ -9,7 +9,8 @@ const SUPABASE_URL =
 const SERVICE_ROLE_KEY =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.REACT_SUPABASE_SERVICE_ROLE_KEY;
+    process.env.REACT_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.react_SUPABASE_SERVICE_ROLE_KEY;
 
 const supabaseAdmin =
     SUPABASE_URL && SERVICE_ROLE_KEY

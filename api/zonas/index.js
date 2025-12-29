@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || process.env.react_SUPABASE_SERVICE_ROLE_KEY;
 
 function getAdmin() {
   if (!supabaseUrl || !serviceKey) {
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('[zonas load] Error:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: error.message || 'Internal server error',
       timestamp: new Date().toISOString()
     });
