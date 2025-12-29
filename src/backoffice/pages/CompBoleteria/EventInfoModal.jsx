@@ -1,12 +1,11 @@
-```javascript
 import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Table, Card, Row, Col, Progress, Button, Tooltip } from '../../../utils/antdComponents';
-import { 
-  BookOutlined, 
-  DollarOutlined, 
-  TicketOutlined, 
-  GlobalOutlined, 
-  DownloadOutlined, 
+import {
+  BookOutlined,
+  DollarOutlined,
+  TicketOutlined,
+  GlobalOutlined,
+  DownloadOutlined,
   QuestionCircleOutlined,
   AppstoreOutlined,
   ShoppingOutlined,
@@ -33,82 +32,82 @@ ChartJS.register(ArcElement, ChartTooltip, Legend, CategoryScale, LinearScale, B
 
 // Estilos móviles inyectados
 const mobileStyles = `
-@media screen and(max - width: 640px) {
-    .event - status - map - wrapper {
-        display: flex!important;
-        flex - direction: column!important;
-        align - items: stretch!important;
+  @media screen and (max-width: 640px) {
+    .event-status-map-wrapper {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
     }
 
-    .event - status - map - wrapper.left - column {
-        order: 1!important;
-        height: auto!important;
-        width: 100 % !important;
-        overflow - y: auto!important;
-        flex - shrink: 0!important;
+    .event-status-map-wrapper .left-column {
+      order: 1 !important;
+      height: auto !important;
+      width: 100% !important;
+      overflow-y: auto !important;
+      flex-shrink: 0 !important;
     }
 
-    .event - status - map - wrapper.map - wrapper {
-        order: 2!important;
+    .event-status-map-wrapper .map-wrapper {
+      order: 2 !important;
     }
     
-    .ant - modal - body {
-        padding: 12px!important;
+    .ant-modal-body {
+      padding: 12px !important;
     }
-}
-
+  }
+  
   /* Legacy styles adaptation */
   .summary_box {
     padding: 20px;
-    border - radius: 8px;
+    border-radius: 8px;
     color: white;
     position: relative;
     overflow: hidden;
     height: 100px;
     display: flex;
-    flex - direction: column;
-    justify - content: center;
-}
-  .summary_box.sold { background: linear - gradient(135deg, #667eea 0 %, #764ba2 100 %); }
-  .summary_box.income { background: linear - gradient(135deg, #a8e063 0 %, #56ab2f 100 %); } /* Clase corregida para income */
-  .summary_box.tickets { background: linear - gradient(135deg, #ff9a9e 0 %, #fecfef 99 %, #fecfef 100 %); }
-  .summary_box.visits { background: linear - gradient(135deg, #fbc2eb 0 %, #a6c1ee 100 %); }
+    flex-direction: column;
+    justify-content: center;
+  }
+  .summary_box.sold { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+  .summary_box.income { background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%); }
+  .summary_box.tickets { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); }
+  .summary_box.visits { background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); }
   
-  .summary_box.title { font - size: 14px; opacity: 0.9; margin - bottom: 5px; }
-  .summary_box.value - text { font - size: 24px; font - weight: bold; }
-  .summary_box.icon - bg { position: absolute; right: -10px; bottom: -10px; font - size: 80px; opacity: 0.2; transform: rotate(-15deg); }
+  .summary_box .title { font-size: 14px; opacity: 0.9; margin-bottom: 5px; }
+  .summary_box .value-text { font-size: 24px; font-weight: bold; }
+  .summary_box .icon-bg { position: absolute; right: -10px; bottom: -10px; font-size: 80px; opacity: 0.2; transform: rotate(-15deg); }
 
-  .bar - grey { background - color: #f0f0f0; height: 8px; border - radius: 4px; overflow: hidden; width: 100 %; position: relative; }
-  .bar - grey.sold { background - color: #1890ff; height: 100 %; }
-  .bar - grey.completed { background - color: #52c41a; }
-
+  .bar-grey { background-color: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden; width: 100%; position: relative; }
+  .bar-grey .sold { background-color: #1890ff; height: 100%; }
+  .bar-grey .completed { background-color: #52c41a; }
+  
   /* Sticky tabs container simulation */
-  .sticky - tabs - container {
-    display: flex;
-    overflow - x: auto;
-    gap: 10px;
-    padding - bottom: 10px;
-    margin - bottom: 20px;
-    border - bottom: 1px solid #f0f0f0;
-}
-  .sticky - tab {
-    padding: 8px 16px;
-    border - radius: 20px;
-    background: #f5f5f5;
-    color: #666;
-    cursor: pointer;
-    white - space: nowrap;
-    font - size: 13px;
-    transition: all 0.3s;
-}
-  .sticky - tab.active {
-    background: #722ed1;
-    color: white;
-    font - weight: 500;
-}
-  .sticky - tab: hover: not(.active) {
-    background: #e6e6e6;
-}
+  .sticky-tabs-container {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #f0f0f0;
+  }
+  .sticky-tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: #f5f5f5;
+      color: #666;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 13px;
+      transition: all 0.3s;
+  }
+  .sticky-tab.active {
+      background: #722ed1;
+      color: white;
+      font-weight: 500;
+  }
+  .sticky-tab:hover:not(.active) {
+      background: #e6e6e6;
+  }
 `;
 
 const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
@@ -168,7 +167,7 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
 
       const totalSales = transactions?.length || 0;
       const totalAmount = transactions?.reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0) || 0;
-      
+
       let totalTickets = 0;
       transactions?.forEach(t => {
         if (t.seats) {
@@ -176,7 +175,7 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
             try {
               const parsed = JSON.parse(t.seats);
               totalTickets += Array.isArray(parsed) ? parsed.length : 0;
-            } catch (e) {}
+            } catch (e) { }
           } else if (Array.isArray(t.seats)) {
             totalTickets += t.seats.length;
           }
@@ -210,7 +209,7 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
           </div>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <div className="summary_box income" style={{background: 'linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)'}}>
+          <div className="summary_box income" style={{ background: 'linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)' }}>
             <div className="title">Total ventas</div>
             <div className="value-text">{formatCurrency(stats.totalAmount)}</div>
             <DollarOutlined className="icon-bg" />
@@ -238,114 +237,118 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
             <Bar options={{ responsive: true, maintainAspectRatio: false }} data={salesData} />
           </div>
         </Card>
-        
+
         <Row gutter={[16, 16]}>
-           <Col xs={24} md={12}>
-              <Card title="Ventas por Canal" extra={<Button icon={<DownloadOutlined />} size="small" />}>
-                 <div style={{ height: '250px', display:'flex', justifyContent:'center' }}>
-                    <Pie data={ticketsData} />
-                 </div>
-              </Card>
-           </Col>
-           <Col xs={24} md={12}>
-              <Card title="Entradas por Zona" extra={<Button icon={<DownloadOutlined />} size="small" />}>
-                  <div style={{ height: '250px' }}>
-                    <Bar options={{ indexAxis: 'y', responsive: true, maintainAspectRatio: false }} data={salesData} />
-                  </div>
-              </Card>
-           </Col>
+          <Col xs={24} md={12}>
+            <Card title="Ventas por Canal" extra={<Button icon={<DownloadOutlined />} size="small" />}>
+              <div style={{ height: '250px', display: 'flex', justifyContent: 'center' }}>
+                <Pie data={ticketsData} />
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} md={12}>
+            <Card title="Entradas por Zona" extra={<Button icon={<DownloadOutlined />} size="small" />}>
+              <div style={{ height: '250px' }}>
+                <Bar options={{ indexAxis: 'y', responsive: true, maintainAspectRatio: false }} data={salesData} />
+              </div>
+            </Card>
+          </Col>
         </Row>
       </div>
     </div>
   );
 
   const TabContent2_EstadosZonas = () => (
-      <div className="tab-extended">
-          <h4 className="text-lg font-semibold mb-3">Estado general</h4>
-          <div className="bg-gray-100 rounded-lg p-2 mb-6">
-              <div className="flex h-4 rounded overflow-hidden">
-                  <div className="bg-blue-500" style={{width: '78.4%'}}></div>
-                  <div className="bg-red-500" style={{width: '4.6%'}}></div>
-                  <div className="bg-gray-300 flex-1"></div>
-              </div>
-              <div className="flex justify-between text-xs mt-1 text-gray-600">
-                  <span>Vendido: 78.4%</span>
-                  <span>Bloqueado: 4.6%</span>
-              </div>
-          </div>
-
-          <Table 
-              dataSource={[
-                  { key: '1', zone: 'GENERAL', aforo: 300, blocked: 12, released: 208, avail: 80, percent: 69.33 },
-                  { key: '2', zone: 'VIP', aforo: 200, blocked: 11, released: 184, avail: 5, percent: 92.00 },
-              ]}
-              columns={[
-                  { title: 'Zona', dataIndex: 'zone', key: 'zone' },
-                  { title: 'Aforo', dataIndex: 'aforo', key: 'aforo', align: 'right' },
-                  { title: 'Emitidas', dataIndex: 'released', key: 'released', align: 'right' },
-                  { title: 'Disp.', dataIndex: 'avail', key: 'avail', align: 'right' },
-                  { title: 'Estado', key: 'status', render: (_, record) => (
-                      <div className="w-24">
-                          <div className="text-xs text-right mb-1">{record.percent}%</div>
-                          <div className="bar-grey"><div className="sold" style={{width: `${ record.percent }% `}}></div></div>
-                      </div>
-                  )}
-              ]}
-              pagination={false}
-              size="small"
-          />
+    <div className="tab-extended">
+      <h4 className="text-lg font-semibold mb-3">Estado general</h4>
+      <div className="bg-gray-100 rounded-lg p-2 mb-6">
+        <div className="flex h-4 rounded overflow-hidden">
+          <div className="bg-blue-500" style={{ width: '78.4%' }}></div>
+          <div className="bg-red-500" style={{ width: '4.6%' }}></div>
+          <div className="bg-gray-300 flex-1"></div>
+        </div>
+        <div className="flex justify-between text-xs mt-1 text-gray-600">
+          <span>Vendido: 78.4%</span>
+          <span>Bloqueado: 4.6%</span>
+        </div>
       </div>
+
+      <Table
+        dataSource={[
+          { key: '1', zone: 'GENERAL', aforo: 300, blocked: 12, released: 208, avail: 80, percent: 69.33 },
+          { key: '2', zone: 'VIP', aforo: 200, blocked: 11, released: 184, avail: 5, percent: 92.00 },
+        ]}
+        columns={[
+          { title: 'Zona', dataIndex: 'zone', key: 'zone' },
+          { title: 'Aforo', dataIndex: 'aforo', key: 'aforo', align: 'right' },
+          { title: 'Emitidas', dataIndex: 'released', key: 'released', align: 'right' },
+          { title: 'Disp.', dataIndex: 'avail', key: 'avail', align: 'right' },
+          {
+            title: 'Estado', key: 'status', render: (_, record) => (
+              <div className="w-24">
+                <div className="text-xs text-right mb-1">{record.percent}%</div>
+                <div className="bar-grey"><div className="sold" style={{ width: `${record.percent}%` }}></div></div>
+              </div>
+            )
+          }
+        ]}
+        pagination={false}
+        size="small"
+      />
+    </div>
   );
 
-    const TabContent5_Pagos = () => (
-      <div>
-         <Table 
-            dataSource={[
-                { key: '1', method: 'Fee procesador', tx: 106, amount: 3777.96, percent: 80.92 },
-                { key: '2', method: 'Paypal', tx: 10, amount: 1477.71, percent: 100 },
-                { key: '3', method: 'Punto de Venta', tx: 2, amount: 39.20, percent: 100 },
-                { key: '4', method: 'Efectivo', tx: 1, amount: 392.00, percent: 100 },
-            ]}
-            columns={[
-                { title: 'Método de pago', dataIndex: 'method' },
-                { title: 'Transacciones', dataIndex: 'tx', align: 'right' },
-                { title: 'Importe', dataIndex: 'amount', align: 'right', render: (val) => formatCurrency(val) },
-                { title: '% Acept.', dataIndex: 'percent', align: 'right', render: (val) => `${ val }% ` },
-            ]}
-            size="small"
-         />
-      </div>
-    );
+  const TabContent5_Pagos = () => (
+    <div>
+      <Table
+        dataSource={[
+          { key: '1', method: 'Fee procesador', tx: 106, amount: 3777.96, percent: 80.92 },
+          { key: '2', method: 'Paypal', tx: 10, amount: 1477.71, percent: 100 },
+          { key: '3', method: 'Punto de Venta', tx: 2, amount: 39.20, percent: 100 },
+          { key: '4', method: 'Efectivo', tx: 1, amount: 392.00, percent: 100 },
+        ]}
+        columns={[
+          { title: 'Método de pago', dataIndex: 'method' },
+          { title: 'Transacciones', dataIndex: 'tx', align: 'right' },
+          { title: 'Importe', dataIndex: 'amount', align: 'right', render: (val) => formatCurrency(val) },
+          { title: '% Acept.', dataIndex: 'percent', align: 'right', render: (val) => `${val}%` },
+        ]}
+        size="small"
+      />
+    </div>
+  );
 
-    const TabContent8_Accesos = () => (
-        <div>
-             <div className="mb-6">
-                  <h4 className="font-semibold mb-2">Asistencia Total</h4>
-                  <div className="flex h-8 bg-gray-200 rounded-full overflow-hidden relative">
-                       <div className="bg-green-500 flex items-center justify-center text-white text-xs font-bold" style={{width: '93.6%'}}>
-                          93.6%
-                       </div>
-                  </div>
-             </div>
-
-             <Table 
-                dataSource={[
-                    { key: '1', zone: 'VIP', entries: 174, pending: 10, percent: 94.5 },
-                    { key: '2', zone: 'GENERAL', entries: 193, pending: 15, percent: 92.7 },
-                ]}
-                columns={[
-                    { title: 'Zona', dataIndex: 'zone' },
-                    { title: 'Dentro', dataIndex: 'entries' },
-                    { title: 'Pendientes', dataIndex: 'pending' },
-                    { title: 'Progreso', key: 'prog', render: (_, r) => (
-                        <div className="w-24">
-                             <div className="bar-grey"><div className="completed" style={{width: `${ r.percent }% `, backgroundColor: '#52c41a'}}></div></div>
-                        </div>
-                    )}
-                ]}
-             />
+  const TabContent8_Accesos = () => (
+    <div>
+      <div className="mb-6">
+        <h4 className="font-semibold mb-2">Asistencia Total</h4>
+        <div className="flex h-8 bg-gray-200 rounded-full overflow-hidden relative">
+          <div className="bg-green-500 flex items-center justify-center text-white text-xs font-bold" style={{ width: '93.6%' }}>
+            93.6%
+          </div>
         </div>
-    );
+      </div>
+
+      <Table
+        dataSource={[
+          { key: '1', zone: 'VIP', entries: 174, pending: 10, percent: 94.5 },
+          { key: '2', zone: 'GENERAL', entries: 193, pending: 15, percent: 92.7 },
+        ]}
+        columns={[
+          { title: 'Zona', dataIndex: 'zone' },
+          { title: 'Dentro', dataIndex: 'entries' },
+          { title: 'Pendientes', dataIndex: 'pending' },
+          {
+            title: 'Progreso', key: 'prog', render: (_, r) => (
+              <div className="w-24">
+                <div className="bar-grey"><div className="completed" style={{ width: `${r.percent}%`, backgroundColor: '#52c41a' }}></div></div>
+              </div>
+            )
+          }
+        ]}
+      />
+    </div>
+  );
 
   const tabs = [
     { id: '1', label: 'Últimas horas' },
@@ -371,55 +374,55 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
         title={
           <div className="flex items-center justify-between pr-8">
             <div className="flex items-center gap-2">
-                 <div className="bg-purple-100 p-2 rounded-full hidden sm:block">
-                    <AppstoreOutlined className="text-purple-600 text-xl" />
-                 </div>
-                 <div>
-                    <h3 className="text-lg font-bold m-0">{selectedFuncion?.nombre || 'Información del Evento'}</h3>
-                    <div className="text-gray-500 text-xs flex items-center gap-2">
-                        <EnvironmentOutlined /> {selectedFuncion?.recinto || 'Recinto Principal'}
-                        <span className="text-gray-300">|</span>
-                        <span>{new Date(selectedFuncion?.fecha || Date.now()).toLocaleDateString()}</span>
-                    </div>
-                 </div>
+              <div className="bg-purple-100 p-2 rounded-full hidden sm:block">
+                <AppstoreOutlined className="text-purple-600 text-xl" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold m-0">{selectedFuncion?.nombre || 'Información del Evento'}</h3>
+                <div className="text-gray-500 text-xs flex items-center gap-2">
+                  <EnvironmentOutlined /> {selectedFuncion?.recinto || 'Recinto Principal'}
+                  <span className="text-gray-300">|</span>
+                  <span>{new Date(selectedFuncion?.fecha || Date.now()).toLocaleDateString()}</span>
+                </div>
+              </div>
             </div>
             {/* Mobile-only header elements simulated */}
             <div className="flex items-center gap-3">
-                 <Tooltip title="Ayuda"><Button shape="circle" icon={<QuestionCircleOutlined />} size="small" /></Tooltip>
-                 <Tooltip title="Pantalla completa"><Button shape="circle" icon={<FullscreenOutlined />} size="small" /></Tooltip>
+              <Tooltip title="Ayuda"><Button shape="circle" icon={<QuestionCircleOutlined />} size="small" /></Tooltip>
+              <Tooltip title="Pantalla completa"><Button shape="circle" icon={<FullscreenOutlined />} size="small" /></Tooltip>
             </div>
           </div>
         }
       >
         <div className="dashboard-content">
-           {/* Custom Sticky Tabs */}
-           <div className="sticky-tabs-container dragscroll">
-              {tabs.map(tab => (
-                  <div 
-                    key={tab.id}
-                    className={`sticky - tab ${ activeTab === tab.id ? 'active' : '' } `}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    {tab.label}
-                  </div>
-              ))}
-           </div>
+          {/* Custom Sticky Tabs */}
+          <div className="sticky-tabs-container dragscroll">
+            {tabs.map(tab => (
+              <div
+                key={tab.id}
+                className={`sticky-tab ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </div>
+            ))}
+          </div>
 
-           {/* Tab Content Rendering */}
-           <div className="tab-content-wrapper min-h-[400px]">
-               {activeTab === '10' && <TabContent10_ActividadTotal />}
-               {activeTab === '1' && <TabContent10_ActividadTotal />} {/* Reusing for demo */}
-               {activeTab === '2' && <TabContent2_EstadosZonas />}
-               {activeTab === '5' && <TabContent5_Pagos />}
-               {activeTab === '8' && <TabContent8_Accesos />}
-               
-               {['3', '4', '6'].includes(activeTab) && (
-                   <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                       <HistoryOutlined style={{ fontSize: '48px', marginBottom: '16px' }} />
-                       <p>Información disponible próximamente</p>
-                   </div>
-               )}
-           </div>
+          {/* Tab Content Rendering */}
+          <div className="tab-content-wrapper min-h-[400px]">
+            {activeTab === '10' && <TabContent10_ActividadTotal />}
+            {activeTab === '1' && <TabContent10_ActividadTotal />} {/* Reusing for demo */}
+            {activeTab === '2' && <TabContent2_EstadosZonas />}
+            {activeTab === '5' && <TabContent5_Pagos />}
+            {activeTab === '8' && <TabContent8_Accesos />}
+
+            {['3', '4', '6'].includes(activeTab) && (
+              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                <HistoryOutlined style={{ fontSize: '48px', marginBottom: '16px' }} />
+                <p>Información disponible próximamente</p>
+              </div>
+            )}
+          </div>
         </div>
       </Modal>
     </>
@@ -427,4 +430,3 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
 };
 
 export default EventInfoModal;
-```
