@@ -114,21 +114,26 @@ const Boleteria = () => {
     if (currentFuncionId && currentFuncionId !== subscriptionFuncionId.current && subscribeToFunction) {
       // Desuscribirse de la función anterior si existe
       if (subscriptionFuncionId.current && unsubscribe) {
-        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂéndose de función anterior:', subscriptionFuncionId.current);
+        logger.log('🔌 [Boleteria] Desuscribiéndose de función anterior:', subscriptionFuncionId.current);
         unsubscribe();
       }
 
-      logger.log('Ã°Å¸â€â€ [Boleteria] SuscribiÂéndose a función:', currentFuncionId);
+      logger.log('🔌 [Boleteria] Suscribiéndose a función:', currentFuncionId);
       subscribeToFunction(currentFuncionId);
       subscriptionFuncionId.current = currentFuncionId;
     }
 
     return () => {
-      if (unsubscribe && subscriptionFuncionId.current) {
-        logger.log('Ã°Å¸â€â€ [Boleteria] DesuscribiÂéndose de función:', subscriptionFuncionId.current);
-        unsubscribe();
-        subscriptionFuncionId.current = null;
-      }
+      // Dar tiempo al WebSocket para conectarse antes de limpiar
+      const timer = setTimeout(() => {
+        if (unsubscribe && subscriptionFuncionId.current) {
+          logger.log('🔌 [Boleteria] Desuscribiéndose de función:', subscriptionFuncionId.current);
+          unsubscribe();
+          subscriptionFuncionId.current = null;
+        }
+      }, 100); // 100ms delay para evitar race condition
+
+      return () => clearTimeout(timer);
     };
   }, [selectedFuncion?.id, subscribeToFunction, unsubscribe]);
 
