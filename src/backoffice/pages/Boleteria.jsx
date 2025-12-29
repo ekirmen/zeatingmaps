@@ -1371,211 +1371,149 @@ const Boleteria = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-w-0 mt-14 md:mt-0 relative">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header ultra compacto con búsqueda de evento y función */}
-          <div className="bg-white border-b border-gray-200 px-3 py-2 md:px-4 md:py-3 shadow-sm z-10">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex-1 flex items-center gap-3">
-                {/* Selector de Evento */}
-                <div className="flex-1 max-w-md">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Evento</label>
+          {/* Header Ultra Compacto (2 Filas) */}
+          <div className="bg-white border-b border-gray-200 px-2 py-1 shadow-sm z-10 flex flex-col gap-1 text-xs">
+            {/* Fila 1: Selección y Navegación Principal */}
+            <div className="flex items-center justify-between gap-2 h-8">
+              {/* Izquierda: Buscador Evento/Función */}
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {/* Botón Mobile Menu */}
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="md:hidden p-1.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  <Menu size={16} />
+                </button>
+
+                <div className="flex-1 max-w-[200px]">
                   <select
                     value={selectedEvent?.id || ''}
                     onChange={(e) => {
                       const eventId = e.target.value;
-                      if (eventId) {
-                        handleEventSelect(eventId);
-                      }
+                      if (eventId) handleEventSelect(eventId);
                     }}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full h-7 px-2 py-0 border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 text-xs"
                   >
-                    <option value="">Seleccionar evento...</option>
+                    <option value="">Evento...</option>
                     {eventos.map(evento => (
-                      <option key={evento.id} value={evento.id}>
-                        {evento.nombre}
-                      </option>
+                      <option key={evento.id} value={evento.id}>{evento.nombre}</option>
                     ))}
                   </select>
                 </div>
 
-                {/* Botón para seleccionar función */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">&nbsp;</label>
-                  <button
-                    onClick={() => setIsFunctionsModalVisible(true)}
-                    disabled={!selectedEvent}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${selectedEvent
-                      ? 'bg-purple-600 text-white hover:bg-purple-700'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      }`}
-                  >
-                    {selectedFuncion ? `Función: ${new Date(selectedFuncion.fecha_celebracion).toLocaleDateString()}` : 'Seleccionar Función'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* NavegaciÂón ultra compacta con botones estilo tabs */}
-          <div className="bg-white border-b border-gray-200 sticky top-14 md:static z-10 shadow-sm md:shadow-none">
-            <div className="flex items-center justify-between px-2 py-1">
-              {/* BotÂón para abrir panel lateral */}
-              <div className="flex items-center">
                 <button
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title="Abrir panel"
+                  onClick={() => setIsFunctionsModalVisible(true)}
+                  disabled={!selectedEvent}
+                  className={`h-7 px-3 flex items-center justify-center font-medium rounded transition-colors whitespace-nowrap ${selectedEvent
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
                 >
-                  <span className="w-3 h-3 bg-gray-400 rounded"></span>
+                  {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleDateString() : 'Función'}
                 </button>
               </div>
 
-              {/* Botones de navegación principales */}
-              <div className="flex space-x-1">
-                <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  <AppstoreOutlined /> Zonas
+              {/* Derecha: Botones de Navegación (Iconos + Texto corto) */}
+              <div className="flex items-center gap-1">
+                <button className="h-7 px-2 flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors">
+                  <AppstoreOutlined /> <span className="hidden sm:inline">Zonas</span>
                 </button>
-                <button className="px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded">
-                  <EnvironmentOutlined /> Mapa
+                <button className="h-7 px-2 flex items-center gap-1 bg-purple-100 text-purple-700 font-medium rounded hover:bg-purple-200 transition-colors">
+                  <EnvironmentOutlined /> <span className="hidden sm:inline">Mapa</span>
                 </button>
                 <button
                   onClick={() => setIsEventInfoModalVisible(true)}
                   disabled={!selectedFuncion}
-                  className={`px-3 py-1 text-xs font-medium rounded transition-colors ${selectedFuncion
+                  className={`h-7 px-2 flex items-center gap-1 rounded transition-colors ${selectedFuncion
                     ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    : 'text-gray-400 cursor-not-allowed'
+                    : 'text-gray-300 cursor-not-allowed'
                     }`}
                 >
-                  📊 Info Evento
+                  <span className="text-sm">📊</span> <span className="hidden sm:inline">Info</span>
                 </button>
-                <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  <ShoppingOutlined /> Productos
+                <button className="h-7 px-2 flex items-center gap-1 text-gray-600 hover:bg-gray-100 rounded transition-colors">
+                  <ShoppingOutlined /> <span className="hidden sm:inline">Prod</span>
                 </button>
-                <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
-                  <EllipsisOutlined /> Otros
+                <button className="h-7 px-2 flex items-center gap-1 text-gray-600 hover:bg-gray-100 rounded transition-colors">
+                  <EllipsisOutlined />
                 </button>
               </div>
+            </div>
 
+            {/* Fila 2: Controles de Mapa y Precios */}
+            <div className="flex items-center justify-between gap-2 h-7 bg-gray-50 rounded px-1">
+              <div className="flex items-center gap-2">
+                {/* Search Toggle */}
+                <label className="flex items-center gap-1.5 cursor-pointer hover:text-purple-600 transition-colors select-none px-1">
+                  <input
+                    type="checkbox"
+                    checked={searchAllSeats}
+                    onChange={(e) => setSearchAllSeats(e.target.checked)}
+                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 w-3.5 h-3.5"
+                  />
+                  <span className="font-medium">Buscar</span>
+                </label>
+
+                <div className="w-px h-4 bg-gray-300 mx-1"></div>
+
+                {/* Block Mode - Segmented Control Style */}
+                <div className="flex bg-gray-200 p-0.5 rounded">
+                  <button
+                    onClick={() => handleBlockActionToggle('block')}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${blockMode && blockAction === 'block'
+                      ? 'bg-red-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-300'
+                      }`}
+                  >
+                    Bloquear
+                  </button>
+                  <button
+                    onClick={() => handleBlockActionToggle('unlock')}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${blockMode && blockAction === 'unlock'
+                      ? 'bg-green-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-300'
+                      }`}
+                  >
+                    Desbloquear
+                  </button>
+                </div>
+
+                {searchAllSeatsLoading && (
+                  <span className="text-[10px] text-purple-600 animate-pulse ml-1">Buscando...</span>
+                )}
+              </div>
+
+              {/* Price Chips Scrollable */}
+              <div className="flex-1 flex justify-end gap-1 overflow-x-auto scrollbar-hide mask-linear-fade">
+                {priceOptions && priceOptions.length > 0 ? (
+                  priceOptions.map((option) => {
+                    const isActive = selectedEntradaId === option.entradaId;
+                    const min = Number.isFinite(option.minPrecio) ? option.minPrecio : 0;
+                    const max = Number.isFinite(option.maxPrecio) ? option.maxPrecio : min;
+                    const priceTxt = min === max ? `$${min}` : `$${min}-$${max}`;
+                    
+                    let bgClass = isActive ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300';
+                    if (!isActive && (option.tipo === 'Invitaciones' || min === 0)) bgClass = 'bg-orange-50 text-orange-700 border-orange-200';
+
+                    return (
+                      <button
+                        key={option.entradaId}
+                        onClick={() => setSelectedEntradaId(option.entradaId)}
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] transition-all whitespace-nowrap ${bgClass}`}
+                        title={`${option.nombre} (${option.tipo})`}
+                      >
+                        <span className="font-bold">{option.nombre.substring(0, 10).toUpperCase()}</span>
+                        <span className="opacity-80 border-l border-current pl-1 ml-1">{priceTxt}</span>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <span className="text-gray-400 italic text-[10px]">Precios...</span>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* SecciÂón ultra compacta de precios dinÂámicos con selecciÂón de entrada */}
-          <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
-            <div className="flex items-center gap-3 px-1 py-1">
-              <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={searchAllSeats}
-                  onChange={(e) => setSearchAllSeats(e.target.checked)}
-                />
-                Buscar
-              </label>
-              <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
-                <span className="text-[11px] text-gray-600 font-semibold">Modo:</span>
-                <button
-                  type="button"
-                  onClick={() => handleBlockActionToggle('block')}
-                  className={`px-3 py-1.5 rounded-lg border-2 text-[11px] font-bold transition-all duration-200 ${blockMode && blockAction === 'block'
-                    ? 'bg-red-50 border-red-500 text-red-700 shadow-md shadow-red-200'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-300'
-                    }`}
-                >
-                  🔒 Bloquear
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBlockActionToggle('unlock')}
-                  className={`px-3 py-1.5 rounded-lg border-2 text-[11px] font-bold transition-all duration-200 ${blockMode && blockAction === 'unlock'
-                    ? 'bg-green-50 border-green-500 text-green-700 shadow-md shadow-green-200'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-green-50 hover:border-green-300'
-                    }`}
-                >
-                  🔓 Desbloquear
-                </button>
-              </div>
-              {searchAllSeatsLoading && (
-                <span className="text-[11px] text-blue-600">Buscando asientos vendidos/reservados...</span>
-              )}
-
-              {/* Visual Legend for Block/Unblock Modes */}
-              {blockMode && (
-                <div className="mt-2 p-2 bg-gray-50 rounded border border-gray-200">
-                  <div className="text-[10px] font-semibold text-gray-700 mb-1">
-                    {blockAction === 'block' ? '🔒 Modo Bloquear:' : '🔓 Modo Desbloquear:'}
-                  </div>
-                  {blockAction === 'block' ? (
-                    <div className="text-[10px] text-gray-600 space-y-0.5">
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-red-500"></div>
-                        <span>Asientos disponibles (con borde rojo)</span>
-                      </div>
-                      <div className="text-gray-500 italic">
-                        → Selecciona asientos para bloquearlos permanentemente
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-[10px] text-gray-600 space-y-0.5">
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-green-500"></div>
-                        <span>Asientos bloqueados (con borde verde)</span>
-                      </div>
-                      <div className="text-gray-500 italic">
-                        → Solo puedes seleccionar asientos bloqueados (no vendidos)
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            <div className="flex space-x-2 overflow-x-auto">
-              {priceOptions && priceOptions.length > 0 ? (
-                priceOptions.map((option, index) => {
-                  const isActive = selectedEntradaId === option.entradaId;
-                  const minPrecio = Number.isFinite(option.minPrecio) ? option.minPrecio : 0;
-                  const maxPrecio = Number.isFinite(option.maxPrecio) ? option.maxPrecio : minPrecio;
-                  const precioDisplay = minPrecio === maxPrecio
-                    ? `$${minPrecio.toFixed(2)}`
-                    : `$${minPrecio.toFixed(2)}-$${maxPrecio.toFixed(2)}`;
-
-                  // Determinar color segÂún tipo de producto
-                  let bgColor = 'bg-gray-200 text-gray-700';
-                  if (isActive) {
-                    bgColor = 'bg-purple-600 text-white';
-                  } else if (option.tipo === 'Invitaciones' || option.minPrecio === 0) {
-                    bgColor = 'bg-orange-200 text-orange-800';
-                  } else if (option.tipo === 'Reducido') {
-                    bgColor = 'bg-blue-200 text-blue-800';
-                  }
-
-                  return (
-                    <button
-                      key={option.entradaId}
-                      onClick={() => {
-                        logger.log('Ã°Å¸Å½Â« Entrada seleccionada:', option);
-                        setSelectedEntradaId(option.entradaId);
-                      }}
-                      className={`flex-shrink-0 px-2 py-1 rounded font-medium text-xs ${isActive
-                        ? 'bg-purple-600 text-white'
-                        : bgColor + ' hover:opacity-80'
-                        } transition-colors`}
-                      title={`${option.nombre} - ${option.tipo}`}
-                    >
-                      <div className="text-xs font-medium">
-                        {option.nombre.toUpperCase()}
-                      </div>
-                      <div className="text-xs opacity-90">
-                        {precioDisplay}
-                      </div>
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="text-xs text-gray-500 py-1">
-                  {selectedFuncion ? 'Cargando precios...' : 'Selecciona una función para ver precios'}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Mapa de asientos ultra compacto */}
           <div className="flex-1 bg-white overflow-hidden relative">
             {/* Debug log removed for production performance */}
             {selectedFuncion && mapa ? (
