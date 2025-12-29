@@ -150,6 +150,7 @@ const Boleteria = () => {
   }, [seatStates, seatStatesVersion]);
 
 
+  const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [isFunctionsModalVisible, setIsFunctionsModalVisible] = useState(false);
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
   const [isFunctionModalVisible, setIsFunctionModalVisible] = useState(false);
