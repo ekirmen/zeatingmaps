@@ -211,6 +211,54 @@ const Cart = ({
 
   return (
     <div className="h-full flex flex-col bg-white">
+      {/* Customer Information Card */}
+      {selectedClient && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-3 py-2">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-blue-600 font-semibold text-sm">
+                  👤 {selectedClient.nombre || ''} {selectedClient.apellido || ''}
+                </span>
+                {selectedClient.role && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                    {selectedClient.role}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600">
+                {selectedClient.telefono && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-400">📞</span>
+                    <span>{selectedClient.telefono}</span>
+                  </div>
+                )}
+                {selectedClient.login && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-400">📧</span>
+                    <span className="truncate">{selectedClient.login}</span>
+                  </div>
+                )}
+                {selectedClient.id && (
+                  <div className="flex items-center gap-1 col-span-2">
+                    <span className="text-gray-400">🆔</span>
+                    <span className="text-xs font-mono text-gray-500 truncate">
+                      {selectedClient.id.substring(0, 8)}...
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            {!selectedClient.activo && (
+              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                Inactivo
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Cart Header */}
       <div className="flex justify-between items-center mb-4 border-b pb-2">
         <div>
           <h3 className="text-lg font-semibold">Carrito de Compras</h3>
