@@ -1175,7 +1175,6 @@ const Boleteria = () => {
       } else {
         // Seleccionar: bloquear en BD primero con precio y metadatos, luego agregar al carrito
         try {
-          // Incluimos precio e información de promoción en el bloqueo
           const lockResult = await lockSeat(sillaId, 'seleccionado', funcionId, {
             precio: precio,
             metadata: {
@@ -1183,6 +1182,8 @@ const Boleteria = () => {
               descuentoNombre,
               entradaId: selectedEntradaId,
               originalPrice: precio,
+              zonaId: zonaId,
+              zonaNombre: nombreZona,
               timestamp: Date.now()
             }
           });

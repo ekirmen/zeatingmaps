@@ -19,7 +19,11 @@ class AtomicSeatLockService {
 
       if (!apiRateLimiter.canMakeRequest(endpoint, requestKey)) {
         const waitTime = apiRateLimiter.getWaitTime(endpoint);
-        throw new Error(`Demasiadas solicitudes. Por favor, espera ${Math.ceil(waitTime / 1000)} segundos antes de intentar nuevamente.`);
+        const seconds = Math.ceil(waitTime / 1000);
+        const message = seconds > 0
+          ? `Demasiadas solicitudes. Por favor, espera ${seconds} segundo(s) antes de intentar nuevamente.`
+          : 'Demasiadas solicitudes. Por favor, espera un momento antes de intentar nuevamente.';
+        throw new Error(message);
       }
 
       // Registrar el request para rate limiting

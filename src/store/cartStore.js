@@ -257,7 +257,16 @@ export const useCartStore = create(
               }
 
               // Bloquear en BD (esperar respuesta del servidor)
-              const lockResult = await useSeatLockStore.getState().lockSeat(seatId, 'seleccionado', functionId);
+              const lockResult = await useSeatLockStore.getState().lockSeat(seatId, 'seleccionado', functionId, {
+                precio: seat.precio,
+                metadata: {
+                  zonaId: seat.zonaId,
+                  nombreZona: seat.nombreZona,
+                  mesaId: seat.mesaId,
+                  nombreMesa: seat.nombreMesa,
+                  tipoPrecio: seat.tipoPrecio || 'normal'
+                }
+              });
 
               if (!lockResult) {
                 console.error('❌ [CART_TOGGLE] Error bloqueando asiento:', seatId);
