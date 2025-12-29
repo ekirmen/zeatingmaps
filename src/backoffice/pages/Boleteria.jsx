@@ -673,19 +673,18 @@ const Boleteria = () => {
           duration: 3
         });
 
-        // 7. Registrar auditoría
-        try {
-          await logUserAction('reclaim_session', {
-            original_session: targetSessionId,
-            new_session: mySessionId,
-            seats_count: allSeats.length,
-            funcion_id: selectedFuncion.id,
-            seats: allSeats.map(s => s.seat_id)
-          });
-        } catch (auditError) {
-          console.warn('[RECLAIM] Error en auditoría:', auditError);
-          // No fallar si la auditoría falla
-        }
+        // 7. Registrar auditoría (deshabilitado - logUserAction no disponible)
+        // try {
+        //   await logUserAction('reclaim_session', {
+        //     original_session: targetSessionId,
+        //     new_session: mySessionId,
+        //     seats_count: allSeats.length,
+        //     funcion_id: selectedFuncion.id,
+        //     seats: allSeats.map(s => s.seat_id)
+        //   });
+        // } catch (auditError) {
+        //   console.warn('[RECLAIM] Error en auditoría:', auditError);
+        // }
 
       } catch (error) {
         message.error({
@@ -696,7 +695,7 @@ const Boleteria = () => {
         console.error('[RECLAIM] Error:', error);
       }
     },
-    [selectedFuncion, setCarrito, logUserAction]
+    [selectedFuncion, setCarrito]
   );
 
   // Función para cargar venta vendida por localizador (Load Sold Transaction)
@@ -793,18 +792,18 @@ const Boleteria = () => {
           duration: 5
         });
 
-        // 7. Registrar auditoría
-        try {
-          await logUserAction('load_sold_transaction', {
-            locator: locator,
-            transaction_id: transaction.id,
-            seats_count: seatsForCart.length,
-            funcion_id: selectedFuncion.id,
-            seats: seatsForCart.map(s => s.sillaId)
-          });
-        } catch (auditError) {
-          console.warn('[LOAD_SOLD] Error en auditoría:', auditError);
-        }
+        // 7. Registrar auditoría (deshabilitado - logUserAction no disponible)
+        // try {
+        //   await logUserAction('load_sold_transaction', {
+        //     locator: locator,
+        //     transaction_id: transaction.id,
+        //     seats_count: seatsForCart.length,
+        //     funcion_id: selectedFuncion.id,
+        //     seats: seatsForCart.map(s => s.sillaId)
+        //   });
+        // } catch (auditError) {
+        //   console.warn('[LOAD_SOLD] Error en auditoría:', auditError);
+        // }
 
       } catch (error) {
         message.error({
@@ -815,7 +814,7 @@ const Boleteria = () => {
         console.error('[LOAD_SOLD] Error:', error);
       }
     },
-    [selectedFuncion, setCarrito, logUserAction]
+    [selectedFuncion, setCarrito]
   );
 
   const handleSeatToggle = useCallback(
