@@ -17,7 +17,7 @@ import { supabase } from '../../supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import logger from '../../utils/logger';
 import UnifiedContextSelector from '../components/UnifiedContextSelector';
-import { AppstoreOutlined, EnvironmentOutlined, ShoppingOutlined, EllipsisOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, EnvironmentOutlined, ShoppingOutlined, EllipsisOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
 const Boleteria = () => {
   const {
@@ -578,6 +578,127 @@ const Boleteria = () => {
     [setCarrito]
   );
 
+  // Función para reclamar sesión de cliente (Customer Recovery)
+  const reclaimSession = useCallback(
+    async (clickedSeatId) => {
+      try {
+        message.loading({ content: 'Reclamando sesión...', key: 'reclaim', duration: 0 });
+
+        // 1. Obtener el session_id del asiento clickeado
+        const { data: seatLock, error: lockError } = await supabase
+          .from('seat_locks')
+          .select('session_id, funcion_id')
+          .eq('seat_id', clickedSeatId)
+          .eq('funcion_id', selectedFuncion.id)
+          .eq('status', 'seleccionado')
+          .single();
+
+        if (lockError || !seatLock) {
+          throw new Error('No se pudo encontrar la sesión del asiento');
+        }
+
+        const targetSessionId = seatLock.session_id;
+
+        // 2. Obtener TODOS los asientos de esa sesión
+        const { data: allSeats, error: seatsError } = await supabase
+          .from('seat_locks')
+          .select('seat_id, zona_id, zona_nombre, precio, metadata')
+          .eq('session_id', targetSessionId)
+          .eq('funcion_id', selectedFuncion.id)
+          .eq('status', 'seleccionado');
+
+        if (seatsError || !allSeats || allSeats.length === 0) {
+          throw new Error('No se encontraron asientos en esta sesión');
+        }
+
+        // 3. Verificar que no haya asientos pagados (seguridad)
+        const { data: paidSeats } = await supabase
+          .from('seat_locks')
+          .select('seat_id')
+          .eq('session_id', targetSessionId)
+          .in('status', ['pagado', 'vendido']);
+
+        if (paidSeats && paidSeats.length > 0) {
+          throw new Error('Esta sesión ya tiene asientos pagados. No se puede reclamar.');
+        }
+
+        // 4. Obtener mi session_id actual
+        const mySessionId = localStorage.getItem('anonSessionId');
+
+        if (!mySessionId) {
+          throw new Error('No se pudo obtener tu sesión actual');
+        }
+
+        // 5. Transferir todos los asientos a mi sesión
+        const { error: updateError } = await supabase
+          .from('seat_locks')
+          .update({
+            session_id: mySessionId,
+            updated_at: new Date().toISOString(),
+            last_activity: new Date().toISOString()
+          })
+          .eq('session_id', targetSessionId)
+          .eq('funcion_id', selectedFuncion.id)
+          .eq('status', 'seleccionado');
+
+        if (updateError) {
+          throw new Error('Error al transferir asientos: ' + updateError.message);
+        }
+
+        // 6. Agregar asientos al carrito local
+        const seatsForCart = allSeats.map(s => ({
+          sillaId: s.seat_id,
+          _id: s.seat_id,
+          zonaId: s.zona_id,
+          zonaNombre: s.zona_nombre,
+          precio: s.precio || 0,
+          funcionId: selectedFuncion.id,
+          metadata: s.metadata || {}
+        }));
+
+        setCarrito(prev => {
+          const safePrev = Array.isArray(prev) ? prev : [];
+          // Evitar duplicados
+          const newSeats = seatsForCart.filter(newSeat =>
+            !safePrev.some(existingSeat =>
+              (existingSeat._id || existingSeat.sillaId) === newSeat.sillaId
+            )
+          );
+          return [...safePrev, ...newSeats];
+        });
+
+        message.success({
+          content: `✅ ${allSeats.length} asiento(s) reclamados exitosamente`,
+          key: 'reclaim',
+          duration: 3
+        });
+
+        // 7. Registrar auditoría
+        try {
+          await logUserAction('reclaim_session', {
+            original_session: targetSessionId,
+            new_session: mySessionId,
+            seats_count: allSeats.length,
+            funcion_id: selectedFuncion.id,
+            seats: allSeats.map(s => s.seat_id)
+          });
+        } catch (auditError) {
+          console.warn('[RECLAIM] Error en auditoría:', auditError);
+          // No fallar si la auditoría falla
+        }
+
+      } catch (error) {
+        message.error({
+          content: '❌ Error al reclamar sesión: ' + error.message,
+          key: 'reclaim',
+          duration: 5
+        });
+        console.error('[RECLAIM] Error:', error);
+      }
+    },
+    [selectedFuncion, setCarrito, logUserAction]
+  );
+
   const handleSeatToggle = useCallback(
     async (silla) => {
       const sillaId = silla._id || silla.id;
@@ -605,6 +726,35 @@ const Boleteria = () => {
       }
 
       const seatEstado = silla.estado || silla.status || 'disponible';
+
+      // NUEVO: Detectar si el asiento está seleccionado por otro usuario
+      const seatId = silla._id || silla.id;
+      const seatState = seatStates?.get(seatId);
+
+      if (seatState === 'seleccionado_por_otro' && !blockMode) {
+        // Mostrar modal para reclamar la sesión
+        Modal.confirm({
+          title: '🔄 Reclamar Sesión de Cliente',
+          icon: <ExclamationCircleOutlined />,
+          content: (
+            <div>
+              <p>Este asiento está seleccionado por otro usuario (posiblemente un cliente con problemas técnicos).</p>
+              <p className="font-semibold mt-2">¿Deseas reclamar TODOS los asientos de esta sesión?</p>
+              <p className="text-gray-500 text-sm mt-2">
+                Esto transferirá todos los asientos bloqueados por este cliente a tu carrito para que puedas completar la venta.
+              </p>
+            </div>
+          ),
+          okText: 'Sí, reclamar sesión',
+          okType: 'primary',
+          cancelText: 'Cancelar',
+          onOk: async () => {
+            await reclaimSession(seatId);
+          }
+        });
+        return;
+      }
+
 
       if (blockMode) {
         const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
