@@ -699,6 +699,125 @@ const Boleteria = () => {
     [selectedFuncion, setCarrito, logUserAction]
   );
 
+  // Función para cargar venta vendida por localizador (Load Sold Transaction)
+  const loadSoldTransaction = useCallback(
+    async (clickedSeatId) => {
+      try {
+        message.loading({ content: 'Cargando venta...', key: 'load-sold', duration: 0 });
+
+        // 1. Obtener el localizador del asiento clickeado
+        const { data: seatLock, error: lockError } = await supabase
+          .from('seat_locks')
+          .select('locator, funcion_id')
+          .eq('seat_id', clickedSeatId)
+          .eq('funcion_id', selectedFuncion.id)
+          .in('status', ['vendido', 'pagado'])
+          .single();
+
+        if (lockError || !seatLock || !seatLock.locator) {
+          throw new Error('No se pudo encontrar el localizador de este asiento');
+        }
+
+        const locator = seatLock.locator;
+
+        // 2. Buscar la transacción en payment_transactions
+        const { data: transaction, error: txError } = await supabase
+          .from('payment_transactions')
+          .select('id, seats, user_id, status, locator, metadata')
+          .eq('locator', locator)
+          .eq('funcion_id', selectedFuncion.id)
+          .single();
+
+        if (txError || !transaction) {
+          throw new Error('No se encontró la transacción asociada a este localizador');
+        }
+
+        // 3. Parsear los asientos de la transacción
+        let transactionSeats = [];
+        try {
+          transactionSeats = typeof transaction.seats === 'string'
+            ? JSON.parse(transaction.seats)
+            : transaction.seats;
+        } catch (parseError) {
+          throw new Error('Error al parsear los asientos de la transacción');
+        }
+
+        if (!Array.isArray(transactionSeats) || transactionSeats.length === 0) {
+          throw new Error('No se encontraron asientos en esta transacción');
+        }
+
+        // 4. Obtener información completa de los asientos desde seat_locks
+        const seatIds = transactionSeats.map(s => s.sillaId || s.id || s._id).filter(Boolean);
+
+        const { data: fullSeats, error: seatsError } = await supabase
+          .from('seat_locks')
+          .select('seat_id, zona_id, zona_nombre, precio, metadata, locator')
+          .eq('locator', locator)
+          .eq('funcion_id', selectedFuncion.id)
+          .in('status', ['vendido', 'pagado']);
+
+        if (seatsError) {
+          console.warn('[LOAD_SOLD] Error obteniendo detalles de asientos:', seatsError);
+        }
+
+        // 5. Combinar información de transacción y seat_locks
+        const seatsForCart = transactionSeats.map(txSeat => {
+          const seatId = txSeat.sillaId || txSeat.id || txSeat._id;
+          const fullSeat = fullSeats?.find(fs => fs.seat_id === seatId);
+
+          return {
+            sillaId: seatId,
+            _id: seatId,
+            zonaId: txSeat.zonaId || fullSeat?.zona_id,
+            zonaNombre: txSeat.zonaNombre || fullSeat?.zona_nombre,
+            precio: txSeat.precio || fullSeat?.precio || 0,
+            funcionId: selectedFuncion.id,
+            locator: locator,
+            transactionId: transaction.id,
+            isSoldTransaction: true, // Marca especial para identificar en el carrito
+            originalStatus: 'vendido',
+            metadata: {
+              ...(txSeat.metadata || {}),
+              ...(fullSeat?.metadata || {}),
+              loadedFromTransaction: true
+            }
+          };
+        });
+
+        // 6. Limpiar carrito y agregar asientos de la venta
+        setCarrito(seatsForCart);
+
+        message.success({
+          content: `✅ Venta cargada: ${seatsForCart.length} asiento(s) | Localizador: ${locator}`,
+          key: 'load-sold',
+          duration: 5
+        });
+
+        // 7. Registrar auditoría
+        try {
+          await logUserAction('load_sold_transaction', {
+            locator: locator,
+            transaction_id: transaction.id,
+            seats_count: seatsForCart.length,
+            funcion_id: selectedFuncion.id,
+            seats: seatsForCart.map(s => s.sillaId)
+          });
+        } catch (auditError) {
+          console.warn('[LOAD_SOLD] Error en auditoría:', auditError);
+        }
+
+      } catch (error) {
+        message.error({
+          content: '❌ Error al cargar venta: ' + error.message,
+          key: 'load-sold',
+          duration: 5
+        });
+        console.error('[LOAD_SOLD] Error:', error);
+      }
+    },
+    [selectedFuncion, setCarrito, logUserAction]
+  );
+
   const handleSeatToggle = useCallback(
     async (silla) => {
       const sillaId = silla._id || silla.id;
@@ -731,8 +850,8 @@ const Boleteria = () => {
       const seatId = silla._id || silla.id;
       const seatState = seatStates?.get(seatId);
 
+      // Detectar click en asiento seleccionado por otro (azul)
       if (seatState === 'seleccionado_por_otro' && !blockMode) {
-        // Mostrar modal para reclamar la sesión
         Modal.confirm({
           title: '🔄 Reclamar Sesión de Cliente',
           icon: <ExclamationCircleOutlined />,
@@ -750,6 +869,36 @@ const Boleteria = () => {
           cancelText: 'Cancelar',
           onOk: async () => {
             await reclaimSession(seatId);
+          }
+        });
+        return;
+      }
+
+      // NUEVO: Detectar click derecho en asiento vendido/pagado (negro)
+      if ((seatState === 'vendido' || seatState === 'pagado' || seatEstado === 'vendido' || seatEstado === 'pagado') && !blockMode) {
+        Modal.confirm({
+          title: '📋 Cargar Venta por Localizador',
+          icon: <ExclamationCircleOutlined />,
+          content: (
+            <div>
+              <p>Este asiento ya está vendido.</p>
+              <p className="font-semibold mt-2">¿Deseas cargar TODA la venta asociada a este asiento?</p>
+              <p className="text-gray-500 text-sm mt-2">
+                Esto cargará todos los asientos de la misma transacción en tu carrito para que puedas:
+              </p>
+              <ul className="text-gray-500 text-sm mt-1 ml-4 list-disc">
+                <li>Cambiar asientos</li>
+                <li>Anular la venta</li>
+                <li>Reimprimir tickets</li>
+                <li>Modificar datos del cliente</li>
+              </ul>
+            </div>
+          ),
+          okText: 'Sí, cargar venta',
+          okType: 'primary',
+          cancelText: 'Cancelar',
+          onOk: async () => {
+            await loadSoldTransaction(seatId);
           }
         });
         return;
