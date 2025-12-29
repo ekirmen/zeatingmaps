@@ -118,6 +118,8 @@ const Boleteria = () => {
     lockSeat,
     unlockSeat,
     isSeatLocked,
+    isSeatLockedByMe,
+    subscribeToFunction,
     unsubscribe,
     lockedSeats: rtLockedSeats,
     seatStates,
