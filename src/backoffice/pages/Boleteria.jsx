@@ -9,6 +9,7 @@ import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
 import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
 import FunctionSwitcher from '../components/FunctionSwitcher';
+import EventInfoModal from './CompBoleteria/EventInfoModal';
 
 
 import { useBoleteria } from '../hooks/useBoleteria';
@@ -150,8 +151,9 @@ const Boleteria = () => {
 
 
   const [isFunctionsModalVisible, setIsFunctionsModalVisible] = useState(false);
-  const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
+  const [isFunctionModalVisible, setIsFunctionModalVisible] = useState(false);
+  const [isEventInfoModalVisible, setIsEventInfoModalVisible] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
   const [clientAbonos, setClientAbonos] = useState([]);
   const [seatPayment, setSeatPayment] = useState(null);
@@ -1433,6 +1435,16 @@ const Boleteria = () => {
                 <button className="px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded">
                   <EnvironmentOutlined /> Mapa
                 </button>
+                <button
+                  onClick={() => setIsEventInfoModalVisible(true)}
+                  disabled={!selectedFuncion}
+                  className={`px-3 py-1 text-xs font-medium rounded transition-colors ${selectedFuncion
+                    ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    : 'text-gray-400 cursor-not-allowed'
+                    }`}
+                >
+                  📊 Info Evento
+                </button>
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
                   <ShoppingOutlined /> Productos
                 </button>
@@ -1680,16 +1692,20 @@ const Boleteria = () => {
         )}
       </Modal>
 
-      {/* Function Selection Modal */}
+      {/* Modal de selección de funciones */}
       <FunctionModal
         visible={isFunctionsModalVisible}
-        onCancel={() => setIsFunctionsModalVisible(false)}
-        funciones={funciones || []}
-        onFunctionSelect={(funcion) => {
-          // Preserve cart to support multi-function selection
-          handleFunctionSelect(funcion.id || funcion._id, { preserveCart: true });
-          setIsFunctionsModalVisible(false);
-        }}
+        onClose={() => setIsFunctionsModalVisible(false)}
+        funciones={funciones}
+        selectedFuncion={selectedFuncion}
+        onSelectFuncion={handleFunctionSelect}
+      />
+
+      {/* Modal de información del evento */}
+      <EventInfoModal
+        visible={isEventInfoModalVisible}
+        onClose={() => setIsEventInfoModalVisible(false)}
+        selectedFuncion={selectedFuncion}
       />
     </div>
   );
