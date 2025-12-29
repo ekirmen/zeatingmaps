@@ -220,13 +220,8 @@ const Cart = ({
                 <span className="text-blue-600 font-semibold text-sm">
                   👤 {selectedClient.nombre || ''} {selectedClient.apellido || ''}
                 </span>
-                {selectedClient.role && (
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                    {selectedClient.role}
-                  </span>
-                )}
               </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
                 {selectedClient.telefono && (
                   <div className="flex items-center gap-1">
                     <span className="text-gray-400">📞</span>
@@ -236,15 +231,7 @@ const Cart = ({
                 {selectedClient.login && (
                   <div className="flex items-center gap-1">
                     <span className="text-gray-400">📧</span>
-                    <span className="truncate">{selectedClient.login}</span>
-                  </div>
-                )}
-                {selectedClient.id && (
-                  <div className="flex items-center gap-1 col-span-2">
-                    <span className="text-gray-400">🆔</span>
-                    <span className="text-xs font-mono text-gray-500 truncate">
-                      {selectedClient.id.substring(0, 8)}...
-                    </span>
+                    <span>{selectedClient.login}</span>
                   </div>
                 )}
               </div>
