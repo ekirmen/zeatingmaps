@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Modal, Drawer, Button, message } from '../../utils/antdComponents';
 import { ChevronLeft, Menu } from 'lucide-react';
 import LeftMenu from './CompBoleteria/LeftMenu';
@@ -18,7 +19,7 @@ import { supabase } from '../../supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import logger from '../../utils/logger';
 import UnifiedContextSelector from '../components/UnifiedContextSelector';
-import { AppstoreOutlined, EnvironmentOutlined, ShoppingOutlined, EllipsisOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, EnvironmentOutlined, ShoppingOutlined, EllipsisOutlined, ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
 
 const Boleteria = () => {
   const {
@@ -36,6 +37,17 @@ const Boleteria = () => {
     handleFunctionSelect,
     setSelectedEvent
   } = useBoleteria();
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   // Debug: Log del estado actual (solo en desarrollo, memoizado para evitar renders)
   const debugState = useMemo(() => ({
@@ -1437,6 +1449,13 @@ const Boleteria = () => {
                 <button className="h-7 px-2 flex items-center gap-1 text-gray-600 hover:bg-gray-100 rounded transition-colors">
                   <EllipsisOutlined />
                 </button>
+                <button
+                  onClick={handleLogout}
+                  className="h-7 px-2 flex items-center gap-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                  title="Cerrar SesiÃ³n"
+                >
+                  <LogoutOutlined />
+                </button>
               </div>
             </div>
 
@@ -1491,7 +1510,7 @@ const Boleteria = () => {
                     const min = Number.isFinite(option.minPrecio) ? option.minPrecio : 0;
                     const max = Number.isFinite(option.maxPrecio) ? option.maxPrecio : min;
                     const priceTxt = min === max ? `$${min}` : `$${min}-$${max}`;
-                    
+
                     let bgClass = isActive ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300';
                     if (!isActive && (option.tipo === 'Invitaciones' || min === 0)) bgClass = 'bg-orange-50 text-orange-700 border-orange-200';
 

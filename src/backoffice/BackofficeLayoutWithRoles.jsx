@@ -119,114 +119,113 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                   {!isBoleteriaRoute && <SidebarMenuWithRoles collapsed={collapsed} />}
 
                   <Layout>
-                    {/* Header */}
-                    <Header
-                      className="dashboard-header"
-                      style={{
-                        padding: isMobile ? '0 16px' : '0 24px',
-                        background: '#fff',
-                        borderBottom: '1px solid #f0f0f0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        position: 'fixed',
-                        top: 0,
-                        right: 0,
-                        left: isBoleteriaRoute ? 0 : (isMobile ? 0 : siderWidth),
-                        zIndex: 999,
-                        transition: 'left 0.2s',
-                        height: isMobile ? '56px' : '64px'
-                      }}
-                    >
-                      <div className="dashboard-header-left" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
-                        {!isBoleteriaRoute && (
-                          <>
-                            {isMobile ? (
-                              <Button
-                                type="text"
-                                className="header-icon-btn"
-                                icon={<MenuUnfoldOutlined />}
-                                onClick={() => setMobileMenuOpen(true)}
-                                style={{ fontSize: '18px', width: 40, height: 40, padding: 0 }}
-                              />
-                            ) : (
-                              <Button
-                                type="text"
-                                className="header-icon-btn"
-                                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                                onClick={() => setCollapsed(!collapsed)}
-                                style={{ fontSize: '16px', width: 48, height: 48 }}
-                              />
-                            )}
-                          </>
-                        )}
-
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <Text strong style={{ fontSize: isMobile ? '16px' : '18px', margin: 0 }}>
-                            {isMobile ? 'Dashboard' : 'Dashboard Administrativo'}
-                          </Text>
-                        </div>
-                      </div>
-
-                      <div className="dashboard-header-right" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
-                        {/* Notificaciones */}
-                        {hasPermission('dashboard') && !isMobile && (
-                          <Badge count={0} size="small">
-                            <div className="p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-all">
-                              <BellOutlined style={{ fontSize: '20px', color: '#64748b' }} />
-                            </div>
-                          </Badge>
-                        )}
-
-                        {/* Menú de usuario */}
-                        <Dropdown
-                          menu={{ items: userMenuItems }}
-                          placement="bottomRight"
-                          trigger={['click']}
-                        >
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: isMobile ? '6px' : '12px',
-                            cursor: 'pointer',
-                            padding: isMobile ? '4px 8px' : '6px 12px',
-                            borderRadius: '12px',
-                            transition: 'all 0.2s',
-                            border: '1px solid transparent',
-                          }}
-                            className="hover:bg-gray-50 hover:border-gray-200"
-                          >
-                            <Avatar
-                              size={isMobile ? 32 : 40}
-                              icon={<UserOutlined />}
-                              style={{
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)',
-                              }}
+                    {/* Header - Oculto en boletería */}
+                    {!isBoleteriaRoute && (
+                      <Header
+                        className="dashboard-header"
+                        style={{
+                          padding: isMobile ? '0 16px' : '0 24px',
+                          background: '#fff',
+                          borderBottom: '1px solid #f0f0f0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          position: 'fixed',
+                          top: 0,
+                          right: 0,
+                          left: isBoleteriaRoute ? 0 : (isMobile ? 0 : siderWidth),
+                          zIndex: 999,
+                          transition: 'left 0.2s',
+                          height: isMobile ? '56px' : '64px'
+                        }}
+                      >
+                        <div className="dashboard-header-left" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
+                          {/* Como se oculta en boletería, no necesitamos la condición !isBoleteriaRoute aquí dentro */}
+                          {isMobile ? (
+                            <Button
+                              type="text"
+                              className="header-icon-btn"
+                              icon={<MenuUnfoldOutlined />}
+                              onClick={() => setMobileMenuOpen(true)}
+                              style={{ fontSize: '18px', width: 40, height: 40, padding: 0 }}
                             />
-                            {!isMobile && (
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                <Text strong style={{ fontSize: '14px', color: '#1e293b', lineHeight: '1.2' }}>
-                                  Usuario
-                                </Text>
-                                <Text style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.2' }}>
-                                  {getRole() === 'tenant_admin' ? 'Administrador' : 'Usuario'}
-                                </Text>
-                              </div>
-                            )}
-                            {!isMobile && (
-                              <div style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                background: '#10b981',
-                                boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)'
-                              }} />
-                            )}
+                          ) : (
+                            <Button
+                              type="text"
+                              className="header-icon-btn"
+                              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                              onClick={() => setCollapsed(!collapsed)}
+                              style={{ fontSize: '16px', width: 48, height: 48 }}
+                            />
+                          )}
+
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <Text strong style={{ fontSize: isMobile ? '16px' : '18px', margin: 0 }}>
+                              {isMobile ? 'Dashboard' : 'Dashboard Administrativo'}
+                            </Text>
                           </div>
-                        </Dropdown>
-                      </div>
-                    </Header>
+                        </div>
+
+                        <div className="dashboard-header-right" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
+                          {/* Notificaciones */}
+                          {hasPermission('dashboard') && !isMobile && (
+                            <Badge count={0} size="small">
+                              <div className="p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-all">
+                                <BellOutlined style={{ fontSize: '20px', color: '#64748b' }} />
+                              </div>
+                            </Badge>
+                          )}
+
+                          {/* Menú de usuario */}
+                          <Dropdown
+                            menu={{ items: userMenuItems }}
+                            placement="bottomRight"
+                            trigger={['click']}
+                          >
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: isMobile ? '6px' : '12px',
+                              cursor: 'pointer',
+                              padding: isMobile ? '4px 8px' : '6px 12px',
+                              borderRadius: '12px',
+                              transition: 'all 0.2s',
+                              border: '1px solid transparent',
+                            }}
+                              className="hover:bg-gray-50 hover:border-gray-200"
+                            >
+                              <Avatar
+                                size={isMobile ? 32 : 40}
+                                icon={<UserOutlined />}
+                                style={{
+                                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                  boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)',
+                                }}
+                              />
+                              {!isMobile && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                  <Text strong style={{ fontSize: '14px', color: '#1e293b', lineHeight: '1.2' }}>
+                                    Usuario
+                                  </Text>
+                                  <Text style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.2' }}>
+                                    {getRole() === 'tenant_admin' ? 'Administrador' : 'Usuario'}
+                                  </Text>
+                                </div>
+                              )}
+                              {!isMobile && (
+                                <div style={{
+                                  width: '6px',
+                                  height: '6px',
+                                  borderRadius: '50%',
+                                  background: '#10b981',
+                                  boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)'
+                                }} />
+                              )}
+                            </div>
+                          </Dropdown>
+                        </div>
+                      </Header>
+                    )}
 
                     {/* Mobile Menu Drawer */}
                     {isMobile && !isBoleteriaRoute && (
@@ -252,7 +251,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                     <Content
                       className="dashboard-content mobile-content"
                       style={{
-                        marginTop: isMobile ? 56 : 64,
+                        marginTop: !isBoleteriaRoute ? (isMobile ? 56 : 64) : 0,
                         marginRight: isMobile ? 12 : 24,
                         marginBottom: isMobile ? 12 : 24,
                         marginLeft: isBoleteriaRoute
