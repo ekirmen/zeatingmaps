@@ -38,7 +38,7 @@ export const TIMEOUTS = {
     PAYMENT_SEARCH: Math.min(5000, VERCEL_TIMEOUT - SAFETY_MARGIN),
 
     // Operaciones de auditoría (rápidas)
-    AUDIT_CREATE: Math.min(3000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+    AUDIT_CREATE: Math.min(5000, VERCEL_TIMEOUT - SAFETY_MARGIN),
     AUDIT_QUERY: Math.min(5000, VERCEL_TIMEOUT - SAFETY_MARGIN),
 
     // Operaciones de mapas (pueden ser pesadas)
@@ -166,18 +166,33 @@ export async function executeWithTimeoutAndRetry(fn, timeout, operation, retryOp
  * 
  * export default async function handler(req, res) {
  *   try {
+ *     // Simulating an audit creation operation
  *     const result = await executeWithTimeoutAndRetry(
- *       () => lockSeat(seatId, userId),
- *       TIMEOUTS.SEAT_LOCK,
- *       'Lock Seat'
+ *       () => createAuditEntry(req.body.auditData),
+ *       TIMEOUTS.AUDIT_CREATE,
+ *       'Create Audit Entry'
  *     );
  *     return res.status(200).json({ success: true, data: result });
  *   } catch (error) {
- *     if (error.message.includes('timeout')) {
- *       return res.status(408).json({ error: 'Request timeout' });
- *     }
- *     return res.status(500).json({ error: error.message });
- *   }
+        console.error('[API AUDIT] Exception caught:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code
+        });
+
+        // Handle timeout specifically
+        if (error.message.includes('timeout')) {
+            return res.status(408).json({
+                error: 'Request timeout',
+                details: `La operación de auditoría excedió los ${TIMEOUTS.AUDIT_CREATE}ms`
+            });
+        }
+
+        return res.status(500).json({ 
+            error: 'Internal server error',
+            details: error.message
+        });
+    }
  * }
  */
 

@@ -1654,6 +1654,67 @@ export const useSeatLockStore = create((set, get) => ({
     }
   },
 
+  // Reclamar todos los asientos de una sesión ajena (transferirlos a la sesión actual)
+  reclaimSession: async (seatId, overrideFuncionId = null) => {
+    const topic = get().channel?.topic;
+    const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
+    if (!funcionIdRaw) return false;
+
+    const funcionId = parseInt(funcionIdRaw, 10);
+    const currentSessionId = await get().getValidSessionId();
+
+    // 1. Encontrar el session_id que bloquea el asiento
+    const { lockedSeats } = get();
+    let targetLock = lockedSeats.find(s => s.seat_id === seatId || s.seat_id === `silla_${seatId}`);
+
+    if (!targetLock || !targetLock.session_id) {
+      // Si no está en el store local, intentar consultar BD
+      const { data } = await supabase
+        .from('seat_locks')
+        .select('session_id')
+        .eq('seat_id', seatId)
+        .eq('funcion_id', funcionId)
+        .maybeSingle();
+
+      if (!data) return false;
+      targetLock = data;
+    }
+
+    const targetSessionId = targetLock.session_id;
+    if (targetSessionId === currentSessionId) return true;
+
+    // 2. Obtener todos los asientos de esa sesión para esta función
+    const seatsToTransfer = lockedSeats
+      .filter(s => s.session_id === targetSessionId && s.funcion_id === funcionId)
+      .map(s => s.seat_id);
+
+    // Si no hay asientos en el store local (raro si estamos viendo el mapa), 
+    // al menos transferir el actual
+    if (seatsToTransfer.length === 0) {
+      seatsToTransfer.push(seatId);
+    }
+
+    console.log(`🔄 [SEAT_LOCK] Reclamando sesión ${targetSessionId} (${seatsToTransfer.length} asientos)`);
+
+    let successCount = 0;
+    for (const sId of seatsToTransfer) {
+      // Forzar desbloqueo de la sesión anterior y bloqueo para la nueva
+      // Usamos unlockSeat con removeOverride para limpiar la sesión ajena
+      const unlocked = await get().unlockSeat(sId, funcionId, {
+        allowOverrideSession: true,
+        sessionIdOverride: targetSessionId,
+        allowForceUnlock: true
+      });
+
+      if (unlocked) {
+        const locked = await get().lockSeat(sId, 'seleccionado', funcionId);
+        if (locked) successCount++;
+      }
+    }
+
+    return successCount > 0;
+  },
+
   // Alternar estado de asiento (toggle)
   toggleSeat: async (seat) => {
     const seatId = seat._id || seat.id || seat.sillaId;

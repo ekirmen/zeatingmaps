@@ -118,8 +118,6 @@ const Boleteria = () => {
     lockSeat,
     unlockSeat,
     isSeatLocked,
-    isSeatLockedByMe,
-    subscribeToFunction,
     unsubscribe,
     lockedSeats: rtLockedSeats,
     seatStates,
@@ -879,18 +877,18 @@ const Boleteria = () => {
       // Detectar click en asiento seleccionado por otro (azul)
       if (seatState === 'seleccionado_por_otro' && !blockMode) {
         Modal.confirm({
-          title: '🔄 Reclamar Sesión de Cliente',
+          title: '🔄 Asiento seleccionado por otro cliente',
           icon: <ExclamationCircleOutlined />,
           content: (
             <div>
-              <p>Este asiento está seleccionado por otro usuario (posiblemente un cliente con problemas técnicos).</p>
-              <p className="font-semibold mt-2">¿Deseas reclamar TODOS los asientos de esta sesión?</p>
+              <p>Este asiento ya está siendo seleccionado por otro cliente en este momento.</p>
+              <p className="font-semibold mt-2 text-purple-700">¿Quieres proceder con su venta?</p>
               <p className="text-gray-500 text-sm mt-2">
-                Esto transferirá todos los asientos bloqueados por este cliente a tu carrito para que puedas completar la venta.
+                Esto transferirá todos los asientos que tiene ese cliente a tu sesión para que puedas completar la venta en boletería.
               </p>
             </div>
           ),
-          okText: 'Sí, reclamar sesión',
+          okText: 'Sí, proceder con su venta',
           okType: 'primary',
           cancelText: 'Cancelar',
           onOk: async () => {
@@ -1102,12 +1100,41 @@ const Boleteria = () => {
         logger.log('🗑️ [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
       } else {
         // Seleccionar: bloquear en BD primero, luego agregar al carrito
-        const lockResult = await lockSeat(sillaId, 'seleccionado', funcionId);
-        if (lockResult) {
-          await toggleSeat(cartItem);
-          logger.log('Å“â€¦ [Boleteria] Asiento seleccionado y bloqueado:', sillaId);
-        } else {
-          logger.log('ÂÅ’ [Boleteria] No se pudo bloquear el asiento:', sillaId);
+        try {
+          const lockResult = await lockSeat(sillaId, 'seleccionado', funcionId);
+          if (lockResult) {
+            await toggleSeat(cartItem);
+            logger.log('œ… [Boleteria] Asiento seleccionado y bloqueado:', sillaId);
+          } else {
+            // Fallback: Si no se pudo bloquear, el error ya se logueó,
+            // pero podemos intentar detectar si es porque alguien más lo ganó
+            const finalState = seatStates?.get(sillaId);
+            if (finalState === 'seleccionado_por_otro' || finalState === 'vendido') {
+              message.error('El asiento acaba de ser ocupado por otro usuario.');
+            } else {
+              message.error('No se pudo seleccionar el asiento. Por favor reintenta.');
+            }
+          }
+        } catch (error) {
+          if (error.message?.includes('seleccionado por otro')) {
+            Modal.confirm({
+              title: '🔄 Asiento seleccionado por otro cliente',
+              icon: <ExclamationCircleOutlined />,
+              content: (
+                <div>
+                  <p>Este asiento acaba de ser seleccionado por otro cliente.</p>
+                  <p className="font-semibold mt-2 text-purple-700">¿Quieres proceder con su venta?</p>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Esto transferirá los asientos de esa sesión a tu carrito.
+                  </p>
+                </div>
+              ),
+              okText: 'Sí, proceder con su venta',
+              onOk: () => reclaimSession(sillaId)
+            });
+          } else {
+            message.error(`Error: ${error.message}`);
+          }
         }
       }
     },
@@ -1127,7 +1154,9 @@ const Boleteria = () => {
       searchAllSeats,
       searchExistingSeats,
       searchDataLoaded,
-      searchAllSeatsLoading
+      searchAllSeatsLoading,
+      seatStates,
+      reclaimSession
     ]
   );
 
