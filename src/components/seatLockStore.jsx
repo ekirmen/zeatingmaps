@@ -659,26 +659,31 @@ export const useSeatLockStore = create((set, get) => ({
     const normalizedFuncionId = String(funcionId);
     const expectedTopic = `seat-locks-channel-${normalizedFuncionId}`;
 
+    // Evitar tormentas de suscripción (ej: múltiples llamadas en milisegundos)
+    const now = Date.now();
+    const state = get();
+    if (state.lastSubscriptionAttempt &&
+      state.lastSubscriptionAttempt.funcionId === normalizedFuncionId &&
+      now - state.lastSubscriptionAttempt.timestamp < 1000) {
+      console.log('⏳ [SEAT_LOCK_STORE] Suscripción ignorada por ser demasiado frecuente');
+      return;
+    }
+    set({ lastSubscriptionAttempt: { funcionId: normalizedFuncionId, timestamp: now } });
+
     // Verificar si ya existe un canal activo para este topic
     const channels = supabase.getChannels();
     const existingChannel = Array.isArray(channels) ? channels.find(ch => ch.topic === expectedTopic) : null;
 
     if (existingChannel) {
-      // Verificar que el canal esté activo (joined o joining)
       const channelState = existingChannel.state;
       if (channelState === 'joined' || channelState === 'joining') {
-        // Incrementar contador de referencias
         const currentCount = channelRefCounts.get(expectedTopic) || 0;
         channelRefCounts.set(expectedTopic, currentCount + 1);
         set({ channel: existingChannel, subscriptionRefCount: currentCount + 1 });
         return;
-      } else {
-        // Limpiar el canal inactivo
-        try {
-          existingChannel.unsubscribe();
-        } catch (e) {
-          // Ignorar errores
-        }
+      } else if (channelState === 'errored') {
+        // Si el canal está en error, intentar limpiarlo antes de recrear
+        try { existingChannel.unsubscribe(); } catch (e) { }
       }
     }
 
@@ -1189,8 +1194,6 @@ export const useSeatLockStore = create((set, get) => ({
               pendingReloadTimeout: null,
             });
           } else if (status === 'CHANNEL_ERROR') {
-            // Error silencioso - no loguear en producción para evitar spam en consola
-            // Solo manejar internamente sin mostrar errores repetitivos
             get().handleRealtimeChannelIssue('CHANNEL_ERROR', normalizedFuncionId);
           } else if (status === 'TIMED_OUT') {
             get().handleRealtimeChannelIssue('TIMED_OUT', normalizedFuncionId);
@@ -1200,20 +1203,12 @@ export const useSeatLockStore = create((set, get) => ({
             const isCurrentChannel = state.channel === newChannel;
 
             // Si el canal cerrado no es el actual o no hay referencias activas, ignorar el evento
-            if (!isCurrentChannel || activeRefCount === 0 || (state.subscriptionRefCount || 0) === 0) {
-              if (typeof window !== 'undefined' && state.pendingReloadTimeout) {
-                window.clearTimeout(state.pendingReloadTimeout);
-              }
-
-              set({
-                connectionIssueDetected: false,
-                pendingReloadTimeout: null,
-              });
+            if (!isCurrentChannel || activeRefCount === 0) {
               return;
             }
-            // No limpiar el canal del store si se cierra - puede estar siendo usado por otros componentes
             get().handleRealtimeChannelIssue('CLOSED', normalizedFuncionId);
-          } else {
+          }
+          else {
           }
         });
 

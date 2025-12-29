@@ -83,18 +83,21 @@ const Boleteria = () => {
   const handleContextChange = useCallback(({ venueId, eventId, functionId }) => {
     setSelectedVenueId(venueId);
 
-    if (eventId !== 'all' && eventId !== selectedEvent?.id) {
-      handleEventSelect(eventId);
-    } else if (eventId === 'all' && selectedEvent) {
-      // Ideally clear event, but handleEventSelect might expect an ID. 
-      // If clearing is not supported by useBoleteria, we might just keep it or inspect handleEventSelect.
-      // Assuming handleEventSelect('') or null works
+    // Comparaciones seguras (casteando a String para evitar flip-flops entre number y string)
+    const currentEventId = selectedEvent?.id ? String(selectedEvent.id) : 'all';
+    const currentFuncionId = selectedFuncion?.id ? String(selectedFuncion.id) : 'all';
+    const newEventId = eventId ? String(eventId) : 'all';
+    const newFuncionId = functionId ? String(functionId) : 'all';
+
+    if (newEventId !== 'all' && newEventId !== currentEventId) {
+      handleEventSelect(newEventId);
+    } else if (newEventId === 'all' && selectedEvent) {
       handleEventSelect(null);
     }
 
-    if (functionId !== 'all' && functionId !== selectedFuncion?.id) {
-      handleFunctionSelect(functionId);
-    } else if (functionId === 'all' && selectedFuncion) {
+    if (newFuncionId !== 'all' && newFuncionId !== currentFuncionId) {
+      handleFunctionSelect(newFuncionId);
+    } else if (newFuncionId === 'all' && selectedFuncion) {
       handleFunctionSelect(null);
     }
   }, [selectedEvent, selectedFuncion, handleEventSelect, handleFunctionSelect]);
@@ -135,28 +138,26 @@ const Boleteria = () => {
 
     // Solo suscribirse si cambió la función
     if (currentFuncionId && currentFuncionId !== subscriptionFuncionId.current && subscribeToFunction) {
-      // Desuscribirse de la función anterior si existe
+      // 1. Desuscribirse de la función anterior si existe
       if (subscriptionFuncionId.current && unsubscribe) {
         logger.log('🔌 [Boleteria] Desuscribiéndose de función anterior:', subscriptionFuncionId.current);
         unsubscribe();
       }
 
+      // 2. Suscribirse a la nueva función
       logger.log('🔌 [Boleteria] Suscribiéndose a función:', currentFuncionId);
       subscribeToFunction(currentFuncionId);
       subscriptionFuncionId.current = currentFuncionId;
     }
 
     return () => {
-      // Dar tiempo al WebSocket para conectarse antes de limpiar
-      const timer = setTimeout(() => {
-        if (unsubscribe && subscriptionFuncionId.current) {
-          logger.log('🔌 [Boleteria] Desuscribiéndose de función:', subscriptionFuncionId.current);
-          unsubscribe();
-          subscriptionFuncionId.current = null;
-        }
-      }, 100); // 100ms delay para evitar race condition
-
-      return () => clearTimeout(timer);
+      // Al desmontar el componente o cambiar de función, simplemente desuscribirse de la actual
+      // El store maneja la referencia y el cierre real del canal
+      if (subscriptionFuncionId.current && unsubscribe) {
+        logger.log('🔌 [Boleteria] Limpieza de suscripción para función:', subscriptionFuncionId.current);
+        unsubscribe();
+        subscriptionFuncionId.current = null;
+      }
     };
   }, [selectedFuncion?.id, subscribeToFunction, unsubscribe]);
 
@@ -604,6 +605,112 @@ const Boleteria = () => {
     [setCarrito]
   );
 
+
+  // Función auxiliar para procesar el reclamo una vez identificada la sesión
+  const proceedWithReclaim = useCallback(async (seatLock) => {
+    try {
+      const targetSessionId = seatLock.session_id;
+      const funcionId = selectedFuncion.id;
+
+      logger.log(`🔄 [RECLAIM] Procesando reclamo para sesión ${targetSessionId} en función ${funcionId}`);
+
+      // 2. Obtener TODOS los asientos de esa sesión
+      const { data: allSeats, error: seatsError } = await supabase
+        .from('seat_locks')
+        .select('seat_id, zona_id, zona_nombre, precio, metadata, status')
+        .eq('session_id', targetSessionId)
+        .eq('funcion_id', funcionId)
+        .in('status', ['seleccionado', 'locked', 'reservado', 'lock']);
+
+      if (seatsError || !allSeats || allSeats.length === 0) {
+        throw new Error('No se encontraron asientos activos en esta sesión para transferir');
+      }
+
+      // 3. Verificar que no haya asientos pagados (seguridad)
+      const { data: paidSeats } = await supabase
+        .from('seat_locks')
+        .select('seat_id')
+        .eq('session_id', targetSessionId)
+        .in('status', ['pagado', 'vendido']);
+
+      if (paidSeats && paidSeats.length > 0) {
+        throw new Error('Esta sesión ya tiene asientos pagados. No se puede reclamar.');
+      }
+
+      // 4. Obtener mi session_id actual
+      const mySessionId = localStorage.getItem('anonSessionId');
+
+      if (!mySessionId) {
+        throw new Error('No se pudo obtener tu sesión actual');
+      }
+
+      // 5. Transferir todos los asientos a mi sesión
+      const { error: updateError } = await supabase
+        .from('seat_locks')
+        .update({
+          session_id: mySessionId,
+          updated_at: new Date().toISOString(),
+          last_activity: new Date().toISOString()
+        })
+        .eq('session_id', targetSessionId)
+        .eq('funcion_id', selectedFuncion.id)
+        .eq('status', 'seleccionado');
+
+      if (updateError) {
+        throw new Error('Error al transferir asientos: ' + updateError.message);
+      }
+
+      // 6. Agregar asientos al carrito local
+      const seatsForCart = allSeats.map(s => ({
+        sillaId: s.seat_id,
+        _id: s.seat_id,
+        zonaId: s.zona_id,
+        zonaNombre: s.zona_nombre,
+        precio: s.precio || 0,
+        funcionId: selectedFuncion.id,
+        metadata: s.metadata || {}
+      }));
+
+      setCarrito(prev => {
+        const safePrev = Array.isArray(prev) ? prev : [];
+        // Evitar duplicados
+        const newSeats = seatsForCart.filter(newSeat =>
+          !safePrev.some(existingSeat =>
+            (existingSeat._id || existingSeat.sillaId) === newSeat.sillaId
+          )
+        );
+        return [...safePrev, ...newSeats];
+      });
+
+      message.success({
+        content: `✅ ${allSeats.length} asiento(s) reclamados exitosamente`,
+        key: 'reclaim',
+        duration: 3
+      });
+
+      // 7. Registrar auditoría (deshabilitado - logUserAction no disponible)
+      // try {
+      //   await logUserAction('reclaim_session', {
+      //     original_session: targetSessionId,
+      //     new_session: mySessionId,
+      //     seats_count: allSeats.length,
+      //     funcion_id: selectedFuncion.id,
+      //     seats: allSeats.map(s => s.seat_id)
+      //   });
+      // } catch (auditError) {
+      //   console.warn('[RECLAIM] Error en auditoría:', auditError);
+      // }
+
+    } catch (error) {
+      message.error({
+        content: '❌ Error al reclamar sesión: ' + error.message,
+        key: 'reclaim',
+        duration: 5
+      });
+      console.error('[RECLAIM] Error:', error);
+    }
+  }, [selectedFuncion, setCarrito, supabase, message]);
+
   // Función para reclamar sesión de cliente (Customer Recovery)
   const reclaimSession = useCallback(
     async (clickedSeatId) => {
@@ -611,117 +718,48 @@ const Boleteria = () => {
         message.loading({ content: 'Reclamando sesión...', key: 'reclaim', duration: 0 });
 
         // 1. Obtener el session_id del asiento clickeado
+        // Usamos maybeSingle() para evitar el error 406 cuando no hay resultados
+        // Y expandimos la búsqueda a cualquier estado activo
         const { data: seatLock, error: lockError } = await supabase
           .from('seat_locks')
-          .select('session_id, funcion_id')
+          .select('session_id, funcion_id, status')
           .eq('seat_id', clickedSeatId)
           .eq('funcion_id', selectedFuncion.id)
-          .eq('status', 'seleccionado')
-          .single();
+          .in('status', ['seleccionado', 'locked', 'reservado', 'lock'])
+          .maybeSingle();
 
-        if (lockError || !seatLock) {
-          throw new Error('No se pudo encontrar la sesión del asiento');
+        if (lockError) {
+          logger.error('❌ [RECLAIM] Error buscando bloqueo:', lockError);
+          throw new Error(`Error de base de datos: ${lockError.message}`);
         }
 
-        const targetSessionId = seatLock.session_id;
+        if (!seatLock) {
+          // Intentar sin prefijo por si acaso
+          const alternateId = clickedSeatId.replace('silla_', '');
+          if (alternateId !== clickedSeatId) {
+            const { data: altLock } = await supabase
+              .from('seat_locks')
+              .select('session_id, funcion_id, status')
+              .eq('seat_id', alternateId)
+              .eq('funcion_id', selectedFuncion.id)
+              .in('status', ['seleccionado', 'locked', 'reservado', 'lock'])
+              .maybeSingle();
 
-        // 2. Obtener TODOS los asientos de esa sesión
-        const { data: allSeats, error: seatsError } = await supabase
-          .from('seat_locks')
-          .select('seat_id, zona_id, zona_nombre, precio, metadata')
-          .eq('session_id', targetSessionId)
-          .eq('funcion_id', selectedFuncion.id)
-          .eq('status', 'seleccionado');
-
-        if (seatsError || !allSeats || allSeats.length === 0) {
-          throw new Error('No se encontraron asientos en esta sesión');
+            if (altLock) {
+              return proceedWithReclaim(altLock);
+            }
+          }
+          throw new Error('No se pudo encontrar la sesión del asiento (el bloqueo podría haber expirado)');
         }
 
-        // 3. Verificar que no haya asientos pagados (seguridad)
-        const { data: paidSeats } = await supabase
-          .from('seat_locks')
-          .select('seat_id')
-          .eq('session_id', targetSessionId)
-          .in('status', ['pagado', 'vendido']);
-
-        if (paidSeats && paidSeats.length > 0) {
-          throw new Error('Esta sesión ya tiene asientos pagados. No se puede reclamar.');
-        }
-
-        // 4. Obtener mi session_id actual
-        const mySessionId = localStorage.getItem('anonSessionId');
-
-        if (!mySessionId) {
-          throw new Error('No se pudo obtener tu sesión actual');
-        }
-
-        // 5. Transferir todos los asientos a mi sesión
-        const { error: updateError } = await supabase
-          .from('seat_locks')
-          .update({
-            session_id: mySessionId,
-            updated_at: new Date().toISOString(),
-            last_activity: new Date().toISOString()
-          })
-          .eq('session_id', targetSessionId)
-          .eq('funcion_id', selectedFuncion.id)
-          .eq('status', 'seleccionado');
-
-        if (updateError) {
-          throw new Error('Error al transferir asientos: ' + updateError.message);
-        }
-
-        // 6. Agregar asientos al carrito local
-        const seatsForCart = allSeats.map(s => ({
-          sillaId: s.seat_id,
-          _id: s.seat_id,
-          zonaId: s.zona_id,
-          zonaNombre: s.zona_nombre,
-          precio: s.precio || 0,
-          funcionId: selectedFuncion.id,
-          metadata: s.metadata || {}
-        }));
-
-        setCarrito(prev => {
-          const safePrev = Array.isArray(prev) ? prev : [];
-          // Evitar duplicados
-          const newSeats = seatsForCart.filter(newSeat =>
-            !safePrev.some(existingSeat =>
-              (existingSeat._id || existingSeat.sillaId) === newSeat.sillaId
-            )
-          );
-          return [...safePrev, ...newSeats];
-        });
-
-        message.success({
-          content: `✅ ${allSeats.length} asiento(s) reclamados exitosamente`,
-          key: 'reclaim',
-          duration: 3
-        });
-
-        // 7. Registrar auditoría (deshabilitado - logUserAction no disponible)
-        // try {
-        //   await logUserAction('reclaim_session', {
-        //     original_session: targetSessionId,
-        //     new_session: mySessionId,
-        //     seats_count: allSeats.length,
-        //     funcion_id: selectedFuncion.id,
-        //     seats: allSeats.map(s => s.seat_id)
-        //   });
-        // } catch (auditError) {
-        //   console.warn('[RECLAIM] Error en auditoría:', auditError);
-        // }
+        return proceedWithReclaim(seatLock);
 
       } catch (error) {
-        message.error({
-          content: '❌ Error al reclamar sesión: ' + error.message,
-          key: 'reclaim',
-          duration: 5
-        });
-        console.error('[RECLAIM] Error:', error);
+        logger.error('❌ [RECLAIM] Error:', error);
+        message.error(`Error: ${error.message}`, 5);
       }
     },
-    [selectedFuncion, setCarrito]
+    [selectedFuncion, proceedWithReclaim, supabase, message]
   );
 
   // Función para cargar venta vendida por localizador (Load Sold Transaction)
