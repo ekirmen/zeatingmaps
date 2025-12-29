@@ -1278,8 +1278,8 @@ const Boleteria = () => {
   }), [isSearchModalVisible, setIsSearchModalVisible, searchResults, paymentResults, searchLoading, handleAddClient, handleUnifiedSearch, clearSearchResults, handleLocatorSearch, selectedClient, setSelectedClient]);
 
   const functionModalProps = useMemo(() => ({
-    isVisible: isFunctionsModalVisible,
-    onClose: () => setIsFunctionsModalVisible(false),
+    visible: isFunctionsModalVisible,
+    onCancel: () => setIsFunctionsModalVisible(false),
     funciones,
     selectedFuncion,
     onFunctionSelect: handleFunctionSelect,
@@ -1693,14 +1693,7 @@ const Boleteria = () => {
         )}
       </Modal>
 
-      {/* Modal de selección de funciones */}
-      <FunctionModal
-        visible={isFunctionsModalVisible}
-        onClose={() => setIsFunctionsModalVisible(false)}
-        funciones={funciones}
-        selectedFuncion={selectedFuncion}
-        onSelectFuncion={handleFunctionSelect}
-      />
+
 
       {/* Modal de información del evento */}
       <EventInfoModal

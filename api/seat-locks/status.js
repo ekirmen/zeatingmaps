@@ -1,5 +1,60 @@
 import { createClient } from '@supabase/supabase-js';
-import { TIMEOUTS, withTimeout } from '../../src/config/timeouts.js';
+
+// =====================================================
+// Timeout Configuration (Inlined for Serverless)
+// =====================================================
+
+// Detectar entorno y plan de Vercel
+const VERCEL_ENV = process.env.VERCEL_ENV || 'development';
+const IS_PRODUCTION = VERCEL_ENV === 'production';
+
+// Timeout máximo de Vercel según plan
+const VERCEL_TIMEOUT = IS_PRODUCTION ? 10000 : 60000; // 10s Free, 60s local/Pro
+
+// Margen de seguridad para evitar timeouts de Vercel
+const SAFETY_MARGIN = 2000; // 2 segundos
+
+const TIMEOUTS = {
+  // Operaciones de asientos (críticas, deben ser rápidas)
+  SEAT_LOCK: Math.min(5000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+  SEAT_UNLOCK: Math.min(5000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+  SEAT_STATUS: Math.min(3000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+  SEAT_BATCH_UNLOCK: Math.min(8000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+
+  // Operaciones de pagos (pueden tardar más)
+  PAYMENT_CREATE: Math.min(8000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+  PAYMENT_PROCESS_STRIPE: Math.min(8000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+  PAYMENT_PROCESS_PAYPAL: Math.min(8000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+  PAYMENT_REFUND: Math.min(8000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+  PAYMENT_SEARCH: Math.min(5000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+
+  // Operaciones de auditoría (rápidas)
+  AUDIT_CREATE: Math.min(3000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+  AUDIT_QUERY: Math.min(5000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+
+  // Operaciones de mapas (pueden ser pesadas)
+  MAP_LOAD: Math.min(5000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+  MAP_SAVE: Math.min(8000, VERCEL_TIMEOUT - SAFETY_MARGIN),
+};
+
+function createTimeoutPromise(ms, operation = 'Operation') {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`${operation} timeout after ${ms}ms`));
+    }, ms);
+  });
+}
+
+async function withTimeout(promise, timeout, operation = 'Operation') {
+  return Promise.race([
+    promise,
+    createTimeoutPromise(timeout, operation)
+  ]);
+}
+
+// =====================================================
+// Main Handler
+// =====================================================
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
