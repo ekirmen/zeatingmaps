@@ -214,33 +214,26 @@ const Cart = ({
       {/* Customer Information Card */}
       {selectedClient && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-3 py-2">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-blue-600 font-semibold text-sm">
-                  👤 {selectedClient.nombre || ''} {selectedClient.apellido || ''}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-                {selectedClient.telefono && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-400">📞</span>
-                    <span>{selectedClient.telefono}</span>
-                  </div>
-                )}
-                {selectedClient.login && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-400">📧</span>
-                    <span>{selectedClient.login}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            {!selectedClient.activo && (
-              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                Inactivo
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-blue-600 font-semibold text-sm">
+                👤 {selectedClient.nombre || ''} {selectedClient.apellido || ''}
               </span>
-            )}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+              {selectedClient.telefono && (
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-400">📞</span>
+                  <span>{selectedClient.telefono}</span>
+                </div>
+              )}
+              {selectedClient.login && (
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-400">📧</span>
+                  <span>{selectedClient.login}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
