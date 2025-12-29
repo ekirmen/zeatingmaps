@@ -35,6 +35,7 @@ const SeatShape = memo(({ seat, color, borderColor, size, isSelected, onClick, b
     // Visual feedback for selection and block mode
     let strokeWidth = isSelected ? 3 : 1;
     let stroke = isSelected ? '#1890ff' : (borderColor || '#ccc');
+    let dash = undefined; // For dashed borders
 
     // Override stroke for block mode
     if (blockMode) {
@@ -45,6 +46,13 @@ const SeatShape = memo(({ seat, color, borderColor, size, isSelected, onClick, b
             stroke = '#22c55e'; // Green for unlock mode
             strokeWidth = 3;
         }
+    }
+
+    // Special visual for loaded sold transactions
+    if (seat.isSoldTransaction) {
+        dash = [10, 5]; // Dashed border pattern
+        strokeWidth = 3;
+        stroke = '#f59e0b'; // Orange border for loaded sales
     }
 
     // Label settings
@@ -69,6 +77,7 @@ const SeatShape = memo(({ seat, color, borderColor, size, isSelected, onClick, b
                 fill={color}
                 stroke={stroke}
                 strokeWidth={strokeWidth}
+                dash={dash}
                 cornerRadius={4}
                 shadowBlur={isSelected ? 10 : 0}
                 shadowColor="#1890ff"
@@ -86,6 +95,7 @@ const SeatShape = memo(({ seat, color, borderColor, size, isSelected, onClick, b
                 fill={color}
                 stroke={stroke}
                 strokeWidth={strokeWidth}
+                dash={dash}
                 shadowBlur={isSelected ? 10 : 0}
                 shadowColor="#1890ff"
             />

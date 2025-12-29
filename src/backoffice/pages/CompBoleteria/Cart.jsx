@@ -247,6 +247,20 @@ const Cart = ({
               {safeCarrito.length} elemento{safeCarrito.length !== 1 ? 's' : ''} seleccionado{safeCarrito.length !== 1 ? 's' : ''}
             </p>
           )}
+          {/* Loaded Transaction Indicator */}
+          {safeCarrito.some(item => item.isSoldTransaction) && (
+            <div className="mt-2 flex items-center gap-2 bg-orange-50 border border-orange-200 rounded px-2 py-1">
+              <span className="text-orange-600 text-sm">🔄</span>
+              <div className="flex-1">
+                <span className="text-xs font-semibold text-orange-700">Venta Cargada</span>
+                {safeCarrito[0]?.locator && (
+                  <span className="text-xs text-orange-600 ml-2">
+                    Localizador: <span className="font-mono font-bold">{safeCarrito[0].locator}</span>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {safeCarrito.length > 0 && !hasLockActions && (
