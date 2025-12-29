@@ -7,7 +7,7 @@ export default defineConfig({
     plugins: [react()],
     base: '/store',
     // Expose env vars with these prefixes to the client
-    envPrefix: ['VITE_', 'NEXT_PUBLIC_', 'REACT_APP_'],
+    envPrefix: ['VITE_', 'NEXT_PUBLIC_', 'REACT_APP_', 'REACT_', 'react_'],
     build: {
         outDir: 'build',
         sourcemap: false,

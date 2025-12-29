@@ -182,6 +182,7 @@ const Boleteria = () => {
   const [seatPayment, setSeatPayment] = useState(null);
   const [isSeatModalVisible, setIsSeatModalVisible] = useState(false);
   const [permanentLocks, setPermanentLocks] = useState([]);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   // Estados para gestiÂón de precios y entradas
   const [entradas, setEntradas] = useState([]);
@@ -1163,7 +1164,9 @@ const Boleteria = () => {
     onShowSeatModal: () => setIsSeatModalVisible(true),
     seatPayment,
     setSeatPayment,
-    setSelectedEvent
+    setSelectedEvent,
+    isMenuCollapsed,
+    setIsMenuCollapsed
   }), [
     selectedClient,
     setCarrito,
@@ -1192,7 +1195,9 @@ const Boleteria = () => {
     selectedAffiliate,
     setSelectedAffiliate,
     clientAbonos,
-    setClientAbonos
+    setClientAbonos,
+    isMenuCollapsed,
+    setIsMenuCollapsed
   ]);
 
 
@@ -1372,16 +1377,18 @@ const Boleteria = () => {
         </Drawer>
 
         {/* Desktop: Sidebar fijo */}
-        <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
-          <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-white">
-            <button
-              onClick={() => window.location.href = '/dashboard'}
-              className="flex items-center gap-2 text-sm font-semibold text-purple-700 bg-white border border-purple-200 rounded-lg px-3 py-2 shadow-sm hover:bg-purple-50 transition"
-            >
-              <ChevronLeft className="text-base" />
-              <span>Volver al panel</span>
-            </button>
-          </div>
+        <div className={`hidden md:flex flex-col ${isMenuCollapsed ? 'w-14' : 'w-64'} bg-white border-r border-gray-200 transition-all duration-300`}>
+          {!isMenuCollapsed && (
+            <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-white">
+              <button
+                onClick={() => window.location.href = '/dashboard'}
+                className="flex items-center gap-2 text-sm font-semibold text-purple-700 bg-white border border-purple-200 rounded-lg px-3 py-2 shadow-sm hover:bg-purple-50 transition overflow-hidden whitespace-nowrap"
+              >
+                <ChevronLeft className="min-w-[16px]" />
+                <span>Volver al panel</span>
+              </button>
+            </div>
+          )}
 
           <div className="flex-1 overflow-auto p-1">
             <LeftMenu {...leftMenuProps} />
@@ -1466,7 +1473,7 @@ const Boleteria = () => {
                 <button
                   onClick={handleLogout}
                   className="h-7 px-3 flex items-center gap-1 text-red-600 hover:bg-red-50 rounded transition-colors border border-transparent hover:border-red-100"
-                  title="Cerrar SesiÃ³n"
+                  title="Cerrar Sesión"
                 >
                   <span className="text-xs font-semibold mr-1">Salir</span>
                   <LogoutOutlined />
@@ -1490,26 +1497,36 @@ const Boleteria = () => {
 
                 <div className="w-px h-4 bg-gray-300 mx-1"></div>
 
-                {/* Block Mode - Segmented Control Style */}
+                {/* Block Mode - Single Toggle */}
                 <div className="flex bg-gray-200 p-0.5 rounded">
-                  <button
-                    onClick={() => handleBlockActionToggle('block')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${blockMode && blockAction === 'block'
-                      ? 'bg-red-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-300'
-                      }`}
-                  >
-                    Bloquear
-                  </button>
-                  <button
-                    onClick={() => handleBlockActionToggle('unlock')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${blockMode && blockAction === 'unlock'
-                      ? 'bg-green-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-300'
-                      }`}
-                  >
-                    Desbloquear
-                  </button>
+                  {!blockMode ? (
+                    <button
+                      onClick={() => handleBlockActionToggle('block')}
+                      className="px-3 py-0.5 rounded text-[10px] font-bold text-gray-600 hover:bg-gray-300 transition-all flex items-center gap-1"
+                    >
+                      <span>Bloquear</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        // Toggle logic: if block -> unlock, if unlock -> turn off
+                        if (blockAction === 'block') {
+                          handleBlockActionToggle('unlock');
+                        } else {
+                          handleBlockActionToggle('unlock'); // This will hit the switch-off logic in handleBlockActionToggle
+                        }
+                      }}
+                      className={`px-3 py-0.5 rounded text-[10px] font-bold shadow-sm text-white transition-all flex items-center gap-1 ${blockAction === 'block' ? 'bg-red-500' : 'bg-green-500'}`}
+                    >
+                      <span>{blockAction === 'block' ? 'MODO BLOQUEO' : 'MODO LIBERAR'}</span>
+                      <X size={10} className="ml-1" onClick={(e) => {
+                        e.stopPropagation();
+                        setBlockMode(false);
+                        setBlockAction(null);
+                        setCarrito(prev => (Array.isArray(prev) ? prev.filter(item => !item.lockAction) : []));
+                      }} />
+                    </button>
+                  )}
                 </div>
 
                 {searchAllSeatsLoading && (

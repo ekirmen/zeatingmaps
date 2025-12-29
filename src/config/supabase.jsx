@@ -16,7 +16,8 @@ const serviceRoleKey =
   import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
   import.meta.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
   import.meta.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ||
-  import.meta.env.REACT_SUPABASE_SERVICE_ROLE_KEY
+  import.meta.env.REACT_SUPABASE_SERVICE_ROLE_KEY ||
+  import.meta.env.react_SUPABASE_SERVICE_ROLE_KEY
 
 // Verificar variables de entorno
 if (!supabaseUrl || !supabaseAnonKey) {

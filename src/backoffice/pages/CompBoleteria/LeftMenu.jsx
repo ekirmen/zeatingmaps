@@ -6,13 +6,22 @@ import { getUserByEmail } from '../../services/adminUsers';
 import downloadTicket from '../../../utils/downloadTicket';
 import { useCartStore } from '../../../store/cartStore';
 
-const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect, setSelectedEvent }) => {
+const LeftMenu = ({
+  onAddClientClick,
+  selectedClient,
+  onClientRemove,
+  setCarrito,
+  setSelectedClient,
+  onFunctionSelect,
+  setSelectedEvent,
+  isMenuCollapsed,
+  setIsMenuCollapsed
+}) => {
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [searchMode, setSearchMode] = useState('locator');
   const [searchTerm, setSearchTerm] = useState('');
   const [emailSearchResults, setEmailSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   const [userData, setUserData] = useState(selectedClient || null);
   const [ticketData, setTicketData] = useState(null);
@@ -348,63 +357,91 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   return (
     <div className="relative h-full">
       {/* Botón para mostrar/ocultar menú */}
-      <div className="absolute top-0 right-0 z-10">
+      <div className={`flex justify-center p-2 border-b border-gray-100 mb-2 ${isMenuCollapsed ? '' : 'justify-end'}`}>
         <Button
           type="text"
-          icon={isMenuCollapsed ? <ChevronDown /> : <ChevronUp />}
+          icon={isMenuCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
           onClick={toggleMenu}
-          className="bg-white shadow-md rounded-full w-8 h-8 flex items-center justify-center"
+          className="bg-gray-50 hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all"
           title={isMenuCollapsed ? "Mostrar menú" : "Ocultar menú"}
         />
       </div>
 
-      <div className="p-4 space-y-4 bg-white shadow rounded">
-        <Button icon={<Search />} onClick={() => setIsSearchModalVisible(true)} block>
-          Buscar Tickets
+      <div className={`flex flex-col gap-3 p-2 transition-all duration-300 ${isMenuCollapsed ? 'items-center' : ''}`}>
+        <Button
+          icon={<Search size={18} />}
+          onClick={() => setIsSearchModalVisible(true)}
+          className={isMenuCollapsed ? 'w-10 h-10 p-0 flex items-center justify-center border-none shadow-none bg-transparent hover:bg-purple-50 text-purple-600' : ''}
+          block={!isMenuCollapsed}
+          type={isMenuCollapsed ? "text" : "default"}
+          title="Buscar Tickets"
+        >
+          {!isMenuCollapsed && "Buscar Tickets"}
         </Button>
 
         <Button
-          icon={<UserPlus />}
+          icon={<UserPlus size={18} />}
           onClick={() => setIsAccountModalVisible(true)}
-          block
+          className={isMenuCollapsed ? 'w-10 h-10 p-0 flex items-center justify-center border-none shadow-none bg-transparent hover:bg-purple-50 text-purple-600' : ''}
+          block={!isMenuCollapsed}
+          type={isMenuCollapsed ? "text" : "default"}
+          title="Buscar/Añadir Cuenta"
         >
-          Buscar/Añadir Cuenta
+          {!isMenuCollapsed && "Buscar/Añadir Cuenta"}
         </Button>
 
         <Button
-          icon={<Settings />}
+          icon={<Settings size={18} />}
           onClick={() => setIsConfigModalVisible(true)}
-          block
+          className={isMenuCollapsed ? 'w-10 h-10 p-0 flex items-center justify-center border-none shadow-none bg-transparent hover:bg-purple-50 text-purple-600' : ''}
+          block={!isMenuCollapsed}
+          type={isMenuCollapsed ? "text" : "default"}
+          title="Configuración"
         >
-          Configuración
+          {!isMenuCollapsed && "Configuración"}
         </Button>
+
         <Button
-          icon={<X />}
+          icon={<X size={18} />}
           onClick={() => {
             const { clearCart } = useCartStore.getState();
             clearCart();
           }}
-          block
-          danger
+          className={isMenuCollapsed ? 'w-10 h-10 p-0 flex items-center justify-center border-none shadow-none bg-transparent hover:bg-red-50 text-red-600' : ''}
+          block={!isMenuCollapsed}
+          type={isMenuCollapsed ? "text" : "default"}
+          danger={!isMenuCollapsed}
+          title="Remove Seats"
         >
-          Remove Seats
+          {!isMenuCollapsed && "Remove Seats"}
         </Button>
 
-        {userData && (
-          <Card size="small" className="border border-gray-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-semibold">
-                  {userData.login || userData.nombre || userData.email || 'Cliente sin nombre'}
+        {!isMenuCollapsed && userData && (
+          <Card size="small" className="border border-purple-100 bg-purple-50/30 mt-2">
+            <div className="flex justify-between items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-xs truncate">
+                  {userData.login || userData.nombre || userData.email || 'Cliente'}
                 </div>
-                <div className="text-sm text-gray-500">{userData.email || userData.telefono || 'Sin datos de contacto'}</div>
+                <div className="text-[10px] text-gray-400 truncate">{userData.email || userData.telefono}</div>
               </div>
-              <div className="flex gap-2">
-                <Button size="small" icon={<Edit />} onClick={() => setIsAccountModalVisible(true)} />
-                <Button size="small" icon={<X />} danger onClick={handleClearClient} />
+              <div className="flex gap-1">
+                <Button size="small" type="text" icon={<Edit size={12} />} onClick={() => setIsAccountModalVisible(true)} className="h-6 w-6 p-0" />
+                <Button size="small" type="text" danger icon={<X size={12} />} onClick={handleClearClient} className="h-6 w-6 p-0" />
               </div>
             </div>
           </Card>
+        )}
+
+        {isMenuCollapsed && userData && (
+          <div className="mt-2 text-purple-600 relative group cursor-pointer" onClick={() => setIsAccountModalVisible(true)}>
+            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center font-bold text-xs border border-purple-200">
+              {(userData.login || userData.email || 'C').substring(0, 1).toUpperCase()}
+            </div>
+            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 whitespace-nowrap">
+              {userData.login || userData.email}
+            </div>
+          </div>
         )}
       </div>
 
@@ -562,21 +599,30 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           configForm.resetFields();
         }}
         footer={null}
-      > <Form layout="vertical" form={configForm} onFinish={handleAddAccount}>
-          <Form.Item name="login" label="Nombre" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="telefono" label="Teléfono">
-            <Input />
-          </Form.Item>
-          <Button htmlType="submit" block>
-            Crear Cuenta
-          </Button>
-        </Form>
-        {isAddingAccount ? null : (
+      >
+        {isAddingAccount ? (
+          <Form layout="vertical" form={configForm} onFinish={handleAddAccount}>
+            <Form.Item name="login" label="Nombre" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="telefono" label="Teléfono">
+              <Input />
+            </Form.Item>
+            <Button type="primary" htmlType="submit" block>
+              Crear Cuenta
+            </Button>
+            <Button
+              className="mt-2"
+              onClick={() => setIsAddingAccount(false)}
+              block
+            >
+              Volver a buscar
+            </Button>
+          </Form>
+        ) : (
           <>
             <Input.Search
               placeholder="Buscar por email"

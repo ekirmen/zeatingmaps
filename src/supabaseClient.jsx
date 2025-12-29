@@ -7,7 +7,10 @@
 const getEnvVar = (name) => {
     return import.meta.env[`VITE_${name}`] ||
         import.meta.env[`NEXT_PUBLIC_${name}`] ||
-        import.meta.env[`REACT_APP_${name}`];
+        import.meta.env[`REACT_APP_${name}`] ||
+        import.meta.env[`REACT_${name}`] ||
+        import.meta.env[`react_${name}`] ||
+        import.meta.env[name];
 };
 
 const supabaseUrl = getEnvVar('SUPABASE_URL');

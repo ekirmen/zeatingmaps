@@ -137,13 +137,13 @@ const TabContentActividadTotal = ({ stats }) => (
 
 const TabContentEstadosZonas = ({ zonesStats }) => (
   <div className="tab-extended">
-    <h4 className="text-lg font-semibold mb-3">OcupaciÃ³n por Zonas</h4>
+    <h4 className="text-lg font-semibold mb-3">Ocupación por Zonas</h4>
     <Table
       dataSource={zonesStats}
       columns={[
         { title: 'Zona', dataIndex: 'zone', key: 'zone' },
         { title: 'Aforo', dataIndex: 'aforo', key: 'aforo', align: 'right' },
-        { title: 'Emitidas', dataIndex: 'released', key: 'released', align: 'right' },
+        { title: 'Vendidas', dataIndex: 'released', key: 'released', align: 'right' },
         { title: 'Disp.', dataIndex: 'avail', key: 'avail', align: 'right' },
         {
           title: 'Estado', key: 'status', render: (_, record) => (
@@ -180,7 +180,7 @@ const TabContentPagos = ({ paymentsByMethod }) => (
     <Table
       dataSource={paymentsByMethod}
       columns={[
-        { title: 'MÃ©todo de pago', dataIndex: 'method' },
+        { title: 'Método de pago', dataIndex: 'method' },
         { title: 'Transacciones', dataIndex: 'tx', align: 'right' },
         { title: 'Importe', dataIndex: 'amount', align: 'right', render: (val) => `$${val.toFixed(2)}` },
         { title: '% del Total', dataIndex: 'percent', align: 'right', render: (val) => `${val}%` },
@@ -198,8 +198,8 @@ const TabContentHistorialPagos = ({ transactions }) => (
       columns={[
         { title: 'Fecha', dataIndex: 'created_at', render: (val) => new Date(val).toLocaleString() },
         { title: 'Localizador', dataIndex: 'locator' },
-        { title: 'MÃ©todo', dataIndex: 'payment_method' },
-        { title: 'Importe', dataIndex: 'total_amount', align: 'right', render: (val) => `$${parseFloat(val).toFixed(2)}` },
+        { title: 'Método', dataIndex: 'payment_method' },
+        { title: 'Importe', dataIndex: 'total_amount', align: 'right', render: (val) => `$${parseFloat(val || 0).toFixed(2)}` },
         { title: 'Estado', dataIndex: 'status', render: (val) => <Tag color={val === 'completed' || val === 'pagado' ? 'green' : 'orange'}>{val}</Tag> },
       ]}
       size="small"
@@ -238,7 +238,7 @@ const TabContentEstadoPlano = ({ mapStatus }) => (
         strokeColor="#52c41a"
       />
       <div className="text-center text-gray-500 mt-2">
-        OcupaciÃ³n Total: {mapStatus.sold} de {mapStatus.total} asientos
+        Ocupación Total: {mapStatus.sold} de {mapStatus.total} asientos
       </div>
     </div>
   </div>
@@ -302,11 +302,11 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
     setLoading(true);
     try {
       // 1. Fetch Transactions
-      const { data: transactions, error } = await supabase
+      const { data: transactions } = await supabase
         .from('payment_transactions')
         .select('*')
         .eq('funcion_id', selectedFuncion.id)
-        .in('status', ['completed', 'pagado', 'vendido']);
+        .in('status', ['completed', 'pagado', 'vendido', 'reservado', 'reserved', 'pending']);
 
       // 2. Fetch Map & Zones Data
       const { data: mapaData } = await supabase
@@ -320,15 +320,46 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
         .select('*')
         .eq('sala_id', selectedFuncion.sala_id || selectedFuncion.sala?.id);
 
-      // Process Activity
-      const totalSales = transactions?.length || 0;
-      const totalAmount = transactions?.reduce((sum, t) => sum + (parseFloat(t.total_amount) || parseFloat(t.amount) || 0), 0) || 0;
+      // 3. Process Map Content for Capacity
+      const zoneCapacityMap = {};
+      let totalMapSeats = 0;
+      let s = 0, r = 0, a = 0;
 
-      // Process Products & Tickets
+      if (mapaData?.contenido) {
+        let elementos = [];
+        try {
+          elementos = Array.isArray(mapaData.contenido) ? mapaData.contenido : (JSON.parse(mapaData.contenido).elementos || []);
+        } catch (e) {
+          elementos = mapaData.contenido.elementos || [];
+        }
+
+        elementos.forEach(el => {
+          const zoneName = el.nombreZona || el.zona;
+          const sillas = el.sillas || (el.type === 'silla' ? [el] : []);
+
+          if (zoneName) {
+            zoneCapacityMap[zoneName] = (zoneCapacityMap[zoneName] || 0) + sillas.length;
+          }
+
+          totalMapSeats += sillas.length;
+          sillas.forEach(silla => {
+            if (['vendido', 'pagado', 'completed'].includes(silla.estado)) s++;
+            else if (['reservado', 'locked', 'pending', 'reserved'].includes(silla.estado)) r++;
+            else a++;
+          });
+        });
+      }
+
+      // 4. Process Transactions for Sales and Products
       const productsMap = {};
-      let totalTickets = 0;
+      const zoneSalesMap = {};
+      let totalSoldTickets = 0;
+      let totalAmountCombined = 0;
 
-      transactions?.forEach(t => {
+      const confirmedTransactions = transactions?.filter(t => ['completed', 'pagado', 'vendido'].includes(t.status)) || [];
+
+      confirmedTransactions.forEach(t => {
+        totalAmountCombined += (parseFloat(t.total_amount) || parseFloat(t.amount) || 0);
         let items = [];
         if (typeof t.seats === 'string') {
           try { items = JSON.parse(t.seats); } catch (e) { }
@@ -343,15 +374,18 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
             productsMap[name].sold += (item.cantidad || 1);
             productsMap[name].amount += (parseFloat(item.precio) || 0) * (item.cantidad || 1);
           } else {
-            // Is a seat/ticket
-            totalTickets++;
+            totalSoldTickets++;
+            const z = item.zona || item.nombre_zona || item.nombreZona || item.zone;
+            if (z) {
+              zoneSalesMap[z] = (zoneSalesMap[z] || 0) + 1;
+            }
           }
         });
       });
 
-      // Process Payments by Method
+      // 5. Process Payments by Method
       const methodsMap = {};
-      transactions?.forEach(t => {
+      confirmedTransactions.forEach(t => {
         const method = t.payment_method || 'Otro';
         if (!methodsMap[method]) methodsMap[method] = { tx: 0, amount: 0 };
         methodsMap[method].tx++;
@@ -363,60 +397,49 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
         method,
         tx: data.tx,
         amount: data.amount,
-        percent: totalAmount > 0 ? ((data.amount / totalAmount) * 100).toFixed(1) : 0
+        percent: totalAmountCombined > 0 ? ((data.amount / totalAmountCombined) * 100).toFixed(1) : 0
       }));
 
-      // Process Zones stats from Map
+      // 6. Process Zones stats
       const processedZones = (zonesData || []).map(zone => {
         const zoneName = zone.nombre;
+        const capacity = zoneCapacityMap[zoneName] || zone.aforo || 0;
+        const sold = zoneSalesMap[zoneName] || 0;
         return {
           key: zone.id,
           zone: zoneName,
-          aforo: zone.aforo || 100,
-          released: transactions?.filter(t => t.seats?.toString().includes(zoneName)).length || 0,
-          avail: (zone.aforo || 100) - (transactions?.filter(t => t.seats?.toString().includes(zoneName)).length || 0),
-          percent: zone.aforo > 0 ? ((transactions?.filter(t => t.seats?.toString().includes(zoneName)).length || 0) / zone.aforo * 100).toFixed(1) : 0
+          aforo: capacity,
+          released: sold,
+          avail: Math.max(0, capacity - sold),
+          percent: capacity > 0 ? ((sold / capacity) * 100).toFixed(1) : 0
         };
       });
 
-      // Process Map Status Summary
-      let s = 0, r = 0, a = 0;
-      if (mapaData?.contenido) {
-        const elementos = Array.isArray(mapaData.contenido) ? mapaData.contenido : (mapaData.contenido.elementos || []);
-        elementos.forEach(el => {
-          const sillas = el.sillas || (el.type === 'silla' ? [el] : []);
-          sillas.forEach(silla => {
-            if (['vendido', 'pagado', 'completed'].includes(silla.estado)) s++;
-            else if (['reservado', 'locked', 'pending'].includes(silla.estado)) r++;
-            else a++;
-          });
-        });
-      }
-
-      // Update State
+      // 7. Update State
       setStats({
-        totalSales,
-        totalAmount: totalAmount.toFixed(2),
-        totalTickets,
-        totalVisits: Math.floor(totalSales * 1.5)
+        totalSales: confirmedTransactions.length,
+        totalAmount: totalAmountCombined.toFixed(2),
+        totalTickets: totalSoldTickets,
+        totalVisits: Math.floor(confirmedTransactions.length * 1.5)
       });
       setProductStats(Object.entries(productsMap).map(([name, data]) => ({ key: name, name, ...data })));
       setPaymentsByMethod(processedPayments);
       setZonesStats(processedZones);
       setTransactionsHistory(transactions || []);
-      setMapStatus({ sold: s, reserved: r, available: a, total: s + r + a });
+      setMapStatus({ sold: s, reserved: r, available: a, total: totalMapSeats });
 
       // Process 24h stats
       const now = new Date();
       const yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-      const trans24 = transactions?.filter(t => new Date(t.created_at) > yesterday) || [];
+      const trans24 = confirmedTransactions.filter(t => new Date(t.created_at) > yesterday);
       const amount24 = trans24.reduce((sum, t) => sum + (parseFloat(t.total_amount) || parseFloat(t.amount) || 0), 0);
 
       let tix24 = 0;
       trans24.forEach(t => {
         if (t.seats) {
           const items = typeof t.seats === 'string' ? (JSON.parse(t.seats) || []) : t.seats;
-          tix24 += items.length || 0;
+          const ticketItems = items.filter(it => it.type !== 'producto' && it.tipo !== 'producto');
+          tix24 += ticketItems.length || 0;
         }
       });
 
@@ -501,7 +524,7 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
 
             {['7'].includes(activeTab) && (
               <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                <p>InformaciÃ³n disponible prÃ³ximamente</p>
+                <p>Información disponible próximamente</p>
               </div>
             )}
           </div>
