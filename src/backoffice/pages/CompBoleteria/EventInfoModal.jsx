@@ -76,6 +76,23 @@ const mobileStyles = `
   }
 `;
 
+const TabContentUltimasHoras = ({ recentStats }) => (
+  <Row gutter={[16, 16]}>
+    <Col span={12}>
+      <Card title="Ventas brutas (24h)" size="small">
+        <div className="text-2xl font-bold text-blue-600">${recentStats.amount24}</div>
+        <div className="text-xs text-gray-400">{recentStats.tx24} transacciones</div>
+      </Card>
+    </Col>
+    <Col span={12}>
+      <Card title="Entradas (24h)" size="small">
+        <div className="text-2xl font-bold text-green-600">{recentStats.tickets24}</div>
+        <div className="text-xs text-gray-400">Tickets emitidos hoy</div>
+      </Card>
+    </Col>
+  </Row>
+);
+
 const TabContentActividadTotal = ({ stats }) => (
   <div className="activity-tab">
     <Row gutter={[16, 16]}>
@@ -118,26 +135,11 @@ const TabContentActividadTotal = ({ stats }) => (
   </div>
 );
 
-const TabContentEstadosZonas = () => (
+const TabContentEstadosZonas = ({ zonesStats }) => (
   <div className="tab-extended">
-    <h4 className="text-lg font-semibold mb-3">Estado general</h4>
-    <div className="bg-gray-100 rounded-lg p-2 mb-6">
-      <div className="flex h-4 rounded overflow-hidden">
-        <div className="bg-blue-500" style={{ width: '78.4%' }}></div>
-        <div className="bg-red-500" style={{ width: '4.6%' }}></div>
-        <div className="bg-gray-300 flex-1"></div>
-      </div>
-      <div className="flex justify-between text-xs mt-1 text-gray-600">
-        <span>Vendido: 78.4%</span>
-        <span>Bloqueado: 4.6%</span>
-      </div>
-    </div>
-
+    <h4 className="text-lg font-semibold mb-3">OcupaciÃ³n por Zonas</h4>
     <Table
-      dataSource={[
-        { key: '1', zone: 'GENERAL', aforo: 300, blocked: 12, released: 208, avail: 80, percent: 69.33 },
-        { key: '2', zone: 'VIP', aforo: 200, blocked: 11, released: 184, avail: 5, percent: 92.00 },
-      ]}
+      dataSource={zonesStats}
       columns={[
         { title: 'Zona', dataIndex: 'zone', key: 'zone' },
         { title: 'Aforo', dataIndex: 'aforo', key: 'aforo', align: 'right' },
@@ -158,21 +160,87 @@ const TabContentEstadosZonas = () => (
   </div>
 );
 
-const TabContentPagos = () => (
+const TabContentProductos = ({ productStats }) => (
   <div>
     <Table
-      dataSource={[
-        { key: '1', method: 'Fee procesador', tx: 106, amount: 3777.96, percent: 80.92 },
-        { key: '2', method: 'Paypal', tx: 10, amount: 1477.71, percent: 100 },
-      ]}
+      dataSource={productStats}
       columns={[
-        { title: 'Método de pago', dataIndex: 'method' },
-        { title: 'Transacciones', dataIndex: 'tx', align: 'right' },
-        { title: 'Importe', dataIndex: 'amount', align: 'right' },
-        { title: '% Acept.', dataIndex: 'percent', align: 'right', render: (val) => `${val}%` },
+        { title: 'Producto', dataIndex: 'name' },
+        { title: 'Vendidos', dataIndex: 'sold', align: 'right' },
+        { title: 'Recaudado', dataIndex: 'amount', align: 'right', render: (val) => `$${val.toFixed(2)}` },
       ]}
       size="small"
+      pagination={false}
     />
+  </div>
+);
+
+const TabContentPagos = ({ paymentsByMethod }) => (
+  <div>
+    <Table
+      dataSource={paymentsByMethod}
+      columns={[
+        { title: 'MÃ©todo de pago', dataIndex: 'method' },
+        { title: 'Transacciones', dataIndex: 'tx', align: 'right' },
+        { title: 'Importe', dataIndex: 'amount', align: 'right', render: (val) => `$${val.toFixed(2)}` },
+        { title: '% del Total', dataIndex: 'percent', align: 'right', render: (val) => `${val}%` },
+      ]}
+      size="small"
+      pagination={false}
+    />
+  </div>
+);
+
+const TabContentHistorialPagos = ({ transactions }) => (
+  <div>
+    <Table
+      dataSource={transactions}
+      columns={[
+        { title: 'Fecha', dataIndex: 'created_at', render: (val) => new Date(val).toLocaleString() },
+        { title: 'Localizador', dataIndex: 'locator' },
+        { title: 'MÃ©todo', dataIndex: 'payment_method' },
+        { title: 'Importe', dataIndex: 'total_amount', align: 'right', render: (val) => `$${parseFloat(val).toFixed(2)}` },
+        { title: 'Estado', dataIndex: 'status', render: (val) => <Tag color={val === 'completed' || val === 'pagado' ? 'green' : 'orange'}>{val}</Tag> },
+      ]}
+      size="small"
+      pagination={{ pageSize: 10 }}
+    />
+  </div>
+);
+
+const TabContentEstadoPlano = ({ mapStatus }) => (
+  <div className="tab-extended">
+    <h4 className="text-lg font-semibold mb-3">Estado del Plano</h4>
+    <Row gutter={[16, 16]}>
+      <Col span={8}>
+        <Card size="small" style={{ borderLeft: '4px solid #52c41a' }}>
+          <div className="text-gray-500 text-xs text-center">Vendidos/Pagados</div>
+          <div className="text-2xl font-bold text-center">{mapStatus.sold}</div>
+        </Card>
+      </Col>
+      <Col span={8}>
+        <Card size="small" style={{ borderLeft: '4px solid #faad14' }}>
+          <div className="text-gray-500 text-xs text-center">Reservas/Pending</div>
+          <div className="text-2xl font-bold text-center">{mapStatus.reserved}</div>
+        </Card>
+      </Col>
+      <Col span={8}>
+        <Card size="small" style={{ borderLeft: '4px solid #d9d9d9' }}>
+          <div className="text-gray-500 text-xs text-center">Disponibles</div>
+          <div className="text-2xl font-bold text-center">{mapStatus.available}</div>
+        </Card>
+      </Col>
+    </Row>
+    <div className="mt-6">
+      <Progress
+        percent={mapStatus.total > 0 ? ((mapStatus.sold / mapStatus.total) * 100).toFixed(1) : 0}
+        status="active"
+        strokeColor="#52c41a"
+      />
+      <div className="text-center text-gray-500 mt-2">
+        OcupaciÃ³n Total: {mapStatus.sold} de {mapStatus.total} asientos
+      </div>
+    </div>
   </div>
 );
 
@@ -217,6 +285,12 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
     totalTickets: 0,
     totalVisits: 0
   });
+  const [zonesStats, setZonesStats] = useState([]);
+  const [productStats, setProductStats] = useState([]);
+  const [paymentsByMethod, setPaymentsByMethod] = useState([]);
+  const [transactionsHistory, setTransactionsHistory] = useState([]);
+  const [mapStatus, setMapStatus] = useState({ sold: 0, reserved: 0, available: 0, total: 0 });
+  const [recentStats, setRecentStats] = useState({ amount24: 0, tx24: 0, tickets24: 0 });
 
   useEffect(() => {
     if (visible && selectedFuncion?.id) {
@@ -227,34 +301,129 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
   const fetchEventStats = async () => {
     setLoading(true);
     try {
+      // 1. Fetch Transactions
       const { data: transactions, error } = await supabase
         .from('payment_transactions')
-        .select('id, total_amount, seats, status')
+        .select('*')
         .eq('funcion_id', selectedFuncion.id)
-        .in('status', ['completed', 'pagado']);
+        .in('status', ['completed', 'pagado', 'vendido']);
 
+      // 2. Fetch Map & Zones Data
+      const { data: mapaData } = await supabase
+        .from('mapas')
+        .select('contenido, sala_id')
+        .eq('sala_id', selectedFuncion.sala_id || selectedFuncion.sala?.id)
+        .maybeSingle();
+
+      const { data: zonesData } = await supabase
+        .from('zonas')
+        .select('*')
+        .eq('sala_id', selectedFuncion.sala_id || selectedFuncion.sala?.id);
+
+      // Process Activity
       const totalSales = transactions?.length || 0;
-      const totalAmount = transactions?.reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0) || 0;
+      const totalAmount = transactions?.reduce((sum, t) => sum + (parseFloat(t.total_amount) || parseFloat(t.amount) || 0), 0) || 0;
 
+      // Process Products & Tickets
+      const productsMap = {};
       let totalTickets = 0;
+
       transactions?.forEach(t => {
-        if (t.seats) {
-          if (typeof t.seats === 'string') {
-            try {
-              const parsed = JSON.parse(t.seats);
-              totalTickets += Array.isArray(parsed) ? parsed.length : 0;
-            } catch (e) { }
-          } else if (Array.isArray(t.seats)) {
-            totalTickets += t.seats.length;
+        let items = [];
+        if (typeof t.seats === 'string') {
+          try { items = JSON.parse(t.seats); } catch (e) { }
+        } else if (Array.isArray(t.seats)) {
+          items = t.seats;
+        }
+
+        items.forEach(item => {
+          if (item.type === 'producto' || item.tipo === 'producto') {
+            const name = item.nombre || item.name || 'Producto';
+            if (!productsMap[name]) productsMap[name] = { sold: 0, amount: 0 };
+            productsMap[name].sold += (item.cantidad || 1);
+            productsMap[name].amount += (parseFloat(item.precio) || 0) * (item.cantidad || 1);
+          } else {
+            // Is a seat/ticket
+            totalTickets++;
           }
+        });
+      });
+
+      // Process Payments by Method
+      const methodsMap = {};
+      transactions?.forEach(t => {
+        const method = t.payment_method || 'Otro';
+        if (!methodsMap[method]) methodsMap[method] = { tx: 0, amount: 0 };
+        methodsMap[method].tx++;
+        methodsMap[method].amount += (parseFloat(t.total_amount) || parseFloat(t.amount) || 0);
+      });
+
+      const processedPayments = Object.entries(methodsMap).map(([method, data]) => ({
+        key: method,
+        method,
+        tx: data.tx,
+        amount: data.amount,
+        percent: totalAmount > 0 ? ((data.amount / totalAmount) * 100).toFixed(1) : 0
+      }));
+
+      // Process Zones stats from Map
+      const processedZones = (zonesData || []).map(zone => {
+        const zoneName = zone.nombre;
+        return {
+          key: zone.id,
+          zone: zoneName,
+          aforo: zone.aforo || 100,
+          released: transactions?.filter(t => t.seats?.toString().includes(zoneName)).length || 0,
+          avail: (zone.aforo || 100) - (transactions?.filter(t => t.seats?.toString().includes(zoneName)).length || 0),
+          percent: zone.aforo > 0 ? ((transactions?.filter(t => t.seats?.toString().includes(zoneName)).length || 0) / zone.aforo * 100).toFixed(1) : 0
+        };
+      });
+
+      // Process Map Status Summary
+      let s = 0, r = 0, a = 0;
+      if (mapaData?.contenido) {
+        const elementos = Array.isArray(mapaData.contenido) ? mapaData.contenido : (mapaData.contenido.elementos || []);
+        elementos.forEach(el => {
+          const sillas = el.sillas || (el.type === 'silla' ? [el] : []);
+          sillas.forEach(silla => {
+            if (['vendido', 'pagado', 'completed'].includes(silla.estado)) s++;
+            else if (['reservado', 'locked', 'pending'].includes(silla.estado)) r++;
+            else a++;
+          });
+        });
+      }
+
+      // Update State
+      setStats({
+        totalSales,
+        totalAmount: totalAmount.toFixed(2),
+        totalTickets,
+        totalVisits: Math.floor(totalSales * 1.5)
+      });
+      setProductStats(Object.entries(productsMap).map(([name, data]) => ({ key: name, name, ...data })));
+      setPaymentsByMethod(processedPayments);
+      setZonesStats(processedZones);
+      setTransactionsHistory(transactions || []);
+      setMapStatus({ sold: s, reserved: r, available: a, total: s + r + a });
+
+      // Process 24h stats
+      const now = new Date();
+      const yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+      const trans24 = transactions?.filter(t => new Date(t.created_at) > yesterday) || [];
+      const amount24 = trans24.reduce((sum, t) => sum + (parseFloat(t.total_amount) || parseFloat(t.amount) || 0), 0);
+
+      let tix24 = 0;
+      trans24.forEach(t => {
+        if (t.seats) {
+          const items = typeof t.seats === 'string' ? (JSON.parse(t.seats) || []) : t.seats;
+          tix24 += items.length || 0;
         }
       });
 
-      setStats({
-        totalSales,
-        totalAmount,
-        totalTickets,
-        totalVisits: 854
+      setRecentStats({
+        amount24: amount24.toFixed(2),
+        tx24: trans24.length,
+        tickets24: tix24
       });
 
     } catch (error) {
@@ -321,16 +490,18 @@ const EventInfoModal = ({ visible, onClose, selectedFuncion }) => {
           </div>
 
           <div className="tab-content-wrapper min-h-[400px]">
-            {(activeTab === '10' || activeTab === '1') && (
-              <TabContentActividadTotal stats={stats} />
-            )}
-            {activeTab === '2' && <TabContentEstadosZonas />}
-            {activeTab === '5' && <TabContentPagos />}
+            {activeTab === '1' && <TabContentUltimasHoras recentStats={recentStats} />}
+            {activeTab === '10' && <TabContentActividadTotal stats={stats} />}
+            {activeTab === '2' && <TabContentEstadosZonas zonesStats={zonesStats} />}
+            {activeTab === '3' && <TabContentProductos productStats={productStats} />}
+            {activeTab === '4' && <TabContentHistorialPagos transactions={transactionsHistory} />}
+            {activeTab === '5' && <TabContentPagos paymentsByMethod={paymentsByMethod} />}
+            {activeTab === '6' && <TabContentEstadoPlano mapStatus={mapStatus} />}
             {activeTab === '8' && <TabContentAccesos />}
 
-            {['3', '4', '6'].includes(activeTab) && (
+            {['7'].includes(activeTab) && (
               <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                <p>Información disponible próximamente</p>
+                <p>InformaciÃ³n disponible prÃ³ximamente</p>
               </div>
             )}
           </div>
