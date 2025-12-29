@@ -40,13 +40,23 @@ const Boleteria = () => {
 
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
+  const handleLogout = () => {
+    Modal.confirm({
+      title: '¿Estás seguro que deseas cerrar sesión?',
+      content: 'Tendrás que iniciar sesión nuevamente para acceder.',
+      okText: 'Sí, cerrar sesión',
+      cancelText: 'Cancelar',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await supabase.auth.signOut();
+          navigate('/');
+        } catch (error) {
+          console.error('Error logging out:', error);
+          message.error('Error al cerrar sesión');
+        }
+      }
+    });
   };
 
   // Debug: Log del estado actual (solo en desarrollo, memoizado para evitar renders)
@@ -1425,8 +1435,8 @@ const Boleteria = () => {
                 </button>
               </div>
 
-              {/* Derecha: Botones de Navegación (Iconos + Texto corto) */}
-              <div className="flex items-center gap-1">
+              {/* Centro: Botones de Navegación (Iconos + Texto corto) */}
+              <div className="flex items-center gap-1 justify-center flex-[2]">
                 <button className="h-7 px-2 flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors">
                   <AppstoreOutlined /> <span className="hidden sm:inline">Zonas</span>
                 </button>
@@ -1449,11 +1459,16 @@ const Boleteria = () => {
                 <button className="h-7 px-2 flex items-center gap-1 text-gray-600 hover:bg-gray-100 rounded transition-colors">
                   <EllipsisOutlined />
                 </button>
+              </div>
+
+              {/* Derecha: Botón de Salir (Aislado) */}
+              <div className="flex items-center justify-end flex-1 min-w-0">
                 <button
                   onClick={handleLogout}
-                  className="h-7 px-2 flex items-center gap-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                  className="h-7 px-3 flex items-center gap-1 text-red-600 hover:bg-red-50 rounded transition-colors border border-transparent hover:border-red-100"
                   title="Cerrar SesiÃ³n"
                 >
+                  <span className="text-xs font-semibold mr-1">Salir</span>
                   <LogoutOutlined />
                 </button>
               </div>
