@@ -713,13 +713,15 @@ const Boleteria = () => {
             (existingSeat._id || existingSeat.sillaId) === newSeat.sillaId
           )
         );
-        return [...safePrev, ...newSeats];
-      });
 
-      message.success({
-        content: `✅ ${allSeats.length} asiento(s) reclamados exitosamente`,
-        key: 'reclaim',
-        duration: 3
+        // Mostrar mensaje con el conteo correcto
+        message.success({
+          content: `✅ ${newSeats.length} asiento(s) reclamados exitosamente`,
+          key: 'reclaim',
+          duration: 3
+        });
+
+        return [...safePrev, ...newSeats];
       });
 
       // 7. Registrar auditoría (deshabilitado - logUserAction no disponible)
